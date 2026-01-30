@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "ExpoFirebaseSkeleton",
+    "slug": "expo-firebase-skeleton",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./nine4_logo.png",
+    "splash": {
+      "image": "./nine4_logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nine4.expofirebaseskeleton"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./nine4_logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.nine4.expofirebaseskeleton"
+    },
+    "web": {
+      "favicon": "./nine4_logo.png"
+    },
+    "scheme": "expofirebaseskeleton",
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font",
+      "@react-native-firebase/app"
+    ]
+  }
+}
