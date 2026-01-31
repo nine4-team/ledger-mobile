@@ -40,9 +40,9 @@ Source of truth:
 
 Rules:
 
-- **Non-canonical**: display category name from `transaction.category_id` and use it for itemization enablement.
+- **Non-canonical**: display category name from `transaction.budgetCategoryId` and use it for itemization enablement.
 - **Canonical inventory** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`):
-  - Treat the transaction row as **uncategorized** (recommend `category_id = null`).
+  - Treat the transaction row as **uncategorized** (recommend `transaction.budgetCategoryId = null`).
   - Display category as “Uncategorized” or omit the category row entirely (choose one UI pattern and keep consistent).
   - Any budgeting attribution related to canonical rows is **item-driven** via linked items’ `inheritedBudgetCategoryId` (no “canonical category” picker).
 
@@ -86,8 +86,8 @@ Each of these must be represented as durable, idempotent Firestore writes (and/o
 
 When the user links/assigns items to this transaction:
 
-- If the transaction is **non-canonical** and has a non-null `category_id`, set:
-  - `item.inheritedBudgetCategoryId = transaction.category_id`
+- If the transaction is **non-canonical** and has a non-null `transaction.budgetCategoryId`, set:
+  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 - If the transaction is **canonical inventory** (`INV_*`), do **not** overwrite `item.inheritedBudgetCategoryId`.
 
 ## UI structure (high level)

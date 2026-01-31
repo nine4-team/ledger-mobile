@@ -53,9 +53,9 @@ Source of truth:
 
 Rules:
 
-- **Non-canonical transactions**: category badge/name (if shown) comes from `transaction.category_id`.
+- **Non-canonical transactions**: category badge/name (if shown) comes from `transaction.budgetCategoryId`.
 - **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`):
-  - Should be treated as **uncategorized** on the transaction row (recommend `category_id = null`).
+  - Should be treated as **uncategorized** on the transaction row (recommend `transaction.budgetCategoryId = null`).
   - If the list shows any category-related badge for canonical rows, it must be **derived** from linked items’ `inheritedBudgetCategoryId` (e.g., “Multiple categories”) and must not require a user-facing “canonical category” selection.
 
 Implementation note (required for filter + export usefulness):

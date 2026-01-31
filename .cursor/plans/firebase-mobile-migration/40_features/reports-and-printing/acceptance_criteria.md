@@ -35,10 +35,10 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/ClientSummary.tsx` (the `summary` memo).
 - [ ] **Category breakdown uses canonical attribution model**:
   - Items are attributed by `item.inheritedBudgetCategoryId` when present.
-  - Fallback: for legacy/non-canonical cases, items can be attributed by their linked transaction’s `category_id`.
-  - Canonical inventory transactions are supported even when `transaction.category_id` is null/meaningless.
+  - Fallback: for legacy/non-canonical cases, items can be attributed by their linked transaction’s `transaction.budgetCategoryId`.
+  - Canonical inventory transactions are supported even when `transaction.budgetCategoryId` is null/meaningless.
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/flows/inherited_budget_category_rules.md`.
-  **Intentional delta** vs web: web groups by transaction `categoryId` only (`src/pages/ClientSummary.tsx`).
+  **Intentional delta** vs web: web groups by transaction `categoryId` only (legacy web naming; `src/pages/ClientSummary.tsx`).
 - [ ] **Receipt link behavior per item**:
   - If item has `transactionId` and the transaction is canonical (`INV_*`) or invoiceable by reimbursement type, “View Receipt” links to the project invoice report.
   - Else, if transaction has `receiptImages[0].url`, link to the external receipt URL.

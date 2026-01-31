@@ -96,7 +96,7 @@ Rules:
   - Required.
   - Changing category may enable/disable itemization; if disabling but there are existing items (edit), show warning and still allow managing existing items.
   - New requirement (item attribution determinism): if editing a non-canonical transaction and the category changes, update all linked items to keep attribution deterministic:
-    - `item.inheritedBudgetCategoryId = transaction.category_id` for each linked item
+    - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId` for each linked item
     - This ensures future canonical inventory transactions can attribute amounts by item category without asking the user to learn a “canonical category”.
 - **Amount**:
   - Required and must be positive.

@@ -75,7 +75,7 @@ When `inheritedBudgetCategoryId` is missing, show a non-blocking banner near the
 
 When associating/linking an item to a **non-canonical** transaction with a category:
 
-- Set `item.inheritedBudgetCategoryId = transaction.category_id`
+- Set `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 
 When associating/linking to a **canonical inventory** transaction (`INV_*`):
 

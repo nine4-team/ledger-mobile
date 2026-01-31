@@ -31,7 +31,7 @@ You are updating Firebase mobile migration specs. Your task is to review and imp
 
 1) **Rollup logic requirement (must be explicit)**
    - Ensure specs clearly require *new rollup computation* (no new UI) where:
-     - non-canonical attribution uses `transaction.category_id`
+     - non-canonical attribution uses `transaction.budgetCategoryId`
      - canonical inventory attribution groups linked items by `item.inheritedBudgetCategoryId`
    - Ensure specs clearly say canonical transaction category must not drive attribution.
    - Add/adjust “Intentional delta” callouts pointing to `BudgetProgress.tsx`.
