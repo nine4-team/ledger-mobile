@@ -7,18 +7,18 @@ This folder defines the parity-grade behavior spec for Ledger’s **global conne
   - offline (“Changes will sync when reconnected”)
   - slow connection indicator
 - Global sync status banner:
-  - pending outbox count
-  - syncing / waiting / error states
-  - retry affordance when in error
+  - pending Firestore writes / pending request-doc operations
+  - syncing / waiting / error states (user-friendly; no “sync engine” jargon)
+  - retry affordance when in error (best-effort “try again now”)
 - Retry behavior:
   - “Retry sync” warms offline prerequisites when online
-  - triggers a foreground sync attempt
+  - triggers a foreground “retry now” attempt (reattach scoped listeners + refresh request-doc statuses)
 - Background/automatic sync error surfacing:
   - toast notifications for background-triggered sync failures
 
 ## Non-scope (for this feature folder)
 - Per-entity “pending” UI markers in lists/details/forms (owned by each feature).
-- Conflict resolution UX (owned by conflicts / sync engine specs).
+- Conflict resolution UX (owned by domain workflows / request-doc specs where relevant).
 - React Native-specific library choices (e.g. which NetInfo/background-task package) beyond required capabilities.
 
 ## Key docs
@@ -31,7 +31,8 @@ This folder defines the parity-grade behavior spec for Ledger’s **global conne
   - `ui/components/BackgroundSyncErrorNotifier.md`
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (local-first, outbox, delta sync, change-signal): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 architecture (canonical): `OFFLINE_FIRST_V2_SPEC.md`
+- Request-doc workflows: multi-doc correctness is expressed as request-doc status (pending/applied/failed), not a client outbox.
 - Offline prerequisites hydration (metadata caches): used by “Retry sync” and some forms; see parity evidence in `src/hooks/useOfflinePrerequisites.ts`.
 
 ## Parity evidence (web sources)
@@ -40,7 +41,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **global conne
 - Retry sync button (hydrates prerequisites + triggers sync): `src/components/ui/RetrySyncButton.tsx`
 - Background sync error toasts: `src/components/BackgroundSyncErrorNotifier.tsx`
 - Network detection + “actual online” ping: `src/services/networkStatusService.ts`, `src/hooks/useNetworkState.ts`
-- Foreground sync scheduler state + backoff: `src/services/syncScheduler.ts`
-- Outbox queue state (pending count, last enqueue errors): `src/services/operationQueue.ts`
+- Foreground sync scheduler state + backoff (web parity only): `src/services/syncScheduler.ts`
+- Outbox queue state (web parity only): `src/services/operationQueue.ts`
 - Realtime telemetry (staleness/disconnect signals used for logging today): `src/contexts/ProjectRealtimeContext.tsx`
 

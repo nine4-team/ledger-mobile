@@ -20,5 +20,5 @@ If needed for cross-link consistency:
 - `src/components/ui/RetrySyncButton.tsx` (manual trigger semantics)
 
 ## Evidence rule
-If we change UX promises from web parity, call it out as an **intentional delta** (what + why), and ensure it remains compatible with local-first + outbox + delta + change-signal.
+If we change UX promises from web parity, call it out as an **intentional delta** (what + why), and ensure it remains compatible with Offline Data v2 (Firestore-native offline persistence + scoped listeners + request-doc workflows).
 

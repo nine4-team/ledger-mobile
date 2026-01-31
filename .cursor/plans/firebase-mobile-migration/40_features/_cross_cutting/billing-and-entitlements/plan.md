@@ -1,7 +1,7 @@
 ## Goal
 Ship the **billing + entitlements enforcement contract** (RevenueCat-backed) in a way that:
 
-- stays compatible with the migration architecture: offline-first, SQLite source of truth, outbox, delta sync, change-signal
+- stays compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - enforces limits server-side (Callable Functions + server-owned counters)
 - provides a predictable offline UX that drives upgrade when online
 

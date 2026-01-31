@@ -8,7 +8,7 @@ This feature is **project-only**.
 - Budget tab: per-category budget progress + overall budget progress
 - Design fee tracker: “received” progress (special semantics)
 - Accounting tab: rollup cards (“owed to business”, “owed to client”) + links to Reports screens
-- All rollups computed from **local data** (SQLite) with deterministic canonical attribution (see below)
+- All rollups computed from **locally cached Firestore data** (Firestore-native offline persistence) with deterministic canonical attribution (see below)
 
 ## Non-scope (for this feature folder)
 - Editing budget categories and presets (Settings) — `40_features/settings-and-admin/README.md`
@@ -22,7 +22,7 @@ This feature is **project-only**.
 - **Plan / prompt packs**: `plan.md`, `prompt_packs/`
 
 ## Cross-cutting dependencies (canonical)
-- Sync architecture constraints (change-signal + delta, local-first): `sync_engine_spec.plan.md`
+- Offline-first architecture constraints: `OFFLINE_FIRST_V2_SPEC.md`
 - Canonical vs non-canonical attribution model (source of truth):
   - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
   - `40_features/project-items/flows/inherited_budget_category_rules.md`

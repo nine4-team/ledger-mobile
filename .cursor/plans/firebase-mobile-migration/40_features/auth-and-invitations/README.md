@@ -26,7 +26,10 @@ This folder defines the parity-grade behavior spec for Ledger’s **authenticati
   - `ui/screens/AuthCallback.md`
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (local-first, outbox, delta sync): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 architecture (canonical): `OFFLINE_FIRST_V2_SPEC.md`
+  - Firestore-native offline persistence (Firestore is canonical).
+  - Scoped listeners only (no “listen to everything”).
+  - Request-doc workflows for multi-doc correctness (Cloud Function transaction).
 
 ## Parity evidence (web sources)
 - Providers/boot order: `src/main.tsx`, `src/App.tsx`

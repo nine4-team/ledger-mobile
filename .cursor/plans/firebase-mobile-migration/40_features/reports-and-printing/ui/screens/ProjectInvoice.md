@@ -9,7 +9,7 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
   - Client Summary → “View Receipt” (internal link can target invoice)
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore local cache reads (scoped to project):
   - Project by id (name, clientName)
   - Transactions for project:
     - filter `status != canceled`
@@ -53,7 +53,7 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
   - Parity evidence: `src/pages/ProjectInvoice.tsx` (`!hasAnyLines` block).
 - Error: show error state + Back button.
   - Parity evidence: `src/pages/ProjectInvoice.tsx` error block.
-- Offline: must render from local DB; if project data missing locally, treat as empty/error depending on why.
+- Offline: must render from Firestore local cache; if project data missing locally, treat as empty/error depending on why.
 - Pending sync: if business logo or other referenced media is pending upload, show a non-blocking warning that exported output may omit branding/media.
 
 ## Media (if applicable)
@@ -63,7 +63,7 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
 
 ## Collaboration / realtime expectations
 - No realtime requirement while the report is open.
-- Accept that values reflect local DB until the next delta sync run.
+- Accept that values reflect Firestore local cache until the next sync pass.
 
 ## Performance notes
 - Expected project size: potentially large transaction + item lists; invoice only includes invoiceable transactions.

@@ -73,5 +73,5 @@ Parity evidence:
 - `getItemLineageHistory` checks `isNetworkOnline()` in `src/services/lineageService.ts`.
 
 Firebase migration requirement:
-- Lineage edges should be available offline via local DB + delta sync once the feature is implemented (so Item Detail can show history even offline).  
-  **Intentional delta**: mobile local DB becomes the source of truth for lineage edges as well, consistent with the overall architecture.
+- Lineage edges should be available offline via Firestore-native offline persistence (cache-first reads when offline) so Item Detail can show history even offline.  
+  **Intentional delta**: unlike the web app, the mobile Firebase app can render lineage history offline from cached Firestore docs (and/or a derived local cache), consistent with `OFFLINE_FIRST_V2_SPEC.md`.

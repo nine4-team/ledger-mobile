@@ -45,13 +45,13 @@ const searchIndex = new SearchIndex((item) => {
 ### 2. Index items from Firestore listeners
 
 ```typescript
-import { onSnapshot } from 'firebase/firestore';
 import { SearchIndex } from '@/search-index';
+import { db } from '@/firebase/firebase';
 
 const searchIndex = new SearchIndex();
 
 // When items are added/modified
-onSnapshot(itemsQuery, (snapshot) => {
+const unsubscribe = db.collection('items').onSnapshot((snapshot) => {
   snapshot.docChanges().forEach((change) => {
     const item = { id: change.doc.id, ...change.doc.data() };
     
@@ -83,7 +83,7 @@ const results = await searchIndex.search('account-1', 'project-1', 'widget');
 // Then fetch full item details from Firestore
 const itemIds = results.map(r => r.itemId);
 const items = await Promise.all(
-  itemIds.map(id => getDoc(doc(db, 'items', id)))
+  itemIds.map(id => db.collection('items').doc(id).get())
 );
 ```
 

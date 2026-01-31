@@ -24,6 +24,22 @@ Primary parity evidence (web):
 
 List UI (search/filter/sort/group, selection, bulk actions) should match existing parity patterns. This doc focuses only on behaviors impacted by the canonical attribution rules.
 
+### Search (required; parity)
+Project-scope item search must match current web parity.
+
+- State key (web parity): `itemSearch`.
+- Mobile (Expo Router): persist via list state store keyed by `listStateKey = project:${projectId}:items` (see shared list-state contract).
+- **Search matches (web parity)**:
+  - `item.description`
+  - `item.source`
+  - `item.sku` (including a normalized “fuzzy SKU” match that ignores non-alphanumeric chars, e.g. `3SEAT-001` matches `3SEAT001`)
+  - `item.paymentMethod`
+  - `item.space`
+
+Parity evidence:
+- Observed in `src/pages/InventoryList.tsx` (search filter logic).
+- Observed in `src/pages/ItemDetail.tsx` (next/previous navigation uses the same filtered+sorted list logic).
+
 ### List state + scroll restoration (required; Expo Router)
 
 We do **not** wire scroll restoration separately for:

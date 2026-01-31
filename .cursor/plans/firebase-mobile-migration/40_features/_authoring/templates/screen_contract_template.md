@@ -8,16 +8,19 @@ What this screen is for (1–3 sentences).
 - Query params:
 - Entry points (where navigated from):
 
-## Reads (local-first)
-- Local DB queries:
+## Reads (Firestore cache-first)
+- Firestore queries / doc fetches (cache-first vs server-first posture, as applicable):
+- Scoped listeners attached (what is listened to, and what is *not*):
 - Derived view models:
-- Cached metadata dependencies (categories/vendors/tax presets/templates/etc):
+- Cached metadata dependencies (categories/vendors/templates/etc):
+- Optional derived search index usage (if applicable): how candidate IDs are produced and how canonical docs are fetched from Firestore:
 
-## Writes (local-first)
+## Writes (Firestore + request-doc)
 For each user action, list:
-- Local DB mutation(s)
-- Outbox op(s) enqueued (shape, idempotency key)
-- Any change-signal updates triggered (conceptually)
+- Direct Firestore write(s) (single-doc) **or** request-doc write (multi-doc/invariant operation)
+- Request-doc fields (op id / request id, status model, error model) and the expected Cloud Function transaction
+- Pending UX: what the user sees while the write is pending locally, syncing, or failed
+- Retry/cancel semantics (especially for request-doc operations)
 
 ## UI structure (high level)
 Sections/components and what each does.

@@ -6,11 +6,11 @@ Copy/paste this at the start of any AI dev chat so the dev can work **without pr
 
 ## Goal
 
-You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with the **Offline Data v2** architecture (see `OFFLINE_FIRST_V2_SPEC.md`):
+- Firestore-native offline persistence is the baseline (Firestore is canonical)
+- Scoped listeners are allowed (no unbounded “listen to everything”)
+- Multi-doc correctness uses **request-doc workflows** (Cloud Function applies changes in a transaction)
+- SQLite is allowed only as an **optional derived search index** (index-only), if robust offline item search is required
 
 Your job in this chat:
 - **Produce parity specs** grounded in the existing codebase (web) so an implementation team can reproduce behavior with the new architecture.
@@ -67,6 +67,7 @@ For each feature or screen contract, include:
   - quota/full storage
 - **Risk level** (low/med/high) with *why*
 - **Dependencies** (auth shell, sync engine, media pipeline, conflict UI, metadata caches, etc.)
+  - Use Offline Data v2 terms where possible: native Firestore, scoped listeners, request-doc framework, offline UX primitives, and optional derived search index.
 
 ---
 
@@ -80,7 +81,9 @@ For each non-obvious behavior:
 
 ## Constraints / non-goals
 
-- Do not prescribe “subscribe to everything” listeners; realtime must use the **change-signal + delta** approach.
+- Do not prescribe “subscribe to everything” listeners; listeners must be **scoped/bounded** to the active context.
+- Do not propose a bespoke “sync engine” (outbox/cursors/delta sync tables) as the default; Offline Data v2 relies on Firestore-native offline persistence.
+- Any multi-doc invariant operation must be framed as **request-doc + Cloud Function transaction** (unless explicitly justified as provably safe).
 - Do not do pixel-perfect design specs.
 - Focus on behaviors where multiple implementations would diverge.
 

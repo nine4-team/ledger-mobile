@@ -8,7 +8,7 @@ Provide a printable/shareable “Property Management Summary” for a project: t
   - Project shell → Accounting tab → “Property Management Summary”
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore local cache reads (scoped to project):
   - Project by id (name, clientName)
   - Items for project (including `description`, `source`, `sku`, `space`/location label, `marketValue`)
   - Business profile (logo + name)
@@ -44,12 +44,12 @@ Provide a printable/shareable “Property Management Summary” for a project: t
   - Parity evidence: `src/pages/PropertyManagementSummary.tsx`.
 - Error: show error state + Back button.
   - Parity evidence: `src/pages/PropertyManagementSummary.tsx` error block.
-- Offline: must render from local DB.
+- Offline: must render from Firestore local cache.
 - Pending sync: if business logo or other referenced media is pending upload, show a non-blocking warning that exports may omit branding/media.
 
 ## Collaboration / realtime expectations
 - No realtime requirement while open.
-- Values reflect local DB until the next delta sync run.
+- Values reflect Firestore local cache until the next sync pass.
 
 ## Performance notes
 - Item list can be large; virtualization is required.

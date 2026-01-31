@@ -17,7 +17,7 @@ Update or create:
 - Project cache hydration: `hydrateProjectCache` in `src/utils/hydrationHelpers.ts`
 
 ## Cross-cutting constraints
-- Offline-first + change-signal + delta sync: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline (Firestore-native offline + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Evidence rule (anti-hallucination)
 For each non-obvious behavior, include one of:
@@ -28,7 +28,7 @@ For each non-obvious behavior, include one of:
 - Loading/error/offline/not-found states and exact messaging
 - Refresh semantics (what collections, in-flight disablement, error toast)
 - Offline hydrate behavior (avoid infinite retry)
-- Reconnect + post-outbox-refresh behavior
+- Reconnect + post-write convergence behavior (Firestore queued writes + listener convergence)
 - Edit flow (prefill, image handling, refresh-after-save)
 - Delete flow (confirm dialog, failure handling)
 

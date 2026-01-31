@@ -2,13 +2,14 @@
 
 This doc defines the **high-level architecture** for the Firebase + React Native (Expo) migration:
 
-- **Local-first correctness**: UI reads/writes **SQLite only**
-- **Collaboration without read amplification**: **1 tiny listener per active scope** (project *or* business inventory) on a signal doc, then **delta fetch**
-- **Explicit durability**: outbox, cursors, conflict records are persisted locally
+- **Offline-ready baseline**: Firestore-native offline persistence (“local cache + queued writes”)
+- **Collaboration without read amplification**: **scoped listeners** only (bounded queries per active scope)
+- **Multi-doc correctness**: request-doc workflows (Cloud Function applies atomically)
+- **Optional offline search**: small SQLite/FTS index, derived from Firestore, rebuildable
 
-For the detailed sync engine mechanics (cursors, tombstones, signal doc fields, conflict policy notes), treat this as canonical:
+Canonical offline-data direction for this repo lives at:
 
-- [`sync_engine_spec.plan.md`](../sync_engine_spec.plan.md)
+- [`OFFLINE_FIRST_V2_SPEC.md`](../../../../OFFLINE_FIRST_V2_SPEC.md)
 
 ---
 
@@ -16,11 +17,11 @@ For the detailed sync engine mechanics (cursors, tombstones, signal doc fields, 
 
 These invariants are repeated across the doc set; they are the reason this architecture exists:
 
-- **UI ↔ local DB only** (no screen code talking directly to Firestore)
-- **No large listeners** (no subscribing to entire `items`, `transactions`, etc.)
-- **Delta sync** via `updatedAt` cursor and stable ordering
-- **Explicit outbox** with idempotency via `lastMutationId`
-- **Server-owned invariants** via callable Functions for multi-doc correctness
+- **Firestore-native offline is the baseline** (no bespoke sync engine/outbox/cursors)
+- **No unbounded listeners** (no “listen to everything” across accounts/projects)
+- **Scoped listeners only** (active scope, bounded queries, lifecycle-managed)
+- **Request-doc workflows** for multi-doc operations and critical invariants
+- **SQLite is index-only** (optional, rebuildable, never authoritative)
 
 ---
 
@@ -34,27 +35,27 @@ flowchart TD
   UI --> Domain[Domain]
   Domain --> Data[DataLayer]
 
-  Data --> SQLite[(SQLite_LocalDB)]
-  Data --> Outbox[OutboxOps]
-  Data --> Sync[SyncEngine]
+  Data --> Firestore[Firestore_native_SDK]
+  Firestore --> Cache[(Firestore_local_cache)]
 
-  Outbox -->|batched_writes| Firestore[Firestore]
-  Outbox -->|increment_signal| MetaSync[ScopeSyncSignal]
-  MetaSync -->|single_listener| SignalListener[SignalListener]
-  SignalListener --> Delta[DeltaFetch]
-  Delta --> Apply[ApplyToSQLite]
-  Apply --> SQLite
+  Data --> Search[(SQLite_FTS_search_index_optional)]
+  Firestore -->|derive_index_from_snapshots| Search
 
   Data --> MediaLocal[LocalMediaStore]
   MediaLocal --> MediaQueue[MediaUploadQueue]
   MediaQueue --> Storage[Firebase_Storage]
   Storage --> Firestore
+
+  Data --> Requests[RequestDocs]
+  Requests -->|create_pending| Firestore
+  Firestore -->|onCreate_trigger| Functions[Cloud_Functions]
+  Functions -->|transaction_apply| Firestore
 ```
 
 ### Firebase services used (and why)
 
 - **Firebase Auth**: identity + session; integrates Google + email/password + invite acceptance
-- **Firestore**: canonical entity docs, plus a tiny per-project `meta/sync` signal doc
+- **Firestore**: canonical entity docs; offline persistence provides cache + queued writes
 - **Firebase Storage**: receipts/images/PDFs (resumable uploads; attach metadata in Firestore)
 - **Cloud Functions (callable)**:
   - multi-doc operations that must be atomic/correct
@@ -67,21 +68,27 @@ flowchart TD
 
 ### Device source of truth
 
-- **SQLite is the canonical state for the UI**
-- Every screen renders from SQLite queries
-- Every user action writes SQLite first (in a transaction) and enqueues an outbox op
+- **Firestore local cache is the canonical state for the UI**
+- Every screen renders from Firestore reads (cache-first or cache-aware, depending on posture)
+- Every user action writes Firestore first (single-doc where possible)
 
 ### Cloud source of truth
 
 - Firestore is the **canonical shared state across devices**
-- Devices converge on Firestore via:
-  - **Outbox flush** (write path)
-  - **Delta fetch** (read path)
+- Devices converge via:
+  - Firestore sync (queued writes + remote updates)
+  - scoped listeners (bounded to the active scope)
 
 ### Derived state
 
 - Derived/rollup fields that require multi-doc correctness are **server-owned**
 - Clients can display locally-derived previews, but server writes decide the canonical values
+
+### Optional derived search index
+
+- SQLite is permitted for a **derived search index** (e.g., FTS for offline item search).
+- The search index is **non-authoritative** and must be rebuildable from Firestore-cached data.
+- Search returns candidate IDs; item details still come from Firestore.
 
 ---
 
@@ -93,24 +100,22 @@ This architecture intentionally treats foreground as the “SLA path” and back
 
 1. **Boot**: initialize logging/error boundaries
 2. **Auth bootstrap**: restore Firebase Auth session
-3. **Local DB init**: open SQLite, run migrations, load minimal caches (account context, last active scope)
-4. **Hydrate UI** from SQLite immediately (offline-first)
-5. If online and a scope is active (project or inventory):
-   - run **one foreground delta pass**
-   - attach the **single** signal listener for that active scope
-   - start outbox flush loop (foreground)
+3. **Firestore init**: ensure persistence is enabled (native SDK) and app is ready for cache-first reads
+4. **Hydrate UI** from Firestore cache immediately (offline-first)
+5. If a scope is active (project or inventory):
+   - attach scoped listeners for that scope (bounded queries)
+   - if offline search is enabled, open SQLite and (re)build/refresh the derived index from snapshots
 
 ### App background
 
-- Stop the scope signal listener
-- Pause/suspend outbox flush (optional “best effort” background execution if platform allows)
-- Persist scheduler + cursors + last-known statuses
+- Detach scoped listeners (or reduce to minimal “essential” listeners if justified)
+- Pause best-effort background work (uploads, rebuild jobs)
+- Persist last-known statuses
 
 ### App resume
 
-1. Run one delta pass immediately (catch-up)
-2. Reattach the single signal listener for the active scope
-3. Resume outbox flush loop
+1. Reattach scoped listeners for the active scope
+2. Resume uploads / index refresh jobs as needed
 
 ---
 
@@ -121,12 +126,12 @@ This architecture intentionally treats foreground as the “SLA path” and back
 Responsibilities:
 
 - navigation, forms, rendering, user interactions
-- subscribes to **query hooks** fed by SQLite reads
-- calls **mutations** that write SQLite + enqueue outbox ops
+- subscribes to state derived from Firestore listeners / reads (through the data layer)
+- calls mutations that write Firestore (through the data layer)
 
 Forbidden:
 
-- any direct Firebase SDK usage (Firestore/Storage/Auth) beyond auth bootstrap glue
+- direct Firebase SDK usage scattered across screens; keep Firebase usage in the data layer (auth bootstrap glue in a single place is fine)
 
 ### Domain layer
 
@@ -144,46 +149,46 @@ Properties:
 
 Responsibilities:
 
-- SQLite schema + migrations
-- outbox table + dispatcher
-- sync engine (delta fetch + apply; change-signal listener)
+- Firestore data access (native SDK), query scoping, and listener lifecycle
+- request-doc helpers (create request docs; observe status)
+- optional SQLite schema + migrations for the **search index only**
 - media storage + upload queue
 - adapters for Firebase Auth/Firestore/Storage + Functions callables
 
 Public surface area (example, not final API):
 
-- `query*` (SQLite read APIs)
-- `mutate*` (SQLite write + enqueue outbox)
-- `startProjectSync(projectId)`, `stopProjectSync()`
-- `triggerForegroundSync()`
-- `getSyncStatus()` (pending ops counts, last delta run timestamps, last error)
+- `subscribe*` / `query*` (Firestore reads + listeners, scoped)
+- `mutate*` (Firestore writes)
+- `startScopeListeners(scope)`, `stopScopeListeners()`
+- `createRequest(type, payload, scope)`
+- `getOfflineStatus()` (network/pending writes/basic errors)
 
 ---
 
 ## Key design choices (and the “why”)
 
-### Why only one listener (signal doc)?
+### Why scoped listeners (not “listen to everything”)?
 
 - Cost control: prevents “subscribe to all items/transactions” read amplification
-- Predictable performance: delta fetch returns only docs that changed since cursor
-- Clear offline UX: local-first with explicit sync state is understandable
+- Predictable performance: bounded queries keep listener work proportional to active scope
+- Clear offline UX: cache-first reads + pending-write indicators are understandable
 
 ### Scope note: Projects vs Business Inventory
 
 Business Inventory is not a project. It is its own scope, represented by `projectId = null` in your existing model.
 
-The architecture therefore supports **two signal docs**:
+The architecture therefore supports **two primary scopes**:
 
-- Project signal: `accounts/{accountId}/projects/{projectId}/meta/sync`
-- Inventory signal: `accounts/{accountId}/inventory/meta/sync`
+- Project scope: listeners/queries bounded by `projectId`
+- Inventory scope: listeners/queries bounded by an inventory sentinel / separate collection path
 
-### Why explicit outbox instead of Firestore client persistence?
+### Why rely on Firestore client persistence instead of an outbox/sync engine?
 
-- You need durable, inspectable state for:
-  - queued ops + retries
-  - idempotency (`lastMutationId`)
-  - conflict detection and resolution UI
-- It matches the existing web app’s offline architecture and constraints
+- Firestore already provides:
+  - local cache reads
+  - queued writes that apply locally and sync later
+  - snapshot metadata to expose “pending writes” UX
+- Maintaining a bespoke sync engine is a major complexity cost we are explicitly avoiding in this mobile architecture.
 
 ### Why callable Functions for some writes?
 
@@ -192,6 +197,12 @@ The architecture therefore supports **two signal docs**:
   - lineage pointers
   - rollups/totals that must match canonical state
 - Firestore rules cannot express complex invariants safely; callables can
+
+### Why request-doc workflows for multi-doc correctness?
+
+- Offline multi-doc client updates are hard to make correct and safe.
+- Request docs let the client queue an intent offline; the server applies the change atomically when it receives it.
+- The request status is debuggable and user-visible (pending/applied/failed).
 
 ---
 
@@ -207,8 +218,8 @@ The architecture therefore supports **two signal docs**:
 
 ## Related docs (this doc’s dependencies)
 
-- Sync engine: [`sync_engine_spec.plan.md`](../sync_engine_spec.plan.md)
+- Offline data direction: [`OFFLINE_FIRST_V2_SPEC.md`](../../../../OFFLINE_FIRST_V2_SPEC.md)
 - Data model: [`../20_data/firebase_data_model.md`](../20_data/firebase_data_model.md)
-- Local schema: [`../20_data/local_sqlite_schema.md`](../20_data/local_sqlite_schema.md)
+- Local schema (search index only): [`../20_data/local_sqlite_schema.md`](../20_data/local_sqlite_schema.md)
 - Security model: [`security_model.md`](./security_model.md)
 - Offline UX principles: [`offline_first_principles.md`](./offline_first_principles.md)

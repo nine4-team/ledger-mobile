@@ -23,7 +23,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/Projects.tsx` and `src/components/ProjectForm.tsx`.
 - [ ] **Validation**: `name` and `clientName` are required.  
   Observed in `src/components/ProjectForm.tsx` (`validateForm`).
-- [ ] **Offline prerequisites gate**: Form submission is blocked unless required caches are warm (budget categories, tax presets, vendor defaults).  
+- [ ] **Offline prerequisites gate**: Form submission is blocked unless required caches are warm (budget categories, vendor defaults).  
   Observed in `src/hooks/useOfflinePrerequisites.ts` and `src/components/ProjectForm.tsx` (disables submit when `!isReady` and sets `_prerequisite` error).
 - [ ] **Image upload on create**: If a main image is chosen, the project is created first and then the image is uploaded and `mainImageUrl` is patched.  
   Observed in `src/components/ProjectForm.tsx` (post-create image upload) and `projectService.updateProject` in `src/services/inventoryService.ts`.
@@ -51,30 +51,31 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/contexts/ProjectRealtimeContext.tsx` (`refreshCollections(..., { includeProject: true })`).
 - [ ] **Reconnect refresh**: After offline→online transition, active projects refresh to converge with server state.  
   Observed in `src/contexts/ProjectRealtimeContext.tsx` (network transition handler).
-- [ ] **Post-sync refresh**: After outbox flush completes with zero pending ops, active projects refresh.  
-  Observed in `src/contexts/ProjectRealtimeContext.tsx` (`onSyncEvent('complete', ...)`).
+- [ ] **Post-write convergence**: After queued offline writes are acknowledged by the server, active projects converge without requiring a manual refresh.  
+  **Intentional delta**: mobile relies on Firestore-native offline queued writes + scoped listeners (no bespoke outbox flush lifecycle), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Edit project
 - [ ] **Entry point**: Edit is launched from Project shell into a modal form prefilled with the current project data.  
   Observed in `src/pages/ProjectLayout.tsx` (`isEditing`) and `src/components/ProjectForm.tsx`.
 - [ ] **Edit submit**: Saving updates the project and refreshes the project snapshot.  
   Observed in `src/pages/ProjectLayout.tsx` (`handleEditProject`).
-- [ ] **Offline update**: If offline, updates are queued for offline sync.  
-  Observed in `projectService.updateProject` in `src/services/inventoryService.ts`.
+- [ ] **Offline update**: If offline, updates are queued automatically by Firestore-native offline persistence and sync when connectivity returns.  
+  **Intentional delta**: web uses an explicit offline queue/outbox pattern; mobile relies on Firestore-native offline persistence, per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Delete project
 - [ ] **Confirmation**: Delete requires explicit confirmation and warns about data loss.  
   Observed in `src/pages/ProjectLayout.tsx` (confirm dialog text).
 - [ ] **Delete behavior**: Confirming delete removes the project and returns to the Projects list.  
   Observed in `src/pages/ProjectLayout.tsx` (`handleDeleteProject`) and `projectService.deleteProject` in `src/services/inventoryService.ts`.
-- [ ] **Offline delete**: If offline, delete is queued for offline sync.  
-  Observed in `projectService.deleteProject` in `src/services/inventoryService.ts`.
+- [ ] **Offline delete**: If offline, delete is queued automatically by Firestore-native offline persistence and sync when connectivity returns.  
+  **Intentional delta**: web uses an explicit offline queue/outbox pattern; mobile relies on Firestore-native offline persistence, per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Collaboration (Firebase target)
 - [ ] **No large listeners**: The mobile app does not attach listeners to large collections (items/transactions) for realtime.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Change-signal listener**: While a project is active + foregrounded, the mobile app listens only to `meta/sync` for that project.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Delta sync on signal**: Signal change triggers delta fetches for advanced collections and local DB upserts/deletes.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md` (listener scoping).
+- [ ] **Scoped listeners**: While a project is active + foregrounded, the app uses scoped listeners only:
+  - project doc listener
+  - tab-visible bounded query listeners (items/transactions/spaces) as needed
+  - detach on background; reattach on resume  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md`.
 

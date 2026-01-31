@@ -24,6 +24,10 @@ isProject: false
 
 Align the **Project budgeting shape** with Firestore best practices and your offline-first sync constraints by using **one doc per category allocation** under a per-project subcollection (instead of a Project-level JSON/map), and ensure all feature specs reference the canonical contracts to avoid drift.
 
+## Status / architecture note (important)
+
+This plan was written under a prior “sync engine” baseline (delta sync / `meta/sync` wording). The current baseline is Firestore native offline persistence with scoped listeners (no bespoke sync engine). Treat any remaining delta/`meta/sync` references below as **deprecated**.
+
 ## What I found (current state)
 
 - The prior drafts used an embedded Project map / local JSON column for per-category budgets.
@@ -100,7 +104,7 @@ flowchart TD
 - Firestore model:
   - `[/.cursor/plans/firebase-mobile-migration/20_data/firebase_data_model.md](.cursor/plans/firebase-mobile-migration/20_data/firebase_data_model.md)`
     - Replace the embedded map description with the `projects/{projectId}/budgetCategories/{budgetCategoryId}` subcollection.
-    - Ensure delta-sync/index notes include the new collection.
+    - Ensure collection layout notes include the new collection.
 - Local schema:
   - `[/.cursor/plans/firebase-mobile-migration/20_data/local_sqlite_schema.md](.cursor/plans/firebase-mobile-migration/20_data/local_sqlite_schema.md)`
     - Add a `project_budget_categories` table (instead of a project JSON/map column) + indexes.
@@ -110,7 +114,7 @@ flowchart TD
     - Update wording to “project budgetCategories subcollection/table”.
   - `[/.cursor/plans/firebase-mobile-migration/40_features/projects/feature_spec.md](.cursor/plans/firebase-mobile-migration/40_features/projects/feature_spec.md)`
     - Update create/edit project flow to write project budget category docs (not a JSON map field).
-    - Ensure `meta/sync` increments mention this collection.
+    - (Deprecated note) Prior drafts referenced `meta/sync`; under the current baseline this is not a core correctness primitive.
 
 ## Execution todos
 

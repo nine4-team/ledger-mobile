@@ -24,12 +24,9 @@ Parity evidence:
 
 ## Writes (local-first)
 ### Create project
-- **Local mutation(s)**:
-  - Create a local project row immediately (or enter an optimistic/pending state) so the list updates without waiting for network.
-- **Outbox op(s) enqueued**:
-  - `CREATE_PROJECT` with idempotency key `opId` (see sync engine spec).
-- **Change-signal update**:
-  - On successful remote write, increment/update `meta/sync` once for `projects` collection.
+- **Firebase enforcement**:
+  - Project creation is **server-enforced** (entitlements + membership) per `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`.
+  - The recommended default for multi-doc/invariant correctness is a **request-doc workflow** (Cloud Function applies changes in a transaction), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 Web parity note:
 - Web supports offline-queued creation and returns an optimistic id (`projectService.createProject`).
@@ -62,7 +59,6 @@ Parity evidence: `src/pages/Projects.tsx`, `src/components/ProjectForm.tsx`.
   - Validate required fields.
   - If offline prerequisites are not ready, block submit and show a clear reason.
   - If allowed:
-    - Create local pending project state immediately.
     - If online, attempt server creation.
     - If offline: apply the chosen entitlements policy for offline creation (see below).
 - **Tap “Open Project”**
@@ -86,7 +82,8 @@ Parity evidence:
   - Provide a path to retry when online (implementation choice).
 - **Pending sync**:
   - Projects created locally but not yet confirmed should render in the list and be visually marked as pending (badge/spinner).
-  - Clearing pending occurs once the outbox confirms or the server state arrives via delta.
+  - Clearing pending occurs when Firestore has committed the write (i.e., the project is no longer `hasPendingWrites`) and/or the server-confirmed state is visible via the normal scoped reads/listeners.
+  - If the create/edit path uses a **request-doc workflow** (multi-doc correctness), “pending” is tied to the request-doc lifecycle: `pending → applied` (clear) or `failed` (show error + retry).
 - **Permissions denied**:
   - If the user lacks membership/role for the account, show access denied messaging and safe navigation back.
   - (Server-enforced in Firebase; client UX optional.)
@@ -106,9 +103,9 @@ Parity evidence:
 ## Collaboration / realtime expectations
 - While foregrounded and online:
   - Project list freshness should converge within ~1–5 seconds typical after remote writes elsewhere.
-  - Must not subscribe to large collections; use account/project change-signal + delta strategy.
+  - Use **scoped listeners** on bounded queries; do not attach unbounded listeners.
 
-Source: `40_features/sync_engine_spec.plan.md`.
+Source: `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Performance notes
 - Expect project counts to be low (<500 typical), but render should be stable and not reflow excessively.

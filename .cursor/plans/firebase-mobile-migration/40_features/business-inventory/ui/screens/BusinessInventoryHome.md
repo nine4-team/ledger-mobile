@@ -15,7 +15,7 @@ Provide the “business inventory” workspace shell with two tabs (Items + Tran
   - Return from item/transaction create/edit/detail via native back stack (Expo Router) with list-state + scroll restoration handled by the shared list modules.
 
 ## Reads (local-first)
-- Local DB queries:
+-- Firestore queries (cache-first via native Firestore offline persistence):
   - Inventory-scoped Items list (items with no `projectId` in the web model; in Firebase, inventory scope is explicit).
   - Inventory-scoped Transactions list (transactions in inventory scope; `projectId` absent/null).
 - Derived view models:
@@ -23,16 +23,15 @@ Provide the “business inventory” workspace shell with two tabs (Items + Tran
   - Filtered/sorted Transactions list
 - Cached metadata dependencies:
   - Budget categories (for transactions category filter)
-  - Vendor defaults and tax presets (used by transaction create/edit flows; loaded by downstream screens)
+  - Vendor defaults (used by transaction create/edit flows; loaded by downstream screens)
 
 ## Writes (local-first)
 For each user action, list the conceptual mutation:
 - Manual refresh:
-  - Outbox: none (read-only)
-  - Delta sync: trigger foreground delta refresh for inventory scope
+  - No data mutation; forces a scoped re-fetch / listener reattach for inventory scope (best-effort).
 - Tab switch and list controls:
-  - Outbox: none
-  - Persist list state with debounce (web: URL params; mobile: list state store)
+  - No data mutation.
+  - Persist list state with debounce (web: URL params; mobile: list state store).
 
 ## UI structure (high level)
 - Header: title + manual refresh control
@@ -70,7 +69,7 @@ This screen is a **workspace shell only**. It must not fork the Items/Transactio
 - Error:
   - Surface snapshot load failures and offer retry.
 - Offline:
-  - Lists still render from local DB.
+  - Lists still render from Firestore cache.
   - Manual refresh should indicate it requires connectivity (but must not break the UI).
 - Pending sync:
   - Pending markers belong to the shared module contracts, not this shell; this shell must not hide them.
@@ -78,13 +77,14 @@ This screen is a **workspace shell only**. It must not fork the Items/Transactio
   - Add/edit flows are role gated (see create screens); list browsing remains readable unless server rules restrict.
 
 ## Collaboration / realtime expectations
-- **Intentional delta for mobile**: do not subscribe to large collections.
-- While foregrounded in Business inventory:
-  - Listen only to `accounts/{accountId}/inventory/meta/sync`
-  - On signal change, run delta fetches and apply to SQLite
+- Mobile follows `OFFLINE_FIRST_V2_SPEC.md`:
+  - Use **scoped listeners** bounded to the active inventory scope where realtime freshness is required.
+  - Detach listeners on background; reattach on resume.
+  - Disallowed: unbounded “listen to everything” listeners across all projects/accounts.
 
 ## Performance notes
-- Expect large inventories; lists must be virtualized and list filtering should be backed by indexes in SQLite.
+- Expect large inventories; lists must be virtualized.
+- If this product requires robust offline multi-field search at scale, enable the optional derived SQLite/FTS **search index** module (index-only; Firestore remains canonical) per `OFFLINE_FIRST_V2_SPEC.md`.
 - URL/state persistence should be debounced to avoid jank while typing.
   - Mobile: list-state-store writes should be debounced similarly.
 

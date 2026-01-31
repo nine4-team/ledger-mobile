@@ -233,11 +233,17 @@ Note (web parity context):
 
 All Firebase/RN implementations must follow:
 
-- Offline-first invariants and delta sync + change-signal plan: `40_features/sync_engine_spec.plan.md`
-- Multi-entity correctness must be enforced as **server-owned invariants** for allocation/sale/deallocation (Callable Function / Firestore transaction), not UI-only.
+- Offline data v2 architecture: `OFFLINE_FIRST_V2_SPEC.md`
+  - Firestore (native RN SDK) is the canonical datastore with offline persistence.
+  - Scoped listeners are allowed (and required to be bounded); we do **not** build a bespoke “outbox + delta sync engine” in this repo.
+  - SQLite is allowed only as an **optional derived search index** (non-authoritative), if the product requires robust offline multi-field search.
+- Multi-entity correctness must be enforced as **server-owned invariants** for allocation/sale/deallocation using the **request-doc workflow** (Cloud Function applies the change in a Firestore transaction), not UI-only.
+  - Idempotency: every request doc must include an `opId` (or `requestId`) that the server uses to de-dupe retries.
+  - Retry model: default retry is **create a new request doc** (do not mutate a previously-applied request).
+  - UX contract: request docs must expose `status: pending|applied|failed` (and error info) so the UI can show queued/applied/failed states.
 
 Implications for this spec:
 
-- `inheritedBudgetCategoryId` must be a first-class field in the **item document** and local SQLite schema.
-- Cross-scope operations that set/update `inheritedBudgetCategoryId` must be atomic with the scope move so retries are safe and deterministic.
+- `inheritedBudgetCategoryId` must be a first-class field in the **item document** (it is authoritative and must sync).
+- Cross-scope operations that set/update `inheritedBudgetCategoryId` must be **atomic with the scope move** so retries are safe and deterministic (i.e., part of the same server-owned invariant operation).
 

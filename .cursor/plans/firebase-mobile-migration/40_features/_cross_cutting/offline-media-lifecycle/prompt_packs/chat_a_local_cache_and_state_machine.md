@@ -9,7 +9,7 @@ Implement Phase A of the offline media lifecycle:
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
-- Architecture constraints (referenced by the spec): `sync_engine_spec.plan.md`
+- Architecture: `OFFLINE_FIRST_V2_SPEC.md`
 - Guardrails subcomponent (referenced by the spec): `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Outputs (required)
@@ -24,7 +24,7 @@ Implement Phase A of the offline media lifecycle:
 
 ## Constraints
 - Offline-first: selection and local linking must succeed without network.
-- SQLite is the local source of truth; avoid network reads for UI rendering.
+- Firestore-native offline persistence is the baseline; UI must render from locally-available state when offline.
 - No “subscribe to everything” patterns; do not introduce large listeners.
 - Do not invent new product capabilities or rename domain concepts.
 

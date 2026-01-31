@@ -63,8 +63,8 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Share/print affordance exists on each report**.
   Web parity evidence: `src/pages/{ProjectInvoice,ClientSummary,PropertyManagementSummary}.tsx` (Print button + `window.print()`).
   **Intentional delta**: mobile uses share/print APIs rather than browser print.
-- [ ] **Works offline**: reports generate from local DB with no network required.
-  **Intentional delta** required by local-first invariant in `40_features/sync_engine_spec.plan.md`.
+- [ ] **Works offline**: reports generate from Firestore local cache with no network required.
+  **Intentional delta** required by local-first invariant in `OFFLINE_FIRST_V2_SPEC.md`.
 - [ ] **Media pending upload warning**: if business logo (or other referenced media) is `local_only`/`uploading`/`failed`, show a non-blocking warning that exported output may be missing branding/media.
   **Intentional delta** (mobile/offline media lifecycle requirement).
 

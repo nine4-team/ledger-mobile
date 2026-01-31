@@ -50,15 +50,15 @@ Rules:
 
 ### Transaction-level actions
 - Add receipt(s):
-  - Local DB: append `receiptImages[]` (and mirror legacy `transactionImages[]` for compatibility)
-  - Outbox: upload media (if placeholder) + update transaction arrays
+  - Firestore: append `receiptImages[]` (and mirror legacy `transactionImages[]` for compatibility), queued offline by Firestore-native persistence
+  - Media uploads: upload media (if placeholder) + patch transaction arrays with Cloud Storage URLs
 - Add other image(s):
-  - Local DB: append `otherImages[]`
-  - Outbox: upload media (if placeholder) + update transaction arrays
+  - Firestore: append `otherImages[]`, queued offline
+  - Media uploads: upload media (if placeholder) + patch transaction arrays
 - Delete receipt/other image:
-  - Local DB: remove image from corresponding array
+  - Firestore: remove image from corresponding array (queued offline)
   - If image is `offline://<mediaId>`, delete local blob file immediately
-  - Outbox: update transaction arrays (and remote delete if applicable)
+  - Media: remote delete if applicable (implementation choice)
 - Pin/unpin image:
   - Local UI-only state; does not mutate the transaction record.
 - Edit transaction:
@@ -67,8 +67,7 @@ Rules:
   - Emits multi-entity server-owned operations; behavior depends on `40_features/inventory-operations-and-lineage/feature_spec.md`.
 - Delete transaction:
   - Requires explicit confirmation.
-  - Local DB: delete transaction row; locally unlink any items as needed.
-  - Outbox: deleteTransaction op.
+  - Firestore: delete transaction doc; unlink any items as needed (prefer a batched write if multiple docs must change together).
 
 ### Itemization actions (transaction items)
 TransactionDetail wires a rich `TransactionItemsList` surface, including:
@@ -81,7 +80,7 @@ TransactionDetail wires a rich `TransactionItemsList` surface, including:
 - Set space/location for selected items
 - Cross-scope actions (move/sell to project/business inventory)
 
-Each of these must be represented as local DB mutations plus durable, idempotent outbox ops.
+Each of these must be represented as durable, idempotent Firestore writes (and/or request-doc operations for multi-doc invariants), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ### New requirement: item linking updates `inheritedBudgetCategoryId` (non-canonical only)
 
@@ -159,8 +158,7 @@ When the user links/assigns items to this transaction:
 - Tile previews must resolve offline placeholders to local blob URLs.
 
 ## Collaboration / realtime expectations
-- While foregrounded, changes from other devices should reflect via change-signal + delta.
-- No listeners on large collections.
+- While foregrounded, changes from other devices should reflect via **scoped listeners** on bounded queries (never unbounded listeners).
 
 ## Performance notes
 - Avoid N+1 network calls for completeness/lineage in mobile implementation; rely on local DB joins/derived tables.

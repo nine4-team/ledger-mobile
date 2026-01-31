@@ -1,12 +1,13 @@
 # `SyncStatus` (global sync banner) — contract
 
 ## Purpose
-Expose outbox + sync state globally so users understand when changes are pending, syncing, waiting, or errored.
+Expose offline-first “pending changes” state globally so users understand when changes are pending, syncing, waiting, or errored.
 
 ## Inputs (state)
-- Outbox pending count (local): `operationQueue.length`
-- Foreground scheduler snapshot (local): `isRunning`, `nextRunAt`, `lastError`
-- Background/automatic sync state (local): progress/complete/error events from the sync engine
+- Pending Firestore writes (best-effort): “there are local writes not yet acknowledged by the server”
+- Pending request-doc operations (multi-doc correctness workflows): count + last error (if any)
+- Optional: scoped listener health snapshot (attach errors / stale listeners) if the app exposes it
+- Optional: background/automatic “sync attempt” state (best-effort; not required for correctness)
 - Connectivity: `isOnline`
 
 Parity evidence:
@@ -19,7 +20,7 @@ Parity evidence:
 
 ### When to show
 Show the banner if any are true:
-- pending count > 0
+- pending Firestore writes or pending request-doc operations > 0
 - `isRunning === true`
 - background/automatic sync attempt is active
 - there is a non-null sync error
@@ -39,5 +40,5 @@ Pick exactly one:
   - else: `N changes pending`
 
 ## Firebase/RN adaptation note
-This banner must reflect **outbox + delta sync + change-signal health**, not Supabase realtime subscription state.
+This banner must reflect **Firestore queued writes + request-doc status (+ scoped listener health if available)**, not a custom outbox/delta sync engine or Supabase realtime channels.
 

@@ -4,7 +4,7 @@
 Specify a mobile background execution policy that is:
 - **safe to skip** (foreground path guarantees correctness)
 - **not expensive** (bounded work; no polling; no background listeners)
-- aligned with the change-signal + delta approach
+- aligned with Offline Data v2 (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 
 ## Outputs (required)
 Update or create the following docs:
@@ -12,7 +12,7 @@ Update or create the following docs:
 - `40_features/pwa-service-worker-and-background-sync/acceptance_criteria.md`
 
 ## Inputs (source of truth)
-- `40_features/sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`
 - `40_features/connectivity-and-sync-status/feature_spec.md`
 
 ## What to decide (capture as spec)

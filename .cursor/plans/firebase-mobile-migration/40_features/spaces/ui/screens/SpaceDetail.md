@@ -14,10 +14,10 @@ Let a user view and manage a single Space: assigned items, space images, and che
   - Deep link from item “space” field (future)
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore queries (cache-first via native Firestore offline persistence):
   - Space by `spaceId`
   - Project by `projectId` (for display + media folder naming)
-  - Assigned items by `projectId` + `spaceId`
+  - Assigned items by `projectId` + `spaceId` (bounded to this space; do not attach an unbounded “all items” listener)
 - Derived view models:
   - Items tab view model for itemization-style list (`TransactionItemsList`-like UI).
   - Tabs state: `items` | `images` | `checklists`.
@@ -27,7 +27,7 @@ Let a user view and manage a single Space: assigned items, space images, and che
 - Create item “in space”:
   - Insert item with `spaceId=<spaceId>` and project scope set.
   - Upload item images (may produce offline placeholders) and patch item `images`.
-  - Enqueue outbox ops for item create/update and media attach.
+  - Firestore writes are queued offline by Firestore-native persistence; media uploads use an upload queue.
 - Update item:
   - Patch item fields and ensure `spaceId=<spaceId>`.
   - Upload any new images and patch `images`.
@@ -59,8 +59,8 @@ Let a user view and manage a single Space: assigned items, space images, and che
 
 ### Delete space
 - Delete space:
-  - Enqueue delete; on success navigate to spaces list.
-  - Server-side invariant: clear `item.spaceId` for affected items (or enforce in client + rules).
+  - Firestore delete; on success navigate to spaces list.
+  - If delete requires clearing `item.spaceId` for affected items, enforce as a **server-owned invariant** (request-doc workflow), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## UI structure (high level)
 - Header:
@@ -103,7 +103,7 @@ Let a user view and manage a single Space: assigned items, space images, and che
   - Failed fetch shows toast and stays on screen.
   - Failed checklist update rolls back local optimistic edit to previous state.
 - Offline:
-  - Screen renders from local DB and allows edits; all writes queue.
+  - Screen renders from Firestore cache and allows edits; writes queue via Firestore-native offline persistence.
 - Pending sync:
   - Show pending markers where available (space updated, images uploading, checklist update queued).
 - Permissions denied:
@@ -122,8 +122,8 @@ Let a user view and manage a single Space: assigned items, space images, and che
   - Ensure object URLs are revoked (cards) and orphaned blobs are cleaned up when media is removed.
 
 ## Collaboration / realtime expectations
-- Space updates (images/checklists/name/notes) should appear on other devices on next delta after change-signal bump.
-- Assigned items changes should also propagate via delta; do not subscribe to all items.
+- Space updates (images/checklists/name/notes) should appear on other devices via scoped listeners.
+- Assigned items changes should also propagate via scoped listeners; do not subscribe to all items.
 
 ## Performance notes
 - Assigned items may be large; list should be virtualized and support bulk actions efficiently.

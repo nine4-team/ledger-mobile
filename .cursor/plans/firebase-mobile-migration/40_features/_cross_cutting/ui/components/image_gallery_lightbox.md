@@ -60,7 +60,7 @@ The reusable full-screen image gallery (“lightbox”) used across the app to v
 - “Pinned image” layout/UX is screen-owned (e.g. `TransactionDetail` uses a pinned panel).
 
 ## Data + sync notes (if applicable)
-- No outbox operations are emitted by the gallery itself; it is a pure UI component.
+- The gallery itself emits no persistence/sync operations; it is a pure UI component.
 
 ## Parity evidence
 - Gallery modal + controls + keyboard + gestures:

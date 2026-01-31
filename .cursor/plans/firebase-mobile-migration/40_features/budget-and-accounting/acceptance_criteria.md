@@ -64,7 +64,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 
 ## Firebase/offline-first constraints
 
-- [ ] **Rollups are computed from SQLite only** and render correctly offline (no network).  
-  **Intentional delta** required by `sync_engine_spec.plan.md` (local source of truth).
-- [ ] **No large listeners** are required to keep rollups fresh; changes arrive via `meta/sync` change-signal + delta sync.  
-  **Intentional delta** required by `sync_engine_spec.plan.md`.
+- [ ] **Rollups render correctly offline** from **Firestore-native offline persistence** (cache-first reads; no network required to render last-known data).  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md` (Firestore is canonical; offline persistence is baseline).
+- [ ] **Scoped listeners only**: if listeners are used, they are bounded to the active project scope and detach on background.  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md` (no unbounded “listen to everything” listeners).

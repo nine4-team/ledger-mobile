@@ -56,7 +56,7 @@ Shared-module requirement:
 - [ ] **Mobile export uses share sheet**: export is shareable via native share UX rather than browser download link creation.  
   **Intentional delta** (platform difference).
 - [ ] **Export works offline**: export is generated from local DB (no network required).  
-  **Intentional delta** (required by local-first invariant in `40_features/sync_engine_spec.plan.md`).
+  **Intentional delta**: export is generated from locally available cached data (Firestore cache). If the cache is cold, export may be unavailable until data is loaded at least once.
 
 ## Create transaction (manual)
 - [ ] **Permission gating**: if user lacks account context and is not system owner, show Access Denied.  
@@ -69,8 +69,13 @@ Shared-module requirement:
   Observed in `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`, `submitDisabled = ... || !metadataReady`).
 - [ ] **Validation**: required fields include source, categoryId, amount (>0).  
   Observed in `src/pages/AddTransaction.tsx` (`validateForm`).
-- [ ] **Tax presets**: supports “No Tax”, presets, and “Other” (requires subtotal; subtotal cannot exceed total).  
-  Observed in `src/pages/AddTransaction.tsx` (`NO_TAX_PRESET_ID`, `taxRatePreset === 'Other'` validation).
+- [ ] **Tax (simplified; no presets)**: tax presets are removed and tax is captured inline in the form.  
+  **Intentional delta**:
+  - Default is **None** (no tax).
+  - User can enter a **tax rate** (%) and the UI derives subtotal + tax amount.
+  - User can select **Calculate from subtotal**; entering a subtotal derives tax amount + tax rate; validate `subtotal > 0` and `subtotal <= total amount`.
+  - User can optionally enter a **tax amount** directly; UI back-calculates tax rate; validate `taxAmount >= 0` and `taxAmount < total amount`.
+  - **Visibility rule**: if the selected budget category is not itemized (category metadata lacks `itemize`/`itemizationEnabled`), tax inputs are hidden and tax is treated as None.
 - [ ] **Vendor source selection**: source selection offers vendor defaults plus “Other” custom source input.  
   Observed in `src/pages/AddTransaction.tsx` (`availableVendors`, `isCustomSource`).
 - [ ] **Receipts upload**: can attach up to 5 receipts; accepted types include images + PDF; offline placeholder URLs are permitted.  
@@ -123,6 +128,6 @@ Shared-module requirement:
 
 ## Collaboration (Firebase target)
 - [ ] **No large listeners**: mobile app does not attach listeners to large collections (transactions/items).  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Change-signal + delta**: while a project is foregrounded, the app listens only to `meta/sync` and runs delta sync on bump.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md` (scoped listeners).
+- [ ] **Scoped listeners**: while a project is foregrounded, the app uses scoped listeners on bounded queries (pagination/limits as needed) and detaches on background.  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md`.

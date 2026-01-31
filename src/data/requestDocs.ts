@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 
 export type RequestStatus = 'pending' | 'applied' | 'failed';
@@ -35,7 +35,9 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
   scope: RequestScope
 ): Promise<string> {
   if (!isFirebaseConfigured || !db) {
-    throw new Error('Firebase is not configured. Configure EXPO_PUBLIC_FIREBASE_* first.');
+    throw new Error(
+      'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
+    );
   }
   const uid = auth?.currentUser?.uid;
   if (!uid) {
@@ -45,12 +47,12 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
   const requestDoc: RequestDoc<TPayload> = {
     type,
     status: 'pending',
-    createdAt: serverTimestamp(),
+    createdAt: firestore.FieldValue.serverTimestamp(),
     createdBy: uid,
     payload
   };
 
-  const docRef = await addDoc(collection(db, getRequestCollectionPath(scope)), requestDoc);
+  const docRef = await db.collection(getRequestCollectionPath(scope)).add(requestDoc);
   return docRef.id;
 }
 
@@ -71,9 +73,9 @@ export function subscribeToRequestPath<TPayload extends Record<string, unknown>>
     return () => {};
   }
 
-  const ref = doc(db, requestDocPath);
-  return onSnapshot(ref, (snapshot) => {
-    if (!snapshot.exists()) {
+  const ref = db.doc(requestDocPath);
+  return ref.onSnapshot((snapshot) => {
+    if (!snapshot.exists) {
       onChange(null);
       return;
     }

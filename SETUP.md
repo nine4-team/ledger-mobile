@@ -7,7 +7,6 @@ Use this checklist when setting up a new app from this template.
 - [ ] Clone or use template
 - [ ] Run `npm install`
 - [ ] Copy `.env.example` to `.env`
-- [ ] Fill in Firebase config in `.env`
 - [ ] Fill in RevenueCat API key in `.env`
 
 ## Firebase Setup
@@ -20,8 +19,6 @@ Use this checklist when setting up a new app from this template.
   - [ ] Add Android app: Project Settings > General > Your apps > Add app > Android
   - [ ] Download `GoogleService-Info.plist` (iOS) and `google-services.json` (Android)
   - [ ] Place both files in project root
-- [ ] Get web config from Project Settings > General > Your apps > Web (for web platform support)
-- [ ] Copy config values to `.env` as `EXPO_PUBLIC_FIREBASE_*`
 - [ ] Deploy Firestore rules: `firebase deploy --only firestore:rules`
 - [ ] Deploy Cloud Functions: `firebase deploy --only functions`
 

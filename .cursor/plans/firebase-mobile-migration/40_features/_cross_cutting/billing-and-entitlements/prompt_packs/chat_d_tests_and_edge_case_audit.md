@@ -15,7 +15,7 @@ Optional:
 ## Inputs to review (source of truth)
 - Definition of done: `40_features/_authoring/templates/definition_of_done.md`
 - Security model: `10_architecture/security_model.md`
-- Sync invariants: `40_features/sync_engine_spec.plan.md`
+- Architecture: `OFFLINE_FIRST_V2_SPEC.md`
 
 ## What to capture
 - Free vs pro allow/deny matrix for create project/item/transaction

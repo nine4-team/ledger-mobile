@@ -119,7 +119,7 @@ When a list screen becomes active again:
 ### 4) Filters/sort preservation
 
 - All list control changes must:
-  - update the list immediately (SQLite query / derived filters)
+  - update the list immediately (in-memory derived filters over current list data and/or Firestore query snapshot updates)
   - persist into `ListStateStore[listStateKey]` with debounce
 
 ### 5) Cross-context flows (without special-case “from” strings)

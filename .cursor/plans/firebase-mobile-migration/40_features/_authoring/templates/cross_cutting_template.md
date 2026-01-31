@@ -13,8 +13,9 @@
 
 ## Data + sync notes (if applicable)
 - Entities touched
-- Outbox ops emitted
-- Change-signal/delta implications
+- Direct writes vs request-doc operations (and why)
+- Listener scoping implications (what must be listened to, lifecycle attach/detach)
+- Optional derived search index implications (if used)
 
 ## Parity evidence
 “Observed in …” bullets with file + component/function name.

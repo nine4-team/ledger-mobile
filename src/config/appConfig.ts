@@ -12,6 +12,8 @@ export interface AppConfig {
   quotas: Record<string, QuotaConfig>;
   revenueCatEntitlementId: string; // e.g., "pro"
   dataModeDefault: 'online' | 'offline';
+  offlineReady: boolean;
+  listenerScope: 'project' | 'account';
 }
 
 export const appConfig: AppConfig = {
@@ -26,4 +28,6 @@ export const appConfig: AppConfig = {
   },
   revenueCatEntitlementId: 'pro',
   dataModeDefault: 'online',
+  offlineReady: true,
+  listenerScope: 'project',
 };

@@ -70,7 +70,7 @@ Parity evidence: `src/pages/Settings.tsx` (`activePresetTab`, `isAdmin`, manager
 
 Offline behavior:
 - Presets must be **readable offline** (because transactions/items/spaces depend on these pickers).
-- Mutations are **online-required** by default unless/until we add a consistent “metadata outbox” policy in the sync engine spec.
+- Mutations are **online-required** by default unless/until we explicitly allow offline-queued metadata writes with clear pending/error UX (and server-side enforcement), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Users tab (owner/admin)
 - Visible for owner or admin.
@@ -108,5 +108,5 @@ Offline behavior:
 
 ## Performance notes
 - Avoid any approach that requires “listening to all presets/users/accounts”.
-- Treat these as small metadata collections: refresh on enter, allow manual refresh if needed, and rely on delta sync/change-signal for eventual consistency.
+- Treat these as small metadata collections: refresh on enter, allow manual refresh if needed, and rely on Firestore-native offline persistence (and bounded/scoped reads/listeners when appropriate) for eventual consistency, per `OFFLINE_FIRST_V2_SPEC.md`.
 

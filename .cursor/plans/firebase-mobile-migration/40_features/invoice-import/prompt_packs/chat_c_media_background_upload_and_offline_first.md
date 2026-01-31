@@ -10,7 +10,7 @@ Update or create:
 - `40_features/invoice-import/acceptance_criteria.md`
 
 Cross-cutting (only if missing details are discovered):
-- `40_features/_cross_cutting/offline_media_lifecycle.md` (update only if truly required)
+- `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md` (update only if truly required)
 
 ## Source-of-truth code pointers
 Web parity “background upload” workers:
@@ -27,5 +27,5 @@ Transaction/item patch surfaces:
 For each state (upload queued / uploading / success / partial failure / retry), cite parity evidence or mark as intentional delta required by the offline-first architecture.
 
 ## Constraints / non-goals
-- The RN/Firebase implementation must use the outbox + offline media lifecycle. Do not specify direct “upload then patch” as a required mechanism.
+- The RN/Firebase implementation must use request-doc workflows + offline media lifecycle. Do not specify direct “upload then patch” as a required mechanism.
 

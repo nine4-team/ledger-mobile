@@ -11,6 +11,12 @@ We standardize on:
 
 We explicitly do **not** support an Expo Go runtime for apps that claim to be offline-ready.
 
+### Hard guardrails (to prevent regression)
+
+- **Native-only Firebase**: production app code must use `@react-native-firebase/*` (Auth/Firestore/Functions).
+- **No Firebase Web SDK imports in app code**: there must be **zero** imports from `firebase/*` anywhere in `app/` or `src/`.
+  - Enforce with `npm run check:native-only` (fails if someone reintroduces `import ... from 'firebase/firestore'`, etc.).
+
 ### Goals (what this skeleton should support)
 
 - **Default is native-first**: the skeleton uses Firebase native modules and a dev client workflow.
@@ -18,6 +24,25 @@ We explicitly do **not** support an Expo Go runtime for apps that claim to be of
 - **No custom sync engine**: the skeleton should not push a “SQLite as source of truth + outbox + delta cursors” architecture.
 - **Optional robust offline item search**: apps that need multi-field offline search can add a **derived local search index** without making SQLite authoritative.
 - **Multi-doc correctness is not optional**: the skeleton must support a safe default for actions that update multiple docs or enforce invariants. The recommended default is a **request-doc pattern** (Cloud Function applies the change atomically).
+
+### Modes (still native-only)
+
+This skeleton supports **online apps** and **offline-ready apps** without switching SDKs:
+
+- **`mode: 'online'` (online-first posture)**: uses native Firestore, prefers server reads (fallback to cache), minimal offline UX, and no “offline-ready” promises.
+- **`mode: 'offline'` (offline-ready posture)**: uses native Firestore, prefers cache-first reads (fallback to server), adds scoped listeners + offline UX primitives, and treats offline as a first-class requirement.
+
+### Ready-to-go baseline (generalizable skeleton plumbing)
+
+These are **skeleton-level**, app-agnostic pieces that make the template “offline-ready” out of the box. Apps still define scopes, collections, and domain rules, but the plumbing should be reusable:
+
+- **Offline repository implementation** wired to the **native Firestore SDK**, with cache-first reads and `onSnapshot` listeners.
+- **Scoped listener manager** with attach/detach lifecycle, background handling, and unsubscribe cleanup.
+- **Repository mode switch** so `mode: 'offline'` is supported and uses the offline repo (no throws).
+- **Native Firebase init path** enabled by default in native builds (`src/firebase/firebase.ts`).
+- **Offline UX primitives**: shared loading, stale indicators, queued writes badges.
+- **Listener scoping conventions** (doc/collection naming + recommended scope limits).
+- **Config flags**: e.g., `offlineReady: true`, `listenerScope: 'project' | 'account'`.
 
 ### Non-goals
 
@@ -268,11 +293,54 @@ Retry mechanism:
 
 **Goal**: implement the native Firebase initialization module and ensure the template is fully dev-client-first.
 
-- Add/standardize `src/firebase/firebase.native.ts` (native SDK init)
+- Add/standardize `src/firebase/firebase.ts` as the **native-only** Firebase SDK init (Auth/Firestore/Functions)
 - Stop documenting any non-native runtime as the **offline-ready** path
 - Document build requirements (dev client / prebuild)
 
 **Done when**: an app author can follow docs to choose **online-only vs offline-ready**, and understands both use the native SDK (offline-ready relies on native offline persistence).
+
+### Phase 2.5 — Offline repository + mode switch (skeleton plumbing)
+
+**Goal**: make the repository layer explicitly “offline-ready” by design (native SDK + listener-friendly API), and ensure `mode` never throws.
+
+- Ensure repository implementation is backed by the **native Firestore SDK** (`@react-native-firebase/firestore`).
+- Extend the repository surface to support real-time updates (e.g., add `subscribe...` methods or a parallel “listener repository” helper).
+- Ensure `createRepository()` **never throws** for `mode: 'offline'` (it can be a no-op now, or a future specialization hook, but never an error path).
+- Add minimal tests or fixtures to prove offline repo is wired and usable.
+
+**Done when**:
+- `npm run check:native-only` passes
+- switching `mode: 'offline'` does not throw
+- repository reads/writes work using the native SDK
+- a listener-based API exists somewhere in the data layer and is used by at least one example (even if minimal)
+
+**Status**: implemented in `src/data/repository.ts` with a minimal fixture in `src/data/examples/repositoryFixture.ts`.
+
+### Phase 2.6 — Scoped listener manager (lifecycle + cleanup)
+
+**Goal**: provide reusable listener lifecycle management for bounded scopes.
+
+- Add a **listener manager** that:
+  - attaches listeners by scope (e.g., project/account)
+  - detaches on background and reattaches on resume
+  - cleans up unsubscribe handlers deterministically
+- Add conventions for listener scoping (doc/collection naming + recommended scope limits).
+
+**Done when**: active scopes can register listeners, lifecycle transitions detach/reattach, and unsubscribe cleanup is centralized.
+
+**Status**: implemented in `src/data/listenerManager.ts`, `src/data/useScopedListeners.ts`, and `src/data/LISTENER_SCOPING.md`.
+
+### Phase 2.7 — Offline UX primitives + config flags
+
+**Goal**: provide shared UI signals and config toggles for offline-ready behavior.
+
+- Add **UX primitives**:
+  - shared loading state
+  - stale indicators
+  - queued-writes badges
+- Add config flags (e.g., `offlineReady: true`, `listenerScope: 'project' | 'account'`).
+
+**Done when**: apps can enable offline-ready mode and render consistent UI states without implementing their own primitives.
 
 ### Phase 3 — Optional module: local search index
 
@@ -307,6 +375,7 @@ Retry mechanism:
 ## Acceptance checklist (repo-level)
 
 - `README.md` does not recommend outbox/cursor-based sync as the skeleton default.
+- `app/` and `src/` contain **no** imports from `firebase/*` (Web SDK). (`npm run check:native-only` passes.)
 - `src/data/offline-first.md`:
   - treats SQLite as optional search-index-only
   - describes native Firestore offline as the offline-ready path

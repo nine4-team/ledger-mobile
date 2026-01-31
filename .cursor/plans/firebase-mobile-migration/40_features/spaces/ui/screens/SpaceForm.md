@@ -26,10 +26,10 @@ Create or edit a Space’s basic fields (name/notes), optionally starting from a
     - `name`, `notes`
     - `templateId` (optional)
     - `checklists` (from template, normalized to unchecked)
-  - Enqueue outbox op for space create (idempotent).
+  - Firestore write (queued offline by Firestore-native persistence). Prefer client-generated `spaceId` for idempotency.
 - Edit:
   - Update space `name` and `notes`
-  - Enqueue outbox op for space update (idempotent).
+  - Firestore write (queued offline by Firestore-native persistence).
 
 ## UI structure (high level)
 - Create (modal-style):
@@ -73,7 +73,7 @@ Create or edit a Space’s basic fields (name/notes), optionally starting from a
 None directly (images handled in `SpaceDetail`).
 
 ## Collaboration / realtime expectations
-- New/updated spaces should propagate to other devices on next delta after change-signal bump.
+- New/updated spaces should propagate to other devices via scoped listeners (no unbounded listeners).
 
 ## Performance notes
 - Template list is small; safe to load all and filter in-memory.

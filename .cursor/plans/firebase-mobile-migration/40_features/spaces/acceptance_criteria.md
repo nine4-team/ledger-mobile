@@ -112,7 +112,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 
 ## Collaboration (Firebase target)
 - [ ] **No large listeners**: mobile app does not attach listeners to large collections (items/spaces).  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Change-signal + delta**: while a project is foregrounded, the app listens only to `meta/sync` and runs delta sync on bump.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md` (scoped listeners).
+- [ ] **Scoped listeners**: while a project is foregrounded, the app uses scoped listeners on bounded queries (and detaches on background).  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md`.
 

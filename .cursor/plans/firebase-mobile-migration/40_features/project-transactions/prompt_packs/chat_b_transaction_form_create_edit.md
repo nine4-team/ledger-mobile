@@ -2,11 +2,10 @@
 
 ## Goal
 
-You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with an **offline-ready** architecture baseline:
+- Firestore-native offline persistence (Firestore is canonical)
+- Scoped listeners (never unbounded “listen to everything”)
+- Request-doc workflows for multi-doc invariants (Cloud Function applies changes atomically)
 
 Your job in this chat:
 - Produce parity specs for **creating and editing** a transaction, including metadata gating, validation, itemization enablement, and offline-aware media attachment.
@@ -33,7 +32,7 @@ Primary screens/components:
 - `src/components/ui/OfflinePrerequisiteBanner.tsx`
 
 Related services/hooks:
-- `src/services/offlineMetadataService.ts` (cached vendor defaults, tax presets)
+- `src/services/offlineMetadataService.ts` (cached vendor defaults)
 - `src/services/accountPresetsService.ts` (default category online/cached)
 - `src/services/offlineAwareImageService.ts`
 - `src/services/offlineMediaService.ts`
@@ -49,7 +48,12 @@ For the form contract and acceptance criteria, include:
   - what’s required
   - what happens when offline and prerequisites are missing
 - Source/vendor selection rules and offline behavior
-- Tax preset rules (No Tax, presets, Other + subtotal validation)
+- Tax rules (simplified; no presets):
+  - default None
+  - tax rate entry and derived values
+  - “calculate from subtotal” mode + validation
+  - optional tax amount entry and rate back-calculation
+  - hide tax inputs for non-itemized categories (no `itemize`/`itemizationEnabled` metadata)
 - Itemization enablement rules (category-dependent, and “disabled but existing items” case)
 - Media attachment rules:
   - receipts include PDFs; other images are images only
@@ -66,6 +70,6 @@ For each non-obvious behavior:
 - Mark as intentional change and justify it (platform/architecture requirement).
 
 ## Constraints / non-goals
-- Do not prescribe large listeners; realtime is change-signal + delta.
+- Do not prescribe unbounded listeners; realtime uses **scoped** listeners only.
 - Do not do pixel-perfect design specs.
 - Focus on contracts that prevent divergence (offline gating, media, itemization).

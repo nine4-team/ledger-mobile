@@ -7,6 +7,15 @@ isProject: false
 
 ## Firebase RN Offline-First + Delta Sync + Change Signal Plan
 
+## Status: LEGACY / DO NOT USE for mobile specs
+
+This document describes an earlier, web-inspired plan centered on **SQLite as source of truth + explicit outbox + delta sync + change-signal**.
+
+It is retained as **historical/parity reference**, but it is **not** the target architecture for this repo’s mobile specs.
+
+For the canonical mobile offline-first architecture, use:
+- `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows; optional derived search index only)
+
 **Status**: Draft (ready to implement)
 
 **Last updated**: 2026-01-25

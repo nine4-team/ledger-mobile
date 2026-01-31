@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { auth, isFirebaseConfigured } from '../firebase/firebase';
 
 interface AuthState {
-  user: User | null;
+  user: FirebaseAuthTypes.User | null;
   isInitialized: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: FirebaseAuthTypes.User | null) => void;
   setInitialized: (isInitialized: boolean) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -21,25 +21,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email: string, password: string) => {
     if (!isFirebaseConfigured || !auth) {
       throw new Error(
-        'Firebase is not configured. Add native config files and/or EXPO_PUBLIC_FIREBASE_* values to .env.'
+        'Firebase is not configured. Add native config files and rebuild the dev client.'
       );
     }
-    await signInWithEmailAndPassword(auth, email, password);
+    await auth.signInWithEmailAndPassword(email, password);
   },
   signUp: async (email: string, password: string) => {
     if (!isFirebaseConfigured || !auth) {
       throw new Error(
-        'Firebase is not configured. Add native config files and/or EXPO_PUBLIC_FIREBASE_* values to .env.'
+        'Firebase is not configured. Add native config files and rebuild the dev client.'
       );
     }
-    await createUserWithEmailAndPassword(auth, email, password);
+    await auth.createUserWithEmailAndPassword(email, password);
   },
   signOut: async () => {
     if (!isFirebaseConfigured || !auth) {
       set({ user: null });
       return;
     }
-    await firebaseSignOut(auth);
+    await auth.signOut();
     set({ user: null });
   },
   initialize: () => {
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: null, isInitialized: true });
       return () => {};
     }
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       set({ user, isInitialized: true });
     });
     return unsubscribe;

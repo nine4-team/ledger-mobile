@@ -36,7 +36,7 @@ Important: the new app will use **Expo Router** (React Navigation). Therefore:
 
 ## Cross-cutting dependencies
 
-- Offline-first UI invariants: `40_features/sync_engine_spec.plan.md` (not for navigation mechanics, but for the “UI must render from local state” mindset).
+- Offline-first UI invariants (canonical): `OFFLINE_FIRST_V2_SPEC.md` (not for navigation mechanics, but for the “UI must render from local cache / Firestore persistence” mindset).
 - Shared Items/Transactions module configuration:
   - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md` → “Scope config object (contract)”
 

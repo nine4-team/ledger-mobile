@@ -23,7 +23,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Projects** e
   - `ui/screens/ProjectLayout.md`
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (change-signal + delta, local-first): `40_features/sync_engine_spec.plan.md`
+- Offline architecture baseline: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Entitlements gating for create project (Firebase): `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
 
 ## Parity evidence (web sources)

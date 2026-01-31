@@ -4,33 +4,42 @@ This doc defines the offline-first principles that every feature must follow. Th
 
 Related canonical specs:
 
-- [`sync_engine_spec.plan.md`](../sync_engine_spec.plan.md)
+- [`OFFLINE_FIRST_V2_SPEC.md`](../../../../OFFLINE_FIRST_V2_SPEC.md)
 - [`target_system_architecture.md`](./target_system_architecture.md)
 
 ---
 
 ## North star: local-first correctness
 
-### Principle 1: SQLite is the UI source of truth
+### Principle 1: Firestore (native) is the UI source of truth
 
-- Screens render from **SQLite** queries only.
-- User edits write to SQLite **immediately** (transactionally).
-- A mutation is “done” for the user when it is committed locally.
+- Screens render from **Firestore reads** using the **native SDK’s local cache**.
+- User edits write to Firestore **immediately**; the native SDK applies them locally and syncs when network is available.
+- A mutation is “done” for the user when it is **accepted locally** by Firestore (even if not yet synced).
 
-### Principle 2: Sync is asynchronous and explicit
+Notes:
+
+- “Firestore as source of truth” means **Firestore documents**, not an extra canonical SQLite store.
+- SQLite is allowed only as a **derived, rebuildable index** (e.g., offline search), never as the authoritative entity store.
+
+### Principle 2: Sync is asynchronous and visible (but we don’t build a sync engine)
 
 - Network is unreliable; sync must be **durable** and **recoverable**.
-- The app always maintains explicit sync state:
-  - pending outbox ops count
-  - last successful delta timestamps
-  - last error (if any)
+- We rely on **Firestore’s built-in queued writes + cache** for baseline offline behavior.
+- The app surfaces simple, user-trustworthy status:
+  - pending writes (e.g., from snapshot metadata / SDK APIs)
+  - last-known online/offline state
+  - last sync error (where observable)
 
 ### Principle 3: Collaboration without read amplification
 
-- We do not subscribe to large collections.
-- While foregrounded in a project, the app listens only to:
-  - `accounts/{accountId}/projects/{projectId}/meta/sync`
-- Signal changes trigger targeted delta fetch.
+- We do not subscribe to unbounded data.
+- While foregrounded in a scope (e.g., active project / active inventory), the app may attach **scoped listeners** only:
+  - bounded queries (e.g., by `projectId`, with reasonable limits)
+  - small, explicit “current context” listeners (e.g., active project doc, memberships)
+- Listener lifecycle is explicit:
+  - detach on background
+  - reattach on resume
 
 ---
 
@@ -45,22 +54,22 @@ Related canonical specs:
 
 When offline:
 
-- all browsing works from local data
-- create/update/delete works locally
+- all browsing works from cached Firestore data when available
+- create/update/delete works locally (queued writes)
 - media capture works locally (queued upload)
 - actions that truly require network (e.g., login) show a clear message and a retry path
 
 ### Invariant C: Make pending changes obvious, not scary
 
-- Always show a global pending changes indicator when outbox has entries.
-- Provide a manual “Retry sync” action that triggers:
-  - outbox flush attempt
-  - targeted delta catch-up
+- Always show a global pending changes indicator when Firestore has pending writes.
+- Provide a manual “Retry” action that:
+  - attempts to refresh connectivity / reattach listeners (where applicable)
+  - re-issues any explicit “pull to refresh” reads (where your UI supports it)
 
 ### Invariant D: Never lose user work silently
 
-- outbox is durable
-- failed ops surface as actionable errors (not just logs)
+- queued writes are durable (Firestore persistence)
+- failed operations surface as actionable errors (not just logs)
 - user can retry or revert a local pending change (where feasible)
 
 ---
@@ -75,34 +84,34 @@ iOS background execution is constrained. The architecture assumes:
 Rules of thumb:
 
 - detach listeners when backgrounded
-- on resume, always run a delta catch-up before re-attaching the signal listener
+- on resume, reattach scoped listeners for the active scope (and re-run any explicit refresh reads if the UI supports it)
 - don’t promise “instant sync in background”; promise “syncs when you reopen / when network returns”
 
 ---
 
 ## Correctness rules for writes (local-first)
 
-### Local write transaction
+### Local write contract
 
-Every user mutation must be atomic locally:
+Every user mutation must be safe locally:
 
-1. validate inputs (domain layer)
-2. update SQLite rows
-3. enqueue one or more outbox ops
+- validate inputs (domain layer)
+- write to Firestore (single-doc where possible)
+- if the operation is multi-doc or requires invariants, use **request-doc workflows** (see below)
 
-If any step fails, the local DB must not be left half-updated.
+Do not implement “multi-doc client updates” as the default; they are the easiest way to create inconsistent state offline.
 
-### Idempotency
+### Idempotency (request-doc workflows)
 
-- Every remote mutation includes `lastMutationId = opId`.
-- Retries must be safe and must not double-apply.
+- For request-doc operations, retries must not double-apply server-side changes.
+- Prefer “retry = create a new request doc” unless the specific request type is explicitly designed to be reset/replayed safely.
 
 ### Tombstones for deletes
 
-Deletes must be observable via delta sync:
+Deletes must be observable and listener-safe:
 
 - remote delete = set `deletedAt` (and `updatedAt`) rather than hard delete
-- clients remove locally when delta observes tombstone
+- clients filter out tombstoned records (or move them to “archived/deleted” views)
 
 ---
 
@@ -115,13 +124,13 @@ Conflicts are inevitable in collaboration. The goal is not “zero conflicts”;
 - For low-risk fields (text, notes, descriptions): prefer automatic merge/“last write wins” with auditability.
 - For high-risk fields (money, tax, category allocation): do not silently overwrite if the remote changed since the user’s base version.
 
-### Concrete mechanism
+### Concrete mechanism (feature-specific)
 
-- Store `baseVersion` (server version last seen) on local edits.
-- When flushing an update:
-  - if server `version != baseVersion`, record a conflict in SQLite and surface a conflict UI.
+- For high-risk edits, implement one of:
+  - **request-doc** workflow (server validates base conditions and either applies or fails)
+  - explicit “compare before commit” UX (re-read, show diff, ask user to confirm)
 
-Conflicts are persisted so they survive app restarts.
+Avoid introducing a general-purpose conflict table unless the product truly needs it; prefer request-doc flows where correctness matters.
 
 ---
 
@@ -141,10 +150,10 @@ Conflicts are persisted so they survive app restarts.
 
 When writing/implementing any feature:
 
-- Does the UI read/write SQLite only?
-- Does every mutation enqueue durable outbox ops?
+- Does the UI read/write Firestore (native) in a cache-friendly way?
+- Is your listener/query scope bounded?
 - Do deletes use tombstones (`deletedAt`)?
-- Does the feature avoid large listeners?
+- Does the feature avoid unbounded listeners?
 - Are pending/error states visible and actionable?
-- Are critical-field conflicts detectable and resolvable?
+- For multi-doc/critical invariants: did you use a request-doc workflow (or justify why not)?
 

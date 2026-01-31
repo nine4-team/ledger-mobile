@@ -8,11 +8,11 @@ This feature covers **cross-entity operations** that move and link items across:
 
 It is the primary correctness layer for “allocate/move/sell/deallocate” flows and must be compatible with:
 
-- local-first writes + explicit outbox
-- delta sync
-- one tiny change-signal listener per active scope
+- Firestore-native offline persistence (offline-ready baseline)
+- request-doc workflows for multi-doc correctness (server-owned invariants)
+- scoped listeners bounded to the active scope (detach on background; reattach on resume)
 
-See: `40_features/sync_engine_spec.plan.md`.
+See: `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Docs in this folder
 - `feature_spec.md` — behavior spec + required invariants

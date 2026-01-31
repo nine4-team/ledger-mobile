@@ -9,7 +9,7 @@ You are updating Firebase mobile migration specs. Your task is to review and imp
 ## Context (source of truth)
 
 - Working doc (canonical on this topic): `.cursor/plans/firebase-mobile-migration/00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
-- Architecture constraints: `.cursor/plans/firebase-mobile-migration/40_features/sync_engine_spec.plan.md`
+- Architecture constraints: `OFFLINE_FIRST_V2_SPEC.md`
 - Project Items spec pack (your targets):
   - `.cursor/plans/firebase-mobile-migration/40_features/project-items/feature_spec.md`
   - `.cursor/plans/firebase-mobile-migration/40_features/project-items/acceptance_criteria.md`

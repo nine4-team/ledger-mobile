@@ -58,11 +58,9 @@ The `firestore.rules` file includes:
 Authoritative function to create objects with quota enforcement:
 
 ```typescript
-import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/firebase/firebase';
 
-const createWithQuota = httpsCallable(functions, 'createWithQuota');
-
+const createWithQuota = functions.httpsCallable('createWithQuota');
 const result = await createWithQuota({
   objectKey: 'object', // Quota key from appConfig
   collectionPath: 'users/{uid}/objects', // Where to create the doc

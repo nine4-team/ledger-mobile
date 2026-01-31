@@ -5,19 +5,18 @@ Produce parity-informed specs for “service worker + background sync” outcome
 
 ## Inputs to review (source of truth)
 - Feature list entry: `40_features/feature_list.md` → `pwa-service-worker-and-background-sync`
-- Sync engine spec: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 architecture: `OFFLINE_FIRST_V2_SPEC.md`
 - Global sync UX spec: `40_features/connectivity-and-sync-status/feature_spec.md`
 - Web parity evidence:
   - `public/sw-custom.js`
   - `src/services/serviceWorker.ts`
-  - `src/services/operationQueue.ts`
   - `src/components/SyncStatus.tsx`
 
 ## Owned screens (list)
 - None (policy/scheduling feature). Any user-visible UI is owned by `connectivity-and-sync-status`.
 
 ## Cross-cutting dependencies (link)
-- `40_features/sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`
 - `40_features/connectivity-and-sync-status/feature_spec.md`
 
 ## Output files (this work order will produce)

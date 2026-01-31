@@ -1,42 +1,14 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  Pressable,
-  TouchableOpacity,
-  View,
-  Modal,
-  useWindowDimensions,
-} from 'react-native';
+import { StyleSheet, Text, Pressable, TouchableOpacity, View } from 'react-native';
 import type { GestureResponderEvent } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { CARD_PADDING, getCardBorderStyle, getCardBaseStyle, SCREEN_PADDING } from '../ui';
+import { CARD_PADDING, getCardBorderStyle, getCardBaseStyle } from '../ui';
+import { AnchoredMenuItem, AnchoredMenuList, AnchoredMenuSubaction } from './AnchoredMenuList';
 
-type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
-
-export type ExpandableCardMenuSubaction = {
-  key: string;
-  label: string;
-  onPress: () => void;
-  icon?: MaterialIconName;
-};
-
-export type ExpandableCardMenuItem =
-  | {
-      key?: string;
-      label: string;
-      onPress: () => void;
-      icon?: MaterialIconName;
-    }
-  | {
-      key?: string;
-      label: string;
-      subactions: ExpandableCardMenuSubaction[];
-      defaultSelectedSubactionKey?: string;
-      icon?: MaterialIconName;
-    };
+export type ExpandableCardMenuSubaction = AnchoredMenuSubaction;
+export type ExpandableCardMenuItem = AnchoredMenuItem;
 
 export interface ExpandableCardProps {
   title: string;
@@ -75,20 +47,16 @@ export function ExpandableCard({
   menuBadgeEnabled = false,
 }: ExpandableCardProps) {
   const uiKitTheme = useUIKitTheme();
-  const { width: screenWidth } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuButtonLayout, setMenuButtonLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const menuButtonRef = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
   const [internalSelected, setInternalSelected] = useState(Boolean(defaultSelected));
-  const [expandedMenuKey, setExpandedMenuKey] = useState<string | null>(null);
-  const [selectedSubactionByKey, setSelectedSubactionByKey] = useState<Record<string, string>>({});
 
   const isSelected = typeof selected === 'boolean' ? selected : internalSelected;
 
   const closeMenu = useCallback(() => {
     setMenuVisible(false);
-    setExpandedMenuKey(null);
   }, []);
 
   const handleMenuPress = useCallback((e: GestureResponderEvent) => {
@@ -119,8 +87,6 @@ export function ExpandableCard({
   }, [isSelected, onSelectedChange, selected]);
 
   const showMenu = menuItems.length > 0 || onMenuPress;
-  const menuItemIconColor = uiKitTheme.primary.main;
-
   return (
     <>
       <Pressable
@@ -275,195 +241,7 @@ export function ExpandableCard({
 
       {/* Menu Modal */}
       {showMenu && !onMenuPress && (
-        <Modal
-          visible={menuVisible}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={closeMenu}
-        >
-          <Pressable
-            style={styles.menuOverlay}
-            onPress={closeMenu}
-          >
-            {menuButtonLayout && (() => {
-              const menuWidth = 220;
-              const buttonRightEdge = menuButtonLayout.x + menuButtonLayout.width;
-              // Align menu's right edge with button's right edge
-              let menuLeft = buttonRightEdge - menuWidth;
-              // Ensure menu doesn't go off the left or right edge of screen
-              menuLeft = Math.max(SCREEN_PADDING, Math.min(menuLeft, screenWidth - menuWidth - SCREEN_PADDING));
-              
-              return (
-                <View
-                  style={[
-                    styles.menuContainer,
-                    {
-                      backgroundColor: uiKitTheme.background.modal,
-                      borderColor: uiKitTheme.border.secondary,
-                      top: menuButtonLayout.y + menuButtonLayout.height + 4,
-                      left: menuLeft,
-                      width: menuWidth,
-                    },
-                  ]}
-                  onStartShouldSetResponder={() => true}
-                >
-                  {menuItems.map((item, idx) => {
-                    const showDivider = idx < menuItems.length - 1;
-                    const isSubmenuItem = 'subactions' in item;
-                    const itemKey = item.key ?? `${item.label}-${idx}`;
-
-                    if (isSubmenuItem) {
-                      const currentKey =
-                        selectedSubactionByKey[itemKey] ??
-                        item.defaultSelectedSubactionKey ??
-                        item.subactions[0]?.key;
-                      const currentLabel =
-                        item.subactions.find((s) => s.key === currentKey)?.label ?? '';
-                      const isExpanded = expandedMenuKey === itemKey;
-
-                      return (
-                        <View key={itemKey}>
-                          <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={item.label}
-                            onPress={() =>
-                              setExpandedMenuKey((prev) => (prev === itemKey ? null : itemKey))
-                            }
-                            style={({ pressed }) => [
-                              styles.menuSectionHeader,
-                              pressed && { opacity: 0.7 },
-                            ]}
-                          >
-                            <View style={styles.menuItemLeft}>
-                              <MaterialIcons
-                                name={item.icon ?? 'build'}
-                                size={20}
-                                color={menuItemIconColor}
-                              />
-                              <Text style={[styles.menuSectionTitle, { color: uiKitTheme.text.primary }]}>
-                                {item.label}
-                              </Text>
-                            </View>
-                            <View style={styles.menuSectionRight}>
-                              <Text style={[styles.menuSectionValue, { color: uiKitTheme.text.secondary }]}>
-                                {currentLabel}
-                              </Text>
-                              <MaterialIcons
-                                name={isExpanded ? 'expand-more' : 'chevron-right'}
-                                size={22}
-                                color={uiKitTheme.text.secondary}
-                              />
-                            </View>
-                          </Pressable>
-
-                          <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
-
-                          {isExpanded ? (
-                            <View
-                              style={[
-                                styles.menuSectionBody,
-                                {
-                                  backgroundColor:
-                                    uiKitTheme.background.tertiary ?? uiKitTheme.background.surface,
-                                },
-                              ]}
-                            >
-                              {item.subactions.map((sub, subIdx) => {
-                                const showSubDivider = subIdx < item.subactions.length - 1;
-                                const selectedSub = currentKey === sub.key;
-
-                                return (
-                                  <View key={sub.key}>
-                                    <Pressable
-                                      accessibilityRole="button"
-                                      accessibilityLabel={sub.label}
-                                      onPress={() => {
-                                        setSelectedSubactionByKey((prev) => ({
-                                          ...prev,
-                                          [itemKey]: sub.key,
-                                        }));
-                                        closeMenu();
-                                        sub.onPress();
-                                      }}
-                                      style={({ pressed }) => [
-                                        styles.submenuItem,
-                                        pressed && { opacity: 0.7 },
-                                      ]}
-                                    >
-                                      <View style={styles.menuItemLeft}>
-                                        <MaterialIcons
-                                          name={sub.icon ?? item.icon ?? 'build'}
-                                          size={20}
-                                          color={menuItemIconColor}
-                                        />
-                                        <Text style={[styles.menuItemText, { color: uiKitTheme.text.primary }]}>
-                                          {sub.label}
-                                        </Text>
-                                      </View>
-                                      {selectedSub ? (
-                                        <MaterialIcons name="check" size={20} color={uiKitTheme.text.primary} />
-                                      ) : (
-                                        <View />
-                                      )}
-                                    </Pressable>
-                                    {showSubDivider ? (
-                                      <View
-                                        style={[
-                                          styles.menuDivider,
-                                          { backgroundColor: uiKitTheme.border.secondary },
-                                        ]}
-                                      />
-                                    ) : null}
-                                  </View>
-                                );
-                              })}
-                            </View>
-                          ) : null}
-
-                          {isExpanded ? (
-                            <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
-                          ) : null}
-
-                          {showDivider ? (
-                            <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
-                          ) : null}
-                        </View>
-                      );
-                    }
-
-                    return (
-                      <View key={itemKey}>
-                        <Pressable
-                          onPress={() => {
-                            closeMenu();
-                            item.onPress();
-                          }}
-                          style={({ pressed }) => [styles.menuActionItem, pressed && { opacity: 0.7 }]}
-                          accessibilityRole="button"
-                          accessibilityLabel={item.label}
-                        >
-                          <View style={styles.menuItemLeft}>
-                            <MaterialIcons
-                              name={item.icon ?? (item.label === 'Edit' ? 'edit' : item.label === 'Delete' ? 'delete' : 'build')}
-                              size={20}
-                              color={menuItemIconColor}
-                            />
-                            <Text style={[styles.menuItemText, { color: uiKitTheme.text.primary }]}>
-                              {item.label}
-                            </Text>
-                          </View>
-                        </Pressable>
-                        {showDivider ? (
-                          <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
-                        ) : null}
-                      </View>
-                    );
-                  })}
-                </View>
-              );
-            })()}
-          </Pressable>
-        </Modal>
+        <AnchoredMenuList visible={menuVisible} anchorLayout={menuButtonLayout} onRequestClose={closeMenu} items={menuItems} />
       )}
     </>
   );
@@ -570,73 +348,5 @@ const styles = StyleSheet.create({
   rowValue: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  menuContainer: {
-    position: 'absolute',
-    borderRadius: 8,
-    borderWidth: 1,
-    minWidth: 220,
-    maxWidth: 280,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-    overflow: 'hidden',
-  },
-  menuSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  menuSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  menuSectionRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginLeft: 12,
-  },
-  menuSectionValue: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  menuSectionBody: {
-    paddingBottom: 8,
-    paddingTop: 8,
-  },
-  submenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    paddingLeft: 28,
-  },
-  menuActionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  menuItemText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  menuDivider: {
-    height: 1,
-    opacity: 0.6,
   },
 });

@@ -12,7 +12,7 @@ A feature is “spec complete” only if:
   - reconnect behavior
 - **Collaboration clarity**: if collaborative:
   - propagation expectations while foregrounded are explicit
-  - docs do not imply large listeners; they reference change-signal + delta.
+  - docs do not imply unbounded listeners; they specify **scoped listeners** and what can be stale until refresh/reopen.
 - **Media clarity** (if applicable):
   - local placeholder behavior
   - upload progress UX
@@ -21,7 +21,7 @@ A feature is “spec complete” only if:
 - **Cross-links**: feature docs link to:
   - required screen contracts
   - cross-cutting docs they depend on
-  - sync engine spec (when relevant)
+  - `OFFLINE_FIRST_V2_SPEC.md` (when relevant)
 
 - **Shared-module reuse (when applicable)**:
   - If the feature touches Items or Transactions UI (lists/menus/details/forms), the spec explicitly states whether it uses the shared modules.

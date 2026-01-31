@@ -10,7 +10,6 @@ This folder defines the parity-grade behavior spec for Ledger’s **Settings** a
 - Presets tab (admin-gated):
   - Budget categories manager (create/edit/archive/unarchive, reorder, account-wide default category, itemization toggle)
   - Vendor defaults manager (10 slots; edit/clear; reorder)
-  - Tax presets manager (edit/delete with guardrails; reorder)
   - Space templates manager (create/edit/archive/unarchive; reorder; checklists editor)
 - Users tab (admin/owner-gated):
   - Create invitation links
@@ -34,7 +33,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Settings** a
 
 ## Cross-cutting dependencies
 - Auth + invitations (acceptance + protected routing): `40_features/auth-and-invitations/README.md`
-- Sync architecture constraints (local-first, outbox, delta sync, metadata hydration): `40_features/sync_engine_spec.plan.md`
+- Offline architecture constraints (Firestore-native offline persistence + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Storage quota warning + offline upload gating (shared guardrail): `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Parity evidence (web sources)
@@ -50,7 +49,6 @@ This folder defines the parity-grade behavior spec for Ledger’s **Settings** a
 - Presets UIs:
   - Budget categories: `src/components/BudgetCategoriesManager.tsx`
   - Vendor defaults: `src/components/VendorDefaultsManager.tsx`
-  - Tax presets: `src/components/TaxPresetsManager.tsx`
   - Space templates: `src/components/spaces/SpaceTemplatesManager.tsx`
 - Admin/owner management:
   - Users: `src/components/auth/UserManagement.tsx`

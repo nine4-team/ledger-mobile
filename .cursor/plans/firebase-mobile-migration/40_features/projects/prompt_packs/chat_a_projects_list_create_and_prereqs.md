@@ -20,7 +20,7 @@ Update or create:
 - Offline hydration helpers: `hydrateProjectsListCache` in `src/utils/hydrationHelpers.ts`
 
 ## Cross-cutting constraints
-- Offline-first + change-signal + delta sync: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline (Firestore-native offline + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Entitlements gating model: `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
 
 ## Evidence rule (anti-hallucination)

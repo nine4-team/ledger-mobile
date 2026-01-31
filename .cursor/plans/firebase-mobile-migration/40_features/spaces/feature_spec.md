@@ -1,7 +1,12 @@
 # Spaces — Feature spec (Firebase mobile migration)
 
 ## Intent
-Provide a local-first Spaces experience inside a project: users can browse/search spaces, create/edit/delete spaces, and manage a space’s items, images, and checklists with predictable offline behavior. While foregrounded and online, the app should feel “fresh” without subscribing to large collections (use change-signal + delta sync).
+Provide an offline-ready Spaces experience inside a project: users can browse/search spaces, create/edit/delete spaces, and manage a space’s items, images, and checklists with predictable offline behavior.
+
+Architecture baseline (mobile):
+- **Firestore-native offline persistence** is the default (Firestore is canonical).
+- “Freshness” while foregrounded is achieved via **scoped listeners** on bounded queries (never unbounded “listen to everything”).
+- Any multi-doc/invariant operations use **request-doc workflows** (Cloud Function applies changes in a transaction).
 
 ## Definitions
 - **Space**: a location/grouping entity used to organize items.
@@ -97,7 +102,7 @@ Migration notes:
 - In Firebase/RN, these are local-first item mutations:
   - set/clear `item.spaceId`
   - and (optional, parity): set human-readable `item.space` name for display if retained in the data contract
-- Do not implement a listener on all items for “live item counts” in a project. The project scope should use `meta/sync` change-signal + delta per `40_features/sync_engine_spec.plan.md`.
+- Do not implement an unbounded listener on all items just to compute “live item counts”. Use scoped/bounded queries and/or a denormalized counter strategy (if needed).
 
 ### 5) Manage space images (Space detail → Images tab)
 Summary:
@@ -127,7 +132,7 @@ Parity evidence:
 - Checklists UI and commit rules: `src/pages/SpaceDetail.tsx` (`updateChecklists`, `commitChecklistName`, `commitChecklistItemText`, inline handlers)
 
 Migration notes:
-- For Firebase/RN, checklist edits should map to a single local DB transaction and an outbox op that updates `space.checklists` deterministically (and is conflict-aware).
+- For Firebase/RN, checklist edits should be deterministic Firestore updates (queued offline by Firestore-native persistence). If conflict strategy is needed, define it explicitly (e.g., last-write-wins with serverTimestamp ordering).
 
 ### 7) Save space as template (admin-only)
 Summary:
@@ -165,9 +170,9 @@ Migration note:
 ## Offline-first behavior (mobile target)
 
 ### Local source of truth
-- UI renders from local DB (SQLite on mobile).
-- User writes are local-first; remote sync is via outbox.
-- Media attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders.
+- UI reads from **Firestore’s local cache** via the native Firestore SDK (cache-first reads with server reconciliation when online).
+- User writes are **direct Firestore writes** (queued offline by Firestore-native persistence).
+- Media attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders until Cloud Storage URLs are available.
 
 ### Restart behavior
 - On cold start:
@@ -175,19 +180,19 @@ Migration note:
   - Space detail should render from local cache (space + images + checklists + assigned items).
 
 ### Reconnect behavior
-- When returning online, foregrounded project should converge via change-signal + delta and clear any “hydrated from cache” stale indicator.
+- When returning online, foregrounded screens should converge via Firestore listeners + queued-writes acknowledgement and clear any “hydrated from cache” stale indicator.
 
-Canonical migration source:
-- `40_features/sync_engine_spec.plan.md`
+Canonical architecture source:
+- `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Collaboration / “realtime” expectations (mobile target)
-- Do not subscribe to large collections (items/spaces) for realtime.
-- While foregrounded in an active project:
-  - listen only to `accounts/{accountId}/projects/{projectId}/meta/sync`
-  - trigger delta fetches for `spaces` and any affected `items` on signal bump
+- **Scoped listeners only (never unbounded)**:
+  - Listen to spaces via bounded queries as needed (project scope).
+  - For items assignment changes, rely on bounded item listeners for the visible UI surface (e.g., items in this space), not “all items”.
+  - Detach listeners on background; reattach on resume.
 
 Canonical migration source:
-- `40_features/sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Permissions and gating
 - User must be authenticated and have an active `accountId` to manage spaces.

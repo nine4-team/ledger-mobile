@@ -3,7 +3,7 @@ Produce parity-grade specs for `inventory-operations-and-lineage`.
 
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → **Feature 8: Cross-entity “inventory operations”** (`inventory-operations-and-lineage`)
-- Sync engine spec: `40_features/sync_engine_spec.plan.md` (local-first + outbox + delta sync + change-signal)
+- Offline data v2 architecture: `OFFLINE_FIRST_V2_SPEC.md` (native Firestore offline persistence + scoped listeners + request-doc correctness)
 - Shared Items + Transactions module rule: `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Budget-category inheritance rules (must remain consistent): `40_features/project-items/flows/inherited_budget_category_rules.md`
 
@@ -33,7 +33,7 @@ Web parity evidence sources (key):
   - Append lineage edges and maintain pointers for moves across canonical/non-canonical transactions and inventory (null)
 
 ## Cross-cutting dependencies (link)
-- `40_features/sync_engine_spec.plan.md` (server-owned invariants + idempotency + outbox)
+- `OFFLINE_FIRST_V2_SPEC.md` (request-doc workflows for multi-doc correctness; scoped listeners; optional derived search index)
 - `40_features/project-items/flows/inherited_budget_category_rules.md` (required guardrails; destination category prompt in BI → Project)
 - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md` (shared UI primitives rule)
 
@@ -69,5 +69,5 @@ Recommended slices:
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Offline behaviors are explicit (pending + retries + restart + reconnect) for these multi-entity ops.
-- Collaboration behavior is explicit and uses change-signal + delta (no large listeners).
+- Collaboration behavior is explicit and uses scoped/bounded listener rules (no unbounded “listen to everything”).
 - Cross-links are complete (spec ↔ flows ↔ referenced cross-cutting docs).

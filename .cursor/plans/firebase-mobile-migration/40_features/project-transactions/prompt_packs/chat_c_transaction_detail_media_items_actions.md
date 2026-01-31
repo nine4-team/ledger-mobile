@@ -2,11 +2,10 @@
 
 ## Goal
 
-You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with an **offline-ready** architecture baseline:
+- Firestore-native offline persistence (Firestore is canonical)
+- Scoped listeners (never unbounded “listen to everything”)
+- Request-doc workflows for multi-doc invariants (Cloud Function applies changes atomically)
 
 Your job in this chat:
 - Produce parity specs for **TransactionDetail**: receipts + other images (gallery + pinning), itemization surface, and transaction actions (edit/move/delete), including offline placeholder semantics.
@@ -63,7 +62,7 @@ For the screen contract and acceptance criteria, include:
   - bulk selection + bulk actions + location setting
   - cross-scope move/sell affordances (link to inventory-operations feature for invariants)
 - States: loading/empty/error/offline/pending/permissions/quota
-- Collaboration expectations consistent with change-signal + delta (no large listeners)
+- Collaboration expectations consistent with scoped listeners (no unbounded listeners)
 
 ## Evidence rule (anti-hallucination)
 
@@ -72,6 +71,6 @@ For each non-obvious behavior:
 - Mark as intentional change and justify it (platform/architecture requirement).
 
 ## Constraints / non-goals
-- Do not prescribe large listeners; realtime is change-signal + delta.
+- Do not prescribe unbounded listeners; realtime uses **scoped** listeners only.
 - Do not do pixel-perfect design specs.
 - Focus on contracts that prevent divergence (media lifecycle, itemization, actions).

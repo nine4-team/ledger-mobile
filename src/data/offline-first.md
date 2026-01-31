@@ -6,8 +6,11 @@ This template supports online-only apps (still using native Firebase), while pro
 
 ## Current Status
 
-- ✅ **Online-first implementation**: `FirestoreRepository` (direct Firestore reads/writes)
-- ⏳ **Offline-ready mode (native Firestore)**: native Firebase scaffolding exists; wiring a full offline-ready repository is still app-specific
+- ✅ **Native Firestore implementation**: `FirestoreRepository` (direct reads/writes via native SDK)
+- ✅ **Offline persistence baseline**: Firestore-native offline persistence is enabled by default (native SDK)
+- ✅ **Listener-based API**: `subscribe()` and `subscribeList()` methods available for real-time updates
+- ✅ **Scoped listener manager**: implemented in `src/data/listenerManager.ts` with lifecycle management
+- ✅ **Offline UX primitives**: implemented in `src/components/OfflineUX.tsx` and `src/offline/offlineUxStore.ts`
 - ✅ **Offline search index (SQLite FTS)**: implemented in `src/search-index/` (optional module)
 - ✅ **Request-doc workflows (multi-doc correctness)**: implemented (functions + rules + client helpers)
 
@@ -61,22 +64,117 @@ This skeleton no longer recommends implementing a generic:
 - outbox queue
 - delta cursors / "pull since cursor"
 
-## Online-first usage (current)
+## Repository Usage Examples
+
+### Online-first usage
 
 ```typescript
 import { createRepository } from '@/data/repository';
 
 const repo = createRepository<MyEntity>('users/{uid}/objects', 'online');
 const items = await repo.list();
+const item = await repo.get('item-id');
+await repo.upsert('item-id', { name: 'Updated' });
 ```
 
-## Offline-ready apps (planned)
+### Offline-ready usage with real-time listeners
+
+```typescript
+import { createRepository } from '@/data/repository';
+import { useEffect, useState } from 'react';
+
+// Create repository with offline mode (cache-first reads)
+const repo = createRepository<MyEntity>('users/{uid}/objects', 'offline');
+
+// Subscribe to collection updates (works offline with cached data)
+function MyComponent() {
+  const [items, setItems] = useState<MyEntity[]>([]);
+
+  useEffect(() => {
+    // subscribeList returns an unsubscribe function
+    const unsubscribe = repo.subscribeList((updatedItems) => {
+      setItems(updatedItems);
+    });
+
+    // Cleanup on unmount
+    return unsubscribe;
+  }, []);
+
+  return <ItemList items={items} />;
+}
+
+// Subscribe to a single document
+function ItemDetail({ itemId }: { itemId: string }) {
+  const [item, setItem] = useState<MyEntity | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = repo.subscribe(itemId, (updatedItem) => {
+      setItem(updatedItem);
+    });
+
+    return unsubscribe;
+  }, [itemId]);
+
+  return item ? <ItemView item={item} /> : <Loading />;
+}
+```
+
+**Key points:**
+- Both `'online'` and `'offline'` modes use the native Firestore SDK
+- `'offline'` mode prefers cache-first reads (fallback to server)
+- `subscribe()` and `subscribeList()` work offline with cached data
+- Listeners fire immediately with cached data when available
+- Always call the returned unsubscribe function in cleanup (useEffect return)
+
+### Offline-ready usage with scoped listener manager
+
+For apps that need lifecycle-aware listener management (automatic detach on background, reattach on resume), use the scoped listener manager:
+
+```typescript
+import { useScopedListeners } from '@/data/useScopedListeners';
+import { createRepository } from '@/data/repository';
+
+function ProjectScreen({ projectId }: { projectId: string }) {
+  const scopeId = `project:${projectId}`;
+  const [items, setItems] = useState<MyEntity[]>([]);
+
+  // Listeners are automatically detached on background and reattached on resume
+  useScopedListeners(scopeId, () => {
+    const repo = createRepository<MyEntity>(
+      `projects/${projectId}/items`,
+      'offline'
+    );
+    return repo.subscribeList((updatedItems) => {
+      setItems(updatedItems);
+    });
+  });
+
+  return <ItemList items={items} />;
+}
+```
+
+**Benefits of scoped listener manager:**
+- Automatic lifecycle management (detach on background, reattach on resume)
+- Centralized cleanup
+- Scope-based organization (e.g., `project:{id}`, `account:{id}`)
+- Prevents listener leaks
+
+**See `src/data/LISTENER_SCOPING.md` for conventions and best practices.**
+
+## Offline-ready apps (additional guidance)
 
 See `SETUP.md` for:
 
 - the native-first runtime assumptions (dev client, not Expo Go)
-- scoped listener rules
+- scoped listener rules (bounded queries, detach on background)
 - optional SQLite FTS "search-index-only" module
 - request-doc workflows (the default for multi-doc invariant operations)
+
+See `src/data/LISTENER_SCOPING.md` for:
+
+- listener scoping conventions and naming patterns
+- recommended scope limits
+- usage examples with hooks and manual management
+- debugging and monitoring tools
 
 Important (React Native): this skeleton assumes **native Firestore** for durable offline persistence.

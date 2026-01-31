@@ -7,6 +7,17 @@ Put docs here like:
 - `local_sqlite_schema.md`
 - `data_contracts.md` (canonical entity contracts; other docs should reference this)
 
+## Architecture baseline (must align)
+
+This folder is aligned to the current offline architecture baseline:
+
+- **Firestore native offline persistence** (cache + queued writes) with **scoped listeners**
+- **No bespoke sync engine**: no outbox/delta cursors/“SQLite as source of truth” baseline
+- **SQLite allowed only as a derived, rebuildable search index** (non-authoritative)
+- **Multi-doc correctness** defaults to **request-doc workflows** (client writes request doc; Cloud Function applies atomically + status)
+
+Primary reference: `OFFLINE_FIRST_V2_SPEC.md`.
+
 ## Naming conventions (canonical)
 
 These conventions keep the Firebase plan aligned with the **current app** (`src/types`) and avoid drift.
@@ -16,14 +27,13 @@ These conventions keep the Firebase plan aligned with the **current app** (`src/
 - **Field casing**: `camelCase`
 - **IDs**: use document id as canonical `id`; also store foreign keys as `accountId`, `projectId`, etc. (camelCase)
 - **Timestamps**: `createdAt`, `updatedAt`, `deletedAt` (Firestore `Timestamp`)
-- **Sync fields (remote, required on sync’d entities)**:
-  - `updatedAt`, `deletedAt`, `version`, `updatedBy`, `lastMutationId`, `schemaVersion`
+- **Lifecycle/audit fields (remote, recommended on mutable entities)**:
+  - `createdAt`, `updatedAt`, `deletedAt`, `createdBy?`, `updatedBy?`, `schemaVersion?`
 - **Enums/roles**: match app enums (e.g. account membership role is `"admin" | "user"`, system owner is `"owner"`)
 
 ### SQLite tables (local)
 
 - **Column casing**: `snake_case`
-- **Remote-mirrored sync fields**: keep `*_server` suffix when storing Firestore timestamps as integers:
-  - `updated_at_server`, `deleted_at_server`, `version`, `updated_by`, `last_mutation_id`, `schema_version`
-- **Local-only bookkeeping**: `local_*` prefix (e.g. `local_pending`, `local_updated_at`)
+- **Use**: SQLite must remain **non-authoritative**. It is used only as a **derived, rebuildable search index** (not a sync engine).
+- **Naming**: use `snake_case` for columns, and keep source ids explicit (`account_id`, `project_id`, `item_id`, `transaction_id`).
 

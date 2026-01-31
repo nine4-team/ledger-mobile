@@ -2,10 +2,10 @@
 
 ## Goal
 You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+- Firestore-native offline persistence (Firestore is canonical; cache + queued writes)
+- Scoped listeners only (no “listen to everything”)
+- Request-doc workflows for multi-doc correctness (Cloud Function transaction applies changes)
+- Optional SQLite is allowed only as a **derived search index** (non-authoritative)
 
 Your job in this chat:
 - Refine the parity spec for account-context resolution, offline fallback, and coarse roles v1 semantics as used in the existing web app.

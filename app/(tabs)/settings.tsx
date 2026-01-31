@@ -5,6 +5,11 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
+import { ExpandableCard } from '../../src/components/ExpandableCard';
+import { ItemCard } from '../../src/components/ItemPreviewCard';
+import { GroupedItemCard } from '../../src/components';
+import { TemplateToggleListCard } from '../../src/components/TemplateToggleListCard';
+import type { TemplateToggleListItem } from '../../src/components/TemplateToggleListCard';
 import { SegmentedControl } from '../../src/components/SegmentedControl';
 import { ScreenTabItem, ScreenTabs, useScreenTabs } from '../../src/components/ScreenTabs';
 import { useAuthStore } from '../../src/auth/authStore';
@@ -12,7 +17,13 @@ import { useBillingStore } from '../../src/billing/billingStore';
 import { usePro } from '../../src/billing/billingStore';
 import { isAuthBypassEnabled } from '../../src/auth/authConfig';
 import { useAppearance, useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
-import { getCardStyle, getTextAccentStyle, getTextSecondaryStyle, layout, surface, textEmphasis } from '../../src/ui';
+import { CARD_LIST_GAP, getCardStyle, getTextAccentStyle, getTextSecondaryStyle, layout, surface, textEmphasis } from '../../src/ui';
+
+const PRIMARY_TABS: ScreenTabItem[] = [
+  { key: 'tab-one', label: 'Settings', accessibilityLabel: 'Settings tab' },
+  { key: 'tab-two', label: 'More', accessibilityLabel: 'More tab' },
+  { key: 'tab-three', label: 'Components', accessibilityLabel: 'Components tab' },
+];
 
 const SECONDARY_TABS: ScreenTabItem[] = [
   { key: 'subtab-one', label: 'Subtab One', accessibilityLabel: 'Subtab One' },
@@ -34,6 +45,15 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
   const { appearanceMode, setAppearanceMode } = useAppearance();
   const screenTabs = useScreenTabs();
   const primaryTabKey = screenTabs?.selectedKey ?? 'tab-one';
+  const [componentsScrollEnabled, setComponentsScrollEnabled] = useState(true);
+  const [activeCategories, setActiveCategories] = useState<TemplateToggleListItem[]>([
+    { id: 'cat-1', name: 'Additional Requests', itemize: true },
+    { id: 'cat-2', name: 'Design Fee', itemize: false },
+    { id: 'cat-3', name: 'Fuel', itemize: false },
+    { id: 'cat-4', name: 'Furnishings', itemize: true },
+    { id: 'cat-5', name: 'Install', itemize: false },
+    { id: 'cat-6', name: 'Kitchen', itemize: true },
+  ]);
 
   const subtabLabel = useMemo(() => {
     return SECONDARY_TABS.find((t) => t.key === selectedSubTabKey)?.label ?? 'Subtab One';
@@ -70,15 +90,128 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
     }
   };
 
-  if (primaryTabKey === 'tab-two') {
+  if (primaryTabKey === 'tab-three') {
     return (
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <AppText variant="body">Settings Tab Two content goes here.</AppText>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.componentsScrollContent}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={componentsScrollEnabled}
+      >
+        <TemplateToggleListCard
+          title="Active Categories"
+          rightHeaderLabel="ITEMIZE"
+          items={activeCategories}
+          onToggleItemize={(id, next) => {
+            setActiveCategories((prev) => prev.map((it) => (it.id === id ? { ...it, itemize: next } : it)));
+          }}
+          onReorderItems={setActiveCategories}
+          onDragActiveChange={(isDragging) => setComponentsScrollEnabled(!isDragging)}
+          getInfoContent={(item) => ({
+            title: `Category: ${item.name}`,
+            message:
+              'When itemize is enabled, transactions mapped to this category can be split into multiple categorized line items. Use this for categories that often include multiple sub-purchases.',
+          })}
+          onPressMenu={(id) => Alert.alert('Menu', `Menu pressed for ${id}`)}
+          onPressCreate={() => Alert.alert('Create', 'Create pressed')}
+          createPlaceholderLabel="Click to create new category"
+        />
+
+        <ExpandableCard
+          title="Expandable Card"
+          expandableRow1={{ label: 'Expandable Field 1', value: 'Expandable Field 3' }}
+          expandableRow2={{ label: 'Expandable Field 2', value: 'Expandable Field 4' }}
+          alwaysShowRow1={{ label: 'Always Show 1', value: 'Always Show Value 1' }}
+          alwaysShowRow2={{ label: 'Always Show 2', value: 'Always Show Value 2' }}
+          menuBadgeEnabled
+          menuBadgeLabel="Badge"
+          menuItems={[
+            {
+              key: 'action-with-subactions',
+              label: 'Action 1',
+              defaultSelectedSubactionKey: 'subaction-1',
+              subactions: [
+                { key: 'subaction-1', label: 'Subaction 1', onPress: () => console.log('Subaction 1 pressed') },
+                { key: 'subaction-2', label: 'Subaction 2', onPress: () => console.log('Subaction 2 pressed') },
+              ],
+            },
+            { key: 'edit', label: 'Edit', onPress: () => console.log('Edit pressed') },
+            { key: 'delete', label: 'Delete', onPress: () => console.log('Delete pressed') },
+          ]}
+        />
+
+        <ItemCard
+          description="CB2 — Pebble Side Table (white oak), sculpted profile with a softly rounded edge and a compact footprint for tight living spaces"
+          sku="CB2-PS-001"
+          sourceLabel="Wayfair"
+          priceLabel="$249.00"
+          statusLabel="In project"
+          locationLabel="Living room North wall"
+          defaultSelected={false}
+          onSelectedChange={(next) => console.log('Selected changed', next)}
+          bookmarked={true}
+          onBookmarkPress={() => console.log('Bookmark pressed')}
+          onAddImagePress={() => console.log('Add image pressed')}
+          onMenuPress={() => console.log('Menu pressed')}
+          onPress={() => console.log('Item card pressed')}
+        />
+
+        <GroupedItemCard
+          summary={{
+            description: 'Wayfair — Pillow Insert (Down alternative)',
+            sku: 'WF-PI-STD-001',
+            sourceLabel: 'Wayfair',
+            locationLabel: 'Guest room Closet',
+            thumbnailUri:
+              'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=240&q=80',
+          }}
+          countLabel="×2"
+          totalLabel="$59.98"
+          defaultSelected={false}
+          onSelectedChange={(next: boolean) => console.log('Group selected', next)}
+          items={[
+            {
+              description: 'Wayfair — Pillow Insert (Down alternative)',
+              sku: 'WF-PI-STD-001',
+              sourceLabel: 'Wayfair',
+              priceLabel: '$29.99',
+              statusLabel: 'In project',
+              locationLabel: 'Guest room Closet',
+              thumbnailUri:
+                'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=240&q=80',
+              defaultSelected: true,
+              onSelectedChange: (next: boolean) => console.log('Child item 1 selected', next),
+              bookmarked: false,
+              onBookmarkPress: () => console.log('Child item 1 bookmark pressed'),
+              onAddImagePress: () => console.log('Child item 1 add image pressed'),
+              onMenuPress: () => console.log('Child item 1 menu pressed'),
+              onPress: () => console.log('Child item 1 pressed'),
+            },
+            {
+              description: 'Wayfair — Pillow Insert (Down alternative)',
+              sku: 'WF-PI-STD-001',
+              sourceLabel: 'Wayfair',
+              priceLabel: '$29.99',
+              statusLabel: 'In project',
+              locationLabel: 'Guest room Closet',
+              thumbnailUri:
+                'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=240&q=80',
+              defaultSelected: false,
+              onSelectedChange: (next: boolean) => console.log('Child item 2 selected', next),
+              bookmarked: true,
+              onBookmarkPress: () => console.log('Child item 2 bookmark pressed'),
+              onAddImagePress: () => console.log('Child item 2 add image pressed'),
+              onMenuPress: () => console.log('Child item 2 menu pressed'),
+              onPress: () => console.log('Child item 2 pressed'),
+            },
+          ]}
+          defaultExpanded={false}
+        />
       </ScrollView>
     );
   }
 
-  if (primaryTabKey === 'tab-three') {
+  if (primaryTabKey === 'tab-two') {
     return (
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <AppText variant="body">{subtabLabel} content goes here.</AppText>
@@ -200,8 +333,9 @@ export default function SettingsScreen() {
   return (
     <Screen
       title="Settings"
+      tabs={PRIMARY_TABS}
       renderBelowTabs={({ selectedKey }) =>
-        selectedKey === 'tab-three' ? (
+        selectedKey === 'tab-two' ? (
           <ScreenTabs tabs={SECONDARY_TABS} value={selectedSubTabKey} onChange={setSelectedSubTabKey} />
         ) : null
       }
@@ -220,6 +354,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
+  },
+  componentsScrollContent: {
+    paddingTop: layout.screenBodyTopMd.paddingTop,
+    gap: CARD_LIST_GAP,
   },
   section: {
     marginBottom: 18,

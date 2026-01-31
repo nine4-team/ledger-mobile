@@ -17,6 +17,8 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 ## Inventory items list (filters/sorts/grouping/bulk)
 - [ ] **Search**: Inventory items support search via `bizItemSearch` and apply it consistently across list and next/previous navigation.  
   Observed in `src/pages/BusinessInventory.tsx` (`inventorySearchQuery`) and `src/pages/BusinessInventoryItemDetail.tsx` (`bizItemSearch` parsing + filtering).
+- [ ] **Search fields (parity)**: Search matches: description, sku, source, paymentMethod, businessInventoryLocation.  
+  Observed in `src/pages/BusinessInventoryItemDetail.tsx` (search matching logic) and captured in `40_features/business-inventory/ui/screens/BusinessInventoryItemsScopeConfig.md`.
 - [ ] **Filter modes**: Inventory items filter supports: `all`, `bookmarked`, `no-sku`, `no-description`, `no-project-price`, `no-image`, `no-transaction`.  
   Observed in `src/pages/BusinessInventory.tsx` (`BUSINESS_ITEM_FILTER_MODES`) and `src/pages/BusinessInventoryItemDetail.tsx` (valid modes list).
 - [ ] **Sort modes**: Inventory items sort supports `alphabetical` and `creationDate` (newest first).  
@@ -77,10 +79,8 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/AddBusinessInventoryTransaction.tsx` (checks `receiptOfflineMediaIds.length > 0 && !isOnline`, calls `showOfflineSaved()`).
 
 ## Firebase mobile collaboration (intentional deltas)
-- [ ] **No large listeners**: The mobile app does not attach listeners to large collections (inventory items/transactions).  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Inventory change-signal listener**: While the inventory workspace is active + foregrounded, the mobile app listens only to `accounts/{accountId}/inventory/meta/sync`.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
-- [ ] **Delta sync on signal**: Signal change triggers delta fetches and local DB upserts/deletes for inventory collections.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
+- [ ] **Scoped listeners only (required)**: Inventory screens may use listeners, but they must be **bounded to the active inventory scope** and must detach on background / reattach on resume.  
+  Required by `OFFLINE_FIRST_V2_SPEC.md`.
+- [ ] **No unbounded listeners (required)**: The mobile app must not attach listeners that effectively “listen to everything” across all projects/accounts.  
+  Required by `OFFLINE_FIRST_V2_SPEC.md`.
 

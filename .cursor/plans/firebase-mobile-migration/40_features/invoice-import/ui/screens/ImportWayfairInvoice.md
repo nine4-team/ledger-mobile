@@ -17,7 +17,6 @@ Let a user select a Wayfair invoice PDF, parse it locally into a draft transacti
   - Web parity evidence: `src/pages/ImportWayfairInvoice.tsx` (`projectService.getProject` → `projectName`)
 - Cached metadata dependencies:
   - Budget categories for `CategorySelect`
-  - Tax presets UI surface (parity includes “Other” behavior)
 
 ## Writes (local-first)
 For each user action:
@@ -28,23 +27,15 @@ For each user action:
   - Local state only (draft); no DB writes.
 - Extract thumbnails
   - Local state only (draft), but produces local image files that may need staging space.
-- Edit draft fields (date, amount, category, payment method, notes, subtotal/tax preset, item drafts, item images)
+- Edit draft fields (date, amount, category, payment method, notes, tax fields, item drafts, item images)
   - Local state only (draft); no DB writes.
 - Create transaction
-  - **Local DB mutation(s)**:
-    - insert transaction row (project scope)
-    - insert item rows
-    - link items to transaction
-    - create local attachment records:
-      - receipt PDF
-      - item image attachments for any imported thumbnails
-  - **Outbox op(s)** enqueued:
-    - `createTransactionWithItems` (idempotency key includes local transaction id)
-    - `uploadReceiptAttachment` (idempotency key includes local receipt attachment id)
-    - `uploadItemImage` per staged thumbnail (idempotency key includes local image attachment id)
-    - `attachImagesToItems` (or equivalent; may be folded into upload ops)
-  - **Change-signal updates**:
-    - server bumps `meta/sync` on apply; client does not write the signal doc directly.
+  - **Request-doc write (Firestore local cache)**:
+    - create a request doc that includes transaction + item payloads and a stable idempotency key
+    - stage local attachment placeholders for receipt PDF + item images (offline media state)
+  - **Server apply (Cloud Function transaction)**:
+    - create transaction + items atomically
+    - attach receipt/item image metadata and enqueue uploads per offline media lifecycle
 
 ## UI structure (high level)
 - Header:
@@ -66,7 +57,7 @@ For each user action:
 - Draft form:
   - Transaction date
   - Amount
-  - If tax preset is “Other”: subtotal input + tax hint
+  - Tax (inline fields; no presets)
   - Budget category select
   - Payment method radio
   - Notes textarea
@@ -92,10 +83,11 @@ For each user action:
   - Thumbnails are matched to items by row order; show a warning when counts mismatch.
   - Allow user to remove/replace item images in the draft editor before create.
   - Parity evidence: `applyThumbnailsToDrafts` + `handleImageFilesChange` in `src/pages/ImportWayfairInvoice.tsx`
-- **Tax preset “Other”**
-  - When the parser provides `calculatedSubtotal`, default tax preset to “Other” and populate subtotal.
-  - Validation: subtotal must be > 0 and must not exceed total amount.
-  - Parity evidence: `applyParsedInvoiceToDraft` + `validateBeforeCreate` in `src/pages/ImportWayfairInvoice.tsx`
+- **Tax (simplified; no presets)**
+  - When the parser provides `calculatedSubtotal`, default to **Calculate from subtotal** mode and populate subtotal.
+  - When the parser provides tax total, populate **tax amount** and back-calculate the rate.
+  - Validation: `subtotal > 0` and `subtotal <= total amount`; `taxAmount >= 0` and `taxAmount < total amount`.
+  - Parity evidence: `applyParsedInvoiceToDraft` + `validateBeforeCreate` in `src/pages/ImportWayfairInvoice.tsx` (intentional delta: replaces preset “Other” with inline tax fields).
 - **Create**
   - On success: show success feedback and navigate to transaction detail.
   - Then: enqueue background/queued uploads for receipt + thumbnails and show progress messaging.
@@ -110,9 +102,9 @@ For each user action:
   - Thumbnail extraction failure shows a non-blocking warning and proceeds.
 - Offline:
   - Parsing is allowed offline (local).
-  - Create is allowed offline (local DB + outbox); show “created (pending sync)” messaging on create.
+  - Create is allowed offline by writing the request doc to Firestore local cache; show “created (pending sync)” messaging on create.
 - Pending sync:
-  - Transaction and items are immediately visible in SQLite-backed UI; media shows placeholder states until uploaded.
+  - Transaction and items are immediately visible via Firestore local cache; media shows placeholder states until uploaded.
 - Permissions denied:
   - Show access denied UI with a back CTA.
   - Parity evidence: guard `!currentAccountId && !isOwner()` in `src/pages/ImportWayfairInvoice.tsx`
@@ -126,13 +118,13 @@ For each user action:
   - Extracted thumbnails become staged item image files.
 - Placeholder rendering (offline):
   - Receipt + item images show `local_only` / `uploading` / `failed` states with retry.
-  - Source of truth: `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 - Cleanup/orphan rules:
   - If user resets or leaves without creating, staged local files should be cleaned up (best-effort).
 
 ## Collaboration / realtime expectations
 - None required while screen is open.
-- Created entities converge via project change-signal + delta (no large listeners).
+- Created entities converge via Firestore offline persistence + scoped project listeners (no large listeners).
 
 ## Performance notes
 - Use explicit progress states for parse + thumbnail extraction.

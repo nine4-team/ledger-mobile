@@ -5,7 +5,7 @@ This doc defines the security model for the Firebase migration: **who can access
 This model is designed to support the architecture in:
 
 - [`target_system_architecture.md`](./target_system_architecture.md)
-- [`sync_engine_spec.plan.md`](../sync_engine_spec.plan.md) (sync constraints, idempotency, change-signal)
+- [`OFFLINE_FIRST_V2_SPEC.md`](../../../../OFFLINE_FIRST_V2_SPEC.md)
 
 ---
 
@@ -13,8 +13,8 @@ This model is designed to support the architecture in:
 
 - **Account isolation**: a user never reads/writes data outside accounts they belong to.
 - **Principle of least privilege**: only owners/admins can perform dangerous operations. (have we defined dangerous?)
-- **Local-first compatible**: rules support idempotent writes and the `meta/sync` signal pattern.
-- **Rules are simple; correctness is server-owned**: complex invariants go through callable Functions.
+- **Offline-ready compatible**: rules support Firestore-native offline (cached reads, queued writes).
+- **Rules are simple; correctness is server-owned**: complex multi-doc invariants go through callable Functions (request-doc workflows).
 
 ---
 
@@ -155,18 +155,18 @@ Recommended high-level layout:
   - `members/{uid}` (membership/role)
   - `invites/{inviteId}` (or `invites/{tokenHash}`) — invite issuance + status
   - `projects/{projectId}`
-    - `meta/sync` (change-signal doc)
-  - `inventory/meta/sync` (change-signal doc for Business Inventory scope)
+    - `requests/{requestId}` (request-doc workflows for multi-doc correctness)
   - `inventory/items/{itemId}`
   - `inventory/transactions/{transactionId}`
   - `inventory/spaces/{spaceId}`
   - `inventory/attachments/{attachmentId}`
+  - `inventory/requests/{requestId}` (request-doc workflows for multi-doc correctness)
   - `presets/...` (budget categories, vendor defaults, tax presets, space templates, etc.)
 
-This layout aligns with the change-signal pattern described in the sync spec and supports both collaboration scopes:
+Notes:
 
-- project: `accounts/{accountId}/projects/{projectId}/meta/sync`
-- inventory: `accounts/{accountId}/inventory/meta/sync`
+- This architecture does not require a `meta/sync` change-signal doc; collaboration is driven by scoped listeners on bounded queries.
+- If you do introduce “meta” documents later (for example: project summaries, counters, or scope-level configuration), treat them as normal secured documents, not as a sync primitive.
 
 ---
 
@@ -186,23 +186,14 @@ This layout aligns with the change-signal pattern described in the sync spec and
 
 ### Validate server-owned sync fields
 
-For entity docs that participate in delta sync, require these fields exist and have the right types:
+For entity docs that are directly client-writable, keep required fields minimal and rules-friendly:
 
-- `accountId` (string)
-- `updatedAt` (timestamp)
-- `deletedAt` (timestamp or null)
-- `version` (number)
-- `updatedBy` (string uid)
-- `lastMutationId` (string)
-- optional `schemaVersion` (number)
+- `accountId` (string; must match the path)
+- `createdAt`/`updatedAt` timestamps (where the product needs them)
+- `createdBy`/`updatedBy` (uid) when ownership/auditability matters
+- `deletedAt` tombstone (timestamp or null) if you need soft deletes
 
-Rules should enforce:
-
-- `updatedBy == request.auth.uid`
-- `updatedAt == request.time` for direct client writes (when not using Functions)
-- `version` increments by exactly +1 for client updates (where feasible)
-
-If enforcing `version` is too strict (because Functions may write), prefer enforcing **presence + monotonicity** and shift strictness to server-callable writes.
+Avoid inventing a global `version`/`lastMutationId` contract unless the product explicitly needs it; this architecture does not depend on a bespoke sync engine.
 
 ### Prefer “append-only” over “rewrite big arrays”
 
@@ -211,42 +202,6 @@ For relationships, prefer foreign keys on child docs (`item.projectId`, `item.tr
 - rule complexity
 - write volume
 - conflict surface
-
----
-
-## The `meta/sync` change-signal doc (rules-safe updates)
-
-The change-signal doc is critical to collaboration latency; it must be writable by authorized clients **without allowing arbitrary data corruption**.
-
-Path:
-
-`accounts/{accountId}/projects/{projectId}/meta/sync`
-
-Inventory scope path:
-
-`accounts/{accountId}/inventory/meta/sync`
-
-Suggested fields:
-
-- `seq` (number, monotonic)
-- `changedAt` (timestamp)
-- `byCollection` (map of collection -> number, monotonic per key)
-
-Rules should enforce:
-
-- Only account members can read the doc.
-- Only account members can update the doc.
-- Only these keys may exist (no arbitrary extra keys).
-- Values are monotonic:
-  - `request.resource.data.seq == resource.data.seq + 1`
-  - each `byCollection.<name>` is `>=` its prior value
-- `changedAt == request.time`
-
-If you find Firestore Rules make monotonic constraints too brittle in practice, move signal updates behind a callable Function (slightly higher latency), or keep client updates but loosen to:
-
-- `seq > resource.data.seq`
-
-…and treat the signal as a **hint** that triggers delta fetch, not as a correctness primitive.
 
 ---
 
@@ -270,8 +225,42 @@ Callable Functions should:
 
 - validate membership + role server-side
 - run a Firestore transaction/batch
-- write `updatedAt`, `version`, `updatedBy`, `lastMutationId`
-- update `meta/sync` once per logical operation
+- write server-owned fields (`updatedAt`, `updatedBy`, derived selectors, rollups)
+- update request status (`pending` → `applied|failed`) for request-doc workflows
+
+---
+
+## Request-doc workflows (security-critical)
+
+Request docs are the default mechanism for multi-doc correctness:
+
+- Client creates a request doc (works offline via queued writes).
+- Server processes and applies changes in a transaction.
+- Server records status on the request doc for debuggable UX.
+
+Recommended shape (example paths):
+
+- `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
+- `accounts/{accountId}/inventory/requests/{requestId}`
+
+Rules must enforce:
+
+- **Create**: allowed for authenticated account members, but only with:
+  - `status == "pending"`
+  - `createdBy == request.auth.uid`
+  - no server-only fields set (`appliedAt`, `errorCode`, `errorMessage`, etc.)
+- **Update**: clients should not be able to forge server results:
+  - disallow changing `status` away from `"pending"`
+  - or disallow client updates entirely (preferred; treat requests as append-only)
+- **Read**: allowed for account members so UX can show pending/applied/failed.
+
+Cloud Functions are the only writers of:
+
+- `status = "applied" | "failed"`
+- `appliedAt`
+- error fields
+
+This is a correctness and security boundary, not just a UX convenience.
 
 ---
 
@@ -341,8 +330,8 @@ Enable **Firebase App Check** early (for Firestore + Functions + Storage) to red
 - **Client tampering with money/critical fields**: mitigate via:
   - callable Functions for critical operations, or
   - stricter rule validation + conflict detection
-- **Signal spam** (`meta/sync` increments): mitigate via:
-  - monotonic constraints + allow only certain fields
+- **Request spam** (creating many request docs): mitigate via:
   - App Check
-  - server-side rate limiting if needed (Functions/Cloud Armor patterns)
+  - rules constraints on request shape/size
+  - server-side rate limiting/abuse detection (Functions/Cloud Armor patterns)
 

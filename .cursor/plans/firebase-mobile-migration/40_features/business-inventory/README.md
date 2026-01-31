@@ -25,7 +25,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Business inv
   - `ui/screens/BusinessInventoryTransactionsScopeConfig.md`
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (change-signal + delta, local-first): `40_features/sync_engine_spec.plan.md`
+- Offline data v2 architecture (native Firestore offline + scoped listeners + optional derived search index): `OFFLINE_FIRST_V2_SPEC.md`
 - Shared Items + Transactions modules (non-negotiable reuse): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Inventory operations + lineage (allocate/move/sell/linking invariants): `40_features/inventory-operations-and-lineage/README.md`
 - Offline media lifecycle + quota guardrails:

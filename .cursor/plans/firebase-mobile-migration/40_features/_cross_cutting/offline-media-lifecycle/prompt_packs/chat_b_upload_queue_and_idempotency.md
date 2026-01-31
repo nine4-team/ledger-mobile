@@ -9,7 +9,7 @@ Implement Phase B of the offline media lifecycle:
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
-- Architecture constraints (referenced by the spec): `sync_engine_spec.plan.md`
+- Architecture: `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Outputs (required)
 - Implement a persistent upload job representation that includes:
@@ -29,7 +29,7 @@ Implement Phase B of the offline media lifecycle:
 - Upload work must be durable across app restarts.
 - Retries must be safe via idempotency keys.
 - Do not assume background execution for correctness; foreground retries must work.
-- Keep compatibility with the “no large listeners; delta sync + change-signal” architecture.
+- Keep compatibility with `OFFLINE_FIRST_V2_SPEC.md` (scoped listeners; no “listen to everything”).
 
 ## Edge cases (must be explicit)
 - App closes mid-upload: expected state on next launch (`uploading` vs `failed` vs resume).

@@ -20,12 +20,9 @@ Shared-module requirement:
   - Return from `TransactionDetail` / `EditTransaction` via native back stack (Expo Router)
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore queries (cache-first via native Firestore offline persistence):
   - `transactions` scoped by the active workspace context (project vs inventory), with additional predicates based on selected filters
-  - Optional join/read: budget categories (to display category name for **non-canonical** transactions)
-  - Required join/read for budget-category filter correctness (new model):
-    - If `txCategory` filter is set, include **canonical inventory** transactions when there exists a linked item where:
-      - `item.transactionId === transaction.id` AND `item.inheritedBudgetCategoryId === <selectedCategoryId>`
+  - Budget categories (to display category name for **non-canonical** transactions)
   - Optional derived: transaction completeness (needs-review vs missing items)
 - Derived view models:
   - Canonical title mapping for inventory purchase/sale transactions
@@ -36,9 +33,7 @@ Shared-module requirement:
 ## Writes (local-first)
 - User actions generally do not mutate transaction data from the list, except:
   - **Canonical total “self-heal”** may update a transaction amount when computed total differs (web behavior).
-    - Local DB mutation: update `transactions.amount`
-    - Outbox op: updateTransaction \(transactionId, fields:{amount}\)
-    - Change-signal: bump `projects/{projectId}/meta/sync` transactions seq (conceptually)
+    - Firestore write: update `transaction.amount` (queued offline by Firestore if needed)
 
 ## UI structure (high level)
 - Sticky controls bar:
@@ -62,6 +57,11 @@ Rules:
 - **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`):
   - Should be treated as **uncategorized** on the transaction row (recommend `category_id = null`).
   - If the list shows any category-related badge for canonical rows, it must be **derived** from linked items’ `inheritedBudgetCategoryId` (e.g., “Multiple categories”) and must not require a user-facing “canonical category” selection.
+
+Implementation note (required for filter + export usefulness):
+- To support “budget category” filtering and useful CSV export without a client-side join, canonical transactions should carry a denormalized field such as:
+  - `attributedCategoryIds: string[]` (set of category IDs present on linked items’ `inheritedBudgetCategoryId`)
+- This field must be maintained by a server-owned invariant (e.g., request-doc processing or a Cloud Function trigger), so it stays correct across writers.
 
 ## User actions → behavior (the contract)
 - **Open Add menu** → show actions; selecting an action closes menus.
@@ -100,23 +100,15 @@ Rules:
 - Not applicable directly; list does not manage media.
 
 ## Collaboration / realtime expectations
-- While foregrounded in an active scope, list should reflect other users’ changes via change-signal + delta sync.
-- No large listeners on `transactions`.
+- While foregrounded in an active scope, list should reflect other users’ changes via **scoped listeners** on bounded queries.
+- No unbounded listeners on `transactions`.
 
 ## Performance notes
 - Expected dataset sizes:
   - Transactions can be large enough that list operations must be indexed and virtualized as needed.
-- Required indexes (SQLite suggestions):
-  - `transactions(project_id, transaction_date)`
-  - `transactions(project_id, created_at)`
-  - `transactions(project_id, category_id)`
-  - `transactions(project_id, receipt_emailed)`
-  - `transactions(project_id, needs_review)`
-  - `transactions(project_id, transaction_type)`
-  - `transactions(project_id, payment_method)`
-  - For canonical category filtering (new model):
-    - `items(transaction_id, inherited_budget_category_id)`
-  - Optional: FTS for `source`/`notes`
+- Required indexes (Firestore + optional derived index):
+  - Firestore composite indexes to support bounded queries (projectId + sort mode + key filters).
+  - Optional: if robust offline full-text search over `source`/`notes` is required, add a **derived local search index** module (index-only; Firestore remains canonical), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Parity evidence
 - State persistence (URL params; web): Observed in `src/pages/TransactionsList.tsx` (`useSearchParams` + sync effects).

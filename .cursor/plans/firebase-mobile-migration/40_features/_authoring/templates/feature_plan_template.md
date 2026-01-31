@@ -5,7 +5,7 @@ Produce parity-grade specs for `<feature_slug>`.
 
 ## Inputs to review (source of truth)
 - Feature map entry: `<link/section>`
-- Sync engine spec: `sync_engine_spec.plan.md`
+- Offline Data v2 architecture: `OFFLINE_FIRST_V2_SPEC.md`
 - Relevant existing plans (if any): `<paths>`
 
 ## Owned screens (list)
@@ -45,6 +45,6 @@ Recommended slices:
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Offline behaviors are explicit (pending + restart + reconnect).
-- Collaboration behavior is explicit and uses change-signal + delta.
+- Collaboration behavior is explicit and uses scoped listeners (bounded to the active context).
 - Cross-links are complete.
 

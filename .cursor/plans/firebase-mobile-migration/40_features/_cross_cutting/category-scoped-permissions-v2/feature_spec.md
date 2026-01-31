@@ -1,6 +1,6 @@
 # Category-scoped access control (Roles v2) — Feature spec (cross-cutting)
 
-This doc defines **category-driven scoped permissions** for the React Native + Firebase migration, aligned with the offline-first architecture (SQLite source of truth, outbox, delta sync, change-signal) and the canonical attribution model.
+This doc defines **category-driven scoped permissions** for the React Native + Firebase migration, aligned with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows) and the canonical attribution model.
 
 Evidence / canonical attribution sources:
 - `40_features/project-items/flows/inherited_budget_category_rules.md` (stable selector: `item.inheritedBudgetCategoryId`)
@@ -100,32 +100,26 @@ For a canonical `INV_*` transaction shown to a scoped user:
   - write access (which creates/updates are accepted)
 - **Client UI gating** is required for a coherent UX, but is **not sufficient**.
 
-### 4.2 Reads and the “no large listeners” + delta-sync constraint
-This migration prohibits subscribing to large collections; reads are performed via:
-- a tiny change-signal listener per active scope, plus
-- **delta sync** queries into allowed subsets.
+### 4.2 Reads and the “no large listeners” constraint
+This migration prohibits subscribing to large collections; reads must be **scoped/bounded** to the active workspace context (project vs inventory) and enforced server-side.
 
 Roles v2 must therefore be enforced in **query shape**, not “fetch everything then filter client-side”.
 
 ### 4.3 Offline implications (decision)
 Decision (preferred):
-- **Local SQLite stores only what the user is allowed to read**, by applying scope filters during delta sync.
-- Rationale:
-  - minimizes data leakage risk on device backups / debug tooling
-  - keeps local search/filter/export behavior consistent with server visibility
-  - aligns with cost-control architecture (“no subscribe to everything”, no “download the world”)
+- **Firestore Rules are the enforcement source of truth**, and the client must only issue **scoped queries/listeners** that can never return out-of-scope docs.
+- This keeps UI behavior consistent with server visibility without relying on client-side filtering or a bespoke sync engine.
 
-Implication:
-- Scope changes (admin updates `allowedCategoryIds`) require the next sync cycle to:
-  - fetch newly-allowed data (backfill within the delta window, or via a dedicated “scope changed” resync cursor), and
-  - optionally prune locally cached rows that are no longer allowed.
+Offline implication:
+- With Firestore-native offline persistence, the device may retain **previously-fetched** documents in its local cache. This spec does **not** rely on cache pruning for correctness; it relies on server-side enforcement + scoped query shapes for what can be shown/used going forward.
+- If `allowedCategoryIds` changes, the client must update query/listener scopes immediately so subsequent reads reflect the new visibility set.
 
 ### 4.4 Where to enforce canonical transaction visibility
 Because canonical `INV_*` visibility is **derived from linked items**, enforcement must ensure:
 - a scoped user cannot read a canonical transaction unless there exists at least one in-scope linked item.
 
 Recommended approach (no new product capability; implementation strategy only):
-- Maintain a server-authoritative, queryable “visibility index” for canonical transactions keyed by category (and/or by member scope) to support delta sync without large listeners.
+- Maintain a server-authoritative, queryable “visibility index” for canonical transactions keyed by category (and/or by member scope) to support **scoped queries** without large listeners.
 - If an implementation chooses a different approach, it must still satisfy:
   - no “subscribe to everything”
   - no client-side filtering of unauthorized canonical transactions after downloading them

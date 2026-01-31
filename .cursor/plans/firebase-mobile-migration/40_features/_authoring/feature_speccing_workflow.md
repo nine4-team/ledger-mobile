@@ -16,7 +16,7 @@ You only come here when you want to create a *new* feature folder, create new pr
 ## Core inputs (canonical)
 
 - **Feature inventory + parity details**: `../feature_list.md` (includes an appendix with the observed existing-app inventory)
-- **Architecture constraints**: `../../sync_engine_spec.plan.md` (local-first, explicit outbox, delta sync, tiny change-signal; avoid large listeners)
+- **Architecture constraints**: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence; scoped listeners; request-doc workflows for multi-doc correctness; optional derived search index)
 - **Shared module reuse rule (Items/Transactions)**: `../_cross_cutting/ui/shared_items_and_transactions_modules.md`
 
 ## Outputs (per feature)
@@ -100,8 +100,8 @@ Minimum requirement per feature:
 
 - Add a short **“Implementation reuse (porting) notes”** section to `feature_spec.md` (or the relevant screen contract) that lists:
   - **Reusable logic** (file paths) that should be ported as-is or with minimal adaptation
-  - **Platform wrappers** needed (e.g., file picker, share sheet, background execution, SQLite persistence)
-  - Any **known deltas** required by offline-first architecture (outbox/delta/change-signal)
+  - **Platform wrappers** needed (e.g., file picker, share sheet, background execution, native Firebase, optional derived search index)
+  - Any **known deltas** required by Offline Data v2 (Firestore offline semantics, scoped listeners, request-doc workflows)
 
 Cross-cutting guidance:
 

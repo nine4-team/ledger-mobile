@@ -32,7 +32,10 @@ Primary sources:
 - Choosing exact RN storage libraries/implementations (this doc defines contracts/behavior).
 
 ## Compatibility constraints (must obey)
-- Must be compatible with `sync_engine_spec.plan.md` (local-first + outbox + delta sync + no read amplification).
+- Must be compatible with `OFFLINE_FIRST_V2_SPEC.md`:
+  - Firestore-native offline persistence is the baseline (Firestore is canonical).
+  - Scoped/bounded listeners are allowed; no “listen to everything”.
+  - Multi-doc correctness uses request-doc workflows (server applies changes in a Firestore transaction).
 - Must work across multiple features consistently (Items, Transactions, Spaces, Settings, Invoice import, QR exports, etc.).
 
 ---

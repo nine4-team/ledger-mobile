@@ -2,11 +2,10 @@
 
 ## Goal
 
-You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with an **offline-ready** architecture baseline:
+- Firestore-native offline persistence (Firestore is canonical)
+- Scoped listeners (never unbounded “listen to everything”)
+- Request-doc workflows for multi-doc invariants (Cloud Function applies changes atomically)
 
 Your job in this chat:
 - Produce parity specs grounded in the existing codebase (web) so an implementation team can reproduce behavior with the new architecture.
@@ -47,7 +46,7 @@ Related services/hooks:
   - pending and retry UX
   - restart + reconnect behavior
 - Collaboration expectations:
-  - no large listeners; change-signal + delta
+  - no unbounded listeners; scoped listeners
 
 ## Evidence rule (anti-hallucination)
 
@@ -57,5 +56,5 @@ For each non-obvious behavior:
 
 ## Constraints / non-goals
 - Do not spec full item CRUD here; link to `project-items`.
-- Do not subscribe to all items; use change-signal + delta.
+- Do not subscribe to all items; use scoped listeners only.
 

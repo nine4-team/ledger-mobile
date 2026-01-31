@@ -4,8 +4,8 @@
 Specify (and/or implement) the project “Accounting” sub-tab rollups and its report entrypoints, compatible with offline-first constraints.
 
 ## Critical constraints (must obey)
-- Rollups must be computed from SQLite only (offline).
-- No listeners on large collections; freshness is change-signal + delta (`sync_engine_spec.plan.md`).
+- Rollups must be derivable offline from Firestore-cached data (Firestore-native offline persistence; `OFFLINE_FIRST_V2_SPEC.md`).
+- If listeners are used, they must be scoped/bounded to the active project scope (no unbounded “listen to everything” listeners).
 
 ## Exact output files
 Update only:

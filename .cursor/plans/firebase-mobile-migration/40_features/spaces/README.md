@@ -37,7 +37,7 @@ Important terminology clarification for this migration:
   - `ui/screens/SpaceForm.md`
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (change-signal + delta, local-first): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Image gallery/lightbox (shared behavior): `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 - Presets/space templates (create/list templates): `40_features/feature_list.md` → “Settings + presets”
 

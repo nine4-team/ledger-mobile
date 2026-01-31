@@ -1,7 +1,7 @@
 ## Goal
 Ship the **offline media lifecycle contract** (local cache + attachment state machine + durable uploads + cleanup) in a way that:
 
-- stays compatible with the migration architecture: **offline-first**, SQLite source of truth, **outbox**, **delta sync**, **change-signal** (no “subscribe to everything”)
+- stays compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows for multi-doc correctness; no “subscribe to everything”)
 - is reusable across features that capture/select attachments (Items, Transactions, Spaces, Settings, Invoice import, etc.)
 - does not leak device storage over time (bounded cache + garbage collection)
 

@@ -8,7 +8,7 @@ Provide a printable/shareable “Client Summary” for a project: overall spend,
   - Project shell → Accounting tab → “Client Summary”
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore local cache reads (scoped to project):
   - Project by id (name, clientName)
   - Items for project
   - Transactions for project (for receipt link resolution and category attribution fallback)
@@ -53,12 +53,12 @@ Provide a printable/shareable “Client Summary” for a project: overall spend,
   - Parity evidence: `src/pages/ClientSummary.tsx`.
 - Error: show error state + Back button.
   - Parity evidence: `src/pages/ClientSummary.tsx` error block.
-- Offline: must render from local DB; if categories are missing locally, category breakdown may show “Uncategorized”/unknown name until metadata is present.
+- Offline: must render from Firestore local cache; if categories are missing locally, category breakdown may show “Uncategorized”/unknown name until metadata is present.
 - Pending sync: if business logo or other referenced media is pending upload, show a non-blocking warning that exports may omit branding/media.
 
 ## Collaboration / realtime expectations
 - No realtime requirement while open.
-- Values reflect local DB until the next delta sync run.
+- Values reflect Firestore local cache until the next sync pass.
 
 ## Performance notes
 - Item list can be large; use list virtualization and avoid expensive derived recomputation on every render.

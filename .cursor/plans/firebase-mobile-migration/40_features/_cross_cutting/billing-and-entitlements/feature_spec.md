@@ -2,7 +2,7 @@
 
 This doc defines the **monetization enforcement contract** for the Firebase mobile migration (React Native + Firebase), compatible with:
 
-- offline-first (SQLite + outbox + delta sync)
+- `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Firestore Rules constraints (no aggregate queries, no server-side “count” in rules)
 - server-owned invariants (Callable Cloud Functions)
 
@@ -106,7 +106,7 @@ Notes:
 
 ### Source of truth
 
-- **Callable Functions** are the source of truth for **limit-enforced creates** (and any multi-doc operation).
+- **Cloud Functions** are the source of truth for **limit-enforced creates** (and any multi-doc operation).
 - **Firestore Rules** should disallow direct client creates where enforcement depends on counts/limits.
 - **Client UX** uses the snapshot to preflight and show the right messaging, but cannot be relied on for enforcement.
 
@@ -115,22 +115,23 @@ Notes:
 #### Create project (required)
 
 - Disallow direct client `create` to `accounts/{accountId}/projects/{projectId}`.
-- Provide callable Function:
-  - `createProject({ accountId, ...projectFields })`
-  - validates membership + role (see `10_architecture/security_model.md`)
-  - reads `accounts/{accountId}/entitlements/current`
-  - reads `accounts/{accountId}/stats.projectCount`
-  - enforces: `projectCount < limits.maxProjects` (unless “unlimited” in Pro policy)
-  - writes the new project doc
-  - increments `stats.projectCount`
-  - updates `projects/{projectId}/meta/sync` once per logical operation
+- Prefer a **request-doc workflow** so the create can be queued offline and applied server-side when online:
+  - client creates: `accounts/{accountId}/requests/{requestId}` with `type: "createProject"` and required fields
+  - Function processes request in a Firestore transaction:
+    - validates membership + role (see `10_architecture/security_model.md`)
+    - reads `accounts/{accountId}/entitlements/current`
+    - reads `accounts/{accountId}/stats.projectCount`
+    - enforces: `projectCount < limits.maxProjects` (unless “unlimited” in Pro policy)
+    - writes the new project doc
+    - increments `stats.projectCount`
+    - marks request `status` (e.g., `applied | denied | failed`) with debuggable error info
 
 #### Create item / transaction (planned)
 
 Same pattern as project creation:
 
 - disallow direct client creates where a limit must be enforced
-- provide server-owned create Functions (`createItem`, `createTransaction`) that enforce `itemCount` / `transactionCount`
+- provide server-owned create processing (prefer request-doc workflows) that enforce `itemCount` / `transactionCount`
 
 ---
 

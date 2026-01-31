@@ -3,7 +3,7 @@
 ## Goal
 Refine the projects spec specifically for the Firebase mobile target:
 - offline-first behaviors (pending, restart, reconnect),
-- collaboration freshness without large listeners (change-signal + delta),
+- collaboration freshness without large listeners (scoped listeners),
 - entitlements gating for create project (callable Function + offline policy).
 
 ## Outputs (required)
@@ -16,7 +16,7 @@ Optionally (only if needed for clarity):
 - `40_features/projects/ui/screens/ProjectLayout.md`
 
 ## Source-of-truth references
-- Migration architecture: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 - Entitlements gating: `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
 
 Web parity references (for what exists today)
@@ -38,6 +38,6 @@ For each non-obvious behavior, include one of:
   - If Option A: define UX when offline and gating is unknown.
   - If Option B: define how drafts are represented, reconciled, and what happens on denial.
 - Collaboration freshness:
-  - One listener per active project on `meta/sync`
-  - Delta fetch + apply, including delete tombstones
+  - Scoped listeners only (never unbounded)
+  - Detach on background; reattach on resume
 

@@ -201,6 +201,12 @@ The web app achieves similar outcomes via URL params + `restoreScrollY`:
     - Search matches include `item.businessInventoryLocation`
     - Detail renders the “Location” field when present
 
+### Search match fields (required; avoid ambiguity)
+Search behavior is owned by the shared list modules, but the **match fields differ by scope** and are specified in the scope-specific screen contracts:
+
+- Project scope item search fields: `40_features/project-items/ui/screens/ProjectItemsList.md`
+- Inventory scope item search fields: `40_features/business-inventory/ui/screens/BusinessInventoryItemsScopeConfig.md`
+
 ### Intentionally not included in the scope config (keep it small)
 
 - **Budget category required on manual transaction create** is **not scope-dependent** (both project + inventory create flows require category in current web parity):

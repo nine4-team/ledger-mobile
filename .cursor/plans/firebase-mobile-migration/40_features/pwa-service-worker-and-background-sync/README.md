@@ -7,12 +7,11 @@ Key migration delta:
 - We **do** preserve (and improve) the user-facing promise: local-first correctness + automatic sync attempts + clear “needs attention” UX, without introducing expensive background polling or large listeners.
 
 ## Inputs (source of truth)
-- Sync engine architecture (canonical): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 architecture (canonical): `OFFLINE_FIRST_V2_SPEC.md`
 - Global sync UX (banner/toasts): `40_features/connectivity-and-sync-status/feature_spec.md`
 - Web parity evidence:
   - Service worker orchestration: `public/sw-custom.js`
   - SW bridge + manual trigger + event bus: `src/services/serviceWorker.ts`
-  - Outbox processing (delegated by SW): `src/services/operationQueue.ts`
   - Sync banner wiring: `src/components/SyncStatus.tsx`
 
 ## Outputs (this folder)

@@ -6,9 +6,9 @@ Provide a deterministic, offline-first way to perform **cross-entity inventory o
 - **Correctness** across items ↔ transactions ↔ projects
 - **Idempotency** under retries (no double-sell / double-allocate)
 - **Lineage visibility** (audit path and “where did this go?” cues)
-- **Cost control** (no large collection listeners; change-signal + delta sync only)
+- **Cost control** (scoped/bounded listeners only; avoid unbounded “listen to everything” patterns)
 
-This spec is written for the React Native + Firebase target architecture described in `40_features/sync_engine_spec.plan.md`.
+This spec is written for the React Native + Firebase target architecture described in `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Key definitions
 
@@ -39,25 +39,71 @@ Parity evidence:
 
 ## Architecture constraints (must hold)
 
-### Local-first + outbox
-All user actions apply to the local DB first, enqueueing **one** outbox op that represents the user intent. The outbox flush applies the server mutation with `lastMutationId` idempotency.
+### Firestore-native offline + request-doc correctness (default)
+For operations that update multiple docs and enforce invariants, the default mechanism is **request docs**:
 
-Reference: `40_features/sync_engine_spec.plan.md` (§5 write path / outbox).
+- Client writes a `request` doc describing the operation (works offline via Firestore-native offline persistence).
+- A Cloud Function processes the request and applies all writes in a Firestore transaction.
+- The request doc records `status` so the client can render `pending/applied/failed` and offer retry.
+
+Reference: `OFFLINE_FIRST_V2_SPEC.md` (“Request-doc workflows”).
 
 ### Server-owned invariants for multi-entity correctness (Firebase)
 Multi-entity operations in this feature MUST be implemented as server-owned invariants, because they update multiple documents and must be idempotent under retries.
 
 Required Firebase shape (conceptual):
-- Callable Function per operation (or one function with a discriminated union op payload), executed as a Firestore transaction:
-  - `inventory_deallocate_to_business(...)`
-  - `inventory_allocate_to_project(...)`
-  - `inventory_sell_item_to_project(...)`
+- A request-doc workflow (recommended default) that triggers a Cloud Function and executes a Firestore transaction:
+  - `INVENTORY_DEALLOCATE_TO_BUSINESS`
+  - `INVENTORY_ALLOCATE_TO_PROJECT`
+  - `INVENTORY_SELL_ITEM_TO_PROJECT`
 
 Each function must:
 - Validate permissions (membership + role).
 - Validate preconditions (expected current state; detect conflicts).
-- Apply all document writes atomically (items + canonical transaction docs + lineage docs + change-signal).
-- Use an idempotency key (`opId` / `lastMutationId`) to make retries safe.
+- Apply all document writes atomically (items + canonical transaction docs + lineage docs + request status updates).
+- Use an idempotency key (`requestId` / `opId`) to make retries safe.
+
+### Request-doc collection + payload shapes (required)
+This feature MUST define concrete request-doc shapes so implementation can be transactional, idempotent, and debuggable.
+
+Collection shape (recommended; per `OFFLINE_FIRST_V2_SPEC.md`):
+- Project-scoped requests: `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
+- Inventory-scoped requests (optional, if you prefer BI as its own scope): `accounts/{accountId}/inventory/requests/{requestId}`
+
+Common request doc fields:
+- `type`: `"INVENTORY_DEALLOCATE_TO_BUSINESS" | "INVENTORY_ALLOCATE_TO_PROJECT" | "INVENTORY_SELL_ITEM_TO_PROJECT"`
+- `status`: `"pending" | "applied" | "failed"` (clients write only `"pending"`)
+- `createdAt`, `createdBy`
+- `appliedAt?`
+- `errorCode?`, `errorMessage?` (safe, non-sensitive)
+- `opId`: stable idempotency key for the *logical* user action
+- `payload`: minimal IDs + fields required for the invariant
+
+Retry + idempotency rules (required):
+- **Default retry**: write a *new* request doc (new `requestId`) with the **same `opId`**.
+- Server MUST treat `(type, opId)` as **at-most-once**:
+  - if already applied, mark the new request as `applied` (or `failed` with a deterministic “already applied” code) without reapplying writes
+  - if already failed, a new request with the same `opId` may retry depending on error type (policy must be explicit in implementation)
+
+Payload shapes (minimum required fields):
+- `INVENTORY_DEALLOCATE_TO_BUSINESS`:
+  - `itemId`, `sourceProjectId`
+  - `disposition` (if UI allows override; else server sets)
+  - `expected`: `{ itemProjectId, itemTransactionId? }` (conflict detection / precondition)
+- `INVENTORY_ALLOCATE_TO_PROJECT`:
+  - `itemId`, `targetProjectId`
+  - `inheritedBudgetCategoryId` (required; see `40_features/project-items/flows/inherited_budget_category_rules.md`)
+  - optional: `space`, `notes`, `amount` (match parity fields if they exist)
+  - `expected`: `{ itemProjectId, itemTransactionId? }`
+- `INVENTORY_SELL_ITEM_TO_PROJECT`:
+  - `itemId`, `sourceProjectId`, `targetProjectId`
+  - `inheritedBudgetCategoryId` (required for the destination project attribution)
+  - optional: `space`, `notes`, `amount`
+  - `expected`: `{ itemProjectId, itemTransactionId? }`
+
+Partial completion semantics (required):
+- Preferred Firebase behavior is **atomic**: the sell-to-project request applies deallocation + allocation in **one Firestore transaction**, so “partial completion” should not occur.
+- If implementation ever requires multiple transactions (e.g., future batch ops), request docs MUST record a resumable `stage` and remain idempotent across stages.
 
 ## Core flows (spec-level summary)
 
@@ -137,7 +183,5 @@ Parity evidence:
 - `src/services/lineageService.ts` (`appendItemLineageEdge`, `updateItemLineagePointers`)
 
 ## Collaboration / realtime expectations (Firebase target)
-- Do not attach listeners to large collections for “freshness.”
-- For project-scoped operations, the server writes must bump the project `meta/sync` change-signal so other foregrounded clients run delta sync within ~1–3 seconds typical.
-
-Reference: `40_features/sync_engine_spec.plan.md` (§4 change signal doc).
+- Use scoped listeners bounded to the active scope per `OFFLINE_FIRST_V2_SPEC.md` (detach on background, reattach on resume).
+- Other foregrounded clients converge via Firestore’s realtime updates within the scope (no bespoke change-signal + delta sync engine).

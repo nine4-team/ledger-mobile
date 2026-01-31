@@ -5,7 +5,7 @@ Provide a deterministic “manual recovery” action when sync is stuck/errored,
 
 ## Inputs (state)
 - Connectivity: `isOnline`
-- Outbox snapshot:
+- Pending-changes snapshot:
   - `pendingCount`
   - `lastOfflineEnqueueAt`
   - `lastEnqueueError`
@@ -23,7 +23,7 @@ Parity evidence:
 ## Behavior (on press)
 1. Guard against double-taps while processing.
 2. If online and prerequisites are `blocked` or `warming`, call `hydrateNow()` (best-effort; do not fail the whole retry if hydration fails).
-3. Request a foreground sync attempt.
+3. Request a best-effort foreground “retry now” attempt (reattach scoped listeners + refresh request-doc statuses).
 
 ## Render rules (hints)
 - If `showPendingCount=true` and `pendingCount>0`, show “(N pending)”.

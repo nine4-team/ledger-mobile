@@ -15,12 +15,12 @@ Each non-obvious criterion is backed by an **intentional delta** reference to th
 - [ ] **Server-owned updates**: counters are updated only by trusted backend/Functions.
 
 ## Gated creates
-- [ ] **Create project is server-owned**: direct client creates to `accounts/{accountId}/projects/*` are disallowed when limits are enforced; creation happens via callable `createProject`.
+- [ ] **Create project is server-owned**: direct client creates to `accounts/{accountId}/projects/*` are disallowed when limits are enforced; creation is applied server-side (preferred: request-doc workflow processed by Functions).
 - [ ] **Create project enforces limits**:
   - Free tier enforces `projectCount < limits.maxProjects` (with `maxProjects = 1`).
   - Pro tier increases/removes the limit per policy.
-- [ ] **Membership/role validated**: callable validates membership per `accounts/{accountId}/members/{uid}` (see `10_architecture/security_model.md`).
-- [ ] **Meta/sync updated once**: successful creates update the relevant `meta/sync` doc once per logical operation (see `40_features/sync_engine_spec.plan.md`).
+- [ ] **Membership/role validated**: server-owned create validates membership per `accounts/{accountId}/members/{uid}` (see `10_architecture/security_model.md`).
+- [ ] **Request status is visible** (if using request-doc workflow): create requests expose debuggable `status` (`pending | applied | denied | failed`) and error info for UX.
 
 ## Offline behavior
 - [ ] **Offline allow only when provable**: when offline, gated creates proceed only if cached `entitlements/current` + cached `stats` prove under-limit.

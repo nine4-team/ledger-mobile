@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "ui:check": "node scripts/check-ui-kit-deltas.mjs",
+    "check:native-only": "node scripts/check-native-only.mjs",
     "lint": "eslint \"{app,src,scripts}/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint \"{app,src,scripts}/**/*.{js,jsx,ts,tsx}\" --fix",
     "lint:styles": "eslint --config eslint.styles.config.mjs \"{app,src}/**/*.{js,jsx,ts,tsx}\""
@@ -27,7 +28,6 @@
     "expo-router": "~4.0.0",
     "expo-sqlite": "~14.0.0",
     "expo-status-bar": "~2.0.0",
-    "firebase": "^11.0.0",
     "react": "18.3.1",
     "react-native": "0.76.9",
     "react-native-purchases": "^8.2.0",

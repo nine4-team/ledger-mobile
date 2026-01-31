@@ -3,7 +3,7 @@ Produce parity-grade specs for `spaces`.
 
 ## Inputs to review (source of truth)
 - Feature list entry: `40_features/feature_list.md` → **Feature 9: Spaces** (`spaces`)
-- Sync engine spec: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 - Cross-cutting UI: `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 
 ## Owned screens (list)
@@ -16,7 +16,7 @@ Produce parity-grade specs for `spaces`.
 
 ## Cross-cutting dependencies (link)
 - Media placeholder + gallery behavior: `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
-- Offline-first invariants: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 - Template management surface (presets): `40_features/feature_list.md` → “Settings + presets”
 
 ## Output files (this work order will produce)
@@ -45,6 +45,6 @@ Recommended slices:
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Offline behaviors are explicit (pending + restart + reconnect).
-- Collaboration behavior is explicit and uses change-signal + delta (no large listeners).
-- Cross-links are complete (spaces ↔ screen contracts ↔ sync engine ↔ cross-cutting media docs).
+- Collaboration behavior is explicit and uses scoped listeners (no unbounded listeners).
+- Cross-links are complete (spaces ↔ screen contracts ↔ offline v2 ↔ cross-cutting media docs).
 

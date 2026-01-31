@@ -9,7 +9,7 @@ Define exactly what happens during **one** background sync attempt so it is:
 This flow is referenced by `../feature_spec.md`.
 
 ## What it is (plain language)
-A “sync work unit” is one short try to send any saved offline changes up to the server. It does a small amount of work and then stops, even if there is more work remaining.
+A “sync work unit” is one short best-effort attempt to help Firestore deliver any **pending local writes** (including submission of request-doc operations) up to the server. It does a small amount of work and then stops, even if there is more work remaining.
 
 ## Preconditions
 - The app may or may not be connected to the internet.
@@ -19,17 +19,18 @@ A “sync work unit” is one short try to send any saved offline changes up to 
 ## Step-by-step behavior (one attempt)
 
 ### 1) Start
-- If there are **no pending changes**, stop immediately (do nothing).
 - If the device is **offline**, stop immediately (do nothing) and wait for the next opportunity.
+- If the user is **unauthenticated** (or auth state is unknown), stop immediately (do nothing).
 
 ### 2) Try to sync pending changes (bounded)
-If there are pending changes and the device is online:
-- Try to sync a **limited chunk** of pending changes.
-- If it succeeds and there are still pending changes, **stop anyway** and wait for a later opportunity.
+If the device is online + authenticated:
+- Allow Firestore to push **pending local writes** to the server.
+- The implementation must be **bounded** by a strict time budget (e.g., “up to N seconds”) and must stop even if work remains.
+- The implementation must not attach listeners or start long-running reads.
 
 ### 3) Optional catch-up (bounded)
-Optionally (only if it remains cheap), do a small “catch-up” to pull in remote updates.
-- This must be bounded the same way (small, limited, then stop).
+Optionally (only if it remains cheap and bounded), do a minimal “catch-up” read relevant to user-visible “needs attention” state (e.g., a very small, user-scoped query of recent failed request-docs).  
+This is not required for correctness and must remain strictly bounded.
 
 ### 4) Stop conditions (always stop)
 The work unit must stop when any of these happen:
@@ -46,7 +47,7 @@ If the attempt fails:
 Parity evidence reference: the web service worker uses cooldown/backoff and stops loops (Observed in `public/sw-custom.js`), but the mobile mechanism is an intentional delta.
 
 ## Cost guardrails (must hold)
-- No background listeners of any kind (including the small change-signal listener).
+- No background listeners of any kind.
 - No “check every N seconds/minutes” polling loop.
 - One attempt = one bounded work unit (no chaining).
 

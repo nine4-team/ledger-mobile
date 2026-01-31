@@ -3,10 +3,10 @@
 ## Goal
 
 You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+- Firestore is canonical with offline persistence
+- Scoped listeners only (no “listen to everything”)
+- Multi-doc correctness uses request-doc workflows
+- SQLite is optional for derived search indexes only
 
 Your job in this chat:
 - Produce parity-grade specs for the **Client Summary** report (rollups + category breakdown + receipt links), including required canonical attribution deltas.
@@ -48,7 +48,7 @@ For the screen contract and acceptance criteria, include:
   - canonical/invoiceable → link to invoice report
   - else receipt image URL → external link
   - else no link
-- Share/print adaptation (mobile: native share/print; offline)
+- Share/print adaptation (mobile: native share/print; offline via Firestore local cache)
 - States: loading/empty/error/offline; pending media warning for business logo
 
 ## Evidence rule (anti-hallucination)
@@ -58,6 +58,6 @@ For each non-obvious behavior:
 - Mark as intentional change and justify it (platform/architecture requirement).
 
 ## Constraints / non-goals
-- Do not prescribe “subscribe to everything” listeners; reports render from local DB.
+- Do not prescribe “subscribe to everything” listeners; reports render from Firestore local cache.
 - Do not do pixel-perfect design specs.
 

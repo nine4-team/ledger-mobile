@@ -55,6 +55,6 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/components/BackgroundSyncErrorNotifier.tsx`.
 
 ## Architecture alignment (Firebase target)
-- [ ] **Sync status reflects outbox + delta + change-signal**: The UI must reflect outbox pending + scheduler/delta health, not realtime subscriptions on large collections.  
-  **Intentional delta** required by `40_features/sync_engine_spec.plan.md`.
+- [ ] **Sync status reflects Firestore + request-doc state**: The UI reflects queued Firestore writes + request-doc pending/applied/failed (and any scoped listener health if available), not a custom outbox/delta sync engine or broad “listen to everything” realtime subscriptions.  
+  **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md`.
 

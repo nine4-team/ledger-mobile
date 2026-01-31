@@ -9,8 +9,11 @@ Scope of this pass:
 
 ## Summary of resolutions
 
-- **Canonical contracts expanded**: `Item`, `Transaction`, `Attachment`, `LineageEdge` (plus item lineage pointers) were added to `20_data/data_contracts.md`.
-- **Firestore + SQLite docs de-duplicated**: `firebase_data_model.md` now links to contracts for entity field shapes (no divergent field lists); SQLite schema doc aligns `items`/`transactions` and adds a `lineage_edges` table.
+- **Canonical contracts expanded**: `Item`, `Transaction`, `LineageEdge` (plus item lineage pointers) were tightened in `20_data/data_contracts.md`.
+- **Media contract realigned to feature specs**: removed the prior “Attachment doc” contract and aligned to embedded URL refs (`offline://` placeholders) on owning entities (e.g. `transaction.receiptImages[]`, `space.images[]`).
+- **Firestore + SQLite docs realigned**:
+  - `firebase_data_model.md` now focuses on Firestore paths + modeling rules and points back to canonical contracts.
+  - `local_sqlite_schema.md` now defines **optional derived search indexes only** (SQLite is non-authoritative and rebuildable).
 - **Money representation decision**: adopted **Option B (tightened)** — persist money as **integer cents** for Items + Transactions (documented in canonical contracts and reflected in SQLite column naming).
 
 ## Mismatches found (spec vs data docs) and how they were resolved
@@ -50,7 +53,7 @@ Scope of this pass:
   - `20_data/data_contracts.md` → **Entity: Transaction** adds **server-maintained selector fields** for canonical transactions:
     - `attributedCategoryIds` (set/map of in-scope categories present among linked items)
     - `attributedUncategorizedCreatorUids` (set/map of creators who have uncategorized linked items)
-  - `20_data/local_sqlite_schema.md` was updated to include these selectors locally as JSON map columns for offline filtering.
+  - Note: SQLite is no longer described as a mirrored local DB; any local indexing of these selectors is TBD and must be justified by an explicit feature requirement.
 
 ### 3) Lineage is required offline (append-only edges + item pointers)
 
@@ -63,32 +66,27 @@ Scope of this pass:
     - `40_features/inventory-operations-and-lineage/flows/lineage_edges_and_pointers.md`
 
 - **Prior data doc mismatch**
-  - `20_data/local_sqlite_schema.md` had no lineage edges table.
+  - Prior drafts treated lineage as “nice to have” rather than a first-class, queryable entity with a stable Firestore location across scope moves.
 
 - **Resolution**
   - `20_data/data_contracts.md` adds **Entity: LineageEdge** and item lineage pointer fields.
-  - `20_data/local_sqlite_schema.md` adds `lineage_edges` table + indexes for offline lineage history.
+  - Lineage edges are stored in an account-wide Firestore collection (`accounts/{accountId}/lineageEdges/{edgeId}`) so history survives scope moves. Firestore native offline persistence provides offline availability.
 
-### 4) Offline media lifecycle needs explicit attachment lifecycle state
+### 4) Offline media lifecycle requires embedded `offline://` placeholders (spec-aligned)
 
 - **Spec truth**
-  - Attachments must support the state machine: `local_only`, `uploading`, `uploaded`, `failed`.
-  - Must support images + PDFs.
+  - Attachments must support the UI state machine: `local_only`, `uploading`, `uploaded`, `failed`.
+  - Must support images + PDFs, and offline placeholders via `offline://<mediaId>`.
   - Sources:
     - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
     - `40_features/project-transactions/feature_spec.md` (receipts and other attachments)
-    - `40_features/sync_engine_spec.plan.md` (§8 media strategy)
 
 - **Prior data doc mismatch**
-  - Firestore doc previously described attachments as nested subcollections under parents, while the sync plan’s appendix uses scope-root attachments.
-  - SQLite attachment table existed, but the canonical decision (embedded arrays vs attachment docs) was not authoritative.
+  - Prior drafts modeled separate attachment documents and de-emphasized embedded arrays, conflicting with feature specs that explicitly reference embedded fields like `transaction.receiptImages[]` and `space.images[]`.
 
 - **Resolution**
-  - Canonical decision: **Attachment docs are canonical** (`20_data/data_contracts.md` → **Entity: Attachment**).
-  - Firestore paths were aligned to **scope-root attachment docs**:
-    - `accounts/{accountId}/projects/{projectId}/attachments/{attachmentId}`
-    - `accounts/{accountId}/inventory/attachments/{attachmentId}`
-  - SQLite `attachments` section was updated to include required lifecycle fields and metadata (`kind`, `local_media_id`, etc.).
+  - Canonical decision: media is represented as **embedded URL refs** on the owning entity, with `offline://<mediaId>` placeholders allowed (`20_data/data_contracts.md` → “Embedded media references”).
+  - TBD: whether we also add separate Firestore attachment docs as an optimization (must be additive and cannot replace the embedded contract without updating feature specs).
 
 ### 5) Money representation for Items/Transactions was inconsistent across docs
 
@@ -98,12 +96,11 @@ Scope of this pass:
     - `40_features/budget-and-accounting/feature_spec.md` (money normalization + rollups)
 
 - **Prior data doc mismatch**
-  - `20_data/firebase_data_model.md` and `20_data/local_sqlite_schema.md` described transaction/item money as strings.
-  - `20_data/data_contracts.md` already tightened some money fields (project budgets) but did not establish a consistent Items/Transactions rule.
+  - Prior drafts mixed string money and numeric money across docs.
 
 - **Resolution**
   - Canonical decision in `20_data/data_contracts.md`: **persist money as integer cents** for Items + Transactions (Option B), including explicit parsing/rounding expectations for migration/import boundaries.
-  - SQLite docs updated to use `_cents` columns for all money-like fields on `items` and `transactions`.
+  - SQLite is no longer specified as a full mirrored schema; any numeric storage there is strictly derived/index-only.
 
 ## Intentional deltas (with rationale + blast radius)
 
@@ -117,7 +114,7 @@ Scope of this pass:
 
 - **Blast radius**
   - Security rules must enforce lineage visibility via linked item/transaction selectors.
-  - Delta sync must include the `lineageEdges` collection (or otherwise backfill edges relevant to visible items).
+  - Scoped listeners must include lineage edges relevant to visible items/transactions (exact listener/query strategy is TBD and should be derived from the lineage feature flows).
 
 ## Open decisions / questions (not resolvable from specs alone)
 
@@ -130,10 +127,10 @@ Open implementation decisions:
 - Are these fields maintained only for `isCanonicalInventory == true`, or for all transactions (with different semantics)?
 - Do we need a dedicated “visibility index” collection instead (Roles v2 spec suggests this as a possible approach)?
 
-### 2) Attachment Firestore doc timing (create-before-upload vs create-after-upload)
+### 2) Embedded media URL timing (placeholder → remote)
 
-The contract allows the Firestore attachment doc to appear once upload begins/finishes (since `local_only` cannot exist remotely).
+Feature specs require `offline://` placeholders to render immediately and later resolve to remote URLs.
 
 Open decision:
-- Do we create Firestore attachment docs immediately when online selection happens (to replicate “uploading” state to other devices), or only after upload finishes (cheaper; fewer transient writes)?
+- When (and how) do we patch embedded arrays from `offline://<mediaId>` to a remote URL, and what (if any) additional metadata is persisted alongside `url`?
 

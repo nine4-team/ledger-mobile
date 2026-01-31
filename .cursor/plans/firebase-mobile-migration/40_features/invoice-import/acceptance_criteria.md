@@ -64,14 +64,15 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/ImportWayfairInvoice.tsx` (`thumbnailWarning`).
 - [ ] **Grouping by SKU+price**: items with SKU are grouped for edit UX by a stable group key; items without SKU are ungrouped.  
   Observed in `src/pages/ImportWayfairInvoice.tsx` (`expandWayfairItemDrafts` `uiGroupKey` logic).
-- [ ] **Tax/subtotal “Other” behavior**: when parser yields calculated subtotal, default tax preset to “Other” and capture subtotal; validation ensures subtotal > 0 and subtotal \(\le\) total.  
+- [ ] **Tax/subtotal inline behavior**: when parser yields calculated subtotal, default to **Calculate from subtotal** and capture subtotal; validation ensures subtotal > 0 and subtotal \(\le\) total.  
+  **Intentional delta**: tax presets removed; use inline tax fields.  
   Observed in `src/pages/ImportWayfairInvoice.tsx` (`hasSubtotal` branch + validation for `taxRatePreset === 'Other'`).
 
 ## Create transaction + items
 - [ ] **Create calls service with items**: tapping create calls `transactionService.createTransaction(..., items)` and navigates to the new transaction detail.  
   Observed in `src/pages/{ImportAmazonInvoice,ImportWayfairInvoice}.tsx` (`handleCreate`).
-- [ ] **Offline-first create is atomic (mobile)**: create must be a single local DB transaction that also enqueues an outbox op with stable idempotency keys (no double-create on retry).  
-  **Intentional delta** (required by `40_features/sync_engine_spec.plan.md`).
+- [ ] **Offline-first create uses request-doc workflow (mobile)**: create writes a request doc with a stable idempotency key, and a Cloud Function transaction creates the transaction + items (no double-create on retry).  
+  **Intentional delta** (required by `OFFLINE_FIRST_V2_SPEC.md`).
 
 ## Media attach + background uploads + retries
 - [ ] **Receipt is attached**: the selected invoice PDF is treated as a receipt attachment on the created transaction.  
@@ -81,5 +82,5 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Failure messaging**: background asset upload failures show a warning instructing the user to open transaction to retry.  
   Observed in `src/pages/ImportWayfairInvoice.tsx` (`showWarning(... 'Open the transaction to retry.')`).
 - [ ] **Offline media lifecycle (mobile)**: receipt + thumbnails must create local-only placeholders immediately and queue uploads; failures are retriable from transaction detail.  
-  **Intentional delta** required by `40_features/_cross_cutting/offline_media_lifecycle.md`.
+  **Intentional delta** required by `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`.
 

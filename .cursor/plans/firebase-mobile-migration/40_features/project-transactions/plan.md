@@ -3,7 +3,7 @@ Produce parity-grade specs for `project-transactions`.
 
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → **Feature 7: Project transactions** (`project-transactions`)
-- Sync engine spec: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 - Relevant existing specs:
   - Navigation + stacked back/scroll restore: `40_features/feature_list.md` → **Feature 15** (`navigation-stack-and-context-links`) (parity evidence in web)
   - Canonical transaction semantics + item-driven attribution: `40_features/project-items/feature_spec.md`
@@ -17,7 +17,7 @@ Produce parity-grade specs for `project-transactions`.
   - why: media upload + offline placeholders + delete semantics + image gallery/pinning + itemization + cross-scope actions.
 
 ## Cross-cutting dependencies (link)
-- Sync architecture constraints (local-first + outbox + change-signal + delta): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline (Firestore-native offline + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Image gallery/lightbox behavior (shared UI): `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 - Inventory operations + lineage (transaction↔item linking/move/sell semantics): `40_features/inventory-operations-and-lineage/README.md`
 
@@ -49,6 +49,6 @@ Recommended slices:
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Offline behaviors are explicit (pending + retries + restart + reconnect).
-- Collaboration behavior references change-signal + delta (no large listeners).
+- Collaboration behavior uses **scoped listeners** (no unbounded listeners).
 - Cross-links are complete (feature docs ↔ screen contracts ↔ sync engine spec ↔ cross-cutting docs).
 

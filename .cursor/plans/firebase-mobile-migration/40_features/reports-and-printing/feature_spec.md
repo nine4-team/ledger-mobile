@@ -1,7 +1,7 @@
 # Reports + share/print — Feature spec (Firebase mobile migration)
 
 ## Intent
-Provide an offline-first reporting experience within a project: users can generate an invoice and two project summaries from local data, then share/print those reports on mobile. Reports should be correct relative to local state (SQLite), and may be “stale” relative to remote until the next delta run (collaboration is not realtime-critical here).
+Provide an offline-first reporting experience within a project: users can generate an invoice and two project summaries from local data, then share/print those reports on mobile. Reports should be correct relative to Firestore local cache and may be “stale” relative to remote until the next sync pass (collaboration is not realtime-critical here).
 
 ## Owned screens / routes
 - `ProjectInvoice` (`/project/:projectId/invoice`)
@@ -17,7 +17,7 @@ Screen contracts:
 - `ui/screens/PropertyManagementSummary.md`
 
 ## Inputs (entities)
-Reports read from local DB (SQLite) only:
+Reports read from Firestore local cache (offline persistence) only:
 - Project: `projects`
 - Transactions: `transactions`
 - Items: `items`
@@ -26,7 +26,7 @@ Reports read from local DB (SQLite) only:
 - Business profile: `business_profile` (logo + name)
 
 Firebase migration constraint:
-- Reports must not attach listeners to large collections. They render from local DB; background convergence is owned by the sync engine (`meta/sync` change-signal + delta).
+- Reports must not attach listeners to large collections. They render from Firestore local cache using scoped project listeners per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Canonical vs non-canonical attribution (required)
 This feature must align with:
@@ -119,11 +119,11 @@ Mobile requirement (intentional delta):
 - The exported artifact should be derived from local data and must work offline.
 
 ## Offline-first behavior (mobile target)
-- Reports render from local DB offline (no network required).
+- Reports render from Firestore local cache offline (no network required).
 - If business profile logo or other referenced media is `local_only` / `uploading` / `failed`, the report must indicate this (at minimum: a non-blocking warning that branding/media may be missing in shared output).
-- Reconnect behavior: reports may remain stale until the next delta run; a “last updated” indicator is recommended but not required unless used elsewhere globally.
+- Reconnect behavior: reports may remain stale until the next sync pass; a “last updated” indicator is recommended but not required unless used elsewhere globally.
 
 ## Collaboration expectations
 - Reports do not require realtime updates while open.
-- Foreground refresh is optional; correctness is relative to local DB.
+- Foreground refresh is optional; correctness is relative to Firestore local cache.
 

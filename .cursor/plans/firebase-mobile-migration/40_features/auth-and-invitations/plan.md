@@ -5,7 +5,7 @@ Produce parity-grade specs for `auth-and-invitations`.
 
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → “1) Authentication (Google + email/password) + invitation acceptance”
-- Sync engine spec: `40_features/sync_engine_spec.plan.md` (offline-first constraints; auth is a prerequisite)
+- Offline Data v2 architecture (canonical): `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Existing web parity sources:
   - Providers/boot: `src/main.tsx`, `src/App.tsx`
   - Auth lifecycle: `src/contexts/AuthContext.tsx`
@@ -21,7 +21,7 @@ Produce parity-grade specs for `auth-and-invitations`.
 - `AuthCallback` — contract required? **yes** — bounded polling + invitation handoff behavior
 
 ## Cross-cutting dependencies (link)
-- `40_features/sync_engine_spec.plan.md` (boot order expectations; offline-first architecture)
+- `OFFLINE_FIRST_V2_SPEC.md` (boot order expectations; offline-ready architecture primitives)
 
 ## Output files (this work order will produce)
 Minimum:

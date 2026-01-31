@@ -24,7 +24,7 @@ If cross-cutting docs are required (only if shared across many features), create
 ## What to capture (required)
 - Edge schema (conceptual) + pointer fields and their semantics
 - Required edges for each inventory operation
-- Offline behavior policy for mobile (local DB + delta sync for lineage edges)
+- Offline behavior policy for mobile (Firestore-native offline persistence; lineage available from cache when present)
 - Any UI expectations that depend on lineage (where displayed, fallback when missing)
 
 ## Evidence rule (anti-hallucination)
@@ -34,4 +34,4 @@ For each non-obvious behavior:
 
 ## Constraints / non-goals
 - Don’t invent a second lineage model; align with the existing service shape unless there is a necessary Firebase delta.
-- Don’t attach large listeners; lineage changes propagate via change-signal + delta.
+- Don’t attach unbounded listeners; use scoped/bounded listeners per `OFFLINE_FIRST_V2_SPEC.md`.

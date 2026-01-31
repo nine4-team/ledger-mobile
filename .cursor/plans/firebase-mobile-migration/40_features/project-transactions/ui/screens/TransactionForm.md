@@ -34,41 +34,33 @@ Rules:
   - Project name (for labeling and media path hints; only when `scope === 'project'`)
   - Budget categories (for category picker)
   - Vendor defaults (for source picker)
-  - Tax presets (for tax preset picker)
   - Account default category (initial default)
   - Transaction (edit only)
   - Transaction items (edit only; and optionally create form if itemization enabled)
 - Derived view models:
   - `itemizationEnabled` derived from selected category
 - Cached metadata dependencies:
-  - Budget categories, vendor defaults, tax presets, account presets (default category)
+  - Budget categories, vendor defaults, account presets (default category)
 
 ## Writes (local-first)
 
 ### Create (submit)
-- Local DB mutation(s):
-  - Insert `transactions` row with form fields
-  - Insert/associate any transaction items created in-form (if itemization enabled)
-  - Persist media attachment metadata arrays:
+- Firestore mutation(s) (queued offline by Firestore-native persistence):
+  - Create/update the `transactions/{transactionId}` doc (prefer a client-generated `transactionId` for idempotency).
+  - If itemization is enabled, create/update transaction items (either as docs in a subcollection or separate collection, per data model), ideally via a batched write when possible.
+  - Persist media attachment metadata arrays on the transaction doc:
     - `receiptImages[]`
     - `otherImages[]`
     - (legacy compat) `transactionImages[]` may mirror receipts
-- Outbox op(s) enqueued:
-  - `createTransaction` with idempotency key (e.g. `tx:create:<clientMutationId>`)
-  - Media upload ops for any `offline://` placeholders, plus eventual patch of transaction’s image arrays to server URLs
-  - Item creates/updates as part of transaction creation (must be deterministic and idempotent)
-- Change-signal:
-  - Bump project `meta/sync` (conceptually) for transactions/items.
+- Media uploads:
+  - Uploads are handled by an upload queue that can create `offline://<mediaId>` placeholders while offline.
+  - After upload succeeds, patch the transaction doc to replace placeholders with Cloud Storage URLs.
 
 ### Edit (submit)
-- Local DB mutation(s):
-  - Update `transactions` fields
-  - Update attachments arrays for receipts/other images
-  - Update existing items and/or create new items if user adds “draft” items
-- Outbox op(s) enqueued:
-  - `updateTransaction` (fields + arrays)
-  - Item ops as needed (update/create/unlink)
-  - Media uploads for newly added files (offline placeholders)
+- Firestore mutation(s) (queued offline by Firestore-native persistence):
+  - Update `transactions/{transactionId}` fields + attachments arrays.
+  - Update/create/unlink transaction items as needed (prefer batched writes for multi-doc updates that must stay consistent).
+  - Queue media uploads for newly added files (offline placeholders).
 
 ## UI structure (high level)
 - Header:
@@ -82,7 +74,7 @@ Rules:
   - Status (edit only: pending/completed/canceled)
   - Reimbursement type (None / owed-to-company / owed-to-client)
   - Amount (required)
-  - Tax preset selection + optional Subtotal (“Other”)
+  - Tax (conditional; see rules below)
   - Transaction date
   - Notes
   - Transaction items (only when itemization enabled; edit also shows if existing items exist)
@@ -108,10 +100,22 @@ Rules:
     - This ensures future canonical inventory transactions can attribute amounts by item category without asking the user to learn a “canonical category”.
 - **Amount**:
   - Required and must be positive.
-- **Tax preset**:
-  - “No Tax” sets tax rate pct=0.
-  - Selecting a preset shows its percentage.
-  - “Other” requires subtotal; subtotal cannot exceed total amount.
+- **Tax (simplified; no presets)**:
+  - **No tax presets exist**. Tax is captured inline on the transaction.
+  - **Visibility rule**: if the selected budget category is **not itemized** (category metadata lacks the itemization flag; i.e. it does not have the `itemize`/`itemizationEnabled` property), do **not** show tax inputs and treat tax as **None**.
+  - When shown, tax has 3 selectable modes (plus an optional amount override):
+    - **None (default)**: no tax is applied; tax fields are cleared.
+    - **Tax rate**: user enters a tax rate percent. The UI derives:
+      - `subtotal = total / (1 + rate)`
+      - `taxAmount = total - subtotal`
+    - **Calculate from subtotal**: user enters a subtotal. The UI derives:
+      - `taxAmount = total - subtotal`
+      - `taxRate = (taxAmount / subtotal)` (when `subtotal > 0`)
+      - Validation: `subtotal > 0` and `subtotal <= total`.
+  - **Tax amount input (optional)**: user may enter a tax amount directly; the UI back-calculates:
+    - `subtotal = total - taxAmount`
+    - `taxRate = (taxAmount / subtotal)` (when `subtotal > 0`)
+    - Validation: `taxAmount >= 0` and `taxAmount < total`.
 - **Receipts + other images**:
   - Adding files:
     - Online: upload and attach
@@ -144,16 +148,16 @@ Rules:
 - Placeholder URLs use `offline://<mediaId>` and must render via local blob resolution in previews.
 
 ## Collaboration / realtime expectations
-- Form does not require live collaboration; changes should converge via outbox + delta sync.
+- Form does not require live collaboration; changes converge via Firestore listeners and queued writes (no bespoke outbox engine), per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Performance notes
-- Avoid per-item network calls during itemization edits; use local DB and batched outbox ops.
+- Avoid per-item network calls during itemization edits; use Firestore cache and batched writes where needed.
 
 ## Parity evidence
 - Create prerequisites gate + banner: Observed in `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`).
 - Default category (online vs cached): Observed in `src/pages/AddTransaction.tsx` (`getDefaultCategory`, `getCachedDefaultCategory`).
 - Vendor defaults (online vs cached): Observed in `src/pages/AddTransaction.tsx` (`getAvailableVendors`, `getCachedVendorDefaults`).
-- Tax presets (online vs cached): Observed in `src/pages/AddTransaction.tsx` (`getTaxPresets`, `getCachedTaxPresets`, `NO_TAX_PRESET_ID`, `Other` validation).
+- Tax (intentional delta): tax presets are removed; the form captures tax via inline fields (rate/subtotal/tax amount) instead of a preset picker.
 - Edit permission gating: Observed in `src/pages/EditTransaction.tsx` (`hasRole(UserRole.USER)`).
 - Edit status ↔ reimbursement coupling: Observed in `src/pages/EditTransaction.tsx` (`handleInputChange`).
 - Existing image preview/removal: Observed in `src/pages/EditTransaction.tsx` (`TransactionImagePreview`, remove handlers).

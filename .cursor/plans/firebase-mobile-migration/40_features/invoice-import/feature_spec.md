@@ -3,10 +3,10 @@
 ## Intent
 Provide a vendor-PDF import flow that turns an Amazon or Wayfair invoice into a **draft transaction + draft items**, lets the user review/edit the draft, then creates a real transaction and items in an **offline-first** way:
 
-- UI reads/writes local SQLite
-- Creates are local-atomic (DB write + outbox enqueue)
+- UI reads/writes Firestore local cache (offline persistence)
+- Creates use **request-doc workflows** for multi-doc correctness (client writes a request doc with an idempotency key; Cloud Function applies a transaction to create transaction + items)
 - Media (invoice PDF as receipt, Wayfair thumbnails as item images) uses the shared offline media lifecycle
-- No large listeners; collaboration convergence is via change-signal + delta sync
+- No large listeners; use scoped project listeners per `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Owned screens / routes
 - `ImportWayfairInvoice`
@@ -26,15 +26,15 @@ This feature composes a transaction and items, and depends on metadata:
 - Transactions (`transactions`) — created
 - Items (`items`) — created
 - Budget categories (`budget_categories`) — category picker (required by UX)
-- Tax presets — Wayfair supports “Other” tax model in the draft (subtotal + tax total relationship)
+- Tax fields — Wayfair drafts may include subtotal + tax total; captured via inline tax fields (no presets)
 
 Media dependencies:
 - Receipt attachment: the uploaded invoice PDF becomes a receipt attachment on the created transaction (parity behavior).
 - Wayfair embedded thumbnails: extracted images become item images (preview, then uploaded/attached).
 
 Cross-cutting specs (canonical):
-- Offline-first invariants + outbox + delta sync: `40_features/sync_engine_spec.plan.md`
-- Offline media lifecycle: `40_features/_cross_cutting/offline_media_lifecycle.md`
+- Offline-first architecture: `OFFLINE_FIRST_V2_SPEC.md`
+- Offline media lifecycle: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 - Storage/quota guardrails: `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Primary flows
@@ -129,9 +129,9 @@ Parity behavior (web):
 - Evidence: `handleCreate` in `src/pages/{ImportAmazonInvoice,ImportWayfairInvoice}.tsx`
 
 Mobile offline-first requirement (intentional delta, required by architecture):
-- The create action must be a **single local transaction**:
-  - write transaction + items to SQLite
-  - enqueue outbox op(s) with stable idempotency keys (e.g., `createTransactionWithItems:<localId>`), so retries never double-create remotely
+- The create action must be a **request-doc workflow**:
+  - write a request doc to Firestore (locally persisted) with a stable idempotency key (e.g., `createTransactionWithItems:<localId>`)
+  - Cloud Function applies a transaction to create the transaction + items and attach server-owned fields
 - If offline or background execution is limited, do not block the user on uploads. Show “created (pending sync)” and allow them to leave the importer immediately.
 
 ### 6) Attach media (receipt PDF + item images) and retry semantics
@@ -146,9 +146,9 @@ Parity behavior (web):
 Mobile offline-first requirement:
 - Receipt PDF and Wayfair thumbnails must be treated as offline media assets:
   - create local-only placeholders immediately
-  - enqueue upload ops in the outbox
+  - enqueue upload ops per the offline media lifecycle (Firestore-backed queueing)
   - allow retry from the Transaction detail screen when any upload fails
-- Source of truth: `40_features/_cross_cutting/offline_media_lifecycle.md`
+- Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 
 ## Permissions
 Parity behavior:
@@ -160,14 +160,14 @@ Mobile requirement:
 
 ## Offline behavior summary (required)
 - **Parsing**: can run fully offline (local parsing). If a fallback “upload for parse” exists, it must explicitly require online.
-- **Create**: must succeed offline (local DB + outbox enqueue).
+- **Create**: must succeed offline by writing the request doc to Firestore local cache (queued for sync).
 - **Media**: receipt/thumbnails can be captured/staged offline; uploads are queued and retriable; UI renders placeholders.
-- **Restart**: importer draft state is allowed to be non-persistent; however, once created, the transaction/items and any staged media must survive restart via SQLite + offline media storage.
-- **Reconnect**: queued create/upload ops flush; importer itself does not need realtime refresh.
+- **Restart**: importer draft state is allowed to be non-persistent; however, once created, the transaction/items and any staged media must survive restart via Firestore local persistence + offline media storage.
+- **Reconnect**: queued request-doc writes and media uploads flush; importer itself does not need realtime refresh.
 
 ## Collaboration expectations
 - None while the importer screen is open (no realtime required).
-- Imported entities converge through the normal project scope change-signal + delta sync.
+- Imported entities converge through Firestore offline persistence + scoped project listeners.
 
 ## Performance notes
 - Parsing must show explicit progress states (parsing, thumbnail extraction) and avoid freezing the UI on large PDFs.
@@ -190,9 +190,9 @@ Port/reuse-first guidance (do not recreate if avoidable):
   - Embedded image extraction:
     - `src/utils/pdfEmbeddedImageExtraction.ts` uses browser canvas + pdf.js rendering; the algorithm can be reused but needs a RN-capable PDF render/crop implementation
   - Clipboard/download JSON → share sheet / filesystem share on mobile
-  - “Background uploads” → outbox + offline media lifecycle in SQLite-backed app
+  - “Background uploads” → request-doc workflows + offline media lifecycle in Firestore-backed app
 
 - **Non-negotiable deltas**:
-  - Create must be local-atomic + outbox (no “call service then patch” as the correctness mechanism) per `40_features/sync_engine_spec.plan.md`
-  - Media must follow `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - Create must use request-doc workflows for multi-doc correctness per `OFFLINE_FIRST_V2_SPEC.md`
+  - Media must follow `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 

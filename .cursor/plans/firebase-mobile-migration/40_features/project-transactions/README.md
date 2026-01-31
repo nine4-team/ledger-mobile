@@ -27,7 +27,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Project Tran
   - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md` → “Scope config object (contract)”
 
 ## Cross-cutting dependencies
-- Sync architecture constraints (change-signal + delta, local-first): `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Image gallery/lightbox behavior: `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 - Navigation/stacked back/scroll restoration parity: `40_features/feature_list.md` → `navigation-stack-and-context-links`
 - Canonical transaction semantics + item-driven attribution: `40_features/project-items/feature_spec.md`

@@ -3,8 +3,8 @@
 ## Intent
 Provide fast, trustworthy **budget progress** and **accounting rollups** inside a project that:
 
-- render from **local SQLite only**
-- update deterministically as transactions/items change (via outbox + delta sync)
+- render from **Firestore-cached project data** (Firestore is canonical; Firestore-native offline persistence is the baseline)
+- remain usable **offline** (cache-first reads; rollups computed from locally cached docs)
 - do **not** require users to learn “canonical categories” for inventory mechanics
 
 This spec explicitly **deviates** from the current web implementation for canonical attribution; see “Canonical attribution” below.
@@ -13,7 +13,6 @@ This spec explicitly **deviates** from the current web implementation for canoni
 
 - **Budget category preset**: account-scoped category entity the user manages in Settings.
 - **Project category budgets**: per-project allocation docs under `projects/{projectId}/budgetCategories/{budgetCategoryId}` (one doc per preset category id).
-  - Local DB source: `project_budget_categories` (see `20_data/local_sqlite_schema.md`).
 - **Design fee**: `project.designFeeCents` with special semantics (“received”, not “spent”).
 - **Non-canonical transaction**: user-facing transaction where category attribution is transaction-driven via `transaction.categoryId` (Firestore) / `transaction.category_id` (legacy web naming).
 - **Canonical inventory transaction**: system row whose id begins with `INV_PURCHASE_`, `INV_SALE_`, `INV_TRANSFER_`.
@@ -76,13 +75,18 @@ Web parity evidence:
 
 ## Budget rollups (Budget tab)
 
-### Inputs (local DB)
+### Inputs (Firestore cached reads; project-scoped)
+All rollups are computed from Firestore-cached reads within the active project scope:
 - Project:
   - `project.designFeeCents`
-- Project category budgets (per-project allocations, cached locally): `project_budget_categories`
-- Budget category presets (account-scoped list, cached locally): `budget_categories`
-- Transactions (project-scoped): `transactions`
-- Items (project-scoped): `items` with `item.inheritedBudgetCategoryId`
+- Project category budgets:
+  - `projects/{projectId}/budgetCategories/{budgetCategoryId}`
+- Budget category presets (account-scoped):
+  - `budgetCategories/{budgetCategoryId}` (exact path TBD; see data model docs)
+- Transactions (project-scoped):
+  - `projects/{projectId}/transactions/{transactionId}`
+- Items (project-scoped):
+  - `projects/{projectId}/items/{itemId}` with `item.inheritedBudgetCategoryId`
 
 ### Money normalization
 All amounts are treated as numbers with two-decimal currency semantics; rounding strategy should be consistent across UI and exports.
@@ -112,7 +116,7 @@ Firebase migration requirement:
 
 #### Enabled category set
 - Categories are “enabled” for budgeting in a project when:
-  - a `project_budget_categories` row exists for `(projectId, categoryId)` (regardless of `budgetCents`), OR
+  - a per-project budget doc exists for `(projectId, categoryId)` (regardless of `budgetCents`), OR
   - the category has non-zero attributed spend (so users can see where money went even if budget not set).
 
 #### Spend per category (non-canonical transactions)
@@ -124,7 +128,7 @@ For each non-canonical transaction with `categoryId`:
 #### Spend per category (canonical inventory transactions) — required
 For each canonical inventory transaction:
 
-1) Determine the set of linked items (local join by `item.transactionId === transaction.transactionId`).
+1) Determine the set of linked items (client-side join by `item.transactionId === transaction.transactionId`).
 2) For each linked item, compute its “canonical value”:
    - `item.projectPrice ?? item.purchasePrice ?? item.marketValue ?? 0`
    - (matches existing canonical totals logic in `src/services/inventoryService.ts`)
@@ -139,7 +143,7 @@ Important:
 
 ### Overall budget (budget denominator)
 Overall budget is computed as:
-- `sum(project_budget_categories.budgetCents)` (for the active project; treat `NULL` as 0), excluding design fee.
+- `sum(projectBudgetCategory.budgetCents)` over all per-project budget category docs for the active project (treat missing/NULL as 0), excluding design fee.
 
 Note:
 - The legacy `project.budget` field (if present) must not be treated as authoritative if category budgets exist; overall rollups should be category-sum-driven.
@@ -169,7 +173,7 @@ Stable identifier requirement:
 ## Accounting rollups (Accounting tab)
 
 ### Owed rollups
-Accounting shows two rollups computed from local transactions:
+Accounting shows two rollups computed from project-scoped transactions:
 
 - **Owed to Design Business**: sum of non-canceled transactions where `reimbursementType === CLIENT_OWES_COMPANY`
 - **Owed to Client**: sum of non-canceled transactions where `reimbursementType === COMPANY_OWES_CLIENT`
@@ -191,8 +195,9 @@ Parity evidence:
 - `src/pages/ProjectLayout.tsx` (report buttons + routes)
 
 ## Offline-first + collaboration constraints (Firebase target)
-- Rollups must always be computed from SQLite (no network required).
-- While a project is foregrounded, data freshness comes from `meta/sync` change-signal + delta sync (no listeners on large collections).
+- Firestore is canonical; rollups are computed from **locally cached Firestore docs** (no network required to render last-known data).
+- While a project is foregrounded, data freshness comes from **scoped/bounded listeners** (and/or explicit refresh) within that project scope. Avoid unbounded “listen to everything” listeners; follow `OFFLINE_FIRST_V2_SPEC.md`.
+- Inventory canonical mechanics that affect rollups (e.g., `INV_*` buckets) are produced by **server-owned request-doc workflows** (see `40_features/inventory-operations-and-lineage/`), and rollups should reflect `pending/applied/failed` request status where applicable.
 
 Canonical source:
-- `sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`

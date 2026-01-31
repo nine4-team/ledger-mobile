@@ -34,24 +34,24 @@ Parity evidence:
 ## Writes (local-first)
 ### Refresh project snapshot
 - Local DB: no direct mutation besides updating local last-seen sync state.
-- Outbox: none (refresh is a read).
-- Delta path: run delta fetch for relevant collections and apply patches.
+- Request-doc: none (refresh is a read).
+- Refresh re-runs the relevant Firestore reads with a server preference when online (cache remains the fallback via Firestore-native offline persistence).
 
 Parity evidence:
 - `src/pages/ProjectLayout.tsx` (`handleRefreshProject` calling `refreshCollections({ includeProject: true })`)
 - `src/contexts/ProjectRealtimeContext.tsx` (`refreshCollections`, `fetchAndStore*`)
 
 ### Edit project
-- Local DB: apply changes immediately and mark pending.
-- Outbox: enqueue `UPDATE_PROJECT` op with idempotency key.
+- Direct write to the project doc when this is a single-doc update (Firestore queues offline writes automatically).
+- If an edit requires invariants/multi-doc updates (rare for Projects), use a **request-doc workflow** per `OFFLINE_FIRST_V2_SPEC.md`.
 
 Parity evidence (web):
 - `src/pages/ProjectLayout.tsx` (`handleEditProject`)
 - `projectService.updateProject` in `src/services/inventoryService.ts` (offline queue fallback)
 
 ### Delete project
-- Local DB: mark project deleted locally and navigate away (or remove locally).
-- Outbox: enqueue `DELETE_PROJECT` op with idempotency key.
+- If delete is “project doc only”, client can write directly (queued offline).
+- If delete implies **cascades** (removing/archiving subcollections, rollups, counters, or other invariants), it must be a **request-doc workflow** so the server can apply changes atomically.
 
 Parity evidence (web):
 - `src/pages/ProjectLayout.tsx` (`handleDeleteProject`)
@@ -116,25 +116,27 @@ Parity evidence:
   - Observed in `src/contexts/ProjectRealtimeContext.tsx` (offline hydrate + reconnect refresh).
 - **Pending sync**:
   - Edits/deletes should show pending state in UI (badge/disabled destructive actions, as appropriate).
-  - Pending clears when server ack arrives via delta or outbox confirm.
+  - Pending clears when Firestore has committed the write (i.e., the mutated doc is no longer `hasPendingWrites`) and the server-confirmed state is visible via the normal scoped reads/listeners.
+  - If an action is implemented as a **request-doc workflow** (multi-doc correctness), “pending” is tied to the request-doc lifecycle: `pending → applied` (clear) or `failed` (show error + retry).
 - **Permissions denied**:
   - If membership/role denies access, show an access denied screen and prevent data leakage.
   - (Server-enforced on Firebase; client UX optional.)
 
 ## Collaboration / realtime expectations (Firebase target)
 - While foregrounded on a project:
-  - Attach exactly one listener to the project’s `meta/sync` doc.
-  - On change, run delta fetches for only advanced collections.
-  - Do not attach listeners to items/transactions collections directly.
+  - Use **scoped listeners** only (never unbounded).
+  - Attach a listener to the project doc.
+  - Attach listeners for the currently visible tab’s bounded query (items/transactions/spaces) as needed.
+  - Detach listeners on background; reattach on resume.
 
-Source: `40_features/sync_engine_spec.plan.md`.
+Source: `OFFLINE_FIRST_V2_SPEC.md`.
 
 Intentional delta vs web:
-- Web uses Supabase realtime for project collections; mobile must use change-signal + delta to control cost.
+- Web uses Supabase realtime + a custom local-first layer; mobile uses **Firestore-native offline + scoped listeners**.
 
 ## Performance notes
-- Refresh should be debounced/coalesced (avoid spamming delta fetch).
-- Nested tabs should avoid re-fetching large lists on every tab switch; rely on local DB + cursors.
+- Refresh should be debounced/coalesced (avoid spamming server reads/refreshes).
+- Nested tabs should avoid attaching unbounded listeners or loading unbounded lists; use pagination/limits and rely on Firestore cache for fast tab switches.
 
 ## Parity evidence
 - `src/pages/ProjectLayout.tsx` (refresh/edit/delete, states, tab structure)

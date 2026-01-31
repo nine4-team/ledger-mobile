@@ -8,7 +8,7 @@ Produce parity-grade specs for `budget-and-accounting`, explicitly incorporating
 
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → “Budget + accounting rollups (project)”
-- Sync engine spec: `sync_engine_spec.plan.md`
+- Offline-first architecture spec: `OFFLINE_FIRST_V2_SPEC.md`
 - Canonical attribution working doc: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 - Item guardrails + attribution rules: `40_features/project-items/flows/inherited_budget_category_rules.md`
 
@@ -36,7 +36,7 @@ Prompt packs:
 ## Prompt packs (copy/paste)
 Create 3 slices so separate AI dev chats can implement/validate in parallel:
 
-- Slice A: rollup math + local DB query shape + canonical item-driven attribution
+- Slice A: rollup math + Firestore query/join shape + canonical item-driven attribution
 - Slice B: design fee stable identity + category metadata strategy
 - Slice C: accounting rollups + report entrypoints wiring
 
@@ -44,4 +44,4 @@ Create 3 slices so separate AI dev chats can implement/validate in parallel:
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Canonical attribution is explicitly item-driven and ignores canonical transaction category fields.
 - Design fee specialness is keyed by a stable identifier.
-- Offline behavior is explicit (computed from SQLite; no network required).
+- Offline behavior is explicit (computed from Firestore-cached data via Firestore-native offline persistence; no network required to render last-known data).

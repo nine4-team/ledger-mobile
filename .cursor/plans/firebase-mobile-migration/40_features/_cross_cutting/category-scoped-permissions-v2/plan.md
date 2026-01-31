@@ -2,7 +2,7 @@
 Ship Roles v2 **category-scoped access control** in a way that:
 
 - is enforced server-side (Firebase Rules / server-side enforcement is source of truth)
-- stays compatible with the migration architecture: **offline-first**, SQLite source of truth, **outbox**, **delta sync**, **change-signal** (no “subscribe to everything”)
+- stays compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows; no “subscribe to everything”)
 - preserves canonical attribution semantics for inventory transactions:
   - canonical `INV_*` transactions keep `transaction.categoryId = null`
   - canonical visibility and filtering are **item-driven** via `item.inheritedBudgetCategoryId`
@@ -41,13 +41,16 @@ Optional (if needed by implementation complexity):
 - There is a single, explicit entitlement representation per member (admin flag + category set/map).
 - All key allow/deny rules from the spec are enforceable without relying on UI.
 
-### Phase B — Delta sync scoping + local DB invariants
-**Goal**: make sure SQLite contains **only** rows the user can read, by applying scope filters in delta sync.
+### Phase B — Scoped query/listener shaping + offline cache semantics
+**Goal**: ensure all reads are **scoped** and server-enforced:
+- queries/listeners are shaped so out-of-scope docs can never be returned
+- the UI never “downloads then filters” unauthorized data
+- offline behavior matches server visibility as closely as Firestore cache semantics allow
 
 **Exit criteria**
 - Items and non-canonical transactions are queried with scope constraints (no “fetch everything then filter”).
 - Canonical `INV_*` transaction fetching respects derived visibility (implementation-specific strategy permitted, but must meet constraints).
-- Documented behavior when `allowedCategoryIds` changes (backfill + optional prune).
+- Documented behavior when `allowedCategoryIds` changes (queries/listeners update immediately; UI reflects new visibility set).
 
 ### Phase C — UI gating + canonical Transaction Detail redaction
 **Goal**: ensure consistent UX:
@@ -68,7 +71,7 @@ Optional (if needed by implementation complexity):
 ## Prompt packs (copy/paste)
 Create `prompt_packs/` with one chat per phase:
 - Chat A: server-side rules + membership entitlement shape
-- Chat B: delta sync scoping + local DB storage invariants
+- Chat B: scoped queries/listeners + offline cache semantics
 - Chat C: UI gating + canonical Transaction Detail redaction behavior
 - Chat D: tests + edge-case audit
 

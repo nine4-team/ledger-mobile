@@ -7,16 +7,19 @@ Preserve the *outcome* of the web app’s “PWA + service worker + background s
 - when sync can’t proceed, the app explains what needs attention
 - **without** expensive background polling or large realtime listeners
 
-This feature is primarily a **policy + scheduling** spec. The canonical correctness mechanism (SQLite + outbox + delta sync + change-signal) is owned by `40_features/sync_engine_spec.plan.md`.
+This feature is primarily a **policy + scheduling** spec. The canonical correctness mechanism is defined by `OFFLINE_FIRST_V2_SPEC.md`:
+- **Firestore-native offline persistence** (Firestore is canonical)
+- **Scoped listeners** (never “listen to everything”)
+- **Request-doc workflows** for multi-doc invariant correctness (Cloud Function transaction)
 
 ## Scope
 
 ### In-scope (RN/Firebase)
 - **Foreground sync scheduling**:
-  - on app open/resume: flush outbox then delta-sync; then attach the small change-signal listener for active scope(s)
-  - on connectivity restored: if there are pending outbox ops, trigger a foreground sync run (when app is active)
+  - on app open/resume: reattach **scoped listeners** for the active scope(s) and allow Firestore to reconcile cached writes/reads
+  - on connectivity restored (while app active): allow Firestore to sync queued writes; if request-doc operations appear stalled/failed, surface actionable “needs attention” UX
 - **Background execution (opportunistic, cost-guarded)**:
-  - if the OS grants background time, attempt a short “sync work unit” (flush pending outbox; optionally run a minimal delta pass)
+  - if the OS grants background time, attempt a short “sync work unit” (best-effort assist for pending Firestore writes / request-doc submission)
   - background work must be safe to skip without breaking correctness (foreground catches up)
 - **User-visible semantics (improved from web where appropriate)**:
   - “automatic sync” is the default
@@ -38,13 +41,12 @@ Document the existing web behavior for reference:
 ## Definitions: “guaranteed” vs “opportunistic”
 
 ### Guaranteed behaviors (must always hold)
-- **Correctness**: UI reads local SQLite only; local changes are durable immediately.
-- **Eventual convergence**: when the user opens/resumes the app while online, the app flushes outbox and runs delta sync until caught up (subject to auth/permissions).
-- **Cost control**: the app does not keep Firestore listeners running in background; no listeners on large collections ever.
+- **Correctness**: UI uses **Firestore-native offline persistence**; local changes apply immediately and are durable.
+- **Eventual convergence**: when the user opens/resumes the app while online, Firestore syncs pending writes and the app reattaches scoped listeners so remote updates flow in (subject to auth/permissions).
+- **Cost control**: detach listeners on background; never attach listeners on large/unbounded collections.
 
 ### Opportunistic behaviors (nice-to-have; safe to skip)
-- **Background sync attempts**: if the OS grants background time and the device is online, attempt a bounded sync run.
-- **Background delta catch-up**: optionally run a minimal delta pass if it is cheap and bounded (see cost guardrails).
+- **Background sync attempts**: if the OS grants background time and the device is online, attempt a bounded sync run (no listeners; no polling).
 
 When opportunistic behavior does not run (OS restrictions, low power, background refresh disabled), the app must remain correct; it simply syncs on next foreground.
 
@@ -52,12 +54,13 @@ When opportunistic behavior does not run (OS restrictions, low power, background
 
 ### 1) The “sync work unit” (the only thing allowed in background)
 One background wake is allowed to attempt *at most one* bounded “sync work unit”:
-- read local pending outbox count
-- if 0: do nothing
-- if >0: attempt outbox flush (bounded)
-- optionally: run a minimal delta catch-up pass (bounded), then stop
+- if offline or unauthenticated: do nothing
+- if online + authenticated: best-effort assist Firestore in pushing pending writes (bounded), then stop
 
-This aligns with `sync_engine_spec.plan.md`’s “Outbox Processor (foreground; optional background best-effort)” model.
+This aligns with `OFFLINE_FIRST_V2_SPEC.md`’s guidance:
+- detach listeners on background; reattach on resume
+- avoid custom outbox/delta sync engines
+- rely on Firestore-native offline persistence + request-doc workflows
 
 Dedicated flow doc (step-by-step, non-ambiguous stop conditions):
 - `flows/sync_work_unit.md`
@@ -73,30 +76,28 @@ The app must also *always* run a catch-up pass on:
 
 ### 3) Realtime propagation constraints (mobile)
 While foregrounded, realtime-like propagation uses:
-- exactly one listener per active scope on a small signal doc (`meta/sync`)
-- delta fetch by `updatedAt` cursor into SQLite
+- **scoped listeners** for the active scope (bounded queries / doc listeners)
 
 Backgrounded state:
-- no listeners (stop `meta/sync` listener)
+- no listeners (detach all scoped listeners)
 - no polling for “realtime”
 
 ## Cost guardrails (“not expensive” requirements)
 Background behavior must be explicitly bounded:
 
 - **No background listeners**:
-  - never attach Firestore listeners when backgrounded (including `meta/sync`)
+  - never attach Firestore listeners when backgrounded
 - **No polling loops**:
   - do not “wake and check” on tight intervals; rely on OS scheduling + app lifecycle
 - **Bounded work per wake**:
-  - cap outbox flush to a bounded batch (implementation choice; must avoid long loops)
-  - cap delta fetch pages/time (implementation choice; must avoid long loops)
+  - cap runtime (time budget) and operations per wake (implementation choice; must avoid long loops)
 - **Backoff for failures**:
   - if a background run fails due to network/auth/permission errors, back off and do not thrash
 - **User setting respect**:
   - if background refresh is disabled (platform), do not attempt to bypass it; rely on foreground
 
 Telemetry expectations (for cost regression detection):
-- track counts of: background wakes, background sync attempts, outbox flush writes, delta reads, failures by reason.
+- track counts of: background wakes, background sync attempts, estimated Firestore reads/writes attributable to sync assistance, and failures by reason.
 
 ## UX: make it better than “Retry Sync everywhere”
 
@@ -125,15 +126,16 @@ This spec intentionally does **not** require “Retry Sync” as a persistent UI
   - iOS: background app refresh tasks (OS-controlled)
   - Android: scheduled background work (OS-controlled)
 - Connectivity reachability: RN network reachability (see connectivity feature spec)
-- Persistent local DB/outbox: SQLite tables + scheduler (owned by sync engine plan)
+- Firestore offline persistence: native Firestore SDK local cache (see `OFFLINE_FIRST_V2_SPEC.md`)
+- Request-doc processing: Cloud Functions transaction applies multi-doc changes (see `OFFLINE_FIRST_V2_SPEC.md`)
 
 ### Intentional deltas
 - No service worker, no PWA install flow.
 - Background execution is opportunistic and bounded; correctness is guaranteed by foreground catch-up.
-- Realtime “channels stale” telemetry becomes “change-signal listener health + last delta run timestamps” (see `connectivity-and-sync-status/feature_spec.md` and `sync_engine_spec.plan.md`).
+- Realtime “channels stale” telemetry becomes “scoped listener health + last successful foreground sync attempt timestamps” (see `connectivity-and-sync-status/feature_spec.md`).
 
 ## Parity evidence (web app)
 - Background Sync API registration + manual trigger: `src/services/serviceWorker.ts`
 - SW background sync handler + backoff + loop-stopper + delegation to clients: `public/sw-custom.js`
-- Sync status UI reflects worker + scheduler + outbox: `src/components/SyncStatus.tsx`
+- Sync status UI reflects worker + scheduler + offline/online state: `src/components/SyncStatus.tsx`
 

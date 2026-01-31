@@ -108,7 +108,10 @@ Parity evidence:
 - QR flag gate: Observed in `src/pages/BusinessInventory.tsx` (`ENABLE_QR` from `VITE_ENABLE_QR`).
 
 ## Offline-first notes (mobile target)
-- All list actions must be local-first (SQLite transaction + outbox op) and show pending UI per the shared module contract.
+- Offline-ready behavior follows `OFFLINE_FIRST_V2_SPEC.md`:
+  - Firestore (native RN SDK) is canonical and provides offline persistence.
+  - For multi-doc operations, prefer request-doc workflows (server applies the invariant in a transaction).
+  - SQLite is allowed only as an optional **derived search index** (index-only), if this product requires robust offline multi-field search at scale.
 - Allocation operations must be modeled as a single idempotent multi-entity op and follow:
   - `40_features/inventory-operations-and-lineage/README.md`
 

@@ -1,11 +1,10 @@
 # Prompt Pack: Multi-entity ops + idempotency (Inventory operations)
 
 ## Goal
-You are helping migrate Ledger to **React Native + Firebase** with an **offline-first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with the **Offline Data v2** architecture:
+- Native Firestore offline persistence is the baseline (“Magic Notebook”)
+- Multi-doc correctness uses **request-doc workflows** (server applies changes in a Firestore transaction)
+- Listeners are allowed but must be **scoped/bounded** (no unbounded “listen to everything”)
 
 Your job in this chat:
 - Tighten and complete the **multi-entity operation contracts** for inventory operations so implementation can be done via server-owned invariants (Callable Functions / Firestore transactions) with idempotency.
@@ -35,11 +34,10 @@ Use these as the canonical references for parity:
   - `src/pages/TransactionDetail.tsx`
 
 ## What to capture (required)
-- **Operation payload shapes** (what the outbox op contains in mobile)
-- **Idempotency strategy** (server-owned, `lastMutationId`/`opId`)
+- **Request-doc payload shapes** (what the client writes as the request doc)
+- **Idempotency strategy** (server-owned, `requestId` / `opId`)
 - **Preconditions + conflict semantics** (expected current state checks)
 - **Atomic write set** per operation (which docs must be written together)
-- **Change-signal bump** requirements per operation (which project’s `meta/sync` is bumped)
 - **Partial completion semantics** (especially sell-to-project)
 
 ## Evidence rule (anti-hallucination)
@@ -48,5 +46,5 @@ For each non-obvious behavior:
 - Mark as an **intentional delta** and explain why (Firebase correctness/cost constraints).
 
 ## Constraints / non-goals
-- Do not prescribe “subscribe to everything” listeners; realtime must use **change-signal + delta**.
+- Do not prescribe “subscribe to everything” listeners; realtime must use scoped/bounded listeners per `OFFLINE_FIRST_V2_SPEC.md`.
 - Do not do pixel-perfect design specs; focus on correctness and offline behavior.

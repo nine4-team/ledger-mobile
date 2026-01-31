@@ -1,6 +1,6 @@
 # Data contracts (canonical entity shapes)
 
-This document is the **single source of truth** for **domain entity contracts** in the Firebase mobile migration.
+This document consolidates the **domain entity contracts** for the Firebase mobile migration.
 
 If there is a disagreement between:
 
@@ -8,7 +8,9 @@ If there is a disagreement between:
 - `firebase_data_model.md` (Firestore)
 - `local_sqlite_schema.md` (SQLite)
 
-…this document wins. The other docs should **reference** these contracts rather than restating fields.
+…**feature specs win** for product intent. This document should be updated to match feature specs where explicit, and should mark gaps/contradictions as **TBD**.
+
+Other docs under `20_data/` should **reference** these contracts rather than restating fields.
 
 ---
 
@@ -42,18 +44,22 @@ There are exactly **two collaboration scopes**:
 - **Business inventory scope**: `projectId = null` and docs live under `accounts/{accountId}/inventory/...`
 
 Contract rule:
-- `projectId: string | null` is always present on **scoped mutable entities** (items/transactions/spaces/attachments, etc.).
+- `projectId: string | null` is always present on **scoped mutable entities** (items/transactions/spaces/lineage edges, etc.).
 - `projectId = null` must mean **Business Inventory** (not “unknown project”).
 
-### Sync fields (delta sync + outbox)
+### Lifecycle + audit fields (Firestore-native offline baseline)
 
-For every **scoped mutable entity doc** (including items, transactions, attachments, lineage edges), include:
+Architecture baseline note:
+- Firestore is canonical, with native offline persistence + scoped listeners.
+- Do **not** require bespoke sync-engine primitives (outbox ids, delta cursors, `meta/sync`) as part of entity contracts unless a feature spec explicitly requires them.
 
+For every **scoped mutable entity doc** (including items, transactions, spaces, lineage edges), include:
+
+- `createdAt: Timestamp`
 - `updatedAt: Timestamp` (server timestamp; updated on every accepted change)
 - `deletedAt: Timestamp | null` (tombstone)
-- `version: number` (integer for conflict detection)
-- `updatedBy?: string | null` (uid)
-- `lastMutationId?: string` (outbox op id; required if you implement end-to-end idempotency)
+- `createdBy?: string | null` (uid; required when Rules need it as a selector)
+- `updatedBy?: string | null` (uid; optional unless Rules require it)
 - `schemaVersion?: number` (optional; recommended)
 
 ### Security fields (Roles v2)
@@ -62,6 +68,20 @@ Roles v2 requires **server-enforceable selectors**. At minimum:
 
 - Entities that use “own uncategorized” behavior MUST include `createdBy: string` (uid).
   - Required for **Items** (see Roles v2 spec: uncategorized items visible only to creator).
+
+### Embedded media references (URLs + `offline://` placeholders)
+
+Feature specs model media as **embedded references on domain entities** (not as separate “Attachment docs”).
+
+Minimal shared shape (used by multiple entities):
+
+- `url: string`
+  - Either a remote URL **or** an `offline://<mediaId>` placeholder string (must render via local media cache).
+- `isPrimary?: boolean`
+  - Only for entity galleries that support a single primary image (e.g. `space.images`).
+
+TBD / needs confirmation (spec gap; do not invent):
+- Whether media entries persist additional metadata (e.g. `mimeType`, `filename`, `byteSize`, upload state) in Firestore, or whether state is derived from local media records + URL scheme.
 
 ---
 
@@ -85,7 +105,8 @@ Optional / nullable:
 - `mainImageUrl?: string | null`
   - Parity field: project cover image URL stored directly on the project.
 - `mainImageAttachmentId?: string | null`
-  - Optional optimization: points at an attachment doc (if/when attachment docs exist).
+  - Deprecated (spec mismatch): feature specs use `mainImageUrl` (and `offline://` placeholders) rather than attachment docs.
+  - TBD: remove this field entirely once specs and implementation converge.
 - `settings?: Record<string, any> | null`
 - `metadata?: Record<string, any> | null`
 
@@ -94,7 +115,7 @@ Derived/denormalized (optional; must not be correctness-critical):
 - `transactionCount?: number`
 - `totalValueCents?: number`
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location
 
@@ -154,7 +175,7 @@ Optional / nullable:
 - `metadata?: Record<string, any> | null`
   - Examples used by specs: `itemizationEnabled`, `systemTag` (e.g. `design_fee`), etc.
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location
 
@@ -197,7 +218,7 @@ Required:
   - Integer cents.
   - `null` means “enabled but not budgeted” (UI can still show spend tracking).
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location
 
@@ -274,7 +295,7 @@ Lineage pointers (nullable):
 - `originTransactionId?: string | null`
 - `latestTransactionId?: string | null`
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Scope semantics + Firestore locations
 
@@ -327,14 +348,27 @@ Other columns:
 - `inventory_status` (TEXT NULL)
 - `business_inventory_location` (TEXT NULL)
 
-Sync + local bookkeeping: per `local_sqlite_schema.md` common columns.
+Local search index note:
+- SQLite is optional and non-authoritative; if used, prefer a rebuildable search index per `local_sqlite_schema.md`.
 
+---
+
+## TBD / missing contracts (needs confirmation)
+
+The following entities/field shapes are referenced by feature specs but are not fully specified in this contracts doc yet:
+
+- **Space** and **SpaceTemplate** entity contracts (see `40_features/spaces/feature_spec.md`)
+- **Embedded media entry shape** beyond `{ url, isPrimary? }`:
+  - receipts that include PDFs (how to distinguish non-image entries in `receiptImages[]`)
+  - whether `mimeType`, `filename`, `byteSize`, upload state are persisted on the entity vs derived locally
+- **Item media fields**:
+  - feature specs reference item images (and example `item.primaryImage`), but do not explicitly define the canonical persisted field(s) and shape
 ---
 
 ## Entity: Transaction
 
 This contract must satisfy:
-- `40_features/project-transactions/feature_spec.md` (filters, canonical title/amount semantics, receipts/PDFs via attachments)
+- `40_features/project-transactions/feature_spec.md` (filters, canonical title/amount semantics, receipts/PDFs via embedded `receiptImages[]`)
 - `40_features/project-items/feature_spec.md` + `40_features/budget-and-accounting/feature_spec.md` (canonical attribution rules)
 - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md` (server-enforceable visibility for canonical rows)
 
@@ -359,6 +393,14 @@ Optional / nullable:
 - `reimbursementType?: string | null`
 - `triggerEvent?: string | null`
 - `receiptEmailed?: boolean`
+
+Embedded media (per feature specs; uses “Embedded media references” above):
+- `receiptImages?: Array<{ url: string; isPrimary?: boolean }>`
+  - Receipts accept images and PDFs in feature specs.
+  - TBD / needs confirmation: whether PDFs live in `receiptImages` and, if so, what metadata distinguishes them from images.
+- `otherImages?: Array<{ url: string; isPrimary?: boolean }>`
+- `transactionImages?: Array<{ url: string; isPrimary?: boolean }>`
+  - Legacy compat: feature specs mention mirroring receipts here.
 
 Budget category selector:
 - `budgetCategoryId?: string | null`
@@ -386,7 +428,7 @@ Linkage helpers (optional; denormalized):
 - `itemIds?: string[]`
   - Non-authoritative cache; use `item.transactionId` as the canonical association.
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### INV_* semantics (authoritative vs derived)
 
@@ -452,100 +494,23 @@ Completeness / denormalized helpers:
 - `sum_item_purchase_prices_cents` (INTEGER NULL)
 - `item_ids_json` (TEXT NULL) (optional; JSON array; non-authoritative cache)
 
-Sync + local bookkeeping: per `local_sqlite_schema.md` common columns.
+Local search index note:
+- SQLite is optional and non-authoritative; if used, prefer a rebuildable search index per `local_sqlite_schema.md`.
 
 ---
 
-## Entity: Attachment
+## Media contract note (replaces prior “Attachment entity”)
 
-Decision (canonical storage):
-- **Attachment documents are canonical**. Parent entities (items/transactions/spaces/projects) should not embed canonical arrays of attachment metadata.
+Prior drafts modeled media as separate Attachment documents. This conflicts with feature specs, which consistently reference embedded fields like:
 
-This contract must satisfy:
-- `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md` (required UI state machine; images + PDFs)
-- `40_features/project-transactions/feature_spec.md` (receipts + other images; offline placeholders)
-- `40_features/sync_engine_spec.plan.md` (§8 media strategy; attachment docs + delta visibility)
+- `transaction.receiptImages[]` / `transaction.otherImages[]` (with `offline://` placeholders)
+- `space.images[]`
+- example: `item.primaryImage` (shape TBD in specs)
 
-### Canonical fields
+**Contract decision (aligned to feature specs):** model media as embedded URL refs on the owning entity (see “Embedded media references” above).
 
-Required:
-- `id: string` (doc id)
-- `accountId: string`
-- `projectId: string | null`
-- `parentType: "item" | "transaction" | "space" | "project"`
-- `parentId: string`
-
-Optional / nullable:
-- `kind?: "receipt" | "image" | "pdf" | "other" | null`
-  - Why it exists: UI can separate receipts vs other media without guessing from mime types.
-
-Remote file identity (nullable until uploaded):
-- `storagePath?: string | null`
-- `mimeType?: string | null`
-- `byteSize?: number | null`
-- `sha256?: string | null`
-- `filename?: string | null`
-
-Media metadata (optional):
-- `width?: number | null`
-- `height?: number | null`
-- `durationMs?: number | null`
-
-Lifecycle state (remote-visible; nullable):
-- `uploadState?: "uploading" | "uploaded" | "failed" | null`
-  - Note: `local_only` is a **local-only** state (cannot be represented in Firestore when offline).
-- `uploadError?: string | null`
-
-Audit (recommended):
-- `createdBy?: string | null`
-- `uploadedBy?: string | null`
-- `uploadedAt?: Timestamp | null`
-
-Sync fields (required once the doc exists in Firestore): see “Sync fields” above.
-
-Local-only fields (SQLite only; never persisted to Firestore):
-- `localUri?: string | null`
-- `localMediaId?: string | null`
-
-### Firestore locations
-
-Project-scope attachments:
-- `accounts/{accountId}/projects/{projectId}/attachments/{attachmentId}`
-
-Business inventory attachments:
-- `accounts/{accountId}/inventory/attachments/{attachmentId}`
-
-### SQLite mapping
-
-Table: `attachments`
-
-Key columns:
-- `id`, `account_id`, `project_id`
-
-Parent association:
-- `parent_type` (TEXT NOT NULL)
-- `parent_id` (TEXT NOT NULL)
-- `kind` (TEXT NULL)
-
-Lifecycle + local cache:
-- `upload_state` (TEXT NOT NULL) (`local_only`, `uploading`, `uploaded`, `failed`)
-- `upload_error` (TEXT NULL)
-- `local_uri` (TEXT NULL)
-- `local_media_id` (TEXT NULL)
-
-Remote identity:
-- `storage_path` (TEXT NULL)
-- `mime_type` (TEXT NULL)
-- `byte_size` (INTEGER NULL)
-- `sha256` (TEXT NULL)
-- `filename` (TEXT NULL)
-- `width` (INTEGER NULL)
-- `height` (INTEGER NULL)
-- `duration_ms` (INTEGER NULL)
-- `uploaded_by` (TEXT NULL)
-- `uploaded_at_server` (INTEGER NULL)
-
-Sync + local bookkeeping: per `local_sqlite_schema.md` common columns.
+TBD / needs confirmation:
+- Whether we also need a separate Firestore “attachment docs” collection as an optimization. If so, it must be additive and must not replace these embedded fields unless feature specs are updated.
 
 ---
 
@@ -571,7 +536,7 @@ Required:
 Optional:
 - `note?: string | null`
 
-Sync fields (required): see “Sync fields” above.
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location (cross-scope)
 
@@ -595,5 +560,6 @@ Edge columns:
 - `created_at_server` (INTEGER NOT NULL)
 - `created_by` (TEXT NOT NULL)
 
-Sync + local bookkeeping: per `local_sqlite_schema.md` common columns.
+Local search index note:
+- SQLite is optional and non-authoritative; if used, prefer a rebuildable search index per `local_sqlite_schema.md`.
 

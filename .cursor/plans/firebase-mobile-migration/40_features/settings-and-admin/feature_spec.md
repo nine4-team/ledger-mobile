@@ -51,13 +51,6 @@ Parity evidence: `src/components/BudgetCategoriesManager.tsx`.
 
 Parity evidence: `src/components/VendorDefaultsManager.tsx`.
 
-- Tax presets:
-  - Edit a preset (name required; rate 0–100)
-  - Delete a preset (must keep at least one)
-  - Reorder presets by drag
-
-Parity evidence: `src/components/TaxPresetsManager.tsx`.
-
 - Space templates:
   - Create/edit template (name required, notes optional)
   - Edit checklists: checklist + items CRUD inside the template editor
@@ -88,7 +81,6 @@ These are “small metadata” entities that must sync efficiently and be cached
 - `accounts` / business profile fields (name, logo URL, versioning metadata)
 - `budget_categories` (including archive state and optional metadata like itemization enabled)
 - `vendor_defaults` (10 slots + ordering)
-- `tax_presets` (array/collection with ordering)
 - `space_templates` (including nested checklists)
 - `account_memberships` / users list
 - `invitations` (pending invitations per account)
@@ -96,17 +88,17 @@ These are “small metadata” entities that must sync efficiently and be cached
 ## Offline behavior (required)
 
 ### Reads (must work offline)
-- Presets (budget categories, vendor defaults, tax presets, space templates) must be readable offline because:
-  - transaction forms require vendors/tax/categories
+- Presets (budget categories, vendor defaults, space templates) must be readable offline because:
+  - transaction forms require vendors/categories
   - space creation requires templates
 
 Implementation note:
-- This implies the sync engine must treat these as “metadata collections” that are hydrated early and stored in SQLite (or equivalent).
+- This implies these should be read in a **cache-first** way and kept available offline via **Firestore-native offline persistence**, per `OFFLINE_FIRST_V2_SPEC.md`. (No bespoke local “sync engine” is required for this behavior.)
 
 ### Writes (policy)
 - Admin/owner writes in Settings should be **online-required by default** (business profile update, presets mutation, invites, account creation).
   - Intentional delta: web parity does not always hard-block offline actions; RN should be explicit to avoid “false success” flows.
-  - If we later introduce “metadata outbox” writes, this spec can be updated to allow queued writes with clear pending UX.
+  - If we later allow offline-queued metadata writes, this spec can be updated to allow queued writes with clear pending/error UX and server-side enforcement, per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ### App restart / reconnect
 - If presets were previously cached:
@@ -135,16 +127,15 @@ Parity evidence:
 - Validation errors:
   - Business profile name required
   - Logo file validation (type + size)
-  - Tax preset validation (name required; 0–100)
 
 ## Collaboration / realtime needs
 - **No** realtime requirement; eventual consistency is sufficient.
-- Do not implement via large listeners. If we need near-real-time freshness, treat it as metadata delta sync triggered by change-signal and/or foreground sync.
+- Do not implement via large listeners. If we need better foreground freshness, prefer bounded/scoped reads/listeners and/or explicit refresh, per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Dependencies
 - Auth + account context (user role, current accountId): `src/contexts/AuthContext.tsx`, `src/contexts/AccountContext.tsx`
 - Business profile context/service: `src/contexts/BusinessProfileContext.tsx`, `src/services/businessProfileService.ts`
-- Offline prerequisites / metadata caching: `src/services/offlineStore.ts` (existing web parity caching for some metadata), and sync engine spec for Firebase.
+- Offline prerequisites / metadata readability: `src/services/offlineStore.ts` (web parity reference for “must be readable offline”), and `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence baseline for mobile).
 - Media upload pipeline: `src/services/imageService.ts`, plus quota guardrail for offline selection:
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 

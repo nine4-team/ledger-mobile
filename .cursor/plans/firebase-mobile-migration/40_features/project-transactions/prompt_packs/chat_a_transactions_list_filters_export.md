@@ -2,11 +2,10 @@
 
 ## Goal
 
-You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+You are helping migrate Ledger to **React Native + Firebase** with an **offline-ready** architecture baseline:
+- Firestore-native offline persistence (Firestore is canonical)
+- Scoped listeners (never unbounded “listen to everything”)
+- Request-doc workflows for multi-doc invariants (Cloud Function applies changes atomically)
 
 Your job in this chat:
 - Produce parity-grade specs for the **project transactions list** (search/filter/sort/state persistence/scroll restoration + CSV export).
@@ -54,10 +53,10 @@ For the list contract and acceptance criteria, include:
   - display title mapping
   - computed totals and any self-heal behavior (explicitly call out whether it is retained on mobile)
 - Offline behavior:
-  - renders from local DB offline
+  - renders from Firestore cache offline (and converges when online)
   - handling stale/partial metadata (category names)
 - Collaboration needs:
-  - change-signal + delta expectations; no large listeners
+  - scoped listener expectations; no unbounded listeners
 - Error/empty/loading states
 
 ## Evidence rule (anti-hallucination)
@@ -67,7 +66,7 @@ For each non-obvious behavior:
 - Mark as intentional change and justify it (platform/architecture requirement).
 
 ## Constraints / non-goals
-- Do not prescribe “subscribe to everything” listeners; realtime must use change-signal + delta.
+- Do not prescribe unbounded listeners; realtime must use **scoped** listeners only.
 - Do not do pixel-perfect design specs.
 - Focus on behaviors where multiple implementations would diverge.
 

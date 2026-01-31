@@ -23,8 +23,8 @@ This folder defines the parity-grade behavior spec for Ledger’s **vendor invoi
   - `ui/screens/ImportWayfairInvoice.md`
 
 ## Cross-cutting dependencies
-- Offline-first invariants + change-signal + delta sync: `40_features/sync_engine_spec.plan.md`
-- Offline media lifecycle (receipt + item thumbnails): `40_features/_cross_cutting/offline_media_lifecycle.md`
+- Offline-first architecture (Firestore-native offline persistence + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
+- Offline media lifecycle (receipt + item thumbnails): `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 - Storage/quota guardrails: `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - Navigation/back behavior: `40_features/navigation-stack-and-context-links/README.md`
 

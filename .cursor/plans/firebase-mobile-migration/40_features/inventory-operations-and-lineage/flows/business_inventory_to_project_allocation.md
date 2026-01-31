@@ -27,7 +27,7 @@ Parity evidence:
 - Deterministic branching in `allocateItemToProject` in `src/services/inventoryService.ts` (“Scenario A/B/C”).
 
 ### Step 3: Apply updates atomically (Firebase requirement)
-Allocation is a multi-entity update (item + canonical transaction + lineage + change-signal). In Firebase it must be server-owned and transactional.
+Allocation is a multi-entity update (item + canonical transaction + lineage). In Firebase it must be server-owned and transactional.
 
 Minimum resulting item state:
 - `projectId = <projectId>`
@@ -47,10 +47,12 @@ Append lineage edge representing the move:
 Parity evidence:
 - `lineageService.appendItemLineageEdge` calls inside allocation helpers in `src/services/inventoryService.ts`.
 
-## Offline-first / outbox requirement (Firebase)
-Represent allocation as one outbox op with one idempotency key.
+## Offline-ready / request-doc requirement (Firebase)
+Represent allocation as **one request doc** with one idempotency key (`requestId` / `opId`).
+The server processes the request and applies the multi-doc write set in a Firestore transaction (see `OFFLINE_FIRST_V2_SPEC.md` → request-doc workflows).
+Retry model: create a new request doc with the same `opId` (see `feature_spec.md` → “Request-doc collection + payload shapes”).
 
-Parity evidence (web outbox):
+Parity evidence (web outbox; intentional delta vs Firebase request-doc):
 - `ALLOCATE_ITEM_TO_PROJECT` op: `src/types/operations.ts`
 - Execution: `executeAllocateItemToProject` in `src/services/operationQueue.ts`
 

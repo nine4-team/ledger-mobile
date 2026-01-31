@@ -75,6 +75,6 @@ For each non-obvious field/default in the contract:
 - Mark as an **intentional delta** (mobile Firebase architecture choice) with rationale.
 
 ## Constraints
-- Must remain compatible with the offline-first invariants in `40_features/sync_engine_spec.plan.md`.
+- Must remain compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence; scoped listeners; request-doc workflows for multi-doc correctness).
 - Must not imply separate “project vs inventory” implementations of Items/Transactions UI.
 

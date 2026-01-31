@@ -1,10 +1,10 @@
 # Business inventory — Feature spec (Firebase mobile migration)
 
 ## Intent
-Provide a local-first **Business inventory** workspace where users can manage inventory-scoped Items and Transactions, including bulk actions and project allocation, with predictable offline behavior. While foregrounded and online, the app should feel “fresh” without subscribing to large collections (use change-signal + delta sync).
+Provide an offline-ready **Business inventory** workspace where users can manage inventory-scoped Items and Transactions, including bulk actions and project allocation, with predictable offline behavior.
 
 Critical migration constraint:
-- Follow `40_features/sync_engine_spec.plan.md` (local DB + outbox + delta sync + one change-signal listener per active scope; no large listeners).
+- Follow `OFFLINE_FIRST_V2_SPEC.md` (native Firestore offline persistence + scoped listeners; optional derived SQLite search index when needed).
 
 Shared-module constraint:
 - Inventory items and inventory transactions must reuse the shared Items/Transactions modules:
@@ -58,6 +58,15 @@ Firebase mobile target (shared-module mapping):
 - Implement the Items tab using the shared Items module configured with `scope: 'inventory'` (no `projectId`), plus inventory-only actions (allocation).
 - Do not fork a separate “business inventory items” component tree; implement via scope-config as required by:
   - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
+
+Search match fields (required; parity):
+- **Search matches (web parity)**:
+  - `item.description`
+  - `item.sku`
+  - `item.source`
+  - `item.paymentMethod`
+  - `item.businessInventoryLocation`
+- Source of truth for inventory-scope list config: `40_features/business-inventory/ui/screens/BusinessInventoryItemsScopeConfig.md`
 
 Mobile requirement (Expo Router; list restoration):
 - Do not implement “filters/sort persistence + scroll restoration” separately in:
@@ -150,25 +159,21 @@ Parity evidence:
 
 ## Offline-first behavior (mobile target)
 
-### Local source of truth
-- UI reads SQLite only.
-- Writes apply locally immediately and enqueue outbox ops for later sync.
+### Canonical datastore + offline readiness
+- Firestore (native RN SDK) is the canonical datastore and provides offline persistence (“Magic Notebook”).
+- UI may read Firestore-cached data immediately and show offline UX signals when stale/queued.
+- SQLite is **not** the canonical store for Items/Transactions in this architecture.
+  - If this product requires robust offline multi-field item search at scale, enable the **optional derived search index** module described in `OFFLINE_FIRST_V2_SPEC.md` (SQLite/FTS is index-only; Firestore remains canonical).
 
 ### Restart behavior
-- On cold start, business inventory home should render from local cache (avoid “empty flash”), then converge after delta sync.
-  - **Parity evidence (web conceptual)**: business inventory snapshot refresh pattern in `src/contexts/BusinessInventoryRealtimeContext.tsx` (`refreshBusinessInventoryRealtimeSnapshot` seeds, then subscriptions).
+- On cold start, business inventory home should render from Firestore cache quickly (avoid “empty flash”), then converge after reconnect/listener updates.
 
 ### Reconnect + post-sync behavior
-- When returning online, inventory scope should refresh collections and clear any stale indicators.
-- After outbox flush completes with zero pending ops, refresh inventory scope.
-  - **Parity evidence (web)**: `src/contexts/BusinessInventoryRealtimeContext.tsx` listens to `onSyncEvent('complete', ...)` and calls `refreshCollections({ force: true })`.
+- When returning online, inventory scope should converge via scoped listener updates and clear any stale indicators.
+- If a manual refresh exists, it should force a re-fetch / reattachment for the inventory scope and surface errors clearly.
 
 ## Collaboration / “realtime” expectations (mobile target)
-- **Intentional delta**: web uses realtime subscriptions for inventory items/transactions (see `src/contexts/BusinessInventoryRealtimeContext.tsx`).
-- Mobile must not subscribe to large collections; instead:
-  - listen only to `accounts/{accountId}/inventory/meta/sync`
-  - on signal change, run delta fetches for advanced collections and apply to SQLite
-
-Canonical migration source:
-- `40_features/sync_engine_spec.plan.md` (§ change-signal + delta sync loop)
+- Web parity uses realtime subscriptions for inventory items/transactions (see `src/contexts/BusinessInventoryRealtimeContext.tsx`).
+- Mobile uses **scoped listeners** (bounded to active inventory scope) per `OFFLINE_FIRST_V2_SPEC.md`.
+- Disallowed: “listen to everything across all projects/accounts”.
 

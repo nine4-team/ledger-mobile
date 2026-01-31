@@ -2,10 +2,10 @@
 
 ## Goal
 You are helping migrate Ledger to **React Native + Firebase** with an **offline‑first** architecture:
-- Local SQLite is the source of truth
-- Explicit outbox
-- Delta sync
-- Tiny change-signal doc (no large listeners)
+- Firestore-native offline persistence (Firestore is canonical; cache + queued writes)
+- Scoped listeners only (no “listen to everything”)
+- Request-doc workflows for multi-doc correctness (Cloud Function transaction applies changes)
+- Optional SQLite is allowed only as a **derived search index** (non-authoritative)
 
 Your job in this chat:
 - Refine the parity spec for auth bootstrap + protected-route gating, grounded in the existing web codebase.
@@ -43,7 +43,7 @@ For each non-obvious behavior:
 - Mark as an **intentional change** and explain why.
 
 ## Constraints / non-goals
-- Do not prescribe “subscribe to everything” listeners; realtime must use the **change-signal + delta** approach.
+- Do not prescribe “subscribe to everything” listeners; realtime must use **scoped/bounded listeners** only.
 - Do not do pixel-perfect design specs.
 - Focus on behaviors where multiple implementations would diverge.
 

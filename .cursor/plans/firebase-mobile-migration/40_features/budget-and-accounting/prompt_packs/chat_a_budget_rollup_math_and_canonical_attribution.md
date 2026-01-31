@@ -1,10 +1,10 @@
 # Chat A — Budget rollup math + canonical attribution (item-driven)
 
 ## Goal
-Specify and/or implement the budget rollup computation layer for the Firebase mobile app (SQLite source of truth), with the **canonical item-driven attribution** model.
+Specify and/or implement the budget rollup computation layer for the Firebase mobile app (Firestore is canonical; Firestore-native offline persistence), with the **canonical item-driven attribution** model.
 
 ## Critical constraints (must obey)
-- UI reads from SQLite only; rollups must be derivable offline (`sync_engine_spec.plan.md`).
+- UI reads from Firestore-cached data; rollups must be derivable offline via Firestore-native offline persistence (`OFFLINE_FIRST_V2_SPEC.md`).
 - Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) must **not** require a user-facing category and must be attributed via **linked items’** `inheritedBudgetCategoryId`.
   - Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
   - Shared rules: `40_features/project-items/flows/inherited_budget_category_rules.md`
@@ -22,7 +22,7 @@ If you need a shared contract doc (only if necessary), add:
   - overall spent (excluding design fee)
   - per-category spent (non-canonical + canonical)
   - overall budget denominator (sum of project category budgets)
-- A local-DB join/query strategy sufficient to implement:
+- A Firestore query/join strategy sufficient to implement:
   - canonical attribution by `item.transactionId` join
   - grouping by `item.inheritedBudgetCategoryId`
 

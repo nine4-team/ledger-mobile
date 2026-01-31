@@ -21,6 +21,6 @@ Routing/entrypoints:
 For each non-obvious behavior, include parity evidence (file + function/component) OR mark as an intentional delta for RN/Firebase.
 
 ## Constraints / non-goals
-- Do not prescribe large listeners; collaboration is change-signal + delta only.
+- Do not prescribe large listeners; use scoped listeners per `OFFLINE_FIRST_V2_SPEC.md`.
 - Focus on behaviors where multiple implementations would diverge (parsing states, draft mapping, validation, create semantics).
 

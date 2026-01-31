@@ -3,8 +3,8 @@ Produce parity-grade specs for `invoice-import`.
 
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → **Feature 13: Invoice import** (`invoice-import`)
-- Sync engine spec (offline-first invariants): `40_features/sync_engine_spec.plan.md`
-- Offline media lifecycle (attachments/images as local-only → uploading → uploaded): `40_features/_cross_cutting/offline_media_lifecycle.md`
+- Offline-first architecture: `OFFLINE_FIRST_V2_SPEC.md`
+- Offline media lifecycle (attachments/images as local-only → uploading → uploaded): `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 - Storage/quota guardrails: `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - Shared Items + Transactions module contract (item draft editing UX reuse): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 
@@ -42,7 +42,7 @@ Create `prompt_packs/` with 2–4 slices. Each slice must include:
 Recommended slices:
 - Slice A: screen contracts (import flows + validation + UX states)
 - Slice B: parsing + debug tooling (parse report, warnings, extraction heuristics)
-- Slice C: media/background asset upload + offline-first adaptation (outbox + placeholders + retries)
+- Slice C: media/background asset upload + offline-first adaptation (request-doc + placeholders + retries)
 
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.

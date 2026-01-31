@@ -16,7 +16,7 @@ Update or create:
   - `src/contexts/BusinessInventoryRealtimeContext.tsx`
 
 ## Cross-cutting constraints
-- Offline-first + outbox + delta sync + change-signal (no large listeners): `40_features/sync_engine_spec.plan.md`
+- Offline data v2 (native Firestore offline + scoped listeners + request-doc correctness): `OFFLINE_FIRST_V2_SPEC.md`
 - Shared Items + Transactions modules (reuse rule): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 
 ## Evidence rule (anti-hallucination)
@@ -28,5 +28,5 @@ For each non-obvious behavior, include one of:
 - URL/state persistence behavior (debounce timing, param keys)
 - Scroll restoration behavior (how list → detail → back works)
 - Refresh semantics (what it refreshes, error handling)
-- Firebase delta: replace web realtime subscriptions with inventory `meta/sync` listener + delta fetch
+- Firebase delta: preserve parity UX, but implement “freshness” via scoped listeners (bounded) and Firestore-native offline persistence (no bespoke delta-sync engine)
 

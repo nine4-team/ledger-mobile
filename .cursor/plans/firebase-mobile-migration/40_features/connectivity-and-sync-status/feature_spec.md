@@ -3,11 +3,13 @@
 ## Intent
 Make offline-first behavior legible and trustworthy by providing **always-on, global UI** for:
 - connectivity state (offline / slow)
-- outbox + sync state (pending / syncing / waiting / error)
+- sync state (pending / syncing / waiting / error) for:
+  - Firestore local queued writes
+  - request-doc operations (multi-doc correctness workflows)
 - a deterministic “Retry sync” affordance
 - background/automatic sync error surfacing
 
-This feature must remain compatible with the migration invariants: **UI reads from local DB**, writes enqueue outbox ops, and remote convergence uses **delta sync + change-signal** (no listeners on large collections). See `40_features/sync_engine_spec.plan.md`.
+This feature must align with Offline Data v2: **Firestore-native offline persistence** (Firestore is canonical), **scoped listeners**, and **request-doc workflows** for multi-doc correctness. See `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Owned UI surface (global)
 These are global components mounted in the app shell, not routed screens:
@@ -34,12 +36,11 @@ Firebase/RN adaptation notes (intentional delta):
 - Any health ping must be rate-limited and must not block UI rendering.
 
 ### Sync state
-The global sync banner reflects **outbox and scheduler** state, not “realtime subscription status”:
-- pending outbox count (local)
-- whether a foreground sync run is currently active (local)
-- whether the next retry is scheduled (local)
-- last sync error message (local)
-- background/automatic sync progress/errors (local event bus)
+The global sync banner reflects **pending Firestore writes + request-doc operation state**, not “realtime subscription status”:
+- whether there are **pending local writes** that have not been acknowledged by the server yet (best-effort)
+- pending request-doc operations (queued / applying / failed)
+- last request-doc error message (if any)
+- background/automatic “sync attempt” errors (best-effort; not required for correctness)
 
 Parity evidence (web):
 - `src/components/SyncStatus.tsx` (derives status from queue + scheduler + worker events)
@@ -48,7 +49,10 @@ Parity evidence (web):
 
 Firebase/RN adaptation notes (intentional delta):
 - There is no Service Worker in React Native. “background sync” becomes **best-effort background execution** (or “automatic sync attempt”) and must never be required for correctness.
-- The “sync status” UI must map to: outbox flush + delta sync + `meta/sync` listener health, not Supabase realtime channels.
+- Mobile does **not** implement the web outbox/delta sync engine. Instead, reflect:
+  - Firestore queued writes + pending writes acknowledgement
+  - request-doc status (queued/applied/failed)
+  - scoped listener attach/health (if exposed)
 
 ## Primary user-visible behaviors
 
@@ -71,7 +75,7 @@ Parity evidence:
 
 ### 3) Sync status banner (SyncStatus) — when it shows
 Show the floating sync status banner if any of these are true:
-- pending outbox operations > 0
+- there are pending Firestore writes or pending request-doc operations
 - foreground sync is currently running
 - an automatic/background sync attempt is active
 - there is a sync error to surface
@@ -101,14 +105,16 @@ Parity evidence:
 ### 5) Retry sync behavior (RetrySyncButton)
 When the user taps “Retry sync”:
 - If online and offline prerequisites are cold (`blocked` or `warming`), attempt to hydrate prerequisites first (best-effort; do not fail the whole retry if hydration fails).
-- Then request a **foreground sync**.
+- Then request a best-effort **foreground retry**:
+  - reattach scoped listeners / refresh listener scopes
+  - refresh request-doc statuses
 
 Parity evidence:
 - `src/components/ui/RetrySyncButton.tsx` (`hydrateNow`, `triggerManualSync`, `requestForegroundSync('manual')`)
 - prerequisite model: `src/hooks/useOfflinePrerequisites.ts`
 
 Firebase/RN adaptation notes (intentional delta):
-- Replace Service Worker “manual sync trigger” with an app-internal “manual sync” signal if needed; the key requirement is that retry triggers a foreground outbox flush + delta catch-up.
+- Replace Service Worker “manual sync trigger” with an app-internal “retry now” signal. The key requirement is deterministic user recovery UX, not an outbox flush.
 
 ### 6) Background/automatic sync error toasts (BackgroundSyncErrorNotifier)
 Background-triggered sync failures must surface as toast notifications:
@@ -128,5 +134,5 @@ Parity evidence:
 - `src/contexts/ProjectRealtimeContext.tsx` (telemetry fields)
 
 Firebase/RN note:
-- Replace “realtime channel” telemetry with change-signal listener health + last delta run timestamps.
+- Replace “realtime channel” telemetry with scoped listener health + request-doc failure counters/timestamps (if available).
 

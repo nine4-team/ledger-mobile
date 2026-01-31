@@ -17,7 +17,7 @@ Let a user select an Amazon invoice PDF, parse it locally into a draft transacti
   - Web parity evidence: `src/pages/ImportAmazonInvoice.tsx` (`projectService.getProject` → `projectName`)
 - Cached metadata dependencies:
   - Budget categories for `CategorySelect`
-  - (Optional) vendor defaults / tax presets are not used on this screen, but the created transaction must be compatible with the shared transaction model.
+  - (Optional) vendor defaults are not used on this screen, but the created transaction must be compatible with the shared transaction model.
 
 ## Writes (local-first)
 For each user action:
@@ -29,16 +29,12 @@ For each user action:
 - Edit draft fields (date, amount, category, payment method, notes, item drafts)
   - Local state only (draft); no DB writes.
 - Create transaction
-  - **Local DB mutation(s)**:
-    - insert transaction row (project scope)
-    - insert item rows
-    - link items to transaction (by foreign key)
-    - create local attachment records for the invoice PDF as receipt (local-only media state)
-  - **Outbox op(s)** enqueued:
-    - `createTransactionWithItems` (idempotency key includes local transaction id)
-    - `uploadReceiptAttachment` (idempotency key includes local attachment id)
-  - **Change-signal updates**:
-    - conceptually, server will bump `meta/sync` when outbox flush applies; client does not write `meta/sync` directly.
+  - **Request-doc write (Firestore local cache)**:
+    - create a request doc that includes transaction + item payloads and a stable idempotency key
+    - stage a local attachment placeholder for the receipt PDF (offline media state)
+  - **Server apply (Cloud Function transaction)**:
+    - create transaction + items atomically
+    - attach receipt metadata and kick off upload per offline media lifecycle
 
 ## UI structure (high level)
 - Header:
@@ -95,7 +91,7 @@ For each user action:
   - Wrong-vendor shows a blocking error and disables create.
 - Offline:
   - Parsing is allowed offline (local).
-  - Create is allowed offline (local DB + outbox); show “created (pending sync)” messaging on create.
+  - Create is allowed offline by writing the request doc to Firestore local cache; show “created (pending sync)” messaging on create.
 - Pending sync:
   - After create, transaction detail should show pending sync markers and receipt upload pending state (see offline media lifecycle).
 - Permissions denied:
@@ -110,13 +106,13 @@ For each user action:
   - Single PDF selected (invoice) becomes a receipt attachment.
 - Placeholder rendering (offline):
   - Receipt shows as `local_only` / `uploading` / `failed` with retry.
-  - Source of truth: `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
 - Cleanup/orphan rules:
   - If user resets or leaves without creating, staged local files should be cleaned up (best-effort).
 
 ## Collaboration / realtime expectations
 - None required while screen is open.
-- Created entities converge via project change-signal + delta (no large listeners).
+- Created entities converge via Firestore offline persistence + scoped project listeners (no large listeners).
 
 ## Performance notes
 - PDF parse should not freeze UI; show progress and allow reset.

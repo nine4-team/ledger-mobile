@@ -24,7 +24,7 @@ Implement the **server-side source-of-truth** for Roles v2 category-scoped permi
 
 ## Constraints
 - Do not rely on client-side filtering for security.
-- Stay compatible with “no large listeners” and delta sync architecture.
+- Stay compatible with `OFFLINE_FIRST_V2_SPEC.md` (scoped listeners; no “listen to everything”).
 - Do not introduce new product capabilities; implement Roles v2 only.
 
 ## Notes / edge cases (must be handled explicitly)

@@ -1,7 +1,12 @@
 # Projects — Feature spec (Firebase mobile migration)
 
 ## Intent
-Provide a local-first Projects experience: users can browse projects, open a project shell, and manage project metadata with predictable offline behavior. While foregrounded and online, the app should feel “fresh” without subscribing to large collections (use change-signal + delta sync).
+Provide an offline-ready Projects experience: users can browse projects, open a project shell, and manage project metadata with predictable offline behavior.
+
+Architecture baseline (mobile):
+- **Firestore-native offline persistence** is the default (Firestore is canonical).
+- “Freshness” while foregrounded is achieved via **scoped listeners** on bounded queries (never “listen to everything”).
+- Any multi-doc/invariant operations use **request-doc workflows** (Cloud Function applies changes in a transaction).
 
 ## Owned screens / routes
 
@@ -77,7 +82,8 @@ Parity evidence:
 
 ### 5) Refresh project snapshot
 - Project shell provides a refresh affordance.
-- Refresh re-fetches at minimum: project + transactions + items + spaces (implementation can optimize via delta).
+- Refresh re-fetches at minimum: project + transactions + items + spaces.
+  - Mobile uses Firestore reads with a server preference when online (cache is the fallback), per `OFFLINE_FIRST_V2_SPEC.md`.
 - If refresh fails: show user-facing error and allow retry.
 
 Parity evidence:
@@ -87,11 +93,12 @@ Parity evidence:
 ## Offline-first behavior (mobile target)
 
 ### Local source of truth
-- UI renders from local DB (SQLite on mobile; IndexedDB + React Query + offlineStore on web).
-- Writes apply locally immediately; remote sync is via outbox.
+- UI reads from **Firestore’s local cache** via the native Firestore SDK (cache-first reads with server reconciliation when online).
+- Writes are **direct Firestore writes** (queued offline by Firestore-native persistence).
+- SQLite is **not** a source of truth here; it is only permitted as an **optional derived search index** module (see `OFFLINE_FIRST_V2_SPEC.md`) when robust offline multi-field search is required.
 
-Migration constraint:
-- Must follow: `40_features/sync_engine_spec.plan.md` (local DB + outbox + delta sync + single change-signal listener per active project).
+Canonical architecture reference:
+- `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline + scoped listeners + request-doc workflows; no bespoke outbox/delta-sync engine).
 
 ### Restart behavior
 - On cold start:
@@ -107,21 +114,17 @@ Parity evidence (web hydration):
 
 Parity evidence:
 - `src/contexts/ProjectRealtimeContext.tsx` (offline→online transition triggers refresh of active projects)
-- Additional refresh after outbox flush: `onSyncEvent('complete', ...)` in `src/contexts/ProjectRealtimeContext.tsx`
+- Web-only: additional refresh after outbox flush: `onSyncEvent('complete', ...)` in `src/contexts/ProjectRealtimeContext.tsx`
 
 ## Collaboration / “realtime” expectations (mobile target)
-- Do not subscribe to large collections (items/transactions) for freshness.
-- While foregrounded on a project:
-  - attach **one** listener to `accounts/{accountId}/projects/{projectId}/meta/sync`
-  - on signal change, run delta fetches for collections whose seq advanced
-  - apply patches locally
-
-Canonical migration source:
-- `40_features/sync_engine_spec.plan.md` (§4 change signal doc + delta sync loop)
+- **Scoped listeners only (never unbounded)**:
+  - Projects list: attach a listener to the bounded projects query for `currentAccountId`.
+  - Project shell: attach a listener to the project doc, plus listeners for the currently visible tab’s bounded query (items/transactions/spaces) as needed.
+  - Detach listeners on background; reattach on resume.
+- **Cost control** is achieved through scoping (bounded queries, pagination/limits), not a bespoke delta-sync engine.
 
 Intentional delta vs current web:
-- Web uses Supabase realtime subscriptions (e.g., per-project transactions/items channels).
-- Mobile must use change-signal + delta to control cost.
+- Web uses a custom local-first + realtime strategy (Supabase/IndexedDB/outbox-style patterns). Mobile uses **Firestore-native offline + scoped listeners** per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Permissions and gating
 
@@ -145,7 +148,6 @@ Policy note:
 ### Offline prerequisites (metadata caches)
 - Project form submission is blocked unless required caches are warm:
   - budget categories
-  - tax presets
   - vendor defaults
 
 Parity evidence:

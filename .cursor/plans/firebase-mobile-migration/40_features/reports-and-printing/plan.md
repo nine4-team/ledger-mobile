@@ -3,7 +3,7 @@ Produce parity-grade specs for `reports-and-printing`.
 
 ## Inputs to review (source of truth)
 - Feature list entry: `40_features/feature_list.md` → Feature 12: `reports-and-printing`
-- Sync engine spec (local-first + outbox + delta + change-signal): `40_features/sync_engine_spec.plan.md`
+- Offline-first architecture (Firestore-native offline persistence + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Budget/accounting rollups entrypoints (reports links in Accounting tab): `40_features/budget-and-accounting/README.md`
 - Canonical category attribution model (required; impacts summaries):
   - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
@@ -18,7 +18,7 @@ Produce parity-grade specs for `reports-and-printing`.
   - why: large list rendering + value totals + space/location inclusion.
 
 ## Cross-cutting dependencies (link)
-- Sync architecture constraints (local-first + outbox + change-signal + delta): `40_features/sync_engine_spec.plan.md`
+- Sync architecture constraints: `OFFLINE_FIRST_V2_SPEC.md`
 - Business profile read availability (branding for reports): `40_features/settings-and-admin/README.md`
 - Canonical attribution model: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 

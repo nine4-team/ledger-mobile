@@ -6,7 +6,11 @@ This is the **canonical feature list** for the **new React Native + Firebase** a
 
 Notes:
 
-- Features should remain compatible with the offline-first invariants in `../sync_engine_spec.plan.md` (outbox + delta sync + change-signal; avoid read amplification).
+- Features must align with `OFFLINE_FIRST_V2_SPEC.md`:
+  - Firestore-native offline persistence is the baseline (Firestore is canonical).
+  - Listeners are allowed but must be **scoped/bounded** (no “listen to everything”).
+  - Multi-doc correctness uses **request-doc workflows** (Cloud Function applies changes in a transaction).
+  - SQLite is allowed only as an **optional derived search index** (index-only), if robust offline item search is required.
 - This list is intentionally high-level; implementation details live under `40_features/` and `_cross_cutting/`.
 - **Non-exhaustive by design**: the bullet points under each feature are **not a complete inventory** of behavior. Anyone fleshing a feature out must assume there are additional sub-flows, edge cases, and cross-cutting requirements that need to be discovered and captured.
 
@@ -16,8 +20,11 @@ Notes:
 
 - **Auth + account context + invitations**
   - Sign in/up, join account via invite, select/switch account where applicable.
-- **Offline-first sync engine**
-  - SQLite local source of truth, outbox, delta sync, conflict handling, media lifecycle, change-signal listener health.
+- **Offline-ready data layer (Offline Data v2)**
+  - Firestore-native offline persistence (cached reads + locally-applied queued writes).
+  - Scoped listeners (attach/detach with lifecycle; no unbounded listeners).
+  - Request-doc workflows for multi-doc invariant correctness (server-owned transaction).
+  - Optional derived local search index (SQLite/FTS) for robust offline item search (non-authoritative).
 - **Global sync UX**
   - Connectivity banner, pending state counts, retry UX, error surfacing.
 - **Roles v1 (coarse)**
@@ -86,7 +93,6 @@ This section is organized **domain-first**:
   - Business profile (name/logo).
   - Budget category presets.
   - Vendor defaults presets.
-  - Tax presets (may be simplified/streamlined vs current).
   - Space template presets (templates include name, notes, and checklists).
 
 ---
@@ -141,7 +147,7 @@ These are not “features” by themselves, but **must be spec’d once and reus
 
 - **Shared Items + Transactions modules**: required shared-component contract for lists, menus, details, and forms across scopes:
   - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
-- **List controls**: search/filter/sort/grouping, state persistence/restoration, large-list performance assumptions (SQLite indexes).
+- **List controls**: search/filter/sort/grouping, state persistence/restoration, and large-list performance assumptions (Firestore queries + optional derived search index).
 - **Bulk selection + bulk actions**: select all / per-group select, bulk edit/assign/delete flows.
 - **Attachment/media UI**: capture/select, placeholder states (`local_only`/`uploading`/`uploaded`/`failed`), retry and cleanup.
 - **Offline media lifecycle (offline cache + uploads + cleanup)**:
@@ -150,7 +156,7 @@ These are not “features” by themselves, but **must be spec’d once and reus
     - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - **Cross-linking UI**: item ↔ transaction linking (“itemization”), item ↔ space assignment, pickers and browse-in-context behaviors.
 - **QR flows**: generate/show/print/share QR codes, and the navigation affordances around QR.
-- **Pending/sync/error UX**: consistent pending markers, error surfacing, retry affordances that map to outbox + delta sync.
+- **Pending/sync/error UX**: consistent pending markers, error surfacing, retry affordances that map to Firestore pending writes + request-doc status.
 - **Conflict UX**: detection, persistence, and resolution patterns for high-risk fields (money/category/tax).
 
 ---
@@ -159,9 +165,14 @@ These are not “features” by themselves, but **must be spec’d once and reus
 
 The following section is a verbatim copy of the prior `feature_map_from_existing_app.md`, preserved here so **no parity evidence/inventory was lost** while still maintaining **one canonical feature list file**.
 
-### Feature Map (Observed) — Ledger → React Native + Firebase (Offline‑First)
+### Feature Map (Observed) — Ledger parity inventory (Offline Data v2 target)
 
 This is a **spec-seed feature map**: it inventories the **actual user-visible capabilities** in the current Ledger app (web), and groups them into cohesive units suitable for `40_features/<feature>/...` specs.
+
+Terminology note:
+- Some entries below may still mention legacy architecture terms like “outbox”, “delta sync”, “change-signal”, or “SQLite source of truth”.
+- Treat those as **historical implementation notes** from prior planning; do **not** copy them into mobile specs.
+- Mobile specs must instead align to `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows; optional derived search index only).
 
 For the **target mobile app scope** (including net-new planned features that do not exist in the web app, like scoped roles/permissions), see:
 
@@ -171,16 +182,15 @@ For the **target mobile app scope** (including net-new planned features that do 
 
 This feature map is **not** a “port it 1:1” checklist. The target architecture is the offline-first sync engine described in:
 
-- `/.cursor/plans/firebase-mobile-migration/sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`
 
 Therefore, any parity spec produced from this map must obey these invariants:
 
-- **UI reads/writes local DB only**: screens render from SQLite; user edits write SQLite immediately.
-- **Explicit outbox**: all remote mutations flow through outbox ops + idempotency (`lastMutationId`).
-- **Delta sync only**: remote state reaches the device via delta fetch (by `updatedAt` cursor) applied into SQLite.
-- **One tiny listener per active project**: only `meta/sync` is live-listened; **no listeners** on large collections.
-- **Server-owned invariants**: multi-doc operations (allocation/sale/lineage/rollups) must be callable-function/transaction based.
-- **No read amplification**: avoid patterns like “subscribe to all items/transactions” or “keep arrays updated everywhere.”
+- **Firestore is canonical**: the app treats native Firestore as the synced local datastore (cache-first reads, locally-applied queued writes).
+- **Scoped listeners only**: listeners are allowed, but must be scoped to the active context (no “listen to everything” across scopes/accounts).
+- **Request-doc correctness**: multi-doc operations and invariants use a request-doc workflow processed by a Cloud Function transaction.
+- **Optional search index only**: SQLite is permitted only as a derived, rebuildable index to support robust offline item search (non-authoritative).
+- **No read amplification**: avoid patterns like “subscribe to all items/transactions across all scopes/accounts” or maintaining large fan-out arrays.
 
 Evidence sources (all in-repo):
 - Routing: `src/App.tsx`
@@ -233,20 +243,21 @@ Evidence sources (all in-repo):
   - Have queued changes → see “N changes pending”
   - Sync error → see error banner + press “Retry sync”
   - Background sync fails → get a toast (warning if “offline”, error otherwise)
-- **Entities touched**: outbox operations, sync scheduler state, “realtime health telemetry” (project-level freshness/disconnect info)
+- **Entities touched**: Firestore queued writes state, request-doc status (pending/applied/failed), and “freshness/health telemetry” for scoped listeners/refresh (project-level last-refresh + error info).
 - **Offline behaviors required**:
   - UI must be **local-only** (no network dependency)
   - Provide clear pending/working/error/waiting states while offline/online
   - Retry triggers **foreground sync** + “warm metadata caches” if online
-- **Collaboration/realtime needs**: **Yes** (indirect) — banner includes “channels stale/disconnected” signals today; in Firebase this maps to “signal listener health” + last delta run timestamps.
+- **Collaboration/realtime needs**: **Yes** (indirect) — banner includes “stale/disconnected” signals today; in Firebase this maps to scoped listener health (when used) and/or explicit refresh timestamps, plus request-doc error/pending status where applicable.
 - **Risk level**: **Med** — if this is wrong or noisy, users lose trust in offline-first.
 - **Dependencies**:
-  - Requires sync engine (outbox, scheduler, manual trigger)
+  - Requires tracking Firestore queued writes + request-doc lifecycle (pending/applied/failed)
+  - Requires a “retry now” affordance that triggers explicit refresh and retries failed operations (where possible)
   - Requires offline prerequisites hydration concept (metadata warming)
   - Requires toast system (global notifications)
 - **Architecture compatibility notes**:
-  - The “sync status” UX must reflect **outbox + delta sync + `meta/sync` health**, not a web-style realtime subscription status.
-  - “Retry sync” should trigger **foreground outbox flush + targeted delta catch-up**, not force large listeners.
+  - The “sync status” UX must reflect **Firestore queued writes + request-doc status + scoped listener health/refresh timestamps**, not a custom outbox/delta-sync engine.
+  - “Retry sync” should trigger **explicit refresh + retries** (and retry request-doc operations / uploads where applicable), not force large listeners.
 
 ### 4) Settings + admin/owner management
 - **feature_slug**: `settings-and-admin`
@@ -261,20 +272,19 @@ Evidence sources (all in-repo):
   - Presets (admin-gated):
     - Budget categories manager
     - Vendor defaults manager
-    - Tax presets manager
     - Space templates manager
   - Users tab (owner/admin): manage users (membership + roles)
   - Account tab (owner): account management
-- **Entities touched**: users, memberships/roles, business_profile, budget_categories, vendor_defaults, tax_presets, space_templates, account metadata
+- **Entities touched**: users, memberships/roles, business_profile, budget_categories, vendor_defaults, space_templates, account metadata
 - **Offline behaviors required**:
-  - Presets must be **readable offline** because downstream screens depend on them (category pickers, vendor pickers, tax computations, templates)
+  - Presets must be **readable offline** because downstream screens depend on them (category pickers, vendor pickers, templates)
   - For mutations: either queue or explicitly require online; whichever you choose, provide consistent UX + pending states
 - **Collaboration/realtime needs**: **No** (eventual refresh is fine)
 - **Risk level**: **Med** — permission gating, logo upload, preset correctness affecting many screens.
 - **Dependencies**:
   - Requires roles/permissions model
   - Requires media pipeline (logo upload)
-  - Requires sync engine for “metadata collections”
+  - Requires presets/metadata to be readable offline via Firestore-native offline persistence (and explicit refresh when needed)
 
 ### 5) Projects: list + project shell + project-level actions
 - **feature_slug**: `projects`
@@ -350,7 +360,7 @@ Evidence sources (all in-repo):
 - Budget category attribution (canonical transactions):
   - Each item must persist a stable `inheritedBudgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
   - Canonical inventory transactions should not require a user-facing budget category; budgeting attribution is item-driven via linked items.
-- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), outbox ops, QR key (`qrKey`), `inheritedBudgetCategoryId`
+- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), QR key (`qrKey`), `inheritedBudgetCategoryId`
 - **Offline behaviors required**:
   - Create/edit/delete offline (local-first)
   - Bulk actions offline (queued ops; show partial failures)
@@ -360,11 +370,11 @@ Evidence sources (all in-repo):
 - **Collaboration/realtime needs**: **Yes** — other users’ edits should appear quickly in active project.
 - **Risk level**: **High** — performance at scale, bulk ops, media lifecycle, and conflicts on shared items.
 - **Dependencies**:
-  - Requires local DB + search/indexes
-  - Requires outbox + idempotency + retries
+  - May require an **optional derived search index** for robust offline multi-field item search at scale (index-only; Firestore remains canonical).
+  - Requires request-doc workflows for multi-doc correctness + idempotency + retries where needed
   - Requires media pipeline + quota handling
   - Requires conflict detection/resolution UX
-  - Requires sync engine + change-signal strategy
+  - Requires scoped/bounded listeners and/or explicit refresh for foreground freshness (no “listen to everything”)
 
 ### 7) Project transactions: list/search/filter/sort + detail + CRUD + receipts + CSV export
 - **feature_slug**: `project-transactions`
@@ -406,20 +416,20 @@ Evidence sources (all in-repo):
     - App has special casing for canonical inventory transactions (must preserve semantics in Firebase)
     - Budget/category attribution for canonical rows is **item-driven** (group linked items by `inheritedBudgetCategoryId`), not `transaction.budgetCategoryId`
     - Canonical inventory transactions should not require a user-facing budget category (keep uncategorized; attribution is derived).
-- **Entities touched**: transactions, budget categories, vendor defaults, tax presets, attachments/media (receipts/other images), items (linked/itemized), conflicts, outbox ops
+- **Entities touched**: transactions, budget categories, vendor defaults, attachments/media (receipts/other images), items (linked/itemized), conflicts
 - **Offline behaviors required**:
   - Create/edit offline (local-first) with pending markers
   - Receipt attachment offline (queue upload; placeholder render)
-  - Offline prerequisite gating: categories/vendors/tax presets must be cached (or block with banner + “retry sync”)
+  - Offline prerequisite gating: categories/vendors must be cached (or block with banner + “retry sync”)
   - CSV export should work offline (from local DB)
 - **Collaboration/realtime needs**: **Yes**
 - **Risk level**: **High** — money-field conflicts/correctness, receipts/media, and complex filters at scale.
 - **Dependencies**:
-  - Requires local DB + indexing for list queries
-  - Requires outbox + retry
-  - Requires metadata sync (categories/vendors/tax presets)
+  - May require an **optional derived index** for robust offline search/filter UX at scale (index-only; Firestore remains canonical).
+  - Requires request-doc workflows for multi-doc correctness + retries where needed
+  - Requires metadata sync (categories/vendors)
   - Requires media pipeline + quota handling
-  - Requires sync engine + change-signal strategy
+  - Requires scoped/bounded listeners and/or explicit refresh for foreground freshness (no “listen to everything”)
 
 ### 8) Cross-entity “inventory operations”: item ↔ transaction linking, allocation, sell/deallocate, lineage
 - **feature_slug**: `inventory-operations-and-lineage`
@@ -444,16 +454,15 @@ Evidence sources (all in-repo):
     - Required choice: if no valid default exists, require selection before completing the operation.
     - Batch behavior: apply one category choice to the whole batch (fast path); optional future enhancement is per-item split.
     - Persistence: on successful allocation/sale, set/update `item.inheritedBudgetCategoryId` to the chosen destination category so future canonical attribution is deterministic.
-- **Entities touched**: items, transactions, projects, spaces, lineage edges/pointers, canonical transaction ids, conflicts, outbox ops
+- **Entities touched**: items, transactions, projects, spaces, lineage edges/pointers, canonical transaction ids, conflicts
 - **Offline behaviors required**:
-  - Represent multi-entity changes as a single **idempotent operation** in the outbox
+  - Represent multi-entity changes as a single **idempotent request-doc operation** applied by a Cloud Function transaction (per `OFFLINE_FIRST_V2_SPEC.md`)
   - Robust pending/progress UI for operations that spawn additional writes (e.g., creating canonical transactions)
   - Recoverable retries (avoid “double-sell” / “double-deallocate”)
 - **Collaboration/realtime needs**: **Yes**
 - **Risk level**: **High** — multi-entity invariants + retries + conflicts are the #1 correctness risk.
 - **Dependencies**:
-  - Requires sync engine with idempotency keys
-  - Requires server-owned invariants (callable function / transaction) for correctness in Firebase (see sync plan §7)
+  - Requires idempotency keys and server-owned invariants (request-doc + Cloud Function transaction) for correctness in Firebase (see `OFFLINE_FIRST_V2_SPEC.md`)
   - Requires conflict UX
 
 ### 9) Spaces: CRUD + checklists + space images + templates + item assignment
@@ -488,7 +497,7 @@ Evidence sources (all in-repo):
 - **Dependencies**:
   - Requires local DB (spaces + indexes)
   - Requires media pipeline + quota handling
-  - Requires outbox + sync engine
+  - Requires Firestore queued writes (offline), and bounded/scoped reads/listeners and/or explicit refresh for foreground freshness (no “listen to everything”)
 
 ### 10) Business inventory: global items + global transactions + bulk ops + QR
 - **feature_slug**: `business-inventory`
@@ -519,21 +528,21 @@ Evidence sources (all in-repo):
     - Sort menu for transactions (observed in UI)
     - Open transaction detail
   - Allocate/move/sell inventory items into a project (and optionally space)
-- **Entities touched**: items, transactions, projects, spaces, attachments/media (images/receipts), vendor defaults, tax presets, budget categories, outbox ops, conflicts, `qrKey`
+- **Entities touched**: items, transactions, projects, spaces, attachments/media (images/receipts), vendor defaults, budget categories, conflicts, `qrKey`
 - **Offline behaviors required**:
   - Full CRUD offline (local-first) + pending UI
   - Bulk actions offline (queued ops; partial failure handling)
   - Media placeholders + queued uploads
   - Local search/filter/sort at scale
-- **Collaboration/realtime needs**: **Yes** — current app relies on realtime contexts; target should use change-signal + delta instead of large listeners.
+- **Collaboration/realtime needs**: **Yes** — current app relies on realtime contexts; target should use scoped/bounded listeners (and/or explicit refresh) instead of unbounded “listen to everything”.
 - **Risk level**: **High** — scale + bulk ops + multi-entity allocation/sell + media.
 - **Dependencies**:
-  - Requires sync engine + local DB + outbox
+  - Requires request-doc workflows for multi-doc correctness + idempotency + retries where needed
   - Requires media pipeline + quota handling
   - Requires inventory operations/lineage semantics
 - **Architecture compatibility notes**:
-  - Must not implement this via “subscribe to all business inventory items/transactions.” Use **one `meta/sync` listener per active scope + delta fetch**.
-  - Prefer relationship modeling that avoids updating large arrays on parents (see sync plan §9 note about `item.transactionId` / `item.spaceId`).
+  - Must not implement this via “subscribe to all business inventory items/transactions.” Use bounded/scoped reads/listeners attached to the active scope, per `OFFLINE_FIRST_V2_SPEC.md`.
+  - Prefer relationship modeling that avoids updating large arrays on parents (favor pointers like `item.transactionId` / `item.spaceId` over fan-out arrays).
 
 ### 11) Budget + accounting rollups (project)
 - **feature_slug**: `budget-and-accounting`
@@ -600,7 +609,7 @@ Evidence sources (all in-repo):
   - Upload PDF → parse → show parsed results → create transaction (+ items when applicable)
   - Attach receipt PDF; for Wayfair also handle extracted images/thumbnails
   - Generate parse/debug reports (present in current UI/tooling patterns)
-- **Entities touched**: transactions, items, attachments/media (PDF + images), vendor defaults, budget categories, tax presets
+- **Entities touched**: transactions, items, attachments/media (PDF + images), vendor defaults, budget categories
 - **Offline behaviors required**:
   - Parsing can run offline, but creates/uploads must queue
   - Long-running operations need explicit progress + resumability
@@ -608,8 +617,8 @@ Evidence sources (all in-repo):
 - **Risk level**: **High** — format drift, parse correctness, large file performance, multi-asset upload robustness.
 - **Dependencies**:
   - Requires media pipeline (PDF + images)
-  - Requires outbox + local DB staging
-  - Requires metadata caches (categories/tax/vendors) to classify the transaction
+  - Requires offline-first create UX with explicit progress + retries (Firestore queued writes + queued uploads; request-doc workflows when multi-doc correctness is required)
+  - Requires metadata caches (categories/vendors) to classify the transaction
 
 ### 14) Installable PWA + service worker caching + background sync loop (web-only, but user-visible)
 - **feature_slug**: `pwa-service-worker-and-background-sync`
@@ -636,7 +645,7 @@ Evidence sources (all in-repo):
   - Interacts with global sync-status UX
 - **Architecture compatibility notes**:
   - **Do not port this 1:1 to React Native.** RN does not have a service worker; “background sync” becomes **best-effort background execution** and must never be required for correctness.
-  - Keep the user-visible expectations (offline use, queued ops, retry UX) but implement via the sync plan’s outbox processor + resume behavior.
+  - Keep the user-visible expectations (offline use, queued ops, retry UX) but implement via Firestore-native offline persistence + request-doc workflows, per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ### 15) Context-aware navigation stack + scroll restoration (user-visible UX system)
 - **feature_slug**: `navigation-stack-and-context-links`
@@ -662,13 +671,13 @@ Evidence sources (all in-repo):
 
 These are flows/behaviors that span multiple features and should be spec’d once.
 
-### A) App bootstrap + hydration (auth → local DB → sync engine → UI)
-- Define boot order: session/account context, local DB init, outbox init, scheduler init, then render.
-- “Warm caches” behavior and what is required before entering offline-first screens.
+### A) App bootstrap + hydration (auth → Firestore cache → scoped listeners → UI)
+- Define boot order: session/account context, Firestore init (native), initial cache-first reads, attach scoped listeners, then render.
+- Define “offline readiness” gates (what data must be cached before entering key screens) and the UX when prerequisites are missing.
 
-### B) Offline mutation lifecycle (local-first write → outbox → retry → ack → clear pending)
-- Standardize pending UI across entities (items/transactions/spaces/projects).
-- Include “waiting for connectivity” vs “syncing” vs “error” states.
+### B) Offline mutation lifecycle (Firestore pending writes + request-doc status)
+- Standardize pending UI across entities (items/transactions/spaces/projects) using Firestore pending writes and request-doc status.
+- Include “waiting for connectivity” vs “syncing” vs “failed” states and the user actions (retry/cancel/view error).
 
 ### C) Manual/foreground sync + background sync behavior
 - What “Retry sync” actually does, how it hydrates prerequisites, and how background sync failure is surfaced.
@@ -679,9 +688,9 @@ These are flows/behaviors that span multiple features and should be spec’d onc
   - Queue processing bridge: `src/services/operationQueue.ts`
   - UI surfacing: `src/components/{SyncStatus,BackgroundSyncErrorNotifier}.tsx`, `src/components/ui/RetrySyncButton.tsx`
 
-### D) Collaboration propagation without large listeners (change-signal + delta)
-- Replace current large realtime subscriptions with the change-signal + delta approach.
-- Define debounce/coalesce and “foreground SLA” expectations.
+### D) Collaboration propagation without unbounded listeners (scoped listeners)
+- Replace any “listen to everything” or large unbounded subscriptions with scoped listeners attached to the active context.
+- Define expected foreground propagation latency and what can be stale until next manual refresh/reopen.
 
 ### E) Conflict detection + resolution UX (items/transactions at minimum)
 - When to detect, where to store, how to block syncing, and resolution strategies (single + resolve all).

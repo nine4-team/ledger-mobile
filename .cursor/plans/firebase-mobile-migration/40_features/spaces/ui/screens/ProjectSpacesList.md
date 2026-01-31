@@ -10,9 +10,9 @@ Let a user browse and search Spaces for a project, see per-space item counts, an
   - Project shell tab: “Spaces” (`ProjectLayout` section nav)
 
 ## Reads (local-first)
-- Local DB queries:
+- Firestore queries (cache-first via native Firestore offline persistence):
   - `spaces` for the current project scope
-  - `items` for the project (to compute item counts by `item.spaceId`)
+  - Item counts should be derived without unbounded “listen to all items” queries (prefer bounded reads, or a denormalized counter if needed)
 - Derived view models:
   - `itemCountsBySpace[spaceId] = count(items where item.spaceId === spaceId)`
   - `filteredSpaces` by search query (matches name or notes)
@@ -55,8 +55,8 @@ Let a user browse and search Spaces for a project, see per-space item counts, an
 - Offline placeholders (`offline://`) must be resolvable in the list card renderer.
 
 ## Collaboration / realtime expectations
-- While project is foregrounded, updates should appear on the next delta after a change-signal bump.
-- No listeners on the `spaces` collection; project freshness comes from `meta/sync` + delta.
+- While project is foregrounded, updates should appear via **scoped listeners** on bounded queries.
+- Do not attach unbounded listeners.
 
 ## Performance notes
 - Expected dataset size is modest (dozens), but search should be debounced for mobile keyboards.

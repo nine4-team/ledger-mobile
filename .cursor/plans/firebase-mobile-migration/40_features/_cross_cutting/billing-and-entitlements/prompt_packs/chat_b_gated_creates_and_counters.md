@@ -1,7 +1,7 @@
 # Prompt Pack — Chat B: Gated creates + server-owned counters
 
 ## Goal
-Specify the callable Function + counter enforcement strategy for the free-tier limits.
+Specify the server-owned enforcement strategy for the free-tier limits (counters + gated creates).
 
 ## Outputs (required)
 Update:
@@ -14,17 +14,17 @@ Optional (only if needed):
 
 ## Inputs to review (source of truth)
 - Security model callable guidance: `10_architecture/security_model.md`
-- Sync + idempotency + change-signal constraints: `40_features/sync_engine_spec.plan.md`
+- Architecture: `OFFLINE_FIRST_V2_SPEC.md` (request-doc workflows; scoped listeners; Firestore-native offline persistence)
 - Projects create delta requirements:
-  - `40_features/projects/feature_spec.md` (createProject callable + meta/sync update)
+  - `40_features/projects/feature_spec.md` (must reference this cross-cutting spec for gated creates)
 
 ## What to capture
 - Server-owned counters shape:
   - `accounts/{accountId}/stats` (`projectCount`, `itemCount`, `transactionCount`)
-- Required callable operations:
-  - `createProject` (required)
-  - `createItem`, `createTransaction` (planned)
-- Idempotency expectations + meta/sync update semantics
+- Required gated create processing:
+  - preferred: request-doc workflows processed by Functions (`createProject` request, etc.)
+  - alternative (online-only): callable functions for creates that cannot be queued offline
+- Idempotency expectations + request status semantics (`pending | applied | denied | failed`)
 
 ## Evidence rule (anti-hallucination)
 Net-new feature: cite architecture docs and label intentional deltas.

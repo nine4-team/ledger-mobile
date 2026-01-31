@@ -57,16 +57,6 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
 - [ ] Admin can **reorder vendor slots by drag** and new order is persisted.
   - Observed in `src/components/VendorDefaultsManager.tsx` (`handleDrag*`, saving each slot’s new position).
 
-### Tax presets
-- [ ] Admin can **view and reorder tax presets** by drag and persist order.
-  - Observed in `src/components/TaxPresetsManager.tsx` (`handleDrag*`, `updateTaxPresets`).
-- [ ] Admin can **edit a tax preset**:
-  - name is required
-  - rate must be between 0 and 100
-  - Observed in `src/components/TaxPresetsManager.tsx` (`handleSaveEdit` validation).
-- [ ] Admin can **delete a tax preset** but cannot delete the last remaining preset.
-  - Observed in `src/components/TaxPresetsManager.tsx` (`if (presets.length <= 1) ...`).
-
 ### Space templates
 - [ ] Admin can **create/edit a space template**; name is required; notes are optional.
   - Observed in `src/components/spaces/SpaceTemplatesManager.tsx` (`handleSave` validation).
@@ -101,7 +91,7 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
 
 ## Offline policy (intentional delta)
 - [ ] **Preset reads** must work offline if previously cached.
-  - Intentional delta vs web: web parity fetches directly; mobile requires explicit local caching (see `40_features/sync_engine_spec.plan.md`).
+  - Intentional delta vs web: web parity may fetch directly; mobile must support offline readability via **Firestore-native offline persistence** (cache-first reads) per `OFFLINE_FIRST_V2_SPEC.md`.
 - [ ] **Admin/owner writes** in Settings are **online-required** by default (business profile updates, presets mutations, invites, account creation).
   - Intentional delta: make offline failure explicit and immediate (no “false success”).
 

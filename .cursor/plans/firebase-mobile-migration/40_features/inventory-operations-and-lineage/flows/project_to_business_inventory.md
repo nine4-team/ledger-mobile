@@ -84,9 +84,11 @@ Otherwise:
 Parity evidence:
 - `deallocationService.ensureSaleTransaction` and subsequent item update in `src/services/inventoryService.ts`.
 
-### Offline-first / outbox requirement (Firebase)
-Represent the canonical deallocate operation as one outbox op with one idempotency key that the server uses to avoid duplication on retry.
+### Offline-ready / request-doc requirement (Firebase)
+Represent the canonical deallocate operation as **one request doc** with one idempotency key that the server uses to avoid duplication on retry.
+The server processes the request and applies the multi-doc write set in a Firestore transaction (see `OFFLINE_FIRST_V2_SPEC.md` → request-doc workflows).
+Retry model: create a new request doc with the same `opId` (see `feature_spec.md` → “Request-doc collection + payload shapes”).
 
-Parity evidence (web outbox):
+Parity evidence (web outbox; intentional delta vs Firebase request-doc):
 - `DEALLOCATE_ITEM_TO_BUSINESS_INVENTORY` op: `src/types/operations.ts`
 - Execution: `executeDeallocateItemToBusinessInventory` in `src/services/operationQueue.ts`

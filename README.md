@@ -30,8 +30,11 @@ cp .env.example .env
 ```
 
 Required:
-- `EXPO_PUBLIC_FIREBASE_*` - Firebase config (from Firebase Console)
-  - For native platforms: Also download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) from Firebase Console
+- `EXPO_PUBLIC_REVENUECAT_API_KEY` - RevenueCat public API key
+
+Firebase (native-only):
+- Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) from Firebase Console
+- Place both files in the project root (see `app.config.js` for how they’re wired during prebuild)
 - `EXPO_PUBLIC_REVENUECAT_API_KEY` - RevenueCat public API key
 
 ### 3. Customize App Config
@@ -209,11 +212,9 @@ Client-side checks are still useful for UX (show paywall early), but they are no
 The template includes `createWithQuota` function:
 
 ```typescript
-import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/firebase/firebase';
 
-const createWithQuota = httpsCallable(functions, 'createWithQuota');
-
+const createWithQuota = functions.httpsCallable('createWithQuota');
 const result = await createWithQuota({
   objectKey: 'object',
   collectionPath: 'users/{uid}/objects',

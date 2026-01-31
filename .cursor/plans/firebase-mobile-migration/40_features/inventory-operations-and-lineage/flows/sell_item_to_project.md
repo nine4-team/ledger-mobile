@@ -37,9 +37,11 @@ Parity evidence:
   - `src/services/inventoryService.ts`
   - UI handlers in `src/pages/ItemDetail.tsx` and `src/pages/TransactionDetail.tsx`
 
-## Offline-first / outbox requirement (Firebase)
-In Firebase, this must be a single server-owned operation with a single idempotency key, even if it writes multiple documents.
+## Offline-ready / request-doc requirement (Firebase)
+In Firebase, this must be a single server-owned operation represented by **one request doc** with a single idempotency key (`requestId` / `opId`), even though it writes multiple documents.
+The server processes the request and applies the multi-doc write set in a Firestore transaction (see `OFFLINE_FIRST_V2_SPEC.md` → request-doc workflows).
+Retry model: create a new request doc with the same `opId` (see `feature_spec.md` → “Request-doc collection + payload shapes”).
 
-Parity evidence (web outbox):
+Parity evidence (web outbox; intentional delta vs Firebase request-doc):
 - `SELL_ITEM_TO_PROJECT` op type: `src/types/operations.ts`
 - Queue execution: `executeSellItemToProject` in `src/services/operationQueue.ts`

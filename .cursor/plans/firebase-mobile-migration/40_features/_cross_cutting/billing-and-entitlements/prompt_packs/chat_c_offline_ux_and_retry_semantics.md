@@ -9,7 +9,7 @@ Update:
 - `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
 
 ## Inputs to review (source of truth)
-- Offline-first + outbox + delta sync: `40_features/sync_engine_spec.plan.md`
+- Architecture: `OFFLINE_FIRST_V2_SPEC.md`
 - Projects create screen contract references this doc:
   - `40_features/projects/ui/screens/ProjectsList.md`
 

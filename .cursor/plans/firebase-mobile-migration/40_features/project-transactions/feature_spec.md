@@ -1,7 +1,12 @@
 # Project Transactions — Feature spec (Firebase mobile migration)
 
 ## Intent
-Provide a local-first Transactions experience inside a project: users can browse/search/filter/sort transactions, export to CSV, and create/edit/view transactions (including receipts and “itemization”) with predictable offline behavior. While foregrounded and online, the app should feel “fresh” without subscribing to large collections (use change-signal + delta sync).
+Provide an offline-ready Transactions experience inside a project: users can browse/search/filter/sort transactions, export to CSV, and create/edit/view transactions (including receipts and “itemization”) with predictable offline behavior.
+
+Architecture baseline (mobile):
+- **Firestore-native offline persistence** is the default (Firestore is canonical).
+- “Freshness” while foregrounded is achieved via **scoped listeners** on bounded queries (never unbounded “listen to everything”).
+- Any multi-doc/invariant operations use **request-doc workflows** (Cloud Function applies changes in a transaction).
 
 ## Shared module requirement (Project + Business Inventory)
 
@@ -90,7 +95,7 @@ Mobile requirement (Expo Router; shared-module):
 - Canonical title + computed totals + self-heal: `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`, `computeCanonicalTransactionTotal`, `transactionService.updateTransaction`)
 
 Firebase migration constraint:
-- Do not implement large listeners on `transactions`; use `meta/sync` change-signal + delta sync per `40_features/sync_engine_spec.plan.md`.
+- Do not implement unbounded listeners on `transactions`; use **scoped listeners** + pagination/limits per `OFFLINE_FIRST_V2_SPEC.md`.
 
 ### 2) Export transactions to CSV
 Summary:
@@ -108,7 +113,7 @@ Mobile adaptation:
 ### 3) Create a transaction (manual)
 Summary:
 - Create is launched from the Transactions list “Add” menu → “Create Manually”.
-- The form requires offline prerequisites (categories/vendors/tax presets) to be warm; otherwise submission is blocked and a prerequisite banner is shown.
+- The form requires offline prerequisites (categories/vendors/account defaults) to be warm; otherwise submission is blocked and a prerequisite banner is shown.
 - User can attach:
   - receipts (images + PDFs)
   - other images (images)
@@ -117,10 +122,12 @@ Summary:
 Parity evidence:
 - Offline prerequisite gate + banner: `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`)
 - Vendor defaults + cached offline behavior: `src/pages/AddTransaction.tsx` (`getAvailableVendors`, `getCachedVendorDefaults`)
-- Tax presets + cached offline behavior: `src/pages/AddTransaction.tsx` (`getTaxPresets`, `getCachedTaxPresets`)
 - Default category (online vs cached): `src/pages/AddTransaction.tsx` (`getDefaultCategory`, `getCachedDefaultCategory`)
 - Itemization enablement by category: `src/pages/AddTransaction.tsx` (`getItemizationEnabled`)
 - Offline-aware image upload placeholder behavior: `src/pages/AddTransaction.tsx` (`OfflineAwareImageService.uploadReceiptAttachment`, `.uploadOtherAttachment`)
+
+Tax model note (intentional delta):
+- **Tax presets are removed**. Transactions capture tax via inline fields (none / tax rate / calculate from subtotal, plus optional tax amount input). See `ui/screens/TransactionForm.md`.
 
 Canonical transaction note:
 - Canonical inventory transactions are system-generated (not created through this form).
@@ -175,16 +182,16 @@ New requirement (itemization ↔ `inheritedBudgetCategoryId`):
 ## Offline-first behavior (mobile target)
 
 ### Local source of truth
-- UI renders from local DB (SQLite on mobile).
-- User writes are local-first; remote sync is via outbox.
-- Attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders.
+- UI reads from **Firestore’s local cache** via the native Firestore SDK (cache-first reads with server reconciliation when online).
+- User writes are **direct Firestore writes** (queued offline by Firestore-native persistence).
+- Attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders until Cloud Storage URLs are available.
 
 Parity evidence (web’s local-first approximation):
 - Offline placeholders for images: `OfflineAwareImageService` usage in `AddTransaction`, `EditTransaction`, `TransactionDetail`
 - Offline media preview resolution: `src/components/ui/ImagePreview.tsx` (`offlineMediaService.getMediaFile`)
 
 ### Offline prerequisites gate (metadata)
-- Creating a transaction requires budget categories + vendor defaults + tax presets to be present locally (otherwise the form is blocked).
+- Creating a transaction requires budget categories + vendor defaults + account default category metadata to be present locally (otherwise the form is blocked).
 - The same gate should apply anywhere the user must pick from these lists; do not silently allow “unknown” writes that later conflict.
 
 Parity evidence:
@@ -198,16 +205,16 @@ Parity evidence (web hydration):
 - Transaction cache hydration: `src/pages/EditTransaction.tsx` (`hydrateTransactionCache`)
 
 ### Reconnect behavior
-- When returning online, foregrounded project should converge via change-signal + delta and clear stale/pending indicators as outbox ops are acknowledged.
+-- When returning online, foregrounded screens should converge via Firestore listeners + queued-writes acknowledgement.
 
-Canonical migration source:
-- `40_features/sync_engine_spec.plan.md`
+Canonical architecture source:
+- `OFFLINE_FIRST_V2_SPEC.md`
 
 ## Collaboration / “realtime” expectations (mobile target)
-- No listeners on `transactions` or `items` collections.
-- While foregrounded in an active project:
-  - listen only to `accounts/{accountId}/projects/{projectId}/meta/sync`
-  - trigger delta fetches for `transactions` and related collections on signal bump
+- **Scoped listeners only (never unbounded)**:
+  - Listen to the project’s transactions via bounded queries (e.g., a page/window of results) and rely on Firestore cache for offline.
+  - For very large datasets, use pagination (limit + startAfter) and avoid keeping “all time” listeners attached.
+  - Detach listeners on background; reattach on resume.
 
 Canonical migration source:
-- `40_features/sync_engine_spec.plan.md`
+- `OFFLINE_FIRST_V2_SPEC.md`

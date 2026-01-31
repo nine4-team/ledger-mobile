@@ -91,7 +91,10 @@ Parity evidence:
 - Observed in `src/pages/AddBusinessInventoryTransaction.tsx` (`OfflineAwareImageService.uploadReceiptAttachment`, `offline://` placeholder metadata, `useOfflineMediaTracker`).
 
 ## Offline-first notes (mobile target)
-- Inventory transactions follow the same local-first + outbox semantics as project transactions, but scoped to inventory collections.
+- Offline-ready behavior follows `OFFLINE_FIRST_V2_SPEC.md`:
+  - Firestore (native RN SDK) is canonical and provides offline persistence.
+  - Inventory scope must use scoped listeners (bounded) where realtime freshness is required.
+  - SQLite is allowed only as an optional derived index (not authoritative).
 - Media behavior must follow:
   - `40_features/_cross_cutting/offline_media_lifecycle.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`

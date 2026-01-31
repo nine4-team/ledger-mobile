@@ -35,30 +35,30 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Components',
-          tabBarLabel: 'Components',
+          title: 'Projects',
+          tabBarLabel: 'Projects',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="widgets" size={size || 24} color={color} />
+            <MaterialIcons name="work" size={size || 24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="screen-two"
         options={{
-          title: 'Screen Two',
-          tabBarLabel: 'Screen Two',
+          title: 'Inventory',
+          tabBarLabel: 'Inventory',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="looks-two" size={size || 24} color={color} />
+            <MaterialIcons name="inventory" size={size || 24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="screen-three"
         options={{
-          title: 'Screen Three',
-          tabBarLabel: 'Screen Three',
+          title: 'Templates',
+          tabBarLabel: 'Templates',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="looks-3" size={size || 24} color={color} />
+            <MaterialIcons name="library-books" size={size || 24} color={color} />
           ),
         }}
       />

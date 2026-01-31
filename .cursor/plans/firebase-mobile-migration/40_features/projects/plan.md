@@ -1,6 +1,6 @@
 # Work order: `projects` parity spec set
 
-This work order produces the **canonical** feature spec set for `40_features/projects/`, aligned to the current Ledger web app behavior and compatible with the React Native + Firebase **offline-first + delta sync + change-signal** constraints.
+This work order produces the **canonical** feature spec set for `40_features/projects/`, aligned to the current Ledger web app behavior and compatible with the React Native + Firebase **offline-ready** baseline: Firestore-native offline persistence + scoped listeners + request-doc workflows (no bespoke outbox/delta-sync engine).
 
 ---
 
@@ -22,7 +22,7 @@ Create parity-grade specs for the `projects` workspace shell (projects list + pr
   - `hydrateProjectsListCache`, `hydrateProjectCache` in `src/utils/hydrationHelpers.ts`
 
 ### Architecture constraints (migration)
-- Offline-first invariants + change-signal + delta sync: `40_features/sync_engine_spec.plan.md`
+- Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 
 ### Cross-cutting dependencies (migration)
 - Billing + entitlements gating (create project): `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
@@ -49,6 +49,6 @@ Prompt packs (required):
 ## Done when (quality gates)
 - Acceptance criteria all have **parity evidence** (file + component/function) or are labeled **intentional deltas**.
 - Offline behaviors are explicit (pending UI, restart behavior, reconnect behavior).
-- Collaboration behavior is explicit and uses **change-signal + delta** (no large listeners).
+- Collaboration behavior is explicit and uses **scoped listeners** (no unbounded listeners).
 - Entitlements gating for create project is explicit and references the cross-cutting doc.
 
