@@ -17,10 +17,10 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 
 ## Canonical attribution (required model; main intentional delta)
 
-- [ ] **Canonical inventory transactions do not require a user-facing category** and are treated as uncategorized on the transaction row (recommended: `categoryId = null`).  
+- [ ] **Canonical inventory transactions do not require a user-facing category** and are treated as uncategorized on the transaction row (recommended: `budgetCategoryId = null`).  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.  
   **Intentional delta** vs web: canonical rows may populate category fields (`src/services/inventoryService.ts`).
-- [ ] **Non-canonical attribution is transaction-driven**: category attribution comes from `transaction.categoryId`.  
+- [ ] **Non-canonical attribution is transaction-driven**: category attribution comes from `transaction.budgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
 - [ ] **Canonical attribution is item-driven**: canonical `INV_*` transactions are attributed by grouping linked items by `item.inheritedBudgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/flows/inherited_budget_category_rules.md`.  

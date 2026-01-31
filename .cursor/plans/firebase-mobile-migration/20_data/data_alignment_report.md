@@ -39,7 +39,7 @@ Scope of this pass:
 
 - **Spec truth**
   - Items require `createdBy` to support scoped-user visibility for uncategorized items (`inheritedBudgetCategoryId == null`).
-  - Canonical `INV_*` transaction visibility is derived from **linked items**; you cannot treat `transaction.categoryId == null` as “private/mine”.
+  - Canonical `INV_*` transaction visibility is derived from **linked items**; you cannot treat `transaction.budgetCategoryId == null` as “private/mine”.
   - Sources:
     - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
 

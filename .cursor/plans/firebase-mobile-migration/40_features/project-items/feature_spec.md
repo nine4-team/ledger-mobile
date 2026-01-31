@@ -46,7 +46,8 @@ Out of scope (but referenced):
 
 A normal user-entered transaction where budget category attribution is **transaction-driven**:
 
-- Source-of-truth category selector: `transactions.category_id` (or equivalent in Firebase)
+- Source-of-truth category selector: `transaction.budgetCategoryId`
+  - Legacy naming notes: web/SQL docs may refer to this as `category_id`; the canonical SQLite column name is `budget_category_id` (see `20_data/data_contracts.md`).
 
 Parity evidence (web):
 
@@ -73,7 +74,7 @@ Parity evidence (web):
 
 ### Rule 1 — Non-canonical attribution is transaction-driven
 
-- For **non-canonical** transactions, budget-category attribution comes from `transactions.category_id` (or equivalent).
+- For **non-canonical** transactions, budget-category attribution comes from `transaction.budgetCategoryId`.
 
 Source of truth (canonical working doc):
 
@@ -95,7 +96,7 @@ Source of truth (canonical working doc):
 
 Intentional delta (vs current web):
 
-- The current web app computes category spend directly from `transaction.categoryId`/`budgetCategory` and treats `INV_SALE_*` as a negative multiplier, without item-driven grouping (`src/components/ui/BudgetProgress.tsx`).
+- The current web app computes category spend directly from legacy `category_id`/`budgetCategory` and treats `INV_SALE_*` as a negative multiplier, without item-driven grouping (`src/components/ui/BudgetProgress.tsx`).
 - The current web canonical transaction creation path may assign a default `category_id` and legacy `budget_category` (e.g., “Furnishings”) (`src/services/inventoryService.ts`).
 
 ---
@@ -119,8 +120,8 @@ Source of truth:
 
 1) **Linking item to a user-facing transaction** sets `item.inheritedBudgetCategoryId`:
 
-- When an item is linked/assigned to a **non-canonical** transaction that has `category_id`, set:
-  - `item.inheritedBudgetCategoryId = transaction.category_id`
+- When an item is linked/assigned to a **non-canonical** transaction that has `budgetCategoryId`, set:
+  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 
 2) Linking item to a **canonical** inventory transaction must not “invent” attribution:
 
@@ -204,7 +205,7 @@ Intentional delta (vs current web):
 The mobile/Firebase implementation must update **rollup computation** so canonical inventory transactions are attributed by items, not by the canonical transaction’s category.
 
 - UI can remain the same (no new UI required by this spec), but the underlying rollup logic must implement:
-  - Non-canonical: `transaction.category_id`
+  - Non-canonical: `transaction.budgetCategoryId`
   - Canonical inventory: group linked items by `item.inheritedBudgetCategoryId`
 
 Parity evidence (current web behavior to intentionally change):
@@ -219,7 +220,7 @@ Goal: canonical inventory transactions should not require a user-facing budget c
 
 Recommended approach for Firebase:
 
-- **Preferred**: keep `transaction.category_id = null` for canonical inventory transactions; treat them as “uncategorized” in UI.
+- **Preferred**: keep `transaction.budgetCategoryId = null` for canonical inventory transactions; treat them as “uncategorized” in UI.
 - **If a category field must exist for schema compatibility**: allow a hidden/internal account category (e.g., “Canonical (system)”) but enforce:
   - rollups ignore canonical transaction category, using item-driven attribution instead.
 

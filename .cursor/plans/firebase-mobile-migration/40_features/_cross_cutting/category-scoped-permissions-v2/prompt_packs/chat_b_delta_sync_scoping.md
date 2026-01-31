@@ -18,7 +18,7 @@ This must remain compatible with:
   - items fetched/listened are only those visible under Roles v2 rules
   - non-canonical transactions fetched/listened are only those visible under Roles v2 rules
   - canonical `INV_*` transaction fetching respects derived visibility (only fetch canonical rows that have at least one in-scope linked item)
-- Define behavior for scope changes (`allowedCategoryIds`):
+- Define behavior for scope changes (`allowedBudgetCategoryIds`):
   - when it expands: newly-visible rows become available via updated queries/listeners (and optional backfill if using paginated lists)
   - when it shrinks: queries/listeners update immediately so newly-disallowed rows are no longer returned for future reads
 

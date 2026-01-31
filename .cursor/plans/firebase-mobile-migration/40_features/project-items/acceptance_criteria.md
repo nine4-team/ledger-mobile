@@ -13,15 +13,15 @@ Shared-module requirement:
 
 ## A) Canonical vs non-canonical attribution rules
 
-- **A1 (non-canonical)**: For non-canonical (user-facing) transactions, budget attribution uses `transaction.category_id` (or equivalent).
+- **A1 (non-canonical)**: For non-canonical (user-facing) transactions, budget attribution uses `transaction.budgetCategoryId`.
 - **A2 (canonical inventory)**: For canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`), budget attribution is **item-driven**:
   - Group linked items by `item.inheritedBudgetCategoryId`
   - Attribute amounts to each category group using the canonical item value rules for that flow
-- **A3 (no user-facing canonical category)**: Canonical inventory transactions must not require a user-facing category selection. Canonical rows may have `category_id = null` and must be treated as uncategorized for user-driven attribution.
+- **A3 (no user-facing canonical category)**: Canonical inventory transactions must not require a user-facing category selection. Canonical rows should have `budgetCategoryId = null` and must be treated as uncategorized for user-driven attribution.
 
 Evidence / deltas:
 
-- **Intentional delta** vs current web: budget rollups currently use `transaction.categoryId` / legacy `budgetCategory` and do not group canonical rows by item category (`src/components/ui/BudgetProgress.tsx`).
+- **Intentional delta** vs current web: budget rollups currently use legacy transaction category fields (e.g. `category_id` / `budgetCategory`) and do not group canonical rows by item category (`src/components/ui/BudgetProgress.tsx`).
 
 ---
 
@@ -29,8 +29,8 @@ Evidence / deltas:
 
 - **B1 (field exists)**: Every item record includes `inheritedBudgetCategoryId` (nullable), persisted in local DB and synced remotely.
 - **B2 (stable across scope moves)**: When an item moves between project ↔ business inventory, `inheritedBudgetCategoryId` is preserved unless explicitly updated by a rule below.
-- **B3 (set on user-facing link)**: When linking an item to a **non-canonical** transaction with a non-null `category_id`, set:
-  - `item.inheritedBudgetCategoryId = transaction.category_id`
+- **B3 (set on user-facing link)**: When linking an item to a **non-canonical** transaction with a non-null `budgetCategoryId`, set:
+  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 - **B4 (do not set from canonical link)**: Linking/unlinking an item to/from a canonical inventory transaction (`INV_*`) must **not** set or overwrite `item.inheritedBudgetCategoryId`.
 - **B5 (do not clear on unlink)**: Unlinking an item from a transaction must not clear `item.inheritedBudgetCategoryId`.
 
@@ -101,9 +101,9 @@ Evidence / deltas:
 ## E) Rollup logic update (required; no new UI)
 
 - **E1**: Budget rollups must implement canonical item-driven attribution:
-  - Non-canonical: attribute by `transaction.category_id`
+  - Non-canonical: attribute by `transaction.budgetCategoryId`
   - Canonical inventory: attribute by grouping linked items by `item.inheritedBudgetCategoryId`
-- **E2**: Rollups must not attribute canonical inventory transactions based on `transaction.category_id` (even if present for internal compatibility).
+- **E2**: Rollups must not attribute canonical inventory transactions based on `transaction.budgetCategoryId` (even if present for internal compatibility).
 
 Parity evidence (intentional change):
 

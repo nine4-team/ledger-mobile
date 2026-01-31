@@ -34,7 +34,7 @@ This feature must align with:
 - `40_features/project-items/flows/inherited_budget_category_rules.md`
 
 Rule (required):
-- Budget/category attribution for reporting must support **item-driven attribution** (via `item.inheritedBudgetCategoryId`), especially for canonical inventory transactions where `transaction.category_id` is null/meaningless.
+- Budget/category attribution for reporting must support **item-driven attribution** (via `item.inheritedBudgetCategoryId`), especially for canonical inventory transactions where `transaction.budgetCategoryId` is null/meaningless.
 
 ## Primary flows
 
@@ -82,14 +82,14 @@ Behavior summary (parity + required deltas for canonical attribution):
   - **Saved**: for items with `marketValue > 0`, sum of `marketValue - projectPrice`.
   - Evidence: `src/pages/ClientSummary.tsx` (the `summary` memo)
 - Category breakdown:
-  - Web parity computes category breakdown by mapping each item to its transaction’s `transaction.categoryId` (if present), then grouping by **category name**.
+  - Web parity computes category breakdown by mapping each item to its transaction’s legacy `category_id` (if present), then grouping by **category name**.
   - Evidence: `src/pages/ClientSummary.tsx` (`transactionCategoryMap`, `categoryBreakdown`)
   - **Required delta (canonical attribution model)**:
     - For each item, determine an attributed category id using:
       - `item.inheritedBudgetCategoryId` when present (preferred), else
-      - the linked transaction’s `category_id` if present (fallback for legacy/non-canonical cases).
+      - the linked transaction’s `budgetCategoryId` if present (fallback for non-canonical cases).
     - Group items by the attributed category id (and resolve to category name via cached categories).
-    - Canonical transactions must participate via `inheritedBudgetCategoryId` (they may not have a meaningful `category_id`).
+    - Canonical transactions must participate via `inheritedBudgetCategoryId` (they may not have a meaningful `budgetCategoryId`).
 - Receipt link rule (per item):
   - If item has a `transactionId`, attempt to find that transaction.
   - If the transaction is canonical by id prefix (`INV_SALE_`/`INV_PURCHASE_`) **or** invoiceable by reimbursement type, the “receipt” link points to the **project invoice** screen.

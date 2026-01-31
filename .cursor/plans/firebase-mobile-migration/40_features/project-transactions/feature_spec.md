@@ -30,18 +30,19 @@ This feature must align with:
 
 Definitions:
 
-- **Non-canonical (user-facing) transaction**: a normal user-entered transaction where category attribution is **transaction-driven** via `transaction.category_id` (or equivalent).
+- **Non-canonical (user-facing) transaction**: a normal user-entered transaction where budget category attribution is **transaction-driven** via `transaction.budgetCategoryId`.
+  - Legacy naming notes: web/SQL docs may refer to this as `category_id`; the canonical SQLite column name is `budget_category_id` (see `20_data/data_contracts.md`).
 - **Canonical inventory transaction**: a system-generated row with id `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`, or `INV_TRANSFER_*`.
 
 Rules (required):
 
-- **Non-canonical**: category attribution comes from `transaction.category_id`.
-- **Canonical inventory**: must be treated as **uncategorized** on the transaction row (recommend `category_id = null`) and category attribution is **item-driven** by grouping linked items by `item.inheritedBudgetCategoryId`.
+- **Non-canonical**: budget category attribution comes from `transaction.budgetCategoryId`.
+- **Canonical inventory**: must be treated as **uncategorized** on the transaction row (recommend `budgetCategoryId = null`) and category attribution is **item-driven** by grouping linked items by `item.inheritedBudgetCategoryId`.
 
 Implications for this feature:
 
-- “Budget category” UI (badges, filters, exports) must not assume canonical rows have a meaningful `category_id`.
-- Any “budget category filter” must include canonical rows via linked items’ `inheritedBudgetCategoryId` rather than `transaction.category_id`.
+- “Budget category” UI (badges, filters, exports) must not assume canonical rows have a meaningful `budgetCategoryId`.
+- Any “budget category filter” must include canonical rows via linked items’ `inheritedBudgetCategoryId` rather than `transaction.budgetCategoryId`.
 
 ## Owned screens / routes
 - **Transactions list**: `ProjectTransactionsPage` → `TransactionsList` (shared screen; business-inventory wrapper composes the same list component with `scope='inventory'`)
@@ -78,7 +79,7 @@ Canonical transaction display:
 
 Budget category filter behavior (required; intentional delta vs web):
 
-- For **non-canonical** transactions, the “budget category” filter matches `transaction.category_id`.
+- For **non-canonical** transactions, the “budget category” filter matches `transaction.budgetCategoryId`.
 - For **canonical inventory** transactions, the “budget category” filter matches if the transaction has **at least one linked item** with `item.inheritedBudgetCategoryId === <selectedCategoryId>`.
   - This requires local DB support for joining items by `transactionId` and filtering by `inheritedBudgetCategoryId`.
 
@@ -100,8 +101,8 @@ Firebase migration constraint:
 ### 2) Export transactions to CSV
 Summary:
 - The list view can export a CSV of transactions (web exports “all transactions” for the project, sorted by current sort mode).
-- CSV includes both legacy and new category fields (category name + categoryId) **for non-canonical transactions**.
-- Canonical inventory transactions should export with `categoryId` empty and `categoryName` empty/“Uncategorized” (pick one and keep consistent).
+- CSV includes both legacy and new category fields (category name + `budgetCategoryId`) **for non-canonical transactions**.
+- Canonical inventory transactions should export with `budgetCategoryId` empty and `categoryName` empty/“Uncategorized” (pick one and keep consistent).
   - Optional (recommended): include an additional column like `attributedCategoryIds` or `attributedCategorySummary` derived from linked items’ `inheritedBudgetCategoryId` values so exports remain useful without introducing a “canonical category”.
 
 Parity evidence:
@@ -149,7 +150,7 @@ Parity evidence:
 New requirement (canonical budget categories):
 
 - Editing a transaction’s budget category has downstream effects on linked items:
-  - When editing a **non-canonical** transaction and its `category_id` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to the new category id (to keep future canonical attribution deterministic).
+  - When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to the new category id (to keep future canonical attribution deterministic).
   - When editing a **canonical inventory** transaction, do not allow category editing (recommended: disallow editing entirely for canonical `INV_*` rows).
 
 ### 5) View transaction detail
@@ -175,8 +176,8 @@ Out-of-scope linkage:
 
 New requirement (itemization ↔ `inheritedBudgetCategoryId`):
 
-- When linking/assigning an item to a **non-canonical** transaction with a non-null `category_id`, set:
-  - `item.inheritedBudgetCategoryId = transaction.category_id`
+- When linking/assigning an item to a **non-canonical** transaction with a non-null `budgetCategoryId`, set:
+  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 - Linking/unlinking items to a **canonical inventory** transaction must not overwrite `item.inheritedBudgetCategoryId`.
 
 ## Offline-first behavior (mobile target)

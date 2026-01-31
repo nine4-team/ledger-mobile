@@ -19,7 +19,8 @@ Audience: internal implementation/design discussion for the Firebase migration (
     - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}` (allocation-only; no name duplication)
   - `project.designFeeCents`: separate field with special UI semantics (received vs spent)
 - **Transactions**:
-  - `transactions.category_id` (preferred) and legacy `transactions.budget_category` (string)
+  - Canonical (mobile/Firebase): `transaction.budgetCategoryId` (Firestore) / `transactions.budget_category_id` (SQLite)
+  - Legacy web naming (historical): `transactions.category_id` and legacy `transactions.budget_category` (string)
 - **Canonical inventory transactions**:
   - System-generated rows such as `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`, `INV_TRANSFER_*`
   - Represent inventory allocation / return / sale mechanics (not user-entered).
@@ -44,7 +45,7 @@ However, budget progress still needs to land in meaningful categories.
 
 #### 3) Canonical vs non-canonical attribution rule (the core decision)
 
-- **Non-canonical transactions**: category attribution comes from `transactions.category_id` (status quo).
+- **Non-canonical transactions**: category attribution comes from `transaction.budgetCategoryId` (status quo; legacy web naming: `transactions.category_id`).
 - **Canonical transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`): category attribution comes from **items linked to the canonical transaction**, grouped by each item’s inherited budget category.
 
 This avoids wrong attribution when a canonical transaction contains mixed-category items (Furniture + Accessories).
@@ -56,7 +57,7 @@ This avoids wrong attribution when a canonical transaction contains mixed-catego
 Each item must have an **inheritedBudgetCategoryId** that represents the user-facing budget category the item “belongs to” for budgeting/progress.
 
 Where it comes from:
-- If an item is linked to a user-facing transaction, it inherits that transaction’s `category_id`.
+- If an item is linked to a user-facing transaction, it inherits that transaction’s `budgetCategoryId` (legacy web naming: `category_id`).
 
 Where it persists:
 - Store on the item as a stable field or metadata (Firebase migration should include it explicitly so it survives cross-scope moves).

@@ -6,8 +6,8 @@ Reduce regression and security risk by adding targeted tests and auditing edge c
 - item visibility (null vs non-null `inheritedBudgetCategoryId`)
 - item writes (null → allowed; A → B admin-only)
 - transaction visibility:
-  - non-canonical by `transaction.categoryId`
-  - canonical `INV_*` derived from linked items (must not treat `categoryId == null` as globally visible)
+  - non-canonical by `transaction.budgetCategoryId`
+  - canonical `INV_*` derived from linked items (must not treat `budgetCategoryId == null` as globally visible)
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`

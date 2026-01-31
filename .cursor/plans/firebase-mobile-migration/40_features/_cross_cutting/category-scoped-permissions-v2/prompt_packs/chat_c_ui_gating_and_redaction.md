@@ -3,7 +3,7 @@
 ## Goal
 Implement the UX surface for Roles v2 without changing the underlying business model:
 
-- category pickers/filters show only `allowedCategoryIds` for scoped users
+- category pickers/filters show only `allowedBudgetCategoryIds` for scoped users
 - canonical `INV_*` Transaction Detail shows **only** in-scope linked items (hide out-of-scope items completely)
 
 ## Required reading (ground truth)
@@ -15,7 +15,7 @@ Implement the UX surface for Roles v2 without changing the underlying business m
 
 ## Outputs (required)
 - Update UI behavior so that for scoped users:
-  - all category pickers/filters use `allowedCategoryIds`
+  - all category pickers/filters use `allowedBudgetCategoryIds`
   - canonical transaction detail:
     - displays only in-scope linked items
     - does not show out-of-scope item counts or redacted placeholders

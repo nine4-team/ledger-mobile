@@ -8,7 +8,7 @@ Goal: make it unambiguous **where `inheritedBudgetCategoryId` comes from**, **wh
 
 ## Definitions
 
-- **User-facing (non-canonical) transaction**: a normal transaction whose budget category is set by the user (`transaction.category_id`).
+- **User-facing (non-canonical) transaction**: a normal transaction whose budget category is set by the user (`transaction.budgetCategoryId`).
 - **Canonical inventory transaction**: a system-generated transaction whose id begins with `INV_PURCHASE_`, `INV_SALE_`, or `INV_TRANSFER_`.
 
 Canonical working doc (source of truth):
@@ -21,7 +21,7 @@ Canonical working doc (source of truth):
 
 ### 1.1 Non-canonical attribution (transaction-driven)
 
-- Category attribution comes from `transaction.category_id`.
+- Category attribution comes from `transaction.budgetCategoryId`.
 
 ### 1.2 Canonical inventory attribution (item-driven)
 
@@ -44,7 +44,7 @@ Every item persists a stable `inheritedBudgetCategoryId` field (nullable but pre
 
 **On link to a non-canonical transaction**:
 
-- If transaction has `category_id`, set `item.inheritedBudgetCategoryId = transaction.category_id`.
+- If transaction has `budgetCategoryId`, set `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`.
 
 **On link to a canonical inventory transaction**:
 
@@ -102,7 +102,7 @@ Persistence:
 
 Preferred:
 
-- Canonical inventory transactions keep `category_id = null` and are treated as uncategorized in UI.
+- Canonical inventory transactions keep `budgetCategoryId = null` and are treated as uncategorized in UI.
 
 Optional (schema compatibility):
 
@@ -110,7 +110,7 @@ Optional (schema compatibility):
 
 Parity context:
 
-- Current web canonical transaction creation may populate `category_id` and legacy `budget_category` fields (`src/services/inventoryService.ts`). This must not be used for attribution going forward.
+- Current web canonical transaction creation may populate legacy `category_id` / `budget_category` fields (`src/services/inventoryService.ts`). This must not be used for attribution going forward.
 
 ---
 

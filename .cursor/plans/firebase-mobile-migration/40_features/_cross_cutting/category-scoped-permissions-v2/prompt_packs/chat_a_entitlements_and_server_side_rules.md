@@ -3,11 +3,11 @@
 ## Goal
 Implement the **server-side source-of-truth** for Roles v2 category-scoped permissions:
 
-- membership entitlement shape (`isAdmin`, `allowedCategoryIds`)
+- membership entitlement shape (`isAdmin`, `allowedBudgetCategoryIds`)
 - item read/write enforcement (including “own uncategorized” exception)
 - transaction read enforcement:
-  - non-canonical: `transaction.categoryId ∈ allowedCategoryIds`
-  - canonical `INV_*`: visibility derived from linked items (must not treat `categoryId == null` as globally visible)
+  - non-canonical: `transaction.budgetCategoryId ∈ allowedBudgetCategoryIds`
+  - canonical `INV_*`: visibility derived from linked items (must not treat `budgetCategoryId == null` as globally visible)
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
@@ -33,6 +33,6 @@ Implement the **server-side source-of-truth** for Roles v2 category-scoped permi
   - `null → allowedCategoryId` is allowed later
   - `A → B` recategorization is **admin-only**
 - Transactions:
-  - Canonical `INV_*` have `categoryId == null` by design; do **not** treat as “uncategorized private”
+  - Canonical `INV_*` have `budgetCategoryId == null` by design; do **not** treat as “uncategorized private”
   - Canonical transaction visibility must be derived from linked items the user may read
 

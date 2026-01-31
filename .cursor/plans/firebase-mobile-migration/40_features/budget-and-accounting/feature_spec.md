@@ -14,7 +14,7 @@ This spec explicitly **deviates** from the current web implementation for canoni
 - **Budget category preset**: account-scoped category entity the user manages in Settings.
 - **Project category budgets**: per-project allocation docs under `projects/{projectId}/budgetCategories/{budgetCategoryId}` (one doc per preset category id).
 - **Design fee**: `project.designFeeCents` with special semantics (“received”, not “spent”).
-- **Non-canonical transaction**: user-facing transaction where category attribution is transaction-driven via `transaction.categoryId` (Firestore) / `transaction.category_id` (legacy web naming).
+- **Non-canonical transaction**: user-facing transaction where budget category attribution is transaction-driven via `transaction.budgetCategoryId` (Firestore).
 - **Canonical inventory transaction**: system row whose id begins with `INV_PURCHASE_`, `INV_SALE_`, `INV_TRANSFER_`.
 
 Canonical working doc (source of truth):
@@ -35,7 +35,7 @@ Canonical working doc (source of truth):
 Canonical rows exist for inventory correctness (allocation / sale / deallocation), not for user budgeting.
 
 Recommendation (preferred):
-- Canonical inventory transactions keep `categoryId = null` (uncategorized).
+- Canonical inventory transactions keep `budgetCategoryId = null` (uncategorized).
 
 Schema-compatibility fallback:
 - A hidden/internal “canonical system” category may exist, but **rollups must ignore it** for attribution.
@@ -43,7 +43,7 @@ Schema-compatibility fallback:
 ### 3) Canonical vs non-canonical attribution (the core deviation)
 
 #### Non-canonical attribution (transaction-driven)
-- Category attribution comes from `transaction.categoryId`.
+- Budget category attribution comes from `transaction.budgetCategoryId`.
 
 #### Canonical inventory attribution (item-driven) — required
 - Canonical inventory transactions are attributed by **items linked to the canonical transaction**, grouped by:
@@ -116,7 +116,7 @@ Firebase migration requirement:
 
 #### Enabled category set
 - Categories are “enabled” for budgeting in a project when:
-  - a per-project budget doc exists for `(projectId, categoryId)` (regardless of `budgetCents`), OR
+  - a per-project budget doc exists for `(projectId, budgetCategoryId)` (regardless of `budgetCents`), OR
   - the category has non-zero attributed spend (so users can see where money went even if budget not set).
 
 #### Spend per category (non-canonical transactions)
@@ -139,7 +139,7 @@ For each canonical inventory transaction:
    - `INV_TRANSFER_*`: `0` impact on budget rollups unless/until transfer semantics are defined elsewhere.
 
 Important:
-- Canonical attribution must **not** consult `transaction.categoryId` even if populated (schema-compatibility fallback).
+- Canonical attribution must **not** consult `transaction.budgetCategoryId` even if populated (schema-compatibility fallback).
 
 ### Overall budget (budget denominator)
 Overall budget is computed as:

@@ -4,7 +4,7 @@ Ship Roles v2 **category-scoped access control** in a way that:
 - is enforced server-side (Firebase Rules / server-side enforcement is source of truth)
 - stays compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows; no “subscribe to everything”)
 - preserves canonical attribution semantics for inventory transactions:
-  - canonical `INV_*` transactions keep `transaction.categoryId = null`
+  - canonical `INV_*` transactions keep `transaction.budgetCategoryId = null`
   - canonical visibility and filtering are **item-driven** via `item.inheritedBudgetCategoryId`
 
 Spec source of truth:
@@ -16,7 +16,7 @@ Canonical attribution evidence sources (must remain consistent):
 - `40_features/budget-and-accounting/feature_spec.md`
 
 ## Primary risk (what can go wrong)
-- Accidentally treating canonical `INV_*` transactions with `categoryId == null` as “globally visible uncategorized”.
+- Accidentally treating canonical `INV_*` transactions with `budgetCategoryId == null` as “globally visible uncategorized”.
 - Client-side filtering after downloading unauthorized rows (violates the security model and the “no subscribe to everything” constraint).
 - Offline DB containing out-of-scope rows (privacy + confusing UX).
 
@@ -50,7 +50,7 @@ Optional (if needed by implementation complexity):
 **Exit criteria**
 - Items and non-canonical transactions are queried with scope constraints (no “fetch everything then filter”).
 - Canonical `INV_*` transaction fetching respects derived visibility (implementation-specific strategy permitted, but must meet constraints).
-- Documented behavior when `allowedCategoryIds` changes (queries/listeners update immediately; UI reflects new visibility set).
+- Documented behavior when `allowedBudgetCategoryIds` changes (queries/listeners update immediately; UI reflects new visibility set).
 
 ### Phase C — UI gating + canonical Transaction Detail redaction
 **Goal**: ensure consistent UX:
@@ -66,7 +66,7 @@ Optional (if needed by implementation complexity):
 
 **Exit criteria**
 - Tests cover the core read/write matrix (admin vs scoped, null vs non-null item category, canonical vs non-canonical transaction).
-- Tests cover the canonical rule: visibility derives from linked items, not `transaction.categoryId`.
+- Tests cover the canonical rule: visibility derives from linked items, not `transaction.budgetCategoryId`.
 
 ## Prompt packs (copy/paste)
 Create `prompt_packs/` with one chat per phase:

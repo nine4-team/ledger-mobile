@@ -63,7 +63,7 @@ This is what the client reads for UX and what callable Functions use for allow/d
 
 Path:
 
-- `accounts/{accountId}/entitlements/current`
+- `accounts/{accountId}/billing/entitlements/current`
 
 Recommended fields (v1):
 
@@ -85,11 +85,11 @@ Rules:
 - Treat this doc as **server-owned** (written only by Functions / trusted backend).
 - Clients can read it for gating UX.
 
-### Stats (server-owned counters)
+### Usage (server-owned counters)
 
 To enforce limits without expensive queries and without rules-time aggregation, maintain server-owned counters:
 
-- `accounts/{accountId}/stats`
+- `accounts/{accountId}/billing/usage`
   - `projectCount: number`
   - `itemCount: number`
   - `transactionCount: number`
@@ -119,11 +119,11 @@ Notes:
   - client creates: `accounts/{accountId}/requests/{requestId}` with `type: "createProject"` and required fields
   - Function processes request in a Firestore transaction:
     - validates membership + role (see `10_architecture/security_model.md`)
-    - reads `accounts/{accountId}/entitlements/current`
-    - reads `accounts/{accountId}/stats.projectCount`
+    - reads `accounts/{accountId}/billing/entitlements/current`
+    - reads `accounts/{accountId}/billing/usage.projectCount`
     - enforces: `projectCount < limits.maxProjects` (unless “unlimited” in Pro policy)
     - writes the new project doc
-    - increments `stats.projectCount`
+    - increments `billing/usage.projectCount`
     - marks request `status` (e.g., `applied | denied | failed`) with debuggable error info
 
 #### Create item / transaction (planned)
@@ -148,7 +148,7 @@ Upgrade requires network, so offline behavior must prioritize:
 
 When offline, for any **gated create** (project/item/transaction):
 
-- If the app can prove (from **cached** `entitlements/current` + **cached** `stats`) that the operation is **under the limit**, it may proceed locally (pending state) and will sync when online.
+- If the app can prove (from **cached** `billing/entitlements/current` + **cached** `billing/usage`) that the operation is **under the limit**, it may proceed locally (pending state) and will sync when online.
 - If the app cannot prove it is under the limit (missing cache, stale cache, or already at limit), the app must:
   - block the operation
   - show a clear message: “Connect to verify your plan / upgrade to Pro”
@@ -167,7 +167,7 @@ This spec assumes RevenueCat is the source of truth for plan entitlements.
 
 Minimum requirement:
 
-- A server-owned path updates `accounts/{accountId}/entitlements/current` to match RevenueCat-derived access.
+- A server-owned path updates `accounts/{accountId}/billing/entitlements/current` to match RevenueCat-derived access.
 
 Implementation choices (acceptable):
 
