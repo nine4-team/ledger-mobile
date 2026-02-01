@@ -17,8 +17,6 @@ The user is correcting scope: “This item should be in Business Inventory,” w
 - Apply item update:
   - `projectId = null`
   - `transactionId = null`
-  - `inventoryStatus = available`
-  - `disposition = inventory` (unless explicitly overridden)
 - Append lineage edge (best-effort):
   - `fromTransactionId = item.latestTransactionId ?? null`
   - `toTransactionId = null`
@@ -35,11 +33,15 @@ The user is designating the item as “inventory,” which must preserve canonic
 
 Primary entrypoints in web:
 - “Sell to Design Business” action
-- Setting disposition to `inventory` from the project items list or business inventory views
+- “Sell/Deallocate to Business Inventory” action from the project items list or item detail
 
 ### Preconditions
 - Item exists.
-- For Firebase migration: Project → BI sell/deallocate may be blocked if `inheritedBudgetCategoryId` is missing (deterministic attribution). See `40_features/project-items/flows/inherited_budget_category_rules.md`.
+- For Firebase migration: Project → BI **sell/deallocate-style** moves (canonical-row paths) **must be blocked** if `inheritedBudgetCategoryId` is missing (deterministic attribution). See `40_features/project-items/flows/inherited_budget_category_rules.md`.
+  - Note: the correction “Move to Business Inventory” path may remain allowed when `inheritedBudgetCategoryId` is missing, since it does not create canonical inventory transactions.
+  - Required copy (per `40_features/project-items/flows/inherited_budget_category_rules.md`):
+    - Disable reason: `Link this item to a categorized transaction before moving it to Design Business Inventory.`
+    - Error toast: `Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
 
 ### Behavior contract (canonical)
 
@@ -57,7 +59,6 @@ If `item.transactionId == INV_PURCHASE_<projectId>` (same project):
 - Update item to Business Inventory:
   - `projectId = null`
   - `transactionId = null`
-  - `inventoryStatus = available`
   - preserve `previousProjectTransactionId` / `previousProjectId`
 - Append lineage edge:
   - `fromTransactionId = INV_PURCHASE_<projectId>`
@@ -74,7 +75,6 @@ Otherwise:
 - Update item to Business Inventory and link it to the sale transaction:
   - `projectId = null`
   - `transactionId = INV_SALE_<projectId>`
-  - `inventoryStatus = available`
   - Clear `space` (scope move)
   - preserve `previousProjectTransactionId` / `previousProjectId`
 - Append lineage edge:

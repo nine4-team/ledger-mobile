@@ -16,7 +16,7 @@ Primary parity evidence (web):
 - Project list page: `src/pages/InventoryList.tsx`
 - Per-item actions menu: `src/components/items/ItemActionsMenu.tsx`
 - Bulk actions surface: `src/components/ui/BulkItemControls.tsx`
-- Disposition → inventory triggers deallocation: `src/pages/InventoryList.tsx` (calls `integrationService.handleItemDeallocation`)
+- Sell/deallocate action triggers deallocation: `src/pages/InventoryList.tsx` (calls `integrationService.handleItemDeallocation`)
 
 ---
 
@@ -90,40 +90,40 @@ Notes:
 
 ---
 
-## Disposition changes (required)
+## Status changes (required)
 
-### 2) Disposition → `inventory` triggers deallocation (and must apply the guardrail)
+### 2) “Sell/Deallocate to Business Inventory” triggers deallocation (and must apply the guardrail)
 
-When disposition is set to `inventory`, the system triggers deallocation (project → business inventory).
+When the user initiates “Sell/Deallocate to Business Inventory”, the system triggers deallocation (project → business inventory).
 
 Parity evidence (web):
 
-- `InventoryList` calls `integrationService.handleItemDeallocation(...)` when disposition becomes `inventory` (`src/pages/InventoryList.tsx`).
+- `InventoryList` calls `integrationService.handleItemDeallocation(...)` from the item actions menu / flow (`src/pages/InventoryList.tsx`).
 
 Required Firebase-migration policy:
 
-- If `inheritedBudgetCategoryId` is missing, block changing disposition to `inventory` and show:
+- If `inheritedBudgetCategoryId` is missing, block the sell/deallocate action and show:
 
 **Error toast**:
 
 `Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
 
-And keep the prior disposition (no optimistic flip that later reverts).
+And keep the item unchanged (no optimistic scope/status change that later reverts).
 
 ---
 
 ## Bulk actions (required)
 
-### 3) Bulk “Set Disposition” → `inventory`
+### 3) Bulk sell/deallocate to Business Inventory
 
-If the user bulk-sets disposition to `inventory`, apply the same guardrail:
+If the user bulk-initiates sell/deallocate to Business Inventory, apply the same guardrail:
 
 - If any selected item is missing `inheritedBudgetCategoryId`, the bulk operation must not proceed.
 - Show the same error toast as the single-item flow.
 
 Parity evidence (web):
 
-- Bulk controls exist and include “Set Disposition” (`src/components/ui/BulkItemControls.tsx`), and `InventoryList` bulk disposition handler triggers deallocation for `inventory` (`src/pages/InventoryList.tsx`).
+- Bulk controls exist and include bulk cross-scope operations (`src/components/ui/BulkItemControls.tsx`), and the project items list bulk action triggers deallocation via `integrationService.handleItemDeallocation` (`src/pages/InventoryList.tsx`).
 
 Intentional delta (vs web):
 

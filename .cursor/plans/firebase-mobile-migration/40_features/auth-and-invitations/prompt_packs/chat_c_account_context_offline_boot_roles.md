@@ -28,8 +28,9 @@ Related services/hooks:
 - `src/App.tsx` (offline init sequencing)
 
 ## What to capture (required sections)
-- How `currentAccountId` is derived (user.accountId, fallback fetch, owner fallback)
-- Offline fallback account id behavior (when it is used and when not)
+- How `accountId` context is derived (prefer `users/{uid}.defaultAccountId` or a locally cached account id from a previously validated session)
+- Membership-gated verification rules (bounded listener/read to `accounts/{accountId}/members/{uid}`)
+- Offline behavior: do not “guess” an account id while offline beyond cached/validated sources (e.g. cached membership doc)
 - What is persisted for offline boot, and when it is cleared
 - Role semantics (owner/admin/member) used in gating logic today (even if UI gates are sparse)
 - Firebase deltas (where to enforce membership/role: Rules/Functions)
@@ -42,4 +43,5 @@ For each non-obvious behavior:
 ## Constraints / non-goals
 - Do not define Roles v2 / scoped permissions here; just document the v1 semantics the app relies on today.
 - Do not prescribe “subscribe to everything” listeners.
+- Do not describe any unsafe “fallback account id” guessing while offline; only use cached/validated sources.
 

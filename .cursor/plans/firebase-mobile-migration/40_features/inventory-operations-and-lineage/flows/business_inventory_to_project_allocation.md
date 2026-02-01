@@ -33,7 +33,7 @@ Minimum resulting item state:
 - `projectId = <projectId>`
 - `transactionId = INV_PURCHASE_<projectId>`
 - `inventoryStatus = allocated`
-- `disposition = purchased` (or equivalent)
+- `status = purchased` (or equivalent)
 - optional: set/clear `space` as selected
 
 Parity evidence (web):

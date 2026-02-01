@@ -9,6 +9,9 @@ Lock down the “fee categories have special semantics” model in a way that is
   - Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 - Canonical inventory transactions must not require a user-facing category.
 - Mutual exclusivity: a category cannot be both `fee` and `itemized` because type is a single field (`BudgetCategory.metadata.categoryType`).
+- Categories are included in overall rollups by default; exclusion is explicit via:
+  - `budgetCategory.metadata.excludeFromOverallBudget === true`
+  - Fee categories may also be excluded via this same flag (fee-ness does not imply exclusion).
 
 ## Exact output files
 Update only:

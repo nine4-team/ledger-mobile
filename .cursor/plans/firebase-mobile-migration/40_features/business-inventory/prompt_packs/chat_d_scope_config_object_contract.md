@@ -60,7 +60,6 @@ Add something like the following to the shared-module doc (doc-only; not code):
     - `canExportCsv: boolean` (project transactions: true; inventory transactions: false)
     - `canGenerateQr: boolean` (feature-flag gated)
     - `supportsInventoryOnlyStatusFilter: boolean` (inventory transactions: true; project: false)
-    - `requiresBudgetCategoryOnCreate: boolean` (inventory transactions: true; project: depends on canonical rules)
   - `}`
 - **Field visibility/labels (only when truly different by scope):**
   - `fields: { showBusinessInventoryLocation: boolean }`
@@ -68,6 +67,9 @@ Add something like the following to the shared-module doc (doc-only; not code):
   - keep this minimal; prefer wrappers to own URL/state concerns
 
 Important: keep the contract **small**. If a field isn’t genuinely scope-dependent, it should not be in the config.
+
+Note (alignment with current shared-module contract):
+- “Budget category required on manual transaction create” is intentionally **not** modeled as a scope config capability; it’s a shared Transactions form rule (see `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`).
 
 ## Evidence rule (anti-hallucination)
 For each non-obvious field/default in the contract:

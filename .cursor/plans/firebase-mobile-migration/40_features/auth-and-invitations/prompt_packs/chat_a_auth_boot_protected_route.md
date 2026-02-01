@@ -17,7 +17,12 @@ Update or create the following docs:
 - `40_features/auth-and-invitations/ui/screens/Login.md`
 
 ## Source-of-truth code pointers
-Primary screens/components:
+Mobile grounding (this repo):
+- Spec source of truth: `40_features/auth-and-invitations/feature_spec.md`
+- Root auth gating + redirects: `ledger_mobile/app/_layout.tsx`, `ledger_mobile/app/index.tsx`
+- Auth store (Firebase Auth + persistence): `ledger_mobile/src/auth/authStore.ts`
+
+Web parity references (evidence only):
 - `src/components/auth/ProtectedRoute.tsx`
 - `src/components/auth/Login.tsx`
 

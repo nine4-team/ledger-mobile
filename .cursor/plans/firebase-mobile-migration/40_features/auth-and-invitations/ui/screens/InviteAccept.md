@@ -1,69 +1,61 @@
 # InviteAccept — Screen contract
 
 ## Intent
-Allow an invited user to join an account via a tokenized link, using either Google OAuth or email/password signup. Persist the invite token across OAuth redirects so the invitation can be accepted after authentication.
+Allow an invited user to join an account via a **tokenized deep link**.
+
+In `ledger_mobile`, invite acceptance is **server-owned** (callable `acceptInvite`) and the app must persist a `pendingInviteToken` across restarts and auth flows so the invite can be accepted after the user signs in/up.
 
 ## Inputs
 - Route params:
   - `token` (required)
 - Query params: none
 - Entry points:
-  - External link to `/invite/:token`
+  - External link / deep link to `/(auth)/invite/<token>` (Expo Router: `app/(auth)/invite/[token].tsx`, to add)
 
 ## Reads (local-first)
 - Route param `token`
-- Local storage (web parity) for invitation bridging:
-  - reads/writes `pendingInvitationToken`
+- Device storage for invitation bridging:
+  - reads/writes `pendingInviteToken` (AsyncStorage is sufficient; SecureStore optional)
+- Auth state:
+  - `user`, `isInitialized` (via `useAuthStore()`)
 
 ## Writes (local-first)
 User actions:
-- Verify invitation token:
-  - calls `getInvitationByToken(token)`
-  - writes `pendingInvitationToken` to local storage on success
-- Initiate Google OAuth signup:
-  - calls `signInWithGoogle()` (redirect)
-- Initiate email/password signup:
-  - calls `signUpWithEmailPassword(email, password)`
-  - checks session after signup to decide whether to show email verification state vs continue
+- Persist the token:
+  - if `token` is present, store it as `pendingInviteToken` immediately so it survives restarts/auth flows
+- Accept the invite (server-owned):
+  - if authenticated, call callable `acceptInvite(token)` (idempotent)
+  - the client **does not** write membership docs directly (no `accounts/{accountId}/members/{uid}` writes)
 - Navigation:
-  - if a session exists after signup, navigate to `/auth/callback` to finish processing invitation
+  - on successful acceptance, navigate to `/(tabs)` (and set account context from `{ accountId, role }` returned by the server)
 
 ## UI structure (high level)
-- Loading state (“Verifying invitation…”)
-- Error state (“Invalid Invitation” + CTA back to home)
-- Email verification state (“Check your email”)
-- Main signup card:
-  - Role indicator (admin vs member)
-  - Signup method tabs (Google vs email/password)
-  - Google signup CTA OR email/password form (password + confirm password with show/hide toggles)
+- Error state (“Invalid invitation link”)
+- Auth required state (when unauthenticated):
+  - CTA to sign in (`/(auth)/sign-in`)
+  - CTA to sign up (`/(auth)/sign-up`)
+- Accepting state (“Accepting invitation…”)
+- Offline state (when token exists but device is offline):
+  - clear offline message + retry CTA
 
 ## User actions → behavior (the contract)
 - On mount:
   - if `token` missing → show “Invalid invitation link”
-  - otherwise verify token with bounded timeout
-  - if valid:
-    - store `pendingInvitationToken`
-    - set `invitation` state (email + role)
-    - prefill email in the email/password form
-- Google signup:
-  - initiates OAuth redirect; invitation acceptance is completed after callback + auth listener processing
-- Email/password signup:
-  - validates:
-    - email present
-    - password present and \(\ge 6\)
-    - confirm password matches
-  - calls signup
-  - checks session:
-    - if no session: show “Check your email”
-    - if session exists: navigate to `/auth/callback`
+  - otherwise persist `pendingInviteToken`
+  - if authenticated:
+    - attempt acceptance via `acceptInvite(token)`
+    - if offline: block acceptance and show retry UX
+  - if unauthenticated:
+    - show sign-in / sign-up CTAs
+    - after auth completes, detect `pendingInviteToken` and attempt acceptance automatically
 
 ## States
-- Loading:
-  - full screen spinner + copy “Verifying invitation…”
-- Error:
-  - show “Invalid Invitation” card with message
-- Email verification:
-  - show “Check your email” card
+- Accepting:
+  - full screen spinner + copy “Accepting invitation…”
+- Error (invalid token):
+  - show “Invalid invitation link” card with message
+- Offline:
+  - show “Requires connection to accept invitation” + retry
 
 ## Media (if applicable)
 - None.
@@ -72,11 +64,9 @@ User actions:
 - Not applicable.
 
 ## Performance notes
-- Invitation verification should be bounded (timeout).
+- Acceptance should be bounded (avoid infinite spinners) and idempotent server-side.
 
 ## Parity evidence
-- Token verification, local storage token persistence, and UI branches: `src/pages/InviteAccept.tsx`
-- Invitation token validation/expiry behavior: `getInvitationByToken()` in `src/services/supabase.ts`
-- OAuth initiation: `signInWithGoogle()` in `src/services/supabase.ts`
-- Email/password signup + redirectTo callback: `signUpWithEmailPassword()` in `src/services/supabase.ts`
+- Token screen UX + pending token persistence + timeouts (web parity reference): `src/pages/InviteAccept.tsx`
+- Mobile spec source of truth: `40_features/auth-and-invitations/feature_spec.md` (deep link route + server-owned `acceptInvite`)
 

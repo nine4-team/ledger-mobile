@@ -347,7 +347,7 @@ Optional / nullable:
 - `notes?: string | null`
 - `bookmark?: boolean`
 - `paymentMethod?: string | null`
-- `disposition?: "to purchase" | "purchased" | "to return" | "returned" | "inventory" | null`
+- `status?: "to purchase" | "purchased" | "to return" | "returned" | null`
 
 Relationships / selectors (nullable):
 - `transactionId?: string | null`
@@ -366,8 +366,7 @@ Tax fields (integer cents; nullable):
 - `taxAmountPurchasePriceCents?: number | null`
 - `taxAmountProjectPriceCents?: number | null`
 
-Inventory-state (nullable; shared module across project + business inventory):
-- `inventoryStatus?: "available" | "allocated" | "sold" | null`
+Inventory metadata (nullable; shared module across project + business inventory):
 - `businessInventoryLocation?: string | null`
 
 Lineage pointers (nullable):
@@ -423,8 +422,7 @@ Other columns:
 - `notes` (TEXT NULL)
 - `bookmark` (INTEGER NOT NULL DEFAULT 0)
 - `payment_method` (TEXT NULL)
-- `disposition` (TEXT NULL)
-- `inventory_status` (TEXT NULL)
+- `status` (TEXT NULL)
 - `business_inventory_location` (TEXT NULL)
 
 Local search index note:

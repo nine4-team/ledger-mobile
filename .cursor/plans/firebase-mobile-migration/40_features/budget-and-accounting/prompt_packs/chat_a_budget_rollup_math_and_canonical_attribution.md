@@ -26,6 +26,21 @@ If you need a shared contract doc (only if necessary), add:
   - canonical attribution by `item.transactionId` join
   - grouping by `item.inheritedBudgetCategoryId`
 
+Also cover these spec-required behaviors (do not omit):
+- **Pinned categories subset + fallback**:
+  - Collapsed Budget view shows **only** the per-user per-project pinned category trackers.
+  - Project list preview uses the **same** pinned subset.
+  - If **no pins exist**, both collapsed + preview show **Overall Budget only**.
+  - Source of truth: `20_data/data_contracts.md` → Entity `ProjectPreferences` (`pinnedBudgetCategoryIds`).
+- **Enabled category set rule**:
+  - A category appears in the expanded list if a per-project budget doc exists **OR** it has non-zero attributed spend (even if no budget is set).
+- **Canonical overall spent uses item-derived values**:
+  - For canonical `INV_*` rows, overall spent must use linked item “canonical value”
+    (`projectPrice ?? purchasePrice ?? marketValue ?? 0`) with the canonical sign, not `transaction.amountCents`.
+- **Two-phase cross-project movement**:
+  - There is no standalone “transfer” canonical transaction; movement is modeled as
+    `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, and rollups apply independently per phase.
+
 ## Parity evidence (web sources)
 - Current budget rollup UI + math (note: we are intentionally deviating for canonical attribution):
   - `src/components/ui/BudgetProgress.tsx`

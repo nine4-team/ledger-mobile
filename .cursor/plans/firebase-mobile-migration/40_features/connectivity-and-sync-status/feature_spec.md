@@ -1,7 +1,7 @@
 # Connectivity + sync status — Feature spec (Firebase mobile migration)
 
 ## Intent
-Make offline-first behavior legible and trustworthy by providing **always-on, global UI** for:
+Make offline-first behavior legible and trustworthy by providing **global, lightweight UI** that appears only when it’s relevant (and stays **compact** when it must persist), covering:
 - connectivity state (offline / slow)
 - sync state (pending / syncing / waiting / error) for:
   - Firestore local queued writes
@@ -9,12 +9,14 @@ Make offline-first behavior legible and trustworthy by providing **always-on, gl
 - a deterministic “Retry sync” affordance
 - background/automatic sync error surfacing
 
+UX constraint (important): avoid large/persistent banners. Prefer a **thin top strip** for connectivity and a **small status pill** for sync, with richer UI only when the user taps or when there’s an error that needs action.
+
 This feature must align with Offline Data v2: **Firestore-native offline persistence** (Firestore is canonical), **scoped listeners**, and **request-doc workflows** for multi-doc correctness. See `OFFLINE_FIRST_V2_SPEC.md`.
 
 ## Owned UI surface (global)
 These are global components mounted in the app shell, not routed screens:
-- `NetworkStatus` (top banner)
-- `SyncStatus` (floating bottom-right banner)
+- `NetworkStatus` (compact top strip / banner)
+- `SyncStatus` (compact floating status pill; can expand on tap or when error)
 - `RetrySyncButton` (inline affordance, typically inside error state)
 - `BackgroundSyncErrorNotifier` (toast-only; no visible UI)
 
@@ -30,6 +32,8 @@ The app computes a local, cached **connectivity snapshot** that can be consumed 
 Parity evidence (web):
 - `src/services/networkStatusService.ts` (navigator events + remote health ping + `isSlowConnection`)
 - `src/hooks/useNetworkState.ts`
+
+Note: these parity pointers refer to the Ledger **web** codebase (not this React Native repo). Treat them as behavioral reference, not required implementation structure.
 
 Firebase/RN adaptation notes (intentional delta):
 - React Native should use platform reachability (e.g. NetInfo’s `isInternetReachable`) and may optionally do a lightweight health ping.
@@ -47,9 +51,11 @@ Parity evidence (web):
 - `src/services/syncScheduler.ts`
 - `src/services/operationQueue.ts`
 
+Note: these parity pointers refer to the Ledger **web** codebase (not this React Native repo). Some older/alternate web architectures use an “outbox/operation queue” pattern; mobile does not depend on that model.
+
 Firebase/RN adaptation notes (intentional delta):
 - There is no Service Worker in React Native. “background sync” becomes **best-effort background execution** (or “automatic sync attempt”) and must never be required for correctness.
-- Mobile does **not** implement the web outbox/delta sync engine. Instead, reflect:
+- Mobile does **not** implement a bespoke outbox/delta-sync engine (even if a web implementation uses outbox-style terminology). Instead, reflect:
   - Firestore queued writes + pending writes acknowledgement
   - request-doc status (queued/applied/failed)
   - scoped listener attach/health (if exposed)
@@ -57,7 +63,7 @@ Firebase/RN adaptation notes (intentional delta):
 ## Primary user-visible behaviors
 
 ### 1) Offline banner (NetworkStatus)
-Show a fixed top banner when the device is offline:
+Show a **compact** fixed top strip when the device is offline:
 - Copy: “Offline - Changes will sync when reconnected”
 - Behavior: banner appears immediately on offline detection and disappears when back online.
 
@@ -65,7 +71,7 @@ Parity evidence:
 - `src/components/NetworkStatus.tsx`
 
 ### 2) Slow connection banner (NetworkStatus)
-Show a top banner when the device is online but slow:
+Show a **compact** top strip when the device is online but slow:
 - Copy: “Slow connection detected”
 - This should not block interaction; it is informational.
 
@@ -74,7 +80,7 @@ Parity evidence:
 - slow-connection derivation: `src/services/networkStatusService.ts` (`navigator.connection.effectiveType`)
 
 ### 3) Sync status banner (SyncStatus) — when it shows
-Show the floating sync status banner if any of these are true:
+Show the floating sync status **pill** if any of these are true:
 - there are pending Firestore writes or pending request-doc operations
 - foreground sync is currently running
 - an automatic/background sync attempt is active
@@ -98,6 +104,8 @@ Derive one of four status variants (highest precedence wins):
    - when there are pending ops (but not syncing, not error)
    - if offline: “Changes will sync when you're back online”
    - if online: “N changes pending”
+
+UX note: in non-error states, prefer the **smallest readable** presentation (pill + icon + short copy). Use expansion (tap) for details rather than occupying persistent screen real estate.
 
 Parity evidence:
 - `src/components/SyncStatus.tsx` (`statusVariant`, `statusMessage`)

@@ -18,6 +18,9 @@ Update or create:
   - `src/pages/AddBusinessInventoryItem.tsx`
   - `src/pages/EditBusinessInventoryItem.tsx`
 
+Note:
+- These are **web parity sources**. The Firebase mobile app should use **wrapper routes** that render the **shared Items screens** configured with `ScopeConfig.scope = 'inventory'` (no separate BI-only screen implementations).
+
 ## Cross-cutting constraints
 - Shared module reuse rule (must reuse Items module): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Canonical Items behavior/contracts (project entrypoint, reused by inventory): `40_features/project-items/README.md`

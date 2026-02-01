@@ -19,8 +19,8 @@ Also ensure cross-links remain correct:
   - `src/components/items/ItemActionsMenu.tsx`
 - Item Detail action handlers + errors:
   - `src/pages/ItemDetail.tsx`
-- Project items list / disposition behavior:
-  - `src/pages/InventoryList.tsx` (`updateDisposition`, deallocation trigger)
+- Project items list / sell/deallocate behavior:
+  - `src/pages/InventoryList.tsx` (actions that call `integrationService.handleItemDeallocation`)
 - Business inventory allocation behavior:
   - `src/pages/BusinessInventory.tsx` (`handleMoveToProject`)
 - Transaction detail item actions:

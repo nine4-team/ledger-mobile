@@ -18,6 +18,9 @@ Update or create:
 - Transaction detail (shared):
   - `src/pages/TransactionDetail.tsx`
 
+Note:
+- These are **web parity sources**. The Firebase mobile app should use **wrapper routes** that render the **shared Transactions screens** (`TransactionForm`, `TransactionDetail`) with `scope = 'inventory'`.
+
 ## Cross-cutting constraints
 - Shared module reuse rule (must reuse Transactions module): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Canonical Transactions behavior/contracts (project entrypoint, reused by inventory): `40_features/project-transactions/README.md`

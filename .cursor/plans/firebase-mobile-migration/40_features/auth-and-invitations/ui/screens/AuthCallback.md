@@ -1,30 +1,28 @@
 # AuthCallback — Screen contract
 
 ## Intent
-Handle the post-OAuth redirect state by waiting briefly for an authenticated session to become available, bridging any pending invitation token into invitation data for user-document creation, and then navigating into the app.
+**Web-only parity reference.**
+
+The mobile app must **not** implement a `/auth/callback` route. Mobile auth is driven by native Firebase Auth persistence and auth state listeners; invitation acceptance is handled via the tokenized deep link route `/(auth)/invite/<token>` + a server-owned callable (`acceptInvite`).
+
+This document is retained only to describe the legacy web behavior the spec is grounded in.
 
 ## Inputs
 - Route params: none
 - Query params: none (auth SDK may use hash/query internally)
 - Entry points:
-  - OAuth redirect target from Google sign-in (`redirectTo: /auth/callback`)
-  - InviteAccept email/password signup may route here when session exists
+  - N/A on mobile (no `/auth/callback` route)
 
 ## Reads (local-first)
-- Auth session availability:
-  - polls `supabase.auth.getSession()` with bounded attempts
-- Invitation bridging state:
-  - reads `pendingInvitationToken` from local storage
+- N/A on mobile (legacy web flow):
+  - web polls for session availability and reads a pending invitation token from web storage.
 
 ## Writes (local-first)
-- If `pendingInvitationToken` exists and invitation is found:
-  - write `pendingInvitationData` to local storage (for consumption by user doc creation)
-  - remove `pendingInvitationToken`
-- Navigation:
-  - navigate to `/` regardless of outcome after bounded wait
+- N/A on mobile (legacy web flow):
+  - web may bridge a pending invitation token into pending invitation data and then navigates home.
 
 ## UI structure (high level)
-- Full-screen spinner + “Completing sign in…”
+- Legacy web behavior: full-screen spinner + “Completing sign in…”
 
 ## User actions → behavior (the contract)
 - No user actions; this screen is purely transitional.

@@ -22,6 +22,23 @@ Source of truth:
 - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
   - See also: “Scope config object (contract)” (single config object consumed by shared Items + Transactions UI across project + inventory scopes)
 
+## Routing / screens (mobile; required)
+
+The Firebase mobile app may have different **wrapper routes** for Project vs Business Inventory, but it must render a **single shared implementation** for:
+
+- Items list
+- Item detail
+- Item create/edit form
+
+Those shared screens/components must be configured via the `ScopeConfig` contract:
+
+- Project wrapper routes pass `ScopeConfig = { scope: 'project', projectId }`
+- Business-inventory wrapper routes pass `ScopeConfig = { scope: 'inventory' }`
+
+Anti-goal (explicit):
+
+- Do **not** implement separate `ProjectItemDetail` vs `BusinessInventoryItemDetail` screens/components that diverge over time. Scope-specific deltas belong in scope-config and the scope screen contracts (e.g. search fields, allowed actions).
+
 ---
 
 ## Scope
@@ -155,7 +172,7 @@ Do not allow “sell/deallocate to Business Inventory” unless the item has pre
 This guardrail applies to all project → business inventory paths that would create/update canonical inventory rows:
 
 - Item actions: “Sell to Design Business”
-- Disposition change: setting disposition to `inventory` (deallocation trigger)
+- Sell/deallocate action to Business Inventory (canonical deallocation trigger)
 
 This guardrail does **not** apply to “Move to Design Business” when “move” is a pure correction that does not create canonical transactions. In that case, attribution determinism is not required at the moment of the correction (but will be required later for deallocation-like flows).
 
@@ -166,7 +183,7 @@ Source of truth:
 Parity evidence (web paths that must be guarded in Firebase):
 
 - Item detail “sell to business inventory” triggers deallocation: `integrationService.handleItemDeallocation` (`src/pages/ItemDetail.tsx`).
-- Project items list disposition → inventory triggers deallocation: `integrationService.handleItemDeallocation` (`src/pages/InventoryList.tsx`).
+- Project items list “sell/deallocate to business inventory” triggers deallocation: `integrationService.handleItemDeallocation` (`src/pages/InventoryList.tsx`).
 - “Move to business inventory” exists as a separate correction path that only updates the item’s scope and does not create canonical transactions: `moveItemToBusinessInventory` (`src/services/inventoryService.ts`).
 
 Intentional delta (vs current web):

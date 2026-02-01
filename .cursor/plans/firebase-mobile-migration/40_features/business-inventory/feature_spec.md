@@ -19,17 +19,22 @@ Shared-module constraint:
 
 ### Inventory item detail
 - **Route concept**: `/business-inventory/:itemId`
-- **Web parity source**: `src/pages/BusinessInventoryItemDetail.tsx`
+- **Mobile implementation**: Business-inventory wrapper route that renders the **shared** `ItemDetail` screen with `ScopeConfig.scope = 'inventory'`.
+- **Web parity source**: `src/pages/BusinessInventoryItemDetail.tsx` (web has a separate page; mobile must not fork a separate implementation).
 
 ### Inventory item create/edit
 - **Route concept**: `/business-inventory/add`, `/business-inventory/:itemId/edit`
-- **Web parity source**: `src/pages/AddBusinessInventoryItem.tsx`, `src/pages/EditBusinessInventoryItem.tsx`
+- **Mobile implementation**: Business-inventory wrapper routes that render the **shared** Item create/edit form screen with `ScopeConfig.scope = 'inventory'` (no duplicate “BI item form” implementation).
+- **Web parity source**: `src/pages/AddBusinessInventoryItem.tsx`, `src/pages/EditBusinessInventoryItem.tsx` (web has separate pages; mobile must not fork a separate implementation).
 
 ### Inventory transaction create/edit + detail
 - **Route concept**:
   - `/business-inventory/transaction/add`
   - `/business-inventory/transaction/:transactionId/edit`
   - `/business-inventory/transaction/:transactionId` (detail)
+- **Mobile implementation**:
+  - Create/edit: wrapper routes that render the **shared** `TransactionForm` screen with `scope = 'inventory'` (see `40_features/project-transactions/ui/screens/TransactionForm.md`).
+  - Detail: wrapper route that renders the **shared** `TransactionDetail` screen with `scope = 'inventory'` (see `40_features/project-transactions/ui/screens/TransactionDetail.md`).
 - **Web parity source**:
   - Create/edit: `src/pages/AddBusinessInventoryTransaction.tsx`, `src/pages/EditBusinessInventoryTransaction.tsx`
   - Detail: `src/pages/TransactionDetail.tsx` (shared detail)
@@ -106,10 +111,10 @@ Behavior summary (web):
 - The screen preserves the list’s search/filter/sort params for next/previous navigation and uses `replace: true` for next/prev so “Back” returns to the list, not through a chain of items.
 - Actions include:
   - Bookmark toggle.
-  - Edit / duplicate (duplicates are forced to remain disposition `inventory`).
+  - Edit / duplicate (duplicates must remain in Business Inventory scope: `projectId = null`).
   - Add to / change transaction, and remove from transaction (with confirmation).
   - Move to project (allocation modal).
-  - Change disposition/status.
+  - Change status.
   - Delete item (confirm).
 - Images:
   - Add images via gallery.

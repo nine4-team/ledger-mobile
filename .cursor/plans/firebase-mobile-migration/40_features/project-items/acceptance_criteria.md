@@ -38,14 +38,14 @@ Evidence / deltas:
 
 ## C) Guardrail: Project → Business Inventory requires known category
 
-### C1 — UI gating (actions menu + bulk + disposition)
+### C1 — UI gating (actions menu + bulk)
 
 If an item’s `inheritedBudgetCategoryId` is missing (null/empty), the UI must disable the project → business inventory actions that would create/update canonical inventory rows.
 
 At minimum, disable:
 
 - “Sell to Design Business”
-- Any “Deallocate to inventory” path (including changing disposition to `inventory`)
+- Any “Sell/Deallocate to Business Inventory” path
 
 Explicitly allowed:
 

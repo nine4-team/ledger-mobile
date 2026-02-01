@@ -14,8 +14,8 @@ Web parity evidence sources (key):
   - `src/types/operations.ts` (operation types + payload shapes)
 - UI entrypoints for these operations:
   - `src/pages/ItemDetail.tsx` (sell/move to BI, sell to project)
-  - `src/pages/InventoryList.tsx` (disposition -> inventory triggers deallocation; assign/unlink to transaction)
-  - `src/pages/BusinessInventory.tsx` (allocate to project; disposition -> inventory triggers deallocation)
+  - `src/pages/InventoryList.tsx` (sell/deallocate to BI action; assign/unlink to transaction)
+  - `src/pages/BusinessInventory.tsx` (allocate to project; sell/deallocate to BI action)
   - `src/pages/TransactionDetail.tsx` (item-level move/sell actions)
   - `src/components/items/ItemActionsMenu.tsx` (disabled reasons + guardrails like “move the transaction instead”)
 - Lineage edges + pointers:
@@ -24,7 +24,7 @@ Web parity evidence sources (key):
 ## Owned flows (list)
 - **Project → Business Inventory**
   - “Move to business inventory” (correction path; no canonical sale)
-  - “Sell to business inventory” / “Set disposition = inventory” (canonical deallocation; creates/updates `INV_SALE_<projectId>` unless purchase-reversion)
+  - “Sell/deallocate to business inventory” (canonical deallocation; creates/updates `INV_SALE_<projectId>` unless purchase-reversion)
 - **Business Inventory → Project**
   - Allocate/move to project (canonical purchase; creates/updates `INV_PURCHASE_<projectId>`)
 - **Project → Project**

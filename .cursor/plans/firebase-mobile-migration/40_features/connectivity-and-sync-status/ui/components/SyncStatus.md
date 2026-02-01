@@ -1,4 +1,4 @@
-# `SyncStatus` (global sync banner) — contract
+# `SyncStatus` (global sync status pill) — contract
 
 ## Purpose
 Expose offline-first “pending changes” state globally so users understand when changes are pending, syncing, waiting, or errored.
@@ -16,10 +16,12 @@ Parity evidence:
 - `src/services/syncScheduler.ts`
 - `src/hooks/useNetworkState.ts`
 
+Note: parity pointers refer to the Ledger **web** codebase (not this React Native repo). Some web implementations use outbox/queue terminology; mobile should not depend on a bespoke outbox/delta-sync engine.
+
 ## Render rules
 
 ### When to show
-Show the banner if any are true:
+Show the (compact) status pill if any are true:
 - pending Firestore writes or pending request-doc operations > 0
 - `isRunning === true`
 - background/automatic sync attempt is active
@@ -39,6 +41,10 @@ Pick exactly one:
   - if offline: `Changes will sync when you're back online`
   - else: `N changes pending`
 
+## UX constraints
+- Default presentation should be a **small floating pill** (icon + short text). Avoid large/persistent banners.
+- Allow expansion (tap) for details if needed; reserve “full” UI emphasis for error + recovery actions.
+
 ## Firebase/RN adaptation note
-This banner must reflect **Firestore queued writes + request-doc status (+ scoped listener health if available)**, not a custom outbox/delta sync engine or Supabase realtime channels.
+This UI must reflect **Firestore queued writes + request-doc status (+ scoped listener health if available)**, not a bespoke outbox/delta-sync engine or Supabase realtime channels.
 

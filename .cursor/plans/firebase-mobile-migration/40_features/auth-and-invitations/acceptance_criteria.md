@@ -2,63 +2,55 @@
 
 Each non-obvious criterion includes **parity evidence** (web code pointer) or is labeled **intentional delta** (Firebase mobile requirement).
 
+This file also marks **what is already implemented** in `ledger_mobile` vs **what remains to implement**, so we don’t “spec” work that’s already done.
+
 ## Routing + boot
-- [ ] **Routes exist**: `/auth/callback` and `/invite/:token` routes exist outside the protected app shell.  
-  Observed in `src/App.tsx`.
-- [ ] **Providers are mounted**: `AuthProvider` wraps the app before `App` renders so ProtectedRoute can read auth state.  
-  Observed in `src/main.tsx`.
-- [ ] **Offline services initialize early**: offline context is initialized at app start to support offline-first screens.  
-  Observed in `src/App.tsx` (`initOfflineContext()` then offline store + operation queue init).
+- [x] **Mobile auth gating exists**: root layout initializes auth store and redirects based on auth state.  
+  Implemented in `ledger_mobile/app/_layout.tsx` and `ledger_mobile/app/index.tsx`.
+- [x] **Email/password auth store exists**: sign-in/sign-up/sign-out + auth state subscription.  
+  Implemented in `ledger_mobile/src/auth/authStore.ts`.
+- [ ] **Auth safety timeout**: auth initialization has a bounded timeout (e.g. 7s) so we never show an indefinite loading overlay if native auth hangs.  
+  Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/contexts/AuthContext.tsx` (7s timeout + `timedOutWithoutAuth`).  
+  Mobile status: **not implemented** (today `ledger_mobile/app/_layout.tsx` shows a loading overlay while `isInitialized` is false).
+- [ ] **Offline “requires connection” messaging on auth screens**: when unauthenticated and offline, sign-in/sign-up must not appear “broken”; show explicit offline gating + retry.  
+  Intentional delta (mobile constraint): sign-in cannot complete offline unless a prior session exists; current `ledger_mobile` auth screens do not yet implement offline gating UX.
 
 ## Protected route gating
-- [ ] **Spinner while auth is resolving**: while `loading || userLoading`, protected routes render a full-screen loading indicator.  
-  Observed in `src/components/auth/ProtectedRoute.tsx`.
-- [ ] **Fallback to Login**: when unauthenticated, missing app user, or auth timed out, protected routes render `<Login />`.  
-  Observed in `src/components/auth/ProtectedRoute.tsx`.
-- [ ] **Auth safety timeout**: auth initialization has a bounded timeout (7s) that forces `loading=false` and sets `timedOutWithoutAuth` when no user exists.  
-  Observed in `src/contexts/AuthContext.tsx` (timeout branch sets `timedOutWithoutAuth`).
+- [x] **Spinner while auth is resolving (mobile)**: an overlay is shown until auth store initializes.  
+  Implemented in `ledger_mobile/app/_layout.tsx` via `LoadingScreen`.
+- [x] **Redirect to sign-in when unauthenticated (mobile)**.  
+  Implemented in `ledger_mobile/app/_layout.tsx` + `ledger_mobile/app/index.tsx`.
 
 ## Login (Google + email/password)
-- [ ] **Login methods**: Login offers Google and Email/Password methods with a switchable UI.  
-  Observed in `src/components/auth/Login.tsx`.
-- [ ] **Google sign-in launches OAuth**: tapping Google sign-in calls AuthContext `signIn()` which initiates OAuth redirect to `/auth/callback`.  
-  Observed in `src/components/auth/Login.tsx` and `signInWithGoogle()` in `src/services/supabase.ts`.
-- [ ] **Email/password validation**: login requires non-empty email and password and shows an error message on failure.  
-  Observed in `src/components/auth/Login.tsx`.
-- [ ] **Email/password sign-in uses Supabase auth password flow (parity)**.  
-  Observed in `signInWithEmailPassword()` in `src/services/supabase.ts`.
+- [x] **Mobile login UI offers Google + Email tabs** (Google is currently a placeholder).  
+  Implemented in `ledger_mobile/app/(auth)/sign-in.tsx` (tabs + Google button shows “Not set up yet”).
+- [x] **Email/password validation exists (mobile)**.  
+  Implemented in `ledger_mobile/app/(auth)/sign-in.tsx`.
+- [x] **Email/password sign-in uses Firebase Auth password flow (mobile)**.  
+  Implemented in `ledger_mobile/src/auth/authStore.ts` (`signInWithEmailAndPassword`).
+- [ ] **Google sign-in parity gap**: web app supports Google OAuth; mobile must either implement mobile-native Google→Firebase credential sign-in or explicitly defer.  
+  Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/Login.tsx` and `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts` (`signInWithGoogle()`).
+  Intentional delta (mobile): **no `/auth/callback` route**; if implemented, it must be mobile-native.
 
-## Auth callback
-- [ ] **Bounded wait for session**: callback polls for session up to a bounded limit, then navigates to `/` regardless.  
-  Observed in `src/pages/AuthCallback.tsx` (`maxAttempts` loop + `navigate('/')`).
-- [ ] **Invitation token bridge**: if `pendingInvitationToken` exists, callback attempts to fetch invitation info and stores `pendingInvitationData`, then clears the token.  
-  Observed in `src/pages/AuthCallback.tsx` + `checkInvitationByToken()` in `src/services/supabase.ts`.
+## Auth callback (web-only parity reference)
+- [ ] **No web callback route in mobile** (`/auth/callback` must not exist in the RN app).  
+  Intentional delta (mobile constraint): native Firebase Auth persistence replaces web OAuth redirect callbacks.
+  Parity evidence (web-only): `/Users/benjaminmackenzie/Dev/ledger/src/pages/AuthCallback.tsx`.
 
 ## Invite acceptance
-- [ ] **Token required**: if `token` param is missing, show “Invalid invitation link”.  
-  Observed in `src/pages/InviteAccept.tsx`.
-- [ ] **Token verification is bounded**: invitation lookup is protected by a timeout that fails with “Request timed out…”.  
-  Observed in `src/pages/InviteAccept.tsx`.
-- [ ] **Expired/invalid token shows error state**: when invitation is not found or expired, show an “Invalid Invitation” error UI.  
-  Observed in `src/pages/InviteAccept.tsx` + expiry behavior in `getInvitationByToken()` (`src/services/supabase.ts`).
-- [ ] **Token persisted across redirect**: for valid tokens, store `pendingInvitationToken` locally to survive OAuth redirect.  
-  Observed in `src/pages/InviteAccept.tsx`.
-- [ ] **Google signup path**: tapping “Sign up with Google” initiates OAuth; invitation is processed after callback and sign-in.  
-  Observed in `src/pages/InviteAccept.tsx` + `src/pages/AuthCallback.tsx` + `createOrUpdateUserDocument()` (`src/services/supabase.ts`).
-- [ ] **Email/password signup validations**: email required; password required and \(\ge 6\); confirm password must match.  
-  Observed in `src/pages/InviteAccept.tsx`.
-- [ ] **Email verification branch**: if signup results in `session=null`, show “Check your email” screen and do not proceed to callback.  
-  Observed in `src/pages/InviteAccept.tsx`.
-- [ ] **If session exists after signup**: navigate to `/auth/callback` to process invitation acceptance.  
-  Observed in `src/pages/InviteAccept.tsx`.
+- [ ] **Invite deep link route exists (mobile)**: `/(auth)/invite/<token>` opens from `myapp://invite/<token>`.  
+  Mobile status: **not implemented** (no invite route exists under `ledger_mobile/app/(auth)` today).
+- [ ] **Token required + bounded verification**: missing/invalid token shows an error state; token lookup is bounded by a timeout.  
+  Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/pages/InviteAccept.tsx` + `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts` (`getInvitationByToken()`).
+- [ ] **Persist pending invite token across auth + restarts (mobile)**.  
+  Intentional delta (mobile): use AsyncStorage (SecureStore optional), not web `localStorage`.
+- [ ] **Invite acceptance is server-owned + idempotent (Firebase)**.  
+  Intentional delta (migration requirement): client must not write membership docs directly; acceptance happens via a callable Function / transaction.
 
 ## Account context + offline context persistence
-- [ ] **Account resolves after auth**: account loading backs off while auth is loading; if user is null, account is cleared.  
-  Observed in `src/contexts/AccountContext.tsx`.
-- [ ] **Offline fallback account id**: when online load fails or is unavailable, `offlineFallbackAccountId` can be applied to set `currentAccountId`.  
-  Observed in `src/contexts/AccountContext.tsx`.
-- [ ] **Offline context requires both userId and accountId**: offline context is persisted only when both are present; otherwise it is cleared.  
-  Observed in `src/services/offlineContext.ts`.
+- [ ] **Account context exists (mobile)**: after auth, determine a safe `accountId` and verify membership.  
+  Mobile status: **not implemented** (no account context store/context found in `ledger_mobile/src/**` yet).
+  Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/contexts/AccountContext.tsx`.
 
 ## Firebase migration requirements (intentional deltas)
 - [ ] **Auth provider**: replace Supabase Auth with Firebase Auth but preserve the behavioral contracts above.  

@@ -348,7 +348,7 @@ Evidence sources (all in-repo):
   - Bulk actions (via `BulkItemControls`):
     - Assign to transaction
     - Set space (including clearing space)
-    - Set disposition/status
+    - Set status
     - Set SKU
     - Delete selected
   - Item detail UX:
@@ -356,8 +356,8 @@ Evidence sources (all in-repo):
     - Bookmark toggle
     - Image management (add/remove/set primary)
     - View QR code (item detail) + “Generate QR Codes” (list action)
-  - Disposition changes:
-    - Changing disposition to `inventory` triggers deallocation behavior (see cross-cutting “allocation/deallocation”)
+  - Scope changes:
+    - Moving/selling/deallocating to Business Inventory triggers deallocation behavior (see cross-cutting “allocation/deallocation”)
 - Budget category attribution (canonical transactions):
   - Each item must persist a stable `inheritedBudgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
   - Canonical inventory transactions should not require a user-facing budget category; budgeting attribution is item-driven via linked items.
@@ -439,14 +439,14 @@ Evidence sources (all in-repo):
   - `ItemDetail`
   - `InventoryList`
   - `TransactionDetail`
-  - `BusinessInventoryItemDetail`
-  - `BusinessInventory`
+  - `BusinessInventoryItemDetail` (wrapper route that renders shared `ItemDetail` in inventory scope)
+  - `BusinessInventory` (workspace shell wrapper that composes shared Items/Transactions modules)
 - **Primary user flows**:
   - Assign/unassign items to/from a transaction (single + bulk)
   - Add/remove items on a transaction (itemization-style)
   - Allocate item(s) to a project (business inventory → project)
   - Move/sell items between project and business inventory
-  - Deallocate when item disposition becomes `inventory`
+  - Deallocate when the user initiates a sell/deallocate to Business Inventory operation
   - Show lineage breadcrumbs / relationship cues (where present)
 - **Budget-category determinism constraints** (canonical; required):
   - Project → Business Inventory: do not allow deallocation/sell unless the item has a known `inheritedBudgetCategoryId` (it must have been linked to a transaction previously).
@@ -505,13 +505,13 @@ Evidence sources (all in-repo):
 - **Short description**: Global (project-less) items and transactions views with rich list controls, detail/edit flows, and allocation into projects.
 - **Owned screens**:
   - `BusinessInventory` (tabs: Items / Transactions)
-  - `BusinessInventoryItemDetail`
-  - `AddBusinessInventoryItem`
-  - `EditBusinessInventoryItem`
-  - `AddBusinessInventoryTransaction`
-  - `EditBusinessInventoryTransaction`
-  - `TransactionDetail` (also routed under business inventory)
-  - Note: these may be separate *wrappers/routes*, but must reuse the **shared Items + Transactions module components** (lists/menus/details/forms) rather than reimplementing them per-scope:
+  - `BusinessInventoryItemDetail` (wrapper route → shared `ItemDetail` with `ScopeConfig.scope='inventory'`)
+  - `AddBusinessInventoryItem` (wrapper route → shared Item create/edit form with `ScopeConfig.scope='inventory'`)
+  - `EditBusinessInventoryItem` (wrapper route → shared Item create/edit form with `ScopeConfig.scope='inventory'`)
+  - `AddBusinessInventoryTransaction` (wrapper route → shared `TransactionForm` with `scope='inventory'`)
+  - `EditBusinessInventoryTransaction` (wrapper route → shared `TransactionForm` with `scope='inventory'`)
+  - `TransactionDetail` (shared; also routed under business inventory with `scope='inventory'`)
+  - Note: these are allowed as separate *wrappers/routes*, but must reuse the **shared Items + Transactions module components** (lists/menus/details/forms) rather than reimplementing them per-scope:
     - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - **Primary user flows**:
   - Items tab:
@@ -523,7 +523,7 @@ Evidence sources (all in-repo):
       - Assign selected items to a transaction
       - Generate QR codes for selected items
       - Delete selected items
-    - Per-item actions: bookmark, duplicate, delete, disposition update, image add/remove
+    - Per-item actions: bookmark, duplicate, delete, status update, image add/remove
   - Transactions tab:
     - Filter modes include status (`all`, `pending`, `completed`, `canceled`, `inventory-only`) and other filters (source/type/reimbursement/receipt emailed/completeness)
     - Sort menu for transactions (observed in UI)

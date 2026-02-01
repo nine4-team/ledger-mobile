@@ -14,6 +14,30 @@ This feature must provide:
 - clear “requires connection” gating when unauthenticated and offline
 - invitation acceptance via tokenized deep links (no web-only callback routes)
 
+## Reality check (what is already implemented in `ledger_mobile` today)
+
+Already implemented:
+
+- **Email/password auth store**: `ledger_mobile/src/auth/authStore.ts` implements:
+  - `signIn(email, password)` → Firebase `signInWithEmailAndPassword`
+  - `signUp(email, password)` → Firebase `createUserWithEmailAndPassword`
+  - `initialize()` → `auth.onAuthStateChanged` and sets `isInitialized`
+- **Root auth gating + redirects**:
+  - `ledger_mobile/app/_layout.tsx` initializes auth and redirects unauthenticated users into `/(auth)`
+  - `ledger_mobile/app/index.tsx` redirects to `/(tabs)` vs `/(auth)/sign-in`
+- **Auth screens**:
+  - `ledger_mobile/app/(auth)/sign-in.tsx` supports email/password sign-in and includes a Google tab/button UI that currently shows “Not set up yet”.
+  - `ledger_mobile/app/(auth)/sign-up.tsx` supports email/password sign-up.
+
+Not yet implemented (must be captured as work, not “assumed done”):
+
+- Invite deep link route `/(auth)/invite/<token>`
+- Pending invite token persistence (AsyncStorage/SecureStore)
+- Callable invite acceptance (`acceptInvite`) and membership/account context bootstrap
+- Explicit offline gating UX on auth screens (unauthenticated + offline)
+- Auth safety timeout (web parity uses 7s timeout to avoid infinite spinner; mobile currently does not)
+- Mobile-native Google OAuth → Firebase credential sign-in (web has Google OAuth; mobile currently has placeholder UI)
+
 ## Architecture alignment (non-negotiable)
 
 - **No web-router assumptions**: do not specify `/auth/callback` routes or “poll session” behavior. Mobile auth is “Firebase user exists” (native persistence), not “redirect callback route”.
@@ -25,7 +49,7 @@ This feature must provide:
 
 Auth group screens (existing in the skeleton):
 
-- `app/(auth)/sign-in.tsx`: sign in (email/password; Google is a planned follow-up)
+- `app/(auth)/sign-in.tsx`: sign in (email/password implemented; Google UI exists but is currently a placeholder)
 - `app/(auth)/sign-up.tsx`: sign up (email/password)
 
 Auth group screens (to add for this feature):
@@ -73,6 +97,7 @@ Required hardening (add to implementation when wiring real auth UX):
 
 - Add a **bounded auth init timeout** (e.g. 7s) so we never show an indefinite loading overlay if native auth hangs.
   - On timeout, show the auth UI plus a “Retry” action (re-run `initialize()` or restart auth subscription).
+  - Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/contexts/AuthContext.tsx` uses a 7s safety timeout and sets `timedOutWithoutAuth`.
 
 ### 2) Sign in (email + password)
 Behavior:
@@ -109,7 +134,8 @@ Planned behavior (phase 2):
 
 Implementation note:
 
-- The current skeleton UI shows Google as “not set up yet” and supports email/password only.
+- The current mobile app UI shows Google as “not set up yet” and supports email/password only (`ledger_mobile/app/(auth)/sign-in.tsx`).
+- Web parity evidence that Google OAuth exists today: `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/Login.tsx` + `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts` (`signInWithGoogle()`).
 
 ### 5) Invite deep link → sign in/up → accept invite (server-owned)
 Deep link behavior:
@@ -145,6 +171,9 @@ Required behavior:
 - Verify membership:
   - attach a **bounded** listener to `accounts/{accountId}/members/{uid}` (or perform a cache-aware read first)
   - if membership is missing or disabled: show a “No access” UI and sign out
+
+Implementation status note:
+- `ledger_mobile` does not yet include an account context store/provider. This section defines required behavior that must be implemented before any account-scoped Firestore paths are safe to use.
 
 Constraints:
 
@@ -198,4 +227,15 @@ Failure modes (structured errors):
   - existing sessions can enter and view cached data
   - new sign-in and invite acceptance clearly require network
 - Account context is membership-gated and does not rely on unsafe “fallback account id” guessing.  
+
+## Parity evidence pointers (web app)
+
+The following web files define the behaviors this spec is grounded in (parity reference only; not 1:1 mobile implementation):
+
+- Auth safety timeout + auth lifecycle: `/Users/benjaminmackenzie/Dev/ledger/src/contexts/AuthContext.tsx`
+- Protected-route gating + spinner/login fallback: `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/ProtectedRoute.tsx`
+- Login methods (Google + email/password): `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/Login.tsx`
+- Invite accept (token check + timeout + local token persistence): `/Users/benjaminmackenzie/Dev/ledger/src/pages/InviteAccept.tsx`
+- OAuth callback token bridging: `/Users/benjaminmackenzie/Dev/ledger/src/pages/AuthCallback.tsx`
+- Invite helpers + Google OAuth implementation (Supabase): `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts`
 

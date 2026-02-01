@@ -88,14 +88,14 @@ Parity evidence:
 Inventory scope must include these actions (subject to permissions):
 - Bookmark toggle
 - Edit item
-- Duplicate item (inventory duplicates must remain disposition `inventory`)
+- Duplicate item (inventory duplicates must remain in Business Inventory scope: `projectId = null`)
 - Add to / change transaction; remove from transaction
 - Move to project (allocation)
-- Change status/disposition
+- Change status
 - Delete item (confirm)
 
 Parity evidence:
-- Observed in `src/pages/BusinessInventoryItemDetail.tsx` (`ItemActionsMenu` wiring + handlers; duplication sets disposition `inventory`).
+- Observed in `src/pages/BusinessInventoryItemDetail.tsx` (`ItemActionsMenu` wiring + handlers; duplication keeps item in Business Inventory scope).
 
 ### Bulk actions (list)
 Inventory scope must support selection and bulk actions:

@@ -35,7 +35,7 @@ This migration must preserve the web distinction:
 Parity evidence:
 - Move correction blocks transaction-attached items: `moveItemToBusinessInventory` in `src/services/inventoryService.ts` and UI enforcement in `src/pages/ItemDetail.tsx`
 - Canonical deallocation entrypoint: `integrationService.handleItemDeallocation` → `deallocationService.handleInventoryDesignation` in `src/services/inventoryService.ts`
-- Disposition → inventory triggers canonical deallocation: `updateDisposition` in `src/pages/InventoryList.tsx` and `src/pages/BusinessInventory.tsx`
+- Sell/deallocate action triggers canonical deallocation: item actions calling `integrationService.handleItemDeallocation` (e.g. `src/pages/InventoryList.tsx`, `src/pages/BusinessInventory.tsx`)
 
 ## Architecture constraints (must hold)
 
@@ -53,9 +53,9 @@ Multi-entity operations in this feature MUST be implemented as server-owned inva
 
 Required Firebase shape (conceptual):
 - A request-doc workflow (recommended default) that triggers a Cloud Function and executes a Firestore transaction:
-  - `INVENTORY_DEALLOCATE_TO_BUSINESS`
-  - `INVENTORY_ALLOCATE_TO_PROJECT`
-  - `INVENTORY_SELL_ITEM_TO_PROJECT`
+  - `ITEM_SALE_PROJECT_TO_BUSINESS`
+  - `ITEM_SALE_BUSINESS_TO_PROJECT`
+  - `ITEM_SALE_PROJECT_TO_PROJECT`
 
 Each function must:
 - Validate permissions (membership + role).
@@ -71,13 +71,21 @@ Collection shape (recommended; per `OFFLINE_FIRST_V2_SPEC.md`):
 - Inventory-scoped requests (optional, if you prefer BI as its own scope): `accounts/{accountId}/inventory/requests/{requestId}`
 
 Common request doc fields:
-- `type`: `"INVENTORY_DEALLOCATE_TO_BUSINESS" | "INVENTORY_ALLOCATE_TO_PROJECT" | "INVENTORY_SELL_ITEM_TO_PROJECT"`
+- `type`: `"ITEM_SALE_PROJECT_TO_BUSINESS" | "ITEM_SALE_BUSINESS_TO_PROJECT" | "ITEM_SALE_PROJECT_TO_PROJECT"`
 - `status`: `"pending" | "applied" | "failed"` (clients write only `"pending"`)
 - `createdAt`, `createdBy`
 - `appliedAt?`
 - `errorCode?`, `errorMessage?` (safe, non-sensitive)
 - `opId`: stable idempotency key for the *logical* user action
 - `payload`: minimal IDs + fields required for the invariant
+
+Legacy request-type mapping (web app parity):
+
+| Legacy name (older docs/web app) | Standardized name (this migration) |
+|---|---|
+| `INVENTORY_DEALLOCATE_TO_BUSINESS` | `ITEM_SALE_PROJECT_TO_BUSINESS` |
+| `INVENTORY_ALLOCATE_TO_PROJECT` | `ITEM_SALE_BUSINESS_TO_PROJECT` |
+| `INVENTORY_SELL_ITEM_TO_PROJECT` | `ITEM_SALE_PROJECT_TO_PROJECT` |
 
 Retry + idempotency rules (required):
 - **Default retry**: write a *new* request doc (new `requestId`) with the **same `opId`**.
@@ -86,16 +94,15 @@ Retry + idempotency rules (required):
   - if already failed, a new request with the same `opId` may retry depending on error type (policy must be explicit in implementation)
 
 Payload shapes (minimum required fields):
-- `INVENTORY_DEALLOCATE_TO_BUSINESS`:
+- `ITEM_SALE_PROJECT_TO_BUSINESS`:
   - `itemId`, `sourceProjectId`
-  - `disposition` (if UI allows override; else server sets)
   - `expected`: `{ itemProjectId, itemTransactionId? }` (conflict detection / precondition)
-- `INVENTORY_ALLOCATE_TO_PROJECT`:
+- `ITEM_SALE_BUSINESS_TO_PROJECT`:
   - `itemId`, `targetProjectId`
   - `inheritedBudgetCategoryId` (required; see `40_features/project-items/flows/inherited_budget_category_rules.md`)
   - optional: `space`, `notes`, `amount` (match parity fields if they exist)
   - `expected`: `{ itemProjectId, itemTransactionId? }`
-- `INVENTORY_SELL_ITEM_TO_PROJECT`:
+- `ITEM_SALE_PROJECT_TO_PROJECT`:
   - `itemId`, `sourceProjectId`, `targetProjectId`
   - `inheritedBudgetCategoryId` (required for the destination project attribution)
   - optional: `space`, `notes`, `amount`
@@ -115,7 +122,6 @@ User intent: “This item should be in Business Inventory.”
 Required behavior:
 - Block if item is tied to a transaction (canonical or non-canonical): user must move the transaction instead.
 - Update item to business inventory scope without creating a canonical sale transaction.
-- Append a lineage edge representing the move.
 
 Parity evidence:
 - Guard + error copy: `src/pages/ItemDetail.tsx` (`handleMoveToBusinessInventory`) and `src/components/items/ItemActionsMenu.tsx`
@@ -140,7 +146,7 @@ User intent: “Move this item into Project X.”
 
 Required behavior:
 - Ensure/update `INV_PURCHASE_<projectId>` and link the item to it.
-- Set item `projectId = <projectId>` and `inventoryStatus = allocated` (or equivalent).
+- Set item `projectId = <projectId>`.
 - Append lineage edge (from prior transaction or inventory → purchase transaction).
 
 Parity evidence:
@@ -169,6 +175,13 @@ Source of truth:
 
 Implementation note (Firebase):
 - Category choice must be part of the server-owned invariant for BI → Project operations so retries remain deterministic.
+
+Additional required guardrail (Firebase):
+- **Project → Business Inventory sell/deallocate-style operations MUST be blocked** if `item.inheritedBudgetCategoryId` is missing (canonical attribution determinism).
+- The **correction “Move to Business Inventory”** path may remain allowed when `inheritedBudgetCategoryId` is missing (it does not create canonical inventory transactions), but it is still blocked when the item is transaction-attached (see “Move: correction path”).
+
+User-facing requirement (required):
+- When blocked for this reason, UI must show the standard **disable reason + error toast** defined in `40_features/project-items/flows/inherited_budget_category_rules.md`.
 
 ## Lineage (required)
 Lineage is required to support:

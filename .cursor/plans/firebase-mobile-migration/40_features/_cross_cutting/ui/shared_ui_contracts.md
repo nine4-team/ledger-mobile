@@ -119,7 +119,7 @@ Define the canonical selection model and bulk-action lifecycle so bulk UX behave
 - **Suggested action set (scope-driven)**:
   - Assign to transaction
   - Set space (or clear)
-  - Set disposition
+  - Set status
   - Set SKU
   - Delete selected
 

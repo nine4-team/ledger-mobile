@@ -3,12 +3,13 @@
 Each non-obvious criterion includes **parity evidence** (web code pointer) or is labeled **intentional delta** (Firebase mobile requirement).
 
 ## NetworkStatus (connectivity banner)
-- [ ] **Offline banner shows when offline**: When `isOnline=false`, render a fixed top banner with copy “Offline - Changes will sync when reconnected”.  
+- [ ] **Offline banner shows when offline**: When `isOnline=false`, render a **compact, single-line** fixed top banner/strip with copy “Offline - Changes will sync when reconnected”.  
   Observed in `src/components/NetworkStatus.tsx`.
 - [ ] **No banner when online and not slow**: When `isOnline=true` and `isSlowConnection=false`, `NetworkStatus` renders nothing.  
   Observed in `src/components/NetworkStatus.tsx` (`shouldShow`).
-- [ ] **Slow connection banner**: When `isOnline=true` and `isSlowConnection=true`, render a fixed top banner with “Slow connection detected”.  
+- [ ] **Slow connection banner**: When `isOnline=true` and `isSlowConnection=true`, render a **compact, single-line** fixed top banner/strip with “Slow connection detected”.  
   Observed in `src/components/NetworkStatus.tsx`.
+- [ ] **Banner is non-intrusive**: The connectivity UI must remain visually small (no large/persistent panels) and must not block interaction.
 - [ ] **Connectivity snapshot is local and subscribable**: Network state is exposed via a subscription and can be read synchronously on startup (no “await network before render”).  
   Observed in `src/services/networkStatusService.ts` (`getNetworkStatusSnapshot`, `subscribeToNetworkStatus`) and `src/hooks/useNetworkState.ts`.
 - [ ] **Actual-online check (web parity)**: “Online” status is validated via a lightweight remote health ping (not only `navigator.onLine`).  
@@ -17,7 +18,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   **Intentional delta** (React Native platform constraint).
 
 ## SyncStatus (global sync banner)
-- [ ] **Banner visibility rules**: Banner renders if any are true: `pending>0`, scheduler is running, background/automatic sync is active, or there is a sync error.  
+- [ ] **Visibility rules**: `SyncStatus` renders (as a compact floating pill by default) if any are true: `pending>0`, scheduler is running, background/automatic sync is active, or there is a sync error.  
   Observed in `src/components/SyncStatus.tsx` (`shouldShowBanner`).
 - [ ] **Status precedence**: `error` > `syncing` > `waiting` > `queue`.  
   Observed in `src/components/SyncStatus.tsx` (`statusVariant` logic).
@@ -31,6 +32,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/components/SyncStatus.tsx`.
 - [ ] **Queue/waiting copy (offline)**: When pending and offline, show “Changes will sync when you're back online”.  
   Observed in `src/components/SyncStatus.tsx`.
+- [ ] **Non-error UI stays compact**: In `queue`/`waiting`/`syncing`, the default presentation should be a compact pill (tap may expand for details). Large/persistent banners are discouraged.
 
 ## RetrySyncButton (manual recovery)
 - [ ] **Retry warms prerequisites (best effort)**: If online and caches are `blocked` or `warming`, pressing Retry triggers prerequisites hydration first, but does not fail the whole retry if hydration fails.  
@@ -55,6 +57,6 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/components/BackgroundSyncErrorNotifier.tsx`.
 
 ## Architecture alignment (Firebase target)
-- [ ] **Sync status reflects Firestore + request-doc state**: The UI reflects queued Firestore writes + request-doc pending/applied/failed (and any scoped listener health if available), not a custom outbox/delta sync engine or broad “listen to everything” realtime subscriptions.  
+- [ ] **Sync status reflects Firestore + request-doc state**: The UI reflects queued Firestore writes + request-doc pending/applied/failed (and any scoped listener health if available), not a bespoke outbox/delta-sync engine or broad “listen to everything” realtime subscriptions.  
   **Intentional delta** required by `OFFLINE_FIRST_V2_SPEC.md`.
 

@@ -47,3 +47,6 @@ This folder defines the parity-grade behavior spec for Ledger’s **Business inv
 - Inventory transaction detail (shared detail screen, routed under business inventory):
   - `src/pages/TransactionDetail.tsx`
 
+Note:
+- These are **web parity sources**. In the Firebase mobile app, Business Inventory may have its own wrapper routes, but item detail + item form + transaction form + transaction detail must be the **shared Items/Transactions screens** configured by scope (see `feature_spec.md` and `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`).
+
