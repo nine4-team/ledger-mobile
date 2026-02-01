@@ -21,7 +21,7 @@ Scope of this pass:
 ### 1) Canonical `INV_*` attribution is item-driven, not transaction-category-driven
 
 - **Spec truth**
-  - Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) must be treated as “uncategorized” at the transaction level; attribution is **item-driven** via `item.inheritedBudgetCategoryId`.
+  - Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must be treated as “uncategorized” at the transaction level; attribution is **item-driven** via `item.inheritedBudgetCategoryId`.
   - Sources:
     - `40_features/project-items/feature_spec.md` (Rules 1–2; required `inheritedBudgetCategoryId`)
     - `40_features/project-transactions/feature_spec.md` (canonical rows treated as uncategorized; budget-category filters must join via items)

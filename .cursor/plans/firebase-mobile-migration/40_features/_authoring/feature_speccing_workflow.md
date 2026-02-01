@@ -18,6 +18,8 @@ You only come here when you want to create a *new* feature folder, create new pr
 - **Feature inventory + parity details**: `../feature_list.md` (includes an appendix with the observed existing-app inventory)
 - **Architecture constraints**: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence; scoped listeners; request-doc workflows for multi-doc correctness; optional derived search index)
 - **Shared module reuse rule (Items/Transactions)**: `../_cross_cutting/ui/shared_items_and_transactions_modules.md`
+- **Shared UI contracts (single canonical doc)**: `../_cross_cutting/ui/shared_ui_contracts.md`
+- **Shared UI update process**: `./shared_ui_update_process.md`
 
 ## Outputs (per feature)
 

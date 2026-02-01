@@ -13,25 +13,48 @@ This spec explicitly **deviates** from the current web implementation for canoni
 
 - **Budget category preset**: account-scoped category entity the user manages in Settings.
 - **Project category budgets**: per-project allocation docs under `projects/{projectId}/budgetCategories/{budgetCategoryId}` (one doc per preset category id).
-- **Design fee**: `project.designFeeCents` with special semantics (“received”, not “spent”).
+- **Pinned budget categories**: per-user per-project ordered list of pinned budget category ids.
+  - Source of truth contract: `20_data/data_contracts.md` → **Entity: ProjectPreferences**
+  - Primary use: drives the collapsed Budget view and Projects list budget preview subset.
+- **Fee category**: a budget category preset where `budgetCategory.metadata.categoryType === "fee"`.
+  - Fee categories have special semantics in the Budget UI: they are tracked as **received** (not spent).
+- **Excluded-from-overall category**: a budget category preset where `budgetCategory.metadata.excludeFromOverallBudget === true`.
+  - Excluded-from-overall categories are excluded from:
+    - “spent overall” totals
+    - the overall budget denominator
+  - Default: categories are included in overall rollups.
 - **Non-canonical transaction**: user-facing transaction where budget category attribution is transaction-driven via `transaction.budgetCategoryId` (Firestore).
-- **Canonical inventory transaction**: system row whose id begins with `INV_PURCHASE_`, `INV_SALE_`, `INV_TRANSFER_`.
+- **Canonical inventory transaction**: system row whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
+  - Note: “project → project” movement is modeled as a **two-phase** operation (`INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`), not a standalone “transfer” canonical transaction.
 
 Canonical working doc (source of truth):
 - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 
 ## Core model decisions (required)
 
-### 1) Design fee stays special
-- **Budget source**: `project.designFeeCents`
+### 1) Fee categories have special semantics
+- **Budget source**: the project’s per-category allocation for that category:
+  - `projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents`
 - **Progress semantics**: “received”, not “spent”
-- **Exclusion rule**: design fee is excluded from:
-  - category budget sums
-  - “spent overall” totals
-- **Stable identifier**: “design fee specialness” must be keyed by a stable identifier (slug/metadata), not a mutable display name.
-  - Intentional delta vs web: web uses `categoryName.includes('design') && includes('fee')` heuristics in `src/components/ui/BudgetProgress.tsx`.
+- **Stable identifier**: fee specialness is keyed by a stable, explicit type (`budgetCategory.metadata.categoryType === "fee"`), not by the category name string.
+  - Intentional delta vs web: web uses name heuristics in `src/components/ui/BudgetProgress.tsx`.
 
-### 2) Canonical inventory transactions must not require a user-facing budget category
+Mutual exclusivity invariant:
+- A category MUST NOT be both fee and itemized.
+- Enforced structurally by a single `categoryType` field (see `20_data/data_contracts.md`).
+
+### 2) Categories may be excluded from overall rollups
+Categories are included in overall rollups by default. A category is excluded only when:
+- `budgetCategory.metadata.excludeFromOverallBudget === true`
+
+Excluding a category removes it from:
+- “spent overall” totals
+- the overall budget denominator
+
+Note:
+- Fee categories are still categories; they may be excluded from overall via this same flag.
+
+### 3) Canonical inventory transactions must not require a user-facing budget category
 Canonical rows exist for inventory correctness (allocation / sale / deallocation), not for user budgeting.
 
 Recommendation (preferred):
@@ -40,7 +63,7 @@ Recommendation (preferred):
 Schema-compatibility fallback:
 - A hidden/internal “canonical system” category may exist, but **rollups must ignore it** for attribution.
 
-### 3) Canonical vs non-canonical attribution (the core deviation)
+### 4) Canonical vs non-canonical attribution (the core deviation)
 
 #### Non-canonical attribution (transaction-driven)
 - Budget category attribution comes from `transaction.budgetCategoryId`.
@@ -77,8 +100,6 @@ Web parity evidence:
 
 ### Inputs (Firestore cached reads; project-scoped)
 All rollups are computed from Firestore-cached reads within the active project scope:
-- Project:
-  - `project.designFeeCents`
 - Project category budgets:
   - `projects/{projectId}/budgetCategories/{budgetCategoryId}`
 - Budget category presets (account-scoped):
@@ -93,24 +114,29 @@ All amounts are treated as numbers with two-decimal currency semantics; rounding
 
 ### Transaction inclusion rules
 - Exclude `status === 'canceled'`.
-- Design fee transactions are excluded from “spent” totals and category budgets (they contribute only to Design Fee received; see below).
+- Overall spent excludes categories where `excludeFromOverallBudget === true` (including fee categories if they are marked excluded).
 
-### Overall “spent” (excluding design fee)
+### Overall “spent” (excluding excluded-from-overall categories)
 Overall spent is computed as:
 
-- Sum over all **non-canceled** transactions **excluding design fee**:
+- Sum over all **non-canceled** transactions excluding transactions whose category is marked `excludeFromOverallBudget === true`:
   - Purchases add
   - Returns subtract
+  - Canonical purchases add (inventory purchase increases “spent”)
   - Canonical sales subtract (inventory sale reduces “spent”)
+
+Note:
+- For canonical `INV_*` rows, the authoritative amount comes from linked item values (see “Spend per category (canonical inventory transactions)”) rather than `transaction.amountCents`.
 
 Web parity note:
 - Web currently uses:
   - `transactionType === 'Return'` as subtract
   - `transactionId.startsWith('INV_SALE_')` as subtract
-  - and excludes design fee by category-name heuristic (`BudgetProgress.calculateSpent`)
+  - and excludes “design fee” (web naming) by category-name heuristic (`BudgetProgress.calculateSpent`)
 
 Firebase migration requirement:
-- Identify design fee by stable identifier, not name matching.
+- Identify fee categories by explicit type, not name matching.
+- Identify excluded-from-overall categories by explicit boolean flag, not name matching.
 
 ### Category breakdown (budget category spend)
 
@@ -136,39 +162,42 @@ For each canonical inventory transaction:
 4) Apply canonical sign:
    - `INV_PURCHASE_*`: `+1`
    - `INV_SALE_*`: `-1`
-   - `INV_TRANSFER_*`: `0` impact on budget rollups unless/until transfer semantics are defined elsewhere.
+   - Transfers are represented by sale+purchase canonical rows (no separate transfer row).
 
 Important:
 - Canonical attribution must **not** consult `transaction.budgetCategoryId` even if populated (schema-compatibility fallback).
 
 ### Overall budget (budget denominator)
 Overall budget is computed as:
-- `sum(projectBudgetCategory.budgetCents)` over all per-project budget category docs for the active project (treat missing/NULL as 0), excluding design fee.
+- `sum(projectBudgetCategory.budgetCents)` over all per-project budget category docs for the active project (treat missing/NULL as 0), excluding categories where `excludeFromOverallBudget === true`.
 
 Note:
 - The legacy `project.budget` field (if present) must not be treated as authoritative if category budgets exist; overall rollups should be category-sum-driven.
   - Parity evidence: web computes overall as sum of category budgets in `BudgetProgress` (`overallFromCategories`).
 
 ### Budget tab UI behavior (high-level)
-- Default collapsed view focuses on “Furnishings” if present; “Show all budget categories” expands the full list and reveals “Overall Budget”.
-- When expanded, show per-category rows, Design Fee, then Overall Budget at the bottom.
+- **Collapsed**: show **only** the pinned budget category trackers (per-user per-project pins).
+  - If **no pins exist**, collapsed view shows **Overall Budget only** (deterministic fallback).
+- **Expanded**: show the full enabled category list (including fee trackers as applicable) plus the Overall Budget row.
+- Pin/unpin affordance: the user can pin/unpin categories from within the Budget UI (exact affordance is implementation-defined; the behavior is the contract).
 
 Parity evidence:
-- `src/components/ui/BudgetProgress.tsx` (toggle behavior, furnishings default, overall budget row placement)
+- `src/components/ui/BudgetProgress.tsx` (toggle behavior, overall budget row placement)
 
-## Design fee rollups (Budget tab)
+## Fee rollups (Budget tab)
 
-### Design fee received
-Design fee “received” is computed from a designated “Design Fee” tracker identity:
+### Fee received (per fee category)
+Fee “received” is computed for each fee category preset (each `budgetCategoryId` where `metadata.categoryType === "fee"`):
 
-- **Budget**: `project.designFeeCents`
-- **Received**: sum of non-canceled “design fee” transactions:
+- **Budget**: the per-project allocation for that category:
+  - `projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents` (treat missing/NULL as 0)
+- **Received**: sum of non-canceled transactions where `transaction.budgetCategoryId === budgetCategoryId`:
   - purchases add
   - returns subtract
-- **Remaining**: `designFeeBudget - received`
+- **Remaining**: `feeBudget - received`
 
 Stable identifier requirement:
-- The design fee tracker must be keyed by stable metadata (e.g., `budgetCategory.systemTag === 'design_fee'`) not by the category name string.
+- Fee categories are identified by `budgetCategory.metadata.categoryType === "fee"` (not by name matching).
 
 ## Accounting rollups (Accounting tab)
 

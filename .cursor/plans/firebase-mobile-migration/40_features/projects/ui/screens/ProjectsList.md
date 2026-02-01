@@ -16,7 +16,11 @@ Parity evidence: `src/App.tsx`.
 - **Primary dataset**: projects for `currentAccountId`.
   - Hydrate from local cache first to avoid empty flashes after restart.
   - Then reconcile from network when online.
-- **Secondary dataset (preview only)**: transactions used to compute per-project budget progress preview.
+- **Secondary dataset (preview only)**: data used to compute per-project budget progress preview (collapsed-subset preview).
+  - Transactions + items + budget category presets as needed (see `40_features/budget-and-accounting/feature_spec.md` rollup inputs).
+  - Per-user per-project **pinned budget categories**:
+    - `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}.pinnedBudgetCategoryIds`
+    - Used to determine which category trackers render in the preview (same subset as collapsed Budget tab).
 
 Parity evidence:
 - Projects hydration + cache use: `src/pages/Projects.tsx` (`hydrateProjectsListCache`, React Query read) + `src/utils/hydrationHelpers.ts`
@@ -42,7 +46,7 @@ Firebase migration note:
   - Grid of project cards:
     - optional main image
     - name + client name
-    - budget progress preview
+    - budget progress preview (Overall Budget + pinned categories)
     - “Open Project” button
 - Create modal: `ProjectForm`
 
@@ -110,6 +114,9 @@ Source: `OFFLINE_FIRST_V2_SPEC.md`.
 ## Performance notes
 - Expect project counts to be low (<500 typical), but render should be stable and not reflow excessively.
 - Budget progress preview should not require expensive per-card network calls; prefer a batched fetch or local-derived rollups.
+- Pinned categories preview must not require per-card expensive reads:
+  - Prefer a single bounded read (or listener) for the visible projects’ `projectPreferences` docs, or an approach that reads preferences on-demand and caches them by `projectId`.
+  - Avoid per-card reads that scale with list size when scrolling (doc-only constraint; implementation can vary).
 
 ## Parity evidence
 - `src/pages/Projects.tsx` (list UI, empty/loading, create modal trigger, open navigation)

@@ -41,7 +41,7 @@ Source of truth:
 Rules:
 
 - **Non-canonical**: display category name from `transaction.budgetCategoryId` and use it for itemization enablement.
-- **Canonical inventory** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`):
+- **Canonical inventory** (`INV_PURCHASE_*`, `INV_SALE_*`):
   - Treat the transaction row as **uncategorized** (recommend `transaction.budgetCategoryId = null`).
   - Display category as “Uncategorized” or omit the category row entirely (choose one UI pattern and keep consistent).
   - Any budgeting attribution related to canonical rows is **item-driven** via linked items’ `inheritedBudgetCategoryId` (no “canonical category” picker).

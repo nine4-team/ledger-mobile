@@ -44,12 +44,12 @@ This plan was written under a prior “sync engine” baseline (delta sync / `me
   - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
   - Each doc represents the project’s allocation for that preset category.
 
-### Design fee clarification (answering your question)
+### Fee category clarification (answering your question)
 
-- **Yes**: Design fee should be a budget category *preset* used as `transaction.budgetCategoryId` for Design Fee transactions.
+- **Yes**: Fee trackers should be budget category *presets* used as `transaction.budgetCategoryId` for fee-category transactions.
 - What’s “special” is rollup semantics, not the category’s display name.
-- Default stable identification approach (unless you later change it):
-  - `accounts/{accountId}/meta/accountPresets.designFeeCategoryId = <budgetCategoryId>`
+- Stable identification approach (preferred for this migration):
+  - `budgetCategory.metadata.categoryType === "fee"`
 
 ### Suggested doc shape for per-project budgets
 

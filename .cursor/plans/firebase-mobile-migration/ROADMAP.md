@@ -12,6 +12,7 @@ This is **not** a second workflow/process doc. The workflow is `40_features/_aut
 Practical note:
 - You don’t need `ROADMAP.md` to run a feature prompt pack chat.
 - You *do* use `ROADMAP.md` when planning the overall migration docs, deciding what to write next, or validating the directory structure.
+- You use `EXECUTION_PLAN.md` to decide **what to implement when**.
 
 ---
 
@@ -164,8 +165,10 @@ If we need “overview” documents in the future, put them under `40_features/_
 
 ## How the sync engine spec fits
 
-Treat `sync_engine_spec.plan.md` as the **Sync Engine spec** (conceptually “10_architecture/sync_engine_spec.md”).
-When adding other docs, **link to it** rather than duplicating its constraints/decisions.
+Canonical architecture source:
+- `OFFLINE_FIRST_V2_SPEC.md`
+
+If you encounter older docs that describe “outbox/delta sync/change-signal”, treat them as **historical reference** unless they are explicitly reaffirmed by `OFFLINE_FIRST_V2_SPEC.md` and the feature specs.
 
 ---
 

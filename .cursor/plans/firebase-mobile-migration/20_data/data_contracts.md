@@ -97,11 +97,6 @@ Required:
 
 Optional / nullable:
 - `description?: string | null`
-- `budgetCents?: number | null`
-  - Stored as integer cents.
-- `designFeeCents?: number | null`
-  - Stored as integer cents.
-- `defaultCategoryId?: string | null`
 - `mainImageUrl?: string | null`
   - Parity field: project cover image URL stored directly on the project.
 - `mainImageAttachmentId?: string | null`
@@ -116,6 +111,23 @@ Derived/denormalized (optional; must not be correctness-critical):
 - `totalValueCents?: number`
 
 Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
+
+Budgeting model (canonical; required for correctness):
+- Project budgeting is defined by per-category allocation docs (see **Entity: ProjectBudgetCategory** below).
+- “Fee” categories:
+  - are identified by `BudgetCategory.metadata.categoryType === "fee"` (see **Entity: BudgetCategory** below)
+  - use “received” rollup semantics (not “spent”) in the Budget UI
+- “Excluded from overall” categories:
+  - are identified by `BudgetCategory.metadata.excludeFromOverallBudget === true`
+  - are excluded from:
+    - “spent overall” totals
+    - the overall budget denominator
+  - default behavior: included (the flag is absent/false)
+- “Itemized” categories:
+  - are identified by `BudgetCategory.metadata.categoryType === "itemized"`
+  - enable the transaction “itemization” UI + tax inputs (see `40_features/project-transactions/**`)
+- Mutual exclusivity invariant:
+  - a category MUST NOT be both fee and itemized (enforced structurally by a single `categoryType` field)
 
 ### Firestore location
 
@@ -133,10 +145,6 @@ Table: `projects`
 Columns (recommended):
 - **identity**: `id`, `account_id`
 - **core**: `name`, `client_name`, `description`
-- **budgeting**:
-  - `budget_cents` (INTEGER)
-  - `design_fee_cents` (INTEGER)
-  - `default_category_id` (TEXT)
 - **images**:
   - `main_image_url` (TEXT)
   - `main_image_attachment_id` (TEXT)
@@ -150,12 +158,68 @@ Notes:
 
 ---
 
+## Entity: ProjectPreferences (per-user per-project)
+
+This entity captures **per-user UI preferences** for a specific project. These preferences are **not shared** project settings.
+
+Primary use cases:
+- **Pinned budget categories**: drive which budget trackers are shown in the collapsed Budget view.
+- **Projects list budget preview**: uses the same pinned subset as the collapsed Budget view (see `40_features/budget-and-accounting/**` and `40_features/projects/**`).
+
+Bootstrap requirement (Firebase migration; required):
+- For **every new project**, the system ensures **“Furnishings” is pinned by default**.
+  - Pins are **per-user per-project** (not shared project settings), so this means:
+    - the creator gets a seeded `ProjectPreferences` doc at project creation time, and
+    - other users get a `ProjectPreferences` doc created **lazily** the first time a surface needs it (e.g., Projects list preview or Budget tab), if they don’t already have one.
+      - The created doc uses `pinnedBudgetCategoryIds = [<furnishingsCategoryId>]` as its initial value.
+
+### Canonical fields (TypeScript / Firestore doc shape)
+
+Doc id:
+- `id = projectId`
+
+Required:
+- `accountId: string`
+- `userId: string`
+- `projectId: string`
+- `pinnedBudgetCategoryIds: string[]`
+  - Ordered list.
+  - UI constraint (recommended): cap to a small number (e.g. 3–5).
+
+Lifecycle/audit fields (recommended):
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
+
+### Firestore location (recommended)
+
+- `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}`
+
+### SQLite mapping (optional)
+
+Not required to persist to SQLite: Firestore-native offline persistence provides a local cache for these user preferences.
+
+If additional local persistence is desired for faster boot or cross-surface caching, store as a small table keyed by `(accountId, userId, projectId)`:
+- `account_id` (TEXT NOT NULL)
+- `user_id` (TEXT NOT NULL)
+- `project_id` (TEXT NOT NULL)
+- `pinned_budget_category_ids_json` (TEXT NOT NULL) (JSON array; ordered)
+- sync + local bookkeeping columns (per `local_sqlite_schema.md`)
+
+Primary key:
+- `(account_id, user_id, project_id)`
+
+---
+
 ## Entity: BudgetCategory (account preset)
 
 This is the account-wide **preset category definition** used by:
 
 - transaction category pickers (`transaction.budgetCategoryId`)
 - project budget setup (project-specific allocation docs reference these ids)
+
+Bootstrap requirement (Firebase migration; required):
+- New accounts (and newly joined members, when they first enter an account) must have a **seeded set of budget category presets** sufficient for the core app to function offline.
+- The seeded set must include **“Furnishings”**.
 
 ### Canonical fields (TypeScript / Firestore doc shape)
 
@@ -172,8 +236,23 @@ Required:
 
 Optional / nullable:
 
-- `metadata?: Record<string, any> | null`
-  - Examples used by specs: `itemizationEnabled`, `systemTag` (e.g. `design_fee`), etc.
+- `metadata?: BudgetCategoryMetadata | null`
+
+Where:
+
+- `BudgetCategoryMetadata`:
+  - `categoryType?: "standard" | "itemized" | "fee"`
+    - Default: `"standard"` when missing.
+    - `categoryType === "itemized"` enables transaction itemization + tax inputs.
+    - `categoryType === "fee"` enables “fee tracker” semantics (received, not spent) in budget rollups.
+    - Mutual exclusivity is structural: a category cannot be both fee and itemized.
+  - `excludeFromOverallBudget?: boolean`
+    - Default: `false` when missing.
+    - When `true`, this category is excluded from the “overall” rollups:
+      - overall spent
+      - overall budget denominator
+  - `legacy?: Record<string, any> | null`
+    - Escape hatch for pre-migration / legacy UI toggles; do not add new semantics here.
 
 Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
@@ -416,7 +495,7 @@ Completeness / rollup helpers (optional; denormalized):
 
 Canonical inventory transaction selectors (Roles v2 + queryability):
 - `isCanonicalInventory?: boolean`
-- `canonicalKind?: "INV_PURCHASE" | "INV_SALE" | "INV_TRANSFER" | null`
+- `canonicalKind?: "INV_PURCHASE" | "INV_SALE" | null`
 - `attributedCategoryIds?: Record<string, true> | null`
   - Server-maintained selector for canonical transactions only:
     - keys are non-null `item.inheritedBudgetCategoryId` values present among linked items
@@ -435,7 +514,7 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 Canonical inventory transactions are identified by id prefix:
 - `INV_PURCHASE_<projectId>`
 - `INV_SALE_<projectId>`
-- `INV_TRANSFER_*`
+  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
 
 Required attribution invariant:
 - **Non-canonical** transactions: category attribution is transaction-driven via `transaction.budgetCategoryId`.

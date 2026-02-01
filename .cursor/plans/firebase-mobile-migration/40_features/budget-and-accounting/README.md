@@ -6,7 +6,7 @@ This feature is **project-only**.
 
 ## Scope
 - Budget tab: per-category budget progress + overall budget progress
-- Design fee tracker: “received” progress (special semantics)
+- Fee tracker categories: “received” progress (special semantics)
 - Accounting tab: rollup cards (“owed to business”, “owed to client”) + links to Reports screens
 - All rollups computed from **locally cached Firestore data** (Firestore-native offline persistence) with deterministic canonical attribution (see below)
 

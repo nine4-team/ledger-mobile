@@ -1,153 +1,201 @@
 # Auth + invitations — Feature spec (Firebase mobile migration)
 
 ## Intent
-Establish a reliable authentication and account-context bootstrap that supports:
-- fast “already signed in” startup
-- explicit “you must sign in” gating when unauthenticated
-- invitation acceptance via tokenized links
+Deliver a mobile-native auth + invitation bootstrap that is consistent with:
 
-This feature must be compatible with the migration’s invariants (local-first UI and cost-controlled sync), but **auth itself is network-dependent** except when restoring an existing session.
+- Expo Router navigation (`app/_layout.tsx`, `app/index.tsx`, `app/(auth)/*`)
+- Firebase Auth persistence (native SDK via `@react-native-firebase/auth`)
+- Firestore-native offline baseline (cache-first reads + queued writes)
+- Security model: membership-gated access; server-owned invitation acceptance
 
-## Owned screens / routes
+This feature must provide:
 
-### Login (ProtectedRoute fallback)
-- **Web parity source**: `src/components/auth/Login.tsx`
-- **Rendered by**: `src/components/auth/ProtectedRoute.tsx`
+- fast “already signed in” startup (offline-capable when a prior session exists)
+- clear “requires connection” gating when unauthenticated and offline
+- invitation acceptance via tokenized deep links (no web-only callback routes)
 
-### Auth callback
-- **Route**: `/auth/callback`
-- **Web parity source**: `src/pages/AuthCallback.tsx`
+## Architecture alignment (non-negotiable)
 
-### Invite acceptance
-- **Route**: `/invite/:token`
-- **Web parity source**: `src/pages/InviteAccept.tsx`
+- **No web-router assumptions**: do not specify `/auth/callback` routes or “poll session” behavior. Mobile auth is “Firebase user exists” (native persistence), not “redirect callback route”.
+- **No client-written memberships**: the client never creates `accounts/{accountId}/members/{uid}` directly.
+- **Invite acceptance is server-owned**: performed via a callable Cloud Function (idempotent).
+- **Offline-first UX**: if local data exists, show it; auth/sign-in is the primary network-dependent exception.
 
-## Primary flows
+## Owned screens / navigation (Expo Router)
 
-### 1) App boot → resolve auth → enter app or show login
+Auth group screens (existing in the skeleton):
+
+- `app/(auth)/sign-in.tsx`: sign in (email/password; Google is a planned follow-up)
+- `app/(auth)/sign-up.tsx`: sign up (email/password)
+
+Auth group screens (to add for this feature):
+
+- `app/(auth)/invite/[token].tsx`: invite landing + acceptance flow (deep link entrypoint)
+  - Note: dynamic route is required so `myapp://invite/<token>` can open the correct screen.
+
+Root auth gating (existing in the skeleton):
+
+- `app/_layout.tsx`: global auth gate. If unauthenticated, routes into `(auth)`; if authenticated, routes into `(tabs)`.
+- `app/index.tsx`: initial redirect based on auth.
+
+## Data dependencies (Firebase)
+
+### Auth
+- Firebase Auth user identity: `uid`, `email`, `emailVerified` (if/when used).
+
+### Firestore security-critical documents
+- Membership doc: `accounts/{accountId}/members/{uid}`
+- Invite doc: `accounts/{accountId}/invites/{inviteId}`
+
+### Cloud Function (callable)
+Required callable:
+
+- `acceptInvite`
+  - Accepts an invite token and creates/updates membership server-side (see “Callable contract” below).
+
+## Primary flows (mobile)
+
+### 1) App boot → resolve auth → enter app or show auth
 Behavior:
-- App mounts providers and initializes offline services early.
-- Auth initializes by:
-  - subscribing to auth state changes
-  - calling `getSession()`
-  - resolving the global auth loading state once initialization completes
-- While auth is loading, protected routes render a spinner.
-- If auth initialization stalls, a **safety timeout** forces loading to resolve and the app falls back to Login.
 
-Parity evidence:
-- Boot/providers: `src/main.tsx`
-- Offline services init on app mount: `src/App.tsx` (initializes `offlineContext`, `offlineStore`, `operationQueue`, `syncScheduler`)
-- Auth initialization + 7s timeout + `timedOutWithoutAuth`: `src/contexts/AuthContext.tsx`
-- Protected gating (spinner then Login): `src/components/auth/ProtectedRoute.tsx`
+- On boot, `useAuthStore.initialize()` subscribes to `auth.onAuthStateChanged` and resolves `isInitialized`.
+- Root navigation redirects:
+  - authenticated → `/(tabs)`
+  - unauthenticated → `/(auth)/sign-in`
+- If unauthenticated and offline, show “requires connection” messaging on auth screens (sign-in cannot complete offline).
 
-### 2) Sign in with Google (OAuth redirect)
+Grounding in skeleton:
+
+- Boot + redirect gating: `app/_layout.tsx`, `app/index.tsx`
+- Auth store: `src/auth/authStore.ts`
+
+Required hardening (add to implementation when wiring real auth UX):
+
+- Add a **bounded auth init timeout** (e.g. 7s) so we never show an indefinite loading overlay if native auth hangs.
+  - On timeout, show the auth UI plus a “Retry” action (re-run `initialize()` or restart auth subscription).
+
+### 2) Sign in (email + password)
 Behavior:
-- User initiates Google sign-in.
-- OAuth redirect navigates to `/auth/callback`.
-- `/auth/callback` polls for session briefly, then navigates to `/` (Projects entry).
-- The actual auth state transition is handled by the auth listener in `AuthContext` (it will create/update the app user record after `SIGNED_IN`).
 
-Parity evidence:
-- Google sign-in initiation: `src/components/auth/Login.tsx` → `signIn()` from `AuthContext`
-- OAuth redirect setup: `signInWithGoogle()` in `src/services/supabase.ts` (redirectTo `/auth/callback`)
-- Callback polling and navigation: `src/pages/AuthCallback.tsx`
-- Fresh `SIGNED_IN` handling + user doc upsert: `src/contexts/AuthContext.tsx` (`onAuthStateChange`, `createOrUpdateUserDocument`, `getCurrentUserWithData`)
+- User enters email/password on `/(auth)/sign-in`.
+- Calls `useAuthStore.signIn(email, password)`.
+- Success is expressed as an Auth state change (user becomes non-null), and root routing moves the user into `/(tabs)`.
 
-### 3) Sign in with email + password
+Grounding in skeleton:
+
+- `app/(auth)/sign-in.tsx` → `useAuthStore.signIn`
+
+### 3) Sign up (email + password)
 Behavior:
-- User enters email/password on Login.
-- On successful sign-in, the AuthContext listener resolves the user document and app user state.
 
-Parity evidence:
-- Email/password login form validation + call: `src/components/auth/Login.tsx` → `signInWithEmailPassword()` (`src/services/supabase.ts`)
-- Listener-driven app user load: `src/contexts/AuthContext.tsx` (`getCurrentUserWithData()`)
+- User enters email/password on `/(auth)/sign-up`.
+- Calls `useAuthStore.signUp(email, password)`.
+- Root routing moves to `/(tabs)`.
 
-### 4) Invite acceptance (tokenized link) → Google or email/password signup
-Behavior:
-- Visiting `/invite/:token` verifies the token and displays signup options.
-- The invite token is persisted locally so it can survive an OAuth redirect.
+Notes:
 
-#### 4a) InviteAccept: token verification and state
-- If no token: show error (“Invalid invitation link”).
-- Verify invitation with a bounded timeout.
-- If invitation is not found/expired: show error state.
-- If valid:
-  - store `pendingInvitationToken` in local storage
-  - display invitation role indicator (admin vs member)
-  - pre-fill email for email/password signup
+- Email verification UX is **TBD**. If we require verified email for some operations, add a dedicated “Verify email” screen and gate account entry accordingly.
 
-Parity evidence:
-- Token fetch + timeout + error states + local storage write: `src/pages/InviteAccept.tsx`
-- Invitation token validation and expiry behavior: `getInvitationByToken()` in `src/services/supabase.ts`
+Grounding in skeleton:
 
-#### 4b) InviteAccept → Google signup path (OAuth)
-Behavior:
-- User taps “Sign up with Google”.
-- App initiates Google OAuth (redirect).
-- On `/auth/callback`, if `pendingInvitationToken` exists:
-  - fetch invitation details by token
-  - store `pendingInvitationData` (accountId, role, invitationId)
-  - clear `pendingInvitationToken` (but keep `pendingInvitationData` for user doc creation)
-- AuthContext `SIGNED_IN` handler creates the user record and **accepts the invitation** using `pendingInvitationData`.
+- `app/(auth)/sign-up.tsx` → `useAuthStore.signUp`
 
-Parity evidence:
-- OAuth initiation from InviteAccept: `src/pages/InviteAccept.tsx` → `signInWithGoogle()`
-- Callback token handoff: `src/pages/AuthCallback.tsx` (reads `pendingInvitationToken`, writes `pendingInvitationData`)
-- Consumption of `pendingInvitationData` in user doc creation: `createOrUpdateUserDocument()` in `src/services/supabase.ts`
+### 4) Sign in with Google (planned, mobile-native; no web callback)
+Planned behavior (phase 2):
 
-#### 4c) InviteAccept → email/password signup path (with email verification branch)
-Behavior:
-- Validations:
-  - email required
-  - password required and \(\ge 6\) chars
-  - confirm password matches
-- After calling email/password signup:
-  - if session is `null`, show “Check your email” verification screen (do not proceed)
-  - else navigate to `/auth/callback` so the invitation can be processed like OAuth
+- User taps “Continue with Google”.
+- App performs a mobile-native Google sign-in and exchanges the result for a Firebase credential.
+- Auth state change drives navigation; no `/auth/callback` route exists in the mobile app.
 
-Parity evidence:
-- Validation + signup + email verification branch: `src/pages/InviteAccept.tsx`
-- Email signup configuration (emailRedirectTo `/auth/callback`): `signUpWithEmailPassword()` in `src/services/supabase.ts`
+Implementation note:
 
-## Account context resolution (required for app entry)
-Behavior:
-- Account context loads after auth resolves.
-- If account can’t be fetched (offline or error), the app applies an offline fallback account id (if cached).
-- Offline context persistence is a join of `userId` (from AuthContext) and `accountId` (from AccountContext).
+- The current skeleton UI shows Google as “not set up yet” and supports email/password only.
 
-Parity evidence:
-- Account context load strategy + offline fallback: `src/contexts/AccountContext.tsx`
-- Offline context persistence rules: `src/services/offlineContext.ts` + updates from:
-  - `src/contexts/AuthContext.tsx` (persists `userId`)
-  - `src/contexts/AccountContext.tsx` (persists `accountId`)
+### 5) Invite deep link → sign in/up → accept invite (server-owned)
+Deep link behavior:
 
-## Offline-first behavior (mobile target)
+- Opening an invite link routes to `/(auth)/invite/<token>`.
+- The invite token is persisted locally so it survives app restarts and auth flows.
+  - Store `pendingInviteToken` in device KV storage (AsyncStorage is sufficient; SecureStore optional).
+
+Invite screen behavior:
+
+- If token is missing/empty: show “Invalid invitation link”.
+- If user is already authenticated:
+  - immediately attempt to accept the invite via callable `acceptInvite(token)`
+  - on success: navigate to `/(tabs)` (and select the account context implied by the invite)
+- If user is not authenticated:
+  - show sign-in / sign-up CTAs (navigate to `/(auth)/sign-in` or `/(auth)/sign-up`)
+  - after auth completes, the app must detect `pendingInviteToken` and attempt acceptance automatically.
+
+Network behavior:
+
+- Invite acceptance requires network (callable Function). If offline:
+  - show a clear offline message + retry.
+
+## Account context bootstrap (membership-gated)
+
+After auth resolves, the app must establish an `accountId` context that drives all Firestore paths.
+
+Required behavior:
+
+- Determine candidate `accountId`:
+  - **MVP assumption**: the app has a single “current account” (e.g. stored on a user profile doc like `users/{uid}.defaultAccountId`, or cached locally from the last successful session).
+  - Multi-account selection is **TBD** and should become an explicit “Choose account” screen if needed.
+- Verify membership:
+  - attach a **bounded** listener to `accounts/{accountId}/members/{uid}` (or perform a cache-aware read first)
+  - if membership is missing or disabled: show a “No access” UI and sign out
+
+Constraints:
+
+- Do not “guess” an account id while offline without a cached membership-backed source; prefer:
+  - Firestore cached membership doc, or
+  - locally cached `accountId` from a previously validated session.
+
+## Callable contract (invite acceptance)
+
+### `acceptInvite` (callable Function)
+Inputs:
+
+- `token: string`
+- optional `deviceInfo` (for diagnostics) and optional `profileDefaults` (if required by product)
+
+Server behavior (must be idempotent):
+
+- validate token (exists, not expired, not already used)
+- enforce entitlements (e.g. free tier user limits)
+- in a Firestore transaction/batch:
+  - create/update `accounts/{accountId}/members/{uid}` with the invited role
+  - mark invite as accepted/used (record `acceptedAt`, `acceptedByUid`)
+  - create any required user/profile defaults (server-owned)
+- return `{ accountId, role }` (minimum) so the client can set account context
+
+Failure modes (structured errors):
+
+- invalid/expired invite
+- invite already accepted
+- entitlement limit reached
+- permission denied (non-authenticated)
+
+## Offline-first behavior
 
 ### Auth while offline
-Policy:
-- **If a prior session is present** (Firebase Auth cached credentials), allow boot into the app and render local DB content.
-- **If no prior session is present**, block with “requires connection” messaging (sign-in cannot be completed offline).
 
-Parity evidence (web equivalent concept):
-- Session persistence in local storage: `src/services/supabase.ts` (persistSession + localStorage storageKey)
-- Protected-route fallback when unauthenticated: `src/components/auth/ProtectedRoute.tsx`
+- **If a prior Firebase session exists** (cached credentials): allow boot into the app and render cached Firestore content (subject to membership gating from cache).
+- **If no prior session exists**: show “requires connection” on sign-in/sign-up and provide a retry action.
 
-### Restart behavior
-- On restart, auth should rehydrate session and avoid a long loading spinner if credentials exist.
-- If auth cannot resolve within the safety timeout, fall back to login to avoid indefinite loading.
+### Invite acceptance while offline
 
-Parity evidence:
-- Auth init with safety timeout: `src/contexts/AuthContext.tsx`
+- Allow the invite screen to render (token parsed + persisted), but block acceptance until online.
 
-## Firebase migration notes (intentional deltas / requirements)
-- Replace Supabase Auth with Firebase Auth (Google + email/password).
-- Replace web redirect callback with mobile-appropriate OAuth/deep-link handling. The behavioral contract remains:
-  - “Complete sign-in…” interstitial
-  - bounded wait for session availability
-  - invitation token bridging across auth redirect
-- Invitation acceptance should be server-owned:
-  - validate token
-  - create membership / user profile defaults
-  - mark invitation accepted
-  - be idempotent (safe retries)
+## Acceptance criteria (implementation-ready)
+
+- App has **no** web-only callback routes (no `/auth/callback`).
+- Auth bootstrap uses native Firebase Auth persistence and gates navigation via Expo Router.
+- Invite links open `/(auth)/invite/<token>` and can be accepted after signing in/up.
+- `acceptInvite` is callable, server-owned, and idempotent; clients do not write membership docs directly.
+- Offline behavior is explicit:
+  - existing sessions can enter and view cached data
+  - new sign-in and invite acceptance clearly require network
+- Account context is membership-gated and does not rely on unsafe “fallback account id” guessing.  
 

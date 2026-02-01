@@ -16,7 +16,7 @@ Source of truth:
 Rules:
 
 - This form is for **user-facing (non-canonical)** transactions.
-- **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) are system-generated and should be treated as **read-only** (recommended: hide/disable “Edit” entrypoint for canonical rows).
+- **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`) are system-generated and should be treated as **read-only** (recommended: hide/disable “Edit” entrypoint for canonical rows).
 
 ## Inputs
 - Route params:
@@ -34,13 +34,14 @@ Rules:
   - Project name (for labeling and media path hints; only when `scope === 'project'`)
   - Budget categories (for category picker)
   - Vendor defaults (for source picker)
-  - Account default category (initial default)
   - Transaction (edit only)
   - Transaction items (edit only; and optionally create form if itemization enabled)
 - Derived view models:
   - `itemizationEnabled` derived from selected category
+    - Recommended: `itemizationEnabled = (budgetCategory.metadata.categoryType === "itemized")`
+    - Mutual exclusivity: a category cannot be both `fee` and `itemized` because `categoryType` is a single field (see `20_data/data_contracts.md`).
 - Cached metadata dependencies:
-  - Budget categories, vendor defaults, account presets (default category)
+  - Budget categories, vendor defaults
 
 ## Writes (local-first)
 
@@ -102,7 +103,7 @@ Rules:
   - Required and must be positive.
 - **Tax (simplified; no presets)**:
   - **No tax presets exist**. Tax is captured inline on the transaction.
-  - **Visibility rule**: if the selected budget category is **not itemized** (category metadata lacks the itemization flag; i.e. it does not have the `itemize`/`itemizationEnabled` property), do **not** show tax inputs and treat tax as **None**.
+  - **Visibility rule**: tax inputs are shown only when the selected budget category is **itemized** (recommended: `budgetCategory.metadata.categoryType === "itemized"`). Otherwise, do **not** show tax inputs and treat tax as **None**.
   - When shown, tax has 3 selectable modes (plus an optional amount override):
     - **None (default)**: no tax is applied; tax fields are cleared.
     - **Tax rate**: user enters a tax rate percent. The UI derives:
@@ -155,7 +156,6 @@ Rules:
 
 ## Parity evidence
 - Create prerequisites gate + banner: Observed in `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`).
-- Default category (online vs cached): Observed in `src/pages/AddTransaction.tsx` (`getDefaultCategory`, `getCachedDefaultCategory`).
 - Vendor defaults (online vs cached): Observed in `src/pages/AddTransaction.tsx` (`getAvailableVendors`, `getCachedVendorDefaults`).
 - Tax (intentional delta): tax presets are removed; the form captures tax via inline fields (rate/subtotal/tax amount) instead of a preset picker.
 - Edit permission gating: Observed in `src/pages/EditTransaction.tsx` (`hasRole(UserRole.USER)`).

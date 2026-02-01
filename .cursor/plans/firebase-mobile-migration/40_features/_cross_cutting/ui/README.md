@@ -1,6 +1,6 @@
 # Cross-cutting UI: style lanes + starter surfaces
 
-This folder exists to keep **UI contracts and conventions** centralized as we build the Ledger mobile app on top of the skeleton app in this repo.
+This folder exists to keep **UI contracts and conventions** centralized as we build the Ledger Mobile app in this repo.
 
 ## Style lane (non-negotiable)
 
@@ -22,7 +22,7 @@ This folder exists to keep **UI contracts and conventions** centralized as we bu
   - `surface` (card helpers, overflow helpers)
   - `textEmphasis` (section labels, value emphasis, etc.)
 
-## Skeleton “starter surfaces” you can build on
+## Starter surfaces you can build on
 
 These are intentionally small but give the team stable lanes to slot into:
 
@@ -47,6 +47,34 @@ When a behavior/UI contract is “parity-critical”, feature specs should cite 
 ## Related cross-cutting specs
 
 - Shared Items + Transactions modules: `shared_items_and_transactions_modules.md`
-- Image gallery / lightbox contract: `components/image_gallery_lightbox.md`
-- Offline media storage guardrails: `components/storage_quota_warning.md`
+- Shared UI contracts (single canonical doc): `shared_ui_contracts.md`
+- UI parity inventory matrix (track gaps): `ui_parity_inventory_matrix.md`
+
+## Cross-cutting UI contracts (index)
+
+The web app we’re migrating from has a dedicated reusable UI layer:
+
+- `ledger/src/components/ui/*`
+
+We do **not** need to spec every component up front, but we do need a grounded backlog so this folder doesn’t feel arbitrary.
+
+### Where shared UI behavior is specified (canonical)
+
+- **All shared UI behavior contracts live in one place**:
+  - `shared_ui_contracts.md`
+- Use the **UI parity inventory matrix** to track what’s missing / in-progress:
+  - `ui_parity_inventory_matrix.md`
+
+### High-value contracts (already present)
+
+All shared UI contract content is centralized in:
+
+- `shared_ui_contracts.md`
+
+### Validation rule (so we don’t write fake docs)
+
+Treat every contract section in `shared_ui_contracts.md` as **tentative until a feature spec references it**.
+
+- When you first reference a contract from a feature spec, sanity-check it against parity behavior (web) and add missing edge cases.
+- If something turns out not to be reused (or not worth sharing), move the contract back into the owning feature spec and leave a short redirect note.
 

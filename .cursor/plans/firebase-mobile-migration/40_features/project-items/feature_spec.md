@@ -59,9 +59,9 @@ A system-generated inventory transaction whose id is one of:
 
 - `INV_PURCHASE_<projectId>`
 - `INV_SALE_<projectId>`
-- `INV_TRANSFER_*`
+- (“project → project” is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`; there is no standalone “transfer” canonical transaction.)
 
-These rows exist for inventory correctness (allocation/sale/transfer mechanics) and should not require the user to set a budget category.
+These rows exist for inventory correctness (allocation/sale mechanics) and should not require the user to set a budget category.
 
 Parity evidence (web):
 
@@ -82,7 +82,7 @@ Source of truth (canonical working doc):
 
 ### Rule 2 — Canonical inventory attribution is item-driven
 
-- For **canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`), budget-category attribution is **not** read from the canonical transaction row.
+- For **canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`), budget-category attribution is **not** read from the canonical transaction row.
 - Instead, attribution is derived by grouping linked items by each item’s `inheritedBudgetCategoryId`.
 
 Implications:
@@ -125,7 +125,7 @@ Source of truth:
 
 2) Linking item to a **canonical** inventory transaction must not “invent” attribution:
 
-- Linking to `INV_PURCHASE_*` / `INV_SALE_*` / `INV_TRANSFER_*` must **not** update `item.inheritedBudgetCategoryId`.
+- Linking to `INV_PURCHASE_*` / `INV_SALE_*` must **not** update `item.inheritedBudgetCategoryId`.
   - Canonical rows are system-owned mechanics; attribution remains item-driven and is defined by `inheritedBudgetCategoryId` already on the item.
 
 3) Unlinking from a transaction does **not** clear `item.inheritedBudgetCategoryId`:

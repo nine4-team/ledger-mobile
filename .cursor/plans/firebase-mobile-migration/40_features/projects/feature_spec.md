@@ -54,6 +54,9 @@ Firebase migration behavior (required delta: entitlements gating):
   - read `entitlements/current` for `accountId`
   - enforce `projectCount < maxProjects` (either via query or server-maintained counter)
   - create project doc and update `meta/sync` once
+  - seed pinned budget categories for the creator (recommended):
+    - create `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}` with `pinnedBudgetCategoryIds = [<furnishingsCategoryId>]`
+    - Source of truth: `20_data/data_contracts.md` → `ProjectPreferences`
 
 Offline policy choice (explicit):
 - **Chosen policy (intentional delta vs current web)**: *Option A* — **block over-limit creation while offline**.

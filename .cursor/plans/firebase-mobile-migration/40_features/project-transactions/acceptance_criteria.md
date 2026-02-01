@@ -12,9 +12,9 @@ Shared-module requirement:
   Observed in `src/pages/TransactionsList.tsx` (list item markup + `formatCurrency`, `formatDate`).
 - [ ] **Canonical title mapping**: canonical transaction IDs display special titles (inventory purchase/sale).  
   Observed in `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`).
-- [ ] **Canonical rows are uncategorized (new model)**: canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) must not require a user-facing category selection and should be treated as uncategorized on the transaction row (recommended: `transaction.budgetCategoryId = null`).  
+- [ ] **Canonical rows are uncategorized (new model)**: canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must not require a user-facing category selection and should be treated as uncategorized on the transaction row (recommended: `transaction.budgetCategoryId = null`).  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.  
-  **Intentional delta** vs current web: web may assign default category fields on canonical rows (`src/services/inventoryService.ts`).
+  **Intentional delta** vs current web: web may assign category fields on canonical rows (`src/services/inventoryService.ts`).
 - [ ] **Sort modes**: supports sorting by purchase date, created date, source, amount, plus stable tie-breaker to avoid jitter.  
   Observed in `src/pages/TransactionsList.tsx` (`TRANSACTION_SORT_MODES`, `sortTransactionsByMode`).
 - [ ] **Search behavior**: search matches title/source/type/notes and amount-ish numeric strings.  
@@ -63,8 +63,6 @@ Shared-module requirement:
   Observed in `src/pages/AddTransaction.tsx` (guard `!currentAccountId && !isOwner()`).
 - [ ] **Default transaction date**: defaults to today (YYYY-MM-DD).  
   Observed in `src/pages/AddTransaction.tsx` (initial `transactionDate` state).
-- [ ] **Default category behavior**: attempts to load account default category online; falls back to cached default category offline.  
-  Observed in `src/pages/AddTransaction.tsx` (`getDefaultCategory`, `getCachedDefaultCategory`).
 - [ ] **Offline prerequisites gate**: submission is blocked unless metadata caches are ready; banner is shown.  
   Observed in `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`, `submitDisabled = ... || !metadataReady`).
 - [ ] **Validation**: required fields include source, `budgetCategoryId`, amount (>0).  
@@ -75,20 +73,20 @@ Shared-module requirement:
   - User can enter a **tax rate** (%) and the UI derives subtotal + tax amount.
   - User can select **Calculate from subtotal**; entering a subtotal derives tax amount + tax rate; validate `subtotal > 0` and `subtotal <= total amount`.
   - User can optionally enter a **tax amount** directly; UI back-calculates tax rate; validate `taxAmount >= 0` and `taxAmount < total amount`.
-  - **Visibility rule**: if the selected budget category is not itemized (category metadata lacks `itemize`/`itemizationEnabled`), tax inputs are hidden and tax is treated as None.
+- **Visibility rule**: tax inputs are shown only when the selected category is **itemized** (recommended: `budgetCategory.metadata.categoryType === "itemized"`). Otherwise, tax inputs are hidden and tax is treated as None.
 - [ ] **Vendor source selection**: source selection offers vendor defaults plus “Other” custom source input.  
   Observed in `src/pages/AddTransaction.tsx` (`availableVendors`, `isCustomSource`).
 - [ ] **Receipts upload**: can attach up to 5 receipts; accepted types include images + PDF; offline placeholder URLs are permitted.  
   Observed in `src/pages/AddTransaction.tsx` (`ImageUpload acceptedTypes`, `OfflineAwareImageService.uploadReceiptAttachment`).
 - [ ] **Other images upload**: can attach up to 5 other images; offline placeholders are permitted.  
   Observed in `src/pages/AddTransaction.tsx` (`ImageUpload maxImages`, `OfflineAwareImageService.uploadOtherAttachment`).
-- [ ] **Itemization conditional**: itemization list renders only when enabled for the selected category.  
+- [ ] **Itemization conditional**: itemization list renders only when enabled for the selected category (recommended: `categoryType === "itemized"`).  
   Observed in `src/pages/AddTransaction.tsx` (`getItemizationEnabled`).
 
 ## Edit transaction
 - [ ] **Permission gating**: user must have role USER or higher to edit.  
   Observed in `src/pages/EditTransaction.tsx` (`hasRole(UserRole.USER)` guard).
-- [ ] **Canonical transactions are not editable (recommended)**: editing is disabled/hidden for canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) to prevent introducing a user-facing “canonical category” concept and to preserve system-owned mechanics.  
+- [ ] **Canonical transactions are not editable (recommended)**: editing is disabled/hidden for canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) to prevent introducing a user-facing “canonical category” concept and to preserve system-owned mechanics.  
   **Intentional delta** vs current web: the web UI exposes Edit for all transactions (`src/components/transactions/TransactionActionsMenu.tsx`).
 - [ ] **Hydration behavior**: attempts to hydrate from cache first, then fetch latest transaction for attachments correctness.  
   Observed in `src/pages/EditTransaction.tsx` (`hydrateTransactionCache`, “Always fetch the latest transaction so attachments stay in sync”).

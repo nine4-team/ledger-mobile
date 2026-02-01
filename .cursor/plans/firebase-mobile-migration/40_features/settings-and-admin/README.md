@@ -8,7 +8,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Settings** a
   - View current user profile info (name/email/role)
   - Business profile (admin-gated): update business name + upload/update business logo
 - Presets tab (admin-gated):
-  - Budget categories manager (create/edit/archive/unarchive, reorder, account-wide default category, itemization toggle)
+  - Budget categories manager (create/edit/archive/unarchive, reorder, itemization toggle)
   - Vendor defaults manager (10 slots; edit/clear; reorder)
   - Space templates manager (create/edit/archive/unarchive; reorder; checklists editor)
 - Users tab (admin/owner-gated):
@@ -35,6 +35,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Settings** a
 - Auth + invitations (acceptance + protected routing): `40_features/auth-and-invitations/README.md`
 - Offline architecture constraints (Firestore-native offline persistence + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Storage quota warning + offline upload gating (shared guardrail): `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
+- Billing + entitlements (free tier user limit): `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
 
 ## Parity evidence (web sources)
 - Settings screen + tab gating: `src/pages/Settings.tsx`

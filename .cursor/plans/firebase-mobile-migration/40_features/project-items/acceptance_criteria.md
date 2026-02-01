@@ -14,7 +14,7 @@ Shared-module requirement:
 ## A) Canonical vs non-canonical attribution rules
 
 - **A1 (non-canonical)**: For non-canonical (user-facing) transactions, budget attribution uses `transaction.budgetCategoryId`.
-- **A2 (canonical inventory)**: For canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`), budget attribution is **item-driven**:
+- **A2 (canonical inventory)**: For canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`), budget attribution is **item-driven**:
   - Group linked items by `item.inheritedBudgetCategoryId`
   - Attribute amounts to each category group using the canonical item value rules for that flow
 - **A3 (no user-facing canonical category)**: Canonical inventory transactions must not require a user-facing category selection. Canonical rows should have `budgetCategoryId = null` and must be treated as uncategorized for user-driven attribution.

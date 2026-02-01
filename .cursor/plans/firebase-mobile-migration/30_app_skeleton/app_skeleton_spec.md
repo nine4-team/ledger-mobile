@@ -1,4 +1,4 @@
-# App Skeleton Spec (Expo RN + Firebase, Local-First)
+# App Foundation Spec (Expo RN + Firebase, Local-First)
 
 This spec defines the reusable “starter app” foundation that all features will sit on:
 
@@ -9,7 +9,7 @@ This spec defines the reusable “starter app” foundation that all features wi
 - global UX patterns (offline banner, sync status, retry, conflicts)
 - logging + error boundaries
 
-This skeleton must enforce the invariants described in:
+This app foundation must enforce the invariants described in:
 
 - [`../10_architecture/target_system_architecture.md`](../10_architecture/target_system_architecture.md)
 - [`../10_architecture/offline_first_principles.md`](../10_architecture/offline_first_principles.md)
@@ -128,7 +128,7 @@ Outbox flush happens asynchronously.
 
 ### Scope sync lifecycle
 
-Public APIs the app skeleton uses:
+Public APIs the app foundation uses:
 
 - `startScopeSync(scope)`
   - scope is either `{ type: "project", id: projectId }` or `{ type: "inventory" }`
@@ -256,9 +256,9 @@ Log structured events for:
 
 ---
 
-## Non-goals (for the skeleton)
+## Non-goals (for the app foundation)
 
 - Perfect background sync on iOS (best-effort only)
 - Complex per-project ACLs (account-wide membership first)
-- Full pixel-parity with web (skeleton defines infra + global patterns)
+- Full pixel-parity with web (this doc defines infra + global patterns)
 

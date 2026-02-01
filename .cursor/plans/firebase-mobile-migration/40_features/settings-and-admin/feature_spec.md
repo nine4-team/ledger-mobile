@@ -39,8 +39,21 @@ Open Settings → Presets → choose one:
   - Create/edit category (name required)
   - Archive/unarchive categories
   - Reorder categories by drag
-  - Toggle per-category “itemization enabled”
-  - Set account-wide default transaction category
+  - Set per-category type (drives behavior):
+    - `standard` (default)
+    - `itemized` (enables itemization UI + tax inputs)
+    - `fee` (enables “fee tracker” received semantics in budgets)
+    - Mutual exclusivity: a category cannot be both `fee` and `itemized` because type is a single field
+  - Toggle “exclude from overall budget” (default: included)
+
+Account bootstrap requirement (Firebase migration; required):
+- When a **new account is created** (or when a new member first joins an account), the system must ensure the account has a **seeded set of budget category presets** sufficient for the core app to function.
+- The seeded presets must include **“Furnishings”** as a budget category preset.
+- This migrated app has **no category-defaulting concept** used for transaction entry or UI selection.
+- The only “what shows up first” behavior for budget progress trackers is driven by **pinned budget categories** (per-user per-project preferences; see `20_data/data_contracts.md` → `ProjectPreferences`).
+  - For **every new project**, the system ensures **“Furnishings” is pinned by default**:
+    - seed the creator’s `ProjectPreferences` doc at project creation time
+    - create other users’ `ProjectPreferences` docs lazily when a UI surface needs it (Projects list preview / Budget tab), if missing
 
 Parity evidence: `src/components/BudgetCategoriesManager.tsx`.
 
@@ -64,6 +77,7 @@ Parity evidence: `src/components/spaces/SpaceTemplatesManager.tsx`.
 - Create invitation link (email + role selection).
 - Link is copied to clipboard automatically; pending invitations show copy action.
 - Team list shows users and role badges.
+ - Invitation creation is entitlement-gated (free tier allows a single user per account).
 
 Parity evidence: `src/components/auth/UserManagement.tsx`.
 

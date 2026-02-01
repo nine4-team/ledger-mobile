@@ -44,10 +44,21 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
   - Observed in `src/components/BudgetCategoriesManager.tsx` (`archiveCategory`, `unarchiveCategory`).
 - [ ] Admin can **reorder active categories by drag** and order is persisted.
   - Observed in `src/components/BudgetCategoriesManager.tsx` (`handleDrag*`, `setBudgetCategoryOrder`).
-- [ ] Admin can **toggle itemization enabled** for a category with an explanatory tooltip.
-  - Observed in `src/components/BudgetCategoriesManager.tsx` (`handleToggleItemization`, `getItemizationEnabled`).
-- [ ] Admin can set an **account-wide default transaction category** and save it.
-  - Observed in `src/components/BudgetCategoriesManager.tsx` (`getDefaultCategory`, `setDefaultCategory`).
+- [ ] Admin can **set the category type** (standard / itemized / fee) with an explanatory tooltip.
+  - `itemized` enables itemization UI + tax inputs.
+  - `fee` enables “fee tracker” received semantics in budget rollups.
+  - Mutual exclusivity: cannot be both fee and itemized (`BudgetCategory.metadata.categoryType` is a single field).
+- [ ] Admin can **toggle “exclude from overall budget”** for a category.
+  - Default: included in overall rollups.
+  - When excluded, the category is excluded from:
+    - overall spent
+    - overall budget denominator
+- [ ] **Account bootstrap (required)**: when a new account is created (and when a new member first joins an account), the system ensures budget category presets are present and usable.
+  - The seeded preset set includes **“Furnishings”**.
+  - This migrated app has **no category-defaulting concept**.
+  - For **every new project**, the system ensures **“Furnishings” is pinned by default**:
+    - seed the creator’s `ProjectPreferences` doc at project creation time
+    - create other users’ `ProjectPreferences` docs lazily when a UI surface needs it (Projects list preview / Budget tab), if missing
 
 ### Vendor defaults
 - [ ] Admin can **view and edit 10 vendor slots** (freeform text) and save per-slot.
@@ -72,6 +83,7 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
   - Observed in `src/pages/Settings.tsx` and `src/components/auth/UserManagement.tsx` (`canManageUsers`).
 - [ ] Admin/owner can **create an invitation link** (email + role).
   - Observed in `src/components/auth/UserManagement.tsx` (`createUserInvitation`).
+- [ ] **Invitation creation is entitlement-gated**: if `userCount >= limits.maxUsers`, the invite is blocked and upgrade messaging is shown (free tier max users = 1).
 - [ ] The invitation link is **copied to clipboard** and confirmation feedback is shown.
   - Observed in `src/components/auth/UserManagement.tsx` (`navigator.clipboard.writeText`, `copiedToken`).
 - [ ] Pending invitations are displayed with **copy link** affordance.

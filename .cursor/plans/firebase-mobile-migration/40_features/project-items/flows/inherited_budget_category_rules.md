@@ -9,7 +9,8 @@ Goal: make it unambiguous **where `inheritedBudgetCategoryId` comes from**, **wh
 ## Definitions
 
 - **User-facing (non-canonical) transaction**: a normal transaction whose budget category is set by the user (`transaction.budgetCategoryId`).
-- **Canonical inventory transaction**: a system-generated transaction whose id begins with `INV_PURCHASE_`, `INV_SALE_`, or `INV_TRANSFER_`.
+- **Canonical inventory transaction**: a system-generated transaction whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
+  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
 
 Canonical working doc (source of truth):
 

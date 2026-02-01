@@ -12,7 +12,9 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Empty state**: If there are zero projects, show an empty state with “Create Project” CTA.  
   Observed in `src/pages/Projects.tsx`.
 - [ ] **List UI**: Projects render in a grid with name + client name + budget preview, and optional main image.  
-  Observed in `src/pages/Projects.tsx` and `src/components/ui/BudgetProgress`.
+  Budget preview shows **Overall Budget + pinned budget categories** (per-user per-project pins; same subset as collapsed Budget tab).  
+  Observed in `src/pages/Projects.tsx` and `src/components/ui/BudgetProgress`.  
+  **Intentional delta**: preview subset is per-user pinned categories, not a project-level “single default/featured category”.
 - [ ] **Open project**: “Open Project” navigates into the project shell (Items tab).  
   Observed in `src/pages/Projects.tsx` (`projectItems(project.id)`).
 - [ ] **Offline hydration**: Projects list hydrates from local cache before network fetch to avoid empty flash after restart.  
@@ -31,6 +33,9 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `projectService.createProject` in `src/services/inventoryService.ts`.
 - [ ] **Entitlements enforcement (Firebase)**: Project creation is server-enforced by a callable Function `createProject(...)`; direct client creates are disallowed.  
   **Intentional delta** required by `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`.
+- [ ] **Pinned categories seeded for new projects (required)**: on successful project creation, the system seeds pinned budget categories so **“Furnishings” is pinned by default** for the creator’s project preferences (`ProjectPreferences.pinnedBudgetCategoryIds`).  
+  Note: pins are per-user per-project; for other users, create `ProjectPreferences` lazily when a UI surface needs it (Projects list preview / Budget tab), if missing.  
+  Source of truth: `20_data/data_contracts.md` → `ProjectPreferences`.
 - [ ] **Offline policy for entitlements (Firebase)**: Over-limit project creation is blocked while offline; user is prompted to go online/upgrade.  
   **Intentional delta** (defined in `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`).
 

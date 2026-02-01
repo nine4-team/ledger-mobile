@@ -37,11 +37,11 @@ Prompt packs:
 Create 3 slices so separate AI dev chats can implement/validate in parallel:
 
 - Slice A: rollup math + Firestore query/join shape + canonical item-driven attribution
-- Slice B: design fee stable identity + category metadata strategy
+- Slice B: fee category identity + category metadata strategy (`categoryType`)
 - Slice C: accounting rollups + report entrypoints wiring
 
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
 - Canonical attribution is explicitly item-driven and ignores canonical transaction category fields.
-- Design fee specialness is keyed by a stable identifier.
+- Fee tracker specialness is keyed by explicit category metadata (`categoryType === 'fee'`).
 - Offline behavior is explicit (computed from Firestore-cached data via Firestore-native offline persistence; no network required to render last-known data).

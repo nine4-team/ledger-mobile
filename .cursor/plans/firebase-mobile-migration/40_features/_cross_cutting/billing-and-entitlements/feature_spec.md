@@ -24,6 +24,7 @@ It is intentionally **provider-aware** (RevenueCat) but **provider-agnostic at t
   - **maxProjects = 1** (per account)
   - **maxItems = 20**
   - **maxTransactions = 5**
+  - **maxUsers = 1**
 - Allow upgrade to **Pro** that increases/removes limits.
 - Enforce limits **server-side** (clients cannot bypass).
 - Provide predictable UX offline (clear messaging; no “mystery failures”).
@@ -73,6 +74,7 @@ Recommended fields (v1):
   - `maxProjects: number`
   - `maxItems: number`
   - `maxTransactions: number`
+  - `maxUsers: number`
 - `updatedAt: Timestamp`
 - `source` (optional but recommended for auditing/debug):
   - `provider: "revenuecat"`
@@ -93,6 +95,7 @@ To enforce limits without expensive queries and without rules-time aggregation, 
   - `projectCount: number`
   - `itemCount: number`
   - `transactionCount: number`
+  - `userCount: number`
   - `updatedAt: Timestamp`
 
 Notes:
@@ -132,6 +135,14 @@ Same pattern as project creation:
 
 - disallow direct client creates where a limit must be enforced
 - provide server-owned create processing (prefer request-doc workflows) that enforce `itemCount` / `transactionCount`
+
+#### Add user to account (required)
+
+User additions (invites/acceptance, role grants, or membership creation) must be entitlement-gated:
+
+- disallow direct client creates to `accounts/{accountId}/memberships/{membershipId}` (or equivalent)
+- server-owned workflow validates `userCount < limits.maxUsers`
+- increments `billing/usage.userCount` when a membership becomes active
 
 ---
 

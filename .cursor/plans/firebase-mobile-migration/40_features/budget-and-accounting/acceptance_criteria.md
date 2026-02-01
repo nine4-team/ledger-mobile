@@ -8,7 +8,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed entrypoint in `src/pages/ProjectLayout.tsx` (renders `BudgetProgress`).
 - [ ] **Excludes canceled transactions** from all rollups.  
   Observed in `src/components/ui/BudgetProgress.tsx` (filters out `status === 'canceled'`).
-- [ ] **Overall budget denominator is the sum of per-category budgets** (excluding design fee).  
+- [ ] **Overall budget denominator is the sum of per-category budgets** (excluding categories marked `excludeFromOverallBudget`).  
   Observed in `src/components/ui/BudgetProgress.tsx` (`overallFromCategories`).
 - [ ] **Purchases add and returns subtract** in spend totals.  
   Observed in `src/components/ui/BudgetProgress.tsx` (multiplier for `transactionType === 'Return'`).
@@ -27,28 +27,36 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   **Intentional delta** vs web: budget rollups do not group canonical transactions by item categories (`src/components/ui/BudgetProgress.tsx`).
 - [ ] **Canonical per-item value uses the same fallback as canonical totals**: `projectPrice ?? purchasePrice ?? marketValue ?? 0`.  
   Observed in `src/services/inventoryService.ts` (`computeCanonicalTransactionTotal`, canonical `INV_SALE` amount recompute).
-- [ ] **Canonical transfer does not affect budget rollups** unless/until transfer semantics are explicitly defined.  
-  **Intentional delta** (explicitly scoped rule for Firebase migration).
+- [ ] **Cross-project movement uses a two-phase canonical model**: there is no standalone “transfer” transaction; movement is represented as `INV_SALE_<sourceProjectId>` and `INV_PURCHASE_<targetProjectId>`.  
+  Budget rollups apply the canonical sign rules and item-driven attribution to each phase independently (source project sale subtracts, target project purchase adds).  
+  Source of truth: `40_features/budget-and-accounting/feature_spec.md` and `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
 
-## Design fee tracker (special semantics)
+## Fee tracker categories (special semantics)
 
-- [ ] **Design fee progress is “received”, not “spent”**.  
+- [ ] **Fee category progress is “received”, not “spent”**.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
-- [ ] **Design fee budget comes from `project.designFee`** (not from category budget map).  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.  
-  Parity evidence: `src/components/ui/BudgetProgress.tsx` uses `designFee` prop for design fee budget.
-- [ ] **Design fee is excluded from spent totals and category budget sums**.  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.  
-  Parity evidence: `src/components/ui/BudgetProgress.tsx` excludes design fee from overall spent and overall budget sum.
-- [ ] **Design fee identity uses a stable identifier** (slug/metadata), not mutable display name matching.  
+- [ ] **Fee category budgets come from per-category project allocations** (not from a dedicated `project.designFee*` field).  
+  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
+- [ ] **Categories are included in overall rollups by default**; exclusion is explicit via `budgetCategory.metadata.excludeFromOverallBudget === true`.  
+  Source of truth: `20_data/data_contracts.md` and `40_features/budget-and-accounting/feature_spec.md`.
+- [ ] **Excluded-from-overall categories are excluded from overall spent and overall budget denominator**.  
+  Parity evidence: `src/components/ui/BudgetProgress.tsx` excludes “design fee” (web naming) from overall spent and overall budget sum (legacy behavior now generalized).
+- [ ] **Fee categories are identified by explicit type metadata** (not mutable display name matching).  
   **Intentional delta** vs web: web uses name heuristic (`isDesignFeeCategory`) in `src/components/ui/BudgetProgress.tsx`.
+- [ ] **Mutual exclusivity**: a budget category cannot be both `fee` and `itemized`.  
+  Source of truth: `20_data/data_contracts.md` (`BudgetCategory.metadata.categoryType` is a single field).
 
 ## Budget UI behavior (high-level parity)
 
-- [ ] **Collapsed vs expanded categories**: default view shows primary category (“Furnishings” when present); “Show all budget categories” reveals full list and the “Overall Budget” row.  
-  Observed in `src/components/ui/BudgetProgress.tsx` (toggle + furnishings default + overall budget appears only when expanded).
-- [ ] **Project list preview mode**: project cards show a compact budget progress view (primary category or overall).  
-  Observed in `src/pages/Projects.tsx` (uses `BudgetProgress` preview mode).
+- [ ] **Pinned categories drive collapsed view**: collapsed Budget view shows **only** the per-user per-project pinned category trackers.  
+  If **no pins exist**, collapsed shows **Overall Budget only** (deterministic fallback).  
+  **Intentional delta**: replaces any “single default/featured category” behavior with per-user pinned categories (source of truth: `20_data/data_contracts.md` → `ProjectPreferences.pinnedBudgetCategoryIds`).
+- [ ] **Expanded shows full set**: “Show all budget categories” expands to the full enabled category list and shows the Overall Budget row.  
+  Parity evidence: `src/components/ui/BudgetProgress.tsx` (toggle + overall budget row placement).
+- [ ] **Project list preview uses same pinned subset**: project cards show a compact budget progress preview using the same pinned categories subset as the collapsed Budget view.  
+  If **no pins exist**, preview shows **Overall Budget only** (same deterministic fallback as collapsed).  
+  Parity evidence: `src/pages/Projects.tsx` (uses `BudgetProgress` preview mode).  
+  **Intentional delta**: preview subset is per-user pinned categories, not a hard-coded category concept.
 
 ## Accounting tab — rollups + report entrypoints
 

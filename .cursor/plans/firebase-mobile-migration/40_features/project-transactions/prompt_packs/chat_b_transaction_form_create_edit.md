@@ -33,7 +33,6 @@ Primary screens/components:
 
 Related services/hooks:
 - `src/services/offlineMetadataService.ts` (cached vendor defaults)
-- `src/services/accountPresetsService.ts` (default category online/cached)
 - `src/services/offlineAwareImageService.ts`
 - `src/services/offlineMediaService.ts`
 - `src/hooks/useOfflineMediaTracker.ts`
@@ -53,7 +52,7 @@ For the form contract and acceptance criteria, include:
   - tax rate entry and derived values
   - “calculate from subtotal” mode + validation
   - optional tax amount entry and rate back-calculation
-  - hide tax inputs for non-itemized categories (no `itemize`/`itemizationEnabled` metadata)
+  - hide tax inputs for non-itemized categories (recommended: `budgetCategory.metadata.categoryType !== "itemized"`)
 - Itemization enablement rules (category-dependent, and “disabled but existing items” case)
 - Media attachment rules:
   - receipts include PDFs; other images are images only

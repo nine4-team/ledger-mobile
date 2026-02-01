@@ -10,7 +10,8 @@ Notes:
   - Firestore-native offline persistence is the baseline (Firestore is canonical).
   - Listeners are allowed but must be **scoped/bounded** (no “listen to everything”).
   - Multi-doc correctness uses **request-doc workflows** (Cloud Function applies changes in a transaction).
-  - SQLite is allowed only as an **optional derived search index** (index-only), if robust offline item search is required.
+  - SQLite is allowed only as a **derived search index** (index-only; non-authoritative).
+    - For **Ledger Mobile**, robust offline item search is required, so the derived search index is **required** for this app.
 - This list is intentionally high-level; implementation details live under `40_features/` and `_cross_cutting/`.
 - **Non-exhaustive by design**: the bullet points under each feature are **not a complete inventory** of behavior. Anyone fleshing a feature out must assume there are additional sub-flows, edge cases, and cross-cutting requirements that need to be discovered and captured.
 
@@ -43,7 +44,7 @@ This section is organized **domain-first**:
 ### B0) Workspaces (scope shells)
 
 - **Projects (workspace shell)**
-  - Create/edit/delete projects; project home/shell/navigation; manual refresh; project-level settings (budget, design fee, category budgets, main image).
+  - Create/edit/delete projects; project home/shell/navigation; manual refresh; project-level settings (budgets, fee categories, category budgets, main image).
 - **Business inventory (workspace shell)**
   - Inventory “home” with Items/Transactions/Spaces tabs (spaces are “storage locations”); allocation entrypoints into projects; manual refresh.
 
@@ -296,7 +297,7 @@ Evidence sources (all in-repo):
 - **Primary user flows**:
   - Browse projects → open project
   - Create project (via `ProjectForm`)
-  - Edit project (name, description, client name, budget, design fee, category budgets, main image, settings)
+  - Edit project (name, description, client name, budgets, fee categories, category budgets, main image, settings)
   - Delete project (confirm, with warning if project contains items)
   - Refresh project data (manual refresh control)
   - Navigate between sections (items/transactions/spaces/budget) and persist last section
@@ -553,15 +554,16 @@ Evidence sources (all in-repo):
 - **Primary user flows**:
   - Budget view:
     - Spend vs budget by category
-    - Includes design fee and category budgets
+    - Includes fee tracker categories and category budgets
   - Canonical inventory transactions contribute to category totals via **item-driven attribution** (`inheritedBudgetCategoryId` on linked items), not `transaction.budgetCategoryId`
   - Canonical inventory transactions contribute to category totals via **item-driven attribution** (`inheritedBudgetCategoryId` on linked items), not `transaction.budgetCategoryId`
-  - Design fee progress is tracked as **received** (not “spent”) and excluded from spent totals/category sums
-  - Design fee “specialness” should be bound to a stable identifier (slug/metadata), not a mutable display name
+  - Fee tracker categories are tracked as **received** (not “spent”)
+  - Categories are included in overall rollups by default; categories can be excluded from overall spent + overall budget denominator via `excludeFromOverallBudget`
+  - Fee specialness should be bound to explicit category metadata (`categoryType === 'fee'`), not a mutable display name
   - Accounting view:
     - Rollups like “owed to business” and “owed to client” based on transactions (and excludes canceled)
     - Launch report generation screens (invoice/client/property management)
-- **Entities touched**: projects (budget, designFee, category budgets), transactions (amount/status/reimbursementType), budget categories
+- **Entities touched**: projects (category budgets), transactions (amount/status/reimbursementType), budget categories
 - **Offline behaviors required**:
   - Must compute from local data offline (no network)
   - Clear stale-data UX when last sync is old

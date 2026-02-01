@@ -5,7 +5,7 @@ Specify and/or implement the budget rollup computation layer for the Firebase mo
 
 ## Critical constraints (must obey)
 - UI reads from Firestore-cached data; rollups must be derivable offline via Firestore-native offline persistence (`OFFLINE_FIRST_V2_SPEC.md`).
-- Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`) must **not** require a user-facing category and must be attributed via **linked items’** `inheritedBudgetCategoryId`.
+- Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must **not** require a user-facing category and must be attributed via **linked items’** `inheritedBudgetCategoryId`.
   - Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
   - Shared rules: `40_features/project-items/flows/inherited_budget_category_rules.md`
 
@@ -19,7 +19,7 @@ If you need a shared contract doc (only if necessary), add:
 
 ## What to produce
 - A deterministic definition of:
-  - overall spent (excluding design fee)
+  - overall spent (excluding categories marked `excludeFromOverallBudget`)
   - per-category spent (non-canonical + canonical)
   - overall budget denominator (sum of project category budgets)
 - A Firestore query/join strategy sufficient to implement:

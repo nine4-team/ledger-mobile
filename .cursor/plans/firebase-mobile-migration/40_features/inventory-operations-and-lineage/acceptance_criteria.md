@@ -3,7 +3,7 @@
 Each non-obvious criterion includes **parity evidence** (web code pointer) or is labeled **intentional delta** (Firebase mobile requirement).
 
 ## Canonical transaction ids (system-owned)
-- [ ] **Canonical detection**: Canonical inventory transactions are detected by id prefix `INV_PURCHASE_`, `INV_SALE_`, `INV_TRANSFER_`.  
+- [ ] **Canonical detection**: Canonical inventory transactions are detected by id prefix `INV_PURCHASE_` or `INV_SALE_`.  
   Observed in `src/services/inventoryService.ts` (`CANONICAL_TRANSACTION_PREFIXES`, `isCanonicalTransactionId`).
 - [ ] **Canonical invariants are checkable** after multi-entity ops apply (projectId/transactionId expectations).  
   Web parity evidence: `src/services/operationQueue.ts` (`verifyCanonicalInvariants`).

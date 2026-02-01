@@ -13,7 +13,8 @@ Evidence / canonical attribution sources:
 
 ### Roles
 - **Admin**: account member with full read/write access across all categories and all records in account scope (subject to normal product constraints).
-- **Scoped user**: account member whose access is restricted to a set of budget categories (`allowedBudgetCategoryIds`), plus a limited “own uncategorized” exception for items.
+- **User**: account member whose access is restricted to a set of budget categories (`allowedBudgetCategoryIds`), plus a limited “own uncategorized” exception for items.
+- Roles are represented by a `role` field on the member document (see §5) and must align with the existing Roles v1 spec (`"admin" | "user"`).
 
 ### Category scope
 - **`allowedBudgetCategoryIds`**: the set of budget category IDs the scoped user is allowed to access *within an account*. This is evaluated server-side for reads and writes.
@@ -24,7 +25,8 @@ Evidence / canonical attribution sources:
 
 ### Transactions: canonical vs non-canonical
 - **Non-canonical transaction**: a user-entered transaction where category attribution is transaction-driven via `transaction.budgetCategoryId`.
-- **Canonical inventory transaction**: a system row whose id begins with `INV_PURCHASE_`, `INV_SALE_`, or `INV_TRANSFER_`.
+- **Canonical inventory transaction**: a system row whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
+  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
   - Canonical rows are treated as `transaction.budgetCategoryId = null` **by design**.
   - Category attribution and filtering for canonical rows is **item-driven** via linked items’ `item.inheritedBudgetCategoryId` (see evidence sources above).
 
@@ -136,7 +138,7 @@ If this requires an intentional delta from current planned sync primitives, labe
 Store per-member entitlements under account membership:
 
 - `accounts/{accountId}/members/{uid}`
-  - `isAdmin: boolean`
+  - `role: "admin" | "user"`
   - `allowedBudgetCategoryIds: map<budgetCategoryId, true>` (preferred) or `allowedBudgetCategoryIds: array<string>`
 
 Recommendation:

@@ -1,6 +1,6 @@
-## Offline Data v2 (Skeleton Spec)
+## Offline Data v2 (Ledger Mobile architecture)
 
-This document updates the template’s “offline-first” direction for a **native-first** skeleton.
+This document defines the Ledger Mobile “offline-first” architecture for a **native-first** React Native app.
 
 We standardize on:
 
@@ -17,24 +17,24 @@ We explicitly do **not** support an Expo Go runtime for apps that claim to be of
 - **No Firebase Web SDK imports in app code**: there must be **zero** imports from `firebase/*` anywhere in `app/` or `src/`.
   - Enforce with `npm run check:native-only` (fails if someone reintroduces `import ... from 'firebase/firestore'`, etc.).
 
-### Goals (what this skeleton should support)
+### Goals (what this app must support)
 
-- **Default is native-first**: the skeleton uses Firebase native modules and a dev client workflow.
+- **Default is native-first**: the app uses Firebase native modules and a dev client workflow.
 - **Offline-ready is the baseline**: offline reads/writes and queued writes “just work” via **Firestore-native offline persistence**.
-- **No custom sync engine**: the skeleton should not push a “SQLite as source of truth + outbox + delta cursors” architecture.
-- **Optional robust offline item search**: apps that need multi-field offline search can add a **derived local search index** without making SQLite authoritative.
-- **Multi-doc correctness is not optional**: the skeleton must support a safe default for actions that update multiple docs or enforce invariants. The recommended default is a **request-doc pattern** (Cloud Function applies the change atomically).
+- **No custom sync engine**: do not push a “SQLite as source of truth + outbox + delta cursors” architecture.
+- **Robust offline item search**: add a **derived local search index** without making SQLite authoritative.
+- **Multi-doc correctness is not optional**: the app must support a safe default for actions that update multiple docs or enforce invariants. The recommended default is a **request-doc pattern** (Cloud Function applies the change atomically).
 
 ### Modes (still native-only)
 
-This skeleton supports **online apps** and **offline-ready apps** without switching SDKs:
+This app supports **online** and **offline-ready** postures without switching SDKs:
 
 - **`mode: 'online'` (online-first posture)**: uses native Firestore, prefers server reads (fallback to cache), minimal offline UX, and no “offline-ready” promises.
 - **`mode: 'offline'` (offline-ready posture)**: uses native Firestore, prefers cache-first reads (fallback to server), adds scoped listeners + offline UX primitives, and treats offline as a first-class requirement.
 
-### Ready-to-go baseline (generalizable skeleton plumbing)
+### Ready-to-go baseline (app plumbing)
 
-These are **skeleton-level**, app-agnostic pieces that make the template “offline-ready” out of the box. Apps still define scopes, collections, and domain rules, but the plumbing should be reusable:
+These are app-level pieces that make Ledger Mobile “offline-ready” out of the box. Features still define scopes, collections, and domain rules, but the plumbing should be reusable:
 
 - **Offline repository implementation** wired to the **native Firestore SDK**, with cache-first reads and `onSnapshot` listeners.
 - **Scoped listener manager** with attach/detach lifecycle, background handling, and unsubscribe cleanup.
@@ -62,7 +62,7 @@ When the app opts into native Firestore, treat Firestore (via native RN SDK) as 
 - Writes apply locally immediately and sync when network is available.
 - Real-time listeners drive UI state (bounded to the active scope).
 
-This is the skeleton default for offline-ready apps because it avoids building and maintaining a bespoke sync pipeline.
+This is the Ledger Mobile default because it avoids building and maintaining a bespoke sync pipeline.
 
 ### 2) Scoped listeners (never unbounded)
 
@@ -99,11 +99,11 @@ Direct client writes are allowed for:
 
 ---
 
-## Skeleton decisions / configuration surface
+## App decisions / configuration surface
 
 ### Runtime and workflow (required)
 
-- **Expo Go is not supported** for this skeleton.
+- **Expo Go is not supported** for this app.
 - Use an **EAS dev client** (or equivalent native build) for development.
 - Firebase must be the **native** SDK so Firestore offline persistence works as designed.
 
@@ -111,15 +111,16 @@ Direct client writes are allowed for:
 
 - `offlineSearchIndex: boolean`
   - Enables SQLite FTS indexing for item search within a bounded scope.
+  - Ledger Mobile requirement: treat this as **required** and enable it by default.
 
 Notes:
 
-- **Request-doc workflows are not “optional correctness.”** Some apps may never need multi-doc invariant workflows, but the skeleton should still provide the request-doc framework (types, helpers, UI states) so teams don’t invent unsafe ad-hoc multi-doc client updates.
-- **Offline search index is optional in the skeleton, not optional in every product.** Product templates that require robust offline multi-field search should enable this by default and treat it as required for that template.
+- **Request-doc workflows are not “optional correctness.”** Some apps may never need multi-doc invariant workflows, but this repo should still provide the request-doc framework (types, helpers, UI states) so teams don’t invent unsafe ad-hoc multi-doc client updates.
+- **Offline search index is required for Ledger Mobile.**
 
 ---
 
-## Required documentation changes in this repo (to align the skeleton)
+## Required documentation changes in this repo (architecture alignment)
 
 These changes remove the old “outbox + cursor pulls” guidance and replace it with v2 guidance.
 
@@ -131,7 +132,7 @@ Replace the current “future implementation” section (SQLite + outbox + sync 
   - **Native-first default**: listeners + offline writes “just work”
 - **Optional search index module** (SQLite FTS) explicitly labeled “index-only”
 - **Request-doc workflows** as the default for multi-doc invariant operations
-- Explicitly mark: “We do not build an outbox/delta sync engine in this skeleton.”
+- Explicitly mark: “We do not build an outbox/delta sync engine for Ledger Mobile.”
 
 ### Update `README.md`
 
@@ -254,7 +255,7 @@ Common fields:
 
 ### Required plumbing (to make this safe, not a half-measure)
 
-The skeleton must (eventually) include, or explicitly require:
+The app must (eventually) include, or explicitly require:
 
 - **Cloud Function** that processes request docs and is the *only* writer of `status = applied|failed`.
 - **Security rules** that allow clients to:
@@ -279,7 +280,7 @@ Retry mechanism:
 
 ## Phased work plan (each phase fits one AI-dev chat)
 
-### Phase 1 — Doc realignment (skeleton-wide)
+### Phase 1 — Doc realignment (repo-wide)
 
 **Goal**: remove the outbox/cursor offline-first recommendation and replace it with Offline Data v2.
 
@@ -299,7 +300,7 @@ Retry mechanism:
 
 **Done when**: an app author can follow docs to choose **online-only vs offline-ready**, and understands both use the native SDK (offline-ready relies on native offline persistence).
 
-### Phase 2.5 — Offline repository + mode switch (skeleton plumbing)
+### Phase 2.5 — Offline repository + mode switch (data-layer plumbing)
 
 **Goal**: make the repository layer explicitly “offline-ready” by design (native SDK + listener-friendly API), and ensure `mode` never throws.
 
@@ -368,13 +369,13 @@ Retry mechanism:
   - `createRequestDoc(type, payload, scope)`
   - `subscribeToRequest(requestId)` / status UI helpers
 
-**Done when**: the skeleton supports “queued offline request → server applies later → UI reflects status”.
+**Done when**: the app supports “queued offline request → server applies later → UI reflects status”.
 
 ---
 
 ## Acceptance checklist (repo-level)
 
-- `README.md` does not recommend outbox/cursor-based sync as the skeleton default.
+- `README.md` does not recommend outbox/cursor-based sync as the Ledger Mobile default.
 - `app/` and `src/` contain **no** imports from `firebase/*` (Web SDK). (`npm run check:native-only` passes.)
 - `src/data/offline-first.md`:
   - treats SQLite as optional search-index-only

@@ -32,7 +32,8 @@ Definitions:
 
 - **Non-canonical (user-facing) transaction**: a normal user-entered transaction where budget category attribution is **transaction-driven** via `transaction.budgetCategoryId`.
   - Legacy naming notes: web/SQL docs may refer to this as `category_id`; the canonical SQLite column name is `budget_category_id` (see `20_data/data_contracts.md`).
-- **Canonical inventory transaction**: a system-generated row with id `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`, or `INV_TRANSFER_*`.
+- **Canonical inventory transaction**: a system-generated row with id `INV_PURCHASE_<projectId>` or `INV_SALE_<projectId>`.
+  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
 
 Rules (required):
 
@@ -123,7 +124,6 @@ Summary:
 Parity evidence:
 - Offline prerequisite gate + banner: `src/pages/AddTransaction.tsx` (`useOfflinePrerequisiteGate`, `OfflinePrerequisiteBanner`)
 - Vendor defaults + cached offline behavior: `src/pages/AddTransaction.tsx` (`getAvailableVendors`, `getCachedVendorDefaults`)
-- Default category (online vs cached): `src/pages/AddTransaction.tsx` (`getDefaultCategory`, `getCachedDefaultCategory`)
 - Itemization enablement by category: `src/pages/AddTransaction.tsx` (`getItemizationEnabled`)
 - Offline-aware image upload placeholder behavior: `src/pages/AddTransaction.tsx` (`OfflineAwareImageService.uploadReceiptAttachment`, `.uploadOtherAttachment`)
 
@@ -192,7 +192,7 @@ Parity evidence (web’s local-first approximation):
 - Offline media preview resolution: `src/components/ui/ImagePreview.tsx` (`offlineMediaService.getMediaFile`)
 
 ### Offline prerequisites gate (metadata)
-- Creating a transaction requires budget categories + vendor defaults + account default category metadata to be present locally (otherwise the form is blocked).
+- Creating a transaction requires budget categories + vendor defaults metadata to be present locally (otherwise the form is blocked).
 - The same gate should apply anywhere the user must pick from these lists; do not silently allow “unknown” writes that later conflict.
 
 Parity evidence:

@@ -17,23 +17,25 @@ Audience: internal implementation/design discussion for the Firebase migration (
 - **Project budgets**:
   - Per-project allocations live as one doc per preset category id:
     - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}` (allocation-only; no name duplication)
-  - `project.designFeeCents`: separate field with special UI semantics (received vs spent)
+  - Fee categories (`budgetCategory.metadata.categoryType === "fee"`) have special UI semantics (“received” vs “spent”).
+  - Categories are included in overall rollups by default; exclusion is explicit via `budgetCategory.metadata.excludeFromOverallBudget === true`.
 - **Transactions**:
   - Canonical (mobile/Firebase): `transaction.budgetCategoryId` (Firestore) / `transactions.budget_category_id` (SQLite)
   - Legacy web naming (historical): `transactions.category_id` and legacy `transactions.budget_category` (string)
 - **Canonical inventory transactions**:
-  - System-generated rows such as `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`, `INV_TRANSFER_*`
+  - System-generated rows such as `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`
+  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
   - Represent inventory allocation / return / sale mechanics (not user-entered).
 
 ---
 
 ### Vision decisions
 
-#### 1) Design Fee stays special (user-facing)
+#### 1) Fee categories stay special (user-facing)
 
-- **Budget source**: `project.designFee`
+- **Budget source**: the project’s per-category allocation for that category (`projects/{projectId}/budgetCategories/{feeCategoryId}.budgetCents`)
 - **Progress semantics**: “received”, not “spent”
-- **Overall budget**: Design Fee is excluded from “spent” totals and category budget sums.
+- **Overall budget**: categories are included by default; excluded categories (via `excludeFromOverallBudget`) are removed from “spent overall” and the overall budget denominator.
 
 Implementation note: the specialness should be bound to a stable identifier (slug/metadata), not a mutable display name.
 
@@ -46,7 +48,7 @@ However, budget progress still needs to land in meaningful categories.
 #### 3) Canonical vs non-canonical attribution rule (the core decision)
 
 - **Non-canonical transactions**: category attribution comes from `transaction.budgetCategoryId` (status quo; legacy web naming: `transactions.category_id`).
-- **Canonical transactions** (`INV_PURCHASE_*`, `INV_SALE_*`, `INV_TRANSFER_*`): category attribution comes from **items linked to the canonical transaction**, grouped by each item’s inherited budget category.
+- **Canonical transactions** (`INV_PURCHASE_*`, `INV_SALE_*`): category attribution comes from **items linked to the canonical transaction**, grouped by each item’s inherited budget category.
 
 This avoids wrong attribution when a canonical transaction contains mixed-category items (Furniture + Accessories).
 
@@ -104,7 +106,7 @@ Batch behavior (recommended):
 
 - Avoid introducing “roles” as a user-facing concept.
 - Use language like:
-  - “Used for design fee”
+  - “Used for fee”
   - “Used for item purchases & sales” (if surfaced at all; keep under “Advanced”)
-- Prefer “pinning” budget trackers in collapsed views over a single “primary category” concept.
+- Prefer “pinning” budget trackers in collapsed views over any single-category “featured tracker” concept.
 
