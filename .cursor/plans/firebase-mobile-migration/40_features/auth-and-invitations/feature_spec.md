@@ -41,7 +41,7 @@ Not yet implemented (must be captured as work, not “assumed done”):
 ## Architecture alignment (non-negotiable)
 
 - **No web-router assumptions**: do not specify `/auth/callback` routes or “poll session” behavior. Mobile auth is “Firebase user exists” (native persistence), not “redirect callback route”.
-- **No client-written memberships**: the client never creates `accounts/{accountId}/members/{uid}` directly.
+- **No client-written account users**: the client never creates `accounts/{accountId}/users/{uid}` directly.
 - **Invite acceptance is server-owned**: performed via a callable Cloud Function (idempotent).
 - **Offline-first UX**: if local data exists, show it; auth/sign-in is the primary network-dependent exception.
 
@@ -68,14 +68,14 @@ Root auth gating (existing in the skeleton):
 - Firebase Auth user identity: `uid`, `email`, `emailVerified` (if/when used).
 
 ### Firestore security-critical documents
-- Membership doc: `accounts/{accountId}/members/{uid}`
+- Account user doc (membership/role): `accounts/{accountId}/users/{uid}`
 - Invite doc: `accounts/{accountId}/invites/{inviteId}`
 
 ### Cloud Function (callable)
 Required callable:
 
 - `acceptInvite`
-  - Accepts an invite token and creates/updates membership server-side (see “Callable contract” below).
+  - Accepts an invite token and creates/updates the account user doc server-side (see “Callable contract” below).
 
 ## Primary flows (mobile)
 
@@ -169,16 +169,16 @@ Required behavior:
   - **MVP assumption**: the app has a single “current account” (e.g. stored on a user profile doc like `users/{uid}.defaultAccountId`, or cached locally from the last successful session).
   - Multi-account selection is **TBD** and should become an explicit “Choose account” screen if needed.
 - Verify membership:
-  - attach a **bounded** listener to `accounts/{accountId}/members/{uid}` (or perform a cache-aware read first)
-  - if membership is missing or disabled: show a “No access” UI and sign out
+  - attach a **bounded** listener to `accounts/{accountId}/users/{uid}` (or perform a cache-aware read first)
+  - if the account user doc is missing or disabled: show a “No access” UI and sign out
 
 Implementation status note:
 - `ledger_mobile` does not yet include an account context store/provider. This section defines required behavior that must be implemented before any account-scoped Firestore paths are safe to use.
 
 Constraints:
 
-- Do not “guess” an account id while offline without a cached membership-backed source; prefer:
-  - Firestore cached membership doc, or
+- Do not “guess” an account id while offline without a cached account-user-backed source; prefer:
+  - Firestore cached account user doc, or
   - locally cached `accountId` from a previously validated session.
 
 ## Callable contract (invite acceptance)
@@ -194,7 +194,7 @@ Server behavior (must be idempotent):
 - validate token (exists, not expired, not already used)
 - enforce entitlements (e.g. free tier user limits)
 - in a Firestore transaction/batch:
-  - create/update `accounts/{accountId}/members/{uid}` with the invited role
+  - create/update `accounts/{accountId}/users/{uid}` with the invited role
   - mark invite as accepted/used (record `acceptedAt`, `acceptedByUid`)
   - create any required user/profile defaults (server-owned)
 - return `{ accountId, role }` (minimum) so the client can set account context
@@ -222,7 +222,7 @@ Failure modes (structured errors):
 - App has **no** web-only callback routes (no `/auth/callback`).
 - Auth bootstrap uses native Firebase Auth persistence and gates navigation via Expo Router.
 - Invite links open `/(auth)/invite/<token>` and can be accepted after signing in/up.
-- `acceptInvite` is callable, server-owned, and idempotent; clients do not write membership docs directly.
+- `acceptInvite` is callable, server-owned, and idempotent; clients do not write account user docs directly.
 - Offline behavior is explicit:
   - existing sessions can enter and view cached data
   - new sign-in and invite acceptance clearly require network

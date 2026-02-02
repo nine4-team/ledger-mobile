@@ -220,7 +220,7 @@ Evidence sources (all in-repo):
 - **Notable behaviors / constraints**:
   - Auth bootstrap has a **safety timeout**; if auth initialization stalls it flips into a “show login” state (`timedOutWithoutAuth`) instead of infinite spinner.
   - Invite acceptance flow supports both Google OAuth and email/password signup (invite stores token locally to survive OAuth redirect).
-- **Entities touched**: users, accounts, invitations, account memberships/roles
+- **Entities touched**: users, accounts, invitations, account users/roles
 - **Offline behaviors required**:
   - **Boot offline** into cached data when a valid session/account context already exists locally
   - If offline at auth time: **block** with clear “requires connection” messaging + retry path
@@ -275,7 +275,7 @@ Evidence sources (all in-repo):
     - Space templates manager
   - Users tab (owner/admin): manage users (membership + roles)
   - Account tab (owner): account management
-- **Entities touched**: users, memberships/roles, business profile, budget_categories, vendor_defaults, space_templates, account metadata
+- **Entities touched**: users, account users/roles, business profile, budget_categories, vendor_defaults, space_templates, account metadata
 - **Offline behaviors required**:
   - Presets must be **readable offline** because downstream screens depend on them (category pickers, vendor pickers, templates)
   - For mutations: either queue or explicitly require online; whichever you choose, provide consistent UX + pending states

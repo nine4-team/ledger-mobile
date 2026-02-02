@@ -23,7 +23,7 @@ Update or create:
 
 ## What to capture
 - Firestore path and field shape for:
-  - `accounts/{accountId}/entitlements/current`
+  - `accounts/{accountId}/billing/entitlements`
 - “Server-owned only” write policy and client read policy
 - Minimal provider audit fields aligned to RevenueCat (don’t mirror the full provider object)
 

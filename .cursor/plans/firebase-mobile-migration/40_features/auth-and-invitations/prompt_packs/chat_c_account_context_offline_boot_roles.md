@@ -29,8 +29,8 @@ Related services/hooks:
 
 ## What to capture (required sections)
 - How `accountId` context is derived (prefer `users/{uid}.defaultAccountId` or a locally cached account id from a previously validated session)
-- Membership-gated verification rules (bounded listener/read to `accounts/{accountId}/members/{uid}`)
-- Offline behavior: do not “guess” an account id while offline beyond cached/validated sources (e.g. cached membership doc)
+- Membership-gated verification rules (bounded listener/read to `accounts/{accountId}/users/{uid}`)
+- Offline behavior: do not “guess” an account id while offline beyond cached/validated sources (e.g. cached account user doc)
 - What is persisted for offline boot, and when it is cleared
 - Role semantics (owner/admin/member) used in gating logic today (even if UI gates are sparse)
 - Firebase deltas (where to enforce membership/role: Rules/Functions)

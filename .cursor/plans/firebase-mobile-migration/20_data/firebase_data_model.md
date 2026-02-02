@@ -19,8 +19,8 @@ Everything is scoped under an `accountId`.
 
 Two collaboration scopes exist for mutable entities:
 
-- **Project scope**: `accounts/{accountId}/projects/{projectId}/...`
-- **Business inventory scope**: `accounts/{accountId}/inventory/...` (and `projectId = null` in entity fields)
+- **Project scope**: `projectId = <projectId>` and docs live under account-level collections (e.g. `accounts/{accountId}/items/{itemId}`)
+- **Business inventory scope**: `projectId = null` and docs live under the same account-level collections
 
 ---
 
@@ -31,43 +31,38 @@ This doc intentionally focuses on **paths**. Field lists live in `20_data/data_c
 ### Account + membership
 
 - Account: `accounts/{accountId}`
-- Members: `accounts/{accountId}/members/{uid}`
+- Account users (membership/roles): `accounts/{accountId}/users/{uid}`
 - Invites: `accounts/{accountId}/invites/{inviteId}`
 
 Account-scoped requests (gated creates / account workflows):
 - Requests: `accounts/{accountId}/requests/{requestId}`
 
 Billing (server-owned enforcement + counters):
-- Entitlements: `accounts/{accountId}/billing/entitlements/current`
+- Entitlements: `accounts/{accountId}/billing/entitlements`
 - Usage: `accounts/{accountId}/billing/usage`
 
 Per-user preferences (within an account):
 - Project preferences (pinned budget categories): `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}`
 
-Account business profile (branding inputs):
-- Business profile: `accounts/{accountId}/businessProfile/current`
+Account profile (branding inputs):
+- Profile: `accounts/{accountId}/profile/default`
 
 ### Presets (account-wide)
 
-- Budget category presets: `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
-- Space templates: `accounts/{accountId}/presets/spaceTemplates/{templateId}`
-- Vendor defaults: `accounts/{accountId}/presets/vendorDefaults/current`
-- (Optional / TBD) Account presets meta doc: `accounts/{accountId}/meta/accountPresets`
-  - TBD: confirm whether this doc is required as a first-class Firestore document vs embedded fields elsewhere.
+- Budget category presets: `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
+- Space templates: `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
+- Vendor defaults: `accounts/{accountId}/presets/default/vendors/{vendorId}` (use `vendorId = "default"`)
 
 ### Project scope
 
 - Project: `accounts/{accountId}/projects/{projectId}`
 - Project budget allocations (per preset category): `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
-- Items: `accounts/{accountId}/projects/{projectId}/items/{itemId}`
-- Transactions: `accounts/{accountId}/projects/{projectId}/transactions/{transactionId}`
-- Spaces: `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}`
 
-### Business inventory scope
+### Account-level mutable entities (project + inventory scopes)
 
-- Items: `accounts/{accountId}/inventory/items/{itemId}`
-- Transactions: `accounts/{accountId}/inventory/transactions/{transactionId}`
-- Spaces: `accounts/{accountId}/inventory/spaces/{spaceId}`
+- Items: `accounts/{accountId}/items/{itemId}` (`projectId` determines scope)
+- Transactions: `accounts/{accountId}/transactions/{transactionId}` (`projectId` determines scope)
+- Spaces: `accounts/{accountId}/spaces/{spaceId}` (`projectId` determines scope)
 
 ### Cross-scope lineage
 

@@ -35,7 +35,7 @@ Optional (if needed for clarity):
 **Goal**: establish the server-owned enforcement snapshot contract used by UI and Functions.
 
 **What it changes (high level)**
-- Define `accounts/{accountId}/entitlements/current` with `planType` + `limits`.
+- Define `accounts/{accountId}/billing/entitlements` with `planType` + `limits`.
 - Define the minimal provider audit fields for RevenueCat.
 - Define read permissions and “server-owned only” write constraints.
 
@@ -47,7 +47,7 @@ Optional (if needed for clarity):
 **Goal**: enforce limits without rule-time aggregation or expensive queries.
 
 **What it changes (high level)**
-- Define `accounts/{accountId}/stats` counters.
+- Define `accounts/{accountId}/billing/usage` counters.
 - Implement gated callable Function(s):
   - `createProject` (required)
   - (optionally later) `createItem`, `createTransaction`
@@ -55,14 +55,14 @@ Optional (if needed for clarity):
 
 **Exit criteria**
 - Direct client creates for gated collections are disallowed.
-- Callable creates enforce `stats` against `limits`.
+- Callable creates enforce `billing/usage` against `limits`.
 
 ### Phase C — Offline UX + paywall retry semantics
 **Goal**: make the user experience predictable and conversion-friendly.
 
 **What it changes (high level)**
 - Define offline policy:
-  - allow only if cached snapshot + stats prove under-limit
+  - allow only if cached snapshot + billing/usage prove under-limit
   - otherwise block and prompt to go online/upgrade
 - Define “after purchase” behavior:
   - refresh entitlements snapshot

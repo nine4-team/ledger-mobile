@@ -32,14 +32,14 @@ This plan was written under a prior “sync engine” baseline (delta sync / `me
 
 - The prior drafts used an embedded Project map / local JSON column for per-category budgets.
 - We’ve now aligned the docs to:
-  - preset definitions at `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
+  - preset definitions at `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
   - per-project allocations at `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
   - local allocations table `project_budget_categories`
 
 ## Target Firestore shape (decision)
 
 - **Account preset categories** remain where they already are:
-  - `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}` (definitions: name/slug/archive/metadata)
+  - `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}` (definitions: name/slug/archive/metadata)
 - **Per-project budgets/enabled categories** move to a subcollection under the project, using your preferred name:
   - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
   - Each doc represents the project’s allocation for that preset category.
@@ -55,7 +55,7 @@ This plan was written under a prior “sync engine” baseline (delta sync / `me
 
 Important distinction:
 
-- `presets/budgetCategories/{budgetCategoryId}` = **preset category definition** (this is where `name`/`slug`/`isArchived` live)
+- `presets/default/budgetCategories/{budgetCategoryId}` = **preset category definition** (this is where `name`/`slug`/`isArchived` live)
 - `projects/{projectId}/budgetCategories/{budgetCategoryId}` = **per-project allocation/enablement** for that preset category (this should *not* duplicate the name)
 
 Doc id: `budgetCategoryId` (matches the preset category id)
@@ -86,11 +86,11 @@ Add a dedicated local table to replace `projects.budget_categories_*_json`:
 ```mermaid
 flowchart TD
   account[accounts/{accountId}] --> project[projects/{projectId}]
-  account --> presets[presets]
+  account --> presets[presets/default]
   presets --> presetCats[budgetCategories/{budgetCategoryId}]
   project --> projBudgets[budgetCategories/{budgetCategoryId}]
-  project --> items[items/{itemId}]
-  project --> txns[transactions/{transactionId}]
+  account --> items[items/{itemId}]
+  account --> txns[transactions/{transactionId}]
 ```
 
 

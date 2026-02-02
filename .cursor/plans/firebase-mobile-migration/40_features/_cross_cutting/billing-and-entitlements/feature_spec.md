@@ -64,7 +64,7 @@ This is what the client reads for UX and what callable Functions use for allow/d
 
 Path:
 
-- `accounts/{accountId}/billing/entitlements/current`
+- `accounts/{accountId}/billing/entitlements`
 
 Recommended fields (v1):
 
@@ -127,7 +127,7 @@ Notes:
     - required fields in `payload`
   - Function processes request in a Firestore transaction:
     - validates membership + role (see `10_architecture/security_model.md`)
-    - reads `accounts/{accountId}/billing/entitlements/current`
+    - reads `accounts/{accountId}/billing/entitlements`
     - reads `accounts/{accountId}/billing/usage.projectCount`
     - enforces: `projectCount < limits.maxProjects` (unless “unlimited” in Pro policy)
     - writes the new project doc
@@ -146,7 +146,7 @@ Same pattern as project creation:
 
 User additions (invites/acceptance, role grants, or membership creation) must be entitlement-gated:
 
-- disallow direct client creates to `accounts/{accountId}/memberships/{membershipId}` (or equivalent)
+- disallow direct client writes to `accounts/{accountId}/users/{uid}` (account user docs)
 - server-owned workflow validates `userCount < limits.maxUsers`
 - increments `billing/usage.userCount` when a membership becomes active
 
@@ -165,7 +165,7 @@ Upgrade requires network, so offline behavior must prioritize:
 
 When offline, for any **gated create** (project/item/transaction):
 
-- If the app can prove (from **cached** `billing/entitlements/current` + **cached** `billing/usage`) that the operation is **under the limit**, it may proceed locally (pending state) and will sync when online.
+- If the app can prove (from **cached** `billing/entitlements` + **cached** `billing/usage`) that the operation is **under the limit**, it may proceed locally (pending state) and will sync when online.
 - If the app cannot prove it is under the limit (missing cache, stale cache, or already at limit), the app must:
   - block the operation
   - show a clear message: “Connect to verify your plan / upgrade to Pro”
@@ -184,7 +184,7 @@ This spec assumes RevenueCat is the source of truth for plan entitlements.
 
 Minimum requirement:
 
-- A server-owned path updates `accounts/{accountId}/billing/entitlements/current` to match RevenueCat-derived access.
+- A server-owned path updates `accounts/{accountId}/billing/entitlements` to match RevenueCat-derived access.
 
 Implementation choices (acceptable):
 

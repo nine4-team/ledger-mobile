@@ -34,6 +34,6 @@ Implement Phase A of the offline media lifecycle:
 ## Edge cases (must be explicit)
 - User cancels after local save: how the local blob/record is handled (must not leak).
 - App restart after selection but before upload begins: `local_only` must still render correctly.
-- Multiple attachments per entity (e.g. `transaction.receiptImages[]`, `space.images[]`) vs singular fields (e.g. `businessProfile.logo`).
+- Multiple attachments per entity (e.g. `transaction.receiptImages[]`, `space.images[]`) vs singular fields (e.g. `profile.logo`).
 - Large file selection blocked by guardrails: required user-visible behavior is “warn at getting full; hard block near-full” per the guardrails spec.
 

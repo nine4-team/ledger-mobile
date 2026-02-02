@@ -24,7 +24,7 @@ Reports read from Firestore local cache (offline persistence) only:
 - Spaces: `spaces` (for space/location labels in PM summary)
 - Budget categories: `budget_categories` (category name lookup for client summary breakdown)
 - Business profile (logo + name):
-  - `accounts/{accountId}/businessProfile/current` (see `20_data/data_contracts.md` → `BusinessProfile`)
+  - `accounts/{accountId}/profile/default` (see `20_data/data_contracts.md` → `Profile`)
 
 Firebase migration constraint:
 - Reports must not attach listeners to large collections. They render from Firestore local cache using scoped project listeners per `OFFLINE_FIRST_V2_SPEC.md`.

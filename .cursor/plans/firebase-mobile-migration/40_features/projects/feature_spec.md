@@ -55,7 +55,7 @@ Firebase migration behavior (required delta: entitlements gating):
 - **Project creation MUST be server-enforced** via a callable Function `createProject(...)` (no direct client create), per `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`.
 - Function responsibilities:
   - verify membership/role for `accountId`
-  - read `entitlements/current` for `accountId`
+  - read `billing/entitlements` for `accountId`
   - enforce `projectCount < maxProjects` (either via query or server-maintained counter)
   - create project doc (and any required server-owned denormalized counters/fields)
   - seed pinned budget categories for the creator (recommended):

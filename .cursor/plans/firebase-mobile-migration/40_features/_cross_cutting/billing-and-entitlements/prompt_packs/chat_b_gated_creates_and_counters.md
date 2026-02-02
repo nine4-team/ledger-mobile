@@ -20,7 +20,7 @@ Optional (only if needed):
 
 ## What to capture
 - Server-owned counters shape:
-  - `accounts/{accountId}/stats` (`projectCount`, `itemCount`, `transactionCount`)
+  - `accounts/{accountId}/billing/usage` (`projectCount`, `itemCount`, `transactionCount`)
 - Required gated create processing:
   - preferred: request-doc workflows processed by Functions (`createProject` request, etc.)
   - alternative (online-only): callable functions for creates that cannot be queued offline

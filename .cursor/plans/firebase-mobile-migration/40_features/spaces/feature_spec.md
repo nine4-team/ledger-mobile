@@ -17,26 +17,24 @@ Architecture baseline (mobile):
 
 Migration stance (intentional model choice):
 - **Spaces are workspace-scoped** (Project or Business Inventory). We do not model generic “account-wide spaces” that float across contexts; the reusable/account-wide concept is **templates**.
-- **Business Inventory spaces are not legacy “account-wide spaces”**:
-  - Legacy web traces `space.projectId === null` (“Account-wide space”).
-  - Migration requirement: Business Inventory spaces live in an **explicit inventory scope** (separate collection path), so we don’t reintroduce ambiguous “null projectId” semantics inside project space UX.
-
-Parity note (web legacy behavior to not carry forward as-is):
-- The web data model and UI include traces of `space.projectId === null` (“Account-wide space”). Treat that as legacy; do not build new product behavior around it for the migration.
+- **Business Inventory spaces are explicit**:
+  - Legacy web traces used `space.projectId === null` as “Account-wide space”.
+  - Migration requirement: `space.projectId === null` now **explicitly means Business Inventory scope**, not a generic catch‑all. Project spaces always have a concrete `projectId`.
 
 ## Scope + datastore locations (Firebase target; required)
 
 ### Space locations
-- **Project spaces**:
-  - Firestore: `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}`
-- **Business Inventory spaces**:
-  - Firestore: `accounts/{accountId}/inventory/spaces/{spaceId}`
+- **All spaces** live under a single account-level collection:
+  - Firestore: `accounts/{accountId}/spaces/{spaceId}`
+  - Scope is defined by `space.projectId`:
+    - Project space: `projectId = <projectId>`
+    - Business Inventory space: `projectId = null`
 
 ### Item ↔ space reference rules (required)
 - Items reference spaces via `item.spaceId`.
 - **Scope consistency is mandatory**:
-  - If `item.projectId = <projectId>`, then `item.spaceId` (when non-null) must refer to a Space in `projects/{projectId}/spaces`.
-  - If `item.projectId = null` (Business Inventory), then `item.spaceId` (when non-null) must refer to a Space in `inventory/spaces`.
+  - If `item.projectId = <projectId>`, then `item.spaceId` (when non-null) must refer to a Space with `space.projectId = <projectId>`.
+  - If `item.projectId = null` (Business Inventory), then `item.spaceId` (when non-null) must refer to a Space with `space.projectId = null`.
 - When an item changes scope (e.g. Business Inventory → Project allocation), `spaceId` must be updated/cleared as part of the same invariant operation so it never points at a space from the wrong scope.
 
 ## Owned screens / routes
@@ -83,7 +81,7 @@ Parity evidence:
 - Offline image resolution: `src/components/spaces/SpacePreviewCard.tsx`
 
 Business Inventory scope (required):
-- Business Inventory must support the same “browse/search spaces” UX within the inventory workspace, backed by `accounts/{accountId}/inventory/spaces`.
+- Business Inventory must support the same “browse/search spaces” UX within the inventory workspace, backed by `accounts/{accountId}/spaces` where `space.projectId = null`.
 - Item counts must be computed from **inventory-scoped items only** (`projectId = null`) that reference the space via `spaceId`.
 
 ### 2) Create a space (optionally from template)
@@ -102,7 +100,7 @@ Parity evidence:
 - Success + refresh: `refreshCollections({ includeProject: false })` in `src/pages/SpaceNew.tsx`
 
 Business Inventory scope (required):
-- Business Inventory supports creating spaces within the inventory workspace, backed by `accounts/{accountId}/inventory/spaces`.
+- Business Inventory supports creating spaces within the inventory workspace, backed by `accounts/{accountId}/spaces` where `space.projectId = null`.
 - Templates remain account-wide; they can be used to create both project spaces and inventory spaces.
 
 ### 3) View space detail (tabs: Items / Images / Checklists)

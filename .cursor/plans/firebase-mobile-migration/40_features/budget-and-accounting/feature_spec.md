@@ -12,7 +12,7 @@ This spec explicitly **deviates** from the current web implementation for canoni
 ## Definitions
 
 - **Budget category preset**: account-scoped category entity the user manages in Settings.
-- **Project category budgets**: per-project allocation docs under `projects/{projectId}/budgetCategories/{budgetCategoryId}` (one doc per preset category id).
+- **Project category budgets**: per-project allocation docs under `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}` (one doc per preset category id).
 - **Pinned budget categories**: per-user per-project ordered list of pinned budget category ids.
   - Source of truth contract: `20_data/data_contracts.md` → **Entity: ProjectPreferences**
   - Primary use: drives the collapsed Budget view and Projects list budget preview subset.
@@ -34,7 +34,7 @@ Canonical working doc (source of truth):
 
 ### 1) Fee categories have special semantics
 - **Budget source**: the project’s per-category allocation for that category:
-  - `projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents`
+  - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents`
 - **Progress semantics**: “received”, not “spent”
 - **Stable identifier**: fee specialness is keyed by a stable, explicit type (`budgetCategory.metadata.categoryType === "fee"`), not by the category name string.
   - Intentional delta vs web: web uses name heuristics in `src/components/ui/BudgetProgress.tsx`.
@@ -101,13 +101,13 @@ Web parity evidence:
 ### Inputs (Firestore cached reads; project-scoped)
 All rollups are computed from Firestore-cached reads within the active project scope:
 - Project category budgets:
-  - `projects/{projectId}/budgetCategories/{budgetCategoryId}`
+  - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
 - Budget category presets (account-scoped):
-  - `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
+  - `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
 - Transactions (project-scoped):
-  - `projects/{projectId}/transactions/{transactionId}`
+  - `accounts/{accountId}/transactions/{transactionId}` with `transaction.projectId = <projectId>`
 - Items (project-scoped):
-  - `projects/{projectId}/items/{itemId}` with `item.inheritedBudgetCategoryId`
+  - `accounts/{accountId}/items/{itemId}` with `item.projectId = <projectId>` and `item.inheritedBudgetCategoryId`
 
 ### Money normalization
 All persisted currency amounts are **integer cents** per `20_data/data_contracts.md` (e.g. `amountCents`, `purchasePriceCents`).
@@ -193,7 +193,7 @@ Parity evidence:
 Fee “received” is computed for each fee category preset (each `budgetCategoryId` where `metadata.categoryType === "fee"`):
 
 - **Budget**: the per-project allocation for that category:
-  - `projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents` (treat missing/NULL as 0)
+  - `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}.budgetCents` (treat missing/NULL as 0)
 - **Received**: sum of non-canceled transactions where `transaction.budgetCategoryId === budgetCategoryId`:
   - purchases add
   - returns subtract

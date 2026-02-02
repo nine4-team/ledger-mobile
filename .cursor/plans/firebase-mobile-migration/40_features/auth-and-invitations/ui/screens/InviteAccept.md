@@ -25,7 +25,7 @@ User actions:
   - if `token` is present, store it as `pendingInviteToken` immediately so it survives restarts/auth flows
 - Accept the invite (server-owned):
   - if authenticated, call callable `acceptInvite(token)` (idempotent)
-  - the client **does not** write membership docs directly (no `accounts/{accountId}/members/{uid}` writes)
+  - the client **does not** write account user docs directly (no `accounts/{accountId}/users/{uid}` writes)
 - Navigation:
   - on successful acceptance, navigate to `/(tabs)` (and set account context from `{ accountId, role }` returned by the server)
 

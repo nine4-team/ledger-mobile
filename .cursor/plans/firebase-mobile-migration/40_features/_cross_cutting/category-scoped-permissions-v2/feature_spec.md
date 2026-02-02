@@ -14,12 +14,12 @@ Evidence / canonical attribution sources:
 ### Roles
 - **Admin**: account member with full read/write access across all categories and all records in account scope (subject to normal product constraints).
 - **User**: account member whose access is restricted to a set of budget categories (`allowedBudgetCategoryIds`), plus a limited “own uncategorized” exception for items.
-- Roles are represented by a `role` field on the member document (see §5) and must align with the existing Roles v1 spec (`"admin" | "user"`).
+- Roles are represented by a `role` field on the account user document (see §5) and must align with the existing Roles v1 spec (`"admin" | "user"`).
 
 ### Category scope
 - **`allowedBudgetCategoryIds`**: the set of budget category IDs the scoped user is allowed to access *within an account*. This is evaluated server-side for reads and writes.
 - **Item category attribution key**: `item.inheritedBudgetCategoryId` (the *effective* budget category used for attribution/filters/visibility, including inheritance rules).
-  - Naming note: this intentionally maps to the transaction field `transaction.budgetCategoryId` (and the `presets/budgetCategories/{budgetCategoryId}` collection).
+  - Naming note: this intentionally maps to the transaction field `transaction.budgetCategoryId` (and the `presets/default/budgetCategories/{budgetCategoryId}` collection).
   - If we ever rename this for ergonomics, prefer something unambiguous like `effectiveBudgetCategoryId` rather than `budgetCategoryId` (since it is not necessarily “directly set on the item”).
 - **Uncategorized item**: `item.inheritedBudgetCategoryId == null`.
 
@@ -144,9 +144,9 @@ Query shaping note (for offline-first / no large listeners):
 
 ## 5) Data shape recommendation (schema only; no code)
 
-Store per-member entitlements under account membership:
+Store per-user entitlements on the account user document:
 
-- `accounts/{accountId}/members/{uid}`
+- `accounts/{accountId}/users/{uid}`
   - `role: "admin" | "user"`
   - `allowedBudgetCategoryIds: map<budgetCategoryId, true>` (preferred) or `allowedBudgetCategoryIds: array<string>`
 

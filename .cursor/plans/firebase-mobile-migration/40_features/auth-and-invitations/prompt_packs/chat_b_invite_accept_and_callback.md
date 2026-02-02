@@ -42,7 +42,7 @@ For each non-obvious behavior:
 
 ## Constraints / non-goals
 - Do not specify or implement any `/auth/callback` route in the mobile app.
-- Do not suggest client-written membership docs like `accounts/{accountId}/members/{uid}`; invite acceptance must be server-owned (callable Function, idempotent).
+- Do not suggest client-written account user docs like `accounts/{accountId}/users/{uid}`; invite acceptance must be server-owned (callable Function, idempotent).
 - Do not do pixel-perfect design specs.
 - Focus on behaviors where multiple implementations would diverge (timeouts, retries, token persistence, idempotency).
 

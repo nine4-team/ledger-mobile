@@ -15,7 +15,7 @@ Update:
 
 ## What to capture
 - Offline policy:
-  - allow only if cached entitlements + cached stats prove under-limit
+  - allow only if cached billing/entitlements + cached billing/usage prove under-limit
   - otherwise block and instruct to go online to verify/upgrade
 - Online policy:
   - when blocked, show upgrade CTA

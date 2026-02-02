@@ -24,7 +24,7 @@ Parity evidence: `src/pages/Settings.tsx`.
 - Edit business name.
 - Optionally pick a logo file → preview renders immediately.
 - Save:
-  - Persist logo as an `AttachmentRef` on `BusinessProfile.logo` (see `20_data/data_contracts.md`).
+  - Persist logo as an `AttachmentRef` on `Profile.logo` (see `20_data/data_contracts.md`).
     - While selecting/previewing locally, `logo.url` may be `offline://<mediaId>` (with `kind: "image"`).
     - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore profile doc.
   - When online, upload the logo (if changed) and update the business profile record to a remote-backed URL.
@@ -95,12 +95,12 @@ Parity evidence: `src/components/auth/AccountManagement.tsx`.
 ## Entities touched (conceptual; Firebase mapping)
 These are “small metadata” entities that must sync efficiently and be cached locally:
 
-- `BusinessProfile` (business name + logo):
-  - `accounts/{accountId}/businessProfile/current`
+- `Profile` (business name + logo):
+  - `accounts/{accountId}/profile/default`
 - `budget_categories` (including archive state and optional metadata like itemization enabled)
 - `vendor_defaults` (10 slots + ordering)
 - `space_templates` (including nested checklists)
-- `account_memberships` / users list
+- `account_users` / users list
 - `invitations` (pending invitations per account)
 
 ## Offline behavior (required)

@@ -27,35 +27,26 @@ This is a **single, skim-friendly map** of:
 accounts/{accountId}
   projects/{projectId}
     budgetCategories/{budgetCategoryId}           (ProjectBudgetCategory)
-    items/{itemId}                                (Item)
-    spaces/{spaceId}                              (Space)
-    transactions/{transactionId}                  (Transaction)
-    requests/{requestId}                          (RequestDoc)
 
-  inventory
-    items/{itemId}                                (Item; projectId = null)
-    spaces/{spaceId}                              (Space; projectId = null)
-    transactions/{transactionId}                  (Transaction; projectId = null)
-    requests/{requestId}                          (RequestDoc)
+  items/{itemId}                                  (Item)
+  spaces/{spaceId}                                (Space)
+  transactions/{transactionId}                    (Transaction)
+  requests/{requestId}                            (RequestDoc)
+  lineageEdges/{edgeId}                           (LineageEdge)
 
-  presets
-    budgetCategories/{budgetCategoryId}            (BudgetCategory)
-    spaceTemplates/{templateId}                   (SpaceTemplate)
-    vendorDefaults/current                         (VendorDefaults)
-
-  users/{userId}
+  users/{uid}                                     (AccountUser / Member)
     projectPreferences/{projectId}                (ProjectPreferences)
 
-  members/{uid}                                   (Member)
   invites/{inviteId}                              (Invite)
-  businessProfile/current                          (BusinessProfile)
 
-  billing
-    entitlements/current                           (BillingEntitlements)
-    usage                                          (BillingUsage)
+  profile/default                                 (Profile)
+  billing/entitlements                             (BillingEntitlements)
+  billing/usage                                    (BillingUsage)
 
-  requests/{requestId}                             (RequestDoc)
-  lineageEdges/{edgeId}                            (LineageEdge)
+  presets/default
+    budgetCategories/{budgetCategoryId}           (BudgetCategory)
+    spaceTemplates/{templateId}                   (SpaceTemplate)
+    vendors/{vendorId}                            (VendorDefaults; use vendorId = "default")
 ```
 
 ### Shared shapes used below
@@ -130,7 +121,7 @@ type ProjectPreferences = {
 };
 ```
 
-#### `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}` (BudgetCategory)
+#### `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}` (BudgetCategory)
 
 ```ts
 type BudgetCategoryMetadata = {
@@ -160,7 +151,7 @@ type ProjectBudgetCategory = {
 } & LifecycleAuditFields;
 ```
 
-#### `accounts/{accountId}/projects/{projectId}/items/{itemId}` and `accounts/{accountId}/inventory/items/{itemId}` (Item)
+#### `accounts/{accountId}/items/{itemId}` (Item)
 
 ```ts
 type Item = {
@@ -197,7 +188,7 @@ type Item = {
 } & LifecycleAuditFields;
 ```
 
-#### `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}` and `accounts/{accountId}/inventory/spaces/{spaceId}` (Space)
+#### `accounts/{accountId}/spaces/{spaceId}` (Space)
 
 ```ts
 type Space = {
@@ -212,7 +203,7 @@ type Space = {
 } & LifecycleAuditFields;
 ```
 
-#### `accounts/{accountId}/presets/spaceTemplates/{templateId}` (SpaceTemplate)
+#### `accounts/{accountId}/presets/default/spaceTemplates/{templateId}` (SpaceTemplate)
 
 ```ts
 type SpaceTemplate = {
@@ -226,7 +217,7 @@ type SpaceTemplate = {
 } & LifecycleAuditFields;
 ```
 
-#### `accounts/{accountId}/members/{uid}` (Member)
+#### `accounts/{accountId}/users/{uid}` (AccountUser / Member)
 
 ```ts
 type Member = {
@@ -263,11 +254,11 @@ type Invite = {
 };
 ```
 
-#### `accounts/{accountId}/businessProfile/current` (BusinessProfile)
+#### `accounts/{accountId}/profile/default` (Profile)
 
 ```ts
-type BusinessProfile = {
-  id: "current";
+type Profile = {
+  id: "default";
   accountId: string;
   businessName: string;
   logo?: AttachmentRef | null;
@@ -278,7 +269,7 @@ type BusinessProfile = {
 };
 ```
 
-#### `accounts/{accountId}/billing/entitlements/current` (BillingEntitlements)
+#### `accounts/{accountId}/billing/entitlements` (BillingEntitlements)
 
 ```ts
 type BillingEntitlements = {
@@ -316,9 +307,7 @@ type BillingUsage = {
 #### Request docs (RequestDoc)
 
 Paths:
-- `accounts/{accountId}/requests/{requestId}` (account-scoped)
-- `accounts/{accountId}/projects/{projectId}/requests/{requestId}` (project-scoped)
-- `accounts/{accountId}/inventory/requests/{requestId}` (inventory-scoped)
+- `accounts/{accountId}/requests/{requestId}` (canonical home; scope encoded in `payload`, e.g. `payload.projectId` where applicable)
 
 ```ts
 type RequestDoc = {
@@ -374,7 +363,7 @@ type InvoiceImportPayloadMinimum = {
 };
 ```
 
-#### `accounts/{accountId}/presets/vendorDefaults/current` (VendorDefaults)
+#### `accounts/{accountId}/presets/default/vendors/{vendorId}` (VendorDefaults; use `vendorId = "default"`)
 
 ```ts
 type VendorDefaults = {
@@ -385,7 +374,7 @@ type VendorDefaults = {
 };
 ```
 
-#### `accounts/{accountId}/projects/{projectId}/transactions/{transactionId}` and `accounts/{accountId}/inventory/transactions/{transactionId}` (Transaction)
+#### `accounts/{accountId}/transactions/{transactionId}` (Transaction)
 
 ```ts
 type Transaction = {
@@ -469,8 +458,8 @@ Rationale:
 
 There are exactly **two collaboration scopes**:
 
-- **Project scope**: `projectId = "<projectId>"` and docs live under `accounts/{accountId}/projects/{projectId}/...`
-- **Business inventory scope**: `projectId = null` and docs live under `accounts/{accountId}/inventory/...`
+- **Project scope**: `projectId = "<projectId>"` and docs live under the account-level collections (e.g. `accounts/{accountId}/items/{itemId}`)
+- **Business inventory scope**: `projectId = null` and docs live under the same account-level collections
 
 Contract rule:
 - `projectId: string | null` is always present on **scoped mutable entities** (items/transactions/spaces/lineage edges, etc.).
@@ -684,7 +673,7 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location
 
-- `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
+- `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
 
 ### SQLite mapping
 
@@ -807,11 +796,11 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 Project-scope item:
 - `projectId = "<projectId>"`
-- Firestore: `accounts/{accountId}/projects/{projectId}/items/{itemId}`
+- Firestore: `accounts/{accountId}/items/{itemId}`
 
 Business inventory item:
 - `projectId = null`
-- Firestore: `accounts/{accountId}/inventory/items/{itemId}`
+- Firestore: `accounts/{accountId}/items/{itemId}`
 
 ### SQLite mapping
 
@@ -899,11 +888,11 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 Project-scope space:
 - `projectId = "<projectId>"`
-- Firestore: `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}`
+- Firestore: `accounts/{accountId}/spaces/{spaceId}`
 
 Business inventory space:
 - `projectId = null`
-- Firestore: `accounts/{accountId}/inventory/spaces/{spaceId}`
+- Firestore: `accounts/{accountId}/spaces/{spaceId}`
 
 ### SQLite mapping (optional)
 
@@ -943,7 +932,7 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 ### Firestore location (recommended; aligns with “presets” semantics)
 
-- `accounts/{accountId}/presets/spaceTemplates/{templateId}`
+- `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
 
 ---
 
@@ -954,6 +943,9 @@ This contract must satisfy:
 - `40_features/auth-and-invitations/feature_spec.md` (membership-gated access; server-owned invite acceptance)
 - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md` (Roles v2 selectors)
 - `40_features/settings-and-admin/feature_spec.md` (owner/admin gating)
+
+Member/users doc = the account roster entry (uid, role, allowed categories, disabled flag, etc.).
+ProjectPreferences = per-user UI preferences, stored under that roster doc.
 
 ### Canonical fields
 
@@ -977,7 +969,7 @@ Lifecycle/audit fields (recommended):
 
 ### Firestore location
 
-- `accounts/{accountId}/members/{uid}`
+- `accounts/{accountId}/users/{uid}`
 
 ---
 
@@ -1011,14 +1003,14 @@ Optional / nullable:
 
 ---
 
-## Entity: BusinessProfile (account branding)
+## Entity: Profile (account branding)
 
 This entity provides the account-level branding inputs used by Settings and Reports (business name + logo).
 
 ### Canonical fields
 
 Doc id:
-- `id = "current"`
+- `id = "default"`
 
 Required:
 - `accountId: string`
@@ -1036,7 +1028,7 @@ Lifecycle/audit fields (recommended):
 
 ### Firestore location (canonical)
 
-- `accounts/{accountId}/businessProfile/current`
+- `accounts/{accountId}/profile/default`
 
 ---
 
@@ -1059,7 +1051,7 @@ Optional:
 
 ### Firestore location
 
-- `accounts/{accountId}/billing/entitlements/current`
+- `accounts/{accountId}/billing/entitlements`
 
 ---
 
@@ -1113,14 +1105,8 @@ Optional:
 
 ### Firestore locations (canonical)
 
-Account-scoped requests (gated creates, account-wide workflows):
 - `accounts/{accountId}/requests/{requestId}`
-
-Project-scoped invariant requests:
-- `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
-
-Inventory-scoped invariant requests:
-- `accounts/{accountId}/inventory/requests/{requestId}`
+  - Scope is encoded in the RequestDoc `payload` (e.g. `payload.projectId` where applicable).
 
 ### Known request payload schemas (codified from feature specs)
 
@@ -1182,6 +1168,7 @@ Minimum payload shape (conceptual; aligns to entity contracts):
 ## Entity: VendorDefaults (account preset; recommended shape)
 
 This entity is required by feature specs (transactions/forms) but is not fully specified elsewhere yet.
+It is stored as a single doc under `vendors/default` to avoid extra nesting while keeping a presets umbrella.
 
 ### Canonical fields (recommended)
 
@@ -1195,7 +1182,7 @@ Lifecycle/audit fields (recommended):
 
 ### Firestore location (recommended)
 
-- `accounts/{accountId}/presets/vendorDefaults/current`
+- `accounts/{accountId}/presets/default/vendors/default`
 
 ---
 
@@ -1293,11 +1280,11 @@ Authoritative value source for canonical totals:
 
 Project-scope transaction:
 - `projectId = "<projectId>"`
-- Firestore: `accounts/{accountId}/projects/{projectId}/transactions/{transactionId}`
+- Firestore: `accounts/{accountId}/transactions/{transactionId}`
 
 Business inventory transaction:
 - `projectId = null`
-- Firestore: `accounts/{accountId}/inventory/transactions/{transactionId}`
+- Firestore: `accounts/{accountId}/transactions/{transactionId}`
 
 ### SQLite mapping
 

@@ -47,7 +47,7 @@ Primary sources:
    - Write the file into the local media cache.
    - Create/update a local media record (metadata: size, localUri/path, checksum if used, timestamps, owning scope).
 3) **Link to the domain entity**
-   - Create/update the relevant **attachment reference** on the owning entity (e.g. `item.images[]`, `transaction.receiptImages[]`, `space.images[]`, `businessProfile.logo`).
+  - Create/update the relevant **attachment reference** on the owning entity (e.g. `item.images[]`, `transaction.receiptImages[]`, `space.images[]`, `profile.logo`).
    - Contract (canonical; GAP B):
      - The Firestore domain entity stores **AttachmentRefs** only (stable domain truth).
      - For local-first selection, write an `AttachmentRef` whose `url` is an `offline://<mediaId>` placeholder (and include `kind` so PDF-vs-image is explicit).

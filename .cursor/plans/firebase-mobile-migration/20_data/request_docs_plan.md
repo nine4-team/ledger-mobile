@@ -3,8 +3,8 @@
 This doc is a **spec-first plan** to eliminate “request-doc helper drift” while we are still designing the new app.
 
 It defines:
-- A **canonical RequestDoc contract** (fields, scopes, status semantics)
-- A **single pathing model** (project/inventory/account)
+- A **canonical RequestDoc contract** (fields, scope semantics, status semantics)
+- A **single pathing model** (account-level collection; scope encoded in payload)
 - A **stable error taxonomy** (so UI and Functions agree)
 - A **build checklist** for the client + Functions + UI
 
@@ -38,30 +38,18 @@ This plan treats today’s helper as **an implementation detail**, not a spec co
 
 ---
 
-## Canonical scopes (what we will build)
+## Canonical scope (what we will build)
 
-Request docs support **three scopes**:
+Request docs use **one collection path**:
 
-1) **Account-scoped**
+1) **Account-scoped (single path)**
 - Path: `accounts/{accountId}/requests/{requestId}`
-- Use when the operation is account-global or should not require a project context:
-  - Billing / entitlement gated creates
-  - Account-level admin operations
-
-2) **Project-scoped**
-- Path: `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
-- Use when the operation is inherently project-specific:
-  - Invoice import “create transaction + items”
-  - Project item mutations, allocations, etc.
-
-3) **Inventory-scoped**
-- Path: `accounts/{accountId}/inventory/requests/{requestId}`
-- Use when the operation is inventory-global:
-  - Inventory operations that are not tied to a single project
+- Scope is encoded in `payload` (e.g. `payload.projectId` where applicable).
+- Use for all operations (project, inventory, and account-global). The Function applies scope rules based on payload fields.
 
 ### Rule
 
-For any request doc, **the scope is determined by the path** (avoid “scope inferred from payload”).
+For any request doc, **the scope is determined by the payload**, since the path is shared.
 
 ---
 
@@ -155,7 +143,7 @@ Feature-specific codes are allowed only if they map to one of the above UI categ
 ### Client helper (one “right” module)
 
 Implement one request-doc helper that:
-- Can create request docs in **all three scopes** (account/project/inventory)
+- Can create request docs in the **single account-level collection**
 - Requires `opId`
 - Subscribes by **explicit doc path** (so the API is uniform across scopes)
 
@@ -184,7 +172,7 @@ UI maps strictly by status + errorCode:
 ## Guardrails (“don’t let drift happen again”)
 
 - **Specs must not reference a helper file** as the source-of-truth. Specs reference the **contract** (this doc + `data_contracts.md`).
-- **A request’s scope is determined by the path**, not by arbitrary fields in `payload`.
+- **A request’s scope is determined by the payload**, since the path is shared for all requests.
 - **All “denied” semantics use the same `errorCode`** (`ENTITLEMENT_DENIED`).
 - **All retries reuse `opId`**; new Firestore doc ids represent attempts, not intent.
 

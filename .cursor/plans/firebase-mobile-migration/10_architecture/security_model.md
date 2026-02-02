@@ -32,9 +32,9 @@ This model is designed to support the architecture in:
 
 ### Membership + roles
 
-Membership is expressed as a document keyed by `uid`:
+Account membership is expressed on the account user document keyed by `uid`:
 
-`accounts/{accountId}/members/{uid}`
+`accounts/{accountId}/users/{uid}`
 
 Fields (suggested):
 
@@ -48,7 +48,7 @@ System owners are **global**, matching the current app:
 
 - Store them as either a Firebase Auth custom claim (e.g. `request.auth.token.role == "owner"`)
   or a rules-checkable allowlist doc like `systemOwners/{uid}`.
-- In rules: allow access if the requester is a system owner **OR** has an active membership doc.
+- In rules: allow access if the requester is a system owner **OR** has an active account user doc.
 
 Role semantics:
 
@@ -72,7 +72,7 @@ This doc stays focused on **enforcement** (Rules/Functions + data shape). Produc
 
 #### Future: scoped visibility + fine-grained permissions (budget-category + ownership)
 
-Planned direction: an admin can assign a member a **visibility scope** such that they only see:
+Planned direction: an admin can assign an account user a **visibility scope** such that they only see:
 
 - transactions/items/spaces/projects related to a permitted **budget category** (or set of categories), and/or
 - records they **created** (ownership fallback), depending on policy.
@@ -138,9 +138,9 @@ To remain backward-compatible (and keep MVP simple), scope enforcement should be
 
 Default assumption (simple, scalable enough for now):
 
-- Project access is **account-wide** (any active member can access account projects).
+- Project access is **account-wide** (any active account user can access account projects).
 - If you later need per-project ACLs, add:
-  - `accounts/{accountId}/projects/{projectId}/members/{uid}` (or a compact allowlist)
+  - `accounts/{accountId}/projects/{projectId}/users/{uid}` (or a compact allowlist)
   - and update rules accordingly.
 
 ---
@@ -152,16 +152,15 @@ All docs must include `accountId` (and `projectId` where applicable).
 Recommended high-level layout:
 
 - `accounts/{accountId}`
-  - `members/{uid}` (membership/role)
+  - `users/{uid}` (account user: membership/role)
   - `invites/{inviteId}` (or `invites/{tokenHash}`) — invite issuance + status
   - `projects/{projectId}`
-    - `requests/{requestId}` (request-doc workflows for multi-doc correctness)
-  - `inventory/items/{itemId}`
-  - `inventory/transactions/{transactionId}`
-  - `inventory/spaces/{spaceId}`
-  - `inventory/attachments/{attachmentId}`
-  - `inventory/requests/{requestId}` (request-doc workflows for multi-doc correctness)
-  - `presets/...` (budget categories, vendor defaults, tax presets, space templates, etc.)
+    - `budgetCategories/{budgetCategoryId}` (per-project budget allocations)
+  - `items/{itemId}`
+  - `transactions/{transactionId}`
+  - `spaces/{spaceId}`
+  - `requests/{requestId}` (request-doc workflows for multi-doc correctness)
+  - `presets/default/...` (budget categories, vendor defaults, space templates, etc.)
 
 Notes:
 
@@ -181,7 +180,7 @@ Notes:
 - A request is allowed only if:
   - the doc’s `accountId` matches the path account id, and
   - requester is a **system owner**, OR:
-    - a membership doc exists for `request.auth.uid`, and
+    - an account user doc exists for `request.auth.uid`, and
     - membership is not disabled (e.g. `disabledAt == null`, if you include that field)
 
 ### Validate server-owned sync fields
@@ -218,7 +217,7 @@ Examples (from existing app behavior / sync spec intent):
 - Inventory allocation/sale operations that update multiple docs
 - Lineage pointers / canonical relationships
 - Rollups (project totals, counts) that must match canonical state
-- Invitation acceptance (token validation → create membership → mark invite used)
+- Invitation acceptance (token validation → create account user → mark invite used)
 - Entitlement/billing-gated operations (e.g., “create project beyond free limit”)
 
 Callable Functions should:
@@ -238,10 +237,9 @@ Request docs are the default mechanism for multi-doc correctness:
 - Server processes and applies changes in a transaction.
 - Server records status on the request doc for debuggable UX.
 
-Recommended shape (example paths):
+Recommended shape (example path):
 
-- `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
-- `accounts/{accountId}/inventory/requests/{requestId}`
+- `accounts/{accountId}/requests/{requestId}`
 
 Rules must enforce:
 
@@ -280,7 +278,7 @@ Allowed:
 Not allowed:
 
 - non-admin members creating invites
-- clients directly creating membership docs for other users
+- clients directly creating account user docs for other users
 
 ### Invite acceptance
 
@@ -288,7 +286,7 @@ Invite acceptance should be a callable Function:
 
 - inputs: invite token, optional profile data
 - server validates token + expiry + status
-- server creates `accounts/{accountId}/members/{uid}` with role
+- server creates `accounts/{accountId}/users/{uid}` with role
 - server marks invite as used
 
 This avoids fragile rules around “only the invited person can accept”.
@@ -304,14 +302,14 @@ Use Storage paths that include tenant and project boundaries:
 Storage rules:
 
 - require authenticated user
-- require membership in `accounts/{accountId}/members/{uid}`
+- require membership in `accounts/{accountId}/users/{uid}`
 - optionally require App Check
 
 Integrity linkage:
 
-- after upload, client (or function) writes an `attachments/{attachmentId}` Firestore doc containing:
-  - `storagePath`, `size`, `mimeType`, `sha256`, `uploadedBy`, `uploadedAt`
-  - `accountId`, `projectId`, `parentType`, `parentId`
+- after upload, client (or function) updates the owning entity’s embedded `AttachmentRef`:
+  - replace `offline://<mediaId>` with the remote URL
+  - do not create a standalone Firestore attachment doc in the baseline model
 
 ---
 

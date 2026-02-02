@@ -67,8 +67,8 @@ Each function must:
 This feature MUST define concrete request-doc shapes so implementation can be transactional, idempotent, and debuggable.
 
 Collection shape (recommended; per `OFFLINE_FIRST_V2_SPEC.md`):
-- Project-scoped requests: `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
-- Inventory-scoped requests (optional, if you prefer BI as its own scope): `accounts/{accountId}/inventory/requests/{requestId}`
+- Account-scoped requests: `accounts/{accountId}/requests/{requestId}`
+  - Scope is encoded in `payload` (e.g. `payload.projectId` where applicable).
 
 Common request doc fields:
 - `type`: `"ITEM_SALE_PROJECT_TO_BUSINESS" | "ITEM_SALE_BUSINESS_TO_PROJECT" | "ITEM_SALE_PROJECT_TO_PROJECT"`
