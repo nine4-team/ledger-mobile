@@ -11,12 +11,33 @@ Architecture baseline (mobile):
 ## Definitions
 - **Space**: a location/grouping entity used to organize items.
 - **Space template**: an account-wide preset used to prefill a new space (name/notes/checklists).
+- **Workspace scope** (required): where the Space “lives” and which Items may reference it:
+  - **Project scope**: spaces within a specific project.
+  - **Business Inventory scope**: spaces within the Business Inventory workspace (no `projectId`).
 
 Migration stance (intentional model choice):
-- **Spaces are project-scoped**. We do not model “account-wide spaces” as real Space records in the target app; the reusable/account-wide concept is **templates**.
+- **Spaces are workspace-scoped** (Project or Business Inventory). We do not model generic “account-wide spaces” that float across contexts; the reusable/account-wide concept is **templates**.
+- **Business Inventory spaces are not legacy “account-wide spaces”**:
+  - Legacy web traces `space.projectId === null` (“Account-wide space”).
+  - Migration requirement: Business Inventory spaces live in an **explicit inventory scope** (separate collection path), so we don’t reintroduce ambiguous “null projectId” semantics inside project space UX.
 
 Parity note (web legacy behavior to not carry forward as-is):
 - The web data model and UI include traces of `space.projectId === null` (“Account-wide space”). Treat that as legacy; do not build new product behavior around it for the migration.
+
+## Scope + datastore locations (Firebase target; required)
+
+### Space locations
+- **Project spaces**:
+  - Firestore: `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}`
+- **Business Inventory spaces**:
+  - Firestore: `accounts/{accountId}/inventory/spaces/{spaceId}`
+
+### Item ↔ space reference rules (required)
+- Items reference spaces via `item.spaceId`.
+- **Scope consistency is mandatory**:
+  - If `item.projectId = <projectId>`, then `item.spaceId` (when non-null) must refer to a Space in `projects/{projectId}/spaces`.
+  - If `item.projectId = null` (Business Inventory), then `item.spaceId` (when non-null) must refer to a Space in `inventory/spaces`.
+- When an item changes scope (e.g. Business Inventory → Project allocation), `spaceId` must be updated/cleared as part of the same invariant operation so it never points at a space from the wrong scope.
 
 ## Owned screens / routes
 - **Spaces list**: `ProjectSpacesPage`
@@ -31,6 +52,16 @@ Parity note (web legacy behavior to not carry forward as-is):
 - **Edit space**: `SpaceEdit`
   - Route: `/project/:projectId/spaces/:spaceId/edit`
   - Web parity source: `src/pages/SpaceEdit.tsx`
+
+Business Inventory equivalents (conceptual; mobile routes may differ, but the scope must be explicit):
+- **Inventory spaces list**: `BusinessInventorySpacesList`
+  - Route concept: `/business-inventory/spaces`
+- **Create inventory space**: `BusinessInventorySpaceNew`
+  - Route concept: `/business-inventory/spaces/new`
+- **Inventory space detail**: `BusinessInventorySpaceDetail`
+  - Route concept: `/business-inventory/spaces/:spaceId`
+- **Edit inventory space**: `BusinessInventorySpaceEdit`
+  - Route concept: `/business-inventory/spaces/:spaceId/edit`
 
 Screen contracts:
 - `ui/screens/ProjectSpacesList.md`
@@ -51,6 +82,10 @@ Parity evidence:
 - List/search + empty states: `src/pages/ProjectSpacesPage.tsx`
 - Offline image resolution: `src/components/spaces/SpacePreviewCard.tsx`
 
+Business Inventory scope (required):
+- Business Inventory must support the same “browse/search spaces” UX within the inventory workspace, backed by `accounts/{accountId}/inventory/spaces`.
+- Item counts must be computed from **inventory-scoped items only** (`projectId = null`) that reference the space via `spaceId`.
+
 ### 2) Create a space (optionally from template)
 Summary:
 - Create is launched from the Spaces list “Add”.
@@ -65,6 +100,10 @@ Parity evidence:
 - Template picker and prefill: `src/pages/SpaceNew.tsx`
 - Checklist normalization: `normalizeChecklistsFromTemplate` in `src/pages/SpaceNew.tsx`
 - Success + refresh: `refreshCollections({ includeProject: false })` in `src/pages/SpaceNew.tsx`
+
+Business Inventory scope (required):
+- Business Inventory supports creating spaces within the inventory workspace, backed by `accounts/{accountId}/inventory/spaces`.
+- Templates remain account-wide; they can be used to create both project spaces and inventory spaces.
 
 ### 3) View space detail (tabs: Items / Images / Checklists)
 Summary:
@@ -104,11 +143,28 @@ Migration notes:
   - and (optional, parity): set human-readable `item.space` name for display if retained in the data contract
 - Do not implement an unbounded listener on all items just to compute “live item counts”. Use scoped/bounded queries and/or a denormalized counter strategy (if needed).
 
+Business Inventory scope (required):
+- The Items tab must work for inventory spaces as well:
+  - “Add Existing Items” searches **inventory items only** (`projectId = null`).
+  - Bulk add/remove sets/clears `item.spaceId` on inventory items.
+- Cross-scope assignment is disallowed (an inventory space cannot contain project items; a project space cannot contain inventory items).
+
+Allocation touchpoint (required; Business Inventory → Project):
+- Allocation flows may include an optional “destination space” choice for the target project.
+- When allocating an inventory item to a project via the server-owned invariant (request-doc workflow):
+  - set `item.projectId = <projectId>`
+  - set/clear `item.spaceId` to a **project space id** selected by the user (or `null` if not selected)
+  - ensure the resulting `spaceId` conforms to the “scope consistency” rules above
+- Source of truth for allocation invariants: `40_features/inventory-operations-and-lineage/flows/business_inventory_to_project_allocation.md`.
+
 ### 5) Manage space images (Space detail → Images tab)
 Summary:
 - User can add multiple images; uploads may create `offline://` placeholder URLs (renderable immediately).
 - User can remove images and set a primary image.
 - Image grid supports lightbox/gallery behavior consistent with the cross-cutting contract.
+- Attachment contract (required; GAP B):
+  - Persisted space images are `AttachmentRef[]` (see `20_data/data_contracts.md`), with `kind: "image"`.
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally per `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`, not stored on the Space doc.
 
 Parity evidence:
 - Add images + upload activity UI: `src/pages/SpaceDetail.tsx` (`handleAddImage`, `UploadActivityIndicator`)
@@ -166,13 +222,16 @@ Parity evidence:
 
 Migration note:
 - In Firebase, enforce “clear assignment” semantics server-side if needed (e.g., on delete, clear `item.spaceId` for affected items) to avoid orphaned references.
+- This must apply to **both** project spaces and inventory spaces (scoped to the relevant item collection).
 
 ## Offline-first behavior (mobile target)
 
 ### Local source of truth
 - UI reads from **Firestore’s local cache** via the native Firestore SDK (cache-first reads with server reconciliation when online).
 - User writes are **direct Firestore writes** (queued offline by Firestore-native persistence).
-- Media attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders until Cloud Storage URLs are available.
+- Media attachments are represented locally immediately via `AttachmentRef.url = offline://<mediaId>` placeholders (with explicit `kind`).
+  - When upload completes, the owning Space doc is patched by replacing the placeholder URL with a remote URL.
+  - Do not persist transient upload state on the Space doc; state is local + derived.
 
 ### Restart behavior
 - On cold start:
@@ -197,4 +256,7 @@ Canonical migration source:
 ## Permissions and gating
 - User must be authenticated and have an active `accountId` to manage spaces.
 - “Save as Template” is admin-only (client gating for UX; server enforcement required).
+Business Inventory scope (required):
+- Inventory spaces use the same authentication baseline.
+- If Business Inventory creation/edit is role-gated (per `40_features/business-inventory/feature_spec.md`), inventory spaces should follow the same gating policy for consistency (client gating for UX; server enforcement required).
 

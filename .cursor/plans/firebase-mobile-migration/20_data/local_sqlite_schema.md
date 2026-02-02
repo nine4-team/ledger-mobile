@@ -46,15 +46,15 @@ Required identity/scoping columns (stored, not full-text indexed):
 - `account_id` (TEXT)
 - `project_id` (TEXT NULL) — `NULL` means Business Inventory scope
 - `item_id` (TEXT) — Firestore doc id
+- `space_id` (TEXT NULL)
+  - When `project_id IS NULL`, this references an inventory-scope Space.
 
 Indexed text columns (from feature specs):
 
 - `description` (TEXT)
 - `sku` (TEXT)
 - `source` (TEXT)
-- `payment_method` (TEXT)
-- `business_inventory_location` (TEXT)
-  - Only meaningful when `project_id IS NULL` (inventory scope).
+- `purchased_by` (TEXT)
 
 TBD (spec gap; do not invent):
 - Project-scope items list search fields (feature specs do not enumerate them). If project items search should include fields beyond the inventory list set, update this schema based on an explicit spec update.

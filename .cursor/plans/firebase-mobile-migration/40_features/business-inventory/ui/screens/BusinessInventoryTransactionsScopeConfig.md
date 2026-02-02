@@ -96,7 +96,7 @@ Parity evidence:
   - Inventory scope must use scoped listeners (bounded) where realtime freshness is required.
   - SQLite is allowed only as an optional derived index (not authoritative).
 - Media behavior must follow:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Scroll restoration (required; mobile target)

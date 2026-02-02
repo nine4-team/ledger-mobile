@@ -44,7 +44,7 @@ For operations that update multiple docs and enforce invariants, the default mec
 
 - Client writes a `request` doc describing the operation (works offline via Firestore-native offline persistence).
 - A Cloud Function processes the request and applies all writes in a Firestore transaction.
-- The request doc records `status` so the client can render `pending/applied/failed` and offer retry.
+- The request doc records `status` so the client can render `pending/applied/failed/denied` and offer retry.
 
 Reference: `OFFLINE_FIRST_V2_SPEC.md` (“Request-doc workflows”).
 
@@ -61,7 +61,7 @@ Each function must:
 - Validate permissions (membership + role).
 - Validate preconditions (expected current state; detect conflicts).
 - Apply all document writes atomically (items + canonical transaction docs + lineage docs + request status updates).
-- Use an idempotency key (`requestId` / `opId`) to make retries safe.
+- Use `opId` to make retries safe. (`requestId` is the Firestore doc id for a single attempt; retries create a new request doc with the same `opId`.)
 
 ### Request-doc collection + payload shapes (required)
 This feature MUST define concrete request-doc shapes so implementation can be transactional, idempotent, and debuggable.
@@ -72,7 +72,7 @@ Collection shape (recommended; per `OFFLINE_FIRST_V2_SPEC.md`):
 
 Common request doc fields:
 - `type`: `"ITEM_SALE_PROJECT_TO_BUSINESS" | "ITEM_SALE_BUSINESS_TO_PROJECT" | "ITEM_SALE_PROJECT_TO_PROJECT"`
-- `status`: `"pending" | "applied" | "failed"` (clients write only `"pending"`)
+- `status`: `"pending" | "applied" | "failed" | "denied"` (clients write only `"pending"`)
 - `createdAt`, `createdBy`
 - `appliedAt?`
 - `errorCode?`, `errorMessage?` (safe, non-sensitive)

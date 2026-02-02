@@ -33,8 +33,6 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/BusinessInventoryItemDetail.tsx` (checks `isOnline`, calls `showOfflineSaved`, returns early).
 - [ ] **Duplicate grouping**: Inventory list groups duplicates and provides a collapsed-group UI.  
   Observed in `src/pages/BusinessInventory.tsx` (`CollapsedDuplicateGroup`, `getInventoryListGroupKey`).
-- [ ] **QR generation gating**: “Generate QR codes” is shown only when QR feature flag is enabled.  
-  Observed in `src/pages/BusinessInventory.tsx` (`ENABLE_QR` from `VITE_ENABLE_QR`).
 
 ## Inventory items create/edit
 - [ ] **Permission gate**: Users without the required role cannot add inventory items; they see an Access Denied screen with a back CTA.  
@@ -77,6 +75,9 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/AddBusinessInventoryTransaction.tsx` (`OfflineAwareImageService.uploadReceiptAttachment`, `offline://` placeholder metadata).
 - [ ] **Offline receipt feedback**: If receipts were queued while offline, show “saved offline” feedback.  
   Observed in `src/pages/AddBusinessInventoryTransaction.tsx` (checks `receiptOfflineMediaIds.length > 0 && !isOnline`, calls `showOfflineSaved()`).
+  Attachment contract (mobile; required):
+  - Receipts persist as `AttachmentRef[]` on the transaction doc (see `20_data/data_contracts.md`), with explicit `kind: "image" | "pdf"` and `offline://<mediaId>` placeholders.
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore domain entity.
 
 ## Firebase mobile collaboration (intentional deltas)
 - [ ] **Scoped listeners only (required)**: Inventory screens may use listeners, but they must be **bounded to the active inventory scope** and must detach on background / reattach on resume.  

@@ -13,7 +13,10 @@ Provide a printable/shareable “Client Summary” for a project: overall spend,
   - Items for project
   - Transactions for project (for receipt link resolution and category attribution fallback)
   - Budget categories (for id → name mapping)
-  - Business profile (logo + name)
+  - Business profile:
+    - `businessName`
+    - `logo` as `AttachmentRef` (see `20_data/data_contracts.md` → `BusinessProfile.logo`)
+    - Derived logo upload state (local_only/uploading/failed/uploaded) from local media subsystem (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`)
 - Derived view models:
   - `totalSpent`: sum of item `projectPrice`
   - `totalMarketValue`: sum of item `marketValue`
@@ -42,7 +45,9 @@ Provide a printable/shareable “Client Summary” for a project: overall spend,
   - Mobile requirement: share/print via native flows using a rendered artifact derived from local state.
 - Tap “View Receipt” in item list:
   - If the item’s linked transaction is canonical (`INV_*`) OR invoiceable by reimbursement type, navigate to project invoice report.
-  - Else, if the transaction has a receipt image URL, open it externally.
+  - Else, if the transaction has a receipt attachment:
+    - If it is remote-backed (`AttachmentRef.url` is a remote URL), open it externally (works for images or PDFs).
+    - If it is local-only (`offline://<mediaId>` placeholder), do not show an external link in a shared/printed artifact; show “Receipt pending upload” indicator instead.
   - Else, no receipt link is shown.
   - Parity evidence: `src/pages/ClientSummary.tsx` (`getReceiptLink`) and item list rendering.
 

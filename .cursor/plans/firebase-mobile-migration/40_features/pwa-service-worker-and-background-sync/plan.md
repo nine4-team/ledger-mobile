@@ -7,7 +7,7 @@ Produce parity-informed specs for “service worker + background sync” outcome
 - Feature list entry: `40_features/feature_list.md` → `pwa-service-worker-and-background-sync`
 - Offline Data v2 architecture: `OFFLINE_FIRST_V2_SPEC.md`
 - Global sync UX spec: `40_features/connectivity-and-sync-status/feature_spec.md`
-- Web parity evidence:
+- Web parity evidence (legacy Ledger web codebase; **not files in this repo**):
   - `public/sw-custom.js`
   - `src/services/serviceWorker.ts`
   - `src/components/SyncStatus.tsx`

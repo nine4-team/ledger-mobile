@@ -8,7 +8,7 @@ Shared-module requirement:
 - Source of truth: `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 
 ## Transactions list
-- [ ] **Renders project transactions list**: shows title, amount, payment method, date, notes preview, and badges.  
+- [ ] **Renders project transactions list**: shows title, amount, purchased by, date, notes preview, and badges.  
   Observed in `src/pages/TransactionsList.tsx` (list item markup + `formatCurrency`, `formatDate`).
 - [ ] **Canonical title mapping**: canonical transaction IDs display special titles (inventory purchase/sale).  
   Observed in `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`).
@@ -51,7 +51,7 @@ Shared-module requirement:
 - [ ] **Export action exists**: list can export transactions to CSV with project-scoped filename and includes category name + `budgetCategoryId`.  
   Observed in `src/pages/TransactionsList.tsx` (`buildTransactionsCsv`, `fileName = project-<id>-<date>.csv`).  
 - [ ] **Canonical rows export without a user-facing category (new model)**: canonical inventory transactions export with `budgetCategoryId` blank and category name blank/“Uncategorized” (consistent choice).  
-  Optional (recommended): include an extra column that summarizes derived item categories (e.g., `attributedCategoryIds`) based on linked items’ `inheritedBudgetCategoryId`.  
+  Optional (recommended): include an extra column that summarizes derived item categories (e.g., `budgetCategoryIds`) based on linked items’ `inheritedBudgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
 - [ ] **Mobile export uses share sheet**: export is shareable via native share UX rather than browser download link creation.  
   **Intentional delta** (platform difference).
@@ -80,6 +80,9 @@ Shared-module requirement:
   Observed in `src/pages/AddTransaction.tsx` (`ImageUpload acceptedTypes`, `OfflineAwareImageService.uploadReceiptAttachment`).
 - [ ] **Other images upload**: can attach up to 5 other images; offline placeholders are permitted.  
   Observed in `src/pages/AddTransaction.tsx` (`ImageUpload maxImages`, `OfflineAwareImageService.uploadOtherAttachment`).
+  Attachment contract (mobile; required):
+  - Receipts and images persist as `AttachmentRef[]` on the transaction doc (see `20_data/data_contracts.md`), with explicit `kind: "image" | "pdf"` and `offline://<mediaId>` placeholders.
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore domain entity.
 - [ ] **Itemization conditional**: itemization list renders only when enabled for the selected category (recommended: `categoryType === "itemized"`).  
   Observed in `src/pages/AddTransaction.tsx` (`getItemizationEnabled`).
 
@@ -101,7 +104,7 @@ Shared-module requirement:
   Observed in `src/pages/EditTransaction.tsx` (warning block when `!itemizationEnabled && hasExistingItems`).
 
 ## Transaction detail
-- [ ] **Core field display**: shows category, source, amount (computed canonical total when applicable), date, payment method, status, reimbursement type, receipt emailed, notes.  
+- [ ] **Core field display**: shows category, source, amount (computed canonical total when applicable), date, purchased by, status, reimbursement type, receipt emailed, notes.  
   Observed in `src/pages/TransactionDetail.tsx` (details grid + computed total display).
 - [ ] **Receipt section**: displays receipts with add/remove, maxImages=5; add supports images + PDFs.  
   Observed in `src/pages/TransactionDetail.tsx` (Receipts section + `input.accept = 'image/*,application/pdf'` + `TransactionImagePreview maxImages={5}`).

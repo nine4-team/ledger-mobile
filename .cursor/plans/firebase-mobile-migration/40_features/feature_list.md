@@ -51,7 +51,7 @@ This section is organized **domain-first**:
 ### B1) Items (shared domain module; used by both workspaces)
 
 - **Items**
-  - Item CRUD, list/search/sort/filter/group, bulk selection + bulk actions, images, QR, bookmarks, duplicate grouping, dispositions/status, and assignment to space/transaction.
+  - Item CRUD, list/search/sort/filter/group, bulk selection + bulk actions, images, bookmarks, duplicate grouping, dispositions/status, and assignment to space/transaction.
   - **Same attribute shape across scopes** (project items and inventory items are the same “Item” entity; scoping differs).
 
 ### B2) Transactions (shared domain module; scope-specific constraints)
@@ -137,7 +137,7 @@ Spec home (cross-cutting): `40_features/_cross_cutting/billing-and-entitlements/
 - Follow the canonical speccing workflow in `40_features/_authoring/feature_speccing_workflow.md` (feature folders, prompt packs, templates, evidence rule).
 - When expanding a feature, **actively hunt for “everything it does”**:
   - Start from **Appendix X** in this doc (observed behaviors, screen ownership, flows).
-  - Capture cross-cutting reuse from section E (list controls, bulk ops, media lifecycle, linking/itemization, QR, pending/error UX, conflicts).
+  - Capture cross-cutting reuse from section E (list controls, bulk ops, media lifecycle, linking/itemization, pending/error UX, conflicts).
   - Include “boring but critical” behaviors: permission gating, empty/error states, performance constraints, and offline-first invariants.
 
 ---
@@ -156,7 +156,6 @@ These are not “features” by themselves, but **must be spec’d once and reus
   - Guardrails subcomponent (global warning + offline attachment gating):
     - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - **Cross-linking UI**: item ↔ transaction linking (“itemization”), item ↔ space assignment, pickers and browse-in-context behaviors.
-- **QR flows**: generate/show/print/share QR codes, and the navigation affordances around QR.
 - **Pending/sync/error UX**: consistent pending markers, error surfacing, retry affordances that map to Firestore pending writes + request-doc status.
 - **Conflict UX**: detection, persistence, and resolution patterns for high-risk fields (money/category/tax).
 
@@ -276,7 +275,7 @@ Evidence sources (all in-repo):
     - Space templates manager
   - Users tab (owner/admin): manage users (membership + roles)
   - Account tab (owner): account management
-- **Entities touched**: users, memberships/roles, business_profile, budget_categories, vendor_defaults, space_templates, account metadata
+- **Entities touched**: users, memberships/roles, business profile, budget_categories, vendor_defaults, space_templates, account metadata
 - **Offline behaviors required**:
   - Presets must be **readable offline** because downstream screens depend on them (category pickers, vendor pickers, templates)
   - For mutations: either queue or explicitly require online; whichever you choose, provide consistent UX + pending states
@@ -301,7 +300,7 @@ Evidence sources (all in-repo):
   - Delete project (confirm, with warning if project contains items)
   - Refresh project data (manual refresh control)
   - Navigate between sections (items/transactions/spaces/budget) and persist last section
-- **Entities touched**: projects, items, transactions, spaces, business_profile (branding used in reports), membership/roles
+- **Entities touched**: projects, items, transactions, spaces, business profile (branding used in reports), membership/roles
 - **Offline behaviors required**:
   - Browse projects from local DB when offline
   - Open a project offline and show last-known snapshot
@@ -314,7 +313,7 @@ Evidence sources (all in-repo):
   - Requires sync engine + local DB schema for projects
   - Depends on connectivity/sync-status UX (global)
 
-### 6) Project items: list/search/filter/sort + detail + CRUD + bulk ops + QR
+### 6) Project items: list/search/filter/sort + detail + CRUD + bulk ops
 - **feature_slug**: `project-items`
 - **Short description**: Project-scoped item management, including rich list controls (filters/sorts/grouping), bulk editing, item detail navigation, and item images.
 - **Owned screens**:
@@ -355,13 +354,12 @@ Evidence sources (all in-repo):
     - Next/previous navigation while preserving list state
     - Bookmark toggle
     - Image management (add/remove/set primary)
-    - View QR code (item detail) + “Generate QR Codes” (list action)
   - Scope changes:
     - Moving/selling/deallocating to Business Inventory triggers deallocation behavior (see cross-cutting “allocation/deallocation”)
 - Budget category attribution (canonical transactions):
   - Each item must persist a stable `inheritedBudgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
   - Canonical inventory transactions should not require a user-facing budget category; budgeting attribution is item-driven via linked items.
-- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), QR key (`qrKey`), `inheritedBudgetCategoryId`
+- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), `inheritedBudgetCategoryId`
 - **Offline behaviors required**:
   - Create/edit/delete offline (local-first)
   - Bulk actions offline (queued ops; show partial failures)
@@ -398,13 +396,13 @@ Evidence sources (all in-repo):
       - reimbursement-status (all / we-owe / client-owes)
       - email-receipt (all / yes / no)
       - source
-      - purchase-method
+      - purchased-by
       - transaction-type
       - completeness
       - budget-category
     - “Needs review” filtering is present in code paths (transactions may be flagged)
   - Transaction CRUD:
-    - Create transaction (category, type, payment method, amounts, dates, notes)
+    - Create transaction (category, type, purchased by, amounts, dates, notes)
     - Edit transaction
     - Status changes (pending/completed/canceled)
     - Receipt emailed flag
@@ -500,7 +498,7 @@ Evidence sources (all in-repo):
   - Requires media pipeline + quota handling
   - Requires Firestore queued writes (offline), and bounded/scoped reads/listeners and/or explicit refresh for foreground freshness (no “listen to everything”)
 
-### 10) Business inventory: global items + global transactions + bulk ops + QR
+### 10) Business inventory: global items + global transactions + bulk ops
 - **feature_slug**: `business-inventory`
 - **Short description**: Global (project-less) items and transactions views with rich list controls, detail/edit flows, and allocation into projects.
 - **Owned screens**:
@@ -521,7 +519,6 @@ Evidence sources (all in-repo):
     - Bulk actions:
       - Allocate selected items to a project
       - Assign selected items to a transaction
-      - Generate QR codes for selected items
       - Delete selected items
     - Per-item actions: bookmark, duplicate, delete, status update, image add/remove
   - Transactions tab:
@@ -529,7 +526,7 @@ Evidence sources (all in-repo):
     - Sort menu for transactions (observed in UI)
     - Open transaction detail
   - Allocate/move/sell inventory items into a project (and optionally space)
-- **Entities touched**: items, transactions, projects, spaces, attachments/media (images/receipts), vendor defaults, budget categories, conflicts, `qrKey`
+- **Entities touched**: items, transactions, projects, spaces, attachments/media (images/receipts), vendor defaults, budget categories, conflicts
 - **Offline behaviors required**:
   - Full CRUD offline (local-first) + pending UI
   - Bulk actions offline (queued ops; partial failure handling)
@@ -727,7 +724,7 @@ These are flows/behaviors that span multiple features and should be spec’d onc
 - Define canonical transaction IDs, lineage updates, and server-owned invariants for multi-entity correctness.
 
 ### K) Export/print/share surface
-- CSV export and share/print behavior for reports + QR codes on mobile.
+- CSV export and share/print behavior for reports on mobile.
 
 ### L) Global toast + notification system
 - Toasts are used to surface non-blocking success/error states across features (invites, CRUD, sync errors, etc.).

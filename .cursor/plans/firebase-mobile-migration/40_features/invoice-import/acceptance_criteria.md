@@ -44,7 +44,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 ## Draft transaction + itemization editor
 - [ ] **Draft fields set from parse**: transaction date defaults to today then applies parsed order date; amount defaults to parsed total or sum of line item totals; notes include vendor import marker + invoice/order metadata.  
   Observed in `src/pages/{ImportAmazonInvoice,ImportWayfairInvoice}.tsx` (`applyParsedInvoiceToDraft`).
-- [ ] **Draft is editable**: user can edit date, amount, category, payment method, and notes before create.  
+- [ ] **Draft is editable**: user can edit date, amount, category, purchased by, and notes before create.  
   Observed in `src/pages/{ImportAmazonInvoice,ImportWayfairInvoice}.tsx` (form inputs + `CategorySelect`).
 - [ ] **Draft itemization editor**: imported items are editable in a transaction-items editor (draft mode).  
   Observed in `src/pages/{ImportAmazonInvoice,ImportWayfairInvoice}.tsx` (`TransactionItemsList` with `enablePersistedItemFeatures={false}`).
@@ -82,5 +82,5 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Failure messaging**: background asset upload failures show a warning instructing the user to open transaction to retry.  
   Observed in `src/pages/ImportWayfairInvoice.tsx` (`showWarning(... 'Open the transaction to retry.')`).
 - [ ] **Offline media lifecycle (mobile)**: receipt + thumbnails must create local-only placeholders immediately and queue uploads; failures are retriable from transaction detail.  
-  **Intentional delta** required by `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`.
+  **Intentional delta** required by `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`.
 

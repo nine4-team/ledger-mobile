@@ -81,11 +81,11 @@ Intentional delta (vs web):
 
 ## Owned UI surface (project context)
 
-### Project shell budget section
-The project shell exposes a “Budget section” with two sub-tabs:
+### Project header budget module (above tabs)
+The project shell exposes a compact **Budget module** (not a tab) that sits **above** the primary project tabs and provides budget progress at-a-glance.
 
-- **Budget**: budget progress
-- **Accounting**: rollups + report entrypoints
+### Project shell accounting tab
+The project shell exposes an **Accounting** tab that contains rollups + report entrypoints (and may include a “View full budget” entrypoint if/when a dedicated budget screen exists).
 
 Web parity evidence:
 - `src/pages/ProjectLayout.tsx` (`budgetTabs`, `activeBudgetTab`, BudgetProgress render, accounting cards and report buttons)
@@ -96,21 +96,24 @@ Projects list shows a compact “budget progress preview” for each project.
 Web parity evidence:
 - `src/pages/Projects.tsx` (uses `BudgetProgress` in preview mode)
 
-## Budget rollups (Budget tab)
+## Budget rollups (Budget module)
 
 ### Inputs (Firestore cached reads; project-scoped)
 All rollups are computed from Firestore-cached reads within the active project scope:
 - Project category budgets:
   - `projects/{projectId}/budgetCategories/{budgetCategoryId}`
 - Budget category presets (account-scoped):
-  - `budgetCategories/{budgetCategoryId}` (exact path TBD; see data model docs)
+  - `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
 - Transactions (project-scoped):
   - `projects/{projectId}/transactions/{transactionId}`
 - Items (project-scoped):
   - `projects/{projectId}/items/{itemId}` with `item.inheritedBudgetCategoryId`
 
 ### Money normalization
-All amounts are treated as numbers with two-decimal currency semantics; rounding strategy should be consistent across UI and exports.
+All persisted currency amounts are **integer cents** per `20_data/data_contracts.md` (e.g. `amountCents`, `purchasePriceCents`).
+
+- UI converts cents ↔ display decimals.
+- Any parsing of decimal strings (imports) must be deterministic and must not silently store floats.
 
 ### Transaction inclusion rules
 - Exclude `status === 'canceled'`.
@@ -156,7 +159,7 @@ For each canonical inventory transaction:
 
 1) Determine the set of linked items (client-side join by `item.transactionId === transaction.transactionId`).
 2) For each linked item, compute its “canonical value”:
-   - `item.projectPrice ?? item.purchasePrice ?? item.marketValue ?? 0`
+   - `item.projectPriceCents ?? item.purchasePriceCents ?? item.marketValueCents ?? 0`
    - (matches existing canonical totals logic in `src/services/inventoryService.ts`)
 3) Group items by `item.inheritedBudgetCategoryId` and sum values per group.
 4) Apply canonical sign:
@@ -175,7 +178,7 @@ Note:
 - The legacy `project.budget` field (if present) must not be treated as authoritative if category budgets exist; overall rollups should be category-sum-driven.
   - Parity evidence: web computes overall as sum of category budgets in `BudgetProgress` (`overallFromCategories`).
 
-### Budget tab UI behavior (high-level)
+### Budget module UI behavior (high-level)
 - **Collapsed**: show **only** the pinned budget category trackers (per-user per-project pins).
   - If **no pins exist**, collapsed view shows **Overall Budget only** (deterministic fallback).
 - **Expanded**: show the full enabled category list (including fee trackers as applicable) plus the Overall Budget row.

@@ -17,7 +17,9 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
   - Items for project:
     - join/group by `item.transactionId`
   - Business profile:
-    - `businessName`, `businessLogoUrl` (and logo media status if tracked)
+    - `businessName`
+    - `logo` as `AttachmentRef` (see `20_data/data_contracts.md` → `BusinessProfile.logo`)
+    - Derived logo upload state (local_only/uploading/failed/uploaded) from local media subsystem (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`)
 - Derived view models:
   - `invoiceLines`: per transaction, a list of linked item lines + computed `lineTotal`
   - `chargesLines`, `creditsLines`, subtotals, net due
@@ -59,7 +61,7 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
 ## Media (if applicable)
 - Business logo:
   - Render if available.
-  - If logo is `local_only` / `uploading` / `failed`, indicate in UI (non-blocking) so user understands why exports may differ.
+  - If logo is `local_only` / `uploading` / `failed` (derived state), indicate in UI (non-blocking) so user understands why exports may differ.
 
 ## Collaboration / realtime expectations
 - No realtime requirement while the report is open.

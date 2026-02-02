@@ -124,12 +124,21 @@ Because canonical `INV_*` visibility is **derived from linked items**, enforceme
 - a scoped user cannot read a canonical transaction unless there exists at least one in-scope linked item.
 
 Recommended approach (no new product capability; implementation strategy only):
-- Maintain a server-authoritative, queryable “visibility index” for canonical transactions keyed by category (and/or by member scope) to support **scoped queries** without large listeners.
-- If an implementation chooses a different approach, it must still satisfy:
+- Add **server-maintained selector fields directly on canonical `INV_*` transaction docs** (see `20_data/data_contracts.md` → **Entity: Transaction**):
+  - `budgetCategoryIds: string[]` (unique non-null category ids present among linked items’ `item.inheritedBudgetCategoryId`)
+  - `uncategorizedItemCreatorUids: string[]` (unique uids of creators with linked items where `item.inheritedBudgetCategoryId == null`)
+- Server must update these selectors when:
+  - items are linked/unlinked to/from the canonical transaction, and
+  - a linked item’s `inheritedBudgetCategoryId` changes (recategorization / inheritance updates), since canonical visibility must reflect the current item attribution.
+- Add a scheduled “periodic repair” job as a safety net to recompute selectors from linked items and correct drift.
+
+Query shaping note (for offline-first / no large listeners):
+- A scoped user’s canonical transaction list can be produced via **bounded, mergeable queries** such as:
+  - `where("budgetCategoryIds", "array-contains-any", <allowedBudgetCategoryIds>)`
+  - plus `where("uncategorizedItemCreatorUids", "array-contains", <myUid>)` for the “own uncategorized” exception.
+- Exact pagination/merge strategy is an implementation detail, but must satisfy:
   - no “subscribe to everything”
   - no client-side filtering of unauthorized canonical transactions after downloading them
-
-If this requires an intentional delta from current planned sync primitives, label it explicitly in the implementation doc(s), not here.
 
 ---
 

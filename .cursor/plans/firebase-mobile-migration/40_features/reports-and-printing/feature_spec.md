@@ -23,7 +23,8 @@ Reports read from Firestore local cache (offline persistence) only:
 - Items: `items`
 - Spaces: `spaces` (for space/location labels in PM summary)
 - Budget categories: `budget_categories` (category name lookup for client summary breakdown)
-- Business profile: `business_profile` (logo + name)
+- Business profile (logo + name):
+  - `accounts/{accountId}/businessProfile/current` (see `20_data/data_contracts.md` → `BusinessProfile`)
 
 Firebase migration constraint:
 - Reports must not attach listeners to large collections. They render from Firestore local cache using scoped project listeners per `OFFLINE_FIRST_V2_SPEC.md`.
@@ -60,9 +61,9 @@ Behavior summary (parity + required clarifications):
   - **Project Credits**: `reimbursementType === COMPANY_OWES_CLIENT`
   - Evidence: `src/pages/ProjectInvoice.tsx` (`clientOwesLines`, `creditLines`)
 - For each invoiceable transaction, compute a line total:
-  - If the transaction has **linked items** (`item.transactionId === transaction.transactionId`), line total is the sum of linked items’ `projectPrice`.
-    - If an item has missing/blank `projectPrice`, it is flagged as “Missing project price” and contributes \(0\) to the sum.
-  - If there are **no linked items**, line total uses `transaction.amount`.
+  - If the transaction has **linked items** (`item.transactionId === transaction.transactionId`), line total is the sum of linked items’ `projectPriceCents`.
+    - If an item has missing/blank `projectPriceCents`, it is flagged as “Missing project price” and contributes \(0\) to the sum.
+  - If there are **no linked items**, line total uses `transaction.amountCents`.
   - Evidence: `src/pages/ProjectInvoice.tsx` (`invoiceLines` mapping; `missingPrice` and `lineTotal`)
 - Sorting:
   - Charges and credits are each sorted ascending by `transaction.transactionDate` (string compare).
@@ -77,9 +78,9 @@ Behavior summary (parity + required clarifications):
 ### 3) Client summary
 Behavior summary (parity + required deltas for canonical attribution):
 - Computes summary rollups from items:
-  - **Total spent overall**: sum of `item.projectPrice` across project items.
-  - **Market value**: sum of `item.marketValue`.
-  - **Saved**: for items with `marketValue > 0`, sum of `marketValue - projectPrice`.
+  - **Total spent overall**: sum of `item.projectPriceCents` across project items.
+  - **Market value**: sum of `item.marketValueCents`.
+  - **Saved**: for items with `marketValueCents > 0`, sum of `marketValueCents - projectPriceCents`.
   - Evidence: `src/pages/ClientSummary.tsx` (the `summary` memo)
 - Category breakdown:
   - Web parity computes category breakdown by mapping each item to its transaction’s legacy `category_id` (if present), then grouping by **category name**.
@@ -93,7 +94,9 @@ Behavior summary (parity + required deltas for canonical attribution):
 - Receipt link rule (per item):
   - If item has a `transactionId`, attempt to find that transaction.
   - If the transaction is canonical by id prefix (`INV_SALE_`/`INV_PURCHASE_`) **or** invoiceable by reimbursement type, the “receipt” link points to the **project invoice** screen.
-  - Else, if the transaction has a receipt image URL (`tx.receiptImages?.[0]?.url`), link to that URL.
+  - Else, if the transaction has a receipt attachment (`tx.receiptImages?.[0]`), link behavior depends on attachment readiness:
+    - If the attachment is remote-backed (`AttachmentRef.url` is a remote URL), link to that URL (works for both images and PDFs).
+    - If the attachment is local-only (`offline://<mediaId>` placeholder), do **not** emit an external link in a shared/printed report artifact; instead show a non-blocking “Receipt pending upload” indicator (attachment upload state is derived locally).
   - Else, no receipt link.
   - Evidence: `src/pages/ClientSummary.tsx` (`getReceiptLink`)
 
@@ -101,13 +104,13 @@ Behavior summary (parity + required deltas for canonical attribution):
 Behavior summary (parity):
 - Shows a summary:
   - total item count
-  - total market value (sum of `item.marketValue`)
+  - total market value (sum of `item.marketValueCents`)
   - Evidence: `src/pages/PropertyManagementSummary.tsx` (`totalMarketValue`)
 - Shows an item list containing (at least):
   - item description
   - item source and sku when present
   - item space/location label when present
-  - item market value and “No market value set” when \(0\)
+  - item market value and “No market value set” when \(0\) cents
   - Evidence: `src/pages/PropertyManagementSummary.tsx` (item list markup)
 
 ## Share/print (mobile adaptation)
@@ -120,7 +123,10 @@ Mobile requirement (intentional delta):
 
 ## Offline-first behavior (mobile target)
 - Reports render from Firestore local cache offline (no network required).
-- If business profile logo or other referenced media is `local_only` / `uploading` / `failed`, the report must indicate this (at minimum: a non-blocking warning that branding/media may be missing in shared output).
+- Attachment contract note (required; GAP B):
+  - Persisted media refs are `AttachmentRef` (see `20_data/data_contracts.md`).
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on Firestore domain entities.
+- If business profile logo or other referenced media is `local_only` / `uploading` / `failed` (derived state), the report must indicate this (at minimum: a non-blocking warning that branding/media may be missing in shared output).
 - Reconnect behavior: reports may remain stale until the next sync pass; a “last updated” indicator is recommended but not required unless used elsewhere globally.
 
 ## Collaboration expectations

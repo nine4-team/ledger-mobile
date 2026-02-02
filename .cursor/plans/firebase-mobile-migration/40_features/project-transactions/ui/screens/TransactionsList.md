@@ -43,7 +43,7 @@ Shared-module requirement:
   - Export button
   - Search field
 - Transactions list:
-  - Preview cards with title, amount, payment method, date, optional notes, badges (category/type + needs-review/missing-items)
+- Preview cards with title, amount, purchased by, date, optional notes, badges (category/type + needs-review/missing-items)
 
 ## Budget category semantics (new model; required)
 
@@ -60,7 +60,7 @@ Rules:
 
 Implementation note (required for filter + export usefulness):
 - To support “budget category” filtering and useful CSV export without a client-side join, canonical transactions should carry a denormalized field such as:
-  - `attributedCategoryIds: string[]` (set of category IDs present on linked items’ `inheritedBudgetCategoryId`)
+  - `budgetCategoryIds: string[]` (set of category IDs present on linked items’ `inheritedBudgetCategoryId`)
 - This field must be maintained by a server-owned invariant (e.g., request-doc processing or a Cloud Function trigger), so it stays correct across writers.
 
 ## User actions → behavior (the contract)

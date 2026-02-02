@@ -32,7 +32,6 @@ Allocation is a multi-entity update (item + canonical transaction + lineage). In
 Minimum resulting item state:
 - `projectId = <projectId>`
 - `transactionId = INV_PURCHASE_<projectId>`
-- `inventoryStatus = allocated`
 - `status = purchased` (or equivalent)
 - optional: set/clear `space` as selected
 

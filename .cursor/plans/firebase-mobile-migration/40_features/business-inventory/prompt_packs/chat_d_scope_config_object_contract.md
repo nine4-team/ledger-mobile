@@ -58,7 +58,6 @@ Add something like the following to the shared-module doc (doc-only; not code):
   - `capabilities: {`
     - `canAllocateToProject: boolean` (inventory: true, project: false)
     - `canExportCsv: boolean` (project transactions: true; inventory transactions: false)
-    - `canGenerateQr: boolean` (feature-flag gated)
     - `supportsInventoryOnlyStatusFilter: boolean` (inventory transactions: true; project: false)
   - `}`
 - **Field visibility/labels (only when truly different by scope):**

@@ -366,8 +366,8 @@ Retry mechanism:
   - shared status/error helpers
 - Add Firestore rules guidance (or starter rules) so clients can create/read requests but cannot forge “applied”.
 - Add client helpers:
-  - `createRequestDoc(type, payload, scope)`
-  - `subscribeToRequest(requestId)` / status UI helpers
+  - `createRequestDoc(type, payload, scope, opId)`
+  - `subscribeToRequest(scope, requestId)` / status UI helpers
 
 **Done when**: the app supports “queued offline request → server applies later → UI reflects status”.
 

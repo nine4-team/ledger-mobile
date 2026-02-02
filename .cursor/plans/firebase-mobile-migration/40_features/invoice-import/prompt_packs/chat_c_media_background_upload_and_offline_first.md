@@ -10,7 +10,7 @@ Update or create:
 - `40_features/invoice-import/acceptance_criteria.md`
 
 Cross-cutting (only if missing details are discovered):
-- `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md` (update only if truly required)
+- `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md` (update only if truly required)
 
 ## Source-of-truth code pointers
 Web parity “background upload” workers:

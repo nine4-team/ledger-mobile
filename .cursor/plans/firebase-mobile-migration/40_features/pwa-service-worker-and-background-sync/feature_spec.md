@@ -118,6 +118,8 @@ This spec intentionally does **not** require “Retry Sync” as a persistent UI
 ## Implementation reuse (porting) notes
 
 ### Reusable logic to port (web → mobile)
+These pointers refer to the legacy Ledger **web** codebase (not files in this React Native repo). Treat them as behavioral reference, not required implementation structure.
+
 - SW event / status semantics (source labels, progress/complete/error payload shape): `src/services/serviceWorker.ts`
 - Backoff/cooldown/loop-stopper ideas for retries: `public/sw-custom.js` (behavioral reference)
 
@@ -135,6 +137,8 @@ This spec intentionally does **not** require “Retry Sync” as a persistent UI
 - Realtime “channels stale” telemetry becomes “scoped listener health + last successful foreground sync attempt timestamps” (see `connectivity-and-sync-status/feature_spec.md`).
 
 ## Parity evidence (web app)
+These pointers refer to the legacy Ledger **web** codebase (not files in this React Native repo).
+
 - Background Sync API registration + manual trigger: `src/services/serviceWorker.ts`
 - SW background sync handler + backoff + loop-stopper + delegation to clients: `public/sw-custom.js`
 - Sync status UI reflects worker + scheduler + offline/online state: `src/components/SyncStatus.tsx`

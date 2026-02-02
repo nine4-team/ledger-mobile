@@ -4,14 +4,14 @@ This folder defines the parity-grade behavior spec for Ledger’s **Projects** e
 
 ## Scope
 - Browse projects (list, empty/loading/offline states)
-- Open a project shell and navigate core tabs (Items, Transactions, Spaces, Budget)
+- Open a project shell and navigate core tabs (Items, Transactions, Spaces, Accounting)
 - Create a project (including optional main image)
 - Edit a project
 - Delete a project
 - Refresh a project snapshot and related collections
 
 ## Non-scope (for this feature folder)
-- Deep specs for tabs’ internal behavior (items/transactions/spaces/budget are separate features)
+- Deep specs for tabs’ internal behavior (items/transactions/spaces/accounting are separate features) and detailed budget rollups/UI (owned by `40_features/budget-and-accounting/`)
 - Pixel-perfect UI design
 - Purchase provider implementation details (Stripe/App Store/Play Billing) — only entitlement enforcement contracts
 

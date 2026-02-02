@@ -48,7 +48,7 @@ Behavior summary (web):
   - Search (`bizItemSearch`) across several item fields.
   - Filter modes (`bizItemFilter`): `all`, `bookmarked`, `no-sku`, `no-description`, `no-project-price`, `no-image`, `no-transaction`.
   - Sort modes (`bizItemSort`): `alphabetical`, `creationDate` (newest-first).
-  - Bulk selection and bulk actions (allocate to project, generate QR codes when enabled, delete).
+  - Bulk selection and bulk actions (allocate to project, delete).
   - Duplicate grouping in the list (collapsed groups) with per-group selection helpers.
 - List UI state is persisted/restored via URL params with a debounce.
 - Navigation into detail preserves list state and supports stacked navigation with scroll restore.
@@ -56,7 +56,7 @@ Behavior summary (web):
 Parity evidence:
 - Tab + URL state persistence: `src/pages/BusinessInventory.tsx` (`bizTab`, `bizItemSearch`, `bizItemFilter`, `bizItemSort` and the debounced `setSearchParams` updater).
 - Filter/sort enum sets: `src/pages/BusinessInventory.tsx` (`BUSINESS_ITEM_FILTER_MODES`, `BUSINESS_ITEM_SORT_MODES`).
-- Bulk selection + actions: `src/pages/BusinessInventory.tsx` (selectedItems set; allocation modal; QR generation; delete).
+- Bulk selection + actions: `src/pages/BusinessInventory.tsx` (selectedItems set; allocation modal; delete).
 - Scroll restoration (web): `src/pages/BusinessInventory.tsx` (passes `scrollY` during navigate) + list screens restore via the `restoreScrollY` pattern (see `src/pages/InventoryList.tsx`, `src/pages/TransactionsList.tsx`).
 
 Firebase mobile target (shared-module mapping):
@@ -89,7 +89,6 @@ Behavior summary (web create):
 - Images are selected from gallery/camera; preview supports remove and a max image count (5 in UI).
 - On save:
   - `projectPrice` defaults to `purchasePrice` if left blank (at save time; no auto-fill while typing).
-  - Each created item gets a generated `qrKey`.
   - If offline queue is used, show “saved offline” feedback and keep user moving.
 - Optional association to a transaction at create time:
   - User can choose a transaction to associate; when selected, `source` is pre-filled from that transaction and some fields are hidden.
@@ -103,7 +102,8 @@ Parity evidence:
 
 Firebase mobile target notes:
 - Images must follow the offline media lifecycle (placeholders + uploads + cleanup) described in:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
+  - Attachment contract: persisted on entities as `AttachmentRef` (see `20_data/data_contracts.md`); upload state is local + derived (see offline-media lifecycle spec).
 
 ### 3) Inventory item detail (allocate / assign to transaction / images / nav)
 Behavior summary (web):
@@ -154,7 +154,9 @@ Parity evidence:
 Behavior summary (web create):
 - Transactions created from inventory have `projectId = null` (business inventory scope).
 - Category is required.
-- Receipts accept images and PDFs and are uploaded via an offline-aware media service that can produce `offline://` placeholders.
+- Receipts accept images and PDFs and are represented as `AttachmentRef[]`:
+  - `AttachmentRef.kind = "image" | "pdf"` is explicit (do not infer from URL).
+  - local-first selection writes `offline://<mediaId>` placeholders; upload state is derived locally per the offline media lifecycle spec.
 - If receipts were queued while offline, show offline-saved feedback.
 
 Parity evidence:

@@ -36,7 +36,7 @@ Primary sources:
   - Firestore-native offline persistence is the baseline (Firestore is canonical).
   - Scoped/bounded listeners are allowed; no “listen to everything”.
   - Multi-doc correctness uses request-doc workflows (server applies changes in a Firestore transaction).
-- Must work across multiple features consistently (Items, Transactions, Spaces, Settings, Invoice import, QR exports, etc.).
+- Must work across multiple features consistently (Items, Transactions, Spaces, Settings, Invoice import, etc.).
 
 ---
 
@@ -47,12 +47,16 @@ Primary sources:
    - Write the file into the local media cache.
    - Create/update a local media record (metadata: size, localUri/path, checksum if used, timestamps, owning scope).
 3) **Link to the domain entity**
-   - Create/update the relevant attachment reference on the owning entity (e.g. `item.primaryImage`, `transaction.receipts[]`, `space.images[]`, `businessProfile.logo`).
+   - Create/update the relevant **attachment reference** on the owning entity (e.g. `item.images[]`, `transaction.receiptImages[]`, `space.images[]`, `businessProfile.logo`).
+   - Contract (canonical; GAP B):
+     - The Firestore domain entity stores **AttachmentRefs** only (stable domain truth).
+     - For local-first selection, write an `AttachmentRef` whose `url` is an `offline://<mediaId>` placeholder (and include `kind` so PDF-vs-image is explicit).
 4) **Enqueue upload work**
    - Enqueue an upload job with an idempotency key and the minimal info required to upload later (local media id, destination bucket/path strategy, owning entity reference).
 5) **Upload + remote attach**
    - When online, upload job runs and produces a remote object reference (path/url + metadata).
-   - Update the attachment reference to `uploaded`.
+   - Update the owning domain entity by **replacing** the `AttachmentRef.url` from `offline://<mediaId>` → a remote URL (keeping the rest of the ref stable).
+   - Do **not** store `uploaded/uploading/failed` state in Firestore.
 6) **Cleanup (post-upload)**
    - Apply policy: keep or delete local cached blob after upload (implementation choice), but **must** prevent unbounded growth over time.
 
@@ -66,6 +70,16 @@ Any UI surface that renders attachments must handle these states:
 - **`failed`**: upload failed; user can retry (and/or system retries).
 
 Additional internal states may exist (e.g. `orphaned`, `deleted`, `purge_pending`), but the UI contract above is the minimum.
+
+### Where these states live (GAP B resolution)
+- **Firestore domain entities**:
+  - Store only `AttachmentRef` values (e.g. `transaction.receiptImages[]`, `item.images[]`).
+  - `AttachmentRef.url` is either:
+    - remote URL (implicitly `uploaded`), or
+    - `offline://<mediaId>` placeholder (state is derived locally).
+- **Local media cache + durable upload queue**:
+  - Track the state machine (`local_only | uploading | failed | uploaded`) locally, keyed by `mediaId`.
+  - UI derives state by joining the owning entity’s `AttachmentRef` (via `offline://<mediaId>`) with the local media record / upload job record.
 
 ---
 

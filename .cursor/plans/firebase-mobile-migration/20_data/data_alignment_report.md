@@ -51,8 +51,8 @@ Scope of this pass:
     - `createdBy` (security field required by Roles v2)
     - `inheritedBudgetCategoryId` (stable selector)
   - `20_data/data_contracts.md` → **Entity: Transaction** adds **server-maintained selector fields** for canonical transactions:
-    - `attributedCategoryIds` (set/map of in-scope categories present among linked items)
-    - `attributedUncategorizedCreatorUids` (set/map of creators who have uncategorized linked items)
+    - `budgetCategoryIds` (unique list of categories present among linked items)
+    - `uncategorizedItemCreatorUids` (unique list of creators who have uncategorized linked items)
   - Note: SQLite is no longer described as a mirrored local DB; any local indexing of these selectors is TBD and must be justified by an explicit feature requirement.
 
 ### 3) Lineage is required offline (append-only edges + item pointers)
@@ -77,6 +77,7 @@ Scope of this pass:
 - **Spec truth**
   - Attachments must support the UI state machine: `local_only`, `uploading`, `uploaded`, `failed`.
   - Must support images + PDFs, and offline placeholders via `offline://<mediaId>`.
+  - PDF-vs-image must be explicit on the persisted attachment ref (do not infer from URL).
   - Sources:
     - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
     - `40_features/project-transactions/feature_spec.md` (receipts and other attachments)
@@ -85,7 +86,9 @@ Scope of this pass:
   - Prior drafts modeled separate attachment documents and de-emphasized embedded arrays, conflicting with feature specs that explicitly reference embedded fields like `transaction.receiptImages[]` and `space.images[]`.
 
 - **Resolution**
-  - Canonical decision: media is represented as **embedded URL refs** on the owning entity, with `offline://<mediaId>` placeholders allowed (`20_data/data_contracts.md` → “Embedded media references”).
+  - Canonical decision: media is represented as **embedded `AttachmentRef` values** on the owning entity, with `offline://<mediaId>` placeholders allowed (`20_data/data_contracts.md` → “Embedded media references”).
+    - `AttachmentRef.kind = "image" | "pdf"` is required (explicit PDF-vs-image).
+    - Transient upload state is **local + derived** (not persisted on the Firestore domain entity).
   - TBD: whether we also add separate Firestore attachment docs as an optimization (must be additive and cannot replace the embedded contract without updating feature specs).
 
 ### 5) Money representation for Items/Transactions was inconsistent across docs
@@ -120,17 +123,17 @@ Scope of this pass:
 
 ### 1) How exactly are canonical transaction selector fields maintained?
 
-The contracts assume canonical transaction selector fields (`attributedCategoryIds`, `attributedUncategorizedCreatorUids`) are **server-maintained** to satisfy Roles v2 enforcement constraints.
+The contracts assume canonical transaction selector fields (`budgetCategoryIds`, `uncategorizedItemCreatorUids`) are **server-maintained** to satisfy Roles v2 enforcement constraints.
 
 Open implementation decisions:
 - Which operations update these fields (item link/unlink, item recategorization, cross-scope ops)?
 - Are these fields maintained only for `isCanonicalInventory == true`, or for all transactions (with different semantics)?
-- Do we need a dedicated “visibility index” collection instead (Roles v2 spec suggests this as a possible approach)?
+- Do we also add a scheduled “periodic repair” job that recomputes these selectors from linked items and corrects drift (recommended as a safety net)?
 
 ### 2) Embedded media URL timing (placeholder → remote)
 
 Feature specs require `offline://` placeholders to render immediately and later resolve to remote URLs.
 
 Open decision:
-- When (and how) do we patch embedded arrays from `offline://<mediaId>` to a remote URL, and what (if any) additional metadata is persisted alongside `url`?
+- When (and how) do we patch embedded arrays from `offline://<mediaId>` to a remote URL, and what (if any) additional **stable** metadata is persisted alongside `AttachmentRef.url` (e.g. `contentType`)?
 

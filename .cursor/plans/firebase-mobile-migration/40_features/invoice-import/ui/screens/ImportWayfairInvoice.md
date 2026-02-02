@@ -27,7 +27,7 @@ For each user action:
   - Local state only (draft); no DB writes.
 - Extract thumbnails
   - Local state only (draft), but produces local image files that may need staging space.
-- Edit draft fields (date, amount, category, payment method, notes, tax fields, item drafts, item images)
+- Edit draft fields (date, amount, category, purchased by, notes, tax fields, item drafts, item images)
   - Local state only (draft); no DB writes.
 - Create transaction
   - **Request-doc write (Firestore local cache)**:
@@ -118,7 +118,11 @@ For each user action:
   - Extracted thumbnails become staged item image files.
 - Placeholder rendering (offline):
   - Receipt + item images show `local_only` / `uploading` / `failed` states with retry.
-  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+  - Attachment contract:
+    - transaction receipt: `AttachmentRef` with `kind: "pdf"`
+    - item images: `AttachmentRef[]` with `kind: "image"`
+    - see `20_data/data_contracts.md`
+  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 - Cleanup/orphan rules:
   - If user resets or leaves without creating, staged local files should be cleaned up (best-effort).
 

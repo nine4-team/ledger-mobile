@@ -11,7 +11,10 @@ Provide a printable/shareable “Property Management Summary” for a project: t
 - Firestore local cache reads (scoped to project):
   - Project by id (name, clientName)
   - Items for project (including `description`, `source`, `sku`, `space`/location label, `marketValue`)
-  - Business profile (logo + name)
+  - Business profile:
+    - `businessName`
+    - `logo` as `AttachmentRef` (see `20_data/data_contracts.md` → `BusinessProfile.logo`)
+    - Derived logo upload state (local_only/uploading/failed/uploaded) from local media subsystem (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`)
 - Derived view models:
   - `totalMarketValue`: sum of item `marketValue`
 

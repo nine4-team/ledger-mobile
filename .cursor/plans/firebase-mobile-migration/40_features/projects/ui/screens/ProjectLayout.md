@@ -4,14 +4,12 @@
 Provide the per-project “workspace shell” that:
 - loads a coherent snapshot (project + core collections),
 - offers refresh/edit/delete affordances,
-- hosts navigation to the project’s major sections (Items, Transactions, Spaces, Budget),
+- hosts navigation to the project’s major sections (Items, Transactions, Spaces, Accounting),
 - behaves predictably offline and after reconnect.
 
 ## Inputs
 - **Route params**:
   - `projectId` (required)
-- **Query params**:
-  - `budgetTab` (web supports `budget` vs `accounting`)
 - **Entry points**:
   - From Projects list “Open Project”
   - Deep links into a specific tab
@@ -64,13 +62,13 @@ Parity evidence (web):
   - Edit button
   - Delete button (opens confirm dialog)
   - Optional “Retry Sync” affordance when background sync error exists
-- Project card:
+- Project header container (above tabs):
   - optional main image
   - name + client name
-  - budget tabs: Budget / Accounting (web)
-  - reports entrypoints (web)
+  - basic project info context (implementation-defined)
+  - **Budget module (compact)**: budget progress summary surface (not a tab)
 - Section tabs:
-  - Items / Transactions / Spaces / Budget
+  - Items / Transactions / Spaces / Accounting
   - Outlet for nested screens
 
 Parity evidence: `src/pages/ProjectLayout.tsx`.

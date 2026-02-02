@@ -4,7 +4,7 @@ Produce parity-grade specs for `invoice-import`.
 ## Inputs to review (source of truth)
 - Feature map entry: `40_features/feature_list.md` → **Feature 13: Invoice import** (`invoice-import`)
 - Offline-first architecture: `OFFLINE_FIRST_V2_SPEC.md`
-- Offline media lifecycle (attachments/images as local-only → uploading → uploaded): `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+- Offline media lifecycle (attachments/images as local-only → uploading → uploaded): `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 - Storage/quota guardrails: `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - Shared Items + Transactions module contract (item draft editing UX reuse): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 

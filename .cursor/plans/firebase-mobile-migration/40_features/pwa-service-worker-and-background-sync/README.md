@@ -9,7 +9,7 @@ Key migration delta:
 ## Inputs (source of truth)
 - Offline Data v2 architecture (canonical): `OFFLINE_FIRST_V2_SPEC.md`
 - Global sync UX (banner/toasts): `40_features/connectivity-and-sync-status/feature_spec.md`
-- Web parity evidence:
+- Web parity evidence (legacy Ledger web codebase; **not files in this repo**):
   - Service worker orchestration: `public/sw-custom.js`
   - SW bridge + manual trigger + event bus: `src/services/serviceWorker.ts`
   - Sync banner wiring: `src/components/SyncStatus.tsx`

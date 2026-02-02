@@ -49,13 +49,14 @@ Rules:
 - Firestore mutation(s) (queued offline by Firestore-native persistence):
   - Create/update the `transactions/{transactionId}` doc (prefer a client-generated `transactionId` for idempotency).
   - If itemization is enabled, create/update transaction items (either as docs in a subcollection or separate collection, per data model), ideally via a batched write when possible.
-  - Persist media attachment metadata arrays on the transaction doc:
-    - `receiptImages[]`
-    - `otherImages[]`
+  - Persist media attachment refs on the transaction doc as `AttachmentRef[]` (see `20_data/data_contracts.md`):
+    - `receiptImages[]` (accepts `kind: "image" | "pdf"`)
+    - `otherImages[]` (image-only; `kind: "image"`)
     - (legacy compat) `transactionImages[]` may mirror receipts
 - Media uploads:
   - Uploads are handled by an upload queue that can create `offline://<mediaId>` placeholders while offline.
   - After upload succeeds, patch the transaction doc to replace placeholders with Cloud Storage URLs.
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally; do not persist it on the transaction doc.
 
 ### Edit (submit)
 - Firestore mutation(s) (queued offline by Firestore-native persistence):

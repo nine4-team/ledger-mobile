@@ -15,6 +15,8 @@ If needed for cross-link consistency:
 - `40_features/connectivity-and-sync-status/feature_spec.md` (only if conflicts arise)
 
 ## Source-of-truth evidence (web)
+Note: these pointers refer to the legacy Ledger **web** codebase (not files in this React Native repo).
+
 - `src/components/SyncStatus.tsx` (banner logic; offline messaging; error gating)
 - `src/services/syncScheduler.ts` (retry scheduling patterns)
 - `src/components/ui/RetrySyncButton.tsx` (manual trigger semantics)

@@ -11,6 +11,8 @@ Update or create the following docs:
 - `40_features/pwa-service-worker-and-background-sync/acceptance_criteria.md`
 
 ## Source-of-truth code pointers
+Note: these pointers refer to the legacy Ledger **web** codebase (not files in this React Native repo).
+
 Primary:
 - `public/sw-custom.js`
 - `src/services/serviceWorker.ts`

@@ -34,9 +34,24 @@ This doc intentionally focuses on **paths**. Field lists live in `20_data/data_c
 - Members: `accounts/{accountId}/members/{uid}`
 - Invites: `accounts/{accountId}/invites/{inviteId}`
 
+Account-scoped requests (gated creates / account workflows):
+- Requests: `accounts/{accountId}/requests/{requestId}`
+
+Billing (server-owned enforcement + counters):
+- Entitlements: `accounts/{accountId}/billing/entitlements/current`
+- Usage: `accounts/{accountId}/billing/usage`
+
+Per-user preferences (within an account):
+- Project preferences (pinned budget categories): `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}`
+
+Account business profile (branding inputs):
+- Business profile: `accounts/{accountId}/businessProfile/current`
+
 ### Presets (account-wide)
 
 - Budget category presets: `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}`
+- Space templates: `accounts/{accountId}/presets/spaceTemplates/{templateId}`
+- Vendor defaults: `accounts/{accountId}/presets/vendorDefaults/current`
 - (Optional / TBD) Account presets meta doc: `accounts/{accountId}/meta/accountPresets`
   - TBD: confirm whether this doc is required as a first-class Firestore document vs embedded fields elsewhere.
 
@@ -52,8 +67,7 @@ This doc intentionally focuses on **paths**. Field lists live in `20_data/data_c
 
 - Items: `accounts/{accountId}/inventory/items/{itemId}`
 - Transactions: `accounts/{accountId}/inventory/transactions/{transactionId}`
-- Spaces: `accounts/{accountId}/inventory/spaces/{spaceId}` (TBD: spaces migration policy; see `40_features/spaces/feature_spec.md`)
-- Space templates: `accounts/{accountId}/inventory/spaceTemplates/{templateId}` (TBD: confirm final template scope)
+- Spaces: `accounts/{accountId}/inventory/spaces/{spaceId}`
 
 ### Cross-scope lineage
 
@@ -69,7 +83,7 @@ Default approach for multi-entity operations:
 
 - Client writes a **request doc** (single-document write, offline-safe)
 - A Cloud Function validates + applies changes atomically (Firestore transaction/batch)
-- Function updates request status (`pending` → `applied` / `rejected`) with structured error info
+- Function updates request status (`pending` → `applied` / `failed` / `denied`) with structured error info
 
 TBD / needs confirmation:
 - Per operation (allocate/sell/deallocate/transfer/etc.), the exact request-doc shape and status fields should be derived from the specific feature flow specs in `40_features/`.
@@ -83,13 +97,23 @@ Feature specs reference embedded media fields like:
 - `transaction.receiptImages[]` / `transaction.otherImages[]`
 - `space.images[]`
 
-Each entry includes at minimum `{ url }`, where `url` may be:
+Each entry uses the canonical `AttachmentRef` contract defined in:
+
+- `20_data/data_contracts.md` → “Embedded media references (URLs + `offline://` placeholders)”
+
+At minimum:
+
+- `url` may be:
 
 - a remote URL, or
 - an `offline://<mediaId>` placeholder that must render via the local media cache
 
-TBD:
-- Whether we persist additional per-media metadata in Firestore (mime/type/state) or derive it from local media records.
+and:
+
+- `kind` must be explicit (`"image" | "pdf"`) so PDF-vs-image is not inferred from URLs.
+
+Important rule (GAP B resolution):
+- Do not store transient upload state on Firestore domain entities. Upload state is local + derived; Firestore stores stable attachment refs only.
 
 ---
 

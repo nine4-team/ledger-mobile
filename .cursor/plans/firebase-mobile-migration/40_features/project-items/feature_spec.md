@@ -39,6 +39,22 @@ Anti-goal (explicit):
 
 - Do **not** implement separate `ProjectItemDetail` vs `BusinessInventoryItemDetail` screens/components that diverge over time. Scope-specific deltas belong in scope-config and the scope screen contracts (e.g. search fields, allowed actions).
 
+## Canonical contracts (where the “shared items object” is defined)
+
+If you’re looking for the shared Item “object” / document shape, it is **not** redefined in this feature spec. It is defined in the canonical data contracts:
+
+- **Item entity contract**: `20_data/data_contracts.md` → `## Entity: Item`
+
+Canonical UI/screen contracts owned by this feature:
+
+- Project items list: `40_features/project-items/ui/screens/ProjectItemsList.md`
+- Item detail (shared module; project-scope guardrails): `40_features/project-items/ui/screens/ItemDetail.md`
+- Item create/edit form (shared module): `40_features/project-items/ui/screens/ItemForm.md`
+
+Inventory-scope deltas (config-only; do not fork implementations):
+
+- Inventory Items scope config: `40_features/business-inventory/ui/screens/BusinessInventoryItemsScopeConfig.md`
+
 ---
 
 ## Scope
@@ -256,9 +272,9 @@ All Firebase/RN implementations must follow:
   - Scoped listeners are allowed (and required to be bounded); we do **not** build a bespoke “outbox + delta sync engine” in this repo.
   - SQLite is allowed only as an **optional derived search index** (non-authoritative), if the product requires robust offline multi-field search.
 - Multi-entity correctness must be enforced as **server-owned invariants** for allocation/sale/deallocation using the **request-doc workflow** (Cloud Function applies the change in a Firestore transaction), not UI-only.
-  - Idempotency: every request doc must include an `opId` (or `requestId`) that the server uses to de-dupe retries.
+  - Idempotency: every request doc must include an `opId` that the server uses to de-dupe retries. (`requestId` is the Firestore doc id for a single attempt.)
   - Retry model: default retry is **create a new request doc** (do not mutate a previously-applied request).
-  - UX contract: request docs must expose `status: pending|applied|failed` (and error info) so the UI can show queued/applied/failed states.
+  - UX contract: request docs must expose `status: pending|applied|failed|denied` (and error info) so the UI can show queued/applied/failed/denied states.
 
 Implications for this spec:
 

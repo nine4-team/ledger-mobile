@@ -1,8 +1,14 @@
-# Shared UI contracts (canonical — single file)
+# Shared UI contracts (canonical — primary file)
 
 This is the **single source of truth** for **shared UI behavior** in the Ledger Mobile migration.
 
 If a UI behavior/component is shared across multiple features (or must remain consistent across the app), it is defined **here** and **feature specs must reference it** rather than redefining it.
+
+Exception (explicit):
+
+- **Items + Transactions shared module contracts** (scope config + list state restoration) live in:
+  - `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
+  - This is the canonical contract for those two shared modules specifically; this file remains canonical for cross-feature UI semantics (bulk actions, messaging, media UI, etc.).
 
 ## Non-goals
 
@@ -247,6 +253,10 @@ Shared attachment UI patterns across items, transactions, spaces, etc.
 
 **Contract (baseline)**
 
+- **Attachment ref contract (required)**
+  - All screens/components treat persisted attachments as `AttachmentRef` (see `20_data/data_contracts.md` → “Embedded media references”).
+  - PDF-vs-image must be explicit via `AttachmentRef.kind` (`"image" | "pdf"`), not inferred from URLs.
+  - Upload state (`local_only | uploading | failed | uploaded`) is **derived locally** (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore domain entity.
 - **Upload surface**:
   - Shows placeholder states and supports retry/remove where applicable.
   - While offline, attachment selection must be validated against available local storage (quota guardrails).

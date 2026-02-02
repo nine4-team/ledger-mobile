@@ -26,7 +26,7 @@ For each user action:
   - Local state only (draft); no DB writes.
 - Parse PDF
   - Local state only (draft); no DB writes.
-- Edit draft fields (date, amount, category, payment method, notes, item drafts)
+- Edit draft fields (date, amount, category, purchased by, notes, item drafts)
   - Local state only (draft); no DB writes.
 - Create transaction
   - **Request-doc write (Firestore local cache)**:
@@ -65,7 +65,7 @@ For each user action:
   - Uses native back stack; if entered via deep link/cold start, fall back to `backTarget` or project transactions list.
   - See: `40_features/navigation-stack-and-context-links/README.md`
 - **Reset**
-  - Clears selected file, parse result, extracted text, and restores defaults (today date, default payment method).
+- Clears selected file, parse result, extracted text, and restores defaults (today date, default purchased by).
   - Parity evidence: `handleReset` in `src/pages/ImportAmazonInvoice.tsx`
 - **Select PDF**
   - Reject non-PDF and show an error.
@@ -106,7 +106,8 @@ For each user action:
   - Single PDF selected (invoice) becomes a receipt attachment.
 - Placeholder rendering (offline):
   - Receipt shows as `local_only` / `uploading` / `failed` with retry.
-  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+  - Attachment contract: persist on the transaction as `AttachmentRef` with `kind: "pdf"` (see `20_data/data_contracts.md`).
+  - Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 - Cleanup/orphan rules:
   - If user resets or leaves without creating, staged local files should be cleaned up (best-effort).
 

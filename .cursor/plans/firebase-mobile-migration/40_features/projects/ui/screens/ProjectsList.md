@@ -20,7 +20,7 @@ Parity evidence: `src/App.tsx`.
   - Transactions + items + budget category presets as needed (see `40_features/budget-and-accounting/feature_spec.md` rollup inputs).
   - Per-user per-project **pinned budget categories**:
     - `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}.pinnedBudgetCategoryIds`
-    - Used to determine which category trackers render in the preview (same subset as collapsed Budget tab).
+    - Used to determine which category trackers render in the preview (same subset as the collapsed Budget module).
 
 Parity evidence:
 - Projects hydration + cache use: `src/pages/Projects.tsx` (`hydrateProjectsListCache`, React Query read) + `src/utils/hydrationHelpers.ts`

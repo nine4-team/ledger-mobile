@@ -14,6 +14,435 @@ Other docs under `20_data/` should **reference** these contracts rather than res
 
 ---
 
+## Firestore data tree (paths + doc shapes)
+
+This is a **single, skim-friendly map** of:
+
+- **Where data lives** in Firestore (paths)
+- **What each document looks like** (field shapes)
+
+### Path tree (at a glance)
+
+```text
+accounts/{accountId}
+  projects/{projectId}
+    budgetCategories/{budgetCategoryId}           (ProjectBudgetCategory)
+    items/{itemId}                                (Item)
+    spaces/{spaceId}                              (Space)
+    transactions/{transactionId}                  (Transaction)
+    requests/{requestId}                          (RequestDoc)
+
+  inventory
+    items/{itemId}                                (Item; projectId = null)
+    spaces/{spaceId}                              (Space; projectId = null)
+    transactions/{transactionId}                  (Transaction; projectId = null)
+    requests/{requestId}                          (RequestDoc)
+
+  presets
+    budgetCategories/{budgetCategoryId}            (BudgetCategory)
+    spaceTemplates/{templateId}                   (SpaceTemplate)
+    vendorDefaults/current                         (VendorDefaults)
+
+  users/{userId}
+    projectPreferences/{projectId}                (ProjectPreferences)
+
+  members/{uid}                                   (Member)
+  invites/{inviteId}                              (Invite)
+  businessProfile/current                          (BusinessProfile)
+
+  billing
+    entitlements/current                           (BillingEntitlements)
+    usage                                          (BillingUsage)
+
+  requests/{requestId}                             (RequestDoc)
+  lineageEdges/{edgeId}                            (LineageEdge)
+```
+
+### Shared shapes used below
+
+```ts
+type Timestamp = any; // Firestore Timestamp
+
+type AttachmentKind = "image" | "pdf";
+
+type AttachmentRef = {
+  url: string; // remote URL or "offline://<mediaId>"
+  kind: AttachmentKind;
+  contentType?: string;
+  isPrimary?: boolean;
+};
+
+// Contract note:
+// - For scoped mutable entity docs (items/transactions/spaces/lineage edges, etc.),
+//   include these lifecycle/audit fields (see "Lifecycle + audit fields" below).
+type LifecycleAuditFields = {
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  deletedAt: Timestamp | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  schemaVersion?: number;
+};
+
+type SpaceChecklistItem = {
+  id: string;
+  text: string;
+  isChecked: boolean;
+};
+
+type SpaceChecklist = {
+  id: string;
+  name: string;
+  items: SpaceChecklistItem[];
+};
+```
+
+### Doc shapes by path
+
+#### `accounts/{accountId}/projects/{projectId}` (Project)
+
+```ts
+type Project = {
+  id: string; // doc id
+  accountId: string;
+  name: string;
+  clientName: string;
+
+  description?: string | null;
+  mainImageUrl?: string | null; // may be "offline://<mediaId>"
+  metadata?: Record<string, any> | null;
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}` (ProjectPreferences)
+
+```ts
+type ProjectPreferences = {
+  id: string; // id = projectId
+  accountId: string;
+  userId: string;
+  projectId: string;
+  pinnedBudgetCategoryIds: string[];
+
+  // Lifecycle/audit fields are recommended for this doc (see entity section below).
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+```
+
+#### `accounts/{accountId}/presets/budgetCategories/{budgetCategoryId}` (BudgetCategory)
+
+```ts
+type BudgetCategoryMetadata = {
+  categoryType?: "standard" | "itemized" | "fee";
+  excludeFromOverallBudget?: boolean;
+  legacy?: Record<string, any> | null;
+};
+
+type BudgetCategory = {
+  id: string; // doc id
+  accountId: string;
+  projectId: null; // preset categories are account-level
+  name: string;
+  slug: string;
+  isArchived: boolean;
+
+  metadata?: BudgetCategoryMetadata | null;
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}` (ProjectBudgetCategory)
+
+```ts
+type ProjectBudgetCategory = {
+  id: string; // id = budgetCategoryId (preset id)
+  budgetCents: number | null; // integer cents; null = enabled but not budgeted
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/projects/{projectId}/items/{itemId}` and `accounts/{accountId}/inventory/items/{itemId}` (Item)
+
+```ts
+type Item = {
+  id: string; // doc id
+  accountId: string;
+  projectId: string | null; // null = Business Inventory scope
+  createdBy: string; // required (Roles v2 selectors)
+  description: string;
+
+  name?: string | null;
+  source?: string | null;
+  sku?: string | null;
+  notes?: string | null;
+  bookmark?: boolean;
+  purchasedBy?: "Client" | "Design Business" | null;
+  status?: "to purchase" | "purchased" | "to return" | "returned" | null;
+
+  images?: AttachmentRef[];
+
+  transactionId?: string | null;
+  spaceId?: string | null;
+  inheritedBudgetCategoryId?: string | null; // required field; may be null
+
+  purchasePriceCents?: number | null;
+  projectPriceCents?: number | null;
+  marketValueCents?: number | null;
+
+  taxRatePct?: number | null;
+  taxAmountPurchasePriceCents?: number | null;
+  taxAmountProjectPriceCents?: number | null;
+
+  originTransactionId?: string | null;
+  latestTransactionId?: string | null;
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}` and `accounts/{accountId}/inventory/spaces/{spaceId}` (Space)
+
+```ts
+type Space = {
+  id: string; // doc id
+  accountId: string;
+  projectId: string | null; // null = Business Inventory scope
+  name: string;
+
+  notes?: string | null;
+  images?: AttachmentRef[];
+  checklists?: SpaceChecklist[];
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/presets/spaceTemplates/{templateId}` (SpaceTemplate)
+
+```ts
+type SpaceTemplate = {
+  id: string; // doc id
+  accountId: string;
+  name: string;
+  isArchived: boolean;
+
+  notes?: string | null;
+  checklists?: SpaceChecklist[]; // uses the same checklist shapes as Space
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/members/{uid}` (Member)
+
+```ts
+type Member = {
+  id: string; // id = uid
+  accountId: string;
+  uid: string;
+  role: "owner" | "admin" | "user";
+
+  allowedBudgetCategoryIds?: Record<string, true> | null;
+  isDisabled?: boolean;
+
+  // Lifecycle/audit fields are recommended for this doc (see entity section below).
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+```
+
+#### `accounts/{accountId}/invites/{inviteId}` (Invite)
+
+```ts
+type Invite = {
+  id: string; // inviteId; doc id
+  accountId: string;
+  email: string;
+  role: "admin" | "user";
+  token: string;
+
+  createdAt: Timestamp;
+  createdByUid?: string | null;
+  expiresAt?: Timestamp | null;
+  acceptedAt?: Timestamp | null;
+  acceptedByUid?: string | null;
+  revokedAt?: Timestamp | null;
+};
+```
+
+#### `accounts/{accountId}/businessProfile/current` (BusinessProfile)
+
+```ts
+type BusinessProfile = {
+  id: "current";
+  accountId: string;
+  businessName: string;
+  logo?: AttachmentRef | null;
+
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  updatedBy?: string | null;
+};
+```
+
+#### `accounts/{accountId}/billing/entitlements/current` (BillingEntitlements)
+
+```ts
+type BillingEntitlements = {
+  accountId: string;
+  planType: "free" | "pro";
+  limits: {
+    maxProjects: number;
+    maxItems: number;
+    maxTransactions: number;
+    maxUsers: number;
+  };
+  updatedAt: Timestamp;
+
+  source?: {
+    provider: "revenuecat";
+    environment?: "sandbox" | "production";
+    appUserId?: string;
+    lastSyncedAt?: Timestamp;
+  };
+};
+```
+
+#### `accounts/{accountId}/billing/usage` (BillingUsage)
+
+```ts
+type BillingUsage = {
+  projectCount: number;
+  itemCount: number;
+  transactionCount: number;
+  userCount: number;
+  updatedAt: Timestamp;
+};
+```
+
+#### Request docs (RequestDoc)
+
+Paths:
+- `accounts/{accountId}/requests/{requestId}` (account-scoped)
+- `accounts/{accountId}/projects/{projectId}/requests/{requestId}` (project-scoped)
+- `accounts/{accountId}/inventory/requests/{requestId}` (inventory-scoped)
+
+```ts
+type RequestDoc = {
+  id: string; // requestId; doc id
+  type: string;
+  status: "pending" | "applied" | "failed" | "denied";
+  opId: string; // idempotency key for the logical user action
+  createdAt: Timestamp;
+  createdBy: string; // uid
+  payload: Record<string, any>;
+
+  appliedAt?: Timestamp;
+  errorCode?: string;
+  errorMessage?: string;
+};
+```
+
+Known minimum `payload` shapes (from feature specs):
+
+```ts
+type ItemSaleExpectedSnapshot = {
+  itemProjectId: string | null;
+  itemTransactionId?: string | null;
+};
+
+type ItemSaleProjectToBusinessPayload = {
+  itemId: string;
+  sourceProjectId: string;
+  expected: ItemSaleExpectedSnapshot;
+};
+
+type ItemSaleBusinessToProjectPayload = {
+  itemId: string;
+  targetProjectId: string;
+  inheritedBudgetCategoryId: string | null;
+  expected: ItemSaleExpectedSnapshot;
+  // optional parity-only fields intentionally omitted here (see entity sections below)
+};
+
+type ItemSaleProjectToProjectPayload = {
+  itemId: string;
+  sourceProjectId: string;
+  targetProjectId: string;
+  inheritedBudgetCategoryId: string | null;
+  expected: ItemSaleExpectedSnapshot;
+  // optional parity-only fields intentionally omitted here (see entity sections below)
+};
+
+type InvoiceImportPayloadMinimum = {
+  projectId: string;
+  transaction: Partial<Transaction>;
+  items: Array<Partial<Item>>;
+};
+```
+
+#### `accounts/{accountId}/presets/vendorDefaults/current` (VendorDefaults)
+
+```ts
+type VendorDefaults = {
+  vendors: string[]; // ordered list (parity: 10 slots)
+
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+```
+
+#### `accounts/{accountId}/projects/{projectId}/transactions/{transactionId}` and `accounts/{accountId}/inventory/transactions/{transactionId}` (Transaction)
+
+```ts
+type Transaction = {
+  id: string; // doc id
+  accountId: string;
+  projectId: string | null; // null = Business Inventory scope
+  transactionDate: string; // stored as string for parity
+  amountCents: number; // authoritative for non-canonical transactions
+
+  source?: string | null;
+  transactionType?: string | null;
+  purchasedBy?: "Client" | "Design Business" | null;
+  notes?: string | null;
+  status?: "pending" | "completed" | "canceled" | null;
+  reimbursementType?: string | null;
+  triggerEvent?: string | null;
+  receiptEmailed?: boolean;
+
+  receiptImages?: AttachmentRef[];
+  otherImages?: AttachmentRef[];
+  transactionImages?: AttachmentRef[];
+
+  budgetCategoryId?: string | null;
+
+  needsReview?: boolean;
+  taxRatePresetId?: string | null;
+  taxRatePct?: number | null;
+  subtotalCents?: number | null;
+  sumItemPurchasePricesCents?: number | null;
+
+  isCanonicalInventory?: boolean;
+  canonicalKind?: "INV_PURCHASE" | "INV_SALE" | null;
+  budgetCategoryIds?: string[] | null;
+  uncategorizedItemCreatorUids?: string[] | null;
+
+  itemIds?: string[]; // non-authoritative cache
+} & LifecycleAuditFields;
+```
+
+#### `accounts/{accountId}/lineageEdges/{edgeId}` (LineageEdge)
+
+```ts
+type LineageEdge = {
+  id: string; // doc id
+  accountId: string;
+  itemId: string;
+  fromTransactionId: string | null; // null = from inventory
+  toTransactionId: string | null; // null = to inventory
+  createdAt: Timestamp;
+  createdBy: string;
+
+  note?: string | null;
+} & LifecycleAuditFields;
+```
+
+---
+
 ## Conventions (applies to all entities below)
 
 ### Naming
@@ -73,15 +502,25 @@ Roles v2 requires **server-enforceable selectors**. At minimum:
 
 Feature specs model media as **embedded references on domain entities** (not as separate “Attachment docs”).
 
-Minimal shared shape (used by multiple entities):
+Canonical shared shapes (used by multiple entities):
 
-- `url: string`
-  - Either a remote URL **or** an `offline://<mediaId>` placeholder string (must render via local media cache).
-- `isPrimary?: boolean`
-  - Only for entity galleries that support a single primary image (e.g. `space.images`).
+- `AttachmentKind = "image" | "pdf"`
+- `AttachmentRef` (persisted on the owning domain entity doc in Firestore):
+  - `url: string`
+    - Either a remote URL **or** an `offline://<mediaId>` placeholder string (must render via local media cache).
+    - Contract: `offline://<mediaId>` is a stable join key into the local media cache + upload queue (see cross-cutting spec: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`).
+  - `kind: AttachmentKind`
+    - **Required**. This is how we represent **image vs PDF** explicitly (not by inferring from the URL).
+  - `contentType?: string`
+    - Optional, recommended when known (e.g. `"image/jpeg"`, `"image/png"`, `"application/pdf"`).
+  - `isPrimary?: boolean`
+    - Only for entity galleries that support a single primary image (e.g. `item.images[]`, `space.images[]`).
+    - Constraint: at most one entry per gallery should have `isPrimary === true` (enforced by app logic and/or server-owned invariants where applicable).
 
-TBD / needs confirmation (spec gap; do not invent):
-- Whether media entries persist additional metadata (e.g. `mimeType`, `filename`, `byteSize`, upload state) in Firestore, or whether state is derived from local media records + URL scheme.
+Important rule (GAP B resolution):
+- **Do not persist transient upload state** (`local_only | uploading | failed | uploaded`) on Firestore domain entities.
+  - Firestore persists stable domain truth (“this entity has these attachments”).
+  - Upload state is tracked locally (durable upload queue + local media cache); UI derives state by joining on `offline://<mediaId>` and/or local records.
 
 ---
 
@@ -98,17 +537,9 @@ Required:
 Optional / nullable:
 - `description?: string | null`
 - `mainImageUrl?: string | null`
-  - Parity field: project cover image URL stored directly on the project.
-- `mainImageAttachmentId?: string | null`
-  - Deprecated (spec mismatch): feature specs use `mainImageUrl` (and `offline://` placeholders) rather than attachment docs.
-  - TBD: remove this field entirely once specs and implementation converge.
-- `settings?: Record<string, any> | null`
+  - Project cover image URL stored directly on the project.
+  - May be a remote URL or an `offline://<mediaId>` placeholder string (see “Embedded media references” above).
 - `metadata?: Record<string, any> | null`
-
-Derived/denormalized (optional; must not be correctness-critical):
-- `itemCount?: number`
-- `transactionCount?: number`
-- `totalValueCents?: number`
 
 Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
@@ -147,14 +578,9 @@ Columns (recommended):
 - **core**: `name`, `client_name`, `description`
 - **images**:
   - `main_image_url` (TEXT)
-  - `main_image_attachment_id` (TEXT)
 - **flex**:
-  - `settings_json` (TEXT)
   - `metadata_json` (TEXT)
 - **sync + local bookkeeping**: per `local_sqlite_schema.md` common columns
-
-Notes:
-- Keep both `main_image_url` and `main_image_attachment_id` available: lists want a cheap URL without joins; attachment docs are optional.
 
 ---
 
@@ -346,12 +772,17 @@ Optional / nullable:
 - `sku?: string | null`
 - `notes?: string | null`
 - `bookmark?: boolean`
-- `paymentMethod?: string | null`
+- `purchasedBy?: "Client" | "Design Business" | null`
 - `status?: "to purchase" | "purchased" | "to return" | "returned" | null`
+- `images?: AttachmentRef[]`
+  - Embedded media references (remote URLs or `offline://<mediaId>` placeholders).
+  - Constraint: `images[].kind` should be `"image"` for item galleries.
+  - `isPrimary` is optional; if present, at most one image should be marked primary.
 
 Relationships / selectors (nullable):
 - `transactionId?: string | null`
 - `spaceId?: string | null`
+  - When `projectId = null` (Business Inventory), `spaceId` is the inventory location reference (Space in inventory scope).
 - `inheritedBudgetCategoryId?: string | null`
   - **Required field** (may be null): stable attribution selector for budgeting + Roles v2.
   - Set/update rules are defined in `40_features/project-items/feature_spec.md` and must be enforced by server-owned invariants for cross-scope ops.
@@ -365,9 +796,6 @@ Tax fields (integer cents; nullable):
 - `taxRatePct?: number | null`
 - `taxAmountPurchasePriceCents?: number | null`
 - `taxAmountProjectPriceCents?: number | null`
-
-Inventory metadata (nullable; shared module across project + business inventory):
-- `businessInventoryLocation?: string | null`
 
 Lineage pointers (nullable):
 - `originTransactionId?: string | null`
@@ -421,25 +849,354 @@ Other columns:
 - `sku` (TEXT NULL)
 - `notes` (TEXT NULL)
 - `bookmark` (INTEGER NOT NULL DEFAULT 0)
-- `payment_method` (TEXT NULL)
+- `purchased_by` (TEXT NULL)
 - `status` (TEXT NULL)
-- `business_inventory_location` (TEXT NULL)
 
 Local search index note:
 - SQLite is optional and non-authoritative; if used, prefer a rebuildable search index per `local_sqlite_schema.md`.
 
 ---
 
-## TBD / missing contracts (needs confirmation)
+## Entity: Space
 
-The following entities/field shapes are referenced by feature specs but are not fully specified in this contracts doc yet:
+This contract must satisfy:
 
-- **Space** and **SpaceTemplate** entity contracts (see `40_features/spaces/feature_spec.md`)
-- **Embedded media entry shape** beyond `{ url, isPrimary? }`:
-  - receipts that include PDFs (how to distinguish non-image entries in `receiptImages[]`)
-  - whether `mimeType`, `filename`, `byteSize`, upload state are persisted on the entity vs derived locally
-- **Item media fields**:
-  - feature specs reference item images (and example `item.primaryImage`), but do not explicitly define the canonical persisted field(s) and shape
+- `40_features/spaces/feature_spec.md` (project + inventory spaces; images; checklists; scope consistency rules)
+
+### Canonical fields
+
+Required:
+- `id: string` (doc id)
+- `accountId: string`
+- `projectId: string | null`
+  - `null` means **Business Inventory scope**.
+- `name: string`
+
+Optional / nullable:
+- `notes?: string | null`
+- `images?: AttachmentRef[]`
+  - See “Embedded media references (URLs + `offline://` placeholders)” above.
+  - Constraint: `images[].kind` should be `"image"` for space galleries.
+- `checklists?: SpaceChecklist[]`
+
+Where:
+
+- `SpaceChecklist`:
+  - `id: string`
+  - `name: string`
+  - `items: SpaceChecklistItem[]`
+- `SpaceChecklistItem`:
+  - `id: string`
+  - `text: string`
+  - `isChecked: boolean`
+
+Notes:
+- Checklists are ordered by array order. Each checklist’s items are ordered by array order.
+
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
+
+### Scope semantics + Firestore locations
+
+Project-scope space:
+- `projectId = "<projectId>"`
+- Firestore: `accounts/{accountId}/projects/{projectId}/spaces/{spaceId}`
+
+Business inventory space:
+- `projectId = null`
+- Firestore: `accounts/{accountId}/inventory/spaces/{spaceId}`
+
+### SQLite mapping (optional)
+
+If Spaces require robust offline search beyond Firestore cache and bounded queries, model them as part of the non-authoritative, rebuildable search index.
+
+Otherwise, SQLite persistence is not required for Spaces under the Firestore-native offline baseline.
+
+---
+
+## Entity: SpaceTemplate (account preset)
+
+This contract must satisfy:
+
+- `40_features/spaces/feature_spec.md` (“Space template: account-wide preset”)
+- `40_features/settings-and-admin/feature_spec.md` (Presets → Space templates manager)
+
+### Canonical fields
+
+Required:
+- `id: string` (doc id)
+- `accountId: string`
+- `name: string`
+- `isArchived: boolean`
+
+Optional / nullable:
+- `notes?: string | null`
+- `checklists?: SpaceTemplateChecklist[]`
+
+Where:
+
+- `SpaceTemplateChecklist` and `SpaceTemplateChecklistItem` reuse the `SpaceChecklist` / `SpaceChecklistItem` shapes from **Entity: Space**.
+
+Normalization requirement (from feature specs):
+- Template checklist items should be stored with `isChecked = false` (templates are “prefill”, not “stateful progress”).
+
+Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
+
+### Firestore location (recommended; aligns with “presets” semantics)
+
+- `accounts/{accountId}/presets/spaceTemplates/{templateId}`
+
+---
+
+## Entity: Member (account membership / role)
+
+This contract must satisfy:
+
+- `40_features/auth-and-invitations/feature_spec.md` (membership-gated access; server-owned invite acceptance)
+- `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md` (Roles v2 selectors)
+- `40_features/settings-and-admin/feature_spec.md` (owner/admin gating)
+
+### Canonical fields
+
+Doc id:
+- `id = uid`
+
+Required:
+- `accountId: string`
+- `uid: string`
+- `role: "owner" | "admin" | "user"`
+
+Optional:
+- `allowedBudgetCategoryIds?: Record<string, true> | null`
+  - Roles v2: preferred “set/map shape” for Rules checks.
+- `isDisabled?: boolean`
+  - If true, the client must fail closed (treat as no access).
+
+Lifecycle/audit fields (recommended):
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
+
+### Firestore location
+
+- `accounts/{accountId}/members/{uid}`
+
+---
+
+## Entity: Invite (pending invitation)
+
+This contract must satisfy:
+
+- `40_features/auth-and-invitations/feature_spec.md` (tokenized deep links + server-owned acceptance)
+- `40_features/settings-and-admin/feature_spec.md` (pending invites list + copy link)
+
+### Canonical fields
+
+Required:
+- `id: string` (inviteId; doc id)
+- `accountId: string`
+- `email: string`
+- `role: "admin" | "user"`
+- `token: string`
+
+Optional / nullable:
+- `createdAt: Timestamp`
+- `createdByUid?: string | null`
+- `expiresAt?: Timestamp | null`
+- `acceptedAt?: Timestamp | null`
+- `acceptedByUid?: string | null`
+- `revokedAt?: Timestamp | null`
+
+### Firestore location
+
+- `accounts/{accountId}/invites/{inviteId}`
+
+---
+
+## Entity: BusinessProfile (account branding)
+
+This entity provides the account-level branding inputs used by Settings and Reports (business name + logo).
+
+### Canonical fields
+
+Doc id:
+- `id = "current"`
+
+Required:
+- `accountId: string`
+- `businessName: string`
+
+Optional / nullable:
+- `logo?: AttachmentRef | null`
+  - Uses the same embedded media reference convention as other entities.
+  - Constraint: `logo.kind` should be `"image"`.
+
+Lifecycle/audit fields (recommended):
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
+- `updatedBy?: string | null`
+
+### Firestore location (canonical)
+
+- `accounts/{accountId}/businessProfile/current`
+
+---
+
+## Entity: BillingEntitlements (server-owned enforcement snapshot)
+
+This contract must satisfy:
+
+- `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
+
+### Canonical fields (v1)
+
+Required:
+- `accountId: string`
+- `planType: "free" | "pro"`
+- `limits: { maxProjects: number; maxItems: number; maxTransactions: number; maxUsers: number }`
+- `updatedAt: Timestamp`
+
+Optional:
+- `source?: { provider: "revenuecat"; environment?: "sandbox" | "production"; appUserId?: string; lastSyncedAt?: Timestamp }`
+
+### Firestore location
+
+- `accounts/{accountId}/billing/entitlements/current`
+
+---
+
+## Entity: BillingUsage (server-owned counters)
+
+This contract must satisfy:
+
+- `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md`
+
+### Canonical fields (v1)
+
+Required:
+- `projectCount: number`
+- `itemCount: number`
+- `transactionCount: number`
+- `userCount: number`
+- `updatedAt: Timestamp`
+
+### Firestore location
+
+- `accounts/{accountId}/billing/usage`
+
+---
+
+## Entity: RequestDoc (request-doc workflow envelope)
+
+This contract must satisfy:
+
+- `OFFLINE_FIRST_V2_SPEC.md` (request-doc workflows)
+- `40_features/inventory-operations-and-lineage/feature_spec.md` (required fields + `opId` idempotency)
+- `40_features/invoice-import/feature_spec.md` (create transaction + items via request-docs)
+- `40_features/_cross_cutting/billing-and-entitlements/feature_spec.md` (account-scoped gated create via request-docs)
+
+### Canonical fields
+
+Required:
+- `id: string` (doc id; requestId)
+- `type: string`
+- `status: "pending" | "applied" | "failed" | "denied"`
+  - Note: some features only need `pending|applied|failed`; `denied` is used when the server explicitly rejects due to policy/entitlements.
+- `opId: string`
+  - Stable idempotency key for the logical user action.
+- `createdAt: Timestamp`
+- `createdBy: string` (uid)
+- `payload: Record<string, any>`
+
+Optional:
+- `appliedAt?: Timestamp`
+- `errorCode?: string`
+- `errorMessage?: string`
+
+### Firestore locations (canonical)
+
+Account-scoped requests (gated creates, account-wide workflows):
+- `accounts/{accountId}/requests/{requestId}`
+
+Project-scoped invariant requests:
+- `accounts/{accountId}/projects/{projectId}/requests/{requestId}`
+
+Inventory-scoped invariant requests:
+- `accounts/{accountId}/inventory/requests/{requestId}`
+
+### Known request payload schemas (codified from feature specs)
+
+This section exists to prevent each feature from inventing incompatible `payload` shapes. Feature specs are the source of truth.
+
+#### Inventory operations (`inventory-operations-and-lineage`) — required
+
+Source of truth: `40_features/inventory-operations-and-lineage/feature_spec.md` (“Request-doc collection + payload shapes”).
+
+All of these use:
+
+- `type`: `"ITEM_SALE_PROJECT_TO_BUSINESS" | "ITEM_SALE_BUSINESS_TO_PROJECT" | "ITEM_SALE_PROJECT_TO_PROJECT"`
+- `opId`: stable idempotency key for the logical user action
+- `payload.expected`: conflict-detection snapshot required by the feature spec
+
+`payload` shapes (minimum required fields):
+
+- `ITEM_SALE_PROJECT_TO_BUSINESS`
+  - `itemId: string`
+  - `sourceProjectId: string`
+  - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
+
+- `ITEM_SALE_BUSINESS_TO_PROJECT`
+  - `itemId: string`
+  - `targetProjectId: string`
+  - `inheritedBudgetCategoryId: string | null`
+  - optional parity fields: `space`, `notes`, `amount`
+  - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
+
+- `ITEM_SALE_PROJECT_TO_PROJECT`
+  - `itemId: string`
+  - `sourceProjectId: string`
+  - `targetProjectId: string`
+  - `inheritedBudgetCategoryId: string | null`
+  - optional parity fields: `space`, `notes`, `amount`
+  - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
+
+Notes:
+- The optional fields above are intentionally left untyped here because they are parity-only and must be reconciled with the canonical `Item` + `Transaction` fields when implemented.
+- The required fields are the invariants needed for idempotent, transactional correctness.
+
+#### Invoice import (transaction + items create) — required (minimal)
+
+Source of truth: `40_features/invoice-import/feature_spec.md` + `40_features/invoice-import/ui/screens/*` (request-doc workflow requirement).
+
+This feature requires a request-doc workflow to create a transaction and items atomically. The feature specs do not currently standardize a `type` string for this operation; the important part for alignment is that:
+
+- the request payload includes the transaction fields and item fields to create, and
+- all money fields are expressed in integer cents per the canonical entity contracts.
+
+Minimum payload shape (conceptual; aligns to entity contracts):
+
+- `projectId: string`
+- `transaction: Partial<Transaction>` (fields to create; must use `*Cents` for money)
+- `items: Array<Partial<Item>>` (fields to create; must use `*Cents` for money)
+
+---
+
+## Entity: VendorDefaults (account preset; recommended shape)
+
+This entity is required by feature specs (transactions/forms) but is not fully specified elsewhere yet.
+
+### Canonical fields (recommended)
+
+Required:
+- `vendors: string[]`
+  - Ordered list, UI-capped (parity: 10 slots).
+
+Lifecycle/audit fields (recommended):
+- `createdAt: Timestamp`
+- `updatedAt: Timestamp`
+
+### Firestore location (recommended)
+
+- `accounts/{accountId}/presets/vendorDefaults/current`
+
 ---
 
 ## Entity: Transaction
@@ -464,7 +1221,7 @@ Required:
 Optional / nullable:
 - `source?: string | null`
 - `transactionType?: string | null`
-- `paymentMethod?: string | null`
+- `purchasedBy?: "Client" | "Design Business" | null`
 - `notes?: string | null`
 - `status?: "pending" | "completed" | "canceled" | null`
 - `reimbursementType?: string | null`
@@ -472,11 +1229,14 @@ Optional / nullable:
 - `receiptEmailed?: boolean`
 
 Embedded media (per feature specs; uses “Embedded media references” above):
-- `receiptImages?: Array<{ url: string; isPrimary?: boolean }>`
-  - Receipts accept images and PDFs in feature specs.
-  - TBD / needs confirmation: whether PDFs live in `receiptImages` and, if so, what metadata distinguishes them from images.
-- `otherImages?: Array<{ url: string; isPrimary?: boolean }>`
-- `transactionImages?: Array<{ url: string; isPrimary?: boolean }>`
+- `receiptImages?: AttachmentRef[]`
+  - Receipts accept images and PDFs in feature specs:
+    - images: `kind: "image"`
+    - PDFs: `kind: "pdf"`
+  - `isPrimary` is typically unused for receipts; if present, treat it as a UI hint only (not correctness-critical).
+- `otherImages?: AttachmentRef[]`
+  - Constraint: `kind: "image"` (non-PDF) for this field.
+- `transactionImages?: AttachmentRef[]`
   - Legacy compat: feature specs mention mirroring receipts here.
 
 Budget category selector:
@@ -494,12 +1254,14 @@ Completeness / rollup helpers (optional; denormalized):
 Canonical inventory transaction selectors (Roles v2 + queryability):
 - `isCanonicalInventory?: boolean`
 - `canonicalKind?: "INV_PURCHASE" | "INV_SALE" | null`
-- `attributedCategoryIds?: Record<string, true> | null`
+- `budgetCategoryIds?: string[] | null`
   - Server-maintained selector for canonical transactions only:
-    - keys are non-null `item.inheritedBudgetCategoryId` values present among linked items
-- `attributedUncategorizedCreatorUids?: Record<string, true> | null`
+    - **unique set** of non-null `item.inheritedBudgetCategoryId` values present among linked items
+    - used by Roles v2 to decide canonical transaction read visibility without “checking all attached items” at read-time
+- `uncategorizedItemCreatorUids?: string[] | null`
   - Server-maintained selector for canonical transactions only:
-    - keys are uids of creators who have at least one linked item with `inheritedBudgetCategoryId == null`
+    - **unique set** of `item.createdBy` uids among linked items with `item.inheritedBudgetCategoryId == null`
+    - used to support the Roles v2 “own uncategorized items” exception when evaluating canonical transaction visibility
 
 Linkage helpers (optional; denormalized):
 - `itemIds?: string[]`
@@ -518,6 +1280,10 @@ Required attribution invariant:
 - **Non-canonical** transactions: category attribution is transaction-driven via `transaction.budgetCategoryId`.
 - **Canonical inventory (`INV_*`)** transactions: category attribution is **item-driven** by grouping linked items by `item.inheritedBudgetCategoryId`.
   - `transaction.budgetCategoryId` must be treated as **non-authoritative** even if populated for compatibility.
+
+Cross-entity invariant (required by transaction edit UX; deterministic attribution):
+- When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to match the new `budgetCategoryId`.
+  - Source of truth: `40_features/project-transactions/feature_spec.md` (“Edit a transaction” requirement).
 
 Authoritative value source for canonical totals:
 - For canonical `INV_*` totals, the authoritative source is the linked items’ values (see `40_features/budget-and-accounting/feature_spec.md`).
@@ -547,7 +1313,7 @@ Core columns:
 - `amount_cents` (INTEGER NOT NULL)
 - `source` (TEXT NULL)
 - `transaction_type` (TEXT NULL)
-- `payment_method` (TEXT NULL)
+- `purchased_by` (TEXT NULL)
 - `notes` (TEXT NULL)
 
 Workflow columns:
@@ -560,8 +1326,8 @@ Category + canonical semantics:
 - `budget_category_id` (TEXT NULL)
 - `is_canonical_inventory` (INTEGER NOT NULL DEFAULT 0)
 - `canonical_kind` (TEXT NULL)
-- `attributed_category_ids_json` (TEXT NULL) (JSON map of `{ [categoryId]: true }`)
-- `attributed_uncategorized_creator_uids_json` (TEXT NULL) (JSON map of `{ [uid]: true }`)
+- `budget_category_ids_json` (TEXT NULL) (JSON array of category ids; canonical `INV_*` selector)
+- `uncategorized_item_creator_uids_json` (TEXT NULL) (JSON array of uids; canonical `INV_*` selector)
 
 Completeness / denormalized helpers:
 - `needs_review` (INTEGER NOT NULL DEFAULT 0)
@@ -582,12 +1348,9 @@ Prior drafts modeled media as separate Attachment documents. This conflicts with
 
 - `transaction.receiptImages[]` / `transaction.otherImages[]` (with `offline://` placeholders)
 - `space.images[]`
-- example: `item.primaryImage` (shape TBD in specs)
+- example: `item.images[]` (embedded media refs)
 
 **Contract decision (aligned to feature specs):** model media as embedded URL refs on the owning entity (see “Embedded media references” above).
-
-TBD / needs confirmation:
-- Whether we also need a separate Firestore “attachment docs” collection as an optimization. If so, it must be additive and must not replace these embedded fields unless feature specs are updated.
 
 ---
 

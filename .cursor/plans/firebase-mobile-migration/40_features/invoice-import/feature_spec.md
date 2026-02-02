@@ -4,7 +4,7 @@
 Provide a vendor-PDF import flow that turns an Amazon or Wayfair invoice into a **draft transaction + draft items**, lets the user review/edit the draft, then creates a real transaction and items in an **offline-first** way:
 
 - UI reads/writes Firestore local cache (offline persistence)
-- Creates use **request-doc workflows** for multi-doc correctness (client writes a request doc with an idempotency key; Cloud Function applies a transaction to create transaction + items)
+- Creates use **request-doc workflows** for multi-doc correctness (client writes a request doc with `opId` idempotency; Cloud Function applies a transaction to create transaction + items)
 - Media (invoice PDF as receipt, Wayfair thumbnails as item images) uses the shared offline media lifecycle
 - No large listeners; use scoped project listeners per `OFFLINE_FIRST_V2_SPEC.md`
 
@@ -34,7 +34,7 @@ Media dependencies:
 
 Cross-cutting specs (canonical):
 - Offline-first architecture: `OFFLINE_FIRST_V2_SPEC.md`
-- Offline media lifecycle: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+- Offline media lifecycle: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 - Storage/quota guardrails: `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Primary flows
@@ -95,7 +95,7 @@ Default behavior (parity):
   - Wayfair: `applyParsedInvoiceToDraft` in `src/pages/ImportWayfairInvoice.tsx`
 
 Draft editing:
-- User can edit transaction date, amount, category, payment method, notes.
+- User can edit transaction date, amount, category, purchased by, notes.
 - User can edit item drafts in an itemization-style editor before creating.
 - Evidence:
   - `TransactionItemsList` usage in both importer pages (draft mode via `enablePersistedItemFeatures={false}`)
@@ -130,7 +130,9 @@ Parity behavior (web):
 
 Mobile offline-first requirement (intentional delta, required by architecture):
 - The create action must be a **request-doc workflow**:
-  - write a request doc to Firestore (locally persisted) with a stable idempotency key (e.g., `createTransactionWithItems:<localId>`)
+  - write a request doc to Firestore (locally persisted) with:
+    - `status: "pending"`
+    - `opId` set to a stable idempotency key (e.g., `createTransactionWithItems:<localId>`)
   - Cloud Function applies a transaction to create the transaction + items and attach server-owned fields
 - If offline or background execution is limited, do not block the user on uploads. Show “created (pending sync)” and allow them to leave the importer immediately.
 
@@ -146,9 +148,12 @@ Parity behavior (web):
 Mobile offline-first requirement:
 - Receipt PDF and Wayfair thumbnails must be treated as offline media assets:
   - create local-only placeholders immediately
-  - enqueue upload ops per the offline media lifecycle (Firestore-backed queueing)
+  - enqueue upload ops per the offline media lifecycle (durable **local** upload queue + local media cache)
   - allow retry from the Transaction detail screen when any upload fails
-- Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+- Attachment contract note:
+  - Persist attachments on domain entities as `AttachmentRef` (explicit `kind: "pdf" | "image"`), per `20_data/data_contracts.md`.
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (do not store it on the Firestore entity).
+- Source of truth: `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 
 ## Permissions
 Parity behavior:
@@ -194,5 +199,5 @@ Port/reuse-first guidance (do not recreate if avoidable):
 
 - **Non-negotiable deltas**:
   - Create must use request-doc workflows for multi-doc correctness per `OFFLINE_FIRST_V2_SPEC.md`
-  - Media must follow `40_features/_cross_cutting/offline-media-lifecycle/offline_media_lifecycle.md`
+  - Media must follow `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
 

@@ -20,6 +20,9 @@ Implement Phase A of the offline media lifecycle:
   - `uploading` (scheduled/in-progress)
   - `uploaded` (remote-backed)
   - `failed` (upload failed)
+  - Contract note (GAP B):
+    - Persisted attachment refs are `AttachmentRef` with explicit `kind: "image" | "pdf"` (see `20_data/data_contracts.md`).
+    - Do not persist transient upload state on Firestore domain entities; state is local + derived (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`).
 - Integrate selection-time validation with quota/guardrails without redefining thresholds/copy (use the guardrails spec).
 
 ## Constraints
@@ -31,6 +34,6 @@ Implement Phase A of the offline media lifecycle:
 ## Edge cases (must be explicit)
 - User cancels after local save: how the local blob/record is handled (must not leak).
 - App restart after selection but before upload begins: `local_only` must still render correctly.
-- Multiple attachments per entity (e.g. `transaction.receipts[]`, `space.images[]`) vs singular fields (e.g. `item.primaryImage`, `businessProfile.logo`).
+- Multiple attachments per entity (e.g. `transaction.receiptImages[]`, `space.images[]`) vs singular fields (e.g. `businessProfile.logo`).
 - Large file selection blocked by guardrails: required user-visible behavior is “warn at getting full; hard block near-full” per the guardrails spec.
 

@@ -25,7 +25,7 @@ Note:
 - Shared module reuse rule (must reuse Transactions module): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Canonical Transactions behavior/contracts (project entrypoint, reused by inventory): `40_features/project-transactions/README.md`
 - Offline media lifecycle + quota guardrails:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Evidence rule (anti-hallucination)

@@ -16,7 +16,11 @@ Architecture baseline (mobile):
 
 ### Project shell
 - **Route**: `/project/:projectId/*`
-- **Tabs**: `items`, `transactions`, `spaces`, `budget`
+- **Tabs**: `items`, `transactions`, `spaces`, `accounting`
+- **Above tabs (required container)**:
+  - **Project header container**: a single container above the section tabs that includes:
+    - **Project info**: basic project identity + context (e.g., name, client, optional main image, key metadata/affordances).
+    - **Budget module (compact)**: a small budget progress surface (e.g., overall + pinned categories summary). This is **not** a tab.
 - **Web parity source**: `src/pages/ProjectLayout.tsx`, `src/utils/routes.ts`
 
 ## Primary flows
@@ -53,7 +57,7 @@ Firebase migration behavior (required delta: entitlements gating):
   - verify membership/role for `accountId`
   - read `entitlements/current` for `accountId`
   - enforce `projectCount < maxProjects` (either via query or server-maintained counter)
-  - create project doc and update `meta/sync` once
+  - create project doc (and any required server-owned denormalized counters/fields)
   - seed pinned budget categories for the creator (recommended):
     - create `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}` with `pinnedBudgetCategoryIds = [<furnishingsCategoryId>]`
     - Source of truth: `20_data/data_contracts.md` → `ProjectPreferences`

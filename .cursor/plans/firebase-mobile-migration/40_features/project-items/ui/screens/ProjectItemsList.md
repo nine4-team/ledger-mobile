@@ -40,6 +40,44 @@ Parity evidence:
 - Observed in `src/pages/InventoryList.tsx` (search filter logic).
 - Observed in `src/pages/ItemDetail.tsx` (next/previous navigation uses the same filtered+sorted list logic).
 
+### Filters (required; parity)
+
+- State key (web parity): `itemFilter`
+- Allowed modes (web parity):
+  - `all`
+  - `bookmarked`
+  - `from-inventory`
+  - `to-return`
+  - `returned`
+  - `no-sku`
+  - `no-description`
+  - `no-project-price`
+  - `no-image`
+  - `no-transaction`
+
+Parity evidence:
+
+- Observed in `ledger/src/pages/InventoryList.tsx` (`ITEM_FILTER_MODES`, `itemFilter` URL param).
+
+### Sort (required; parity)
+
+- State key (web parity): `itemSort`
+- Allowed modes (web parity):
+  - `alphabetical`
+  - `creationDate` (newest-first)
+
+Parity evidence:
+
+- Observed in `ledger/src/pages/InventoryList.tsx` (`ITEM_SORT_MODES`, `itemSort` URL param).
+
+### Duplicate grouping (recommended; parity)
+
+Project items list should support “duplicate grouping” (collapsed groups) and preserve selection semantics.
+
+Parity evidence:
+
+- Observed in `ledger/src/pages/InventoryList.tsx` (`getInventoryListGroupKey`, `CollapsedDuplicateGroup`).
+
 ### List state + scroll restoration (required; Expo Router)
 
 We do **not** wire scroll restoration separately for:
@@ -135,4 +173,12 @@ If/when the Project Items list adds bulk “Move/Sell to Business Inventory” a
 
 - Be disabled when any selected item is missing `inheritedBudgetCategoryId`
 - Use the same disable reason + error toast copy
+
+## Add item entrypoint (required; parity)
+
+- The list must provide an “Add Item” entrypoint that navigates to the shared `ItemForm` create screen in project scope.
+
+Parity evidence:
+
+- Observed in `ledger/src/pages/InventoryList.tsx` (add item entrypoint).
 

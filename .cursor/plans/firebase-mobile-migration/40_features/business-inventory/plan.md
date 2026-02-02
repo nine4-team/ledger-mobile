@@ -9,7 +9,7 @@ Produce parity-grade specs for `business-inventory`.
 - Shared module reuse rule: `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Inventory operations + lineage semantics: `40_features/inventory-operations-and-lineage/README.md`
 - Media lifecycle + quota guardrails:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Owned screens (web parity sources)

@@ -13,6 +13,7 @@ Each non-obvious criterion is backed by an **intentional delta** reference to th
 - [ ] **Canonical path**: counters live at `accounts/{accountId}/stats`.
 - [ ] **Fields present**: `projectCount`, `itemCount`, `transactionCount`, `userCount` exist and are numbers.
 - [ ] **Server-owned updates**: counters are updated only by trusted backend/Functions.
+- [ ] **Not Project fields**: these counters are account-level and are not persisted on `Project` documents.
 
 ## Gated creates
 - [ ] **Create project is server-owned**: direct client creates to `accounts/{accountId}/projects/*` are disallowed when limits are enforced; creation is applied server-side (preferred: request-doc workflow processed by Functions).

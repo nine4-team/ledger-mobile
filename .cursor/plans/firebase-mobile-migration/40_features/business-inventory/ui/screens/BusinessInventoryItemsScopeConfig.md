@@ -20,7 +20,6 @@ const inventoryScopeConfig = {
   scope: 'inventory',
   capabilities: {
     canAllocateToProject: true,
-    canGenerateQr: ENABLE_QR, // feature flag / remote config
   },
   fields: {
     showBusinessInventoryLocation: true,
@@ -36,7 +35,6 @@ Notes:
 Parity evidence (web):
 
 - `capabilities.canAllocateToProject`: Observed in `src/pages/BusinessInventory.tsx` (`unifiedItemsService.batchAllocateItemsToProject(...)`) and `src/pages/BusinessInventoryItemDetail.tsx` (allocation modal + `unifiedItemsService.allocateItemToProject(...)`).
-- `capabilities.canGenerateQr`: Observed in `src/pages/BusinessInventory.tsx` (`ENABLE_QR = import.meta.env.VITE_ENABLE_QR === 'true'` + conditional QR button).
 - `fields.showBusinessInventoryLocation`: Observed in `src/pages/BusinessInventoryItemDetail.tsx` (search includes `businessInventoryLocation`, and detail renders the Location field).
 
 Out of scope for the config object (intentional):
@@ -101,11 +99,9 @@ Parity evidence:
 Inventory scope must support selection and bulk actions:
 - Allocate selected items to a project (optional space field)
 - Delete selected items
-- Generate QR codes for selected items (feature-flag gated)
 
 Parity evidence:
 - Batch allocation modal + handler: Observed in `src/pages/BusinessInventory.tsx` (`batchAllocateItemsToProject`, modal with `space`).
-- QR flag gate: Observed in `src/pages/BusinessInventory.tsx` (`ENABLE_QR` from `VITE_ENABLE_QR`).
 
 ## Offline-first notes (mobile target)
 - Offline-ready behavior follows `OFFLINE_FIRST_V2_SPEC.md`:

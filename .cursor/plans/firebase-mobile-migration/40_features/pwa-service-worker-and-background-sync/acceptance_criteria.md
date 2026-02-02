@@ -2,6 +2,8 @@
 
 Each criterion must have **parity evidence** (Observed in …) or an **intentional delta**.
 
+Note: any “Observed in `public/...` / `src/...`” pointers in this doc refer to the legacy Ledger **web** codebase (not files in this React Native repo). Treat them as behavioral reference only.
+
 ## A) Intentional deltas (must be explicit)
 - [ ] **No Service Worker / PWA on mobile**: The RN app does not implement a service worker or PWA installation flow.  
   **Intentional delta** (platform constraint).

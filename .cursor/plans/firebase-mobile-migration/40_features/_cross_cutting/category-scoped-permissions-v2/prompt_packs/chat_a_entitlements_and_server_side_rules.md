@@ -35,4 +35,7 @@ Implement the **server-side source-of-truth** for Roles v2 category-scoped permi
 - Transactions:
   - Canonical `INV_*` have `budgetCategoryId == null` by design; do **not** treat as “uncategorized private”
   - Canonical transaction visibility must be derived from linked items the user may read
+  - Implementation strategy: enforce using server-maintained selector fields on the canonical transaction doc:
+    - `budgetCategoryIds: string[]` (derived from linked items’ `inheritedBudgetCategoryId`)
+    - `uncategorizedItemCreatorUids: string[]` (derived from linked items where `inheritedBudgetCategoryId == null`)
 

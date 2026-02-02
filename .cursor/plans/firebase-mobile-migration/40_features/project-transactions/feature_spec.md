@@ -64,14 +64,14 @@ Screen contracts:
 
 ### 1) Browse transactions (list/search/sort/filter)
 Summary:
-- Transactions render as a list of preview cards with title, amount, payment method, date, notes preview, and badges (category/type + needs-review/missing-items).
+- Transactions render as a list of preview cards with title, amount, purchased by, date, notes preview, and badges (category/type + needs-review/missing-items).
 - List state (search, filters, sort) is persisted and restored when navigating to detail and back.
   - Web parity mechanism: URL params + `restoreScrollY`.
   - Mobile (Expo Router) mechanism: shared Transactions list module persists state via `ListStateStore[listStateKey]` and restores scroll best-effort (anchor-first).
 
 Filters/sorts/search (web parity):
 - Sort modes: date, created, source, amount.
-- Filters: reimbursement status, email receipt, purchase method, transaction type, budget category, completeness.
+- Filters: reimbursement status, email receipt, purchased by, transaction type, budget category, completeness.
 - Search matches title/source/type/notes and amount-ish queries.
 
 Canonical transaction display:
@@ -104,7 +104,7 @@ Summary:
 - The list view can export a CSV of transactions (web exports “all transactions” for the project, sorted by current sort mode).
 - CSV includes both legacy and new category fields (category name + `budgetCategoryId`) **for non-canonical transactions**.
 - Canonical inventory transactions should export with `budgetCategoryId` empty and `categoryName` empty/“Uncategorized” (pick one and keep consistent).
-  - Optional (recommended): include an additional column like `attributedCategoryIds` or `attributedCategorySummary` derived from linked items’ `inheritedBudgetCategoryId` values so exports remain useful without introducing a “canonical category”.
+  - Optional (recommended): include an additional column like `budgetCategoryIds` (derived from linked items’ `inheritedBudgetCategoryId`) so exports remain useful without introducing a “canonical category”.
 
 Parity evidence:
 - CSV builder + download: `src/pages/TransactionsList.tsx` (`buildTransactionsCsv`, `handleExportCsv`)
@@ -119,6 +119,11 @@ Summary:
 - User can attach:
   - receipts (images + PDFs)
   - other images (images)
+- Attachment contract (required; GAP B):
+  - Persisted attachments on `Transaction` use `AttachmentRef[]` (see `20_data/data_contracts.md`):
+    - `transaction.receiptImages[]` accepts `kind: "image" | "pdf"`
+    - `transaction.otherImages[]` is image-only (`kind: "image"`)
+  - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore domain entity.
 - Itemization (transaction items) is shown only when enabled for the selected category.
 
 Parity evidence:
@@ -185,7 +190,9 @@ New requirement (itemization ↔ `inheritedBudgetCategoryId`):
 ### Local source of truth
 - UI reads from **Firestore’s local cache** via the native Firestore SDK (cache-first reads with server reconciliation when online).
 - User writes are **direct Firestore writes** (queued offline by Firestore-native persistence).
-- Attachments are represented locally immediately; uploads may create `offline://<mediaId>` placeholders until Cloud Storage URLs are available.
+- Attachments are represented locally immediately via `AttachmentRef.url = offline://<mediaId>` placeholders (with explicit `kind`).
+  - When upload completes, the owning transaction doc is patched by replacing the placeholder URL with a remote URL.
+  - Do not persist transient upload state on the transaction doc; state is local + derived.
 
 Parity evidence (web’s local-first approximation):
 - Offline placeholders for images: `OfflineAwareImageService` usage in `AddTransaction`, `EditTransaction`, `TransactionDetail`

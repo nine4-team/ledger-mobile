@@ -46,6 +46,8 @@ If the attempt fails:
 
 Parity evidence reference: the web service worker uses cooldown/backoff and stops loops (Observed in `public/sw-custom.js`), but the mobile mechanism is an intentional delta.
 
+Note: `public/sw-custom.js` is a pointer into the legacy Ledger **web** codebase, not a file in this React Native repo.
+
 ## Cost guardrails (must hold)
 - No background listeners of any kind.
 - No “check every N seconds/minutes” polling loop.

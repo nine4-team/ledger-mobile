@@ -100,6 +100,7 @@ To enforce limits without expensive queries and without rules-time aggregation, 
 
 Notes:
 
+- These are **account-level** counters and are **not** fields on `Project` documents.
 - These are updated only by server-owned operations (callable Functions / trusted backend).
 - Counters should be updated transactionally with the operation that changes them.
 
@@ -119,7 +120,11 @@ Notes:
 
 - Disallow direct client `create` to `accounts/{accountId}/projects/{projectId}`.
 - Prefer a **request-doc workflow** so the create can be queued offline and applied server-side when online:
-  - client creates: `accounts/{accountId}/requests/{requestId}` with `type: "createProject"` and required fields
+  - client creates: `accounts/{accountId}/requests/{requestId}` with:
+    - `type: "createProject"`
+    - `status: "pending"`
+    - `opId: "<stable idempotency key for this logical create>"`
+    - required fields in `payload`
   - Function processes request in a Firestore transaction:
     - validates membership + role (see `10_architecture/security_model.md`)
     - reads `accounts/{accountId}/billing/entitlements/current`
@@ -127,7 +132,8 @@ Notes:
     - enforces: `projectCount < limits.maxProjects` (unless “unlimited” in Pro policy)
     - writes the new project doc
     - increments `billing/usage.projectCount`
-    - marks request `status` (e.g., `applied | denied | failed`) with debuggable error info
+    - marks request `status` (`applied | denied | failed`) with debuggable error info
+      - if denied due to entitlements/limits, use `errorCode="ENTITLEMENT_DENIED"`
 
 #### Create item / transaction (planned)
 

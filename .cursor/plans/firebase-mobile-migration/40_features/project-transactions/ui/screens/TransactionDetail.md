@@ -51,9 +51,11 @@ Rules:
 ### Transaction-level actions
 - Add receipt(s):
   - Firestore: append `receiptImages[]` (and mirror legacy `transactionImages[]` for compatibility), queued offline by Firestore-native persistence
+    - Contract: arrays are `AttachmentRef[]` (see `20_data/data_contracts.md`), with explicit `kind: "image" | "pdf"`.
   - Media uploads: upload media (if placeholder) + patch transaction arrays with Cloud Storage URLs
 - Add other image(s):
   - Firestore: append `otherImages[]`, queued offline
+    - Contract: arrays are `AttachmentRef[]` with `kind: "image"`.
   - Media uploads: upload media (if placeholder) + patch transaction arrays
 - Delete receipt/other image:
   - Firestore: remove image from corresponding array (queued offline)
@@ -95,7 +97,7 @@ When the user links/assigns items to this transaction:
   - Back + optional Retry Sync button
   - Transaction actions menu (Edit / Move / Delete)
 - Details section:
-  - Category, source, amount, tax/subtotal, date, payment method, status, reimbursement, receipt emailed, notes
+- Category, source, amount, tax/subtotal, date, purchased by, status, reimbursement, receipt emailed, notes
 - Receipts section:
   - “Add receipts” action
   - Tile preview grid with remove + pin + click-to-open-gallery
@@ -156,6 +158,7 @@ When the user links/assigns items to this transaction:
 - Receipts can include PDFs; receipt PDFs are not included in the image gallery set (images-only).
 - Offline placeholders use `offline://<mediaId>`.
 - Tile previews must resolve offline placeholders to local blob URLs.
+ - Upload state (`local_only | uploading | failed | uploaded`) is derived locally (see `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`), not stored on the Firestore transaction doc.
 
 ## Collaboration / realtime expectations
 - While foregrounded, changes from other devices should reflect via **scoped listeners** on bounded queries (never unbounded listeners).

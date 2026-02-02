@@ -10,7 +10,7 @@ Update or create:
 - `40_features/business-inventory/ui/screens/BusinessInventoryItemsScopeConfig.md` (scope config contract)
 
 ## Source-of-truth code pointers (parity evidence)
-- Inventory items list (filters/sorts/grouping/bulk actions/QR gating):
+- Inventory items list (filters/sorts/grouping/bulk actions):
   - `src/pages/BusinessInventory.tsx`
 - Inventory item detail (allocation + transaction assignment + next/prev navigation + images):
   - `src/pages/BusinessInventoryItemDetail.tsx`
@@ -26,7 +26,7 @@ Note:
 - Canonical Items behavior/contracts (project entrypoint, reused by inventory): `40_features/project-items/README.md`
 - Inventory operations correctness: `40_features/inventory-operations-and-lineage/README.md`
 - Offline media lifecycle + quota guardrails:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 
 ## Evidence rule (anti-hallucination)
@@ -38,5 +38,4 @@ For each non-obvious behavior, include one of:
 - Inventory-scope filter/sort/search keys and allowed values
 - Duplicate grouping rules and how selection behaves with groups
 - Bulk allocate flow (project selection + optional space) and offline behavior
-- QR generation feature-flag behavior
 

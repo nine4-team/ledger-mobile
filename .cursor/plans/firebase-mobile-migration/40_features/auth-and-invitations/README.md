@@ -46,4 +46,3 @@ Parity note:
 ## Intentional deltas (mobile)
 - **No `/auth/callback` route in the mobile app**. Mobile auth should be native-persistent; OAuth (if implemented) must be mobile-native and must not require a web callback route.
 - Invite acceptance should be driven from a deep-link route in the auth group (e.g. `myapp://invite/<token>` → `/(auth)/invite/<token>`), and token bridging must use device storage (AsyncStorage/SecureStore), not web `localStorage`.
-

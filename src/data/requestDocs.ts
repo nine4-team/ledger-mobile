@@ -1,26 +1,39 @@
 import firestore from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 
-export type RequestStatus = 'pending' | 'applied' | 'failed';
+export type RequestStatus = 'pending' | 'applied' | 'failed' | 'denied';
 
 export type RequestScope =
-  | { accountId: string; projectId: string }
-  | { accountId: string; scope: 'inventory' };
+  | { accountId: string; scope: 'account' }
+  | { accountId: string; scope: 'inventory' }
+  | { accountId: string; projectId: string };
 
 export type RequestDoc<TPayload extends Record<string, unknown> = Record<string, unknown>> = {
   type: string;
   status: RequestStatus;
+  opId: string;
   createdAt?: unknown;
   createdBy?: string;
   appliedAt?: unknown;
   errorCode?: string;
   errorMessage?: string;
-  payload?: TPayload;
+  payload: TPayload;
 };
+
+export function generateRequestOpId(): string {
+  const cryptoApi = globalThis.crypto as { randomUUID?: () => string } | undefined;
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
+  }
+  return 'op_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 export function getRequestCollectionPath(scope: RequestScope): string {
   if ('projectId' in scope) {
     return `accounts/${scope.accountId}/projects/${scope.projectId}/requests`;
+  }
+  if (scope.scope === 'account') {
+    return `accounts/${scope.accountId}/requests`;
   }
   return `accounts/${scope.accountId}/inventory/requests`;
 }
@@ -32,7 +45,8 @@ export function getRequestDocPath(scope: RequestScope, requestId: string): strin
 export async function createRequestDoc<TPayload extends Record<string, unknown>>(
   type: string,
   payload: TPayload,
-  scope: RequestScope
+  scope: RequestScope,
+  opId: string
 ): Promise<string> {
   if (!isFirebaseConfigured || !db) {
     throw new Error(
@@ -43,10 +57,14 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
   if (!uid) {
     throw new Error('Must be signed in to create a request.');
   }
+  if (!opId) {
+    throw new Error('Request opId is required to create a request.');
+  }
 
   const requestDoc: RequestDoc<TPayload> = {
     type,
     status: 'pending',
+    opId,
     createdAt: firestore.FieldValue.serverTimestamp(),
     createdBy: uid,
     payload

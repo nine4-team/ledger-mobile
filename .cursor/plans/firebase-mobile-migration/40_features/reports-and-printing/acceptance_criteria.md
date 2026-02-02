@@ -41,7 +41,8 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   **Intentional delta** vs web: web groups by transaction `categoryId` only (legacy web naming; `src/pages/ClientSummary.tsx`).
 - [ ] **Receipt link behavior per item**:
   - If item has `transactionId` and the transaction is canonical (`INV_*`) or invoiceable by reimbursement type, “View Receipt” links to the project invoice report.
-  - Else, if transaction has `receiptImages[0].url`, link to the external receipt URL.
+  - Else, if transaction has a receipt attachment (`receiptImages[0]`) and it is remote-backed, link to the external receipt URL.
+  - Else (local-only placeholder), do not emit an external link in shared/printed output; show “Receipt pending upload” indicator instead.
   - Else, no receipt link.
   Observed in `src/pages/ClientSummary.tsx` (`getReceiptLink`) and item list rendering.
 - [ ] **Empty state**: if there are no items, shows a “No items found” empty state.

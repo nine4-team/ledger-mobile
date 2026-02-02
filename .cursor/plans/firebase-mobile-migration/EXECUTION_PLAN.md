@@ -11,7 +11,7 @@ If you only read a handful of docs, read these in order:
 - `OFFLINE_FIRST_V2_SPEC.md` (canonical architecture constraints)
 - `40_features/feature_list.md` (what we’re building)
 - `40_features/_authoring/feature_speccing_workflow.md` (how to run feature work)
-- `40_features/FEATURE_SPECS_SWEEP_CHECKLIST.md` (how to validate/spec-sweep)
+- `40_features/_authoring/templates/definition_of_done.md` (spec-complete criteria)
 - `CHANGELOG.md` (what moved/changed in the doc set)
 
 It answers:
@@ -21,7 +21,7 @@ It answers:
 This is intentionally different from:
 - `ROADMAP.md` (roadmap of the **docs** we plan to write / structure)
 - `40_features/feature_list.md` (scope inventory)
-- `40_features/FEATURE_SPECS_SWEEP_CHECKLIST.md` (spec quality controller)
+- `40_features/_authoring/templates/definition_of_done.md` (spec quality controller)
 
 ---
 
@@ -50,6 +50,39 @@ For a given feature folder `40_features/<feature>/`:
 
 ---
 
+## Spec authoring vs implementation (two-stage process)
+
+This migration has an explicit two-stage workflow:
+
+1) **Spec authoring (prompt packs → specs)**
+   - Use `40_features/_authoring/feature_speccing_workflow.md`.
+   - Run the feature-local `prompt_packs/` to produce **spec outputs**:
+     `feature_spec.md`, `acceptance_criteria.md`, and any needed `ui/screens/*.md`.
+   - Validate “spec complete” using `40_features/_authoring/templates/definition_of_done.md`.
+
+2) **Implementation (acceptance criteria → code)**
+   - Build from `acceptance_criteria.md` in the order below.
+   - Use feature specs + screen contracts as the detailed behavior source.
+
+Spec authoring is complete for this migration; the checklist below is retained for reference only. The phase sections below it are for **implementation order**.
+
+---
+
+## Legacy web app parity references (read-only context)
+
+Many specs are parity-grounded against the legacy web app. If a spec mentions “web app behavior” but does **not** include a concrete file path, use these pointers to resolve the exact source:
+
+- **Web app repo (parity evidence only)**: `/Users/benjaminmackenzie/Dev/ledger`
+- **Cross-cutting UI parity index**: `40_features/_cross_cutting/ui/README.md`
+- **Canonical shared UI contracts**: `40_features/_cross_cutting/ui/shared_ui_contracts.md`
+- **UI parity inventory matrix**: `40_features/_cross_cutting/ui/ui_parity_inventory_matrix.md`
+- **Parity evidence workflow (examples + rules)**: `40_features/_cross_cutting/ui/shared_ui_speccing_workflow.md`
+- **Alignment/gap notes**: `20_data/alignment_issues_vs_40_features.md`
+
+If you add or clarify parity evidence while implementing, include a full web app path (and function/component when helpful) in the spec or acceptance criteria.
+
+---
+
 ## Architectural baseline (do not fight it)
 
 Canonical architecture source:
@@ -66,9 +99,9 @@ Key implications for execution:
 
 ## Build order (phased)
 
-### Sub-phases checklist (existing prompt packs)
+### Sub-phases checklist (spec authoring prompt packs — completed, reference only)
 
-This section is intentionally **not invented**: it lists the **actual prompt packs already present** under `40_features/**/prompt_packs/`, grouped into the macro phases below so you can check them off.
+This section is intentionally **not invented**: it lists the **actual prompt packs already present** under `40_features/**/prompt_packs/`, grouped into the macro phases below for historical context. No action is required unless a spec gap is discovered.
 
 Conventions:
 - Checkboxes are manual (edit this doc as you complete each pack).
@@ -82,7 +115,7 @@ Conventions:
 
 #### Phase 2 — Cross-cutting runtime primitives
 
-- [ ] `40_features/connectivity-and-sync-status/plan.md` (no prompt packs; treat `plan.md` + acceptance criteria as the work order)
+- [ ] `40_features/connectivity-and-sync-status/plan.md` (no prompt packs; ensure spec outputs exist and use acceptance criteria for implementation)
 - [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_a_local_cache_and_state_machine.md`
 - [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_b_upload_queue_and_idempotency.md`
 - [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_c_cleanup_quota_and_bounded_cache.md`
@@ -149,6 +182,8 @@ Conventions:
 ### Phase 0 — Hard guardrails + “can ship a dev client”
 
 **Goal**: you can run the app in a native dev client and enforce “no accidental web SDK” regressions.
+
+Prereq: relevant feature specs are “spec complete” per `40_features/_authoring/templates/definition_of_done.md`.
 
 Implement / verify:
 - Native Firebase wiring (Auth/Firestore/Functions)

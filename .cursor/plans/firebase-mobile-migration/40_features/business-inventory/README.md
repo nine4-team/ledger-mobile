@@ -29,7 +29,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Business inv
 - Shared Items + Transactions modules (non-negotiable reuse): `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
 - Inventory operations + lineage (allocate/move/sell/linking invariants): `40_features/inventory-operations-and-lineage/README.md`
 - Offline media lifecycle + quota guardrails:
-  - `40_features/_cross_cutting/offline_media_lifecycle.md`
+  - `40_features/_cross_cutting/offline-media-lifecycle/feature_spec.md`
   - `40_features/_cross_cutting/ui/components/storage_quota_warning.md`
 - Image gallery/lightbox behavior: `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 

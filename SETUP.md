@@ -112,8 +112,9 @@ For any operation that updates **multiple docs** or enforces invariants:
 2. Cloud Function processes it (typically a Firestore transaction)
 3. Function updates request status to:
    - `applied` + `appliedAt`, or
+   - `denied` + `errorCode="ENTITLEMENT_DENIED"`, or
    - `failed` + `errorCode`/`errorMessage`
-4. UI subscribes to the request doc and shows pending/applied/failed + retry (retry = create a new request doc)
+4. UI subscribes to the request doc and shows pending/applied/denied/failed + retry (retry = create a new request doc)
 
 **Implemented scaffolding in this repo**
 
@@ -127,5 +128,5 @@ For any operation that updates **multiple docs** or enforces invariants:
   - Clients **cannot** update/delete or forge `status: applied|failed`
   - Tighten request **read** access to your membership model for real apps
 - **Client helpers**: `src/data/requestDocs.ts`
-  - `createRequestDoc(type, payload, scope) -> requestId`
+  - `createRequestDoc(type, payload, scope, opId) -> requestId`
   - `subscribeToRequest(scope, requestId, onChange) -> unsubscribe`
