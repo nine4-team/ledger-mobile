@@ -1,17 +1,18 @@
-import { StyleSheet, View, ScrollView, RefreshControl } from 'react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocalSearchParams, usePathname } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Screen, useScreenRefresh } from '../../src/components/Screen';
+import { useLocalSearchParams, usePathname } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+
+import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { AppText } from '../../src/components/AppText';
+import { Screen, useScreenRefresh } from '../../src/components/Screen';
 import { useScreenTabs } from '../../src/components/ScreenTabs';
-import { layout, SCREEN_PADDING } from '../../src/ui';
 import { SharedItemsList } from '../../src/components/SharedItemsList';
 import { SharedTransactionsList } from '../../src/components/SharedTransactionsList';
 import { createInventoryScopeConfig, getListStateKey } from '../../src/data/scopeConfig';
 import { useScopeSwitching } from '../../src/data/useScopeSwitching';
 import { refreshScopedItems, refreshScopedTransactions } from '../../src/data/scopedListData';
-import { useAccountContextStore } from '../../src/auth/accountContextStore';
+import { layout, SCREEN_PADDING } from '../../src/ui';
 
 export default function ScreenTwo() {
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -55,6 +56,11 @@ export default function ScreenTwo() {
       refreshing={isRefreshing}
       onRefresh={handleRefresh}
       contentStyle={{ paddingTop: SCREEN_PADDING }}
+      hideBackButton={true}
+      infoContent={{
+        title: 'Inventory',
+        message: 'Manage your inventory items, transactions, and spaces. Track items across projects and locations.',
+      }}
       tabs={[
         { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
         { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },

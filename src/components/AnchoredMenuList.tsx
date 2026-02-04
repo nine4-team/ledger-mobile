@@ -68,15 +68,16 @@ export function AnchoredMenuList({
     >
       {computedItems.map((item, idx) => {
         const showDivider = idx < computedItems.length - 1;
-        const isSubmenuItem = Boolean(item.subactions?.length);
+        const subactions = item.subactions ?? [];
+        const isSubmenuItem = subactions.length > 0;
         const itemKey = item.key ?? `${item.label}-${idx}`;
 
-        if (isSubmenuItem && item.subactions) {
+        if (isSubmenuItem) {
           const currentKey =
             selectedSubactionByKey[itemKey] ??
             item.defaultSelectedSubactionKey ??
-            item.subactions[0]?.key;
-          const currentLabel = item.subactions.find((s) => s.key === currentKey)?.label ?? '';
+            subactions[0]?.key;
+          const currentLabel = subactions.find((s) => s.key === currentKey)?.label ?? '';
           const isExpanded = expandedMenuKey === itemKey;
 
           return (
@@ -118,8 +119,8 @@ export function AnchoredMenuList({
                     },
                   ]}
                 >
-                  {item.subactions.map((sub, subIdx) => {
-                    const showSubDivider = subIdx < item.subactions.length - 1;
+                  {subactions.map((sub, subIdx) => {
+                    const showSubDivider = subIdx < subactions.length - 1;
                     const selectedSub = currentKey === sub.key;
 
                     return (

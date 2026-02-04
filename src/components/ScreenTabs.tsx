@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
 export type ScreenTabItem = {
@@ -66,7 +66,6 @@ export function ScreenTabs({
         },
         scrollContent: {
           paddingHorizontal: theme.spacing.screenPadding,
-          paddingRight: theme.spacing.screenPadding + 16,
         },
         tabSelectedBorder: {
           borderBottomColor: theme.tabBar.activeTint,
@@ -83,17 +82,7 @@ export function ScreenTabs({
 
   return (
     <View style={[styles.container, themed.container, containerStyle]}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        scrollEnabled
-        alwaysBounceHorizontal
-        bounces
-        directionalLockEnabled
-        nestedScrollEnabled
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scrollContent, themed.scrollContent, contentContainerStyle]}
-      >
+      <View style={[styles.scrollContent, themed.scrollContent, contentContainerStyle]}>
         {tabs.map((tab) => {
           const isSelected = tab.key === selectedKey;
           return (
@@ -112,7 +101,7 @@ export function ScreenTabs({
               <Text
                 style={[
                   styles.tabText,
-                  theme.typography.caption,
+                  theme.typography.body,
                   isSelected
                     ? [styles.tabTextSelected, themed.tabTextSelected]
                     : [styles.tabTextUnselected, themed.tabTextUnselected],
@@ -123,7 +112,7 @@ export function ScreenTabs({
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -134,16 +123,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexDirection: 'row',
-    // IMPORTANT: keep this wrapping its children, otherwise the content width can
-    // incorrectly clamp to the viewport width and prevent horizontal scrolling.
-    flexGrow: 0,
   },
   tab: {
-    paddingHorizontal: 12,
+    flex: 1,
+    paddingHorizontal: 10,
     paddingTop: 15,
     paddingBottom: 10,
-    flexShrink: 0,
-    marginRight: 8,
     marginBottom: -1,
     justifyContent: 'center',
     alignItems: 'center',

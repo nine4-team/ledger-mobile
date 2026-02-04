@@ -1,10 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { getCardStyle, getTextSecondaryStyle, surface, textEmphasis } from '../ui';
 import { AppText } from './AppText';
+import type { AnchoredMenuItem } from './AnchoredMenuList';
+import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { DraggableCard } from './DraggableCard';
 import { DraggableCardList } from './DraggableCardList';
 import type { InfoDialogContent } from './InfoButton';
@@ -72,6 +74,8 @@ export function TemplateToggleListCard({
 }: TemplateToggleListCardProps) {
   const uiKitTheme = useUIKitTheme();
   const [orderedItems, setOrderedItems] = useState(items);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuTarget, setMenuTarget] = useState<TemplateToggleListItem | null>(null);
 
   useEffect(() => {
     const bubbled = bubbleDisabledToEnd(items);
@@ -119,6 +123,44 @@ export function TemplateToggleListCard({
   );
 
   const itemHeight = 54 + StyleSheet.hairlineWidth;
+  const menuItems: AnchoredMenuItem[] = useMemo(() => {
+    if (!menuTarget) return [];
+    const name = menuTarget.name;
+    return [
+      {
+        key: 'rename',
+        label: 'Rename',
+        onPress: () => Alert.alert('Rename', `Rename ${name}`),
+      },
+      {
+        key: 'duplicate',
+        label: 'Duplicate',
+        onPress: () => Alert.alert('Duplicate', `Duplicate ${name}`),
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        onPress: () => Alert.alert('Delete', `Delete ${name}`),
+      },
+    ];
+  }, [menuTarget]);
+
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false);
+    setMenuTarget(null);
+  }, []);
+
+  const handleMenuPress = useCallback(
+    (item: TemplateToggleListItem) => {
+      if (onPressMenu) {
+        onPressMenu(item.id);
+        return;
+      }
+      setMenuTarget(item);
+      setMenuVisible(true);
+    },
+    [onPressMenu]
+  );
 
   return (
     <View style={[surface.overflowHidden, themed.card, style]} accessibilityRole="none">
@@ -209,7 +251,7 @@ export function TemplateToggleListCard({
                       accessibilityLabel={`More options for ${item.name}`}
                       hitSlop={10}
                       style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-                      onPress={() => onPressMenu?.(item.id)}
+                      onPress={() => handleMenuPress(item)}
                     >
                       <MaterialIcons name="more-vert" size={20} color={themed.iconBrown.color} />
                     </Pressable>
@@ -238,6 +280,15 @@ export function TemplateToggleListCard({
         </View>
         <View style={styles.createRight} />
       </Pressable>
+
+      {!onPressMenu ? (
+        <BottomSheetMenuList
+          visible={menuVisible}
+          onRequestClose={closeMenu}
+          items={menuItems}
+          title={menuTarget?.name ?? 'Options'}
+        />
+      ) : null}
     </View>
   );
 }

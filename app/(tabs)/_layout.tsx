@@ -23,6 +23,9 @@ export default function TabsLayout() {
             borderTopColor: theme.tabBar.border,
           },
         ],
+        tabBarItemStyle: {
+          flex: 1,
+        },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',

@@ -7,6 +7,7 @@ import { getScreenContainerStyle, SCREEN_PADDING } from '../ui';
 import { appTokens } from '../ui/tokens';
 import { TopHeader } from './TopHeader';
 import { DEFAULT_SCREEN_TABS, ScreenTabItem, ScreenTabs, ScreenTabsProvider } from './ScreenTabs';
+import type { InfoDialogContent } from './InfoButton';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -41,6 +42,16 @@ interface ScreenProps {
     setSelectedKey: (tabKey: string) => void;
     tabs: ScreenTabItem[];
   }) => React.ReactNode;
+  /**
+   * If true, hides the back button even if navigation history exists.
+   * Useful for main tab screens that should never show a back button.
+   */
+  hideBackButton?: boolean;
+  /**
+   * Optional info content to display in an info modal.
+   * If provided, an info icon will be shown on the left side of the header.
+   */
+  infoContent?: InfoDialogContent;
 }
 
 type ScreenRefreshContextValue = {
@@ -68,6 +79,8 @@ export const Screen: React.FC<ScreenProps> = ({
   backTarget,
   onPressBack,
   renderBelowTabs,
+  hideBackButton = false,
+  infoContent,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -95,11 +108,12 @@ export const Screen: React.FC<ScreenProps> = ({
   }, [onPressBack, router, backTarget]);
 
   const shouldShowBackButton = useMemo(() => {
+    if (hideBackButton) return false;
     if (onPressBack) return true;
     if (router.canGoBack()) return true;
     if (backTarget) return true;
     return false;
-  }, [onPressBack, router, backTarget]);
+  }, [hideBackButton, onPressBack, router, backTarget]);
 
   const content = (
     <View style={[styles.container, getScreenContainerStyle(uiKitTheme), containerStyle]}>
@@ -108,6 +122,8 @@ export const Screen: React.FC<ScreenProps> = ({
           title={title}
           onPressMenu={onPressMenu}
           onPressBack={shouldShowBackButton ? handleBack : undefined}
+          hideBottomBorder={true}
+          infoContent={infoContent}
         />
       ) : null}
       {title ? (

@@ -19,13 +19,18 @@ export default function ScreenThree() {
       title="Templates"
       refreshing={isRefreshing}
       onRefresh={handleRefresh}
+      hideBackButton={true}
+      infoContent={{
+        title: 'Templates',
+        message: 'Manage templates for spaces, vendors, and budget. Templates help you organize and standardize your project data.',
+      }}
       tabs={[
         { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
         { key: 'vendors', label: 'Vendors', accessibilityLabel: 'Vendors tab' },
         {
           key: 'budget-categories',
-          label: 'Budget Categories',
-          accessibilityLabel: 'Budget Categories tab',
+          label: 'Budget',
+          accessibilityLabel: 'Budget tab',
         },
       ]}
       initialTabKey="spaces"
@@ -61,7 +66,6 @@ function TemplatesScreenContent() {
   const commonCardProps = useMemo(
     () => ({
       rightHeaderLabel: 'ITEMIZE',
-      onPressMenu: (id: string) => Alert.alert('Menu', `Menu pressed for ${id}`),
       onPressCreate: () => Alert.alert('Create', 'Create pressed'),
     }),
     []

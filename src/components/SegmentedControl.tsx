@@ -84,7 +84,7 @@ export function SegmentedControl<T extends string>({
           >
             <View style={styles.content}>
               {opt.icon ? <View style={styles.icon}>{opt.icon}</View> : null}
-              <AppText variant="caption" style={selected ? themed.labelSelected : themed.labelUnselected}>
+              <AppText variant="body" style={selected ? themed.labelSelected : themed.labelUnselected}>
                 {opt.label}
               </AppText>
             </View>

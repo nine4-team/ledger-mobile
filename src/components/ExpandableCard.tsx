@@ -1,11 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, Pressable, TouchableOpacity, View } from 'react-native';
 import type { GestureResponderEvent } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { APP_CARD_PADDING, getCardBorderStyle, getCardBaseStyle } from '../ui';
-import { AnchoredMenuItem, AnchoredMenuList, AnchoredMenuSubaction } from './AnchoredMenuList';
+import { AnchoredMenuItem, AnchoredMenuSubaction } from './AnchoredMenuList';
+import { BottomSheetMenuList } from './BottomSheetMenuList';
 
 export type ExpandableCardMenuSubaction = AnchoredMenuSubaction;
 export type ExpandableCardMenuItem = AnchoredMenuItem;
@@ -48,8 +49,6 @@ export function ExpandableCard({
 }: ExpandableCardProps) {
   const uiKitTheme = useUIKitTheme();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [menuButtonLayout, setMenuButtonLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
-  const menuButtonRef = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
   const [internalSelected, setInternalSelected] = useState(Boolean(defaultSelected));
 
@@ -63,13 +62,9 @@ export function ExpandableCard({
     e.stopPropagation();
     if (onMenuPress) {
       onMenuPress();
-    } else {
-      // Measure button position when opening menu
-      menuButtonRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
-        setMenuButtonLayout({ x, y, width, height });
-        setMenuVisible(true);
-      });
+      return;
     }
+    setMenuVisible(true);
   }, [onMenuPress]);
 
   const handleToggleExpand = useCallback((e: GestureResponderEvent) => {
@@ -172,7 +167,7 @@ export function ExpandableCard({
                       </Text>
                     </View>
                   ) : null}
-                  <View ref={menuButtonRef} collapsable={false}>
+                  <View>
                     <TouchableOpacity
                       onPress={handleMenuPress}
                       style={styles.menuButton}
@@ -241,7 +236,12 @@ export function ExpandableCard({
 
       {/* Menu Modal */}
       {showMenu && !onMenuPress && (
-        <AnchoredMenuList visible={menuVisible} anchorLayout={menuButtonLayout} onRequestClose={closeMenu} items={menuItems} />
+        <BottomSheetMenuList
+          visible={menuVisible}
+          onRequestClose={closeMenu}
+          items={menuItems}
+          title={title}
+        />
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,7 +7,9 @@ import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { getScreenHeaderStyle } from '../ui';
 
 import { AppText } from './AppText';
-import { AnchoredMenuItem, AnchoredMenuList } from './AnchoredMenuList';
+import { AnchoredMenuItem } from './AnchoredMenuList';
+import { BottomSheetMenuList } from './BottomSheetMenuList';
+import { InfoButton, InfoDialogContent } from './InfoButton';
 
 export interface TopHeaderProps {
   title: string;
@@ -23,22 +25,31 @@ export interface TopHeaderProps {
    */
   onPressBack?: () => void;
   backAccessibilityLabel?: string;
+  /**
+   * If true, removes the bottom border from the header.
+   */
+  hideBottomBorder?: boolean;
+  /**
+   * Optional info content to display in an info modal.
+   * If provided, an info icon will be shown on the left side of the header.
+   */
+  infoContent?: InfoDialogContent;
 }
 
-export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressBack, backAccessibilityLabel }: TopHeaderProps) {
+export function TopHeader({
+  title,
+  onPressMenu,
+  menuAccessibilityLabel,
+  onPressBack,
+  backAccessibilityLabel,
+  hideBottomBorder = false,
+  infoContent,
+}: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
 
   const [menuVisible, setMenuVisible] = useState(false);
-  const [menuButtonLayout, setMenuButtonLayout] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const menuButtonRef = useRef<View>(null);
-
   const closeMenu = useCallback(() => {
     setMenuVisible(false);
   }, []);
@@ -62,10 +73,7 @@ export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressB
   );
 
   const handleDefaultMenuPress = useCallback(() => {
-    menuButtonRef.current?.measureInWindow((x, y, width, height) => {
-      setMenuButtonLayout({ x, y, width, height });
-      setMenuVisible(true);
-    });
+    setMenuVisible(true);
   }, []);
 
   const handleMenuButtonPress = useCallback(() => {
@@ -78,9 +86,24 @@ export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressB
 
   return (
     <>
-      <View style={[styles.header, getScreenHeaderStyle(uiKitTheme, insets)]}>
-        {onPressBack ? (
-          <View style={styles.leftButtonOuter}>
+      <View
+        style={[
+          styles.header,
+          getScreenHeaderStyle(uiKitTheme, insets),
+          hideBottomBorder && { borderBottomWidth: 0 },
+        ]}
+      >
+        <View style={styles.leftButtonOuter}>
+          {infoContent ? (
+            <InfoButton
+              accessibilityLabel="Show info"
+              content={infoContent}
+              iconColor={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
+              iconSize={24}
+              style={styles.infoButton}
+            />
+          ) : null}
+          {onPressBack ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={backAccessibilityLabel ?? 'Go back'}
@@ -94,15 +117,14 @@ export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressB
                 color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
               />
             </Pressable>
-          </View>
-        ) : (
-          <View style={styles.leftSpacer} />
-        )}
+          ) : null}
+          {!infoContent && !onPressBack ? <View style={styles.leftSpacer} /> : null}
+        </View>
         <AppText variant="h2" style={styles.title}>
           {title}
         </AppText>
 
-        <View ref={menuButtonRef} collapsable={false} style={styles.rightButtonOuter}>
+        <View style={styles.rightButtonOuter}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={menuAccessibilityLabel ?? 'Open menu'}
@@ -119,12 +141,12 @@ export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressB
         </View>
       </View>
 
-      <AnchoredMenuList
+      <BottomSheetMenuList
         visible={menuVisible}
-        anchorLayout={menuButtonLayout}
         onRequestClose={closeMenu}
         items={menuItems}
         showLeadingIcons={false}
+        title={title}
       />
     </>
   );
@@ -143,16 +165,25 @@ const styles = StyleSheet.create({
   },
   leftButtonOuter: {
     width: 60,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingLeft: 4,
+    gap: 4,
   },
-  backButton: {
-    padding: 6,
+  infoButton: {
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 32,
-    minHeight: 32,
+    minWidth: 48,
+    minHeight: 48,
+  },
+  backButton: {
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 48,
+    minHeight: 48,
   },
   rightButtonOuter: {
     width: 60,
@@ -161,10 +192,10 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   menuButton: {
-    padding: 6,
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 32,
-    minHeight: 32,
+    minWidth: 48,
+    minHeight: 48,
   },
 });

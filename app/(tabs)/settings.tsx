@@ -63,6 +63,15 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
     return SECONDARY_TABS.find((t) => t.key === selectedSubTabKey)?.label ?? 'Subtab One';
   }, [selectedSubTabKey]);
 
+  const itemMenuItems = useMemo(
+    () => [
+      { key: 'edit', label: 'Edit', onPress: () => Alert.alert('Menu', 'Edit pressed') },
+      { key: 'duplicate', label: 'Duplicate', onPress: () => Alert.alert('Menu', 'Duplicate pressed') },
+      { key: 'delete', label: 'Delete', onPress: () => Alert.alert('Menu', 'Delete pressed') },
+    ],
+    []
+  );
+
   const handleSignOut = async () => {
     if (isAuthBypassEnabled) {
       router.replace('/(auth)/sign-in?preview=1');
@@ -117,7 +126,6 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
             message:
               'When itemize is enabled, transactions mapped to this category can be split into multiple categorized line items. Use this for categories that often include multiple sub-purchases.',
           })}
-          onPressMenu={(id) => Alert.alert('Menu', `Menu pressed for ${id}`)}
           onPressCreate={() => Alert.alert('Create', 'Create pressed')}
           createPlaceholderLabel="Click to create new category"
         />
@@ -157,7 +165,7 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
           bookmarked={true}
           onBookmarkPress={() => console.log('Bookmark pressed')}
           onAddImagePress={() => console.log('Add image pressed')}
-          onMenuPress={() => console.log('Menu pressed')}
+          menuItems={itemMenuItems}
           onPress={() => console.log('Item card pressed')}
         />
 
@@ -189,7 +197,7 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
               bookmarked: false,
               onBookmarkPress: () => console.log('Child item 1 bookmark pressed'),
               onAddImagePress: () => console.log('Child item 1 add image pressed'),
-              onMenuPress: () => console.log('Child item 1 menu pressed'),
+              menuItems: itemMenuItems,
               onPress: () => console.log('Child item 1 pressed'),
             },
             {
@@ -206,7 +214,7 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
               bookmarked: true,
               onBookmarkPress: () => console.log('Child item 2 bookmark pressed'),
               onAddImagePress: () => console.log('Child item 2 add image pressed'),
-              onMenuPress: () => console.log('Child item 2 menu pressed'),
+              menuItems: itemMenuItems,
               onPress: () => console.log('Child item 2 pressed'),
             },
           ]}
@@ -355,6 +363,11 @@ export default function SettingsScreen() {
       title="Settings"
       refreshing={isRefreshing}
       onRefresh={handleRefresh}
+      hideBackButton={true}
+      infoContent={{
+        title: 'Settings',
+        message: 'Manage your account settings, subscription, appearance preferences, and more.',
+      }}
       tabs={PRIMARY_TABS}
       renderBelowTabs={({ selectedKey }) =>
         selectedKey === 'tab-two' ? (

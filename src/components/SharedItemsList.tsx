@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
-import { ListStateControls } from './ListStateControls';
+import { ListControlBar } from './ListControlBar';
 import { ItemCard } from './ItemCard';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
@@ -170,7 +169,6 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, [items]);
 
   const sortMode = (state.sort as SortMode | undefined) ?? DEFAULT_SORT;
-  const sortLabel = useMemo(() => (sortMode === 'alphabetical' ? 'Alphabetical' : 'Creation date'), [sortMode]);
 
   const activeFilters = (state.filters ?? {}) as ItemFilters;
   const filterModes = scopeConfig.scope === 'inventory' ? INVENTORY_FILTER_MODES : PROJECT_FILTER_MODES;
@@ -393,54 +391,20 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
   return (
     <View style={styles.container}>
-      {/* Control Bar */}
-      <View style={[styles.controlBar, { backgroundColor: uiKitTheme.background.surface }]}>
-        <ListStateControls
-          search={query}
-          onChangeSearch={setQuery}
-        />
-        <View style={styles.controlButtons}>
-          <AppButton
-            title="Sort"
-            variant="secondary"
-            onPress={handleToggleSort}
-            style={styles.controlButton}
-            leftIcon={
-              <MaterialIcons 
-                name="sort" 
-                size={18} 
-                color={uiKitTheme.button.secondary.text} 
-              />
-            }
-          />
-          <AppButton
-            title="Filter"
-            variant="secondary"
-            onPress={() => setFiltersOpen((prev) => !prev)}
-            style={styles.controlButton}
-            leftIcon={
-              <MaterialIcons 
-                name="filter-list" 
-                size={18} 
-                color={uiKitTheme.button.secondary.text} 
-              />
-            }
-          />
-          <AppButton
-            title="Add"
-            variant="primary"
-            onPress={handleCreateItem}
-            style={styles.controlButton}
-            leftIcon={
-              <MaterialIcons 
-                name="add" 
-                size={18} 
-                color={uiKitTheme.button.primary.text} 
-              />
-            }
-          />
-        </View>
-      </View>
+      <ListControlBar
+        search={query}
+        onChangeSearch={setQuery}
+        actions={[
+          { title: 'Sort', variant: 'secondary', onPress: handleToggleSort, iconName: 'sort' },
+          {
+            title: 'Filter',
+            variant: 'secondary',
+            onPress: () => setFiltersOpen((prev) => !prev),
+            iconName: 'filter-list',
+          },
+          { title: 'Add', variant: 'primary', onPress: handleCreateItem, iconName: 'add' },
+        ]}
+      />
       {/* Select All - moved below search */}
       <Pressable
         onPress={() => {
@@ -690,19 +654,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
-  controlBar: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
   selectAllRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -732,18 +683,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
   },
-  controlButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    width: '100%',
-  },
-  controlButton: {
-    flex: 1,
-    minHeight: 40,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
   bulkSelectButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -757,9 +696,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   emptyState: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 12,
   },
   row: {

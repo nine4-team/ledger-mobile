@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FlatList, Pressable, RefreshControl, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
-import { ListStateControls } from './ListStateControls';
+import { ListControlBar } from './ListControlBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
@@ -79,6 +79,8 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const [transactions, setTransactions] = useState<ScopedTransaction[]>([]);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
@@ -170,23 +172,6 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   }, [items, transactions]);
 
   const sortMode = (state.sort as SortMode | undefined) ?? DEFAULT_SORT;
-  const sortLabel = useMemo(() => {
-    switch (sortMode) {
-      case 'date-asc':
-        return 'Date ↑';
-      case 'created-desc':
-        return 'Created ↓';
-      case 'created-asc':
-        return 'Created ↑';
-      case 'source':
-        return 'Source';
-      case 'amount':
-        return 'Amount';
-      case 'date-desc':
-      default:
-        return 'Date ↓';
-    }
-  }, [sortMode]);
 
   const activeFilters = (state.filters ?? {}) as TransactionFilters;
 
@@ -324,6 +309,20 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     lastSelfHealRef.current = nextHeal;
   }, [accountId, filtered, items]);
 
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((row) => row.id));
+    }
+  }, [filtered, selectedIds.length]);
+
+  const allSelected = bulkMode && selectedIds.length === filtered.length && filtered.length > 0;
+
   const handleToggleSort = useCallback(() => {
     const currentIndex = SORT_MODES.indexOf(sortMode);
     const nextMode = SORT_MODES[(currentIndex + 1) % SORT_MODES.length];
@@ -341,10 +340,12 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     });
   }, [listStateKey, router, scopeConfig.projectId, scopeConfig.scope]);
 
-  const handleExportCsv = useCallback(async () => {
+  const handleExportCsv = useCallback(async (ids?: string[]) => {
     if (!scopeConfig.capabilities?.canExportCsv) return;
+    const targetIds = ids && ids.length ? new Set(ids) : null;
+    const targetTransactions = targetIds ? transactions.filter((tx) => targetIds.has(tx.id)) : transactions;
     const headers = ['id', 'date', 'source', 'amount', 'categoryName', 'budgetCategoryId', 'itemCategories'];
-    const rows = transactions.map((tx) => {
+    const rows = targetTransactions.map((tx) => {
       const isCanonical = isCanonicalTransactionId(tx.id);
       const categoryName =
         tx.budgetCategoryId && budgetCategories[tx.budgetCategoryId]
@@ -371,28 +372,59 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
 
   return (
     <View style={styles.container}>
-      <ListStateControls
+      <ListControlBar
         search={query}
         onChangeSearch={setQuery}
+        actions={[
+          { title: 'Sort', variant: 'secondary', onPress: handleToggleSort, iconName: 'sort' },
+          {
+            title: 'Filter',
+            variant: 'secondary',
+            onPress: () => setFiltersOpen((prev) => !prev),
+            iconName: 'filter-list',
+          },
+          { title: 'Add', variant: 'primary', onPress: handleCreateTransaction, iconName: 'add' },
+          ...(scopeConfig.capabilities?.canExportCsv
+            ? [
+                {
+                  title: 'Export',
+                  variant: 'secondary' as const,
+                  onPress: () => handleExportCsv(),
+                  iconName: 'file-download',
+                },
+              ]
+            : []),
+        ]}
       />
-      <View style={styles.actionsRow}>
-        <AppText variant="caption" style={styles.scopeNote}>
-          Scope: {scopeConfig.scope === 'inventory' ? 'Inventory' : `Project ${scopeConfig.projectId ?? '—'}`}
-        </AppText>
-        <View style={styles.actionsRow}>
-          <Pressable onPress={() => setFiltersOpen((prev) => !prev)}>
-            <AppText variant="caption">Filters</AppText>
-          </Pressable>
-          <Pressable onPress={handleCreateTransaction}>
-            <AppText variant="caption">Add transaction</AppText>
-          </Pressable>
-          {scopeConfig.capabilities?.canExportCsv ? (
-            <Pressable onPress={handleExportCsv}>
-              <AppText variant="caption">Export CSV</AppText>
-            </Pressable>
-          ) : null}
+      <Pressable
+        onPress={() => {
+          if (!bulkMode) {
+            setBulkMode(true);
+            handleSelectAll();
+          } else {
+            handleSelectAll();
+          }
+        }}
+        style={({ pressed }) => [styles.selectAllRow, pressed && styles.selectAllPressed]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: bulkMode && allSelected }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <View
+          style={[
+            styles.checkbox,
+            {
+              borderColor: uiKitTheme.border.primary,
+              backgroundColor: bulkMode && allSelected ? uiKitTheme.primary.main : 'transparent',
+            },
+          ]}
+        >
+          {bulkMode && allSelected && <AppText style={styles.checkmark}>✓</AppText>}
         </View>
-      </View>
+        <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+          Select all
+        </AppText>
+      </Pressable>
       {filtersOpen ? (
         <View style={styles.filterPanel}>
           <View style={styles.filterRow}>
@@ -473,9 +505,32 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           </View>
         </View>
       ) : null}
-      <AppText variant="caption" style={styles.scopeNote}>
-        CSV export: {scopeConfig.capabilities?.canExportCsv ? 'Enabled' : 'Disabled'}
-      </AppText>
+      {bulkMode ? (
+        <View
+          style={[
+            styles.bulkPanel,
+            { backgroundColor: uiKitTheme.background.surface, borderColor: uiKitTheme.border.primary },
+          ]}
+        >
+          <View style={styles.bulkHeader}>
+            <AppText variant="caption" style={{ fontWeight: '600' }}>
+              {selectedIds.length} selected
+            </AppText>
+            <Pressable onPress={() => setBulkMode(false)}>
+              <AppText variant="caption" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                Done
+              </AppText>
+            </Pressable>
+          </View>
+          {scopeConfig.capabilities?.canExportCsv ? (
+            <Pressable onPress={() => handleExportCsv(selectedIds)} style={styles.bulkActionButton}>
+              <AppText variant="caption" style={{ color: theme.colors.primary }}>
+                Export CSV
+              </AppText>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       <FlatList
         ref={listRef}
         data={filtered}
@@ -499,6 +554,10 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         renderItem={({ item }) => (
           <Pressable
             onPress={() => {
+              if (bulkMode) {
+                toggleSelection(item.id);
+                return;
+              }
               setRestoreHint({ anchorId: item.id, scrollOffset: lastScrollOffsetRef.current });
               const backTarget =
                 scopeConfig.scope === 'inventory'
@@ -523,13 +582,28 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
               pressed && styles.rowPressed,
             ]}
           >
-            <AppText variant="body">{item.label}</AppText>
-            {item.subtitle ? <AppText variant="caption">{item.subtitle}</AppText> : null}
-            {!isCanonicalTransactionId(item.id) && item.transaction.budgetCategoryId ? (
-              <AppText variant="caption">
-                {budgetCategories[item.transaction.budgetCategoryId]?.name ?? item.transaction.budgetCategoryId}
-              </AppText>
+            {bulkMode ? (
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    borderColor: uiKitTheme.border.primary,
+                    backgroundColor: selectedIds.includes(item.id) ? uiKitTheme.primary.main : 'transparent',
+                  },
+                ]}
+              >
+                {selectedIds.includes(item.id) ? <AppText style={styles.checkmark}>✓</AppText> : null}
+              </View>
             ) : null}
+            <View style={styles.rowContent}>
+              <AppText variant="body">{item.label}</AppText>
+              {item.subtitle ? <AppText variant="caption">{item.subtitle}</AppText> : null}
+              {!isCanonicalTransactionId(item.id) && item.transaction.budgetCategoryId ? (
+                <AppText variant="caption">
+                  {budgetCategories[item.transaction.budgetCategoryId]?.name ?? item.transaction.budgetCategoryId}
+                </AppText>
+              ) : null}
+            </View>
           </Pressable>
         )}
       />
@@ -542,19 +616,37 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
-  scopeNote: {
-    paddingTop: 4,
-  },
-  actionsRow: {
+  selectAllRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
+    marginTop: -6,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  selectAllPressed: {
+    opacity: 0.6,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 18,
   },
   list: {
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
   },
   emptyState: {
+    alignItems: 'center',
     paddingVertical: 12,
   },
   row: {
@@ -562,9 +654,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   rowPressed: {
     opacity: 0.7,
+  },
+  rowContent: {
+    flex: 1,
+    gap: 4,
   },
   filterPanel: {
     gap: 10,
@@ -580,5 +679,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
+  },
+  bulkPanel: {
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  bulkHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bulkActionButton: {
+    paddingVertical: 6,
   },
 });

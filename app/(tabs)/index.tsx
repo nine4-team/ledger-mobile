@@ -18,7 +18,15 @@ import { resolveAttachmentUri } from '../../src/offline/media';
 
 export default function ProjectsScreen() {
   return (
-    <Screen title="Projects" tabs={PROJECT_TABS}>
+    <Screen
+      title="Projects"
+      tabs={PROJECT_TABS}
+      hideBackButton={true}
+      infoContent={{
+        title: 'Projects',
+        message: 'Manage your projects here. Create new projects, view active and archived projects, and track budgets.',
+      }}
+    >
       <ProjectsList />
     </Screen>
   );
@@ -211,68 +219,75 @@ function ProjectsList() {
       ) : (
         <>
           {sortedProjects.length === 0 ? (
-            <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-              {tabKey === 'archived' ? 'No archived projects yet.' : 'No active projects yet.'}
-            </AppText>
-          ) : (
-            <View style={styles.projectList}>
-              {sortedProjects.map((project) => (
-                <Pressable
-                  key={project.id}
-                  onPress={() => router.push(`/project/${project.id}?tab=items`)}
-                  style={({ pressed }) => [
-                    styles.projectRow,
-                    {
-                      borderColor: uiKitTheme.border.primary,
-                      backgroundColor: uiKitTheme.background.surface,
-                      opacity: pressed ? 0.8 : 1,
-                    },
-                  ]}
-                >
-                  {project.mainImageUrl ? (
-                    <Image
-                      source={{ uri: resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' }) ?? project.mainImageUrl }}
-                      style={styles.projectImage}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.projectImage,
-                        { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface },
-                      ]}
-                    />
-                  )}
-                  <AppText variant="body" style={styles.projectTitle}>
-                    {project.name?.trim() ? project.name.trim() : 'Project'}
-                  </AppText>
-                  <AppText variant="caption" style={styles.projectSub}>
-                    {project.clientName?.trim() ? project.clientName.trim() : 'No client name'}
-                  </AppText>
-                  <View style={styles.budgetRow}>
-                    <AppText variant="caption">
-                      {typeof budgetTotals[project.id] === 'number'
-                        ? `Budget: $${(budgetTotals[project.id] / 100).toFixed(2)}`
-                        : 'Budget not set'}
-                    </AppText>
-                    {projectPreferences[project.id]?.pinnedBudgetCategoryIds?.length ? (
-                      <AppText variant="caption" style={styles.budgetPins}>
-                        {projectPreferences[project.id].pinnedBudgetCategoryIds
-                          .slice(0, 2)
-                          .map((categoryId) => budgetCategories[categoryId]?.name ?? categoryId)
-                          .join(' • ')}
-                      </AppText>
-                    ) : null}
-                    <AppText variant="caption" style={styles.openProject}>
-                      Open Project
-                    </AppText>
-                  </View>
-                </Pressable>
-              ))}
+            <View style={styles.emptyStateContainer}>
+              <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                {tabKey === 'archived' ? 'No archived projects yet.' : 'No active projects yet.'}
+              </AppText>
+              {tabKey !== 'archived' && (
+                <AppButton title="New project" onPress={() => router.push('/project/new')} />
+              )}
             </View>
+          ) : (
+            <>
+              <View style={styles.projectList}>
+                {sortedProjects.map((project) => (
+                  <Pressable
+                    key={project.id}
+                    onPress={() => router.push(`/project/${project.id}?tab=items`)}
+                    style={({ pressed }) => [
+                      styles.projectRow,
+                      {
+                        borderColor: uiKitTheme.border.primary,
+                        backgroundColor: uiKitTheme.background.surface,
+                        opacity: pressed ? 0.8 : 1,
+                      },
+                    ]}
+                  >
+                    {project.mainImageUrl ? (
+                      <Image
+                        source={{ uri: resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' }) ?? project.mainImageUrl }}
+                        style={styles.projectImage}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.projectImage,
+                          { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface },
+                        ]}
+                      />
+                    )}
+                    <AppText variant="body" style={styles.projectTitle}>
+                      {project.name?.trim() ? project.name.trim() : 'Project'}
+                    </AppText>
+                    <AppText variant="caption" style={styles.projectSub}>
+                      {project.clientName?.trim() ? project.clientName.trim() : 'No client name'}
+                    </AppText>
+                    <View style={styles.budgetRow}>
+                      <AppText variant="caption">
+                        {typeof budgetTotals[project.id] === 'number'
+                          ? `Budget: $${(budgetTotals[project.id] / 100).toFixed(2)}`
+                          : 'Budget not set'}
+                      </AppText>
+                      {projectPreferences[project.id]?.pinnedBudgetCategoryIds?.length ? (
+                        <AppText variant="caption" style={styles.budgetPins}>
+                          {projectPreferences[project.id].pinnedBudgetCategoryIds
+                            .slice(0, 2)
+                            .map((categoryId) => budgetCategories[categoryId]?.name ?? categoryId)
+                            .join(' • ')}
+                        </AppText>
+                      ) : null}
+                      <AppText variant="caption" style={styles.openProject}>
+                        Open Project
+                      </AppText>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.actions}>
+                <AppButton title="New project" onPress={() => router.push('/project/new')} />
+              </View>
+            </>
           )}
-          <View style={styles.actions}>
-            <AppButton title="New project" onPress={() => router.push('/project/new')} />
-          </View>
         </>
       )}
     </ScrollView>
@@ -291,11 +306,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   actions: {
-    flexDirection: 'row',
-    gap: 12,
     alignItems: 'center',
+    gap: 12,
   },
   emptyState: {
+    gap: 12,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
     gap: 12,
   },
   projectList: {
