@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
@@ -7,6 +7,8 @@ import { AppButton } from '../../src/components/AppButton';
 import { useAuthStore } from '../../src/auth/authStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { getCardStyle, getTextInputStyle } from '../../src/ui';
+import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
+import { useInviteTokenStore } from '../../src/auth/inviteTokenStore';
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('');
@@ -14,9 +16,26 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { signUp } = useAuthStore();
+  const { signUp, user, timedOutWithoutAuth, retryInitialize } = useAuthStore();
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
+  const { isOnline } = useNetworkStatus();
+  const { pendingToken, hydrate: hydrateToken } = useInviteTokenStore();
+
+  // Hydrate token store on mount
+  useEffect(() => {
+    hydrateToken();
+  }, [hydrateToken]);
+
+  // Redirect to invite acceptance if there's a pending token after sign-up
+  useEffect(() => {
+    if (user && pendingToken) {
+      router.replace(`/(auth)/invite/${pendingToken}`);
+    } else if (user && !pendingToken) {
+      // Normal sign-up flow - go to tabs
+      router.replace('/(tabs)');
+    }
+  }, [user, pendingToken, router]);
 
   const styles = StyleSheet.create({
     container: {
@@ -40,6 +59,19 @@ export default function SignUpScreen() {
     button: {
       marginTop: theme.spacing.sm,
     },
+    errorBanner: {
+      borderWidth: 1,
+      borderColor: theme.colors.error,
+      borderRadius: 12,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.md,
+    },
+    errorText: {
+      color: theme.colors.error,
+    },
+    retryButton: {
+      marginTop: theme.spacing.sm,
+    },
   });
 
   const handleSignUp = async () => {
@@ -61,7 +93,7 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       await signUp(email, password);
-      router.replace('/(tabs)');
+      // Don't navigate here - let useEffect handle redirect based on pending token
     } catch (error: any) {
       Alert.alert('Sign Up Failed', error.message || 'An error occurred');
     } finally {
@@ -79,6 +111,28 @@ export default function SignUpScreen() {
           <AppText variant="h1" style={styles.title}>
             Sign Up
           </AppText>
+
+          {!isOnline && !user && (
+            <View style={styles.errorBanner}>
+              <AppText variant="body" style={styles.errorText}>
+                Requires connection. Please check your internet connection and try again.
+              </AppText>
+            </View>
+          )}
+
+          {timedOutWithoutAuth && (
+            <View style={styles.errorBanner}>
+              <AppText variant="body" style={styles.errorText}>
+                Auth is taking longer than expected. You can retry.
+              </AppText>
+              <AppButton
+                title="Retry auth"
+                variant="secondary"
+                onPress={retryInitialize}
+                style={styles.retryButton}
+              />
+            </View>
+          )}
 
           <TextInput
             style={styles.input}
@@ -113,7 +167,13 @@ export default function SignUpScreen() {
             autoComplete="password"
           />
 
-          <AppButton title="Sign Up" onPress={handleSignUp} loading={loading} style={styles.button} />
+          <AppButton
+            title="Sign Up"
+            onPress={handleSignUp}
+            loading={loading}
+            disabled={!isOnline}
+            style={styles.button}
+          />
 
           <AppButton
             title="Back to Sign In"

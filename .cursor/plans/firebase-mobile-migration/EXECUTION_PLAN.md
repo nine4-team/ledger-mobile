@@ -40,7 +40,6 @@ For a given feature folder `40_features/<feature>/`:
 ### 3) Doc-only vs code-required (rule of thumb)
 
 - **Doc-only**:
-  - prompt packs (`prompt_packs/`)
   - screen contracts (`ui/screens/*.md`) unless they introduce new shared primitives
   - parity evidence notes / links
 - **Code-required**:
@@ -50,21 +49,13 @@ For a given feature folder `40_features/<feature>/`:
 
 ---
 
-## Spec authoring vs implementation (two-stage process)
+## Implementation rule (source of truth)
 
-This migration has an explicit two-stage workflow:
+This doc is only about **implementation order**.
 
-1) **Spec authoring (prompt packs → specs)**
-   - Use `40_features/_authoring/feature_speccing_workflow.md`.
-   - Run the feature-local `prompt_packs/` to produce **spec outputs**:
-     `feature_spec.md`, `acceptance_criteria.md`, and any needed `ui/screens/*.md`.
-   - Validate “spec complete” using `40_features/_authoring/templates/definition_of_done.md`.
-
-2) **Implementation (acceptance criteria → code)**
-   - Build from `acceptance_criteria.md` in the order below.
-   - Use feature specs + screen contracts as the detailed behavior source.
-
-Spec authoring is complete for this migration; the checklist below is retained for reference only. The phase sections below it are for **implementation order**.
+Implement from:
+- `40_features/<feature>/acceptance_criteria.md` (what must exist)
+- `40_features/<feature>/feature_spec.md` + `ui/screens/*.md` (details/edge cases)
 
 ---
 
@@ -99,86 +90,6 @@ Key implications for execution:
 
 ## Build order (phased)
 
-### Sub-phases checklist (spec authoring prompt packs — completed, reference only)
-
-This section is intentionally **not invented**: it lists the **actual prompt packs already present** under `40_features/**/prompt_packs/`, grouped into the macro phases below for historical context. No action is required unless a spec gap is discovered.
-
-Conventions:
-- Checkboxes are manual (edit this doc as you complete each pack).
-- `README.md` entries under `prompt_packs/` are informational; the checklist items are the `chat_*.md` packs.
-
-#### Phase 1 — Auth + account context
-
-- [ ] `40_features/auth-and-invitations/prompt_packs/chat_a_auth_boot_protected_route.md`
-- [ ] `40_features/auth-and-invitations/prompt_packs/chat_b_invite_accept_and_callback.md`
-- [ ] `40_features/auth-and-invitations/prompt_packs/chat_c_account_context_offline_boot_roles.md`
-
-#### Phase 2 — Cross-cutting runtime primitives
-
-- [ ] `40_features/connectivity-and-sync-status/plan.md` (no prompt packs; ensure spec outputs exist and use acceptance criteria for implementation)
-- [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_a_local_cache_and_state_machine.md`
-- [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_b_upload_queue_and_idempotency.md`
-- [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_c_cleanup_quota_and_bounded_cache.md`
-- [ ] `40_features/_cross_cutting/offline-media-lifecycle/prompt_packs/chat_d_tests_and_edge_case_audit.md`
-
-#### Phase 3 — Scope switching + shared module contracts (anti-drift)
-
-- [ ] `40_features/business-inventory/prompt_packs/chat_d_scope_config_object_contract.md`
-
-#### Phase 4 — Core workspaces + shared domain modules
-
-- [ ] `40_features/projects/prompt_packs/chat_a_projects_list_create_and_prereqs.md`
-- [ ] `40_features/projects/prompt_packs/chat_b_project_layout_refresh_edit_delete.md`
-- [ ] `40_features/projects/prompt_packs/chat_c_projects_offline_collab_entitlements.md`
-
-- [ ] `40_features/project-transactions/prompt_packs/chat_a_transactions_list_filters_export.md`
-- [ ] `40_features/project-transactions/prompt_packs/chat_b_transaction_form_create_edit.md`
-- [ ] `40_features/project-transactions/prompt_packs/chat_c_transaction_detail_media_items_actions.md`
-
-- [ ] `40_features/spaces/prompt_packs/chat_a_spaces_list_create_edit_delete.md`
-- [ ] `40_features/spaces/prompt_packs/chat_b_space_detail_items_checklists.md`
-- [ ] `40_features/spaces/prompt_packs/chat_c_space_detail_images_templates_media.md`
-
-- [ ] `40_features/business-inventory/prompt_packs/chat_a_business_inventory_home_tabs_refresh_state.md`
-- [ ] `40_features/business-inventory/prompt_packs/chat_b_inventory_items_scope_config_and_bulk_ops.md`
-- [ ] `40_features/business-inventory/prompt_packs/chat_c_inventory_transactions_scope_config_and_receipts.md`
-
-- [ ] `40_features/inventory-operations-and-lineage/prompt_packs/chat_a_multi_entity_ops_and_idempotency.md`
-- [ ] `40_features/inventory-operations-and-lineage/prompt_packs/chat_b_lineage_and_visibility.md`
-- [ ] `40_features/inventory-operations-and-lineage/prompt_packs/chat_c_ui_guardrails_and_copy.md`
-
-#### Phase 5 — Secondary modules + outputs
-
-- [ ] `40_features/budget-and-accounting/prompt_packs/chat_a_budget_rollup_math_and_canonical_attribution.md`
-- [ ] `40_features/budget-and-accounting/prompt_packs/chat_b_design_fee_identity_and_budget_categories_metadata.md`
-- [ ] `40_features/budget-and-accounting/prompt_packs/chat_c_accounting_rollups_and_reports_entrypoints.md`
-
-- [ ] `40_features/reports-and-printing/prompt_packs/chat_a_project_invoice.md`
-- [ ] `40_features/reports-and-printing/prompt_packs/chat_b_client_summary.md`
-- [ ] `40_features/reports-and-printing/prompt_packs/chat_c_property_management_summary.md`
-
-- [ ] `40_features/invoice-import/prompt_packs/chat_a_screen_contracts_importers.md`
-- [ ] `40_features/invoice-import/prompt_packs/chat_b_parsing_and_debug_tooling.md`
-- [ ] `40_features/invoice-import/prompt_packs/chat_c_media_background_upload_and_offline_first.md`
-
-#### Phase 6 — Parity knowledge / web-only (do not implement 1:1 in RN)
-
-- [ ] `40_features/pwa-service-worker-and-background-sync/prompt_packs/chat_a_web_parity_inventory.md`
-- [ ] `40_features/pwa-service-worker-and-background-sync/prompt_packs/chat_b_mobile_background_policy_and_cost.md`
-- [ ] `40_features/pwa-service-worker-and-background-sync/prompt_packs/chat_c_sync_ux_and_error_actions.md`
-
-#### Cross-cutting: entitlements + permissions (schedule when needed)
-
-- [ ] `40_features/_cross_cutting/billing-and-entitlements/prompt_packs/chat_a_data_model_and_entitlements_snapshot.md`
-- [ ] `40_features/_cross_cutting/billing-and-entitlements/prompt_packs/chat_b_gated_creates_and_counters.md`
-- [ ] `40_features/_cross_cutting/billing-and-entitlements/prompt_packs/chat_c_offline_ux_and_retry_semantics.md`
-- [ ] `40_features/_cross_cutting/billing-and-entitlements/prompt_packs/chat_d_tests_and_edge_case_audit.md`
-
-- [ ] `40_features/_cross_cutting/category-scoped-permissions-v2/prompt_packs/chat_a_entitlements_and_server_side_rules.md`
-- [ ] `40_features/_cross_cutting/category-scoped-permissions-v2/prompt_packs/chat_b_delta_sync_scoping.md`
-- [ ] `40_features/_cross_cutting/category-scoped-permissions-v2/prompt_packs/chat_c_ui_gating_and_redaction.md`
-- [ ] `40_features/_cross_cutting/category-scoped-permissions-v2/prompt_packs/chat_d_tests_and_edge_case_audit.md`
-
 ### Phase 0 — Hard guardrails + “can ship a dev client”
 
 **Goal**: you can run the app in a native dev client and enforce “no accidental web SDK” regressions.
@@ -208,6 +119,10 @@ Primary references:
 - `40_features/auth-and-invitations/feature_spec.md`
 - `10_architecture/security_model.md`
 
+Status:
+- ✅ Done for Phase 1 scope (auth timeout, offline gating, invite flow, account context, server-owned acceptance).
+- ⚠️ Deferred: Google sign-in (required for parity) is not implemented yet.
+
 ---
 
 ### Phase 2 — Cross-cutting runtime primitives (reused everywhere)
@@ -227,6 +142,12 @@ Implement:
   - Source: `OFFLINE_FIRST_V2_SPEC.md` (Offline “Item Search Index” module)
   - Product requirements: feature specs under `project-items/`, `business-inventory/`, and any search-heavy lists
 
+Status:
+- ✅ Complete for Phase 2 scope: shared primitives exist (listener lifecycle, global sync UX shell, request-doc framework plumbing, offline media store/queue, search-index module).
+- ⚠️ Follow-ups belong to later phases:
+  - Request-doc handlers beyond the starter template are implemented per-feature when multi-doc invariants are introduced.
+  - Search index integration happens when the first search-heavy item lists ship (Phase 4+), using the Phase 2 module.
+
 ---
 
 ### Phase 3 — Scope switching + shared module contracts (anti-drift foundation)
@@ -241,6 +162,9 @@ Implement:
 - List state persistence keyed by scope (`listStateKey`)
   - Source: `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
   - Source: `40_features/navigation-stack-and-context-links/feature_spec.md`
+
+Status:
+- ✅ Done for Phase 3 scope: shared Items/Transactions modules used across Projects and Inventory, `ScopeConfig` enforced (no implicit `projectId`), scope-keyed list state + restore hints, scope switching hook that detaches/activates listener scopes, real list data with scoped listeners, full project/inventory scope-switch flows tied to selection, and back-target fallback for deep links.
 
 ---
 
@@ -263,6 +187,13 @@ Primary references:
 - `40_features/spaces/…`
 - `40_features/business-inventory/…`
 - `40_features/inventory-operations-and-lineage/…`
+
+Status / known gaps (important):
+Status:
+- ✅ Transactions gap closed: “Add existing items” now uses a picker flow (Suggested/Project/Outside, search, select-all, duplicate grouping, conflict confirm) with parity “re-home then link” behavior.
+- ✅ Spaces gap closed: “Add existing items” now supports outside items (other projects + business inventory), blocks transaction-linked items, and runs canonical pull-in operations before assigning `spaceId`.
+- ⚠️ Phase 4 incomplete: shared UI components were not used in the new add-item pickers (see `40_features/_cross_cutting/ui/shared_component_audit.md`).
+- ⚠️ Follow-up (optional): consider moving the transaction “re-home then link” logic (when adding an outside item to a transaction: update `item.projectId` / clear `spaceId` as needed, then set `item.transactionId`) into the canonical inventory-ops request-doc flows—but only after those server-owned invariants explicitly cover transaction linking/unlinking rules (conflict reassignment, canonical vs non-canonical behavior, `inheritedBudgetCategoryId`).
 
 ---
 
@@ -299,5 +230,5 @@ Primary references:
 If you’re unsure whether something needs implementation, ask:
 - Is it in any feature’s `acceptance_criteria.md`? If yes: implement.
 - Is it a cross-cutting subsystem needed by 2+ features (media, request-doc, list state, scope config)? If yes: implement once, early.
-- Is it only parity evidence or an authoring prompt pack? If yes: doc-only.
+- Is it only parity evidence or authoring scaffolding? If yes: doc-only.
 

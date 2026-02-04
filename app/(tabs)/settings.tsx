@@ -6,7 +6,7 @@ import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
 import { ExpandableCard } from '../../src/components/ExpandableCard';
-import { ItemCard } from '../../src/components/ItemPreviewCard';
+import { ItemCard } from '../../src/components/ItemCard';
 import { GroupedItemCard } from '../../src/components';
 import { TemplateToggleListCard } from '../../src/components/TemplateToggleListCard';
 import type { TemplateToggleListItem } from '../../src/components/TemplateToggleListCard';

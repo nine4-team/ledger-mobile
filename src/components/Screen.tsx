@@ -60,6 +60,7 @@ export const Screen: React.FC<ScreenProps> = ({
           // Local (app-owned) content padding so it can't be overridden by ui-kit defaults.
           {
             paddingHorizontal: SCREEN_PADDING,
+            paddingTop: (appTokens.screen.contentPaddingTop ?? 0) + insets.top,
             paddingBottom: (appTokens.screen.contentPaddingBottom ?? 0) + insets.bottom,
           },
           style,
@@ -86,7 +87,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: appTokens.screen.contentPaddingTop,
     paddingBottom: appTokens.screen.contentPaddingBottom,
   },
 });

@@ -9,10 +9,10 @@ This file also marks **what is already implemented** in `ledger_mobile` vs **wha
   Implemented in `ledger_mobile/app/_layout.tsx` and `ledger_mobile/app/index.tsx`.
 - [x] **Email/password auth store exists**: sign-in/sign-up/sign-out + auth state subscription.  
   Implemented in `ledger_mobile/src/auth/authStore.ts`.
-- [ ] **Auth safety timeout**: auth initialization has a bounded timeout (e.g. 7s) so we never show an indefinite loading overlay if native auth hangs.  
+- [x] **Auth safety timeout**: auth initialization has a bounded timeout (e.g. 7s) so we never show an indefinite loading overlay if native auth hangs.  
   Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/contexts/AuthContext.tsx` (7s timeout + `timedOutWithoutAuth`).  
   Mobile status: **not implemented** (today `ledger_mobile/app/_layout.tsx` shows a loading overlay while `isInitialized` is false).
-- [ ] **Offline “requires connection” messaging on auth screens**: when unauthenticated and offline, sign-in/sign-up must not appear “broken”; show explicit offline gating + retry.  
+- [x] **Offline “requires connection” messaging on auth screens**: when unauthenticated and offline, sign-in/sign-up must not appear “broken”; show explicit offline gating + retry.  
   Intentional delta (mobile constraint): sign-in cannot complete offline unless a prior session exists; current `ledger_mobile` auth screens do not yet implement offline gating UX.
 
 ## Protected route gating
@@ -28,9 +28,9 @@ This file also marks **what is already implemented** in `ledger_mobile` vs **wha
   Implemented in `ledger_mobile/app/(auth)/sign-in.tsx`.
 - [x] **Email/password sign-in uses Firebase Auth password flow (mobile)**.  
   Implemented in `ledger_mobile/src/auth/authStore.ts` (`signInWithEmailAndPassword`).
-- [ ] **Google sign-in parity gap**: web app supports Google OAuth; mobile must either implement mobile-native Google→Firebase credential sign-in or explicitly defer.  
+- [x] **Google sign-in required**: web app supports Google OAuth; mobile must implement mobile-native Google→Firebase credential sign-in.  
   Parity evidence (web): `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/Login.tsx` and `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts` (`signInWithGoogle()`).
-  Intentional delta (mobile): **no `/auth/callback` route**; if implemented, it must be mobile-native.
+  Intentional delta (mobile): **no `/auth/callback` route**; it must be mobile-native.
 
 ## Auth callback (web-only parity reference)
 - [ ] **No web callback route in mobile** (`/auth/callback` must not exist in the RN app).  

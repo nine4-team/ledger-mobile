@@ -1,4 +1,4 @@
-# ExpoFirebaseSkeleton
+# Ledger
 
 A GitHub template for Expo + React Native apps with:
 
@@ -17,7 +17,7 @@ Click "Use this template" on GitHub, or clone and customize:
 
 ```bash
 git clone <your-repo-url>
-cd expo-firebase-skeleton
+cd ledger
 npm install
 ```
 
@@ -48,7 +48,7 @@ Edit `src/config/appConfig.ts`:
 
 ### 3a. Customize the app logo
 
-- The template uses the example logo at `nine4_logo.png` (repo root).
+- The app uses the logo at `ledger_logo.png` (repo root).
 - Expo icon/splash/adaptive icon are configured in `app.json`.
 - In-app logo rendering is centralized in `src/components/BrandLogo.tsx`.
 

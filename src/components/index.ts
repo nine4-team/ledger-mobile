@@ -6,8 +6,8 @@ export { OfflineLoadingOverlay, StaleIndicator, QueuedWritesBadge } from './Offl
 export { GoogleMark } from './GoogleMark';
 export { BrandLogo } from './BrandLogo';
 export { ExpandableCard } from './ExpandableCard';
-export { GroupedItemCard } from './GroupedItemListCard';
-export { ItemCard } from './ItemPreviewCard';
+export { GroupedItemCard } from './GroupedItemCard';
+export { ItemCard } from './ItemCard';
 export { TopHeader } from './TopHeader';
 export { AnchoredMenu } from './AnchoredMenu';
 export { AnchoredMenuList } from './AnchoredMenuList';
@@ -17,3 +17,7 @@ export { TemplateToggleListCard } from './TemplateToggleListCard';
 export { InfoButton } from './InfoButton';
 export { DraggableCard } from './DraggableCard';
 export { DraggableCardList } from './DraggableCardList';
+export { NetworkStatusBanner } from './NetworkStatusBanner';
+export { SyncStatusPill } from './SyncStatusPill';
+export { RetrySyncButton } from './RetrySyncButton';
+export { BackgroundSyncErrorNotifier } from './BackgroundSyncErrorNotifier';

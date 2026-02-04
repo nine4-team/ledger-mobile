@@ -19,10 +19,10 @@ module.exports = () => {
   const androidGoogleServicesFile =
     process.env.EXPO_ANDROID_GOOGLE_SERVICES_FILE ?? "./google-services.json";
 
-  // `@react-native-firebase/app` config plugin fails prebuild if iOS plist isn't set.
-  // Only enable native Firebase config when both platform files exist.
-  const enableNativeFirebase =
-    fileExists(iosGoogleServicesFile) && fileExists(androidGoogleServicesFile);
+  // Enable native Firebase config per-platform (iOS only is OK).
+  const hasIosGoogleServices = fileExists(iosGoogleServicesFile);
+  const hasAndroidGoogleServices = fileExists(androidGoogleServicesFile);
+  const enableNativeFirebase = hasIosGoogleServices || hasAndroidGoogleServices;
 
   const plugins = Array.isArray(baseExpoConfig.plugins)
     ? baseExpoConfig.plugins.filter((p) => p !== "@react-native-firebase/app")
@@ -40,13 +40,38 @@ module.exports = () => {
 
   const ios = { ...(baseExpoConfig.ios ?? {}) };
   const android = { ...(baseExpoConfig.android ?? {}) };
+  const googleIosReversedClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID;
 
   if (enableNativeFirebase) {
-    ios.googleServicesFile = iosGoogleServicesFile;
-    android.googleServicesFile = androidGoogleServicesFile;
+    if (hasIosGoogleServices) {
+      ios.googleServicesFile = iosGoogleServicesFile;
+    } else {
+      delete ios.googleServicesFile;
+    }
+    if (hasAndroidGoogleServices) {
+      android.googleServicesFile = androidGoogleServicesFile;
+    } else {
+      delete android.googleServicesFile;
+    }
   } else {
     delete ios.googleServicesFile;
     delete android.googleServicesFile;
+  }
+
+  if (googleIosReversedClientId) {
+    const infoPlist = { ...(ios.infoPlist ?? {}) };
+    const existingUrlTypes = Array.isArray(infoPlist.CFBundleURLTypes)
+      ? infoPlist.CFBundleURLTypes
+      : [];
+
+    infoPlist.CFBundleURLTypes = [
+      ...existingUrlTypes,
+      {
+        CFBundleURLSchemes: [googleIosReversedClientId],
+      },
+    ];
+
+    ios.infoPlist = infoPlist;
   }
 
   return {

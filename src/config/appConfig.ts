@@ -17,7 +17,7 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  appName: 'ExpoFirebaseSkeleton',
+  appName: 'Ledger',
   quotas: {
     // Example quota: users can create up to 10 "objects" for free
     object: {

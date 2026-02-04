@@ -27,6 +27,7 @@ export type RepositoryMode = 'online' | 'offline';
  * Online-first implementation: direct Firestore access
  */
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export class FirestoreRepository<T extends { id: string }> implements Repository<T> {
   constructor(
@@ -98,6 +99,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
       return;
     }
     await db.collection(this.collectionPath).doc(id).set(data as object, { merge: true });
+    trackPendingWrite();
   }
 
   async delete(id: string): Promise<void> {
@@ -105,6 +107,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
       return;
     }
     await db.collection(this.collectionPath).doc(id).delete();
+    trackPendingWrite();
   }
 
   async listByUser(uid: string): Promise<T[]> {

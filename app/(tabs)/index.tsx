@@ -1,49 +1,272 @@
-import { StyleSheet, View } from 'react-native';
-
+import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
-import { useScreenTabs } from '../../src/components/ScreenTabs';
 import { layout } from '../../src/ui';
+import { AppButton } from '../../src/components/AppButton';
+import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import { useAccountContextStore } from '../../src/auth/accountContextStore';
+import { createRepository } from '../../src/data/repository';
+import { useAuthStore } from '../../src/auth/authStore';
+import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
+import { fetchProjectPreferencesMap, ensureProjectPreferences } from '../../src/data/projectPreferencesService';
+import { ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
+import { resolveAttachmentUri } from '../../src/offline/media';
 
 export default function ProjectsScreen() {
   return (
-    <Screen 
-      title="Projects"
-      tabs={[
-        { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
-        { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
-        { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
-      ]}
-      initialTabKey="items"
-    >
-      <ProjectsScreenContent />
+    <Screen title="Projects">
+      <ProjectsList />
     </Screen>
   );
 }
 
-function ProjectsScreenContent() {
-  const screenTabs = useScreenTabs();
-  const selectedKey = screenTabs?.selectedKey ?? 'items';
+type ProjectSummary = {
+  id: string;
+  name?: string | null;
+  clientName?: string | null;
+  isArchived?: boolean | null;
+  mainImageUrl?: string | null;
+  budgetSummary?: {
+    totalCents?: number | null;
+    pinnedCategories?: { id: string; name?: string | null; spentCents?: number | null }[];
+  } | null;
+};
 
-  if (selectedKey === 'items') {
-    return (
-      <View style={styles.placeholder}>
-        <AppText variant="body">Project items go here.</AppText>
-      </View>
-    );
-  }
+function ProjectsList() {
+  const router = useRouter();
+  const accountId = useAccountContextStore((store) => store.accountId);
+  const userId = useAuthStore((store) => store.user?.uid ?? null);
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [budgetCategories, setBudgetCategories] = useState<Record<string, { id: string; name: string }>>({});
+  const [projectPreferences, setProjectPreferences] = useState<Record<string, { pinnedBudgetCategoryIds: string[] }>>({});
+  const [budgetTotals, setBudgetTotals] = useState<Record<string, number>>({});
+  const theme = useTheme();
+  const uiKitTheme = useUIKitTheme();
 
-  if (selectedKey === 'transactions') {
-    return (
-      <View style={styles.placeholder}>
-        <AppText variant="body">Project transactions go here.</AppText>
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!accountId) {
+      setProjects([]);
+      setIsLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setBudgetCategories({});
+      return;
+    }
+    return subscribeToBudgetCategories(accountId, (next) => {
+      setBudgetCategories(mapBudgetCategories(next));
+    });
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setIsHydrated(true);
+      return;
+    }
+    const storageKey = `projects:list:cache:${accountId}`;
+    AsyncStorage.getItem(storageKey)
+      .then((stored) => {
+        if (!stored) return;
+        try {
+          const parsed = JSON.parse(stored) as ProjectSummary[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProjects(parsed);
+          }
+        } catch {
+          // ignore parse failures
+        }
+      })
+      .finally(() => setIsHydrated(true));
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setProjects([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    const repo = createRepository<ProjectSummary>(`accounts/${accountId}/projects`, 'offline');
+    const unsubscribe = repo.subscribeList((next) => {
+      setProjects(next);
+      setIsLoading(false);
+      const storageKey = `projects:list:cache:${accountId}`;
+      void AsyncStorage.setItem(storageKey, JSON.stringify(next));
+    });
+    return () => unsubscribe();
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId || !userId || projects.length === 0) {
+      setProjectPreferences({});
+      return;
+    }
+    const projectIds = projects.map((project) => project.id);
+    fetchProjectPreferencesMap({ accountId, userId, projectIds })
+      .then((prefs) => {
+        setProjectPreferences(prefs);
+        const furnishings = Object.values(budgetCategories).find(
+          (category) => category.name.toLowerCase() === 'furnishings'
+        );
+        projectIds.forEach((projectId) => {
+          if (!prefs[projectId]) {
+            void ensureProjectPreferences(accountId, projectId, furnishings ? [furnishings.id] : []);
+          }
+        });
+      })
+      .catch(() => {
+        setProjectPreferences({});
+      });
+  }, [accountId, budgetCategories, projects, userId]);
+
+  useEffect(() => {
+    if (!accountId || projects.length === 0) {
+      setBudgetTotals({});
+      return;
+    }
+    let cancelled = false;
+    const loadTotals = async () => {
+      const totals: Record<string, number> = {};
+      await Promise.all(
+        projects.map(async (project) => {
+          const repo = createRepository<ProjectBudgetCategory>(
+            `accounts/${accountId}/projects/${project.id}/budgetCategories`,
+            'offline'
+          );
+          const categories = await repo.list();
+          totals[project.id] = categories.reduce((sum, category) => sum + (category.budgetCents ?? 0), 0);
+        })
+      );
+      if (!cancelled) {
+        setBudgetTotals(totals);
+      }
+    };
+    void loadTotals();
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, projects]);
+
+  const sortedProjects = useMemo(() => {
+    return [...projects]
+      .filter((project) => !project.isArchived)
+      .sort((a, b) => {
+        const nameA = a.name?.toLowerCase() ?? '';
+        const nameB = b.name?.toLowerCase() ?? '';
+        if (nameA && nameB) return nameA.localeCompare(nameB);
+        if (nameA) return -1;
+        if (nameB) return 1;
+        return a.id.localeCompare(b.id);
+      });
+  }, [projects]);
+
+  const handleRefresh = async () => {
+    if (!accountId || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      const repo = createRepository<ProjectSummary>(`accounts/${accountId}/projects`, 'online');
+      const next = await repo.list();
+      setProjects(next);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <View style={styles.placeholder}>
-      <AppText variant="body">Project spaces go here.</AppText>
+      {!accountId ? (
+        <View style={styles.emptyState}>
+          <AppText variant="body">
+            No Account Selected.
+          </AppText>
+          <AppButton title="Choose account" onPress={() => router.replace('/account-select')} />
+        </View>
+      ) : isLoading && !isHydrated ? (
+        <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+          Loading projects…
+        </AppText>
+      ) : (
+        <>
+          {sortedProjects.length === 0 ? (
+            <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+              No projects yet.
+            </AppText>
+          ) : (
+            <View style={styles.projectList}>
+              {sortedProjects.map((project) => (
+                <Pressable
+                  key={project.id}
+                  onPress={() => router.push(`/project/${project.id}?tab=items`)}
+                  style={({ pressed }) => [
+                    styles.projectRow,
+                    {
+                      borderColor: uiKitTheme.border.primary,
+                      backgroundColor: uiKitTheme.background.surface,
+                      opacity: pressed ? 0.8 : 1,
+                    },
+                  ]}
+                >
+                  {project.mainImageUrl ? (
+                    <Image
+                      source={{ uri: resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' }) ?? project.mainImageUrl }}
+                      style={styles.projectImage}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.projectImage,
+                        { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface },
+                      ]}
+                    />
+                  )}
+                  <AppText variant="body" style={styles.projectTitle}>
+                    {project.name?.trim() ? project.name.trim() : 'Project'}
+                  </AppText>
+                  <AppText variant="caption" style={styles.projectSub}>
+                    {project.clientName?.trim() ? project.clientName.trim() : 'No client name'}
+                  </AppText>
+                  <View style={styles.budgetRow}>
+                    <AppText variant="caption">
+                      {typeof budgetTotals[project.id] === 'number'
+                        ? `Budget: $${(budgetTotals[project.id] / 100).toFixed(2)}`
+                        : 'Budget not set'}
+                    </AppText>
+                    {projectPreferences[project.id]?.pinnedBudgetCategoryIds?.length ? (
+                      <AppText variant="caption" style={styles.budgetPins}>
+                        {projectPreferences[project.id].pinnedBudgetCategoryIds
+                          .slice(0, 2)
+                          .map((categoryId) => budgetCategories[categoryId]?.name ?? categoryId)
+                          .join(' • ')}
+                      </AppText>
+                    ) : null}
+                    <AppText variant="caption" style={styles.openProject}>
+                      Open Project
+                    </AppText>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          <View style={styles.actions}>
+            <AppButton title="New project" onPress={() => router.push('/project/new')} />
+            <AppButton
+              title={isRefreshing ? 'Refreshing…' : 'Refresh'}
+              variant="secondary"
+              onPress={handleRefresh}
+              disabled={isRefreshing}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -51,5 +274,45 @@ function ProjectsScreenContent() {
 const styles = StyleSheet.create({
   placeholder: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
+    gap: 12,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  emptyState: {
+    gap: 12,
+  },
+  projectList: {
+    gap: 10,
+  },
+  projectRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 6,
+  },
+  projectImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 10,
+  },
+  projectTitle: {
+    fontWeight: '600',
+  },
+  projectSub: {
+    marginTop: 4,
+  },
+  budgetRow: {
+    gap: 4,
+  },
+  budgetPins: {
+    opacity: 0.8,
+  },
+  openProject: {
+    marginTop: 4,
+    opacity: 0.7,
   },
 });

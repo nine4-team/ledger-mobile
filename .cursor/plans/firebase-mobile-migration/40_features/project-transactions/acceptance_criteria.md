@@ -86,6 +86,16 @@ Shared-module requirement:
 - [ ] **Itemization conditional**: itemization list renders only when enabled for the selected category (recommended: `categoryType === "itemized"`).  
   Observed in `src/pages/AddTransaction.tsx` (`getItemizationEnabled`).
 
+---
+
+## Form validation + shared media (required)
+
+- [ ] **Validation rule**: a transaction is valid only if **either**:
+  - at least one receipt image is attached, **or**
+  - both `source` (non-empty) and `amountCents > 0` are present.
+- [ ] **Inline error**: block submission and show inline error text when neither condition is met.
+- [ ] **Shared media components**: receipt/image pickers and previews must use shared attachment utilities/components (no one-off screen logic).
+
 ## Edit transaction
 - [ ] **Permission gating**: user must have role USER or higher to edit.  
   Observed in `src/pages/EditTransaction.tsx` (`hasRole(UserRole.USER)` guard).
@@ -118,6 +128,21 @@ Shared-module requirement:
   Observed in `src/pages/TransactionDetail.tsx` (gallery open via `handleImageClick`) and `src/components/ui/ImageGallery.tsx` (`Escape` logic).
 - [ ] **Transaction items section**: renders itemization list when enabled OR if existing items exist; shows warning if disabled but items exist.  
   Observed in `src/pages/TransactionDetail.tsx` (itemization-enabled block + warning).
+- [ ] **Add existing items picker (required)**: “Add existing” opens a modal picker (not an id field) that supports:
+  - search
+  - tabs: Suggested / Project (only when project-scoped) / Outside
+  - select-all (per tab / visible set)
+  - duplicate grouping + group selection
+  - sticky “Add selected”
+  Parity evidence: `src/components/transactions/TransactionItemPicker.tsx`.
+- [ ] **Outside items include business inventory when project-scoped (required)**: when `transaction.projectId` is non-null, “Outside” includes:
+  - items from other projects
+  - items from business inventory (`projectId = null`)
+  Parity evidence: `unifiedItemsService.searchItemsOutsideProject(...)` usage in `src/components/transactions/TransactionItemPicker.tsx`.
+- [ ] **Re-home behavior when adding outside items (required; current parity)**: when adding an item whose `projectId` differs from the transaction’s project id, the system updates `item.projectId` to the transaction’s project id before linking.  
+  Parity evidence: `src/components/transactions/TransactionItemPicker.tsx` (re-home via `unifiedItemsService.updateItem({ projectId })`).
+- [ ] **Conflict confirmation (required)**: if selected items are already linked to another transaction, show a confirmation dialog and require explicit confirm before reassigning.  
+  Parity evidence: `src/components/transactions/TransactionItemPicker.tsx` (conflict preview + confirm).
 - [ ] **Transaction items operations**: supports adding existing items, creating items, updating items, duplicating, deleting, removing from transaction, and bulk/location actions.  
   Observed in `src/pages/TransactionDetail.tsx` (passes handlers into `TransactionItemsList`) and `src/components/TransactionItemsList.tsx` (feature surface).
 - [ ] **Item linking sets `inheritedBudgetCategoryId` (new model)**: when an item is linked/assigned to a **non-canonical** transaction with non-null `transaction.budgetCategoryId`, the item is updated to: `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`. Linking/unlinking to a **canonical** `INV_*` transaction must not overwrite this field.  

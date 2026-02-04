@@ -9,7 +9,7 @@ Place your app assets here:
 
 ## Example logo
 
-This template currently uses the example logo at `nine4_logo.png` (repo root) for the Expo app icon + splash screen (see `app.json`) and for in-app branding via `src/components/BrandLogo.tsx`.
+This app uses the logo at `ledger_logo.png` (repo root) for the Expo app icon + splash screen (see `app.json`) and for in-app branding via `src/components/BrandLogo.tsx`.
 
 You can generate these using tools like:
 - [Expo Asset Generator](https://www.npmjs.com/package/@expo/asset-generator)

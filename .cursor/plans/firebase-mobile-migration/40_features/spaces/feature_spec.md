@@ -126,14 +126,32 @@ Summary:
   - Bulk move selected items to another space
   - Bulk remove selected items from the current space
 - “Add Existing Items” opens a modal picker that supports:
-  - search project items
-  - select all
+  - search + multi-select
+  - select all (for the current tab / current result set)
   - duplicate-group aware selection
-  - bulk add selected items to the space (sets `item.spaceId = <spaceId>`)
+  - bulk “Add Selected”
+
+Correct behavior (web parity; required):
+- The picker must support pulling items from **any context**, not just the current workspace:
+  - **Current workspace items** (same scope as the space)
+  - **Outside items** (account-wide), including:
+    - items from **other projects**
+    - items from **Business Inventory** (items with `projectId = null`)
+- When adding an outside item, the system must **pull the item into the target workspace** first (canonical behavior), then assign it to the space:
+  - **Business Inventory → Project space**: allocate into the project via the canonical allocation flow, then set `spaceId`.
+  - **Other project → Project space**: move with accounting via the canonical sell/move flow (deallocate+allocate), then set `spaceId`.
+  - **Project → Business Inventory space**: deallocate to Business Inventory via the canonical deallocation flow, then set `spaceId`.
+  - **Business Inventory → Business Inventory space**: set `spaceId` directly.
+- Items that are already assigned to this space are excluded/disabled in the picker.
+- Items that are currently tied to a transaction should be **blocked** in the Space picker (recommended parity + safety):
+  - Reason shown: the item is tied to a transaction; use the transaction flow instead.
 
 Parity evidence:
 - Items tab wiring + bulk handlers: `src/pages/SpaceDetail.tsx` (TransactionItemsList props and `bulkSetSpaceId` / `bulkUnassignSpace`)
 - Add existing items modal: `src/pages/SpaceDetail.tsx` + `src/components/spaces/SpaceItemPicker.tsx`
+  - Outside-items UX pattern (tabs/search/select-all/duplicates/sticky add): `src/components/transactions/TransactionItemPicker.tsx`
+  - Outside-items query semantics (other projects + optional business inventory): `unifiedItemsService.searchItemsOutsideProject(...)`
+  - Canonical pull-in semantics for Spaces: `SPACES_ADD_EXISTING_ITEMS_PARITY_PLAN.md` (web repo), plus inventory ops flows in this migration plan (see below).
 
 Migration notes:
 - In Firebase/RN, these are local-first item mutations:
@@ -143,9 +161,12 @@ Migration notes:
 
 Business Inventory scope (required):
 - The Items tab must work for inventory spaces as well:
-  - “Add Existing Items” searches **inventory items only** (`projectId = null`).
+  - “Add Existing Items” can pull from **any context** (projects + business inventory), but items must be pulled into the **inventory workspace** before assignment:
+    - Project → inventory space: deallocate to inventory, then set `spaceId`.
+    - Inventory → inventory space: set `spaceId`.
   - Bulk add/remove sets/clears `item.spaceId` on inventory items.
-- Cross-scope assignment is disallowed (an inventory space cannot contain project items; a project space cannot contain inventory items).
+- Direct cross-scope linking is disallowed, but **cross-scope pull-in is allowed**:
+  - after a pull-in operation completes, the item’s `projectId` must match the space’s scope, so `spaceId` remains scope-consistent.
 
 Allocation touchpoint (required; Business Inventory → Project):
 - Allocation flows may include an optional “destination space” choice for the target project.
@@ -154,6 +175,22 @@ Allocation touchpoint (required; Business Inventory → Project):
   - set/clear `item.spaceId` to a **project space id** selected by the user (or `null` if not selected)
   - ensure the resulting `spaceId` conforms to the “scope consistency” rules above
 - Source of truth for allocation invariants: `40_features/inventory-operations-and-lineage/flows/business_inventory_to_project_allocation.md`.
+
+### Implementation changes needed (to align mobile with correct behavior)
+Mobile currently must implement more than “set `spaceId`”:
+- **Picker UI parity**:
+  - Provide a real “Add Existing Items” picker with tabs (at least “In this workspace” + “Outside”), search, duplicate grouping, select-all, and sticky “Add selected”.
+- **Outside search**:
+  - Support searching items outside the current workspace (other projects + business inventory) without unbounded listeners.
+  - Recommended approach: use the derived search index module (Phase 2) + scoped queries per `OFFLINE_FIRST_V2_SPEC.md`.
+- **Canonical pull-in operations**:
+  - Adding outside items must run inventory operations invariants (request-doc / server-owned) before setting `spaceId`:
+    - Business Inventory → Project allocation
+    - Project → Business Inventory deallocation
+    - Project → Project move/sell (deallocate+allocate)
+  - Source of truth: `40_features/inventory-operations-and-lineage/…` flows (especially allocation and sell/move flows).
+- **Guardrails**:
+  - Block transaction-linked items in Space picker (recommended parity + safety), or explicitly define a confirmation + invariant flow if you want to allow it.
 
 ### 5) Manage space images (Space detail → Images tab)
 Summary:

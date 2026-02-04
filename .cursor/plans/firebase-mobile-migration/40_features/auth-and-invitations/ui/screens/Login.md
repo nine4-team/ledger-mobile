@@ -1,7 +1,7 @@
 # Login — Screen contract
 
 ## Intent
-Allow users to authenticate via **email/password** (implemented) and optionally **Google** (UI exists; implementation is a known parity gap).
+Allow users to authenticate via **email/password** (implemented) and **Google** (required; implementation is currently missing).
 
 In `ledger_mobile`, this contract maps to the Expo Router screen `/(auth)/sign-in` (`app/(auth)/sign-in.tsx`) and is shown when the app routes unauthenticated users into the auth group.
 
@@ -21,7 +21,7 @@ In `ledger_mobile`, this contract maps to the Expo Router screen `/(auth)/sign-i
 - Initiate email/password sign-in:
   - Calls `useAuthStore.signIn(email, password)` (Firebase Auth `signInWithEmailAndPassword`).
 - Initiate Google sign-in:
-  - **Not implemented** in `ledger_mobile` today; the current UI shows “Not set up yet”.
+  - **Required** in `ledger_mobile`; current UI still shows “Not set up yet” and must be replaced.
 
 ## UI structure (high level)
 - Ledger logo + tagline
@@ -35,8 +35,8 @@ In `ledger_mobile`, this contract maps to the Expo Router screen `/(auth)/sign-i
 - Switch method tabs:
   - Switches between Google and email/password form
   - Clears any existing error message
-- Google “Continue” (current skeleton behavior):
-  - Shows “Not set up yet”
+- Google “Continue” (required behavior):
+  - Runs native Google sign-in and exchanges for Firebase credential
 - Email/password “Sign In”:
   - Validates required email/password
   - Shows inline error message on validation or auth failure

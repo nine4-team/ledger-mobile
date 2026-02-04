@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,8 +19,10 @@ import { BrandLogo } from '../../src/components/BrandLogo';
 import { GoogleMark } from '../../src/components/GoogleMark';
 import { useAuthStore } from '../../src/auth/authStore';
 import { isAuthBypassEnabled } from '../../src/auth/authConfig';
-import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import { useAppearance, useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { getCardStyle, getTextInputStyle } from '../../src/ui';
+import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
+import { useInviteTokenStore } from '../../src/auth/inviteTokenStore';
 
 function EyeIcon({ size = 20, color, crossed }: { size?: number; color: string; crossed?: boolean }) {
   return (
@@ -64,13 +66,32 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
-  const { signIn } = useAuthStore();
+  const { signIn, signInWithGoogle, user, timedOutWithoutAuth, retryInitialize } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [emailAnchorHeight, setEmailAnchorHeight] = useState<number | null>(null);
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
+  const { resolvedColorScheme } = useAppearance();
+  const { isOnline } = useNetworkStatus();
+  const { pendingToken, hydrate: hydrateToken } = useInviteTokenStore();
+
+  // Hydrate token store on mount
+  useEffect(() => {
+    hydrateToken();
+  }, [hydrateToken]);
+
+  // Redirect to invite acceptance if there's a pending token after sign-in
+  useEffect(() => {
+    if (user && pendingToken) {
+      router.replace(`/(auth)/invite/${pendingToken}`);
+    } else if (user && !pendingToken) {
+      // Normal sign-in flow - go to tabs
+      router.replace('/(tabs)');
+    }
+  }, [user, pendingToken, router]);
 
   const styles = useMemo(
     () =>
@@ -88,24 +109,9 @@ export default function SignInScreen() {
           alignItems: 'center',
           marginBottom: theme.spacing.lg,
         },
-        brandLogoTile: {
-          backgroundColor: '#fff',
-          borderRadius: 26,
-          padding: 7,
-          borderWidth: 1,
-          borderColor: 'rgba(0,0,0,0.06)',
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOpacity: 0.14,
-              shadowRadius: 28,
-              shadowOffset: { width: 0, height: 12 },
-            },
-            android: {
-              elevation: 10,
-            },
-            default: {},
-          }),
+        brandLogoBorder: {
+          borderWidth: 2,
+          borderColor: theme.colors.primary,
         },
         card: {
           width: '100%',
@@ -145,6 +151,9 @@ export default function SignInScreen() {
         errorText: {
           color: theme.colors.error,
         },
+        retryButton: {
+          marginTop: theme.spacing.sm,
+        },
         section: {
           gap: theme.spacing.sm,
         },
@@ -177,9 +186,12 @@ export default function SignInScreen() {
           marginTop: theme.spacing.sm,
           alignItems: 'center',
         },
+        googleSignUpLinkDisabled: {
+          opacity: 0.5,
+        },
         googleSignUpText: {
           color: theme.colors.primary,
-          fontWeight: '600',
+          fontWeight: '400',
         },
         primaryButton: {
           marginTop: theme.spacing.md,
@@ -193,7 +205,7 @@ export default function SignInScreen() {
           fontWeight: '600',
         },
       }),
-    [theme, uiKitTheme]
+    [resolvedColorScheme, theme, uiKitTheme]
   );
 
   // Keep the logo + card "anchored" to the email layout's vertical position to avoid
@@ -235,8 +247,20 @@ export default function SignInScreen() {
     [loginMethod]
   );
 
-  const handleGoogleSignIn = () => {
-    Alert.alert('Not set up yet', 'This skeleton currently supports email/password sign-in only.');
+  const handleGoogleSignIn = async () => {
+    if (!isOnline) return;
+    setGoogleLoading(true);
+    try {
+      setError('');
+      await signInWithGoogle();
+      // Don't navigate here - let useEffect handle redirect based on pending token
+    } catch (error: any) {
+      const message = error?.message || 'Google sign-in failed. Please try again.';
+      setError(message);
+      Alert.alert('Google Sign-In Failed', message);
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const handleSignIn = async () => {
@@ -253,7 +277,7 @@ export default function SignInScreen() {
     try {
       setError('');
       await signIn(trimmedEmail, password);
-      router.replace('/(tabs)');
+      // Don't navigate here - let useEffect handle redirect based on pending token
     } catch (error: any) {
       setError(error?.message || 'Failed to sign in. Please check your email and password.');
     } finally {
@@ -270,9 +294,7 @@ export default function SignInScreen() {
         <View style={dynamicStyles.anchorSpacer} />
         <View style={styles.content} onLayout={handleContentLayout}>
           <View style={styles.brandHeader}>
-            <View style={styles.brandLogoTile}>
-              <BrandLogo size={84} accessibilityLabel="App logo" />
-            </View>
+            <BrandLogo size={84} accessibilityLabel="App logo" style={styles.brandLogoBorder} />
           </View>
 
           <View style={styles.card}>
@@ -316,15 +338,51 @@ export default function SignInScreen() {
               </View>
             )}
 
+            {timedOutWithoutAuth && (
+              <View style={styles.errorBanner}>
+                <AppText variant="body" style={styles.errorText}>
+                  Auth is taking longer than expected. You can retry.
+                </AppText>
+                <AppButton
+                  title="Retry auth"
+                  variant="secondary"
+                  onPress={retryInitialize}
+                  style={styles.retryButton}
+                />
+              </View>
+            )}
+
+            {!isOnline && !user && (
+              <View style={styles.errorBanner}>
+                <AppText variant="body" style={styles.errorText}>
+                  Requires connection. Please check your internet connection and try again.
+                </AppText>
+              </View>
+            )}
+
             {loginMethod === 'google' ? (
               <View style={styles.section}>
                 <AppButton
                   title="Sign In with Google"
                   onPress={handleGoogleSignIn}
-                  leftIcon={<GoogleMark size={18} color={theme.colors.background} />}
+                  leftIcon={
+                    <GoogleMark
+                      size={18}
+                      color={resolvedColorScheme === 'dark' ? '#fff' : theme.colors.background}
+                    />
+                  }
+                  loading={googleLoading}
+                  disabled={!isOnline || googleLoading}
                 />
 
-                <Pressable onPress={handleGoogleSignIn} style={styles.googleSignUpLink}>
+                <Pressable
+                  onPress={handleGoogleSignIn}
+                  disabled={!isOnline || googleLoading}
+                  style={[
+                    styles.googleSignUpLink,
+                    !isOnline && styles.googleSignUpLinkDisabled,
+                  ]}
+                >
                   <AppText variant="body" style={styles.googleSignUpText}>
                     Sign up with Google
                   </AppText>
@@ -374,6 +432,7 @@ export default function SignInScreen() {
                   title="Sign In"
                   onPress={handleSignIn}
                   loading={loading}
+                  disabled={!isOnline}
                   style={styles.primaryButton}
                 />
 

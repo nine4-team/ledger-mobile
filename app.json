@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "ExpoFirebaseSkeleton",
-    "slug": "expo-firebase-skeleton",
+    "name": "Ledger",
+    "slug": "ledger",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./nine4_logo.png",
+    "icon": "./ledger_logo.png",
     "splash": {
-      "image": "./nine4_logo.png",
+      "image": "./ledger_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,15 +20,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./nine4_logo.png",
+        "foregroundImage": "./ledger_logo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.nine4.expofirebaseskeleton"
     },
     "web": {
-      "favicon": "./nine4_logo.png"
+      "favicon": "./ledger_logo.png"
     },
-    "scheme": "expofirebaseskeleton",
+    "scheme": "ledger",
     "plugins": [
       "expo-router",
       "expo-asset",

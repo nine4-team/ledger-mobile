@@ -71,6 +71,17 @@ Evidence / deltas:
 
 ---
 
+## F) Item form validation + shared media (required)
+
+- **F1 (validation)**: An item can be created/updated only if **at least one** of the following is present:
+  - `description` (non-empty)
+  - `sku` (non-empty)
+  - one or more image attachments
+- **F2 (error messaging)**: If all three are missing, block submission and show inline error text.
+- **F3 (shared media components)**: Image pickers/preview must use shared attachment utilities/components; do not implement one-off image logic per screen.
+
+---
+
 ## D) BI → Project prompt (destination project budget category)
 
 ### D1 — Prompt requirement

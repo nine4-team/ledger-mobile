@@ -1,5 +1,7 @@
 import firestore from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
+import { trackRequestDocPath } from '../sync/requestDocTracker';
 
 export type RequestStatus = 'pending' | 'applied' | 'failed' | 'denied';
 
@@ -71,6 +73,8 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
   };
 
   const docRef = await db.collection(getRequestCollectionPath(scope)).add(requestDoc);
+  trackPendingWrite();
+  trackRequestDocPath(docRef.path);
   return docRef.id;
 }
 

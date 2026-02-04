@@ -45,6 +45,11 @@ Access at `http://localhost:4000` to:
 The `firestore.rules` file includes:
 
 - User profile access (users can read/write their own profile)
+- Account + membership access:
+  - Account docs at `accounts/{accountId}`
+  - Membership docs at `accounts/{accountId}/users/{uid}`
+  - The app lists memberships using a `collectionGroup('users')` query filtered by document id (`{uid}`)
+  - Account creation + membership creation is **server-owned** via callable Functions (Admin SDK)
 - Quota counter reads (users can read their own quotas)
 - Quota counter writes blocked (only Cloud Functions can write)
 - Quota'd object collections blocked (only Cloud Functions can write)

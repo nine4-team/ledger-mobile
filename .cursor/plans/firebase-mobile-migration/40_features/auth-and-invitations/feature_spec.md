@@ -125,8 +125,8 @@ Grounding in skeleton:
 
 - `app/(auth)/sign-up.tsx` → `useAuthStore.signUp`
 
-### 4) Sign in with Google (planned, mobile-native; no web callback)
-Planned behavior (phase 2):
+### 4) Sign in with Google (required, mobile-native; no web callback)
+Required behavior:
 
 - User taps “Continue with Google”.
 - App performs a mobile-native Google sign-in and exchanges the result for a Firebase credential.
@@ -134,7 +134,7 @@ Planned behavior (phase 2):
 
 Implementation note:
 
-- The current mobile app UI shows Google as “not set up yet” and supports email/password only (`ledger_mobile/app/(auth)/sign-in.tsx`).
+- The current mobile app UI shows Google as “not set up yet” and supports email/password only (`ledger_mobile/app/(auth)/sign-in.tsx`); this is **a gap that must be implemented**, not deferred.
 - Web parity evidence that Google OAuth exists today: `/Users/benjaminmackenzie/Dev/ledger/src/components/auth/Login.tsx` + `/Users/benjaminmackenzie/Dev/ledger/src/services/supabase.ts` (`signInWithGoogle()`).
 
 ### 5) Invite deep link → sign in/up → accept invite (server-owned)

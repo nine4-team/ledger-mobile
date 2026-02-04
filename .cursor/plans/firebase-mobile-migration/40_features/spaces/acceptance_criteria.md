@@ -44,13 +44,23 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Create in-space item defaults**: creating an item in a space defaults `projectPrice` to `purchasePrice` when not set.  
   Observed in `src/pages/SpaceDetail.tsx` (`handleCreateSpaceItem` payload comment).
 - [ ] **Add existing items modal**: “Add Existing Items” opens a modal picker where user can search and multi-select items to add.  
-  Observed in `src/pages/SpaceDetail.tsx` (`showExistingItemsModal`) and `src/components/spaces/SpaceItemPicker.tsx`.
+  Observed in `src/pages/SpaceDetail.tsx` (`showExistingItemsModal`) and `src/components/spaces/SpaceItemPicker.tsx` (baseline).
+- [ ] **Cross-context add existing (required)**: the picker supports pulling items from **any context**, not only the current workspace:
+  - current workspace items (same scope as the space)
+  - outside items (account-wide): other projects + business inventory (`projectId = null`)
+  Parity evidence (web): `SPACES_ADD_EXISTING_ITEMS_PARITY_PLAN.md` and `src/components/transactions/TransactionItemPicker.tsx` (outside tab UX + outside search semantics).
 - [ ] **Select-all**: the picker supports “Select all” for visible items.  
   Observed in `src/components/spaces/SpaceItemPicker.tsx` (`isAllSelected`, `toggleSelectAll`).
 - [ ] **Duplicate-group selection**: the picker groups duplicates and supports group selection state.  
   Observed in `src/components/spaces/SpaceItemPicker.tsx` (`CollapsedDuplicateGroup`, `getGroupSelectionState`).
-- [ ] **Bulk add selected**: “Add Selected” updates each item with `spaceId = <spaceId>` and shows a success toast.  
-  Observed in `src/components/spaces/SpaceItemPicker.tsx` (`handleAddSelected` updates via `unifiedItemsService.updateItem`).
+- [ ] **Bulk add selected (required; canonical pull-in)**: “Add Selected” ensures each selected item is in the target workspace, then sets `spaceId = <spaceId>`:
+  - Business Inventory → Project space: allocate into project (canonical allocation), then set `spaceId`.
+  - Other project → Project space: move with accounting (canonical sell/move), then set `spaceId`.
+  - Project → Business Inventory space: deallocate to inventory (canonical deallocation), then set `spaceId`.
+  - Business Inventory → Business Inventory space: set `spaceId`.
+  Source of truth: `40_features/inventory-operations-and-lineage/…` flows (allocation, deallocation, project-to-project sell/move).
+- [ ] **Transaction-linked guardrail (recommended)**: items tied to a transaction are disabled/blocked in the Space picker with a clear reason.  
+  Parity evidence (web plan): `SPACES_ADD_EXISTING_ITEMS_PARITY_PLAN.md`.
 - [ ] **Bulk remove from space**: selecting items and choosing “Remove” clears `item.spaceId`.  
   Observed in `src/pages/SpaceDetail.tsx` (`bulkUnassignSpace` and `bulkAction={{ label: 'Remove' ... }}`).
 - [ ] **Bulk move to another space**: selecting items and choosing a different space updates `item.spaceId` to the chosen id.  

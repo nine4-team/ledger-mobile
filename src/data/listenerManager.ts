@@ -134,6 +134,20 @@ export class ScopedListenerManager {
   }
 
   /**
+   * Activate a scope's listeners (attach if currently detached).
+   *
+   * Useful when switching between scopes without re-registering factories.
+   *
+   * @param scopeId - Scope identifier
+   */
+  activateScope(scopeId: ScopeId): void {
+    const scope = this.scopes.get(scopeId);
+    if (!scope) return;
+    if (this.currentAppState !== 'active') return;
+    this.attachScope(scopeId);
+  }
+
+  /**
    * Remove a scope entirely (detach + remove factories).
    * 
    * Use this when a scope is no longer needed (e.g., user switched projects).
@@ -282,6 +296,20 @@ export class ScopedListenerManager {
    */
   getActiveScopes(): ScopeId[] {
     return Array.from(this.scopes.keys());
+  }
+
+  /**
+   * Detach and reattach all scopes (best-effort refresh).
+   */
+  refreshAllScopes(): void {
+    this.scopes.forEach((_, scopeId) => {
+      this.detach(scopeId);
+    });
+    if (this.currentAppState === 'active') {
+      this.scopes.forEach((_, scopeId) => {
+        this.attachScope(scopeId);
+      });
+    }
   }
 }
 

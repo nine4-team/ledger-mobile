@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Image, ImageStyle, StyleProp } from 'react-native';
 
-const BRAND_LOGO_SOURCE = require('../../nine4_logo.png');
+const BRAND_LOGO_SOURCE = require('../../ledger_logo.png');
 
 export function BrandLogo({
   size = 72,

@@ -38,11 +38,14 @@ import { globalListenerManager } from './listenerManager';
  * @param manager - Optional listener manager instance (defaults to global)
  */
 export function useScopedListeners(
-  scopeId: ScopeId,
+  scopeId: ScopeId | null,
   factory: ListenerFactory,
   manager: ScopedListenerManager = globalListenerManager
 ): void {
   useEffect(() => {
+    if (!scopeId) {
+      return;
+    }
     const removeListener = manager.attach(scopeId, factory);
     return () => {
       removeListener();
@@ -60,11 +63,14 @@ export function useScopedListeners(
  * @param manager - Optional listener manager instance
  */
 export function useScopedListenersMultiple(
-  scopeId: ScopeId,
+  scopeId: ScopeId | null,
   factories: ListenerFactory[],
   manager: ScopedListenerManager = globalListenerManager
 ): void {
   useEffect(() => {
+    if (!scopeId) {
+      return;
+    }
     const removers = factories.map((factory) => manager.attach(scopeId, factory));
     return () => {
       removers.forEach((removeListener) => {

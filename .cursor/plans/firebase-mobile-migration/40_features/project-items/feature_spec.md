@@ -73,6 +73,26 @@ Out of scope (but referenced):
 
 ---
 
+## Form validation + shared components (required)
+
+### Validation (create/edit)
+
+- An item is valid only if **at least one** of these is present:
+  - `description` (non-empty)
+  - `sku` (non-empty)
+  - **at least one** image attachment
+- If all three are missing, the form must block submission and show a clear inline error.
+
+### Shared components (attachments + media)
+
+- Image selection, preview, and placeholder handling must use the **shared media utilities/components** (no per-screen custom logic).
+- The shared components must support:
+  - `offline://<mediaId>` placeholders
+  - remove + set-primary behavior
+  - max counts (items: 5 images)
+
+---
+
 ## Key definitions
 
 ### Non-canonical (user-facing) transaction

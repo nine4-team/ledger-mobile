@@ -139,6 +139,26 @@ Canonical transaction note:
 - Canonical inventory transactions are system-generated (not created through this form).
 - Canonical inventory transactions should be treated as **read-only** from the user’s perspective (recommended): the edit action should be disabled/hidden for canonical `INV_*` rows to avoid “assigning a category” or mutating system-owned mechanics.
 
+---
+
+## Form validation + shared components (required)
+
+### Validation (create/edit)
+
+- A transaction is valid only if:
+  - **at least one** receipt image is attached **OR**
+  - both `source` (non-empty) **and** `amountCents > 0` are present.
+- If neither condition is met, the form must block submission and show a clear inline error.
+
+### Shared components (attachments + media)
+
+- Receipt and image attachments must use the **shared media utilities/components** (no per-screen custom logic).
+- The shared components must support:
+  - `offline://<mediaId>` placeholders
+  - images + PDFs for receipts
+  - remove + preview
+  - max counts (receipts: 5, other images: 5)
+
 ### 4) Edit a transaction
 Summary:
 - Edit loads the current transaction and allows updating fields, adding/removing images, and managing itemization.
@@ -168,6 +188,30 @@ Summary:
   - audit section (when itemization enabled and not a canonical sale/purchase transaction)
   - delete transaction affordance
 
+Correct behavior (web parity; required): “Add existing items” is a real picker (not an id field)
+- The “Transaction items” section includes an “Add Item” menu with:
+  - “Create item”
+  - “Add existing”
+- “Add existing” opens a modal picker with:
+  - search box
+  - duplicate grouping + group selection
+  - select-all (per tab / visible set)
+  - sticky “Add selected”
+  - tabs:
+    - **Suggested**: items with the same vendor/source as the transaction and no current transaction assignment
+      - Legacy web behavior note (reference only; not a mobile requirement):
+        - The legacy web app populates “Suggested” via `transactionService.getSuggestedItemsForTransaction(accountId, transaction.source, limit)`:
+          - Online path (Supabase): `items.account_id == accountId`, `items.source == transaction.source`, `items.transaction_id IS NULL`, ordered by `date_created` descending, limited (the web picker uses 50).
+          - Offline fallback: uses the offline cache, matches `source` case-insensitively, excludes items with an existing `transactionId`, and sorts newest-first (by `dateCreated` / `createdAt` / `lastUpdated` where available).
+    - **Project**: items in the transaction’s project (only if `transaction.projectId` is non-null)
+    - **Outside**: items outside the transaction’s project; when the transaction is project-scoped, this includes **business inventory** items (`projectId = null`)
+- Add behavior (current web parity):
+  - If adding an item whose `projectId` differs from the transaction’s `projectId`, first “re-home” it by updating `item.projectId` to the transaction’s project id.
+  - Then link items to the transaction (single or bulk).
+  - If any selected item is already linked to a different transaction:
+    - show a confirmation dialog (“Reassign items?”) with a preview of the conflicting items + their current transaction
+    - on confirm, reassign them (and ensure the previous transaction’s linkage is updated/cleaned up)
+
 Parity evidence:
 - Detail layout + sections: `src/pages/TransactionDetail.tsx`
 - Receipts/other upload with offline placeholders + local update + queued remote mutation: `src/pages/TransactionDetail.tsx` (`handleReceiptsUpload`, `handleOtherImagesUpload`, `offlineTransactionService.updateTransaction`)
@@ -175,6 +219,7 @@ Parity evidence:
 - Gallery integration + pin support: `src/pages/TransactionDetail.tsx` (renders `ImageGallery`, pins with `onPinToggle`)
 - Transaction items list integration: `src/pages/TransactionDetail.tsx` (renders `TransactionItemsList` with many handlers)
 - Actions menu constraints for canonical: `src/components/transactions/TransactionActionsMenu.tsx`
+  - Add existing items picker UX + behavior: `src/components/transactions/TransactionItemPicker.tsx` (tabs, outside search, select-all, duplicate grouping, conflict confirm, re-home + assign)
 
 Out-of-scope linkage:
 - Many TransactionDetail item actions (move/sell to project/business inventory) depend on `inventory-operations-and-lineage` semantics. This feature spec captures the **UI contract** and links the multi-entity invariants elsewhere.
@@ -184,6 +229,22 @@ New requirement (itemization ↔ `inheritedBudgetCategoryId`):
 - When linking/assigning an item to a **non-canonical** transaction with a non-null `budgetCategoryId`, set:
   - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 - Linking/unlinking items to a **canonical inventory** transaction must not overwrite `item.inheritedBudgetCategoryId`.
+
+### Implementation changes needed (to align mobile with correct behavior)
+Mobile currently must implement the real “add existing items” flow:
+- **Replace the current “type an item id” affordance** with a picker UI that matches parity:
+  - Suggested / Project / Outside tabs
+  - search, select-all, duplicate grouping, sticky “Add selected”
+- **Outside search semantics**:
+  - When transaction is project-scoped, “Outside” includes other projects + business inventory (`projectId = null`).
+  - When transaction is inventory-scoped, “Outside” should include other projects (and exclude business inventory to avoid listing the same set twice).
+- **Re-home behavior (current parity)**:
+  - When adding an item from outside, update `item.projectId` to the transaction’s project id before linking.
+  - (Optional future improvement): replace this with canonical allocation/deallocation flows once inventory ops invariants are fully in place.
+- **Conflict confirmation**:
+  - If an item is already tied to another transaction, require explicit confirmation before reassigning.
+- **Linking writes**:
+  - Ensure linking/unlinking updates are durable and offline-safe, and respect canonical-vs-non-canonical `inheritedBudgetCategoryId` rules.
 
 ## Offline-first behavior (mobile target)
 

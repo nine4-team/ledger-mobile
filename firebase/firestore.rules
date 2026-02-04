@@ -6,6 +6,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAccountMember(accountId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/accounts/$(accountId)/users/$(request.auth.uid));
+    }
+
     function isRequestCreate() {
       return request.resource.data.keys().hasOnly([
         'type',
@@ -23,6 +28,26 @@ service cloud.firestore {
     // Public-ish user profile document (example).
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Account document (minimal shape for now).
+    // NOTE: Account creation + membership creation is server-owned (Cloud Functions using Admin SDK).
+    match /accounts/{accountId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if false;
+
+      // For now, account updates are server-managed (or future work).
+      allow update, delete: if false;
+    }
+
+    // Account membership docs.
+    // Membership docs are at: accounts/{accountId}/users/{uid}
+    match /accounts/{accountId}/users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if false;
+
+      // For now, membership updates are server-managed (or future work).
+      allow update, delete: if false;
     }
 
     // Quota counters should only be written by trusted server code (Cloud Functions).

@@ -170,6 +170,11 @@ Define consistent picker behavior (search, empty states, create-from-picker, dis
 
 **Contract (stub)**
 
+- **Non-negotiable (required)**:
+  - Space and Transaction “Add existing items” pickers must be implemented as a **single shared picker component** (configurable via `mode` / props), not separate copy-pasted implementations.
+  - The shared implementation must support both contexts without forking logic (e.g., `mode: 'space' | 'transaction'`), so fixes to selection, duplicate grouping, offline gating, and empty states apply everywhere.
+  - Owning location (mobile target): `src/components/ui/Pickers/` (or equivalent shared UI module). Feature screens should only wrap/configure it.
+
 - Pickers must share:
   - input/search behavior (explicit match fields)
   - “create new” affordance rules (where permitted)
