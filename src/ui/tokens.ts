@@ -13,3 +13,6 @@ export const appTokens = {
   },
 } as const;
 
+// TODO(ui-kit): Promote card padding token when UI kit supports it.
+export const CARD_PADDING = 12;
+

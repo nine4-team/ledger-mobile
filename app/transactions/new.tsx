@@ -179,7 +179,7 @@ export default function NewTransactionScreen() {
   };
 
   return (
-    <Screen title="New Transaction">
+    <Screen title="New Transaction" backTarget={fallbackTarget}>
       <View style={styles.container}>
         <AppText variant="body">Source</AppText>
         <TextInput

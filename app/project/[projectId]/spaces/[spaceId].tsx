@@ -6,9 +6,7 @@ import { Screen } from '../../../../src/components/Screen';
 import { useScreenTabs } from '../../../../src/components/ScreenTabs';
 import { AppText } from '../../../../src/components/AppText';
 import { AppButton } from '../../../../src/components/AppButton';
-import { ItemCard } from '../../../../src/components/ItemCard';
-import { GroupedItemCard } from '../../../../src/components/GroupedItemCard';
-import { SegmentedControl } from '../../../../src/components/SegmentedControl';
+import { SharedItemPicker } from '../../../../src/components/SharedItemPicker';
 import { layout } from '../../../../src/ui';
 import { useTheme, useUIKitTheme } from '../../../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../../../src/auth/accountContextStore';
@@ -18,15 +16,13 @@ import { createSpaceTemplate } from '../../../../src/data/spaceTemplatesService'
 import { createProjectScopeConfig, getScopeId } from '../../../../src/data/scopeConfig';
 import { useScopeSwitching } from '../../../../src/data/useScopeSwitching';
 import { useScopedListeners } from '../../../../src/data/useScopedListeners';
-import { subscribeToScopedItems, ScopedItem, subscribeToProjects, ProjectSummary } from '../../../../src/data/scopedListData';
-import { Item, listItemsByProject, subscribeToItem, updateItem } from '../../../../src/data/itemsService';
+import { subscribeToScopedItems, ScopedItem } from '../../../../src/data/scopedListData';
+import { updateItem } from '../../../../src/data/itemsService';
 import { createRepository } from '../../../../src/data/repository';
 import { getTextInputStyle } from '../../../../src/ui/styles/forms';
 import { deleteLocalMediaByUrl, resolveAttachmentState, resolveAttachmentUri, saveLocalMedia } from '../../../../src/offline/media';
-import {
-  requestBusinessToProjectPurchase,
-  requestProjectToProjectMove,
-} from '../../../../src/data/inventoryOperations';
+import { useOutsideItems } from '../../../../src/hooks/useOutsideItems';
+import { resolveItemMove } from '../../../../src/data/resolveItemMove';
 
 type SpaceParams = {
   projectId?: string;
@@ -58,12 +54,14 @@ export default function SpaceDetailScreen() {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('current');
-  const [pickerQuery, setPickerQuery] = useState('');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
-  const [outsideItems, setOutsideItems] = useState<Item[]>([]);
-  const [outsideLoading, setOutsideLoading] = useState(false);
-  const [outsideError, setOutsideError] = useState<string | null>(null);
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+
+  const outsideItemsHook = useOutsideItems({
+    accountId,
+    currentProjectId: projectId ?? null,
+    scope: 'project',
+    includeInventory: true,
+  });
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
   const [bulkTargetSpaceId, setBulkTargetSpaceId] = useState('');
@@ -103,13 +101,6 @@ export default function SpaceDetailScreen() {
     return () => unsubscribe();
   }, [accountId, projectId]);
 
-  useEffect(() => {
-    if (!accountId) {
-      setProjects([]);
-      return;
-    }
-    return subscribeToProjects(accountId, (next) => setProjects(next));
-  }, [accountId]);
 
   useEffect(() => {
     if (!accountId || !userId) {
@@ -137,64 +128,13 @@ export default function SpaceDetailScreen() {
 
   const spaceItems = useMemo(() => items.filter((item) => item.spaceId === spaceId), [items, spaceId]);
   const availableItems = useMemo(() => items.filter((item) => item.spaceId !== spaceId), [items, spaceId]);
-  const filteredAvailableItems = useMemo(() => {
-    const needle = pickerQuery.trim().toLowerCase();
-    if (!needle) return availableItems;
-    return availableItems.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
-      return label.includes(needle);
-    });
-  }, [availableItems, pickerQuery]);
 
-  const filteredOutsideItems = useMemo(() => {
-    const needle = pickerQuery.trim().toLowerCase();
-    if (!needle) return outsideItems;
-    return outsideItems.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
-      return label.includes(needle);
-    });
-  }, [outsideItems, pickerQuery]);
-
-  const activePickerItems = pickerTab === 'outside' ? filteredOutsideItems : filteredAvailableItems;
-
-  const pickerGroups = useMemo(() => {
-    const groups = new Map<string, ScopedItem[]>();
-    activePickerItems.forEach((item) => {
-      const label = item.name?.trim() || item.description?.trim() || 'Item';
-      const key = label.toLowerCase();
-      const list = groups.get(key) ?? [];
-      list.push(item as ScopedItem);
-      groups.set(key, list);
-    });
-    return Array.from(groups.entries());
-  }, [activePickerItems]);
-
-  const loadOutsideItems = useCallback(async () => {
-    if (!accountId || !projectId) return;
-    setOutsideLoading(true);
-    setOutsideError(null);
-    try {
-      const otherProjects = projects.filter((project) => project.id !== projectId);
-      const requests = [
-        listItemsByProject(accountId, null, { mode: 'offline' }),
-        ...otherProjects.map((project) => listItemsByProject(accountId, project.id, { mode: 'offline' })),
-      ];
-      const results = await Promise.all(requests);
-      const flattened = results.flat();
-      const unique = new Map(flattened.map((item) => [item.id, item]));
-      setOutsideItems(Array.from(unique.values()));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to load outside items.';
-      setOutsideError(message);
-    } finally {
-      setOutsideLoading(false);
-    }
-  }, [accountId, projectId, projects]);
+  const activePickerItems = pickerTab === 'outside' ? outsideItemsHook.items : availableItems;
 
   useEffect(() => {
     if (!isPickingItems || pickerTab !== 'outside') return;
-    void loadOutsideItems();
-  }, [isPickingItems, pickerTab, loadOutsideItems]);
+    void outsideItemsHook.reload();
+  }, [isPickingItems, pickerTab, outsideItemsHook]);
 
   const handleSaveChecklists = useCallback(
     async (next: Checklist[]) => {
@@ -255,40 +195,12 @@ export default function SpaceDetailScreen() {
     [accountId, space?.images, spaceId]
   );
 
-  const waitForScopeThenAssignSpace = useCallback(
-    (itemId: string, targetProjectId: string | null, targetSpaceId: string | null) =>
-      new Promise<void>((resolve) => {
-        if (!accountId) {
-          resolve();
-          return;
-        }
-        let resolved = false;
-        let unsubscribe: () => void = () => {};
-        const timeoutId = setTimeout(() => {
-          if (resolved) return;
-          resolved = true;
-          unsubscribe();
-          resolve();
-        }, 20000);
-        unsubscribe = subscribeToItem(accountId, itemId, (item) => {
-          if (!item || resolved) return;
-          const matchesScope = targetProjectId ? item.projectId === targetProjectId : item.projectId == null;
-          if (!matchesScope) return;
-          resolved = true;
-          clearTimeout(timeoutId);
-          unsubscribe();
-          void updateItem(accountId, itemId, { spaceId: targetSpaceId });
-          resolve();
-        });
-      }),
-    [accountId, spaceId]
-  );
-
   const handleAddSelectedItems = useCallback(async () => {
     if (!accountId || pickerSelectedIds.length === 0 || !projectId) return;
-    const sourceItems = pickerTab === 'outside' ? filteredOutsideItems : filteredAvailableItems;
-    const selectedItems = sourceItems.filter((item) => pickerSelectedIds.includes(item.id));
+    const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
+    
     if (pickerTab !== 'outside') {
+      // Items already in the project, just assign to space
       await Promise.all(
         selectedItems.map((item) => updateItem(accountId, item.id, { spaceId }))
       );
@@ -297,6 +209,7 @@ export default function SpaceDetailScreen() {
       return;
     }
 
+    // Items from outside need to be moved first
     const missingCategory = selectedItems.filter((item) => !item.inheritedBudgetCategoryId);
     if (missingCategory.length > 0) {
       Alert.alert(
@@ -308,44 +221,34 @@ export default function SpaceDetailScreen() {
 
     await Promise.all(
       selectedItems.map(async (item) => {
+        // Block items linked to transactions
         if (item.transactionId) {
           return;
         }
-        if (item.projectId === projectId) {
-          await updateItem(accountId, item.id, { spaceId });
-          return;
-        }
-        if (item.projectId == null) {
-          await requestBusinessToProjectPurchase({
-            accountId,
-            targetProjectId: projectId,
-            inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
-            items: [{ id: item.id, projectId: item.projectId ?? null, transactionId: item.transactionId ?? null }],
-          });
-          await waitForScopeThenAssignSpace(item.id, projectId, spaceId ?? null);
-          return;
-        }
-        await requestProjectToProjectMove({
+
+        // Use resolveItemMove to handle project moves and space assignment
+        const result = await resolveItemMove(item, {
           accountId,
-          sourceProjectId: item.projectId,
+          itemId: item.id,
           targetProjectId: projectId,
+          targetSpaceId: spaceId ?? null,
           inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
-          items: [{ id: item.id, projectId: item.projectId ?? null, transactionId: item.transactionId ?? null }],
         });
-        await waitForScopeThenAssignSpace(item.id, projectId, spaceId ?? null);
+
+        if (!result.success) {
+          console.error(`Failed to move item ${item.id}: ${result.error}`);
+        }
       })
     );
     setPickerSelectedIds([]);
     setIsPickingItems(false);
   }, [
     accountId,
-    filteredAvailableItems,
-    filteredOutsideItems,
+    activePickerItems,
     pickerSelectedIds,
     pickerTab,
     projectId,
     spaceId,
-    waitForScopeThenAssignSpace,
   ]);
 
   const handleBulkRemove = useCallback(async () => {
@@ -456,148 +359,31 @@ export default function SpaceDetailScreen() {
               />
             </View>
             {isPickingItems ? (
-              <View style={styles.pickerPanel}>
-                <SegmentedControl
-                  value={pickerTab}
-                  options={[
-                    { value: 'current', label: 'In this project', accessibilityLabel: 'In this project tab' },
-                    { value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' },
-                  ]}
-                  onChange={(next) => {
-                    setPickerTab(next);
-                    setPickerSelectedIds([]);
-                  }}
-                  accessibilityLabel="Item picker tabs"
-                />
-                <TextInput
-                  value={pickerQuery}
-                  onChangeText={setPickerQuery}
-                  placeholder="Search items"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 })}
-                />
-                <View style={styles.actions}>
-                  <AppButton
-                    title="Select all visible"
-                    variant="secondary"
-                    onPress={() =>
-                      setPickerSelectedIds(
-                        activePickerItems
-                          .filter((item) => item.spaceId !== spaceId && !item.transactionId)
-                          .map((item) => item.id)
-                      )
-                    }
-                  />
-                  <AppButton
-                    title={`Add Selected (${pickerSelectedIds.length})`}
-                    onPress={handleAddSelectedItems}
-                    disabled={pickerSelectedIds.length === 0}
-                  />
-                </View>
-                <View style={styles.list}>
-                  {pickerGroups.map(([label, groupItems]) => {
-                    const eligibleIds = groupItems
-                      .filter((item) => item.spaceId !== spaceId && !item.transactionId)
-                      .map((item) => item.id);
-                    const groupAllSelected =
-                      eligibleIds.length > 0 && eligibleIds.every((itemId) => pickerSelectedIds.includes(itemId));
-
-                    if (groupItems.length > 1) {
-                      return (
-                        <GroupedItemCard
-                          key={label}
-                          summary={{ description: label }}
-                          countLabel={`×${groupItems.length}`}
-                          items={groupItems.map((item) => {
-                            const description = item.name?.trim() || item.description || 'Item';
-                            const locked = item.spaceId === spaceId || !!item.transactionId;
-                            const statusLabel =
-                              item.spaceId === spaceId ? 'Already here' : item.transactionId ? 'Linked' : undefined;
-                            const selected = pickerSelectedIds.includes(item.id);
-
-                            return {
-                              description,
-                              selected,
-                              onSelectedChange: locked
-                                ? undefined
-                                : (next) =>
-                                    setPickerSelectedIds((prev) => {
-                                      if (next) return prev.includes(item.id) ? prev : [...prev, item.id];
-                                      return prev.filter((entry) => entry !== item.id);
-                                    }),
-                              onPress: locked
-                                ? undefined
-                                : () =>
-                                    setPickerSelectedIds((prev) =>
-                                      prev.includes(item.id)
-                                        ? prev.filter((entry) => entry !== item.id)
-                                        : [...prev, item.id]
-                                    ),
-                              statusLabel,
-                              style: locked ? { opacity: 0.6 } : undefined,
-                            };
-                          })}
-                          selected={groupAllSelected}
-                          onSelectedChange={
-                            eligibleIds.length === 0
-                              ? undefined
-                              : (next) => {
-                                  setPickerSelectedIds((prev) => {
-                                    if (next) return Array.from(new Set([...prev, ...eligibleIds]));
-                                    const remove = new Set(eligibleIds);
-                                    return prev.filter((entry) => !remove.has(entry));
-                                  });
-                                }
-                          }
-                        />
-                      );
-                    }
-
-                    const [only] = groupItems;
-                    const description = only.name?.trim() || only.description || 'Item';
-                    const locked = only.spaceId === spaceId || !!only.transactionId;
-                    const selected = pickerSelectedIds.includes(only.id);
-                    const statusLabel =
-                      only.spaceId === spaceId ? 'Already here' : only.transactionId ? 'Linked' : undefined;
-
-                    return (
-                      <ItemCard
-                        key={only.id}
-                        description={description}
-                        selected={selected}
-                        onSelectedChange={locked ? undefined : (next) => {
-                          setPickerSelectedIds((prev) => {
-                            if (next) return prev.includes(only.id) ? prev : [...prev, only.id];
-                            return prev.filter((entry) => entry !== only.id);
-                          });
-                        }}
-                        onPress={locked ? undefined : () => {
-                          setPickerSelectedIds((prev) =>
-                            prev.includes(only.id) ? prev.filter((entry) => entry !== only.id) : [...prev, only.id]
-                          );
-                        }}
-                        statusLabel={statusLabel}
-                        style={locked ? { opacity: 0.6 } : undefined}
-                      />
-                    );
-                  })}
-                  {pickerGroups.length === 0 ? (
-                    <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                      No items available.
-                    </AppText>
-                  ) : null}
-                  {pickerTab === 'outside' && outsideLoading ? (
-                    <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                      Loading outside items…
-                    </AppText>
-                  ) : null}
-                  {pickerTab === 'outside' && outsideError ? (
-                    <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                      {outsideError}
-                    </AppText>
-                  ) : null}
-                </View>
-              </View>
+              <SharedItemPicker
+                tabs={[
+                  { value: 'current', label: 'In this project', accessibilityLabel: 'In this project tab' },
+                  { value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' },
+                ]}
+                selectedTab={pickerTab}
+                onTabChange={(next) => {
+                  setPickerTab(next);
+                  setPickerSelectedIds([]);
+                }}
+                items={activePickerItems}
+                selectedIds={pickerSelectedIds}
+                onSelectionChange={setPickerSelectedIds}
+                eligibilityCheck={{
+                  isEligible: (item) => item.spaceId !== spaceId && !item.transactionId,
+                  getStatusLabel: (item) => {
+                    if (item.spaceId === spaceId) return 'Already here';
+                    if (item.transactionId) return 'Linked';
+                    return undefined;
+                  },
+                }}
+                onAddSelected={handleAddSelectedItems}
+                outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
+                outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
+              />
             ) : (
               <>
                 {bulkMode ? (
@@ -828,9 +614,6 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 10,
-  },
-  pickerPanel: {
-    gap: 12,
   },
   bulkPanel: {
     gap: 10,

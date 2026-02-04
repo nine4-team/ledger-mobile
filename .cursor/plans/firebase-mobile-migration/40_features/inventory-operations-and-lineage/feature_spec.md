@@ -189,11 +189,38 @@ Lineage is required to support:
 - Auditability across cross-scope moves
 
 Required model (conceptual):
-- Append-only edges: `(fromTransactionId, toTransactionId, createdAt, createdBy, note?)`
+- Append-only edges: `(fromTransactionId, toTransactionId, createdAt, createdBy, movementKind?, source?, note?)`
+  - `movementKind` is **intent**, not an inference:
+    - `sold`: economic sale / inventory designation / allocation sale
+    - `returned`: explicit move into a Return transaction
+    - `correction`: non-economic mistake-fix move
+    - `association`: server-recorded audit edge when `item.transactionId` changes
+  - `source` is provenance (`app|server|migration`), so UI can hide/grey “automatic” edges if desired.
 - Maintain pointers on the item record for quick UI access (e.g. `latestTransactionId`, optionally `originTransactionId`)
+
+Association vs intent edges (not mutually exclusive):
+- **Association edges (audit, always):** for every change to `item.transactionId`, append an edge with:
+  - `movementKind = "association"`
+  - `source = "server"`
+  - `fromTransactionId = old item.transactionId`
+  - `toTransactionId = new item.transactionId`
+- **Intent edges (when known):** append a *separate* edge when user intent is clear:
+  - `movementKind = "sold"`: written by canonical request-doc inventory flows
+    (`ITEM_SALE_PROJECT_TO_BUSINESS`, `ITEM_SALE_BUSINESS_TO_PROJECT`, `ITEM_SALE_PROJECT_TO_PROJECT`)
+  - `movementKind = "returned"`: written when linking into a Return transaction
+  - `movementKind = "correction"`: written only for explicit “fix mistake” actions (do not infer)
+
+Short rationale:
+- The audit trail never loses history, even for mistakes.
+- Sold/Returned UI stays clean because it uses intent edges only.
 
 Parity evidence:
 - `src/services/lineageService.ts` (`appendItemLineageEdge`, `updateItemLineagePointers`)
+
+Observed in code (Firebase lineage write points):
+- `ledger_mobile/firebase/functions/src/index.ts` (top comment block; design overview)
+- `ledger_mobile/firebase/functions/src/index.ts` (`onItemTransactionIdChanged` → `movementKind: "association"` + `movementKind: "returned"` when Return)
+- `ledger_mobile/firebase/functions/src/index.ts` (`handleProjectToBusiness`, `handleBusinessToProject`, `handleProjectToProject` → `movementKind: "sold"`)
 
 ## Collaboration / realtime expectations (Firebase target)
 - Use scoped listeners bounded to the active scope per `OFFLINE_FIRST_V2_SPEC.md` (detach on background, reattach on resume).

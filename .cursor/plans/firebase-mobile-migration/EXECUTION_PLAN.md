@@ -192,7 +192,7 @@ Status / known gaps (important):
 Status:
 - ✅ Transactions gap closed: “Add existing items” now uses a picker flow (Suggested/Project/Outside, search, select-all, duplicate grouping, conflict confirm) with parity “re-home then link” behavior.
 - ✅ Spaces gap closed: “Add existing items” now supports outside items (other projects + business inventory), blocks transaction-linked items, and runs canonical pull-in operations before assigning `spaceId`.
-- ⚠️ Phase 4 incomplete: shared UI components were not used in the new add-item pickers (see `40_features/_cross_cutting/ui/shared_component_audit.md`).
+- ✅ Phase 4 follow-up closed: shared add-item picker UI + outside-items hook + conflict dialog + move helper are now shared and used in Transactions/Spaces.
 - ⚠️ Follow-up (optional): consider moving the transaction “re-home then link” logic (when adding an outside item to a transaction: update `item.projectId` / clear `spaceId` as needed, then set `item.transactionId`) into the canonical inventory-ops request-doc flows—but only after those server-owned invariants explicitly cover transaction linking/unlinking rules (conflict reassignment, canonical vs non-canonical behavior, `inheritedBudgetCategoryId`).
 
 ---

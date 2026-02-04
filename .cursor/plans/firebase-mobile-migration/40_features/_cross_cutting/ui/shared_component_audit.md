@@ -13,7 +13,7 @@ This note captures where we failed to use existing shared UI components and what
 - `app/transactions/[id].tsx`: add-existing picker now uses `SegmentedControl` + `ItemCard`/`GroupedItemCard`.
 - `app/project/[projectId]/spaces/[spaceId].tsx`: add-existing picker now uses `SegmentedControl` + `ItemCard`/`GroupedItemCard`.
 
-## Shared components that still do not exist (should be shared)
+## Shared components now implemented
 
 - Shared add-existing-items picker UI (tabs, search, select-all, duplicate grouping, sticky add button).
 - Shared “outside items” fetch + filter hook (other projects + optional inventory).

@@ -21,3 +21,5 @@ export { NetworkStatusBanner } from './NetworkStatusBanner';
 export { SyncStatusPill } from './SyncStatusPill';
 export { RetrySyncButton } from './RetrySyncButton';
 export { BackgroundSyncErrorNotifier } from './BackgroundSyncErrorNotifier';
+export { SharedItemPicker } from './SharedItemPicker';
+export { showItemConflictDialog } from './ItemConflictDialog';

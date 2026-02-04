@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
+import { AppButton } from './AppButton';
 import { ListStateControls } from './ListStateControls';
 import { ItemCard } from './ItemCard';
+import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
 import { layout } from '../ui';
@@ -111,6 +114,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
+  const screenRefresh = useScreenRefresh();
 
   useEffect(() => {
     setQuery(state.search ?? '');
@@ -377,31 +381,99 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     });
   }, [listStateKey, router, scopeConfig.projectId, scopeConfig.scope]);
 
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((row) => row.id));
+    }
+  }, [filtered, selectedIds.length]);
+
+  const allSelected = bulkMode && selectedIds.length === filtered.length && filtered.length > 0;
+
   return (
     <View style={styles.container}>
-      <ListStateControls
-        title={scopeConfig.scope === 'inventory' ? 'Inventory items' : 'Project items'}
-        search={query}
-        onChangeSearch={setQuery}
-        sortLabel={sortLabel}
-        onToggleSort={handleToggleSort}
-      />
-      <View style={styles.actionsRow}>
-        <AppText variant="caption" style={styles.scopeNote}>
-          Scope: {scopeConfig.scope === 'inventory' ? 'Inventory' : `Project ${scopeConfig.projectId ?? '—'}`}
-        </AppText>
-        <View style={styles.actionsRow}>
-          <Pressable onPress={() => setFiltersOpen((prev) => !prev)}>
-            <AppText variant="caption">Filters</AppText>
-          </Pressable>
-          <Pressable onPress={() => setBulkMode((prev) => !prev)}>
-            <AppText variant="caption">{bulkMode ? 'Done' : 'Bulk select'}</AppText>
-          </Pressable>
-          <Pressable onPress={handleCreateItem}>
-            <AppText variant="caption">Add item</AppText>
-          </Pressable>
+      {/* Control Bar */}
+      <View style={[styles.controlBar, { backgroundColor: uiKitTheme.background.surface }]}>
+        <ListStateControls
+          search={query}
+          onChangeSearch={setQuery}
+        />
+        <View style={styles.controlButtons}>
+          <AppButton
+            title="Sort"
+            variant="secondary"
+            onPress={handleToggleSort}
+            style={styles.controlButton}
+            leftIcon={
+              <MaterialIcons 
+                name="sort" 
+                size={18} 
+                color={uiKitTheme.button.secondary.text} 
+              />
+            }
+          />
+          <AppButton
+            title="Filter"
+            variant="secondary"
+            onPress={() => setFiltersOpen((prev) => !prev)}
+            style={styles.controlButton}
+            leftIcon={
+              <MaterialIcons 
+                name="filter-list" 
+                size={18} 
+                color={uiKitTheme.button.secondary.text} 
+              />
+            }
+          />
+          <AppButton
+            title="Add"
+            variant="primary"
+            onPress={handleCreateItem}
+            style={styles.controlButton}
+            leftIcon={
+              <MaterialIcons 
+                name="add" 
+                size={18} 
+                color={uiKitTheme.button.primary.text} 
+              />
+            }
+          />
         </View>
       </View>
+      {/* Select All - moved below search */}
+      <Pressable
+        onPress={() => {
+          if (!bulkMode) {
+            setBulkMode(true);
+            handleSelectAll();
+          } else {
+            handleSelectAll();
+          }
+        }}
+        style={({ pressed }) => [
+          styles.selectAllRow,
+          pressed && styles.selectAllPressed,
+        ]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: bulkMode && allSelected }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <View
+          style={[
+            styles.checkbox,
+            {
+              borderColor: uiKitTheme.border.primary,
+              backgroundColor: bulkMode && allSelected ? uiKitTheme.primary.main : 'transparent',
+            },
+          ]}
+        >
+          {bulkMode && allSelected && (
+            <AppText style={styles.checkmark}>✓</AppText>
+          )}
+        </View>
+        <Text style={[styles.selectAllLabel, { color: theme.colors.textSecondary }]}>Select all</Text>
+      </Pressable>
       {filtersOpen ? (
         <View style={styles.filterPanel}>
           <View style={styles.filterRow}>
@@ -437,29 +509,46 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         </View>
       ) : null}
       {bulkMode ? (
-        <View style={styles.bulkPanel}>
-          <AppText variant="caption">{selectedIds.length} selected</AppText>
+        <View style={[styles.bulkPanel, { backgroundColor: uiKitTheme.background.surface, borderColor: uiKitTheme.border.primary }]}>
+          <View style={styles.bulkHeader}>
+            <AppText variant="caption" style={{ fontWeight: '600' }}>
+              {selectedIds.length} selected
+            </AppText>
+            <Pressable onPress={() => setBulkMode(false)}>
+              <AppText variant="caption" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                Done
+              </AppText>
+            </Pressable>
+          </View>
           {bulkError ? (
-            <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            <AppText variant="caption" style={{ color: theme.colors.error }}>
               {bulkError}
             </AppText>
           ) : null}
-          <TextInput
-            value={bulkSpaceId}
-            onChangeText={setBulkSpaceId}
-            placeholder="Target space id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
-          />
           <View style={styles.bulkActions}>
-            <Pressable onPress={handleBulkMoveToSpace}>
-              <AppText variant="caption">Move to space</AppText>
-            </Pressable>
-            <Pressable onPress={handleBulkRemoveFromSpace}>
-              <AppText variant="caption">Remove from space</AppText>
-            </Pressable>
+            <View style={styles.bulkActionGroup}>
+              <TextInput
+                value={bulkSpaceId}
+                onChangeText={setBulkSpaceId}
+                placeholder="Target space id"
+                placeholderTextColor={theme.colors.textSecondary}
+                style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
+              />
+              <AppButton
+                title="Move to space"
+                variant="secondary"
+                onPress={handleBulkMoveToSpace}
+                style={styles.bulkActionButton}
+              />
+              <AppButton
+                title="Remove from space"
+                variant="secondary"
+                onPress={handleBulkRemoveFromSpace}
+                style={styles.bulkActionButton}
+              />
+            </View>
             {scopeConfig.scope === 'inventory' ? (
-              <>
+              <View style={styles.bulkActionGroup}>
                 <TextInput
                   value={bulkProjectId}
                   onChangeText={setBulkProjectId}
@@ -474,30 +563,41 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                   placeholderTextColor={theme.colors.textSecondary}
                   style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
                 />
-                <Pressable onPress={handleBulkAllocateToProject}>
-                  <AppText variant="caption">Allocate to project</AppText>
-                </Pressable>
-              </>
+                <AppButton
+                  title="Allocate to project"
+                  variant="secondary"
+                  onPress={handleBulkAllocateToProject}
+                  style={styles.bulkActionButton}
+                />
+              </View>
             ) : null}
             {scopeConfig.scope === 'project' ? (
-              <Pressable onPress={handleBulkSellToBusiness}>
-                <AppText variant="caption">Sell to business</AppText>
-              </Pressable>
+              <AppButton
+                title="Sell to business"
+                variant="secondary"
+                onPress={handleBulkSellToBusiness}
+                style={styles.bulkActionButton}
+              />
             ) : null}
-            <Pressable onPress={handleBulkDelete}>
-              <AppText variant="caption">Delete</AppText>
-            </Pressable>
+            <AppButton
+              title="Delete"
+              variant="secondary"
+              onPress={handleBulkDelete}
+              style={styles.bulkActionButton}
+            />
           </View>
         </View>
       ) : null}
-      <AppText variant="caption" style={styles.scopeNote}>
-        Location field: {scopeConfig.fields?.showBusinessInventoryLocation ? 'Shown' : 'Hidden'}
-      </AppText>
       <FlatList
         ref={listRef}
         data={groupedRows}
         keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
         contentContainerStyle={styles.list}
+        refreshControl={
+          screenRefresh ? (
+            <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+          ) : undefined
+        }
         onScroll={(event) => {
           lastScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
         }}
@@ -590,19 +690,76 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
-  scopeNote: {
-    paddingTop: 4,
+  controlBar: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  actionsRow: {
+  selectAllRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
+    marginTop: -6,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  selectAllPressed: {
+    opacity: 0.6,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 18,
+  },
+  selectAllLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  controlButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+  },
+  controlButton: {
+    flex: 1,
+    minHeight: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  bulkSelectButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  bulkSelectText: {
+    fontWeight: '500',
   },
   list: {
+    flexGrow: 1,
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
   },
   emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
   },
   row: {
@@ -642,13 +799,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   bulkPanel: {
-    gap: 10,
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  bulkHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   bulkActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 12,
-    alignItems: 'center',
+  },
+  bulkActionGroup: {
+    gap: 8,
+  },
+  bulkActionButton: {
+    minHeight: 36,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   groupRow: {
     borderWidth: 1,

@@ -14,6 +14,7 @@ export type ProjectToBusinessPayload = {
   itemId: string;
   sourceProjectId: string;
   expected: InventoryOperationExpected;
+  note?: string | null;
 };
 
 export type BusinessToProjectPayload = {
@@ -54,6 +55,7 @@ export async function requestProjectToBusinessSale(params: {
         itemProjectId: item.projectId ?? null,
         itemTransactionId: item.transactionId ?? null,
       },
+      note: params.note ?? null,
     };
     const opId = params.opId ?? generateRequestOpId();
     const requestId = await createRequestDoc('ITEM_SALE_PROJECT_TO_BUSINESS', payload, { accountId: params.accountId, scope: 'account' }, opId);

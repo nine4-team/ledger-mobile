@@ -20,6 +20,9 @@ function getCallableErrorMessage(error: unknown): string {
   if (code.includes('not-found')) {
     return 'Backend is not deployed yet. Start emulators or deploy Cloud Functions, then try again.';
   }
+  if (code.includes('unimplemented')) {
+    return 'Backend is not implemented or deployed yet. Start emulators or deploy Cloud Functions, then try again.';
+  }
   if (code.includes('unavailable')) {
     return 'Backend is not reachable. If you are using emulators, make sure they are running.';
   }
@@ -28,6 +31,9 @@ function getCallableErrorMessage(error: unknown): string {
   }
   if (code.includes('permission-denied')) {
     return 'Permission denied by Firestore rules. Double-check rules + that you are signed in.';
+  }
+  if (message.toLowerCase().includes('not implemented')) {
+    return 'Backend is not implemented or deployed yet. Start emulators or deploy Cloud Functions, then try again.';
   }
   if (message) {
     return message;
@@ -167,7 +173,11 @@ export default function AccountSelectScreen() {
       await setAccountId(accountId);
       router.replace('/(tabs)');
     } catch (error) {
-      console.warn('[account-select] create account failed');
+      const e = error as any;
+      console.warn('[account-select] create account failed', {
+        code: e?.code,
+        message: e?.message,
+      });
       Alert.alert('Could not create account', getCallableErrorMessage(error));
     } finally {
       setCreating(false);

@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, StyleSheet, Alert, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Screen } from '../../src/components/Screen';
+import { Screen, useScreenRefresh } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
 import { ExpandableCard } from '../../src/components/ExpandableCard';
@@ -44,7 +44,11 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
   const uiKitTheme = useUIKitTheme();
   const { appearanceMode, setAppearanceMode } = useAppearance();
   const screenTabs = useScreenTabs();
+  const screenRefresh = useScreenRefresh();
   const primaryTabKey = screenTabs?.selectedKey ?? 'tab-one';
+  const refreshControl = screenRefresh ? (
+    <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+  ) : undefined;
   const [componentsScrollEnabled, setComponentsScrollEnabled] = useState(true);
   const [activeCategories, setActiveCategories] = useState<TemplateToggleListItem[]>([
     { id: 'cat-1', name: 'Additional Requests', itemize: true },
@@ -97,6 +101,7 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
         contentContainerStyle={styles.componentsScrollContent}
         showsVerticalScrollIndicator={false}
         scrollEnabled={componentsScrollEnabled}
+        refreshControl={refreshControl}
       >
         <TemplateToggleListCard
           title="Active Categories"
@@ -213,14 +218,24 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
 
   if (primaryTabKey === 'tab-two') {
     return (
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={refreshControl}
+      >
         <AppText variant="body">{subtabLabel} content goes here.</AppText>
       </ScrollView>
     );
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+      refreshControl={refreshControl}
+    >
       <View style={styles.section}>
         <AppText
           variant="caption"
@@ -329,10 +344,17 @@ function SettingsContent({ selectedSubTabKey }: SettingsContentProps) {
 
 export default function SettingsScreen() {
   const [selectedSubTabKey, setSelectedSubTabKey] = useState<string>(SECONDARY_TABS[0]?.key ?? 'subtab-one');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setIsRefreshing(false);
+  }, []);
 
   return (
     <Screen
       title="Settings"
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
       tabs={PRIMARY_TABS}
       renderBelowTabs={({ selectedKey }) =>
         selectedKey === 'tab-two' ? (

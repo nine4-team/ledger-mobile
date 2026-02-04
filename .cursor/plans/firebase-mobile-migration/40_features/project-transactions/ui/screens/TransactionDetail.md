@@ -23,8 +23,8 @@ Shared-module requirement:
   - Transaction by `transactionId`
   - Project by `projectId` (for display and routing; only when `scope === 'project'`)
   - Budget categories (for category display and itemization-enabled determination)
-  - Transaction items (items linked to this transaction), plus “moved out” items for the moved section
-  - Optional: lineage edges/flags used by cross-scope actions
+  - Transaction items (items currently linked to this transaction)
+  - Lineage edges for this transaction (filter by intent `movementKind` for **Sold** and **Returned**)
 - Derived view models:
   - Canonical title mapping
   - Canonical total computation (canonical sale/purchase) for display
@@ -107,7 +107,9 @@ When the user links/assigns items to this transaction:
 - Transaction items section (itemization):
   - Visible when itemization is enabled OR items exist
   - If disabled but items exist: show warning
-  - Current items list + moved items list (read-only-ish/opacity)
+  - Current items list
+  - “Sold” list (items that left due to an economic sale / inventory designation / allocation sale)
+  - “Returned” list (items that left into an explicit Return transaction)
   - Bulk selection + bulk actions + per-item menus
 - Optional audit section (only when itemization enabled and not canonical sale/purchase)
 - Metadata footer with delete button
@@ -166,6 +168,31 @@ When the user links/assigns items to this transaction:
 ## Performance notes
 - Avoid N+1 network calls for completeness/lineage in mobile implementation; rely on local DB joins/derived tables.
 - Itemization list may require virtualization and debounced search in large transactions.
+
+## “Moved item” redesign (Firebase adaptation; required semantics)
+This screen must **not** show a generic “Moved” bucket.
+
+Instead:
+- **Current items** = items where `item.transactionId === transactionId` (truth).
+- **Sold** = lineage edges where:
+  - `fromTransactionId === transactionId`
+  - `movementKind === "sold"`
+- **Returned** = lineage edges where:
+  - `fromTransactionId === transactionId`
+  - `movementKind === "returned"`
+
+Notes:
+- Corrective moves must not show up as Sold/Returned:
+  - `movementKind === "correction"` is excluded from those sections.
+- The system also records server-side `movementKind === "association"` edges for audit, but the UI should not surface those as “Sold/Returned”.
+- Association edges can exist alongside intent edges; use intent edges only for these sections.
+Short rationale:
+- Sold/Returned must reflect user intent, not every link/unlink.
+
+Observed in code (Firebase lineage write points):
+- `ledger_mobile/firebase/functions/src/index.ts` (top comment block; design overview)
+- `ledger_mobile/firebase/functions/src/index.ts` (`onItemTransactionIdChanged` → `movementKind: "association"` + `movementKind: "returned"` when Return)
+- `ledger_mobile/firebase/functions/src/index.ts` (`handleProjectToBusiness`, `handleBusinessToProject`, `handleProjectToProject` → `movementKind: "sold"`)
 
 ## Parity evidence
 - Receipts section UI + add/upload indicator: Observed in `src/pages/TransactionDetail.tsx` (Receipts block, `UploadActivityIndicator`).

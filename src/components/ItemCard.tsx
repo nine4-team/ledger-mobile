@@ -4,7 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
 
 export type ItemCardProps = {
   description: string;
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   content: {
-    padding: CARD_PADDING,
+    padding: APP_CARD_PADDING,
     gap: 12,
   },
   topRow: {

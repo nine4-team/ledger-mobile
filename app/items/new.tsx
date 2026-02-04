@@ -126,7 +126,7 @@ export default function NewItemScreen() {
   };
 
   return (
-    <Screen title="New Item">
+    <Screen title="New Item" backTarget={fallbackTarget}>
       <View style={styles.container}>
         <AppText variant="body">Name</AppText>
         <TextInput

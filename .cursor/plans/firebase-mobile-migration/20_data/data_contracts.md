@@ -426,6 +426,22 @@ type LineageEdge = {
   createdAt: Timestamp;
   createdBy: string;
 
+  // Classification used by UI/semantics. This is intentionally not inferred purely
+  // from "where it moved to" because some moves are corrective (non-economic).
+  // `null` is allowed for legacy/unknown edges.
+  movementKind?: "sold" | "returned" | "correction" | "association" | null;
+
+  // Provenance for debugging + filtering (e.g., hide auto association edges in UI).
+  // This replaces the legacy "db_trigger/app" mental model:
+  // - `server` includes request-doc handlers and server-side triggers.
+  source?: "app" | "server" | "migration";
+
+  // Optional scope hints (rules + query helpers).
+  // These are derived by the server at write time and represent the project context
+  // implied by the edge endpoints.
+  fromProjectId?: string | null;
+  toProjectId?: string | null;
+
   note?: string | null;
 } & LifecycleAuditFields;
 ```
@@ -1361,9 +1377,30 @@ Required:
 - `createdBy: string`
 
 Optional:
+- `movementKind?: "sold" | "returned" | "correction" | "association" | null`
+  - `sold`: user intent was an economic sale / inventory designation / allocation sale.
+  - `returned`: user intent was an explicit return into a Return transaction.
+  - `correction`: corrective/non-economic move (fixing a mistake).
+  - `association`: server-recorded audit edge when `item.transactionId` changes.
+  - `null`: legacy/unknown (allowed).
+  - Note: association edges are audit-only and can exist **alongside** intent edges
+    for the same item move. They are not mutually exclusive.
+- `source?: "app" | "server" | "migration"`
+  - `server` includes request-doc handlers and server triggers.
+- `fromProjectId?: string | null`
+- `toProjectId?: string | null`
 - `note?: string | null`
 
 Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
+
+Observed in code (Firebase lineage write points):
+- `ledger_mobile/firebase/functions/src/index.ts` (top comment block; design overview)
+- `ledger_mobile/firebase/functions/src/index.ts` (`onItemTransactionIdChanged` → `movementKind: "association"` + `movementKind: "returned"` when Return)
+- `ledger_mobile/firebase/functions/src/index.ts` (`handleProjectToBusiness`, `handleBusinessToProject`, `handleProjectToProject` → `movementKind: "sold"`)
+
+Short rationale:
+- Association edges preserve a full audit trail.
+- Intent edges drive UI labels like Sold/Returned without guesswork.
 
 ### Firestore location (cross-scope)
 

@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { getScreenContainerStyle, SCREEN_PADDING } from '../ui';
 import { appTokens } from '../ui/tokens';
@@ -19,6 +20,18 @@ interface ScreenProps {
   onPressMenu?: () => void;
   tabs?: ScreenTabItem[];
   initialTabKey?: string;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  /**
+   * Optional fallback target for back navigation when there's no navigation history.
+   * If not provided and router.canGoBack() is false, back button will not be shown.
+   */
+  backTarget?: string;
+  /**
+   * Optional custom handler for back button press.
+   * If provided, this will be used instead of the default back navigation logic.
+   */
+  onPressBack?: () => void;
   /**
    * Optional content rendered between the primary ScreenTabs and the padded content container.
    * Useful for secondary tab bars that should not live inside the screen content area.
@@ -30,6 +43,17 @@ interface ScreenProps {
   }) => React.ReactNode;
 }
 
+type ScreenRefreshContextValue = {
+  refreshing: boolean;
+  onRefresh: () => void;
+};
+
+const ScreenRefreshContext = createContext<ScreenRefreshContextValue | null>(null);
+
+export function useScreenRefresh() {
+  return useContext(ScreenRefreshContext);
+}
+
 export const Screen: React.FC<ScreenProps> = ({
   children,
   style,
@@ -39,17 +63,53 @@ export const Screen: React.FC<ScreenProps> = ({
   onPressMenu,
   tabs,
   initialTabKey,
+  refreshing,
+  onRefresh,
+  backTarget,
+  onPressBack,
   renderBelowTabs,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
+  const router = useRouter();
   const resolvedTabs = useMemo(() => tabs ?? DEFAULT_SCREEN_TABS, [tabs]);
   const defaultKey = useMemo(() => resolvedTabs[0]?.key ?? 'tab-one', [resolvedTabs]);
   const [selectedKey, setSelectedKey] = useState<string>(initialTabKey ?? defaultKey);
+  const refreshContextValue = useMemo<ScreenRefreshContextValue | null>(() => {
+    if (!onRefresh) return null;
+    return { refreshing: Boolean(refreshing), onRefresh };
+  }, [onRefresh, refreshing]);
+
+  const handleBack = useCallback(() => {
+    if (onPressBack) {
+      onPressBack();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    if (backTarget) {
+      router.replace(backTarget);
+    }
+  }, [onPressBack, router, backTarget]);
+
+  const shouldShowBackButton = useMemo(() => {
+    if (onPressBack) return true;
+    if (router.canGoBack()) return true;
+    if (backTarget) return true;
+    return false;
+  }, [onPressBack, router, backTarget]);
 
   const content = (
     <View style={[styles.container, getScreenContainerStyle(uiKitTheme), containerStyle]}>
-      {title ? <TopHeader title={title} onPressMenu={onPressMenu} /> : null}
+      {title ? (
+        <TopHeader
+          title={title}
+          onPressMenu={onPressMenu}
+          onPressBack={shouldShowBackButton ? handleBack : undefined}
+        />
+      ) : null}
       {title ? (
         <ScreenTabs tabs={resolvedTabs} value={selectedKey} onChange={setSelectedKey} initialTabKey={initialTabKey} />
       ) : null}
@@ -72,11 +132,17 @@ export const Screen: React.FC<ScreenProps> = ({
     </View>
   );
 
-  if (!title) return content;
+  const withRefresh = (
+    <ScreenRefreshContext.Provider value={refreshContextValue}>
+      {content}
+    </ScreenRefreshContext.Provider>
+  );
+
+  if (!title) return withRefresh;
 
   return (
     <ScreenTabsProvider value={{ selectedKey, setSelectedKey, tabs: resolvedTabs }}>
-      {content}
+      {withRefresh}
     </ScreenTabsProvider>
   );
 };

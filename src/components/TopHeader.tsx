@@ -17,9 +17,15 @@ export interface TopHeaderProps {
    */
   onPressMenu?: () => void;
   menuAccessibilityLabel?: string;
+  /**
+   * Optional handler for back button press.
+   * If provided, a back button will be shown on the left side.
+   */
+  onPressBack?: () => void;
+  backAccessibilityLabel?: string;
 }
 
-export function TopHeader({ title, onPressMenu, menuAccessibilityLabel }: TopHeaderProps) {
+export function TopHeader({ title, onPressMenu, menuAccessibilityLabel, onPressBack, backAccessibilityLabel }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
@@ -73,7 +79,25 @@ export function TopHeader({ title, onPressMenu, menuAccessibilityLabel }: TopHea
   return (
     <>
       <View style={[styles.header, getScreenHeaderStyle(uiKitTheme, insets)]}>
-        <View style={styles.leftSpacer} />
+        {onPressBack ? (
+          <View style={styles.leftButtonOuter}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={backAccessibilityLabel ?? 'Go back'}
+              hitSlop={10}
+              onPress={onPressBack}
+              style={styles.backButton}
+            >
+              <MaterialIcons
+                name="arrow-back"
+                size={24}
+                color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
+              />
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.leftSpacer} />
+        )}
         <AppText variant="h2" style={styles.title}>
           {title}
         </AppText>
@@ -116,6 +140,19 @@ const styles = StyleSheet.create({
   },
   leftSpacer: {
     width: 60,
+  },
+  leftButtonOuter: {
+    width: 60,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingLeft: 4,
+  },
+  backButton: {
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 32,
+    minHeight: 32,
   },
   rightButtonOuter: {
     width: 60,

@@ -67,15 +67,41 @@ service cloud.firestore {
     // Request-doc pattern (multi-doc correctness). These are scoped examples.
     // Adjust membership checks to your auth model (accounts, teams, etc.).
     match /accounts/{accountId}/projects/{projectId}/requests/{requestId} {
-      allow read: if signedIn();
-      allow create: if signedIn() && isRequestCreate();
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
       allow update, delete: if false;
     }
 
     match /accounts/{accountId}/inventory/requests/{requestId} {
-      allow read: if signedIn();
-      allow create: if signedIn() && isRequestCreate();
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
       allow update, delete: if false;
+    }
+
+    // Core app data (MVP posture).
+    // NOTE: These permissions are intentionally broad for now (account-member access).
+    // Tighten to Roles v2 category-scoped permissions per the security model/specs.
+    match /accounts/{accountId}/items/{itemId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/projects/{projectId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/spaces/{spaceId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/transactions/{transactionId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Lineage edges are append-only and server-produced (request-doc handlers / server triggers).
+    // Clients may read for UI ("sold/returned/where did it go?") but cannot forge history.
+    match /accounts/{accountId}/lineageEdges/{edgeId} {
+      allow read: if isAccountMember(accountId);
+      allow create, update, delete: if false;
     }
   }
 }

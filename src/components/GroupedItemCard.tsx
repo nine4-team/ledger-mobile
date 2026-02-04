@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
 import type { ItemCardProps } from './ItemCard';
 
 export type GroupedItemListSummary = Pick<
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: {
-    padding: CARD_PADDING,
+    padding: APP_CARD_PADDING,
     gap: 0, // Gap handled by margin in summaryRow to match specific layout needs
   },
   headerTopRow: {

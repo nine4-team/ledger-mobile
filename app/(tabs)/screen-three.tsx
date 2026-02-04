@@ -1,15 +1,24 @@
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, RefreshControl, ScrollView } from 'react-native';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { useScreenTabs } from '../../src/components/ScreenTabs';
+import { useScreenRefresh } from '../../src/components/Screen';
 import { TemplateToggleListCard } from '../../src/components/TemplateToggleListCard';
 import { layout } from '../../src/ui';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 export default function ScreenThree() {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setIsRefreshing(false);
+  }, []);
+
   return (
     <Screen
       title="Templates"
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
       tabs={[
         { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
         { key: 'vendors', label: 'Vendors', accessibilityLabel: 'Vendors tab' },
@@ -28,7 +37,11 @@ export default function ScreenThree() {
 
 function TemplatesScreenContent() {
   const screenTabs = useScreenTabs();
+  const screenRefresh = useScreenRefresh();
   const selectedKey = screenTabs?.selectedKey ?? 'spaces';
+  const refreshControl = screenRefresh ? (
+    <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+  ) : undefined;
 
   const [vendorTemplates, setVendorTemplates] = useState(() => [
     { id: 'vendor-1', name: 'Wayfair', itemize: true },
@@ -56,15 +69,23 @@ function TemplatesScreenContent() {
 
   if (selectedKey === 'spaces') {
     return (
-      <View style={styles.placeholder}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.placeholder}
+        refreshControl={refreshControl}
+      >
         <AppText variant="body">Spaces templates go here.</AppText>
-      </View>
+      </ScrollView>
     );
   }
 
   if (selectedKey === 'vendors') {
     return (
-      <View style={styles.placeholder}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.placeholder}
+        refreshControl={refreshControl}
+      >
         <TemplateToggleListCard
           title="Vendors"
           items={vendorTemplates}
@@ -79,12 +100,16 @@ function TemplatesScreenContent() {
           createPlaceholderLabel="Click to create new vendor"
           {...commonCardProps}
         />
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View style={styles.placeholder}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.placeholder}
+      refreshControl={refreshControl}
+    >
       <TemplateToggleListCard
         title="Active Categories"
         items={budgetCategoryTemplates}
@@ -99,11 +124,14 @@ function TemplatesScreenContent() {
         createPlaceholderLabel="Click to create new category"
         {...commonCardProps}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   placeholder: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },

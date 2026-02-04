@@ -4,21 +4,22 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
-import { ItemCard } from '../../src/components/ItemCard';
-import { GroupedItemCard } from '../../src/components/GroupedItemCard';
-import { SegmentedControl } from '../../src/components/SegmentedControl';
+import { SharedItemPicker } from '../../src/components/SharedItemPicker';
+import { showItemConflictDialog } from '../../src/components/ItemConflictDialog';
 import { layout } from '../../src/ui';
 import { useProjectContextStore } from '../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { getTextInputStyle } from '../../src/ui/styles/forms';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../src/data/scopeConfig';
-import { ProjectSummary, ScopedItem, subscribeToProjects, subscribeToScopedItems } from '../../src/data/scopedListData';
-import { Item, listItemsByProject, updateItem } from '../../src/data/itemsService';
+import { ScopedItem, subscribeToScopedItems } from '../../src/data/scopedListData';
+import { Item, updateItem } from '../../src/data/itemsService';
 import { saveLocalMedia } from '../../src/offline/media';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../src/data/transactionsService';
 import { isCanonicalTransactionId } from '../../src/data/inventoryOperations';
+import { useOutsideItems } from '../../src/hooks/useOutsideItems';
+import { resolveItemMove } from '../../src/data/resolveItemMove';
 
 type TransactionDetailParams = {
   id?: string;
@@ -74,12 +75,14 @@ export default function TransactionDetailScreen() {
   const [localImageUri, setLocalImageUri] = useState('');
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
-  const [pickerQuery, setPickerQuery] = useState('');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
-  const [outsideItems, setOutsideItems] = useState<Item[]>([]);
-  const [outsideLoading, setOutsideLoading] = useState(false);
-  const [outsideError, setOutsideError] = useState<string | null>(null);
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+
+  const outsideItemsHook = useOutsideItems({
+    accountId,
+    currentProjectId: projectId ?? null,
+    scope: scope ?? 'project',
+    includeInventory: scope === 'project',
+  });
 
   useEffect(() => {
     if (scope === 'project' && projectId) {
@@ -130,13 +133,6 @@ export default function TransactionDetailScreen() {
     return subscribeToBudgetCategories(accountId, (next) => setBudgetCategories(mapBudgetCategories(next)));
   }, [accountId]);
 
-  useEffect(() => {
-    if (!accountId) {
-      setProjects([]);
-      return;
-    }
-    return subscribeToProjects(accountId, (next) => setProjects(next));
-  }, [accountId]);
 
   useEffect(() => {
     if (!accountId || !id || !scope) {
@@ -186,50 +182,11 @@ export default function TransactionDetailScreen() {
 
   const projectItems = useMemo(() => (projectId ? items : []), [items, projectId]);
 
-  const filteredSuggestedItems = useMemo(() => {
-    const needle = pickerQuery.trim().toLowerCase();
-    if (!needle) return suggestedItems;
-    return suggestedItems.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
-      return label.includes(needle);
-    });
-  }, [pickerQuery, suggestedItems]);
-
-  const filteredProjectItems = useMemo(() => {
-    const needle = pickerQuery.trim().toLowerCase();
-    if (!needle) return projectItems;
-    return projectItems.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
-      return label.includes(needle);
-    });
-  }, [pickerQuery, projectItems]);
-
-  const filteredOutsideItems = useMemo(() => {
-    const needle = pickerQuery.trim().toLowerCase();
-    if (!needle) return outsideItems;
-    return outsideItems.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
-      return label.includes(needle);
-    });
-  }, [pickerQuery, outsideItems]);
-
   const activePickerItems = useMemo(() => {
-    if (pickerTab === 'suggested') return filteredSuggestedItems;
-    if (pickerTab === 'project') return filteredProjectItems;
-    return filteredOutsideItems;
-  }, [filteredOutsideItems, filteredProjectItems, filteredSuggestedItems, pickerTab]);
-
-  const pickerGroups = useMemo(() => {
-    const groups = new Map<string, ScopedItem[]>();
-    activePickerItems.forEach((item) => {
-      const label = item.name?.trim() || item.description?.trim() || 'Item';
-      const key = label.toLowerCase();
-      const list = groups.get(key) ?? [];
-      list.push(item as ScopedItem);
-      groups.set(key, list);
-    });
-    return Array.from(groups.entries());
-  }, [activePickerItems]);
+    if (pickerTab === 'suggested') return suggestedItems;
+    if (pickerTab === 'project') return projectItems;
+    return outsideItemsHook.items;
+  }, [pickerTab, suggestedItems, projectItems, outsideItemsHook.items]);
 
   const pickerTabOptions = useMemo(() => {
     const options: Array<{ value: ItemPickerTab; label: string; accessibilityLabel?: string }> = [
@@ -240,34 +197,10 @@ export default function TransactionDetailScreen() {
     return options;
   }, [projectId]);
 
-  const loadOutsideItems = useCallback(async () => {
-    if (!accountId) return;
-    setOutsideLoading(true);
-    setOutsideError(null);
-    try {
-      const currentProjectId = projectId ?? null;
-      const otherProjects = projects.filter((project) => project.id !== currentProjectId);
-      const requests: Promise<Item[]>[] = [];
-      if (scope === 'project') {
-        requests.push(listItemsByProject(accountId, null, { mode: 'offline' }));
-      }
-      requests.push(...otherProjects.map((project) => listItemsByProject(accountId, project.id, { mode: 'offline' })));
-      const results = await Promise.all(requests);
-      const flattened = results.flat().filter((item) => item.projectId !== currentProjectId);
-      const unique = new Map(flattened.map((item) => [item.id, item]));
-      setOutsideItems(Array.from(unique.values()));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to load outside items.';
-      setOutsideError(message);
-    } finally {
-      setOutsideLoading(false);
-    }
-  }, [accountId, projectId, projects, scope]);
-
   useEffect(() => {
     if (!isPickingItems || pickerTab !== 'outside') return;
-    void loadOutsideItems();
-  }, [isPickingItems, pickerTab, loadOutsideItems]);
+    void outsideItemsHook.reload();
+  }, [isPickingItems, pickerTab, outsideItemsHook]);
 
   const handleSave = async () => {
     if (!accountId || !id) return;
@@ -372,39 +305,42 @@ export default function TransactionDetailScreen() {
     if (!accountId || !id || pickerSelectedIds.length === 0) return;
     const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
     const conflicts = selectedItems.filter((item) => item.transactionId && item.transactionId !== id);
+    
     const performAdd = async () => {
       await Promise.all(
-        selectedItems.map((item) => {
-          const update: Partial<Item> = { transactionId: id };
-          if (!isCanonical && transaction?.budgetCategoryId) {
-            update.inheritedBudgetCategoryId = transaction.budgetCategoryId;
+        selectedItems.map(async (item) => {
+          const targetProjectId = scope === 'inventory' ? null : projectId ?? null;
+          const inheritedBudgetCategoryId =
+            scope === 'inventory'
+              ? item.inheritedBudgetCategoryId ?? null
+              : !isCanonical && transaction?.budgetCategoryId
+                ? transaction.budgetCategoryId
+                : undefined;
+
+          const result = await resolveItemMove(item, {
+            accountId,
+            itemId: item.id,
+            targetProjectId,
+            targetSpaceId: null,
+            targetTransactionId: id,
+            inheritedBudgetCategoryId,
+          });
+
+          if (!result.success) {
+            console.error(`Failed to move item ${item.id}: ${result.error}`);
           }
-          if (scope === 'project' && projectId && item.projectId !== projectId) {
-            update.projectId = projectId;
-            update.spaceId = null;
-          }
-          if (scope === 'inventory' && item.projectId != null) {
-            update.projectId = null;
-            update.spaceId = null;
-          }
-          return updateItem(accountId, item.id, update);
         })
       );
       setPickerSelectedIds([]);
       setIsPickingItems(false);
     };
+
     if (conflicts.length > 0) {
-      const names = conflicts
-        .slice(0, 4)
-        .map((item) => item.name?.trim() || item.description || 'Item');
-      Alert.alert(
-        'Reassign items?',
-        `Some items are linked to another transaction. Reassign them?\n\n${names.join('\n')}`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Reassign', style: 'destructive', onPress: performAdd },
-        ]
-      );
+      const conflictNames = conflicts.map((item) => item.name?.trim() || item.description || 'Item');
+      showItemConflictDialog({
+        conflictItemNames: conflictNames,
+        onConfirm: performAdd,
+      });
       return;
     }
     await performAdd();
@@ -452,9 +388,8 @@ export default function TransactionDetailScreen() {
   };
 
   return (
-    <Screen title="Transaction">
+    <Screen title="Transaction" backTarget={fallbackTarget}>
       <View style={styles.container}>
-        <AppButton title="Back" variant="secondary" onPress={handleBack} />
         <AppText variant="title">Transaction detail</AppText>
         {isLoading ? (
           <AppText variant="body">Loading transaction…</AppText>
@@ -650,139 +585,28 @@ export default function TransactionDetailScreen() {
               />
             </View>
             {isPickingItems ? (
-              <View style={styles.pickerPanel}>
-                <SegmentedControl
-                  value={pickerTab}
-                  options={pickerTabOptions}
-                  onChange={(next) => {
-                    setPickerTab(next);
-                    setPickerSelectedIds([]);
-                  }}
-                  accessibilityLabel="Item picker tabs"
-                />
-                <TextInput
-                  value={pickerQuery}
-                  onChangeText={setPickerQuery}
-                  placeholder="Search items"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 })}
-                />
-                <View style={styles.actions}>
-                  <AppButton
-                    title="Select all visible"
-                    variant="secondary"
-                    onPress={() =>
-                      setPickerSelectedIds(
-                        activePickerItems.filter((item) => item.transactionId !== id).map((item) => item.id)
-                      )
-                    }
-                  />
-                  <AppButton
-                    title={`Add Selected (${pickerSelectedIds.length})`}
-                    onPress={handleAddSelectedItems}
-                    disabled={pickerSelectedIds.length === 0}
-                  />
-                </View>
-                <View style={styles.list}>
-                  {pickerGroups.map(([label, groupItems]) => {
-                    const eligibleIds = groupItems.filter((item) => item.transactionId !== id).map((item) => item.id);
-                    const groupAllSelected =
-                      eligibleIds.length > 0 && eligibleIds.every((itemId) => pickerSelectedIds.includes(itemId));
-
-                    if (groupItems.length > 1) {
-                      return (
-                        <GroupedItemCard
-                          key={label}
-                          summary={{ description: label }}
-                          countLabel={`×${groupItems.length}`}
-                          items={groupItems.map((item) => {
-                            const description = item.name?.trim() || item.description || 'Item';
-                            const locked = item.transactionId === id;
-                            const conflict = !!item.transactionId && item.transactionId !== id;
-                            const selected = pickerSelectedIds.includes(item.id);
-
-                            return {
-                              description,
-                              selected,
-                              onSelectedChange: locked
-                                ? undefined
-                                : (next) =>
-                                    setPickerSelectedIds((prev) => {
-                                      if (next) return prev.includes(item.id) ? prev : [...prev, item.id];
-                                      return prev.filter((entry) => entry !== item.id);
-                                    }),
-                              onPress: locked
-                                ? undefined
-                                : () =>
-                                    setPickerSelectedIds((prev) =>
-                                      prev.includes(item.id)
-                                        ? prev.filter((entry) => entry !== item.id)
-                                        : [...prev, item.id]
-                                    ),
-                              statusLabel: locked ? 'Already linked' : conflict ? 'Linked elsewhere' : undefined,
-                              style: locked ? { opacity: 0.6 } : undefined,
-                            };
-                          })}
-                          selected={groupAllSelected}
-                          onSelectedChange={
-                            eligibleIds.length === 0
-                              ? undefined
-                              : (next) => {
-                                  setPickerSelectedIds((prev) => {
-                                    if (next) return Array.from(new Set([...prev, ...eligibleIds]));
-                                    const remove = new Set(eligibleIds);
-                                    return prev.filter((entry) => !remove.has(entry));
-                                  });
-                                }
-                          }
-                        />
-                      );
-                    }
-
-                    const [only] = groupItems;
-                    const description = only.name?.trim() || only.description || 'Item';
-                    const locked = only.transactionId === id;
-                    const conflict = !!only.transactionId && only.transactionId !== id;
-                    const selected = pickerSelectedIds.includes(only.id);
-
-                    return (
-                      <ItemCard
-                        key={only.id}
-                        description={description}
-                        selected={selected}
-                        onSelectedChange={locked ? undefined : (next) => {
-                          setPickerSelectedIds((prev) => {
-                            if (next) return prev.includes(only.id) ? prev : [...prev, only.id];
-                            return prev.filter((entry) => entry !== only.id);
-                          });
-                        }}
-                        onPress={locked ? undefined : () => {
-                          setPickerSelectedIds((prev) =>
-                            prev.includes(only.id) ? prev.filter((entry) => entry !== only.id) : [...prev, only.id]
-                          );
-                        }}
-                        statusLabel={locked ? 'Already linked' : conflict ? 'Linked elsewhere' : undefined}
-                        style={locked ? { opacity: 0.6 } : undefined}
-                      />
-                    );
-                  })}
-                  {pickerGroups.length === 0 ? (
-                    <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                      No items available.
-                    </AppText>
-                  ) : null}
-                  {pickerTab === 'outside' && outsideLoading ? (
-                    <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                      Loading outside items…
-                    </AppText>
-                  ) : null}
-                  {pickerTab === 'outside' && outsideError ? (
-                    <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                      {outsideError}
-                    </AppText>
-                  ) : null}
-                </View>
-              </View>
+              <SharedItemPicker
+                tabs={pickerTabOptions}
+                selectedTab={pickerTab}
+                onTabChange={(next) => {
+                  setPickerTab(next);
+                  setPickerSelectedIds([]);
+                }}
+                items={activePickerItems}
+                selectedIds={pickerSelectedIds}
+                onSelectionChange={setPickerSelectedIds}
+                eligibilityCheck={{
+                  isEligible: (item) => item.transactionId !== id,
+                  getStatusLabel: (item) => {
+                    if (item.transactionId === id) return 'Already linked';
+                    if (item.transactionId) return 'Linked elsewhere';
+                    return undefined;
+                  },
+                }}
+                onAddSelected={handleAddSelectedItems}
+                outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
+                outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
+              />
             ) : null}
             {linkedItems.length ? (
               <View style={styles.list}>
@@ -824,8 +648,5 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
-  },
-  pickerPanel: {
-    gap: 12,
   },
 });

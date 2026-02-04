@@ -61,9 +61,11 @@ export default function EditProjectScreen() {
     }
   };
 
+  const backTarget = projectId ? `/project/${projectId}?tab=items` : undefined;
+
   if (!projectId) {
     return (
-      <Screen title="Edit Project">
+      <Screen title="Edit Project" backTarget={backTarget}>
         <View style={styles.container}>
           <AppText variant="body">Project not found.</AppText>
         </View>
@@ -72,7 +74,7 @@ export default function EditProjectScreen() {
   }
 
   return (
-    <Screen title="Edit Project">
+    <Screen title="Edit Project" backTarget={backTarget}>
       <View style={styles.container}>
         {!project ? (
           <AppText variant="body">Loading project…</AppText>

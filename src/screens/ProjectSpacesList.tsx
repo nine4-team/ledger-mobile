@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from '../components/AppText';
 import { AppButton } from '../components/AppButton';
+import { useScreenRefresh } from '../components/Screen';
 import { layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
@@ -27,6 +28,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const screenRefresh = useScreenRefresh();
 
   const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
@@ -89,7 +91,15 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
   }, [items]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={[styles.container, styles.scrollContent]}
+      refreshControl={
+        screenRefresh ? (
+          <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+        ) : undefined
+      }
+    >
       <AppText variant="body" style={styles.title}>
         Spaces
       </AppText>
@@ -142,14 +152,20 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
           ))}
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   container: {
     gap: 12,
     paddingTop: layout.screenBodyTopMd.paddingTop,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   title: {
     fontWeight: '600',

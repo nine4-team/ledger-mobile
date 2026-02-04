@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,6 +6,7 @@ import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
 import { layout } from '../../src/ui';
 import { AppButton } from '../../src/components/AppButton';
+import { ScreenTabItem, useScreenTabs } from '../../src/components/ScreenTabs';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { createRepository } from '../../src/data/repository';
@@ -17,11 +18,16 @@ import { resolveAttachmentUri } from '../../src/offline/media';
 
 export default function ProjectsScreen() {
   return (
-    <Screen title="Projects">
+    <Screen title="Projects" tabs={PROJECT_TABS}>
       <ProjectsList />
     </Screen>
   );
 }
+
+const PROJECT_TABS: ScreenTabItem[] = [
+  { key: 'active', label: 'Active', accessibilityLabel: 'Active projects' },
+  { key: 'archived', label: 'Archived', accessibilityLabel: 'Archived projects' },
+];
 
 type ProjectSummary = {
   id: string;
@@ -46,6 +52,8 @@ function ProjectsList() {
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { id: string; name: string }>>({});
   const [projectPreferences, setProjectPreferences] = useState<Record<string, { pinnedBudgetCategoryIds: string[] }>>({});
   const [budgetTotals, setBudgetTotals] = useState<Record<string, number>>({});
+  const screenTabs = useScreenTabs();
+  const tabKey = screenTabs?.selectedKey === 'archived' ? 'archived' : 'active';
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
 
@@ -157,17 +165,19 @@ function ProjectsList() {
   }, [accountId, projects]);
 
   const sortedProjects = useMemo(() => {
-    return [...projects]
-      .filter((project) => !project.isArchived)
-      .sort((a, b) => {
-        const nameA = a.name?.toLowerCase() ?? '';
-        const nameB = b.name?.toLowerCase() ?? '';
-        if (nameA && nameB) return nameA.localeCompare(nameB);
-        if (nameA) return -1;
-        if (nameB) return 1;
-        return a.id.localeCompare(b.id);
-      });
-  }, [projects]);
+    const filtered =
+      tabKey === 'archived'
+        ? projects.filter((project) => project.isArchived)
+        : projects.filter((project) => !project.isArchived);
+    return [...filtered].sort((a, b) => {
+      const nameA = a.name?.toLowerCase() ?? '';
+      const nameB = b.name?.toLowerCase() ?? '';
+      if (nameA && nameB) return nameA.localeCompare(nameB);
+      if (nameA) return -1;
+      if (nameB) return 1;
+      return a.id.localeCompare(b.id);
+    });
+  }, [projects, tabKey]);
 
   const handleRefresh = async () => {
     if (!accountId || isRefreshing) return;
@@ -182,7 +192,11 @@ function ProjectsList() {
   };
 
   return (
-    <View style={styles.placeholder}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={[styles.placeholder, styles.scrollContent]}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+    >
       {!accountId ? (
         <View style={styles.emptyState}>
           <AppText variant="body">
@@ -198,7 +212,7 @@ function ProjectsList() {
         <>
           {sortedProjects.length === 0 ? (
             <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-              No projects yet.
+              {tabKey === 'archived' ? 'No archived projects yet.' : 'No active projects yet.'}
             </AppText>
           ) : (
             <View style={styles.projectList}>
@@ -258,23 +272,23 @@ function ProjectsList() {
           )}
           <View style={styles.actions}>
             <AppButton title="New project" onPress={() => router.push('/project/new')} />
-            <AppButton
-              title={isRefreshing ? 'Refreshing…' : 'Refresh'}
-              variant="secondary"
-              onPress={handleRefresh}
-              disabled={isRefreshing}
-            />
           </View>
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   placeholder: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     gap: 12,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   actions: {
     flexDirection: 'row',

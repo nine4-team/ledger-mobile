@@ -79,8 +79,10 @@ export default function NewSpaceScreen() {
     }
   };
 
+  const backTarget = projectId ? `/project/${projectId}/spaces` : undefined;
+
   return (
-    <Screen title="New Space">
+    <Screen title="New Space" backTarget={backTarget}>
       <View style={styles.container}>
         <AppText variant="body">Template</AppText>
         <View style={styles.templateRow}>

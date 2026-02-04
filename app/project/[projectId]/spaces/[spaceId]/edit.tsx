@@ -68,8 +68,10 @@ export default function EditSpaceScreen() {
     }
   };
 
+  const backTarget = projectId && spaceId ? `/project/${projectId}/spaces/${spaceId}` : undefined;
+
   return (
-    <Screen title="Edit Space">
+    <Screen title="Edit Space" backTarget={backTarget}>
       <View style={styles.container}>
         {!space ? (
           <AppText variant="body">Loading space…</AppText>

@@ -6,6 +6,7 @@
 - Read-only profile view for all users.
 - Admin-managed configuration that drives other modules (business profile, presets).
 - Admin/owner flows for invitations and user/account management.
+- Troubleshooting tools for offline export and stuck sync issues.
 
 This feature is **not collaborative in the realtime sense** (no “live updates” required), but it must be **correct and explicit** about online-required mutations and about offline readability of presets.
 
@@ -92,6 +93,23 @@ Parity evidence: `src/components/auth/UserManagement.tsx`.
 
 Parity evidence: `src/components/auth/AccountManagement.tsx`.
 
+### F) Troubleshoot offline data + sync issues
+- Open Settings → Troubleshooting.
+- Export offline data:
+  - downloads a JSON snapshot of local cache + queued operations
+  - includes counts and a consistency report for missing item/transaction references
+  - shows a success timestamp or error message
+  - warns that exported data can be sensitive
+- Sync issues manager:
+  - lists item update operations that are blocked because the item is missing on the server
+  - supports select all, recreate, and discard flows
+  - shows a confirmation dialog before discarding
+  - includes a “Retry sync” action
+
+Parity evidence:
+- `src/components/settings/TroubleshootingTab.tsx`
+- `src/components/settings/SyncIssuesManager.tsx`
+
 ## Entities touched (conceptual; Firebase mapping)
 These are “small metadata” entities that must sync efficiently and be cached locally:
 
@@ -102,6 +120,7 @@ These are “small metadata” entities that must sync efficiently and be cached
 - `space_templates` (including nested checklists)
 - `account_users` / users list
 - `invitations` (pending invitations per account)
+- Offline cache snapshot + operation queue (local-only; not Firestore-backed)
 
 ## Offline behavior (required)
 
@@ -118,6 +137,11 @@ Implementation note:
   - Intentional delta: web parity does not always hard-block offline actions; RN should be explicit to avoid “false success” flows.
   - If we later allow offline-queued metadata writes, this spec can be updated to allow queued writes with clear pending/error UX and server-side enforcement, per `OFFLINE_FIRST_V2_SPEC.md`.
 
+### Troubleshooting tools (local-first)
+- Offline export and sync-issue actions are **local-first** and should remain usable without a connection.
+- Export uses the local cache snapshot; if no cache is available, show a clear error.
+- Recreate/discard actions should operate on the local queue; any server writes occur when connectivity resumes.
+
 ### App restart / reconnect
 - If presets were previously cached:
   - App restart offline should still allow downstream screens to function using cached presets.
@@ -126,6 +150,7 @@ Implementation note:
 
 ## Permissions / role gating (required)
 - **Everyone**: can access Settings → General → Profile section.
+- **Everyone**: can access Settings → Troubleshooting.
 - **Admin (or owner)**:
   - can access Business Profile editor
   - can access Presets editor

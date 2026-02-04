@@ -19,6 +19,7 @@ This is intentionally a **high-branching** screen; the contract exists to preser
 - Tabs (top-level):
   - `General` (always visible)
   - `Presets` (always visible, but content is admin-gated)
+  - `Troubleshooting` (always visible)
   - `Users` (visible only for owner/admin)
   - `Account` (visible only for owner)
 
@@ -98,6 +99,42 @@ Parity evidence: `src/components/auth/AccountManagement.tsx`.
 
 Offline behavior:
 - Account creation is **online-required**.
+
+## Troubleshooting tab (all users)
+- Visible to all users.
+- Purpose: provide diagnostic tools for offline cache/export and stuck sync operations.
+
+### Offline data export
+- Shows a brief note that the export is a dump of local cache and may be incomplete or differ from server state.
+- A button triggers a JSON download of local offline cache + queued operations.
+  - The payload includes counts and a consistency report for item/transaction references.
+  - The file name includes a timestamp and the scoped account id when available.
+- Shows:
+  - error banner if the export fails
+  - success banner with timestamp if the export succeeds
+- Includes a warning that the export may contain sensitive data.
+
+### Sync issues manager
+- Surfaces stuck operations where an item update can’t sync because the item is missing on the server.
+- If no issues:
+  - show an “All clear” message
+  - provide a “Retry sync” button
+- If issues exist:
+  - list rows with item label, change type, and error summary
+  - allow multi-select (select all)
+  - actions:
+    - “Recreate” (single or selected) to re-create missing items on the server
+    - “Discard” (single or selected) to drop stuck operations and delete the local item
+  - show a confirmation dialog before discarding
+
+Parity evidence:
+- Troubleshooting tab + entry: `src/pages/Settings.tsx` (`activeTab === 'troubleshooting'`).
+- Offline export: `src/components/settings/TroubleshootingTab.tsx`.
+- Sync issues manager: `src/components/settings/SyncIssuesManager.tsx`.
+
+Offline behavior:
+- Export and sync-issue management are **local-first** and should remain available offline.
+- If actions require network, they should queue and apply when connectivity returns; avoid false success messaging.
 
 ## Error handling & messaging rules
 - All admin/owner mutations should:

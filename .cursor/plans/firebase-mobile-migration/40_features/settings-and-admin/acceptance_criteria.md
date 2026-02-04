@@ -8,6 +8,7 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
 - [ ] **Top-level tabs are role-gated**:
   - `General`: always visible
   - `Presets`: always visible
+  - `Troubleshooting`: always visible
   - `Users`: visible only for admin/owner
   - `Account`: visible only for owner
   - Observed in `src/pages/Settings.tsx` (tab buttons guarded by `isOwner()` / `isAdmin`).
@@ -100,6 +101,23 @@ Each criterion includes **parity evidence** (“Observed in …”) or an explic
   - Observed in `src/components/auth/AccountManagement.tsx` (invitation link display + copy).
 - [ ] Owner can **view all accounts** and expand an account to view **pending invitations** with copy buttons.
   - Observed in `src/components/auth/AccountManagement.tsx` (`getAllPendingInvitationsForAccounts`, expand/collapse UI).
+
+## Troubleshooting tab (all users)
+- [ ] Troubleshooting tab is accessible to all users.
+  - Observed in `src/pages/Settings.tsx` (`activeTab === 'troubleshooting'`).
+- [ ] Offline data export:
+  - shows a clear note that this is a local cache export and may be incomplete
+  - includes a warning that exported data may be sensitive
+  - downloads a JSON file when triggered
+  - shows a success timestamp or error message
+  - Observed in `src/components/settings/TroubleshootingTab.tsx`.
+- [ ] Sync issues manager:
+  - shows an “All clear” state when no issues are present
+  - lists missing-item sync issues when present
+  - supports select all, recreate, and discard actions
+  - confirms before discarding
+  - includes a “Retry sync” action
+  - Observed in `src/components/settings/SyncIssuesManager.tsx`.
 
 ## Offline policy (intentional delta)
 - [ ] **Preset reads** must work offline if previously cached.

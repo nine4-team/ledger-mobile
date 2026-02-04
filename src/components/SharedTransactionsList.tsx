@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Share, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { ListStateControls } from './ListStateControls';
+import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
 import { layout } from '../ui';
@@ -86,6 +87,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
   const lastSelfHealRef = useRef<Record<string, number>>({});
+  const screenRefresh = useScreenRefresh();
 
   useEffect(() => {
     setQuery(state.search ?? '');
@@ -358,7 +360,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         tx.transactionDate ?? '',
         tx.source ?? '',
         typeof tx.amountCents === 'number' ? (tx.amountCents / 100).toFixed(2) : '',
-        isCanonical ? '' : categoryName || tx.budgetCategoryId ?? '',
+        isCanonical ? '' : (categoryName || tx.budgetCategoryId) ?? '',
         isCanonical ? '' : tx.budgetCategoryId ?? '',
         itemCategories,
       ];
@@ -370,11 +372,8 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   return (
     <View style={styles.container}>
       <ListStateControls
-        title={scopeConfig.scope === 'inventory' ? 'Inventory transactions' : 'Project transactions'}
         search={query}
         onChangeSearch={setQuery}
-        sortLabel={sortLabel}
-        onToggleSort={handleToggleSort}
       />
       <View style={styles.actionsRow}>
         <AppText variant="caption" style={styles.scopeNote}>
@@ -482,6 +481,11 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          screenRefresh ? (
+            <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+          ) : undefined
+        }
         onScroll={(event) => {
           lastScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
         }}

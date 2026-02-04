@@ -142,6 +142,8 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   return (
     <Screen
       title={project?.name?.trim() || 'Project'}
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
       tabs={[
         { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
         { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
@@ -154,11 +156,9 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
         project={project}
         isOnline={isOnline}
         isLoading={isLoading}
-        isRefreshing={isRefreshing}
         refreshError={refreshError}
         refreshToken={refreshToken}
         onEdit={() => router.push(`/project/${projectId}/edit`)}
-        onRefresh={handleRefresh}
         onDelete={handleDelete}
         scopeConfig={scopeConfig}
         budgetCategories={budgetCategories}
@@ -174,11 +174,9 @@ type ProjectShellContentProps = {
   project: Project | null;
   isOnline: boolean;
   isLoading: boolean;
-  isRefreshing: boolean;
   refreshError: string | null;
   refreshToken: number;
   onEdit: () => void;
-  onRefresh: () => void;
   onDelete: () => void;
   scopeConfig: ReturnType<typeof createProjectScopeConfig>;
   budgetCategories: Record<string, { id: string; name: string }>;
@@ -191,11 +189,9 @@ function ProjectShellContent({
   project,
   isOnline,
   isLoading,
-  isRefreshing,
   refreshError,
   refreshToken,
   onEdit,
-  onRefresh,
   onDelete,
   scopeConfig,
   budgetCategories,
@@ -250,12 +246,6 @@ function ProjectShellContent({
       </View>
       <View style={styles.actions}>
         <AppButton title="Edit" variant="secondary" onPress={onEdit} />
-        <AppButton
-          title={isRefreshing ? 'Refreshing…' : 'Refresh'}
-          variant="secondary"
-          onPress={onRefresh}
-          disabled={isRefreshing}
-        />
         <AppButton title="Delete" variant="secondary" onPress={onDelete} />
       </View>
       {refreshError ? (

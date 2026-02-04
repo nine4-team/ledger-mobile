@@ -1,8 +1,38 @@
 import * as admin from 'firebase-admin';
+import {
+  DocumentData,
+  DocumentReference,
+  FieldValue,
+  getFirestore,
+  Timestamp,
+  Transaction,
+} from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 
 admin.initializeApp();
+
+/**
+ * LineageEdge semantics (DO NOT REMOVE — this is a product correctness contract)
+ * ---------------------------------------------------------------------------
+ * We use lineage edges for two related but different needs:
+ *
+ * 1) "Association" audit: what *actually happened* to item↔transaction linkage over time.
+ *    - Always append an `association` edge when `items/{itemId}.transactionId` changes.
+ *    - This is a complete, durable audit trail (including mistakes/corrections).
+ *
+ * 2) "Intent" labeling: why it happened (used to power UI sections like Sold/Returned).
+ *    - Append an additional edge ONLY when we know the intent deterministically:
+ *      - `sold`: written inside canonical inventory request-doc handlers
+ *        (project→business, business→project, project→project).
+ *      - `returned`: written when an item is linked to a Return transaction.
+ *      - `correction`: written only by explicit "fix mistake" actions (when implemented).
+ *
+ * Important: association edges are not mutually exclusive with intent edges.
+ * A single item move can produce BOTH:
+ * - an `association` edge (audit)
+ * - and a `sold` / `returned` / `correction` edge (intent)
+ */
 
 type CreateWithQuotaRequest = {
   // Identifies which quota bucket to enforce (e.g. "memory", "entry", "project").
@@ -32,11 +62,11 @@ export const createWithQuota = onCall<CreateWithQuotaRequest>(async (request) =>
   // - check “isPro” (from custom claims or a user doc updated by a billing webhook)
   // - load the quota limit from config
   // - enforce per-objectKey rules
-  const db = admin.firestore();
+  const db = getFirestore();
 
   const quotaRef = db.doc(`users/${uid}/quota/${objectKey}`);
   const newDocRef = db.collection(collectionPath.replace('{uid}', uid)).doc();
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  const now = FieldValue.serverTimestamp();
 
   const result = await db.runTransaction(async (tx) => {
     const quotaSnap = await tx.get(quotaRef);
@@ -81,29 +111,29 @@ type RequestDoc = {
   type: string;
   status: RequestStatus;
   opId?: string;
-  createdAt?: admin.firestore.Timestamp;
+  createdAt?: Timestamp;
   createdBy?: string;
-  appliedAt?: admin.firestore.Timestamp;
+  appliedAt?: Timestamp;
   errorCode?: string;
   errorMessage?: string;
   payload?: Record<string, unknown>;
 };
 
 async function setRequestApplied(
-  requestRef: admin.firestore.DocumentReference,
+  requestRef: DocumentReference,
   extra: Record<string, unknown> = {}
 ) {
   await requestRef.update({
     status: 'applied',
-    appliedAt: admin.firestore.FieldValue.serverTimestamp(),
-    errorCode: admin.firestore.FieldValue.delete(),
-    errorMessage: admin.firestore.FieldValue.delete(),
+    appliedAt: FieldValue.serverTimestamp(),
+    errorCode: FieldValue.delete(),
+    errorMessage: FieldValue.delete(),
     ...extra
   });
 }
 
 async function setRequestFailed(
-  requestRef: admin.firestore.DocumentReference,
+  requestRef: DocumentReference,
   errorCode: string,
   errorMessage: string
 ) {
@@ -111,12 +141,12 @@ async function setRequestFailed(
     status: 'failed',
     errorCode,
     errorMessage,
-    appliedAt: admin.firestore.FieldValue.delete()
+    appliedAt: FieldValue.delete()
   });
 }
 
 type RequestHandlerContext = {
-  requestRef: admin.firestore.DocumentReference;
+  requestRef: DocumentReference;
   requestData: RequestDoc;
   accountId: string;
   projectId?: string;
@@ -133,14 +163,14 @@ function canonicalSaleId(projectId: string) {
   return `INV_SALE_${projectId}`;
 }
 
-function getItemValueCents(item: admin.firestore.DocumentData): number {
+function getItemValueCents(item: DocumentData): number {
   if (typeof item.projectPriceCents === 'number') return item.projectPriceCents;
   if (typeof item.purchasePriceCents === 'number') return item.purchasePriceCents;
   return 0;
 }
 
 async function ensureCanonicalTransaction(params: {
-  tx: admin.firestore.Transaction;
+  tx: Transaction;
   accountId: string;
   transactionId: string;
   projectId: string;
@@ -149,9 +179,9 @@ async function ensureCanonicalTransaction(params: {
   itemId: string;
 }) {
   const { tx, accountId, transactionId, projectId, kind, amountDelta, itemId } = params;
-  const txRef = admin.firestore().doc(`accounts/${accountId}/transactions/${transactionId}`);
+  const txRef = getFirestore().doc(`accounts/${accountId}/transactions/${transactionId}`);
   const snap = await tx.get(txRef);
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  const now = FieldValue.serverTimestamp();
   if (!snap.exists) {
     tx.set(
       txRef,
@@ -191,14 +221,14 @@ async function ensureCanonicalTransaction(params: {
 }
 
 async function removeFromCanonicalTransaction(params: {
-  tx: admin.firestore.Transaction;
+  tx: Transaction;
   accountId: string;
   transactionId: string;
   amountDelta: number;
   itemId: string;
 }) {
   const { tx, accountId, transactionId, amountDelta, itemId } = params;
-  const txRef = admin.firestore().doc(`accounts/${accountId}/transactions/${transactionId}`);
+  const txRef = getFirestore().doc(`accounts/${accountId}/transactions/${transactionId}`);
   const snap = await tx.get(txRef);
   if (!snap.exists) return;
   const data = snap.data() ?? {};
@@ -211,24 +241,42 @@ async function removeFromCanonicalTransaction(params: {
     {
       amountCents: nextAmount,
       itemIds: nextItemIds,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     },
     { merge: true }
   );
 }
 
 async function appendLineageEdge(params: {
-  tx: admin.firestore.Transaction;
+  tx: Transaction;
   accountId: string;
   requestId: string;
   itemId: string;
   fromTransactionId: string | null;
   toTransactionId: string | null;
   createdBy: string | null | undefined;
+  movementKind: 'sold' | 'returned' | 'correction' | 'association';
+  source: 'app' | 'server' | 'migration';
+  note?: string | null;
+  fromProjectId?: string | null;
+  toProjectId?: string | null;
 }) {
-  const { tx, accountId, requestId, itemId, fromTransactionId, toTransactionId, createdBy } = params;
-  const edgeId = `edge_${requestId}_${itemId}`;
-  const edgeRef = admin.firestore().doc(`accounts/${accountId}/lineageEdges/${edgeId}`);
+  const {
+    tx,
+    accountId,
+    requestId,
+    itemId,
+    fromTransactionId,
+    toTransactionId,
+    createdBy,
+    movementKind,
+    source,
+    note,
+    fromProjectId,
+    toProjectId,
+  } = params;
+  const edgeId = `edge_${requestId}_${itemId}_${movementKind}`;
+  const edgeRef = getFirestore().doc(`accounts/${accountId}/lineageEdges/${edgeId}`);
   tx.set(
     edgeRef,
     {
@@ -237,10 +285,15 @@ async function appendLineageEdge(params: {
       itemId,
       fromTransactionId: fromTransactionId ?? null,
       toTransactionId: toTransactionId ?? null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       deletedAt: null,
       createdBy: createdBy ?? null,
+      movementKind,
+      source,
+      note: note ?? null,
+      fromProjectId: fromProjectId ?? null,
+      toProjectId: toProjectId ?? null,
     },
     { merge: true }
   );
@@ -258,11 +311,12 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
   const payload = context.requestData.payload ?? {};
   const itemId = payload.itemId as string;
   const sourceProjectId = payload.sourceProjectId as string;
+  const note = (payload as any).note as string | null | undefined;
   if (!itemId || !sourceProjectId) {
     await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or sourceProjectId.');
     return;
   }
-  const db = admin.firestore();
+  const db = getFirestore();
   const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
   const { itemProjectId, itemTransactionId } = getExpected(payload);
   await db.runTransaction(async (tx) => {
@@ -298,7 +352,8 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
           projectId: null,
           transactionId: null,
           spaceId: null,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+          updatedBy: context.requestData.createdBy ?? null,
           latestTransactionId: null,
         },
         { merge: true }
@@ -311,6 +366,11 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
         fromTransactionId: purchaseId,
         toTransactionId: null,
         createdBy: context.requestData.createdBy,
+        movementKind: 'sold',
+        source: 'server',
+        note: note ?? null,
+        fromProjectId: sourceProjectId,
+        toProjectId: null,
       });
     } else {
       await ensureCanonicalTransaction({
@@ -328,7 +388,8 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
           projectId: null,
           transactionId: saleId,
           spaceId: null,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+          updatedBy: context.requestData.createdBy ?? null,
           latestTransactionId: saleId,
         },
         { merge: true }
@@ -341,6 +402,11 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
         fromTransactionId: previousTxId,
         toTransactionId: saleId,
         createdBy: context.requestData.createdBy,
+        movementKind: 'sold',
+        source: 'server',
+        note: note ?? null,
+        fromProjectId: sourceProjectId,
+        toProjectId: null,
       });
     }
   });
@@ -352,11 +418,12 @@ async function handleBusinessToProject(context: RequestHandlerContext) {
   const itemId = payload.itemId as string;
   const targetProjectId = payload.targetProjectId as string;
   const inheritedBudgetCategoryId = payload.inheritedBudgetCategoryId ?? null;
+  const note = (payload as any).note as string | null | undefined;
   if (!itemId || !targetProjectId) {
     await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or targetProjectId.');
     return;
   }
-  const db = admin.firestore();
+  const db = getFirestore();
   const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
   const { itemProjectId, itemTransactionId } = getExpected(payload);
   await db.runTransaction(async (tx) => {
@@ -394,7 +461,8 @@ async function handleBusinessToProject(context: RequestHandlerContext) {
         status: item.status ?? 'purchased',
         spaceId: null,
         inheritedBudgetCategoryId,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        updatedBy: context.requestData.createdBy ?? null,
         latestTransactionId: purchaseId,
       },
       { merge: true }
@@ -407,6 +475,11 @@ async function handleBusinessToProject(context: RequestHandlerContext) {
       fromTransactionId: previousTxId,
       toTransactionId: purchaseId,
       createdBy: context.requestData.createdBy,
+      movementKind: 'sold',
+      source: 'server',
+      note: note ?? null,
+      fromProjectId: null,
+      toProjectId: targetProjectId,
     });
   });
   await setRequestApplied(context.requestRef);
@@ -418,11 +491,12 @@ async function handleProjectToProject(context: RequestHandlerContext) {
   const sourceProjectId = payload.sourceProjectId as string;
   const targetProjectId = payload.targetProjectId as string;
   const inheritedBudgetCategoryId = payload.inheritedBudgetCategoryId ?? null;
+  const note = (payload as any).note as string | null | undefined;
   if (!itemId || !sourceProjectId || !targetProjectId) {
     await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or project ids.');
     return;
   }
-  const db = admin.firestore();
+  const db = getFirestore();
   const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
   const { itemProjectId, itemTransactionId } = getExpected(payload);
   await db.runTransaction(async (tx) => {
@@ -469,7 +543,8 @@ async function handleProjectToProject(context: RequestHandlerContext) {
         transactionId: purchaseId,
         spaceId: null,
         inheritedBudgetCategoryId,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        updatedBy: context.requestData.createdBy ?? null,
         latestTransactionId: purchaseId,
       },
       { merge: true }
@@ -482,6 +557,11 @@ async function handleProjectToProject(context: RequestHandlerContext) {
       fromTransactionId: previousTxId,
       toTransactionId: purchaseId,
       createdBy: context.requestData.createdBy,
+      movementKind: 'sold',
+      source: 'server',
+      note: note ?? null,
+      fromProjectId: sourceProjectId,
+      toProjectId: targetProjectId,
     });
   });
   await setRequestApplied(context.requestRef);
@@ -547,6 +627,97 @@ export const onAccountRequestCreated = onDocumentCreated(
       accountId: event.params.accountId,
       requestId: event.params.requestId
     });
+  }
+);
+
+/**
+ * Append an association lineage edge whenever an item's transactionId changes.
+ * This captures client-direct linking/unlinking and also complements request-doc operations.
+ */
+export const onItemTransactionIdChanged = onDocumentUpdated(
+  'accounts/{accountId}/items/{itemId}',
+  async (event) => {
+    const before = event.data?.before.data() ?? null;
+    const after = event.data?.after.data() ?? null;
+    if (!before || !after) return;
+
+    const beforeTxId = (before as any).transactionId ?? null;
+    const afterTxId = (after as any).transactionId ?? null;
+    if (beforeTxId === afterTxId) return;
+
+    const accountId = event.params.accountId as string;
+    const itemId = event.params.itemId as string;
+
+    const db = getFirestore();
+
+    // Always append an association audit edge for transactionId changes.
+    const associationEdgeId = `assoc_${event.id}_${itemId}`;
+    const associationRef = db.doc(`accounts/${accountId}/lineageEdges/${associationEdgeId}`);
+    await db.runTransaction(async (tx) => {
+      const existing = await tx.get(associationRef);
+      if (existing.exists) return;
+      const now = FieldValue.serverTimestamp();
+      tx.set(
+        associationRef,
+        {
+          id: associationEdgeId,
+          accountId,
+          itemId,
+          fromTransactionId: beforeTxId,
+          toTransactionId: afterTxId,
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+          createdBy: (after as any).updatedBy ?? null,
+          movementKind: 'association',
+          source: 'server',
+          note: null,
+          fromProjectId: (before as any).projectId ?? null,
+          toProjectId: (after as any).projectId ?? null,
+        },
+        { merge: false }
+      );
+    });
+
+    // Optional but deterministic: if the destination transaction is a Return transaction,
+    // also append a `returned` intent edge (in addition to the association audit edge).
+    if (afterTxId != null) {
+      const toTxRef = db.doc(`accounts/${accountId}/transactions/${afterTxId}`);
+      const toTxSnap = await toTxRef.get();
+      const toTx = toTxSnap.exists ? (toTxSnap.data() as any) : null;
+      const rawType =
+        (toTx?.transactionType ?? toTx?.type ?? toTx?.transaction_type ?? null) as string | null;
+      const isReturn = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'return';
+      if (isReturn) {
+        const returnedEdgeId = `returned_${event.id}_${itemId}`;
+        const returnedRef = db.doc(`accounts/${accountId}/lineageEdges/${returnedEdgeId}`);
+        await db.runTransaction(async (tx) => {
+          const existing = await tx.get(returnedRef);
+          if (existing.exists) return;
+          const now = FieldValue.serverTimestamp();
+          tx.set(
+            returnedRef,
+            {
+              id: returnedEdgeId,
+              accountId,
+              itemId,
+              fromTransactionId: beforeTxId,
+              toTransactionId: afterTxId,
+              createdAt: now,
+              updatedAt: now,
+              deletedAt: null,
+              createdBy: (after as any).updatedBy ?? null,
+              movementKind: 'returned',
+              source: 'server',
+              note: null,
+              fromProjectId: (before as any).projectId ?? null,
+              toProjectId: (after as any).projectId ?? null,
+            },
+            { merge: false }
+          );
+        });
+      }
+    }
   }
 );
 
@@ -619,7 +790,7 @@ type CreateProjectResponse = {
 /**
  * Create a new account and the caller's membership (server-owned).
  */
-export const createAccount = onCall<CreateAccountRequest, CreateAccountResponse>(async (request) => {
+export const createAccount = onCall<CreateAccountRequest>(async (request): Promise<CreateAccountResponse> => {
   const uid = request.auth?.uid;
   if (!uid) {
     throw new HttpsError('unauthenticated', 'Must be signed in.');
@@ -628,8 +799,8 @@ export const createAccount = onCall<CreateAccountRequest, CreateAccountResponse>
   const rawName = request.data?.name;
   const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim().slice(0, 80) : 'My account';
 
-  const db = admin.firestore();
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  const db = getFirestore();
+  const now = FieldValue.serverTimestamp();
   const accountRef = db.collection('accounts').doc();
   const accountId = accountRef.id;
   const membershipRef = db.doc(`accounts/${accountId}/users/${uid}`);
@@ -662,7 +833,7 @@ export const createAccount = onCall<CreateAccountRequest, CreateAccountResponse>
 /**
  * Create a new project (server-owned, entitlements-safe).
  */
-export const createProject = onCall<CreateProjectRequest, CreateProjectResponse>(async (request) => {
+export const createProject = onCall<CreateProjectRequest>(async (request): Promise<CreateProjectResponse> => {
   const uid = request.auth?.uid;
   if (!uid) {
     throw new HttpsError('unauthenticated', 'Must be signed in.');
@@ -679,8 +850,8 @@ export const createProject = onCall<CreateProjectRequest, CreateProjectResponse>
     throw new HttpsError('invalid-argument', 'accountId, name, and clientName are required.');
   }
 
-  const db = admin.firestore();
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  const db = getFirestore();
+  const now = FieldValue.serverTimestamp();
   const projectRef = db.collection(`accounts/${accountId}/projects`).doc();
   const projectId = projectRef.id;
 
@@ -732,8 +903,8 @@ export const createProject = onCall<CreateProjectRequest, CreateProjectResponse>
  * Accept an invitation token and create/update account membership.
  * This function is idempotent - if the user is already a member, it returns success.
  */
-export const acceptInvite = onCall<AcceptInviteRequest, AcceptInviteResponse>(
-  async (request) => {
+export const acceptInvite = onCall<AcceptInviteRequest>(
+  async (request): Promise<AcceptInviteResponse> => {
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Must be signed in to accept an invitation.');
@@ -744,14 +915,14 @@ export const acceptInvite = onCall<AcceptInviteRequest, AcceptInviteResponse>(
       throw new HttpsError('invalid-argument', 'Invitation token is required.');
     }
 
-    const db = admin.firestore();
-    const now = admin.firestore.FieldValue.serverTimestamp();
+    const db = getFirestore();
+    const now = FieldValue.serverTimestamp();
 
     // Find the invite by token
     // Note: In a real implementation, you might hash the token or use a different lookup strategy.
     // For now, we'll search invites collections. This assumes tokens are stored as invite IDs or in a token field.
     // A production implementation should optimize this lookup (e.g., token -> inviteId mapping doc).
-    let inviteRef: admin.firestore.DocumentReference | null = null;
+    let inviteRef: DocumentReference | null = null;
     let accountId: string | null = null;
     let inviteData: any = null;
 
@@ -795,8 +966,8 @@ export const acceptInvite = onCall<AcceptInviteRequest, AcceptInviteResponse>(
 
     // Validate invite status and expiration
     const status = inviteData.status;
-    const expiresAt = inviteData.expiresAt as admin.firestore.Timestamp | undefined;
-    const acceptedAt = inviteData.acceptedAt as admin.firestore.Timestamp | undefined;
+    const expiresAt = inviteData.expiresAt as Timestamp | undefined;
+    const acceptedAt = inviteData.acceptedAt as Timestamp | undefined;
     const acceptedByUid = inviteData.acceptedByUid as string | undefined;
 
     if (status === 'accepted' || acceptedAt) {

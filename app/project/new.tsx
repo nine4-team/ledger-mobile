@@ -52,7 +52,7 @@ export default function NewProjectScreen() {
   };
 
   return (
-    <Screen title="New Project">
+    <Screen title="New Project" backTarget="/(tabs)/index">
       <View style={styles.container}>
         <AppText variant="body">Project name</AppText>
         <TextInput

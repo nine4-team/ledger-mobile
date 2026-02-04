@@ -278,9 +278,8 @@ export default function ItemDetailScreen() {
   };
 
   return (
-    <Screen title="Item">
+    <Screen title="Item" backTarget={fallbackTarget}>
       <View style={styles.container}>
-        <AppButton title="Back" variant="secondary" onPress={handleBack} />
         <AppText variant="title">Item detail</AppText>
         {isLoading ? (
           <AppText variant="body">Loading item…</AppText>

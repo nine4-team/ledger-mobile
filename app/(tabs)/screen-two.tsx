@@ -1,13 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView, RefreshControl } from 'react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useIsFocused } from '@react-navigation/native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, usePathname } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Screen } from '../../src/components/Screen';
+import { Screen, useScreenRefresh } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
-import { AppButton } from '../../src/components/AppButton';
 import { useScreenTabs } from '../../src/components/ScreenTabs';
-import { layout } from '../../src/ui';
+import { layout, SCREEN_PADDING } from '../../src/ui';
 import { SharedItemsList } from '../../src/components/SharedItemsList';
 import { SharedTransactionsList } from '../../src/components/SharedTransactionsList';
 import { createInventoryScopeConfig, getListStateKey } from '../../src/data/scopeConfig';
@@ -18,6 +16,10 @@ import { useAccountContextStore } from '../../src/auth/accountContextStore';
 export default function ScreenTwo() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const [storedTab, setStoredTab] = useState<string | null>(null);
+  const accountId = useAccountContextStore((store) => store.accountId);
+  const scopeConfig = useMemo(() => createInventoryScopeConfig(), []);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToken, setRefreshToken] = useState(0);
   const initialTabKey = useMemo(() => {
     const raw = Array.isArray(params.tab) ? params.tab[0] : params.tab;
     if (raw === 'items' || raw === 'transactions' || raw === 'spaces') {
@@ -33,9 +35,26 @@ export default function ScreenTwo() {
     AsyncStorage.getItem('inventory:last-tab').then((value) => setStoredTab(value));
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    if (!accountId || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refreshScopedItems(accountId, scopeConfig, 'online'),
+        refreshScopedTransactions(accountId, scopeConfig, 'online'),
+      ]);
+      setRefreshToken((prev) => prev + 1);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [accountId, isRefreshing, scopeConfig]);
+
   return (
     <Screen
       title="Inventory"
+      refreshing={isRefreshing}
+      onRefresh={handleRefresh}
+      contentStyle={{ paddingTop: SCREEN_PADDING }}
       tabs={[
         { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
         { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
@@ -43,73 +62,44 @@ export default function ScreenTwo() {
       ]}
       initialTabKey={initialTabKey}
     >
-      <InventoryScreenContent />
+      <InventoryScreenContent scopeConfig={scopeConfig} refreshToken={refreshToken} />
     </Screen>
   );
 }
 
-function InventoryScreenContent() {
-  const accountId = useAccountContextStore((store) => store.accountId);
-  const isFocused = useIsFocused();
+function InventoryScreenContent({
+  scopeConfig,
+  refreshToken,
+}: {
+  scopeConfig: ReturnType<typeof createInventoryScopeConfig>;
+  refreshToken: number;
+}) {
+  const pathname = usePathname();
+  const isFocused = pathname === '/screen-two';
   const screenTabs = useScreenTabs();
   const selectedKey = screenTabs?.selectedKey ?? 'items';
-  const scopeConfig = createInventoryScopeConfig();
+  const screenRefresh = useScreenRefresh();
+  const refreshControl = screenRefresh ? (
+    <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+  ) : undefined;
   useScopeSwitching(scopeConfig, { isActive: isFocused });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshToken, setRefreshToken] = useState(0);
-  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedKey) return;
     void AsyncStorage.setItem('inventory:last-tab', selectedKey);
   }, [selectedKey]);
 
-  const handleRefresh = useCallback(async () => {
-    if (!accountId || isRefreshing) return;
-    setIsRefreshing(true);
-    setRefreshError(null);
-    try {
-      await Promise.all([
-        refreshScopedItems(accountId, scopeConfig, 'online'),
-        refreshScopedTransactions(accountId, scopeConfig, 'online'),
-      ]);
-      setRefreshToken((prev) => prev + 1);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to refresh inventory.';
-      setRefreshError(message);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [accountId, isRefreshing, scopeConfig]);
-
-  const refreshAction = (
-    <View style={styles.refreshRow}>
-      <AppButton
-        title={isRefreshing ? 'Refreshing…' : 'Refresh'}
-        variant="secondary"
-        onPress={handleRefresh}
-        disabled={isRefreshing}
-      />
-      {refreshError ? (
-        <AppText variant="caption" style={styles.refreshError}>
-          {refreshError}
-        </AppText>
-      ) : null}
-    </View>
-  );
-
   if (selectedKey === 'items') {
     const listStateKey = getListStateKey(scopeConfig, 'items');
     if (!listStateKey) {
       return (
-        <View style={styles.placeholder}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
           <AppText variant="body">Inventory items go here.</AppText>
-        </View>
+        </ScrollView>
       );
     }
     return (
       <View style={styles.content}>
-        {refreshAction}
         <SharedItemsList scopeConfig={scopeConfig} listStateKey={listStateKey} refreshToken={refreshToken} />
       </View>
     );
@@ -119,14 +109,13 @@ function InventoryScreenContent() {
     const listStateKey = getListStateKey(scopeConfig, 'transactions');
     if (!listStateKey) {
       return (
-        <View style={styles.placeholder}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
           <AppText variant="body">Inventory transactions go here.</AppText>
-        </View>
+        </ScrollView>
       );
     }
     return (
       <View style={styles.content}>
-        {refreshAction}
         <SharedTransactionsList
           scopeConfig={scopeConfig}
           listStateKey={listStateKey}
@@ -137,27 +126,21 @@ function InventoryScreenContent() {
   }
 
   return (
-    <View style={styles.placeholder}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
       <AppText variant="body">Inventory spaces go here.</AppText>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   placeholder: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
   content: {
     flex: 1,
     gap: 12,
-    paddingTop: layout.screenBodyTopMd.paddingTop,
-  },
-  refreshRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  refreshError: {
-    flex: 1,
   },
 });
