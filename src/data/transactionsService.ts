@@ -1,4 +1,15 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocFromCache,
+  getDocFromServer,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 import type { AttachmentRef } from '../offline/media';
@@ -38,8 +49,8 @@ export async function createTransaction(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
     );
   }
-  const now = firestore.FieldValue.serverTimestamp();
-  const docRef = await db.collection(`accounts/${accountId}/transactions`).add({
+  const now = serverTimestamp();
+  const docRef = await addDoc(collection(db, `accounts/${accountId}/transactions`), {
     ...data,
     createdAt: now,
     updatedAt: now,
@@ -56,16 +67,14 @@ export async function updateTransaction(
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await db
-    .collection(`accounts/${accountId}/transactions`)
-    .doc(transactionId)
-    .set(
-      {
-        ...data,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+  await setDoc(
+    doc(db, `accounts/${accountId}/transactions/${transactionId}`),
+    {
+      ...data,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   trackPendingWrite();
 }
 
@@ -73,7 +82,7 @@ export async function deleteTransaction(accountId: string, transactionId: string
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await db.collection(`accounts/${accountId}/transactions`).doc(transactionId).delete();
+  await deleteDoc(doc(db, `accounts/${accountId}/transactions/${transactionId}`));
   trackPendingWrite();
 }
 
@@ -85,11 +94,12 @@ export async function getTransaction(
   if (!isFirebaseConfigured || !db) {
     return null;
   }
-  const ref = db.collection(`accounts/${accountId}/transactions`).doc(transactionId);
+  const ref = doc(db, `accounts/${accountId}/transactions/${transactionId}`);
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
-      const snapshot = await (ref as any).get({ source });
+      const snapshot =
+        source === 'cache' ? await getDocFromCache(ref) : await getDocFromServer(ref);
       if (!snapshot.exists) {
         return null;
       }
@@ -98,7 +108,7 @@ export async function getTransaction(
       // try next
     }
   }
-  const snapshot = await ref.get();
+  const snapshot = await getDoc(ref);
   if (!snapshot.exists) {
     return null;
   }
@@ -114,10 +124,9 @@ export function subscribeToTransaction(
     onChange(null);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/transactions`)
-    .doc(transactionId)
-    .onSnapshot(
+  const ref = doc(db, `accounts/${accountId}/transactions/${transactionId}`);
+  return onSnapshot(
+    ref,
       (snapshot) => {
         if (!snapshot.exists) {
           onChange(null);

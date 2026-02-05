@@ -1,19 +1,27 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import firestore from '@react-native-firebase/firestore';
+import { doc, getDoc, onSnapshot } from '@react-native-firebase/firestore';
 
 import { useSyncStatusStore } from './syncStatusStore';
-import { isFirebaseConfigured } from '../firebase/firebase';
+import { db, isFirebaseConfigured } from '../firebase/firebase';
+import type { RequestDoc } from '../data/requestDocs';
 
 const STORAGE_KEY = 'sync/request-docs';
 
-type TrackedRequest = {
+export type TrackedRequest = {
   path: string;
   status?: string;
   errorMessage?: string;
+  doc?: RequestDoc<Record<string, unknown>>;
 };
 
 const subscriptions = new Map<string, () => void>();
 const trackedRequests = new Map<string, TrackedRequest>();
+const listeners = new Set<(requests: TrackedRequest[]) => void>();
+
+function notifyListeners() {
+  const payload = Array.from(trackedRequests.values());
+  listeners.forEach((listener) => listener(payload));
+}
 
 function updateCounts() {
   let pending = 0;
@@ -28,6 +36,7 @@ function updateCounts() {
     }
   });
   useSyncStatusStore.getState().setRequestDocCounts(pending, failed);
+  notifyListeners();
 }
 
 async function persistTrackedRequests() {
@@ -39,12 +48,12 @@ function attachSubscription(path: string) {
   if (subscriptions.has(path)) {
     return;
   }
-  if (!isFirebaseConfigured) {
+  if (!isFirebaseConfigured || !db) {
     return;
   }
-  const unsubscribe = firestore()
-    .doc(path)
-    .onSnapshot(
+  const ref = doc(db, path);
+  const unsubscribe = onSnapshot(
+    ref,
       (snapshot) => {
         if (!snapshot.exists) {
           trackedRequests.set(path, { path, status: 'failed', errorMessage: 'Request missing.' });
@@ -52,10 +61,10 @@ function attachSubscription(path: string) {
           persistTrackedRequests();
           return;
         }
-        const data = snapshot.data() as { status?: string; errorMessage?: string } | undefined;
+        const data = snapshot.data() as RequestDoc<Record<string, unknown>> | undefined;
         const status = data?.status ?? 'pending';
         const errorMessage = data?.errorMessage;
-        trackedRequests.set(path, { path, status, errorMessage });
+        trackedRequests.set(path, { path, status, errorMessage, doc: data });
         updateCounts();
         if (status === 'applied') {
           untrackRequestDocPath(path);
@@ -74,12 +83,12 @@ function attachSubscription(path: string) {
         useSyncStatusStore.getState().setLastError(message);
         updateCounts();
       }
-    );
+  );
   subscriptions.set(path, unsubscribe);
 }
 
 export async function startRequestDocTracking(): Promise<void> {
-  if (!isFirebaseConfigured) {
+  if (!isFirebaseConfigured || !db) {
     return;
   }
   const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -129,16 +138,17 @@ export async function refreshTrackedRequestDocs(): Promise<void> {
   await Promise.all(
     paths.map(async (path) => {
       try {
-        const snapshot = await firestore().doc(path).get();
+        const snapshot = await getDoc(doc(db, path));
         if (!snapshot.exists) {
           trackedRequests.set(path, { path, status: 'failed', errorMessage: 'Request missing.' });
           return;
         }
-        const data = snapshot.data() as { status?: string; errorMessage?: string } | undefined;
+        const data = snapshot.data() as RequestDoc<Record<string, unknown>> | undefined;
         trackedRequests.set(path, {
           path,
           status: data?.status ?? 'pending',
           errorMessage: data?.errorMessage,
+          doc: data,
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Request refresh failed.';
@@ -149,4 +159,16 @@ export async function refreshTrackedRequestDocs(): Promise<void> {
   );
   updateCounts();
   await persistTrackedRequests();
+}
+
+export function subscribeToTrackedRequests(onChange: (requests: TrackedRequest[]) => void): () => void {
+  listeners.add(onChange);
+  onChange(Array.from(trackedRequests.values()));
+  return () => {
+    listeners.delete(onChange);
+  };
+}
+
+export function getTrackedRequestsSnapshot(): TrackedRequest[] {
+  return Array.from(trackedRequests.values());
 }

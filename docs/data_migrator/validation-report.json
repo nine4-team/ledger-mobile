@@ -1,0 +1,191 @@
+{
+  "exportPath": "/Users/benjaminmackenzie/Dev/ledger_mobile/docs/data_migrator/ledger-server-export-1584-account-2026-02-04T19_34_39.509Z.json",
+  "exportedAt": "2026-02-04T19:34:39.509Z",
+  "source": {
+    "kind": "server",
+    "supabaseUrl": "https://rwevbekceexnoaabdnbz.supabase.co"
+  },
+  "scope": {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "projects": [
+      {
+        "id": "0ee567e7-ae7b-4816-910f-2296368a6e60",
+        "name": "Hyer's Martinique Rental"
+      },
+      {
+        "id": "c093c11b-6c1e-4c54-9df2-e7ee3c74a5f0",
+        "name": "Bradshaws Desert Color Rental"
+      }
+    ]
+  },
+  "tables": {
+    "public.accounts": 1,
+    "public.users": 1,
+    "public.projects": 2,
+    "public.spaces": 1,
+    "public.space_templates": 0,
+    "public.items": 785,
+    "public.transactions": 175,
+    "public.invitations": 0,
+    "public.account_presets": 1,
+    "public.item_lineage_edges": 35,
+    "public.item_audit_logs": 4,
+    "public.transaction_audit_logs": 440,
+    "public.highlevel_onboarding_events": 0
+  },
+  "primaryCounts": {
+    "accounts": 1,
+    "users": 1,
+    "projects": 2,
+    "spaces": 1,
+    "items": 785,
+    "transactions": 175,
+    "item_lineage_edges": 35
+  },
+  "idShapes": {
+    "items": {
+      "byUuid": 785,
+      "byItemId": 785
+    },
+    "transactions": {
+      "byUuid": 175,
+      "byTransactionId": 175
+    },
+    "users": {
+      "byId": 1
+    }
+  },
+  "totals": {
+    "errors": 14,
+    "warnings": 1
+  },
+  "fkErrorCounts": {
+    "public.item_lineage_edges.from_transaction_id_missing": 14
+  },
+  "errors": [
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "a96365b3-961c-4c85-b5c6-efd507f8c6ba",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "28f1a3c4-1b2c-4152-896c-50840f525cbf",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "9443c729-da3e-4f39-a5be-4cf8e5308ce0",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "20f9fdd3-456c-43b5-ba3b-147977ccc2e9",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "61ecfab6-ce70-4b5f-a479-70a01be9e1b6",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "c0a6d660-469b-4856-9a33-812646cb7b4f",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "ac06ede3-2e01-469c-94e1-380a91c7d9e0",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "9d626945-6ef9-46e9-9f2a-384998bc7758",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "66f9f987-f90d-4a48-8a05-f77588861984",
+        "from_transaction_id": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "cf11ca40-d70e-41b8-9346-16e2c46a5368",
+        "from_transaction_id": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "acccda2d-4145-42d0-a9c0-c55458b08789",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "3e484742-80aa-412b-9117-03530ce174a7",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "256370ac-c870-4f76-b612-493a668f3e8d",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "e37e8ec7-e7a2-454e-948f-b8df9c6b5911",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "code": "storage_not_exported",
+      "message": "Storage objects were not exported; only URLs are present.",
+      "details": {
+        "warnings": [
+          "Skipping storage export for storage.buckets: storage.buckets: The schema must be one of the following: public, graphql_public",
+          "Skipping storage export for storage.objects: storage.objects: The schema must be one of the following: public, graphql_public"
+        ]
+      }
+    }
+  ]
+}

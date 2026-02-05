@@ -7,6 +7,7 @@
  * - This config is a focused, blocking gate for "styling belongs in the stash".
  */
 import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
 
 export default [
@@ -30,6 +31,8 @@ export default [
       },
     },
     plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      'react-hooks': reactHooks,
       'react-native': reactNative,
     },
     rules: {

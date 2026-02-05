@@ -219,12 +219,15 @@ export function DraggableCardList<TItem>({
 
   const containerHeight = ordered.length * itemHeight;
 
+  const containerHeightStyle = { height: containerHeight };
+
   return (
-    <View style={[styles.container, { height: containerHeight }, style]} accessibilityRole="none">
+    <View style={[styles.container, containerHeightStyle, style]} accessibilityRole="none">
       {ordered.map((item, index) => {
         const id = getItemId(item);
         const isActive = id === activeId;
         const top = positions.get(id) ?? new Animated.Value(index * itemHeight);
+        const itemDynamicStyle = getItemDynamicStyle(top, itemHeight, isActive);
 
         const dragHandleProps: Record<string, unknown> = disabled || !canDragItem(item)
           ? {}
@@ -250,17 +253,7 @@ export function DraggableCardList<TItem>({
         return (
           <Animated.View
             key={id}
-            style={[
-              styles.itemContainer,
-              {
-                top,
-                height: itemHeight,
-                zIndex: isActive ? 10 : 0,
-                elevation: isActive ? 10 : 0,
-                opacity: isActive ? 0.98 : 1,
-                transform: [{ scale: isActive ? 1.01 : 1 }],
-              },
-            ]}
+            style={[styles.itemContainer, itemDynamicStyle]}
             pointerEvents={activeId && !isActive ? 'none' : 'auto'}
           >
             {renderItem({ item, index, isActive, dragHandleProps })}
@@ -269,6 +262,17 @@ export function DraggableCardList<TItem>({
       })}
     </View>
   );
+}
+
+function getItemDynamicStyle(top: Animated.Value, itemHeight: number, isActive: boolean) {
+  return {
+    top,
+    height: itemHeight,
+    zIndex: isActive ? 10 : 0,
+    elevation: isActive ? 10 : 0,
+    opacity: isActive ? 0.98 : 1,
+    transform: [{ scale: isActive ? 1.01 : 1 }],
+  };
 }
 
 const styles = StyleSheet.create({

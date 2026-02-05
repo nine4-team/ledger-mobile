@@ -1,4 +1,17 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 import type { AttachmentRef } from '../offline/media';
@@ -37,9 +50,10 @@ export function subscribeToSpaces(
     onChange([]);
     return () => {};
   }
-  const collectionRef = db.collection(`accounts/${accountId}/spaces`);
-  const query = collectionRef.where('projectId', '==', projectId);
-  return query.onSnapshot(
+  const collectionRef = collection(db, `accounts/${accountId}/spaces`);
+  const queryRef = query(collectionRef, where('projectId', '==', projectId));
+  return onSnapshot(
+    queryRef,
     (snapshot) => {
       const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as Space));
       onChange(next);
@@ -59,18 +73,19 @@ export async function refreshSpaces(
   if (!isFirebaseConfigured || !db) {
     return [];
   }
-  const collectionRef = db.collection(`accounts/${accountId}/spaces`);
-  const query = collectionRef.where('projectId', '==', projectId);
+  const collectionRef = collection(db, `accounts/${accountId}/spaces`);
+  const queryRef = query(collectionRef, where('projectId', '==', projectId));
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
-      const snapshot = await (query as any).get({ source });
+      const snapshot =
+        source === 'cache' ? await getDocsFromCache(queryRef) : await getDocsFromServer(queryRef);
       return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Space));
     } catch {
       // try next
     }
   }
-  const snapshot = await (query as any).get();
+  const snapshot = await getDocs(queryRef);
   return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Space));
 }
 
@@ -84,8 +99,8 @@ export async function createSpace(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
     );
   }
-  const now = firestore.FieldValue.serverTimestamp();
-  const docRef = await db.collection(`accounts/${accountId}/spaces`).add({
+  const now = serverTimestamp();
+  const docRef = await addDoc(collection(db, `accounts/${accountId}/spaces`), {
     name: data.name,
     notes: data.notes ?? null,
     projectId: data.projectId ?? null,
@@ -106,16 +121,14 @@ export async function updateSpace(
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await db
-    .collection(`accounts/${accountId}/spaces`)
-    .doc(spaceId)
-    .set(
-      {
-        ...data,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+  await setDoc(
+    doc(db, `accounts/${accountId}/spaces/${spaceId}`),
+    {
+      ...data,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   trackPendingWrite();
 }
 
@@ -123,7 +136,7 @@ export async function deleteSpace(accountId: string, spaceId: string): Promise<v
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await db.collection(`accounts/${accountId}/spaces`).doc(spaceId).delete();
+  await deleteDoc(doc(db, `accounts/${accountId}/spaces/${spaceId}`));
   trackPendingWrite();
 }
 
@@ -136,10 +149,9 @@ export function subscribeToSpace(
     onChange(null);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/spaces`)
-    .doc(spaceId)
-    .onSnapshot(
+  const ref = doc(db, `accounts/${accountId}/spaces/${spaceId}`);
+  return onSnapshot(
+    ref,
       (snapshot) => {
         if (!snapshot.exists) {
           onChange(null);

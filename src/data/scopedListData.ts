@@ -1,3 +1,12 @@
+import {
+  collection,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+  query,
+  where,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import type { AttachmentRef } from '../offline/media';
 import { ScopeConfig } from './scopeConfig';
@@ -75,28 +84,28 @@ async function getQuerySnapshotWithPreference(
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
-      return await (query as any).get({ source });
+      return source === 'cache' ? await getDocsFromCache(query as any) : await getDocsFromServer(query as any);
     } catch {
       // try next
     }
   }
-  return await (query as any).get();
+  return await getDocs(query as any);
 }
 
 function getScopedItemsQuery(accountId: string, scopeConfig: ScopeConfig) {
   const projectId = getScopeProjectId(scopeConfig);
-  const collectionRef = db.collection(`accounts/${accountId}/items`);
+  const collectionRef = collection(db, `accounts/${accountId}/items`);
   return scopeConfig.scope === 'inventory'
-    ? collectionRef.where('projectId', '==', null)
-    : collectionRef.where('projectId', '==', projectId);
+    ? query(collectionRef, where('projectId', '==', null))
+    : query(collectionRef, where('projectId', '==', projectId));
 }
 
 function getScopedTransactionsQuery(accountId: string, scopeConfig: ScopeConfig) {
   const projectId = getScopeProjectId(scopeConfig);
-  const collectionRef = db.collection(`accounts/${accountId}/transactions`);
+  const collectionRef = collection(db, `accounts/${accountId}/transactions`);
   return scopeConfig.scope === 'inventory'
-    ? collectionRef.where('projectId', '==', null)
-    : collectionRef.where('projectId', '==', projectId);
+    ? query(collectionRef, where('projectId', '==', null))
+    : query(collectionRef, where('projectId', '==', projectId));
 }
 
 export function subscribeToScopedItems(
@@ -117,7 +126,8 @@ export function subscribeToScopedItems(
 
   const query = getScopedItemsQuery(accountId, scopeConfig);
 
-  return query.onSnapshot(
+  return onSnapshot(
+    query,
     (snapshot) => {
       const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ScopedItem));
       onChange(toSafeArray(next));
@@ -147,7 +157,8 @@ export function subscribeToScopedTransactions(
 
   const query = getScopedTransactionsQuery(accountId, scopeConfig);
 
-  return query.onSnapshot(
+  return onSnapshot(
+    query,
     (snapshot) => {
       const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ScopedTransaction));
       onChange(toSafeArray(next));
@@ -202,8 +213,9 @@ export function subscribeToProjects(
     return () => {};
   }
 
-  const collectionRef = db.collection(`accounts/${accountId}/projects`);
-  return collectionRef.onSnapshot(
+  const collectionRef = collection(db, `accounts/${accountId}/projects`);
+  return onSnapshot(
+    collectionRef,
     (snapshot) => {
       const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectSummary));
       onChange(toSafeArray(next));

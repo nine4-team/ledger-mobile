@@ -26,6 +26,21 @@ export type RepositoryMode = 'online' | 'offline';
 /**
  * Online-first implementation: direct Firestore access
  */
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocFromCache,
+  getDocFromServer,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 
@@ -37,7 +52,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
 
   private async getDocWithPreference(docPath: string) {
     if (!db) return null;
-    const ref = db.doc(docPath);
+    const ref = doc(db, docPath);
 
     // Both modes use native Firestore. The difference is *read preference*:
     // - online: server-first, fallback to cache
@@ -49,16 +64,17 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
 
     for (const source of preference) {
       try {
-        return await (ref as any).get({ source });
+        return source === 'cache' ? await getDocFromCache(ref) : await getDocFromServer(ref);
       } catch {
         // try next source
       }
     }
-    return await ref.get();
+    return await getDoc(ref);
   }
 
   private async getQueryWithPreference(query: unknown) {
     // query: FirebaseFirestoreTypes.Query, but keep it loose to avoid over-coupling types here.
+    const queryRef = query as any;
     const preference =
       this.mode === 'offline'
         ? (['cache', 'server'] as const)
@@ -66,19 +82,19 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
 
     for (const source of preference) {
       try {
-        return await (query as any).get({ source });
+        return source === 'cache' ? await getDocsFromCache(queryRef) : await getDocsFromServer(queryRef);
       } catch {
         // try next source
       }
     }
-    return await (query as any).get();
+    return await getDocs(queryRef);
   }
 
   async list(): Promise<T[]> {
     if (!isFirebaseConfigured || !db) {
       return [];
     }
-    const q = db.collection(this.collectionPath);
+    const q = collection(db, this.collectionPath);
     const snapshot = await this.getQueryWithPreference(q);
     return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
   }
@@ -98,7 +114,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     if (!isFirebaseConfigured || !db) {
       return;
     }
-    await db.collection(this.collectionPath).doc(id).set(data as object, { merge: true });
+    await setDoc(doc(db, `${this.collectionPath}/${id}`), data as object, { merge: true });
     trackPendingWrite();
   }
 
@@ -106,7 +122,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     if (!isFirebaseConfigured || !db) {
       return;
     }
-    await db.collection(this.collectionPath).doc(id).delete();
+    await deleteDoc(doc(db, `${this.collectionPath}/${id}`));
     trackPendingWrite();
   }
 
@@ -114,7 +130,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     if (!isFirebaseConfigured || !db) {
       return [];
     }
-    const q = db.collection(this.collectionPath).where('uid', '==', uid);
+    const q = query(collection(db, this.collectionPath), where('uid', '==', uid));
     const snapshot = await this.getQueryWithPreference(q);
     return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
   }
@@ -129,11 +145,12 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
       return () => {};
     }
 
-    const docRef = db.doc(`${this.collectionPath}/${id}`);
+    const docRef = doc(db, `${this.collectionPath}/${id}`);
     
     // onSnapshot works offline with native Firestore persistence
     // It will fire immediately with cached data if available, then with server updates
-    return docRef.onSnapshot(
+    return onSnapshot(
+      docRef,
       (snapshot) => {
         if (!snapshot.exists) {
           onChange(null);
@@ -158,11 +175,12 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
       return () => {};
     }
 
-    const collectionRef = db.collection(this.collectionPath);
+    const collectionRef = collection(db, this.collectionPath);
     
     // onSnapshot works offline with native Firestore persistence
     // It will fire immediately with cached data if available, then with server updates
-    return collectionRef.onSnapshot(
+    return onSnapshot(
+      collectionRef,
       (snapshot) => {
         const items = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
         onChange(items);

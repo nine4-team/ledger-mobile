@@ -56,12 +56,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="screen-three"
+        name="components"
         options={{
-          title: 'Templates',
-          tabBarLabel: 'Templates',
+          title: 'Components',
+          tabBarLabel: 'Components',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="library-books" size={size || 24} color={color} />
+            <MaterialIcons name="widgets" size={size || 24} color={color} />
           ),
         }}
       />

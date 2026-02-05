@@ -6,7 +6,7 @@ import { useUIKitTheme } from '../theme/ThemeProvider';
 import { getScreenContainerStyle, SCREEN_PADDING } from '../ui';
 import { appTokens } from '../ui/tokens';
 import { TopHeader } from './TopHeader';
-import { DEFAULT_SCREEN_TABS, ScreenTabItem, ScreenTabs, ScreenTabsProvider } from './ScreenTabs';
+import { ScreenTabItem, ScreenTabs, ScreenTabsProvider } from './ScreenTabs';
 import type { InfoDialogContent } from './InfoButton';
 
 interface ScreenProps {
@@ -52,6 +52,10 @@ interface ScreenProps {
    * If provided, an info icon will be shown on the left side of the header.
    */
   infoContent?: InfoDialogContent;
+  /**
+   * Optional actions rendered to the right of the title.
+   */
+  headerRight?: React.ReactNode;
 }
 
 type ScreenRefreshContextValue = {
@@ -81,17 +85,20 @@ export const Screen: React.FC<ScreenProps> = ({
   renderBelowTabs,
   hideBackButton = false,
   infoContent,
+  headerRight,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
   const router = useRouter();
-  const resolvedTabs = useMemo(() => tabs ?? DEFAULT_SCREEN_TABS, [tabs]);
+  const resolvedTabs = useMemo(() => tabs ?? [], [tabs]);
   const defaultKey = useMemo(() => resolvedTabs[0]?.key ?? 'tab-one', [resolvedTabs]);
   const [selectedKey, setSelectedKey] = useState<string>(initialTabKey ?? defaultKey);
   const refreshContextValue = useMemo<ScreenRefreshContextValue | null>(() => {
     if (!onRefresh) return null;
     return { refreshing: Boolean(refreshing), onRefresh };
   }, [onRefresh, refreshing]);
+
+  const hasTabs = Boolean(title) && resolvedTabs.length > 0;
 
   const handleBack = useCallback(() => {
     if (onPressBack) {
@@ -115,6 +122,8 @@ export const Screen: React.FC<ScreenProps> = ({
     return false;
   }, [hideBackButton, onPressBack, router, backTarget]);
 
+  const contentPaddingTop = (appTokens.screen.contentPaddingTop ?? 0) + (title ? 0 : insets.top);
+
   const content = (
     <View style={[styles.container, getScreenContainerStyle(uiKitTheme), containerStyle]}>
       {title ? (
@@ -124,19 +133,20 @@ export const Screen: React.FC<ScreenProps> = ({
           onPressBack={shouldShowBackButton ? handleBack : undefined}
           hideBottomBorder={true}
           infoContent={infoContent}
+          rightActions={headerRight}
         />
       ) : null}
-      {title ? (
+      {hasTabs ? (
         <ScreenTabs tabs={resolvedTabs} value={selectedKey} onChange={setSelectedKey} initialTabKey={initialTabKey} />
       ) : null}
-      {title ? renderBelowTabs?.({ selectedKey, setSelectedKey, tabs: resolvedTabs }) : null}
+      {hasTabs ? renderBelowTabs?.({ selectedKey, setSelectedKey, tabs: resolvedTabs }) : null}
       <View
         style={[
           styles.content,
           // Local (app-owned) content padding so it can't be overridden by ui-kit defaults.
           {
             paddingHorizontal: SCREEN_PADDING,
-            paddingTop: (appTokens.screen.contentPaddingTop ?? 0) + insets.top,
+            paddingTop: contentPaddingTop,
             paddingBottom: (appTokens.screen.contentPaddingBottom ?? 0) + insets.bottom,
           },
           style,
@@ -154,7 +164,7 @@ export const Screen: React.FC<ScreenProps> = ({
     </ScreenRefreshContext.Provider>
   );
 
-  if (!title) return withRefresh;
+  if (!hasTabs) return withRefresh;
 
   return (
     <ScreenTabsProvider value={{ selectedKey, setSelectedKey, tabs: resolvedTabs }}>

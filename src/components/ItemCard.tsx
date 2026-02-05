@@ -7,6 +7,7 @@ import { useUIKitTheme } from '../theme/ThemeProvider';
 import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
+import { SelectorCircle } from './SelectorCircle';
 
 export type ItemCardProps = {
   description: string;
@@ -140,7 +141,7 @@ export function ItemCard({
           getCardBaseStyle({ radius: 16 }),
           getCardBorderStyle(uiKitTheme),
           themed.card,
-          pressed && onPress ? { opacity: 0.92 } : null,
+        pressed && onPress ? styles.cardPressed : null,
           style,
         ]}
       >
@@ -153,18 +154,12 @@ export function ItemCard({
                     e.stopPropagation();
                     setSelected(!isSelected);
                   }}
-                  style={[
-                    styles.selector,
-                    { borderColor: isSelected ? uiKitTheme.primary.main : uiKitTheme.border.secondary },
-                  ]}
                   accessibilityRole="checkbox"
                   accessibilityLabel={`Select ${description}`}
                   accessibilityState={{ checked: isSelected }}
-                  hitSlop={8}
+                  hitSlop={13}
                 >
-                  {isSelected ? (
-                    <View style={[styles.selectorInner, { backgroundColor: uiKitTheme.primary.main }]} />
-                  ) : null}
+                  <SelectorCircle selected={isSelected} indicator="dot" />
                 </Pressable>
               ) : null}
 
@@ -259,7 +254,7 @@ export function ItemCard({
                   style={[
                     styles.thumbPlaceholder,
                     themed.placeholderBorder,
-                    !onAddImagePress ? { opacity: 0.7 } : null,
+                    !onAddImagePress ? styles.addImageDisabled : null,
                   ]}
                 >
                   <MaterialIcons name="photo-camera" size={24} color={uiKitTheme.text.secondary} />
@@ -312,6 +307,9 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  cardPressed: {
+    opacity: 0.92,
+  },
   content: {
     padding: APP_CARD_PADDING,
     gap: 12,
@@ -326,20 +324,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  selector: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  selectorInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
   },
   price: {
     fontSize: 13,
@@ -364,6 +348,9 @@ const styles = StyleSheet.create({
     minHeight: 28,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addImageDisabled: {
+    opacity: 0.7,
   },
   bottomRow: {
     flexDirection: 'row',

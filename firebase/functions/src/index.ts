@@ -787,6 +787,102 @@ type CreateProjectResponse = {
   projectId: string;
 };
 
+type BudgetCategorySeed = {
+  id: string;
+  name: string;
+  slug: string;
+  order: number;
+  metadata?: {
+    categoryType?: 'standard' | 'itemized' | 'fee';
+    excludeFromOverallBudget?: boolean;
+  } | null;
+};
+
+const BUDGET_CATEGORY_PRESET_SEED: BudgetCategorySeed[] = [
+  {
+    id: 'seed_furnishings',
+    name: 'Furnishings',
+    slug: 'furnishings',
+    order: 0,
+    metadata: { categoryType: 'itemized', excludeFromOverallBudget: false },
+  },
+  {
+    id: 'seed_design_fee',
+    name: 'Design Fee',
+    slug: 'design-fee',
+    order: 1,
+    metadata: { categoryType: 'fee', excludeFromOverallBudget: false },
+  },
+];
+
+async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; createdBy?: string | null }) {
+  const { accountId, createdBy } = params;
+  const db = getFirestore();
+  const now = FieldValue.serverTimestamp();
+
+  const collectionRef = db.collection(`accounts/${accountId}/presets/default/budgetCategories`);
+
+  await db.runTransaction(async (tx) => {
+    // Fast path: if Furnishings exists, ensure it's usable (not archived) and exit.
+    const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));
+    if (!existingFurnishings.empty) {
+      const docSnap = existingFurnishings.docs[0];
+      const data = docSnap.data() as any;
+      if (data?.isArchived === true) {
+        tx.set(
+          docSnap.ref,
+          {
+            isArchived: false,
+            updatedAt: now,
+            updatedBy: createdBy ?? null,
+          },
+          { merge: true }
+        );
+      }
+      return;
+    }
+
+    // Seed minimal required set (currently just Furnishings) in an idempotent way.
+    for (const seed of BUDGET_CATEGORY_PRESET_SEED) {
+      const seedRef = collectionRef.doc(seed.id);
+      const seedSnap = await tx.get(seedRef);
+      if (seedSnap.exists) continue;
+      tx.set(
+        seedRef,
+        {
+          id: seed.id,
+          accountId,
+          projectId: null,
+          name: seed.name,
+          slug: seed.slug,
+          isArchived: false,
+          order: seed.order,
+          metadata: seed.metadata ?? null,
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+          createdBy: createdBy ?? null,
+          updatedBy: createdBy ?? null,
+        },
+        { merge: false }
+      );
+    }
+  });
+}
+
+/**
+ * Bootstrap presets on first membership creation (covers client-side account creation too).
+ */
+export const onAccountMembershipCreated = onDocumentCreated(
+  'accounts/{accountId}/users/{uid}',
+  async (event) => {
+    const accountId = event.params.accountId as string;
+    const uid = (event.params.uid as string | undefined) ?? null;
+    if (!accountId) return;
+    await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
+  }
+);
+
 /**
  * Create a new account and the caller's membership (server-owned).
  */
@@ -827,6 +923,9 @@ export const createAccount = onCall<CreateAccountRequest>(async (request): Promi
     );
   });
 
+  // Bootstrap required presets before returning, to avoid downstream UI/code relying on missing seeds.
+  await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
+
   return { accountId, role: 'owner', name };
 });
 
@@ -854,6 +953,9 @@ export const createProject = onCall<CreateProjectRequest>(async (request): Promi
   const now = FieldValue.serverTimestamp();
   const projectRef = db.collection(`accounts/${accountId}/projects`).doc();
   const projectId = projectRef.id;
+
+  // Ensure required budget presets exist before we try to pin Furnishings.
+  await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
 
   const presetBudgetCategories = db
     .collection(`accounts/${accountId}/presets/default/budgetCategories`)
@@ -1044,7 +1146,7 @@ export const acceptInvite = onCall<AcceptInviteRequest>(
       );
 
       // Mark invite as accepted
-      tx.update(inviteRef, {
+      tx.update(inviteRef!, {
         status: 'accepted',
         acceptedAt: now,
         acceptedByUid: uid,
@@ -1056,6 +1158,9 @@ export const acceptInvite = onCall<AcceptInviteRequest>(
         role,
       };
     });
+
+    // Ensure required presets exist for newly joined members (idempotent).
+    await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
 
     return result;
   }

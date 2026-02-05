@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import firestore from '@react-native-firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { appConfig } from '../config/appConfig';
 import { useAuthStore } from '../auth/authStore';
@@ -24,8 +24,8 @@ export const useQuotaStore = create<QuotaState>((set, get) => ({
 
     await Promise.all(
       quotaKeys.map(async (key) => {
-        const quotaRef = db.doc(`users/${uid}/quota/${key}`);
-        const snap = await quotaRef.get();
+        const quotaRef = doc(db, `users/${uid}/quota/${key}`);
+        const snap = await getDoc(quotaRef);
         counters[key] = snap.exists ? ((snap.data()?.count as number) ?? 0) : 0;
       })
     );
@@ -36,13 +36,14 @@ export const useQuotaStore = create<QuotaState>((set, get) => ({
     if (!isFirebaseConfigured || !db) {
       return;
     }
-    const quotaRef = db.doc(`users/${uid}/quota/${objectKey}`);
+    const quotaRef = doc(db, `users/${uid}/quota/${objectKey}`);
     const current = get().counters[objectKey] || 0;
 
-    await quotaRef.set(
+    await setDoc(
+      quotaRef,
       {
         count: current + 1,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
+        updatedAt: serverTimestamp(),
       },
       { merge: true }
     );
@@ -55,8 +56,8 @@ export const useQuotaStore = create<QuotaState>((set, get) => ({
     if (!isFirebaseConfigured || !db) {
       return 0;
     }
-    const quotaRef = db.doc(`users/${uid}/quota/${objectKey}`);
-    const snap = await quotaRef.get();
+    const quotaRef = doc(db, `users/${uid}/quota/${objectKey}`);
+    const snap = await getDoc(quotaRef);
     return snap.exists ? ((snap.data()?.count as number) ?? 0) : 0;
   },
 }));

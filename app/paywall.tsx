@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../src/components/Screen';
 import { AppText } from '../src/components/AppText';
 import { AppButton } from '../src/components/AppButton';
+import { AppScrollView } from '../src/components/AppScrollView';
 import { useBillingStore } from '../src/billing/billingStore';
 import { useTheme } from '../src/theme/ThemeProvider';
 
@@ -16,6 +17,9 @@ export default function PaywallScreen() {
     container: {
       flexGrow: 1,
       paddingTop: theme.spacing.xl,
+    },
+    scroll: {
+      flex: 1,
     },
     title: {
       marginBottom: theme.spacing.xl,
@@ -90,7 +94,7 @@ export default function PaywallScreen() {
 
   return (
     <Screen>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+      <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
         <AppText variant="h1" style={styles.title}>
           Upgrade to Pro
         </AppText>
@@ -153,7 +157,7 @@ export default function PaywallScreen() {
           onPress={() => router.back()}
           style={styles.button}
         />
-      </ScrollView>
+      </AppScrollView>
     </Screen>
   );
 }

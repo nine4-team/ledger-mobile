@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from '../components/AppText';
 import { AppButton } from '../components/AppButton';
+import { AppScrollView } from '../components/AppScrollView';
 import { useScreenRefresh } from '../components/Screen';
 import { layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
@@ -91,7 +92,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
   }, [items]);
 
   return (
-    <ScrollView
+    <AppScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.container, styles.scrollContent]}
       refreshControl={
@@ -152,7 +153,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
           ))}
         </View>
       )}
-    </ScrollView>
+    </AppScrollView>
   );
 }
 

@@ -53,6 +53,9 @@ Open Settings → Presets → choose one:
 Account bootstrap requirement (Firebase migration; required):
 - When a **new account is created** (or when a new member first joins an account), the system must ensure the account has a **seeded set of budget category presets** sufficient for the core app to function.
 - The seeded presets must include **“Furnishings”** as a budget category preset.
+  - Canonical baseline seed list (v1):
+    - **Furnishings** (`metadata.categoryType = "itemized"`)
+    - **Design Fee** (`metadata.categoryType = "fee"`)
 - This migrated app has **no category-defaulting concept** used for transaction entry or UI selection.
 - The only “what shows up first” behavior for budget progress trackers is driven by **pinned budget categories** (per-user per-project preferences; see `20_data/data_contracts.md` → `ProjectPreferences`).
   - For **every new project**, the system ensures **“Furnishings” is pinned by default**:

@@ -55,6 +55,10 @@ export default function AccountSelectScreen() {
   const styles = useMemo(
     () =>
       StyleSheet.create({
+        container: {
+          flex: 1,
+          justifyContent: 'center',
+        },
         card: {
           ...getCardStyle(uiKitTheme, { radius: 12, padding: theme.spacing.lg }),
           gap: theme.spacing.md,
@@ -71,12 +75,19 @@ export default function AccountSelectScreen() {
           borderRadius: 12,
           paddingVertical: theme.spacing.md,
           paddingHorizontal: theme.spacing.md,
+          backgroundColor: uiKitTheme.background.surface,
+        },
+        rowPressed: {
+          opacity: 0.8,
         },
         rowTitle: {
           fontWeight: '600',
         },
         rowSub: {
           marginTop: theme.spacing.xs,
+          color: theme.colors.textSecondary,
+        },
+        secondaryText: {
           color: theme.colors.textSecondary,
         },
         errorBanner: {
@@ -211,10 +222,10 @@ export default function AccountSelectScreen() {
 
   return (
     <Screen>
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={styles.container}>
         <View style={styles.card}>
           <AppText variant="title">{title}</AppText>
-          <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+          <AppText variant="body" style={styles.secondaryText}>
             {subtitle}
           </AppText>
 
@@ -227,7 +238,7 @@ export default function AccountSelectScreen() {
           )}
 
           {loading ? (
-            <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+            <AppText variant="body" style={styles.secondaryText}>
               Loading accounts…
             </AppText>
           ) : accounts.length === 0 ? (
@@ -246,7 +257,7 @@ export default function AccountSelectScreen() {
                     disabled={Boolean(selectingAccountId) || creating}
                     style={({ pressed }) => [
                       styles.row,
-                      { opacity: pressed || isSelecting ? 0.8 : 1, backgroundColor: uiKitTheme.background.surface },
+                      (pressed || isSelecting) ? styles.rowPressed : null,
                     ]}
                   >
                     <AppText variant="body" style={styles.rowTitle}>

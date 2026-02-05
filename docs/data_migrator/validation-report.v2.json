@@ -1,0 +1,369 @@
+{
+  "exportPath": "docs/data_migrator/ledger-server-export-1dd4fd75-8eea-4f7a-98e7-bf45b987ae94-2026-02-04T20_45_23.037Z.json",
+  "exportedAt": "2026-02-04T20:45:23.037Z",
+  "scope": {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "projects": [
+      {
+        "id": "0ee567e7-ae7b-4816-910f-2296368a6e60",
+        "name": "Hyer's Martinique Rental"
+      },
+      {
+        "id": "c093c11b-6c1e-4c54-9df2-e7ee3c74a5f0",
+        "name": "Bradshaws Desert Color Rental"
+      }
+    ]
+  },
+  "counts": {
+    "public.accounts": 1,
+    "public.users": 1,
+    "public.projects": 2,
+    "public.spaces": 1,
+    "public.space_templates": 0,
+    "public.items": 785,
+    "public.transactions": 175,
+    "public.invitations": 0,
+    "public.account_presets": 1,
+    "public.item_lineage_edges": 37,
+    "public.item_audit_logs": 4,
+    "public.transaction_audit_logs": 440,
+    "public.highlevel_onboarding_events": 0
+  },
+  "derivedCounts": {
+    "accounts": 1,
+    "users": 1,
+    "projects": 2,
+    "spaces": 1,
+    "items": 785,
+    "transactions": 175,
+    "item_lineage_edges": 37
+  },
+  "idSets": {
+    "items": {
+      "item_id": 785,
+      "id": 785
+    },
+    "transactions": {
+      "transaction_id": 175,
+      "id": 175
+    }
+  },
+  "counters": {
+    "items.previous_project_transaction_id_missing": 20,
+    "item_lineage_edges.from_transaction_id.matched_domain_id": 10,
+    "item_lineage_edges.from_transaction_id.matched_row_id": 0,
+    "item_lineage_edges.from_transaction_id.empty": 13,
+    "item_lineage_edges.from_transaction_id.missing": 14,
+    "item_lineage_edges.item_id_missing": 0
+  },
+  "totals": {
+    "errors": 0,
+    "warnings": 34
+  },
+  "storageChecks": {
+    "enabled": false,
+    "storageDir": null,
+    "checked": 0,
+    "missing": 0,
+    "missingExamples": []
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "18e34ca7-9fcc-4532-b650-05f966140450",
+        "item_id": "I-1767813246734-lkba",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "91783f5b-5f99-41c8-aa65-d521f92c94ba",
+        "item_id": "I-1767813326972-d04h",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "b9b97725-625c-4e1c-9e3c-a88ed8ff7525",
+        "item_id": "I-1767813435724-lflu",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "dbc256b0-6131-44a4-92b4-5aa67922de9c",
+        "item_id": "I-1767813501948-tbco",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "2e021bf8-d174-4fb1-bb56-520911c2068f",
+        "item_id": "I-1767813513172-r0v3",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "05e463c1-187c-41a5-8676-242079c79ad9",
+        "item_id": "I-1767813528867-q3br",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "858254e4-ddf4-4aef-9ddd-957ec004b87b",
+        "item_id": "I-1767813544341-ivvg",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "28c4b91b-7c0f-4e77-bff0-03e45b00ca1c",
+        "item_id": "I-1767813550348-1l9c",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "54d32a5f-1de2-471a-9d11-e21fd9587117",
+        "item_id": "I-1767813603282-e94f",
+        "previous_project_transaction_id": "342b7f92-39f7-445a-9c14-5aaeb1471233"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "6182a95c-d7fa-40d3-ba47-ad18f8dbc000",
+        "item_id": "I-1767813997456-stb0",
+        "previous_project_transaction_id": "c4ebe556-eb06-467c-8510-718cd5fdc6cf"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "e26fd3a6-510c-4caf-90f7-395e01b089ca",
+        "item_id": "I-1768250810839-f0iq",
+        "previous_project_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "e65771fe-6d72-43b1-b255-307ac5d21adf",
+        "item_id": "I-1768252761307-yj5c",
+        "previous_project_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "dcfbf046-4967-486d-b8c0-f0d4e270e78d",
+        "item_id": "I-1768343613360-73jl",
+        "previous_project_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "47ea98bc-c5dd-4000-92af-0f2659e5bfa3",
+        "item_id": "I-1768343618953-wo51",
+        "previous_project_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "5e6ba1c2-c961-4960-8942-eb3bcafd9cc1",
+        "item_id": "I-1768423500711-10jl",
+        "previous_project_transaction_id": "af24438f-33bc-4cdb-80ee-394d00b1ee92"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "eaf92150-ddcc-4bb3-925a-87382bdce816",
+        "item_id": "I-1768433248215-uddf",
+        "previous_project_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "354d71ff-9936-44c1-beb1-e73d0093d26b",
+        "item_id": "I-1768433501282-6dsl",
+        "previous_project_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "a4155500-a167-4e53-9501-c07215af2115",
+        "item_id": "I-1768434715361-k9mq",
+        "previous_project_transaction_id": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "4cd1bf2f-8723-4f8d-8c67-8783414d70be",
+        "item_id": "I-1768846830985-kchi",
+        "previous_project_transaction_id": "87b8c459-a3b7-4e6b-8116-3b37c3ac680d"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Item references missing previous_project_transaction_id.",
+      "details": {
+        "itemUuid": "e841c6fc-7929-41c3-91ac-a50d1c30c148",
+        "item_id": "I-1768846851155-vd1r",
+        "previous_project_transaction_id": "87b8c459-a3b7-4e6b-8116-3b37c3ac680d"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "a96365b3-961c-4c85-b5c6-efd507f8c6ba",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "28f1a3c4-1b2c-4152-896c-50840f525cbf",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "9443c729-da3e-4f39-a5be-4cf8e5308ce0",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "20f9fdd3-456c-43b5-ba3b-147977ccc2e9",
+        "from_transaction_id": "e013cfe7-afde-4393-882f-f60eae396288"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "61ecfab6-ce70-4b5f-a479-70a01be9e1b6",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "c0a6d660-469b-4856-9a33-812646cb7b4f",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "ac06ede3-2e01-469c-94e1-380a91c7d9e0",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "9d626945-6ef9-46e9-9f2a-384998bc7758",
+        "from_transaction_id": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "66f9f987-f90d-4a48-8a05-f77588861984",
+        "from_transaction_id": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "cf11ca40-d70e-41b8-9346-16e2c46a5368",
+        "from_transaction_id": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "acccda2d-4145-42d0-a9c0-c55458b08789",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "3e484742-80aa-412b-9117-03530ce174a7",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "256370ac-c870-4f76-b612-493a668f3e8d",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    },
+    {
+      "code": "missing_fk",
+      "message": "Lineage edge references missing from_transaction_id.",
+      "details": {
+        "edgeId": "e37e8ec7-e7a2-454e-948f-b8df9c6b5911",
+        "from_transaction_id": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      }
+    }
+  ],
+  "truncated": {
+    "errors": false,
+    "warnings": false
+  }
+}

@@ -44,11 +44,11 @@ export function SegmentedControl<T extends string>({
           opacity: 0.75,
         },
         labelSelected: {
-          fontWeight: '700',
+          fontWeight: '600',
           color: uiKitTheme.text.primary,
         },
         labelUnselected: {
-          fontWeight: '600',
+          fontWeight: '500',
           color: uiKitTheme.text.secondary,
         },
       }),
@@ -84,7 +84,7 @@ export function SegmentedControl<T extends string>({
           >
             <View style={styles.content}>
               {opt.icon ? <View style={styles.icon}>{opt.icon}</View> : null}
-              <AppText variant="body" style={selected ? themed.labelSelected : themed.labelUnselected}>
+              <AppText variant="caption" style={[styles.label, selected ? themed.labelSelected : themed.labelUnselected]}>
                 {opt.label}
               </AppText>
             </View>
@@ -99,15 +99,20 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 6,
     overflow: 'hidden',
+    marginTop: 8,
   },
   segment: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  label: {
+    fontSize: 13,
+    letterSpacing: 0.1,
   },
   content: {
     flexDirection: 'row',

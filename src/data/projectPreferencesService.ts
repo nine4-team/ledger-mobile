@@ -1,4 +1,15 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  FieldPath,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 
 export type ProjectPreferences = {
@@ -23,10 +34,9 @@ export function subscribeToProjectPreferences(
     onChange(null);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/users/${userId}/projectPreferences`)
-    .doc(projectId)
-    .onSnapshot(
+  const ref = doc(db, `accounts/${accountId}/users/${userId}/projectPreferences/${projectId}`);
+  return onSnapshot(
+    ref,
       (snapshot) => {
         if (!snapshot.exists) {
           onChange(null);
@@ -51,18 +61,19 @@ export async function ensureProjectPreferences(
   }
   const uid = auth?.currentUser?.uid;
   if (!uid) return;
-  const ref = db.doc(`accounts/${accountId}/users/${uid}/projectPreferences/${projectId}`);
-  const snapshot = await ref.get();
+  const ref = doc(db, `accounts/${accountId}/users/${uid}/projectPreferences/${projectId}`);
+  const snapshot = await getDoc(ref);
   if (snapshot.exists) return;
-  await ref.set(
+  await setDoc(
+    ref,
     {
       id: projectId,
       accountId,
       userId: uid,
       projectId,
       pinnedBudgetCategoryIds,
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      updatedAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     },
     { merge: true }
   );
@@ -84,10 +95,12 @@ export async function fetchProjectPreferencesMap(params: {
     chunks.push(projectIds.slice(i, i + 10));
   }
   for (const chunk of chunks) {
-    const snapshot = await db
-      .collection(`accounts/${accountId}/users/${userId}/projectPreferences`)
-      .where(firestore.FieldPath.documentId(), 'in', chunk)
-      .get();
+    const snapshot = await getDocs(
+      query(
+        collection(db, `accounts/${accountId}/users/${userId}/projectPreferences`),
+        where(FieldPath.documentId(), 'in', chunk)
+      )
+    );
     snapshot.docs.forEach((doc) => {
       output[doc.id] = { ...(doc.data() as object), id: doc.id } as ProjectPreferences;
     });

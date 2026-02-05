@@ -1,4 +1,14 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import type { Checklist } from './spacesService';
 
@@ -7,6 +17,7 @@ export type SpaceTemplate = {
   accountId: string;
   name: string;
   isArchived?: boolean | null;
+  order?: number | null;
   notes?: string | null;
   checklists?: Checklist[] | null;
   createdAt?: unknown;
@@ -23,20 +34,46 @@ export function subscribeToSpaceTemplates(
     onChange([]);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/presets/default/spaceTemplates`)
-    .onSnapshot(
+  const collectionRef = collection(db, `accounts/${accountId}/presets/default/spaceTemplates`);
+  return onSnapshot(
+    collectionRef,
       (snapshot) => {
         const next = snapshot.docs.map(
           (doc) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
         );
-        onChange(next.filter((template) => !template.isArchived));
+        onChange(next);
       },
       (error) => {
         console.warn('[spaceTemplatesService] subscription failed', error);
         onChange([]);
       }
     );
+}
+
+export async function refreshSpaceTemplates(
+  accountId: string,
+  mode: 'online' | 'offline' = 'online'
+): Promise<SpaceTemplate[]> {
+  if (!isFirebaseConfigured || !db) {
+    return [];
+  }
+  const ref = collection(db, `accounts/${accountId}/presets/default/spaceTemplates`);
+  const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
+  for (const source of preference) {
+    try {
+      const snapshot =
+        source === 'cache' ? await getDocsFromCache(ref) : await getDocsFromServer(ref);
+      return snapshot.docs.map(
+        (doc: any) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
+      );
+    } catch {
+      // try next
+    }
+  }
+  const snapshot = await getDocs(ref);
+  return snapshot.docs.map(
+    (doc: any) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
+  );
 }
 
 function normalizeChecklists(checklists: Checklist[] | null | undefined): Checklist[] | null {
@@ -54,16 +91,68 @@ export async function createSpaceTemplate(
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
-  const now = firestore.FieldValue.serverTimestamp();
-  const docRef = await db
-    .collection(`accounts/${accountId}/presets/default/spaceTemplates`)
-    .add({
+  const now = serverTimestamp();
+  const docRef = await addDoc(
+    collection(db, `accounts/${accountId}/presets/default/spaceTemplates`),
+    {
       ...data,
       accountId,
       isArchived: false,
+      order: data.order ?? Date.now(),
       checklists: normalizeChecklists(data.checklists ?? null),
       createdAt: now,
       updatedAt: now,
-    });
+    }
+  );
   return docRef.id;
+}
+
+export async function updateSpaceTemplate(
+  accountId: string,
+  templateId: string,
+  data: Partial<SpaceTemplate>
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) {
+    throw new Error('Firebase is not configured.');
+  }
+  const now = serverTimestamp();
+  await setDoc(
+    doc(db, `accounts/${accountId}/presets/default/spaceTemplates/${templateId}`),
+    {
+      ...data,
+      checklists: normalizeChecklists(data.checklists ?? null),
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+}
+
+export async function setSpaceTemplateArchived(
+  accountId: string,
+  templateId: string,
+  isArchived: boolean
+): Promise<void> {
+  await updateSpaceTemplate(accountId, templateId, { isArchived });
+}
+
+export async function setSpaceTemplateOrder(
+  accountId: string,
+  orderedIds: string[]
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) {
+    throw new Error('Firebase is not configured.');
+  }
+  const now = serverTimestamp();
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      setDoc(
+        doc(db, `accounts/${accountId}/presets/default/spaceTemplates/${id}`),
+        {
+          order: index,
+          updatedAt: now,
+        },
+        { merge: true }
+      )
+    )
+  );
 }

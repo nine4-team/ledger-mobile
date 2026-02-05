@@ -1,4 +1,4 @@
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,6 +6,7 @@ import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
 import { layout } from '../../src/ui';
 import { AppButton } from '../../src/components/AppButton';
+import { AppScrollView } from '../../src/components/AppScrollView';
 import { ScreenTabItem, useScreenTabs } from '../../src/components/ScreenTabs';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
@@ -200,7 +201,7 @@ function ProjectsList() {
   };
 
   return (
-    <ScrollView
+    <AppScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.placeholder, styles.scrollContent]}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
@@ -290,7 +291,7 @@ function ProjectsList() {
           )}
         </>
       )}
-    </ScrollView>
+    </AppScrollView>
   );
 }
 

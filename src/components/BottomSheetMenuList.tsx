@@ -1,11 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useUIKitTheme } from '../theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheet } from './BottomSheet';
+import { AppScrollView } from './AppScrollView';
 
 export interface BottomSheetMenuListProps {
   visible: boolean;
@@ -25,10 +26,11 @@ export function BottomSheetMenuList({
   onRequestClose,
   items,
   title,
-  showLeadingIcons = true,
+  showLeadingIcons = false,
   maxContentHeight = 420,
 }: BottomSheetMenuListProps) {
   const uiKitTheme = useUIKitTheme();
+  const theme = useTheme();
   const [expandedMenuKey, setExpandedMenuKey] = useState<string | null>(null);
   const [selectedSubactionByKey, setSelectedSubactionByKey] = useState<Record<string, string>>({});
 
@@ -45,13 +47,22 @@ export function BottomSheetMenuList({
     <BottomSheet visible={visible} onRequestClose={onRequestClose}>
       {title ? (
         <View style={[styles.titleRow, { borderBottomColor: uiKitTheme.border.secondary }]}>
-          <Text style={[styles.title, { color: uiKitTheme.text.primary }]} numberOfLines={1}>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: uiKitTheme.text.primary,
+                fontSize: (theme.typography.body?.fontSize ?? styles.title.fontSize ?? 14) + 2,
+              },
+            ]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
         </View>
       ) : null}
 
-      <ScrollView
+      <AppScrollView
         style={{ maxHeight: maxContentHeight }}
         contentContainerStyle={styles.content}
         bounces={false}
@@ -87,9 +98,14 @@ export function BottomSheetMenuList({
                     </Text>
                   </View>
                   <View style={styles.menuSectionRight}>
-                    <Text style={[styles.menuSectionValue, { color: uiKitTheme.text.secondary }]}>
-                      {currentLabel}
-                    </Text>
+                    {currentLabel ? (
+                      <>
+                        <Text style={[styles.menuSectionValue, { color: uiKitTheme.primary.main }]}>
+                          {currentLabel}
+                        </Text>
+                        <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
+                      </>
+                    ) : null}
                     <MaterialIcons
                       name={isExpanded ? 'expand-more' : 'chevron-right'}
                       size={22}
@@ -136,12 +152,17 @@ export function BottomSheetMenuList({
                                   color={menuItemIconColor}
                                 />
                               ) : null}
-                              <Text style={[styles.menuItemText, { color: uiKitTheme.text.primary }]}>
+                              <Text
+                                style={[
+                                  styles.menuItemText,
+                                  { color: selectedSub ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                                ]}
+                              >
                                 {sub.label}
                               </Text>
                             </View>
                             {selectedSub ? (
-                              <MaterialIcons name="check" size={20} color={uiKitTheme.text.primary} />
+                              <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
                             ) : (
                               <View />
                             )}
@@ -185,10 +206,23 @@ export function BottomSheetMenuList({
                       color={menuItemIconColor}
                     />
                   ) : null}
-                  <Text style={[styles.menuItemText, { color: uiKitTheme.text.primary }]}>
+                  <Text
+                    style={[
+                      styles.menuItemText,
+                      {
+                        color:
+                          !showLeadingIcons && item.icon === 'check'
+                            ? uiKitTheme.primary.main
+                            : uiKitTheme.text.primary,
+                      },
+                    ]}
+                  >
                     {item.label}
                   </Text>
                 </View>
+                {!showLeadingIcons && item.icon === 'check' ? (
+                  <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
+                ) : null}
               </Pressable>
               {showDivider ? (
                 <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
@@ -196,7 +230,7 @@ export function BottomSheetMenuList({
             </View>
           );
         })}
-      </ScrollView>
+      </AppScrollView>
     </BottomSheet>
   );
 }
@@ -251,6 +285,7 @@ const styles = StyleSheet.create({
   menuActionItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -258,6 +293,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
   },
   menuItemText: {
     fontSize: 14,

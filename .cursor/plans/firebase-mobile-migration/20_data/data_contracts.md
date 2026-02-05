@@ -651,6 +651,9 @@ This is the account-wide **preset category definition** used by:
 Bootstrap requirement (Firebase migration; required):
 - New accounts (and newly joined members, when they first enter an account) must have a **seeded set of budget category presets** sufficient for the core app to function offline.
 - The seeded set must include **“Furnishings”**.
+  - Canonical baseline seed list (v1):
+    - **Furnishings** (`metadata.categoryType = "itemized"`)
+    - **Design Fee** (`metadata.categoryType = "fee"`)
 
 ### Canonical fields (TypeScript / Firestore doc shape)
 

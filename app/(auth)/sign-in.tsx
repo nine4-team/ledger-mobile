@@ -9,7 +9,7 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '../../src/components/Screen';
@@ -68,6 +68,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
   const { signIn, signInWithGoogle, user, timedOutWithoutAuth, retryInitialize } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -85,13 +86,16 @@ export default function SignInScreen() {
 
   // Redirect to invite acceptance if there's a pending token after sign-in
   useEffect(() => {
+    if (!rootNavigationState?.key) {
+      return;
+    }
     if (user && pendingToken) {
       router.replace(`/(auth)/invite/${pendingToken}`);
     } else if (user && !pendingToken) {
       // Normal sign-in flow - go to tabs
       router.replace('/(tabs)');
     }
-  }, [user, pendingToken, router]);
+  }, [pendingToken, rootNavigationState?.key, router, user]);
 
   const styles = useMemo(
     () =>

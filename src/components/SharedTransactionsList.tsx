@@ -1,12 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Share, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Share, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { ListControlBar } from './ListControlBar';
+import { ListSelectAllRow } from './ListSelectionControls';
+import { BottomSheet } from './BottomSheet';
+import { SelectorCircle } from './SelectorCircle';
+import { FilterMenu } from './FilterMenu';
+import { SortMenu } from './SortMenu';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { layout } from '../ui';
+import { getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListenersMultiple } from '../data/useScopedListeners';
@@ -20,6 +25,7 @@ import {
 import { isCanonicalTransactionId } from '../data/inventoryOperations';
 import { subscribeToBudgetCategories, mapBudgetCategories } from '../data/budgetCategoriesService';
 import { updateTransaction } from '../data/transactionsService';
+import type { AnchoredMenuItem } from './AnchoredMenuList';
 
 type SharedTransactionsListProps = {
   scopeConfig: ScopeConfig;
@@ -42,6 +48,7 @@ type TransactionFilters = {
   budgetCategoryId?: string;
   completeness?: 'all' | 'needs-review' | 'complete';
   source?: string;
+  purchasedBy?: string;
 };
 
 const SORT_MODES = ['date-desc', 'date-asc', 'created-desc', 'created-asc', 'source', 'amount'] as const;
@@ -76,6 +83,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const { state, setSearch, setSort, setFilters, setRestoreHint, clearRestoreHint } = useListState(listStateKey);
   const [query, setQuery] = useState(state.search ?? '');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [transactions, setTransactions] = useState<ScopedTransaction[]>([]);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,6 +92,15 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
+  const bulkSheetDividerStyle = useMemo(
+    () => ({ borderBottomColor: uiKitTheme.border.secondary }),
+    [uiKitTheme]
+  );
+  const primaryTextStyle = useMemo(() => getTextColorStyle(theme.colors.primary), [theme]);
+  const rowSurfaceStyle = useMemo(
+    () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
+    [uiKitTheme]
+  );
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
@@ -233,10 +250,14 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return false;
         }
       }
-      if (activeFilters.source) {
-        const value = tx.source?.toLowerCase() ?? '';
-        if (!value.includes(activeFilters.source.toLowerCase())) return false;
-      }
+    if (activeFilters.source) {
+      const value = tx.source?.trim().toLowerCase() ?? '';
+      if (value !== activeFilters.source.trim().toLowerCase()) return false;
+    }
+    if (activeFilters.purchasedBy) {
+      const value = tx.purchasedBy?.trim().toLowerCase() ?? '';
+      if (value !== activeFilters.purchasedBy.trim().toLowerCase()) return false;
+    }
       return true;
     });
 
@@ -321,13 +342,197 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     }
   }, [filtered, selectedIds.length]);
 
-  const allSelected = bulkMode && selectedIds.length === filtered.length && filtered.length > 0;
+  const hasFiltered = filtered.length > 0;
+  const allSelected = bulkMode && selectedIds.length === filtered.length && hasFiltered;
 
   const handleToggleSort = useCallback(() => {
-    const currentIndex = SORT_MODES.indexOf(sortMode);
-    const nextMode = SORT_MODES[(currentIndex + 1) % SORT_MODES.length];
-    setSort(nextMode);
+    setSortOpen(true);
+  }, []);
+
+  const sortMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const labels: Record<SortMode, string> = {
+      'date-desc': 'Date (Newest First)',
+      'date-asc': 'Date (Oldest First)',
+      'created-desc': 'Created (Newest First)',
+      'created-asc': 'Created (Oldest First)',
+      source: 'Source',
+      amount: 'Amount',
+    };
+    return SORT_MODES.map((mode) => ({
+      key: mode,
+      label: labels[mode],
+      onPress: () => setSort(mode),
+      icon: sortMode === mode ? 'check' : undefined,
+    }));
   }, [setSort, sortMode]);
+
+  const purchasedByOptions = useMemo(() => {
+    const unique = new Set<string>();
+    transactions.forEach((tx) => {
+      if (tx.purchasedBy?.trim()) {
+        unique.add(tx.purchasedBy.trim());
+      }
+    });
+    return Array.from(unique).sort();
+  }, [transactions]);
+
+  const sourceOptions = useMemo(() => {
+    const unique = new Set<string>();
+    transactions.forEach((tx) => {
+      if (tx.source?.trim()) {
+        unique.add(tx.source.trim());
+      }
+    });
+    return Array.from(unique).sort();
+  }, [transactions]);
+
+  const filterMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const statusOptions = scopeConfig.capabilities?.supportsInventoryOnlyStatusFilter
+      ? ['all', 'pending', 'completed', 'canceled', 'inventory-only'] as const
+      : (['all', 'pending', 'completed', 'canceled'] as const);
+    const statusLabels: Record<string, string> = {
+      all: 'All',
+      pending: 'Pending',
+      completed: 'Completed',
+      canceled: 'Canceled',
+      'inventory-only': 'Inventory Only',
+    };
+    const reimbursementLabels: Record<string, string> = {
+      all: 'All',
+      'we-owe': 'We Owe',
+      'client-owes': 'Client Owes',
+    };
+    const receiptLabels: Record<string, string> = {
+      all: 'All',
+      yes: 'Yes',
+      no: 'No',
+    };
+    const typeLabels: Record<string, string> = {
+      all: 'All',
+      purchase: 'Purchase',
+      return: 'Return',
+    };
+    const completenessLabels: Record<string, string> = {
+      all: 'All',
+      'needs-review': 'Needs Review',
+      complete: 'Complete',
+    };
+    const categoryOptions = Object.entries(budgetCategories).map(([id, cat]) => ({
+      key: id,
+      label: cat.name,
+    }));
+
+    return [
+      {
+        key: 'status',
+        label: 'Status',
+        defaultSelectedSubactionKey: activeFilters.status ?? 'all',
+        subactions: statusOptions.map((opt) => ({
+          key: opt,
+          label: statusLabels[opt] ?? opt,
+          onPress: () => setFilters({ ...activeFilters, status: opt }),
+        })),
+      },
+      {
+        key: 'reimbursement',
+        label: 'Reimbursement',
+        defaultSelectedSubactionKey: activeFilters.reimbursement ?? 'all',
+        subactions: (['all', 'we-owe', 'client-owes'] as const).map((opt) => ({
+          key: opt,
+          label: reimbursementLabels[opt] ?? opt,
+          onPress: () => setFilters({ ...activeFilters, reimbursement: opt }),
+        })),
+      },
+      {
+        key: 'receipt',
+        label: 'Email Receipt',
+        defaultSelectedSubactionKey: activeFilters.receipt ?? 'all',
+        subactions: (['all', 'yes', 'no'] as const).map((opt) => ({
+          key: opt,
+          label: receiptLabels[opt] ?? opt,
+          onPress: () => setFilters({ ...activeFilters, receipt: opt }),
+        })),
+      },
+      {
+        key: 'type',
+        label: 'Transaction Type',
+        defaultSelectedSubactionKey: activeFilters.type ?? 'all',
+        subactions: (['all', 'purchase', 'return'] as const).map((opt) => ({
+          key: opt,
+          label: typeLabels[opt] ?? opt,
+          onPress: () => setFilters({ ...activeFilters, type: opt }),
+        })),
+      },
+      {
+        key: 'completeness',
+        label: 'Completeness',
+        defaultSelectedSubactionKey: activeFilters.completeness ?? 'all',
+        subactions: (['all', 'needs-review', 'complete'] as const).map((opt) => ({
+          key: opt,
+          label: completenessLabels[opt] ?? opt,
+          onPress: () => setFilters({ ...activeFilters, completeness: opt }),
+        })),
+      },
+      ...(categoryOptions.length > 0
+        ? [
+            {
+              key: 'budget-category',
+              label: 'Budget Category',
+              defaultSelectedSubactionKey: activeFilters.budgetCategoryId ?? 'all',
+              subactions: [
+                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, budgetCategoryId: undefined }) },
+                ...categoryOptions.map((opt) => ({
+                  key: opt.key,
+                  label: opt.label,
+                  onPress: () => setFilters({ ...activeFilters, budgetCategoryId: opt.key }),
+                })),
+              ],
+            },
+          ]
+        : []),
+      ...(purchasedByOptions.length > 0
+        ? [
+            {
+              key: 'purchased-by',
+              label: 'Purchased By',
+              defaultSelectedSubactionKey: activeFilters.purchasedBy ?? 'all',
+              subactions: [
+                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, purchasedBy: undefined }) },
+                ...purchasedByOptions.map((opt) => ({
+                  key: opt,
+                  label: opt,
+                  onPress: () => setFilters({ ...activeFilters, purchasedBy: opt }),
+                })),
+              ],
+            },
+          ]
+        : []),
+      ...(sourceOptions.length > 0
+        ? [
+            {
+              key: 'source',
+              label: 'Source',
+              defaultSelectedSubactionKey: activeFilters.source ?? 'all',
+              subactions: [
+                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, source: undefined }) },
+                ...sourceOptions.map((opt) => ({
+                  key: opt,
+                  label: opt,
+                  onPress: () => setFilters({ ...activeFilters, source: opt }),
+                })),
+              ],
+            },
+          ]
+        : []),
+    ];
+  }, [
+    activeFilters,
+    budgetCategories,
+    purchasedByOptions,
+    sourceOptions,
+    scopeConfig.capabilities?.supportsInventoryOnlyStatusFilter,
+    setFilters,
+  ]);
 
   const handleCreateTransaction = useCallback(() => {
     router.push({
@@ -370,34 +575,61 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     await Share.share({ message: csv, title: `${scopeConfig.scope}-transactions.csv` });
   }, [budgetCategories, items, scopeConfig.capabilities?.canExportCsv, scopeConfig.scope, transactions]);
 
+  const isSortActive = sortMode !== DEFAULT_SORT;
+  const isFilterActive =
+    (activeFilters.status && activeFilters.status !== 'all') ||
+    (activeFilters.reimbursement && activeFilters.reimbursement !== 'all') ||
+    (activeFilters.receipt && activeFilters.receipt !== 'all') ||
+    (activeFilters.type && activeFilters.type !== 'all') ||
+    (activeFilters.completeness && activeFilters.completeness !== 'all') ||
+    Boolean(activeFilters.budgetCategoryId) ||
+    Boolean(activeFilters.source) ||
+    Boolean(activeFilters.purchasedBy);
+
   return (
     <View style={styles.container}>
-      <ListControlBar
-        search={query}
-        onChangeSearch={setQuery}
-        actions={[
-          { title: 'Sort', variant: 'secondary', onPress: handleToggleSort, iconName: 'sort' },
-          {
-            title: 'Filter',
-            variant: 'secondary',
-            onPress: () => setFiltersOpen((prev) => !prev),
-            iconName: 'filter-list',
-          },
-          { title: 'Add', variant: 'primary', onPress: handleCreateTransaction, iconName: 'add' },
-          ...(scopeConfig.capabilities?.canExportCsv
-            ? [
-                {
-                  title: 'Export',
-                  variant: 'secondary' as const,
-                  onPress: () => handleExportCsv(),
-                  iconName: 'file-download',
-                },
-              ]
-            : []),
-        ]}
-      />
-      <Pressable
+      <View style={styles.controlSection}>
+        <ListControlBar
+          search={query}
+          onChangeSearch={setQuery}
+          actions={[
+            {
+              title: 'Sort',
+              variant: 'secondary',
+              onPress: handleToggleSort,
+              iconName: 'sort',
+              active: isSortActive,
+            },
+            {
+              title: 'Filter',
+              variant: 'secondary',
+              onPress: () => setFiltersOpen(true),
+              iconName: 'filter-list',
+              active: isFilterActive,
+            },
+            { title: 'Add', variant: 'primary', onPress: handleCreateTransaction, iconName: 'add' },
+            ...(scopeConfig.capabilities?.canExportCsv
+              ? [
+                  {
+                    title: 'Export',
+                    variant: 'secondary' as const,
+                    onPress: () => {
+                      void handleExportCsv();
+                    },
+                    iconName: 'file-download' as const,
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </View>
+      <SortMenu visible={sortOpen} onRequestClose={() => setSortOpen(false)} items={sortMenuItems} />
+      <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
+      <ListSelectAllRow
+        disabled={!hasFiltered}
+        checked={bulkMode && allSelected}
         onPress={() => {
+          if (!hasFiltered) return;
           if (!bulkMode) {
             setBulkMode(true);
             handleSelectAll();
@@ -405,132 +637,33 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             handleSelectAll();
           }
         }}
-        style={({ pressed }) => [styles.selectAllRow, pressed && styles.selectAllPressed]}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: bulkMode && allSelected }}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <View
-          style={[
-            styles.checkbox,
-            {
-              borderColor: uiKitTheme.border.primary,
-              backgroundColor: bulkMode && allSelected ? uiKitTheme.primary.main : 'transparent',
-            },
-          ]}
-        >
-          {bulkMode && allSelected && <AppText style={styles.checkmark}>✓</AppText>}
+      />
+      <BottomSheet visible={bulkMode} onRequestClose={() => setBulkMode(false)}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Bulk actions
+          </AppText>
         </View>
-        <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-          Select all
-        </AppText>
-      </Pressable>
-      {filtersOpen ? (
-        <View style={styles.filterPanel}>
-          <View style={styles.filterRow}>
-            <AppText variant="caption">Status</AppText>
-            <View style={styles.filterRow}>
-              {(['all', 'pending', 'completed', 'canceled'] as const).map((mode) => (
-                <Pressable
-                  key={mode}
-                  onPress={() => setFilters({ ...activeFilters, status: mode })}
-                >
-                  <AppText variant="caption">{mode}</AppText>
-                </Pressable>
-              ))}
-              {scopeConfig.capabilities?.supportsInventoryOnlyStatusFilter ? (
-                <Pressable onPress={() => setFilters({ ...activeFilters, status: 'inventory-only' })}>
-                  <AppText variant="caption">inventory-only</AppText>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
-          <TextInput
-            value={activeFilters.source ?? ''}
-            onChangeText={(value) => setFilters({ ...activeFilters, source: value })}
-            placeholder="Source filter"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
-          />
-          <TextInput
-            value={activeFilters.budgetCategoryId ?? ''}
-            onChangeText={(value) => setFilters({ ...activeFilters, budgetCategoryId: value })}
-            placeholder="Budget category id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
-          />
-          <View style={styles.filterRow}>
-            <Pressable onPress={() => setFilters({ ...activeFilters, receipt: 'yes' })}>
-              <AppText variant="caption">Receipt emailed</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, receipt: 'no' })}>
-              <AppText variant="caption">No receipt email</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, receipt: 'all' })}>
-              <AppText variant="caption">All receipts</AppText>
-            </Pressable>
-          </View>
-          <View style={styles.filterRow}>
-            <Pressable onPress={() => setFilters({ ...activeFilters, reimbursement: 'we-owe' })}>
-              <AppText variant="caption">We owe</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, reimbursement: 'client-owes' })}>
-              <AppText variant="caption">Client owes</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, reimbursement: 'all' })}>
-              <AppText variant="caption">All reimbursement</AppText>
-            </Pressable>
-          </View>
-          <View style={styles.filterRow}>
-            <Pressable onPress={() => setFilters({ ...activeFilters, type: 'purchase' })}>
-              <AppText variant="caption">Purchase</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, type: 'return' })}>
-              <AppText variant="caption">Return</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, type: 'all' })}>
-              <AppText variant="caption">All types</AppText>
-            </Pressable>
-          </View>
-          <View style={styles.filterRow}>
-            <Pressable onPress={() => setFilters({ ...activeFilters, completeness: 'needs-review' })}>
-              <AppText variant="caption">Needs review</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, completeness: 'complete' })}>
-              <AppText variant="caption">Complete</AppText>
-            </Pressable>
-            <Pressable onPress={() => setFilters({ ...activeFilters, completeness: 'all' })}>
-              <AppText variant="caption">All completeness</AppText>
-            </Pressable>
-          </View>
-        </View>
-      ) : null}
-      {bulkMode ? (
-        <View
-          style={[
-            styles.bulkPanel,
-            { backgroundColor: uiKitTheme.background.surface, borderColor: uiKitTheme.border.primary },
-          ]}
-        >
+        <View style={styles.bulkSheetContent}>
           <View style={styles.bulkHeader}>
-            <AppText variant="caption" style={{ fontWeight: '600' }}>
+            <AppText variant="caption" style={styles.semiboldText}>
               {selectedIds.length} selected
             </AppText>
             <Pressable onPress={() => setBulkMode(false)}>
-              <AppText variant="caption" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+              <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
                 Done
               </AppText>
             </Pressable>
           </View>
           {scopeConfig.capabilities?.canExportCsv ? (
             <Pressable onPress={() => handleExportCsv(selectedIds)} style={styles.bulkActionButton}>
-              <AppText variant="caption" style={{ color: theme.colors.primary }}>
+              <AppText variant="caption" style={primaryTextStyle}>
                 Export CSV
               </AppText>
             </Pressable>
           ) : null}
         </View>
-      ) : null}
+      </BottomSheet>
       <FlatList
         ref={listRef}
         data={filtered}
@@ -578,22 +711,12 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             }}
             style={({ pressed }) => [
               styles.row,
-              { borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface },
+              rowSurfaceStyle,
               pressed && styles.rowPressed,
             ]}
           >
             {bulkMode ? (
-              <View
-                style={[
-                  styles.checkbox,
-                  {
-                    borderColor: uiKitTheme.border.primary,
-                    backgroundColor: selectedIds.includes(item.id) ? uiKitTheme.primary.main : 'transparent',
-                  },
-                ]}
-              >
-                {selectedIds.includes(item.id) ? <AppText style={styles.checkmark}>✓</AppText> : null}
-              </View>
+              <SelectorCircle selected={selectedIds.includes(item.id)} indicator="check" />
             ) : null}
             <View style={styles.rowContent}>
               <AppText variant="body">{item.label}</AppText>
@@ -616,30 +739,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
-  selectAllRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: -6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  selectAllPressed: {
-    opacity: 0.6,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmark: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 18,
+  controlSection: {
+    gap: 0,
   },
   list: {
     paddingBottom: layout.screenBodyTopMd.paddingTop,
@@ -665,31 +766,28 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
-  filterPanel: {
-    gap: 10,
-    paddingVertical: 6,
+  bulkSheetTitleRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    paddingTop: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  bulkSheetTitle: {
+    fontWeight: '700',
   },
-  filterInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  bulkPanel: {
+  bulkSheetContent: {
     gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: 8,
   },
   bulkHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  semiboldText: {
+    fontWeight: '600',
   },
   bulkActionButton: {
     paddingVertical: 6,

@@ -11,6 +11,7 @@ type ControlAction = {
   variant: 'primary' | 'secondary';
   iconName?: React.ComponentProps<typeof MaterialIcons>['name'];
   disabled?: boolean;
+  active?: boolean;
 };
 
 type ListControlBarProps = {
@@ -32,7 +33,10 @@ export function ListControlBar({ search, onChangeSearch, actions }: ListControlB
             title={action.title}
             variant={action.variant}
             onPress={action.onPress}
-            style={styles.controlButton}
+            style={[
+              styles.controlButton,
+              action.active ? { borderColor: uiKitTheme.primary.main } : null,
+            ]}
             disabled={action.disabled}
             leftIcon={
               action.iconName ? (

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
 export type ScreenTabItem = {
@@ -82,7 +82,11 @@ export function ScreenTabs({
 
   return (
     <View style={[styles.container, themed.container, containerStyle]}>
-      <View style={[styles.scrollContent, themed.scrollContent, contentContainerStyle]}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, themed.scrollContent, contentContainerStyle]}
+      >
         {tabs.map((tab) => {
           const isSelected = tab.key === selectedKey;
           return (
@@ -112,7 +116,7 @@ export function ScreenTabs({
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -125,7 +129,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   tab: {
-    flex: 1,
     paddingHorizontal: 10,
     paddingTop: 15,
     paddingBottom: 10,

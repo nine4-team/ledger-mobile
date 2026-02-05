@@ -1,4 +1,10 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 import { trackRequestDocPath } from '../sync/requestDocTracker';
@@ -44,6 +50,23 @@ export function getRequestDocPath(scope: RequestScope, requestId: string): strin
   return `${getRequestCollectionPath(scope)}/${requestId}`;
 }
 
+export function parseRequestDocPath(path: string): RequestScope | null {
+  const trimmed = path.trim();
+  const projectMatch = trimmed.match(/^accounts\/([^/]+)\/projects\/([^/]+)\/requests\/[^/]+$/);
+  if (projectMatch) {
+    return { accountId: projectMatch[1], projectId: projectMatch[2] };
+  }
+  const accountMatch = trimmed.match(/^accounts\/([^/]+)\/requests\/[^/]+$/);
+  if (accountMatch) {
+    return { accountId: accountMatch[1], scope: 'account' };
+  }
+  const inventoryMatch = trimmed.match(/^accounts\/([^/]+)\/inventory\/requests\/[^/]+$/);
+  if (inventoryMatch) {
+    return { accountId: inventoryMatch[1], scope: 'inventory' };
+  }
+  return null;
+}
+
 export async function createRequestDoc<TPayload extends Record<string, unknown>>(
   type: string,
   payload: TPayload,
@@ -67,12 +90,12 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
     type,
     status: 'pending',
     opId,
-    createdAt: firestore.FieldValue.serverTimestamp(),
+    createdAt: serverTimestamp(),
     createdBy: uid,
     payload
   };
 
-  const docRef = await db.collection(getRequestCollectionPath(scope)).add(requestDoc);
+  const docRef = await addDoc(collection(db, getRequestCollectionPath(scope)), requestDoc);
   trackPendingWrite();
   trackRequestDocPath(docRef.path);
   return docRef.id;
@@ -95,8 +118,8 @@ export function subscribeToRequestPath<TPayload extends Record<string, unknown>>
     return () => {};
   }
 
-  const ref = db.doc(requestDocPath);
-  return ref.onSnapshot((snapshot) => {
+  const ref = doc(db, requestDocPath);
+  return onSnapshot(ref, (snapshot) => {
     if (!snapshot.exists) {
       onChange(null);
       return;

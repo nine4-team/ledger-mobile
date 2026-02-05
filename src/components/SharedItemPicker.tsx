@@ -7,6 +7,7 @@ import { GroupedItemCard } from './GroupedItemCard';
 import { SegmentedControl } from './SegmentedControl';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { getTextInputStyle } from '../ui/styles/forms';
+import { getTextSecondaryStyle } from '../ui/styles/typography';
 import type { ScopedItem } from '../data/scopedListData';
 import type { Item } from '../data/itemsService';
 
@@ -218,7 +219,7 @@ export function SharedItemPicker({
                           handleItemToggle(item.id);
                         },
                     statusLabel,
-                    style: locked ? { opacity: 0.6 } : undefined,
+                    style: locked ? styles.lockedItem : undefined,
                   };
                 })}
                 selected={groupAllSelected}
@@ -247,22 +248,22 @@ export function SharedItemPicker({
               onSelectedChange={locked ? undefined : (next) => handleItemToggle(only.id)}
               onPress={locked ? undefined : () => handleItemToggle(only.id)}
               statusLabel={statusLabel}
-              style={locked ? { opacity: 0.6 } : undefined}
+              style={locked ? styles.lockedItem : undefined}
             />
           );
         })}
         {pickerGroups.length === 0 ? (
-          <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+          <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
             No items available.
           </AppText>
         ) : null}
         {selectedTab === 'outside' && outsideLoading ? (
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
             Loading outside items…
           </AppText>
         ) : null}
         {selectedTab === 'outside' && outsideError ? (
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
             {outsideError}
           </AppText>
         ) : null}
@@ -274,6 +275,9 @@ export function SharedItemPicker({
 const styles = StyleSheet.create({
   container: {
     gap: 12,
+  },
+  lockedItem: {
+    opacity: 0.6,
   },
   actions: {
     flexDirection: 'row',

@@ -1,11 +1,13 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { ItemCard } from './ItemCard';
 import type { ItemCardProps } from './ItemCard';
+import { SelectorCircle } from './SelectorCircle';
 
 export type GroupedItemListSummary = Pick<
   ItemCardProps,
@@ -49,6 +51,15 @@ export function GroupedItemCard({
   style,
 }: GroupedItemCardProps) {
   const uiKitTheme = useUIKitTheme();
+  const countBadgeStyle = useMemo(
+    () => ({
+      backgroundColor: uiKitTheme.primary.main + '1A',
+      borderColor: uiKitTheme.primary.main + '33',
+    }),
+    [uiKitTheme]
+  );
+  const countBadgeTextStyle = useMemo(() => ({ color: uiKitTheme.primary.main }), [uiKitTheme]);
+  const summaryTitleColorStyle = useMemo(() => ({ color: uiKitTheme.text.primary }), [uiKitTheme]);
   
   // Expansion state
   const [internalExpanded, setInternalExpanded] = useState(Boolean(defaultExpanded));
@@ -72,15 +83,12 @@ export function GroupedItemCard({
         icon: {
           color: uiKitTheme.text.secondary,
         },
+        thumbBorder: {
+          borderColor: uiKitTheme.border.secondary,
+        },
         childIndicator: {
           borderTopColor: uiKitTheme.border.secondary,
           borderTopWidth: 1,
-        },
-        selector: {
-          borderColor: isSelected ? uiKitTheme.primary.main : uiKitTheme.border.secondary,
-        },
-        selectorInner: {
-          backgroundColor: uiKitTheme.primary.main,
         },
       }),
     [uiKitTheme, isSelected]
@@ -129,10 +137,10 @@ export function GroupedItemCard({
         accessibilityRole="button"
         accessibilityLabel={`${isExpanded ? 'Collapse' : 'Expand'} group: ${summary.description}`}
         accessibilityState={{ expanded: isExpanded }}
-        style={({ pressed }) => [styles.header, pressed ? { opacity: 0.95 } : null]}
+        style={({ pressed }) => [styles.header, pressed ? styles.headerPressed : null]}
       >
         {/* Top Row: Checkbox, Total, Count, Microcopy, Chevron */}
-        <View style={[styles.headerTopRow, isExpanded ? { marginBottom: 0 } : null]}>
+        <View style={[styles.headerTopRow, isExpanded ? styles.headerTopRowExpanded : null]}>
           {/* Checkbox */}
           {!isExpanded && (onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
             <Pressable
@@ -140,15 +148,12 @@ export function GroupedItemCard({
                 e.stopPropagation();
                 setSelected(!isSelected);
               }}
-              style={[styles.selector, themed.selector]}
               accessibilityRole="checkbox"
               accessibilityLabel={`Select group`}
               accessibilityState={{ checked: isSelected }}
-              hitSlop={8}
+              hitSlop={13}
             >
-              {isSelected ? (
-                <View style={[styles.selectorInner, themed.selectorInner]} />
-              ) : null}
+              <SelectorCircle selected={isSelected} indicator="dot" />
             </Pressable>
           ) : null}
 
@@ -170,17 +175,11 @@ export function GroupedItemCard({
           <View style={styles.headerRight}>
             {countLabel ? (
               <View
-                style={[
-                  styles.countBadge,
-                  {
-                    backgroundColor: uiKitTheme.primary.main + '1A',
-                    borderColor: uiKitTheme.primary.main + '33',
-                  },
-                ]}
+                style={[styles.countBadge, countBadgeStyle]}
                 accessibilityRole="text"
                 accessibilityLabel={`Count ${countLabel}`}
               >
-                <Text style={[styles.countBadgeText, { color: uiKitTheme.primary.main }]} numberOfLines={1}>
+                <Text style={[styles.countBadgeText, countBadgeTextStyle]} numberOfLines={1}>
                   {countLabel}
                 </Text>
               </View>
@@ -205,28 +204,37 @@ export function GroupedItemCard({
         {/* Summary Content: Reusing ItemCard content via strict props */}
         {!isExpanded ? (
           <View style={styles.summary}>
-            <Text style={[styles.summaryTitle, { color: uiKitTheme.text.primary }]} numberOfLines={3}>
+            <Text style={[styles.summaryTitle, summaryTitleColorStyle]} numberOfLines={3}>
               {summary.description}
             </Text>
-            {(summary.sourceLabel || summary.sku || summary.locationLabel) ? (
-              <View style={styles.summaryMeta}>
-                {summary.sourceLabel ? (
-                  <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
-                    <Text style={styles.metaStrong}>Source:</Text> {summary.sourceLabel}
-                  </Text>
-                ) : null}
-                {summary.sku ? (
-                  <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
-                    <Text style={styles.metaStrong}>SKU:</Text> {summary.sku}
-                  </Text>
-                ) : null}
-                {summary.locationLabel ? (
-                  <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={2}>
-                    <Text style={styles.metaStrong}>Location:</Text> {summary.locationLabel}
-                  </Text>
-                ) : null}
-              </View>
-            ) : null}
+            <View style={styles.summaryBottomRow}>
+              {summary.thumbnailUri ? (
+                <Image
+                  source={{ uri: summary.thumbnailUri }}
+                  style={[styles.summaryThumb, themed.thumbBorder]}
+                  accessibilityIgnoresInvertColors
+                />
+              ) : null}
+              {(summary.sourceLabel || summary.sku || summary.locationLabel) ? (
+                <View style={styles.summaryMetaCol}>
+                  {summary.sourceLabel ? (
+                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
+                      <Text style={styles.metaStrong}>Source:</Text> {summary.sourceLabel}
+                    </Text>
+                  ) : null}
+                  {summary.sku ? (
+                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
+                      <Text style={styles.metaStrong}>SKU:</Text> {summary.sku}
+                    </Text>
+                  ) : null}
+                  {summary.locationLabel ? (
+                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={2}>
+                      <Text style={styles.metaStrong}>Location:</Text> {summary.locationLabel}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
           </View>
         ) : null}
       </Pressable>
@@ -241,7 +249,7 @@ export function GroupedItemCard({
                 indexLabel={`${idx + 1}/${items.length}`}
                 stackSkuAndSource
                 style={[
-                  idx < items.length - 1 ? { marginBottom: 12 } : null,
+                  idx < items.length - 1 ? styles.itemRowSpacing : null,
                 ]}
               />
             </View>
@@ -261,6 +269,9 @@ const styles = StyleSheet.create({
     padding: APP_CARD_PADDING,
     gap: 0, // Gap handled by margin in summaryRow to match specific layout needs
   },
+  headerPressed: {
+    opacity: 0.95,
+  },
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -268,25 +279,15 @@ const styles = StyleSheet.create({
     marginBottom: 8, // Spacing between top row and summary content
     minHeight: 24,
   },
+  headerTopRowExpanded: {
+    marginBottom: 0,
+  },
   totalRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     flexShrink: 1,
     minWidth: 0,
-  },
-  selector: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectorInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
   },
   total: {
     fontSize: 13,
@@ -326,12 +327,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryRow: {
-    // No specific styling needed, just container
-  },
   summary: {
     gap: 8,
     paddingTop: 8,
+  },
+  itemRowSpacing: {
+    marginBottom: 12,
+  },
+  summaryBottomRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  summaryThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   summaryTitle: {
     fontSize: 15,
@@ -340,7 +352,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingVertical: 2,
   },
-  summaryMeta: {
+  summaryMetaCol: {
+    flex: 1,
+    minWidth: 0,
     gap: 6,
   },
   summaryMetaText: {

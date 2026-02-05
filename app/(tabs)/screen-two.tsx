@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { AppText } from '../../src/components/AppText';
@@ -9,6 +9,7 @@ import { Screen, useScreenRefresh } from '../../src/components/Screen';
 import { useScreenTabs } from '../../src/components/ScreenTabs';
 import { SharedItemsList } from '../../src/components/SharedItemsList';
 import { SharedTransactionsList } from '../../src/components/SharedTransactionsList';
+import { AppScrollView } from '../../src/components/AppScrollView';
 import { createInventoryScopeConfig, getListStateKey } from '../../src/data/scopeConfig';
 import { useScopeSwitching } from '../../src/data/useScopeSwitching';
 import { refreshScopedItems, refreshScopedTransactions } from '../../src/data/scopedListData';
@@ -99,9 +100,9 @@ function InventoryScreenContent({
     const listStateKey = getListStateKey(scopeConfig, 'items');
     if (!listStateKey) {
       return (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
+        <AppScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
           <AppText variant="body">Inventory items go here.</AppText>
-        </ScrollView>
+        </AppScrollView>
       );
     }
     return (
@@ -115,9 +116,9 @@ function InventoryScreenContent({
     const listStateKey = getListStateKey(scopeConfig, 'transactions');
     if (!listStateKey) {
       return (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
+        <AppScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
           <AppText variant="body">Inventory transactions go here.</AppText>
-        </ScrollView>
+        </AppScrollView>
       );
     }
     return (
@@ -132,9 +133,9 @@ function InventoryScreenContent({
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
+    <AppScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
       <AppText variant="body">Inventory spaces go here.</AppText>
-    </ScrollView>
+    </AppScrollView>
   );
 }
 

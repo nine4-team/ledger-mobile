@@ -34,6 +34,10 @@ export interface TopHeaderProps {
    * If provided, an info icon will be shown on the left side of the header.
    */
   infoContent?: InfoDialogContent;
+  /**
+   * Optional right-side actions rendered before the menu button.
+   */
+  rightActions?: React.ReactNode;
 }
 
 export function TopHeader({
@@ -44,6 +48,7 @@ export function TopHeader({
   backAccessibilityLabel,
   hideBottomBorder = false,
   infoContent,
+  rightActions,
 }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -90,7 +95,7 @@ export function TopHeader({
         style={[
           styles.header,
           getScreenHeaderStyle(uiKitTheme, insets),
-          hideBottomBorder && { borderBottomWidth: 0 },
+          hideBottomBorder && styles.headerNoBorder,
         ]}
       >
         <View style={styles.leftButtonOuter}>
@@ -125,6 +130,7 @@ export function TopHeader({
         </AppText>
 
         <View style={styles.rightButtonOuter}>
+          {rightActions ? <View style={styles.rightActions}>{rightActions}</View> : null}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={menuAccessibilityLabel ?? 'Open menu'}
@@ -156,6 +162,9 @@ const styles = StyleSheet.create({
   header: {
     justifyContent: 'space-between',
   },
+  headerNoBorder: {
+    borderBottomWidth: 0,
+  },
   title: {
     flex: 1,
     textAlign: 'center',
@@ -186,10 +195,17 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   rightButtonOuter: {
-    width: 60,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    minWidth: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     paddingRight: 4,
+    gap: 4,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   menuButton: {
     padding: 12,

@@ -1,5 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import {
+  collectionGroup,
+  doc,
+  getDoc,
+  getDocFromCache,
+  getDocFromServer,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  query,
+  where,
+} from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 
 const STORAGE_KEYS = {
@@ -63,24 +75,24 @@ async function getDocWithPreference(ref: any) {
   // Mirror the repo approach: try server then cache.
   for (const source of ['server', 'cache'] as const) {
     try {
-      return await ref.get({ source });
+      return source === 'server' ? await getDocFromServer(ref) : await getDocFromCache(ref);
     } catch {
       // try next source
     }
   }
-  return await ref.get();
+  return await getDoc(ref);
 }
 
 async function getDocsWithPreference(query: any) {
   // Mirror the repo approach: try server then cache.
   for (const source of ['server', 'cache'] as const) {
     try {
-      return await query.get({ source });
+      return source === 'server' ? await getDocsFromServer(query) : await getDocsFromCache(query);
     } catch {
       // try next source
     }
   }
-  return await query.get();
+  return await getDocs(query);
 }
 
 export const useAccountContextStore = create<AccountContextState>((set, get) => ({
@@ -128,7 +140,7 @@ export const useAccountContextStore = create<AccountContextState>((set, get) => 
       // Membership docs live at: accounts/{accountId}/users/{uid}
       // IMPORTANT (RN Firebase native): for collectionGroup queries, filtering by documentId requires a full
       // document path, not just an id, so we use a real `uid` field on membership docs.
-      const membershipQuery = db.collectionGroup('users').where('uid', '==', uid);
+      const membershipQuery = query(collectionGroup(db, 'users'), where('uid', '==', uid));
 
       const membershipSnap = await getDocsWithPreference(membershipQuery);
       const accountIds = Array.from(
@@ -145,7 +157,7 @@ export const useAccountContextStore = create<AccountContextState>((set, get) => 
       // account (if its membership doc exists). This preserves offline boot for existing sessions.
       if (accountIds.length === 0 && lastSelected) {
         try {
-          const membershipRef = db.doc(`accounts/${lastSelected}/users/${uid}`);
+          const membershipRef = doc(db, `accounts/${lastSelected}/users/${uid}`);
           const membershipSnap = await getDocWithPreference(membershipRef);
           if (membershipSnap?.exists) {
             accountIds.push(lastSelected);
@@ -158,7 +170,7 @@ export const useAccountContextStore = create<AccountContextState>((set, get) => 
       const accounts = await Promise.all(
         accountIds.map(async (accountId) => {
           try {
-            const accountSnap = await getDocWithPreference(db.doc(`accounts/${accountId}`));
+            const accountSnap = await getDocWithPreference(doc(db, `accounts/${accountId}`));
             const data = typeof accountSnap?.data === 'function' ? accountSnap.data() : undefined;
             return { accountId, name: data?.name as string | undefined };
           } catch {
@@ -193,7 +205,7 @@ export const useAccountContextStore = create<AccountContextState>((set, get) => 
     }
 
     try {
-      const ref = db.doc(`accounts/${accountId}/users/${uid}`);
+      const ref = doc(db, `accounts/${accountId}/users/${uid}`);
       const snapshot = await getDocWithPreference(ref);
 
       // Only clear if we can definitively say "does not exist".

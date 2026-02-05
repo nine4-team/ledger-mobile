@@ -1,4 +1,4 @@
-import firestore from '@react-native-firebase/firestore';
+import { serverTimestamp } from '@react-native-firebase/firestore';
 import { functions, isFirebaseConfigured } from '../firebase/firebase';
 import { createRepository } from './repository';
 
@@ -52,7 +52,7 @@ export async function updateProject(
   const repo = createRepository<Project>(`accounts/${accountId}/projects`, 'online');
   await repo.upsert(projectId, {
     ...data,
-    updatedAt: firestore.FieldValue.serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
 }
 

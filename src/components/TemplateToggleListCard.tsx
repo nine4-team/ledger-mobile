@@ -47,6 +47,16 @@ export type TemplateToggleListCardProps = {
   onReorderItems?: (nextItems: TemplateToggleListItem[]) => void;
   onDragActiveChange?: (isDragging: boolean) => void;
   /**
+   * Controls which items are draggable. Defaults to:
+   * - draggable when toggle is ON (itemize === true) and not disabled.
+   */
+  isItemDraggable?: (item: TemplateToggleListItem) => boolean;
+  /**
+   * Optional normalization step applied any time items are set/reordered.
+   * Defaults to bubbling items with toggle OFF (or disabled) to the bottom.
+   */
+  normalizeOrder?: (items: TemplateToggleListItem[]) => TemplateToggleListItem[];
+  /**
    * Preferred: provide content and the card will render a consistent info dialog.
    * If omitted, falls back to `onPressInfo` to preserve prior behavior.
    */
@@ -65,6 +75,8 @@ export function TemplateToggleListCard({
   onToggleItemize,
   onReorderItems,
   onDragActiveChange,
+  isItemDraggable,
+  normalizeOrder,
   getInfoContent,
   onPressInfo,
   onPressMenu,
@@ -78,13 +90,13 @@ export function TemplateToggleListCard({
   const [menuTarget, setMenuTarget] = useState<TemplateToggleListItem | null>(null);
 
   useEffect(() => {
-    const bubbled = bubbleDisabledToEnd(items);
-    setOrderedItems(bubbled);
+    const next = (normalizeOrder ?? bubbleDisabledToEnd)(items);
+    setOrderedItems(next);
     // Keep parent state consistent with the displayed order.
-    if (onReorderItems && !sameIdOrder(items, bubbled)) {
-      onReorderItems(bubbled);
+    if (onReorderItems && !sameIdOrder(items, next)) {
+      onReorderItems(next);
     }
-  }, [items]);
+  }, [items, normalizeOrder, onReorderItems]);
 
   const themed = useMemo(
     () =>
@@ -188,12 +200,14 @@ export function TemplateToggleListCard({
         getItemId={(it) => it.id}
         itemHeight={itemHeight}
         onReorder={(next) => {
-          const bubbled = bubbleDisabledToEnd(next);
-          setOrderedItems(bubbled);
-          onReorderItems?.(bubbled);
+          const normalized = (normalizeOrder ?? bubbleDisabledToEnd)(next);
+          setOrderedItems(normalized);
+          onReorderItems?.(normalized);
         }}
         onDragActiveChange={onDragActiveChange}
-        isItemDraggable={(it) => it.itemize && !Boolean(it.disabled)}
+        isItemDraggable={(it) =>
+          isItemDraggable ? isItemDraggable(it) : it.itemize && !Boolean(it.disabled)
+        }
         renderItem={({ item, isActive, dragHandleProps }) => {
           const disabled = Boolean(item.disabled);
           return (
@@ -208,7 +222,7 @@ export function TemplateToggleListCard({
                     <Pressable
                       accessibilityRole="switch"
                       accessibilityState={{ checked: item.itemize, disabled }}
-                      accessibilityLabel={`Itemize ${item.name}`}
+                      accessibilityLabel={`${rightHeaderLabel} ${item.name}`}
                       disabled={disabled}
                       onPress={() => onToggleItemize(item.id, !item.itemize)}
                       hitSlop={8}
@@ -264,22 +278,24 @@ export function TemplateToggleListCard({
         }}
       />
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Create new item"
-        onPress={onPressCreate}
-        style={({ pressed }) => [styles.createRow, pressed && styles.pressed]}
-      >
-        <View style={styles.createLeft}>
-          <View style={styles.createPlus}>
-            <MaterialIcons name="add" size={18} color={themed.icon.color} />
+      {onPressCreate ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Create new item"
+          onPress={onPressCreate}
+          style={({ pressed }) => [styles.createRow, pressed && styles.pressed]}
+        >
+          <View style={styles.createLeft}>
+            <View style={styles.createPlus}>
+              <MaterialIcons name="add" size={18} color={themed.icon.color} />
+            </View>
+            <AppText variant="body" style={[styles.createLabel, themed.createText]} numberOfLines={1}>
+              {createPlaceholderLabel}
+            </AppText>
           </View>
-          <AppText variant="body" style={[styles.createLabel, themed.createText]} numberOfLines={1}>
-            {createPlaceholderLabel}
-          </AppText>
-        </View>
-        <View style={styles.createRight} />
-      </Pressable>
+          <View style={styles.createRight} />
+        </Pressable>
+      ) : null}
 
       {!onPressMenu ? (
         <BottomSheetMenuList

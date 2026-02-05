@@ -1,3 +1,10 @@
+import {
+  collection,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+} from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 
 export type ProjectBudgetCategory = {
@@ -16,9 +23,9 @@ export function subscribeToProjectBudgetCategories(
     onChange([]);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`)
-    .onSnapshot(
+  const collectionRef = collection(db, `accounts/${accountId}/projects/${projectId}/budgetCategories`);
+  return onSnapshot(
+    collectionRef,
       (snapshot) => {
         const next = snapshot.docs.map(
           (doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
@@ -40,11 +47,12 @@ export async function refreshProjectBudgetCategories(
   if (!isFirebaseConfigured || !db) {
     return [];
   }
-  const ref = db.collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`);
+  const ref = collection(db, `accounts/${accountId}/projects/${projectId}/budgetCategories`);
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
-      const snapshot = await (ref as any).get({ source });
+      const snapshot =
+        source === 'cache' ? await getDocsFromCache(ref) : await getDocsFromServer(ref);
       return snapshot.docs.map(
         (doc: any) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
       );
@@ -52,7 +60,7 @@ export async function refreshProjectBudgetCategories(
       // try next
     }
   }
-  const snapshot = await ref.get();
+  const snapshot = await getDocs(ref);
   return snapshot.docs.map(
     (doc: any) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
   );

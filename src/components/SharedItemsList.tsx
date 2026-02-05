@@ -1,14 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { ListControlBar } from './ListControlBar';
+import { ListSelectAllRow } from './ListSelectionControls';
+import { BottomSheet } from './BottomSheet';
 import { ItemCard } from './ItemCard';
+import { SelectorCircle } from './SelectorCircle';
+import { FilterMenu } from './FilterMenu';
+import { SortMenu } from './SortMenu';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { layout } from '../ui';
+import { getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
@@ -16,6 +21,7 @@ import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/
 import { deleteItem, updateItem } from '../data/itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale } from '../data/inventoryOperations';
 import { resolveAttachmentUri } from '../offline/media';
+import type { AnchoredMenuItem } from './AnchoredMenuList';
 
 type SharedItemsListProps = {
   scopeConfig: ScopeConfig;
@@ -43,7 +49,7 @@ type ItemFilterMode =
   | 'no-transaction';
 
 type ItemFilters = {
-  mode?: ItemFilterMode;
+  mode?: ItemFilterMode | ItemFilterMode[];
   showDuplicates?: boolean;
 };
 
@@ -51,7 +57,7 @@ type ListRow =
   | { type: 'group'; groupId: string; label: string; count: number; itemIds: string[] }
   | { type: 'item'; item: ItemRow; groupId?: string };
 
-const SORT_MODES = ['alphabetical', 'creationDate'] as const;
+const SORT_MODES = ['creationDate', 'alphabetical'] as const;
 type SortMode = (typeof SORT_MODES)[number];
 const DEFAULT_SORT: SortMode = 'creationDate';
 
@@ -99,6 +105,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const { state, setSearch, setSort, setFilters, setRestoreHint, clearRestoreHint } = useListState(listStateKey);
   const [query, setQuery] = useState(state.search ?? '');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bulkMode, setBulkMode] = useState(false);
@@ -109,6 +116,20 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const [bulkError, setBulkError] = useState<string | null>(null);
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
+  const bulkSheetDividerStyle = useMemo(
+    () => ({ borderBottomColor: uiKitTheme.border.secondary }),
+    [uiKitTheme]
+  );
+  const primaryTextStyle = useMemo(() => getTextColorStyle(theme.colors.primary), [theme]);
+  const errorTextStyle = useMemo(() => getTextColorStyle(theme.colors.error), [theme]);
+  const filterInputThemeStyle = useMemo(
+    () => ({ borderColor: uiKitTheme.border.primary, color: theme.colors.text }),
+    [uiKitTheme, theme]
+  );
+  const rowSurfaceStyle = useMemo(
+    () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
+    [uiKitTheme]
+  );
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
@@ -173,6 +194,14 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const activeFilters = (state.filters ?? {}) as ItemFilters;
   const filterModes = scopeConfig.scope === 'inventory' ? INVENTORY_FILTER_MODES : PROJECT_FILTER_MODES;
 
+  const selectedModes = useMemo<ItemFilterMode[]>(() => {
+    const modeValue = activeFilters.mode;
+    if (Array.isArray(modeValue)) {
+      return modeValue.length > 0 ? modeValue : ['all'];
+    }
+    return modeValue ? [modeValue] : ['all'];
+  }, [activeFilters.mode]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const normalizedNeedle = normalizeSku(needle);
@@ -198,17 +227,19 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
     const filteredByFilters = filteredItems.filter((row) => {
       const item = row.item;
-      const mode = activeFilters.mode ?? 'all';
-      if (mode === 'bookmarked' && !item.bookmark) return false;
-      if (mode === 'from-inventory' && item.projectId) return false;
-      if (mode === 'to-return' && item.status !== 'to return') return false;
-      if (mode === 'returned' && item.status !== 'returned') return false;
-      if (mode === 'no-sku' && item.sku?.trim()) return false;
-      if (mode === 'no-description' && item.description?.trim()) return false;
-      if (mode === 'no-project-price' && typeof item.projectPriceCents === 'number') return false;
-      if (mode === 'no-image' && (item.images?.length ?? 0) > 0) return false;
-      if (mode === 'no-transaction' && item.transactionId) return false;
-      return true;
+      if (selectedModes.includes('all')) return true;
+      return selectedModes.every((mode) => {
+        if (mode === 'bookmarked') return Boolean(item.bookmark);
+        if (mode === 'from-inventory') return !item.projectId;
+        if (mode === 'to-return') return item.status === 'to return';
+        if (mode === 'returned') return item.status === 'returned';
+        if (mode === 'no-sku') return !item.sku?.trim();
+        if (mode === 'no-description') return !item.description?.trim();
+        if (mode === 'no-project-price') return typeof item.projectPriceCents !== 'number';
+        if (mode === 'no-image') return (item.images?.length ?? 0) === 0;
+        if (mode === 'no-transaction') return !item.transactionId;
+        return true;
+      });
     });
 
     const sorted = [...filteredByFilters].sort((a, b) => {
@@ -224,7 +255,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     });
 
     return sorted;
-  }, [activeFilters.mode, query, rows, sortMode]);
+  }, [query, rows, selectedModes, sortMode]);
 
   const groupedRows = useMemo(() => {
     if (activeFilters.showDuplicates === false) {
@@ -363,10 +394,43 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, [accountId, items, scopeConfig.projectId, scopeConfig.scope, selectedIds]);
 
   const handleToggleSort = useCallback(() => {
-    const currentIndex = SORT_MODES.indexOf(sortMode);
-    const nextMode = SORT_MODES[(currentIndex + 1) % SORT_MODES.length];
-    setSort(nextMode);
+    setSortOpen(true);
+  }, []);
+
+  const sortMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const labels: Record<SortMode, string> = {
+      alphabetical: 'Alphabetical',
+      creationDate: 'Creation Date',
+    };
+    return SORT_MODES.map((mode) => ({
+      key: mode,
+      label: labels[mode] ?? mode.replace(/\b\w/g, (l) => l.toUpperCase()),
+      onPress: () => setSort(mode),
+      icon: sortMode === mode ? 'check' : undefined,
+    }));
   }, [setSort, sortMode]);
+
+  const filterMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const normalizedModes = selectedModes.length > 0 ? selectedModes : ['all'];
+    return filterModes.map((mode) => {
+      const label = mode === 'all' ? 'All' : mode.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+      const isSelected = normalizedModes.includes(mode);
+      return {
+        key: mode,
+        label,
+        onPress: () => {
+          if (mode === 'all') {
+            setFilters({ ...activeFilters, mode: 'all' });
+            return;
+          }
+          const next = normalizedModes.filter((value) => value !== 'all');
+          const nextModes = next.includes(mode) ? next.filter((value) => value !== mode) : [...next, mode];
+          setFilters({ ...activeFilters, mode: nextModes.length > 0 ? nextModes : 'all' });
+        },
+        icon: isSelected ? 'check' : undefined,
+      };
+    });
+  }, [activeFilters, filterModes, selectedModes, setFilters]);
 
   const handleCreateItem = useCallback(() => {
     router.push({
@@ -387,27 +451,52 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     }
   }, [filtered, selectedIds.length]);
 
-  const allSelected = bulkMode && selectedIds.length === filtered.length && filtered.length > 0;
+  const hasFiltered = filtered.length > 0;
+  const allSelected = bulkMode && selectedIds.length === filtered.length && hasFiltered;
+
+  const getSortLabel = useCallback(() => {
+    if (sortMode === 'alphabetical') return 'Alphabetical';
+    if (sortMode === 'creationDate') return 'Creation Date';
+    return sortMode;
+  }, [sortMode]);
+
+  const isSortActive = sortMode !== DEFAULT_SORT;
+  const isFilterActive =
+    !selectedModes.includes('all') || selectedModes.length > 1 || activeFilters.showDuplicates === false;
 
   return (
     <View style={styles.container}>
-      <ListControlBar
-        search={query}
-        onChangeSearch={setQuery}
-        actions={[
-          { title: 'Sort', variant: 'secondary', onPress: handleToggleSort, iconName: 'sort' },
-          {
-            title: 'Filter',
-            variant: 'secondary',
-            onPress: () => setFiltersOpen((prev) => !prev),
-            iconName: 'filter-list',
-          },
-          { title: 'Add', variant: 'primary', onPress: handleCreateItem, iconName: 'add' },
-        ]}
-      />
+      <View style={styles.controlSection}>
+        <ListControlBar
+          search={query}
+          onChangeSearch={setQuery}
+          actions={[
+            {
+              title: 'Sort',
+              variant: 'secondary',
+              onPress: handleToggleSort,
+              iconName: 'sort',
+              active: isSortActive,
+            },
+            {
+              title: 'Filter',
+              variant: 'secondary',
+              onPress: () => setFiltersOpen(true),
+              iconName: 'filter-list',
+              active: isFilterActive,
+            },
+            { title: 'Add', variant: 'primary', onPress: handleCreateItem, iconName: 'add' },
+          ]}
+        />
+      </View>
+      <SortMenu visible={sortOpen} onRequestClose={() => setSortOpen(false)} items={sortMenuItems} />
+      <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
       {/* Select All - moved below search */}
-      <Pressable
+      <ListSelectAllRow
+        disabled={!hasFiltered}
+        checked={bulkMode && allSelected}
         onPress={() => {
+          if (!hasFiltered) return;
           if (!bulkMode) {
             setBulkMode(true);
             handleSelectAll();
@@ -415,77 +504,26 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             handleSelectAll();
           }
         }}
-        style={({ pressed }) => [
-          styles.selectAllRow,
-          pressed && styles.selectAllPressed,
-        ]}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: bulkMode && allSelected }}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <View
-          style={[
-            styles.checkbox,
-            {
-              borderColor: uiKitTheme.border.primary,
-              backgroundColor: bulkMode && allSelected ? uiKitTheme.primary.main : 'transparent',
-            },
-          ]}
-        >
-          {bulkMode && allSelected && (
-            <AppText style={styles.checkmark}>✓</AppText>
-          )}
+      />
+      <BottomSheet visible={bulkMode} onRequestClose={() => setBulkMode(false)}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Bulk actions
+          </AppText>
         </View>
-        <Text style={[styles.selectAllLabel, { color: theme.colors.textSecondary }]}>Select all</Text>
-      </Pressable>
-      {filtersOpen ? (
-        <View style={styles.filterPanel}>
-          <View style={styles.filterRow}>
-            {filterModes.map((mode) => (
-              <Pressable
-                key={mode}
-                onPress={() => setFilters({ ...activeFilters, mode })}
-                style={[
-                  styles.filterChip,
-                  {
-                    borderColor:
-                      (activeFilters.mode ?? 'all') === mode
-                        ? uiKitTheme.primary.main
-                        : uiKitTheme.border.primary,
-                  },
-                ]}
-              >
-                <AppText variant="caption">{mode.replace(/-/g, ' ')}</AppText>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.filterRow}>
-            <Pressable
-              onPress={() =>
-                setFilters({ ...activeFilters, showDuplicates: !activeFilters.showDuplicates })
-              }
-            >
-              <AppText variant="caption">
-                {activeFilters.showDuplicates === false ? 'Show duplicates' : 'Hide duplicates'}
-              </AppText>
-            </Pressable>
-          </View>
-        </View>
-      ) : null}
-      {bulkMode ? (
-        <View style={[styles.bulkPanel, { backgroundColor: uiKitTheme.background.surface, borderColor: uiKitTheme.border.primary }]}>
+        <View style={styles.bulkSheetContent}>
           <View style={styles.bulkHeader}>
-            <AppText variant="caption" style={{ fontWeight: '600' }}>
+            <AppText variant="caption" style={styles.semiboldText}>
               {selectedIds.length} selected
             </AppText>
             <Pressable onPress={() => setBulkMode(false)}>
-              <AppText variant="caption" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+              <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
                 Done
               </AppText>
             </Pressable>
           </View>
           {bulkError ? (
-            <AppText variant="caption" style={{ color: theme.colors.error }}>
+            <AppText variant="caption" style={errorTextStyle}>
               {bulkError}
             </AppText>
           ) : null}
@@ -496,7 +534,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                 onChangeText={setBulkSpaceId}
                 placeholder="Target space id"
                 placeholderTextColor={theme.colors.textSecondary}
-                style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
+                style={[styles.filterInput, filterInputThemeStyle]}
               />
               <AppButton
                 title="Move to space"
@@ -518,14 +556,14 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                   onChangeText={setBulkProjectId}
                   placeholder="Target project id"
                   placeholderTextColor={theme.colors.textSecondary}
-                  style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
+                  style={[styles.filterInput, filterInputThemeStyle]}
                 />
                 <TextInput
                   value={bulkCategoryId}
                   onChangeText={setBulkCategoryId}
                   placeholder="Destination category id"
                   placeholderTextColor={theme.colors.textSecondary}
-                  style={[styles.filterInput, { borderColor: uiKitTheme.border.primary, color: theme.colors.text }]}
+                  style={[styles.filterInput, filterInputThemeStyle]}
                 />
                 <AppButton
                   title="Allocate to project"
@@ -551,7 +589,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             />
           </View>
         </View>
-      ) : null}
+      </BottomSheet>
       <FlatList
         ref={listRef}
         data={groupedRows}
@@ -637,10 +675,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                   },
                 });
               }}
-              style={[
-                styles.row,
-                { borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface },
-              ]}
+              style={[styles.row, rowSurfaceStyle]}
             />
           );
         }}
@@ -654,34 +689,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 16,
   },
-  selectAllRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: -6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  selectAllPressed: {
-    opacity: 0.6,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmark: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 18,
-  },
-  selectAllLabel: {
-    fontSize: 14,
-    fontWeight: '400',
+  controlSection: {
+    gap: 0,
   },
   bulkSelectButton: {
     paddingVertical: 8,
@@ -714,37 +723,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  filterPanel: {
-    gap: 10,
-    paddingVertical: 6,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
   filterInput: {
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  bulkPanel: {
+  bulkSheetTitleRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    paddingTop: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  bulkSheetTitle: {
+    fontWeight: '700',
+  },
+  bulkSheetContent: {
     gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: 8,
   },
   bulkHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  semiboldText: {
+    fontWeight: '600',
   },
   bulkActions: {
     gap: 12,

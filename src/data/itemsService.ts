@@ -1,4 +1,19 @@
-import firestore from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 import type { AttachmentRef } from '../offline/media';
@@ -31,12 +46,12 @@ async function getQuerySnapshotWithPreference(
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
-      return await (query as any).get({ source });
+      return source === 'cache' ? await getDocsFromCache(query as any) : await getDocsFromServer(query as any);
     } catch {
       // try next
     }
   }
-  return await (query as any).get();
+  return await getDocs(query as any);
 }
 
 export async function listItemsByProject(
@@ -47,10 +62,14 @@ export async function listItemsByProject(
   if (!isFirebaseConfigured || !db) {
     return [];
   }
-  const { limit = 200, mode = 'online' } = options;
-  let query = db.collection(`accounts/${accountId}/items`).where('projectId', '==', projectId);
-  query = query.orderBy('updatedAt', 'desc').limit(limit);
-  const snapshot = await getQuerySnapshotWithPreference(query, mode);
+  const { limit: limitCount = 200, mode = 'online' } = options;
+  const baseQuery = query(
+    collection(db, `accounts/${accountId}/items`),
+    where('projectId', '==', projectId),
+    orderBy('updatedAt', 'desc'),
+    limit(limitCount)
+  );
+  const snapshot = await getQuerySnapshotWithPreference(baseQuery, mode);
   return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Item));
 }
 
@@ -63,17 +82,15 @@ export async function updateItem(
     return;
   }
   const uid = auth?.currentUser?.uid ?? null;
-  await db
-    .collection(`accounts/${accountId}/items`)
-    .doc(itemId)
-    .set(
-      {
-        ...data,
-        updatedAt: firestore.FieldValue.serverTimestamp(),
-        updatedBy: uid,
-      },
-      { merge: true }
-    );
+  await setDoc(
+    doc(db, `accounts/${accountId}/items/${itemId}`),
+    {
+      ...data,
+      updatedAt: serverTimestamp(),
+      updatedBy: uid,
+    },
+    { merge: true }
+  );
   trackPendingWrite();
 }
 
@@ -86,9 +103,9 @@ export async function createItem(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
     );
   }
-  const now = firestore.FieldValue.serverTimestamp();
+  const now = serverTimestamp();
   const uid = auth?.currentUser?.uid ?? null;
-  const docRef = await db.collection(`accounts/${accountId}/items`).add({
+  const docRef = await addDoc(collection(db, `accounts/${accountId}/items`), {
     ...data,
     createdAt: now,
     updatedAt: now,
@@ -103,7 +120,7 @@ export async function deleteItem(accountId: string, itemId: string): Promise<voi
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await db.collection(`accounts/${accountId}/items`).doc(itemId).delete();
+  await deleteDoc(doc(db, `accounts/${accountId}/items/${itemId}`));
   trackPendingWrite();
 }
 
@@ -116,10 +133,9 @@ export function subscribeToItem(
     onChange(null);
     return () => {};
   }
-  return db
-    .collection(`accounts/${accountId}/items`)
-    .doc(itemId)
-    .onSnapshot(
+  const ref = doc(db, `accounts/${accountId}/items/${itemId}`);
+  return onSnapshot(
+    ref,
       (snapshot) => {
         if (!snapshot.exists) {
           onChange(null);

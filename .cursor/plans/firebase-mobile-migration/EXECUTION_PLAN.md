@@ -193,6 +193,10 @@ Status:
 - ✅ Transactions gap closed: “Add existing items” now uses a picker flow (Suggested/Project/Outside, search, select-all, duplicate grouping, conflict confirm) with parity “re-home then link” behavior.
 - ✅ Spaces gap closed: “Add existing items” now supports outside items (other projects + business inventory), blocks transaction-linked items, and runs canonical pull-in operations before assigning `spaceId`.
 - ✅ Phase 4 follow-up closed: shared add-item picker UI + outside-items hook + conflict dialog + move helper are now shared and used in Transactions/Spaces.
+- ✅ Filter and sort menus gap closed: Items + Transactions list filter and sort menus are now implemented to spec with full menu structure using BottomSheetMenuList:
+  - Items list: Filter menu with all required modes (all, bookmarked, from-inventory, to-return, returned, no-sku, no-description, no-project-price, no-image, no-transaction) and Sort menu (alphabetical, creationDate).
+  - Transactions list: Filter menu with submenus for status, reimbursement, receipt, type, completeness, budget category, purchased by, and source; Sort menu with all modes (date-desc, date-asc, created-desc, created-asc, source, amount).
+  - Both lists persist filter/sort state via ListStateStore and display active filter/sort indicators in the control bar.
 - ⚠️ Follow-up (optional): consider moving the transaction “re-home then link” logic (when adding an outside item to a transaction: update `item.projectId` / clear `spaceId` as needed, then set `item.transactionId`) into the canonical inventory-ops request-doc flows—but only after those server-owned invariants explicitly cover transaction linking/unlinking rules (conflict reassignment, canonical vs non-canonical behavior, `inheritedBudgetCategoryId`).
 
 ---

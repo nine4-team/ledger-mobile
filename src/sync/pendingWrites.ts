@@ -1,12 +1,15 @@
-import firestore from '@react-native-firebase/firestore';
+import { waitForPendingWrites } from '@react-native-firebase/firestore';
 
 import { useSyncStatusStore } from './syncStatusStore';
-import { isFirebaseConfigured } from '../firebase/firebase';
+import { db, isFirebaseConfigured } from '../firebase/firebase';
 
 let pendingTokens: string[] = [];
 
 export function trackPendingWrite(): void {
   if (!isFirebaseConfigured) {
+    return;
+  }
+  if (!db) {
     return;
   }
   const token = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -15,8 +18,7 @@ export function trackPendingWrite(): void {
   store.setPendingWritesCount(pendingTokens.length);
   store.setSyncing(true);
 
-  firestore()
-    .waitForPendingWrites()
+  waitForPendingWrites(db)
     .then(() => {
       pendingTokens = [];
       store.setPendingWritesCount(0);
