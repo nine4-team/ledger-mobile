@@ -107,7 +107,7 @@ Goal: allow an admin to restrict what a user can **see** and **do**. Example: a 
 Security-enforcement compatibility requirements (high-level):
 
 - **Rules-enforceable scoping**: scope data must be checkable via `exists()`/`get()` by known paths.
-- **Denormalized selectors**: any entity whose visibility depends on budget category needs a direct selector (prefer `item.inheritedBudgetCategoryId`; use `transaction.budgetCategoryId` for non-canonical transactions) or a server-owned derived field.
+- **Denormalized selectors**: any entity whose visibility depends on budget category needs a direct selector (prefer `item.budgetCategoryId`; use `transaction.budgetCategoryId` for non-canonical transactions) or a server-owned derived field.
 - **Ownership fallback** requires `createdBy` fields that are validated at write time.
 - **Server-owned invariants**: multi-doc operations validate permissions in callable Functions.
 
@@ -357,9 +357,9 @@ Evidence sources (all in-repo):
   - Scope changes:
     - Moving/selling/deallocating to Business Inventory triggers deallocation behavior (see cross-cutting “allocation/deallocation”)
 - Budget category attribution (canonical transactions):
-  - Each item must persist a stable `inheritedBudgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
+  - Each item must persist a stable `budgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
   - Canonical inventory sale transactions are system-owned and category-coded; budgeting attribution uses `transaction.budgetCategoryId` with sign based on direction.
-- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), `inheritedBudgetCategoryId`
+- **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), `budgetCategoryId`
 - **Offline behaviors required**:
   - Create/edit/delete offline (local-first)
   - Bulk actions offline (queued ops; show partial failures)
@@ -447,12 +447,12 @@ Evidence sources (all in-repo):
   - Deallocate when the user initiates a sell/deallocate to Business Inventory operation
   - Show lineage breadcrumbs / relationship cues (where present)
 - **Budget-category determinism constraints** (canonical; required):
-  - Project → Business Inventory: do not allow deallocation/sell unless the item has a known `inheritedBudgetCategoryId` (it must have been linked to a transaction previously).
+  - Project → Business Inventory: do not allow deallocation/sell unless the item has a known `budgetCategoryId` (it must have been linked to a transaction previously).
   - Business Inventory → Project: prompt for a destination-project budget category and persist it back onto the item.
-    - Defaulting: if the item already has `inheritedBudgetCategoryId` and that category is enabled/available for the destination project, preselect it.
+    - Defaulting: if the item already has `budgetCategoryId` and that category is enabled/available for the destination project, preselect it.
     - Required choice: if no valid default exists, require selection before completing the operation.
     - Batch behavior: apply one category choice to the whole batch (fast path); optional future enhancement is per-item split.
-    - Persistence: on successful allocation/sale, set/update `item.inheritedBudgetCategoryId` to the chosen destination category so future canonical attribution is deterministic.
+    - Persistence: on successful allocation/sale, set/update `item.budgetCategoryId` to the chosen destination category so future canonical attribution is deterministic.
 - **Entities touched**: items, transactions, projects, spaces, lineage edges/pointers, canonical transaction ids, conflicts
 - **Offline behaviors required**:
   - Represent multi-entity changes as a single **idempotent request-doc operation** applied by a Cloud Function transaction (per `OFFLINE_FIRST_V2_SPEC.md`)

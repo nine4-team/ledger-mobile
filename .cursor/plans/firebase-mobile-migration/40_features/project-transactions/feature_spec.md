@@ -36,7 +36,7 @@ Definitions:
   Canonical inventory sale transactions are:
   - direction-coded (`business_to_project` or `project_to_business`)
   - category-coded (`transaction.budgetCategoryId` is required)
-  - deterministic (one per `(projectId, direction, budgetCategoryId)`, recommended id prefix `INV_SALE__`)
+  - deterministic (one per `(projectId, direction, budgetCategoryId)`, recommended id prefix `SALE_`)
   - Note: “project → project” movement is modeled as two hops (project → business, then business → project).
 
 Rules (required):
@@ -80,7 +80,8 @@ Filters/sorts/search (web parity):
 
 Canonical transaction display:
 - Canonical inventory sale transaction IDs are displayed with special titles that reflect direction (e.g., “Inventory → Project (System)” vs “Project → Inventory (System)”).
-- Canonical totals may be recomputed from linked items and (in web) the list self-heals stale amounts by updating the stored transaction amount.
+- Canonical totals may be recomputed from linked items; **web-only** self-heal writes should not be required on mobile (canonical `amountCents` is server-owned).
+  - Mobile may display a computed hint or “may be updating” state, but MUST NOT write `amountCents` to self-heal.
 
 Budget category filter behavior (required; intentional delta vs web):
 
@@ -97,7 +98,7 @@ Mobile requirement (Expo Router; shared-module):
   - `listStateKey = project:${projectId}:transactions` (project scope)
   - `listStateKey = inventory:transactions` (inventory scope)
 - Restore behavior: anchor-id restore preferred (`anchorId = <opened transactionId>`), optional scroll-offset fallback.
-- Canonical title + computed totals + self-heal: `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`, `computeCanonicalTransactionTotal`, `transactionService.updateTransaction`)
+- Canonical title + computed totals (display-only): `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`, `computeCanonicalTransactionTotal`)
 
 Firebase migration constraint:
 - Do not implement unbounded listeners on `transactions`; use **scoped listeners** + pagination/limits per `OFFLINE_FIRST_V2_SPEC.md`.
@@ -178,7 +179,7 @@ Parity evidence:
 New requirement (canonical budget categories):
 
 - Editing a transaction’s budget category has downstream effects on linked items:
-  - When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to the new category id (to keep future canonical attribution deterministic).
+  - When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.budgetCategoryId` updated to the new category id (to keep future canonical attribution deterministic).
   - When editing a **canonical inventory** transaction, do not allow category editing (recommended: disallow editing entirely for canonical `INV_*` rows).
 
 ### 5) View transaction detail
@@ -227,11 +228,11 @@ Parity evidence:
 Out-of-scope linkage:
 - Many TransactionDetail item actions (move/sell to project/business inventory) depend on `inventory-operations-and-lineage` semantics. This feature spec captures the **UI contract** and links the multi-entity invariants elsewhere.
 
-New requirement (itemization ↔ `inheritedBudgetCategoryId`):
+New requirement (itemization ↔ `budgetCategoryId`):
 
 - When linking/assigning an item to a **non-canonical** transaction with a non-null `budgetCategoryId`, set:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
-- Linking/unlinking items to a **canonical inventory** transaction must not overwrite `item.inheritedBudgetCategoryId`.
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
+- Linking/unlinking items to a **canonical inventory** transaction must not overwrite `item.budgetCategoryId`.
 
 ### Implementation changes needed (to align mobile with correct behavior)
 Mobile currently must implement the real “add existing items” flow:
@@ -247,7 +248,7 @@ Mobile currently must implement the real “add existing items” flow:
 - **Conflict confirmation**:
   - If an item is already tied to another transaction, require explicit confirmation before reassigning.
 - **Linking writes**:
-  - Ensure linking/unlinking updates are durable and offline-safe, and respect canonical-vs-non-canonical `inheritedBudgetCategoryId` rules.
+  - Ensure linking/unlinking updates are durable and offline-safe, and respect canonical-vs-non-canonical `budgetCategoryId` rules.
 
 ## Offline-first behavior (mobile target)
 

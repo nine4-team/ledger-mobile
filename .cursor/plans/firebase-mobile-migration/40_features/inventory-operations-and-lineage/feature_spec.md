@@ -28,7 +28,7 @@ Canonical inventory transactions are system-owned mechanics. In the new model, t
 Deterministic identity (required):
 - `canonicalSaleTransactionId(projectId, direction, budgetCategoryId)` must be deterministic and parseable.
 - Recommended format:
-  - `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+- `SALE_<projectId>_<direction>_<budgetCategoryId>`
 
 Recommended explicit fields on the transaction doc (even if direction/category are encoded in the id):
 - `isCanonicalInventorySale: true`
@@ -74,6 +74,10 @@ Each function must:
 - Apply all document writes atomically (items + canonical transaction docs + lineage docs + request status updates).
 - Use `opId` to make retries safe. (`requestId` is the Firestore doc id for a single attempt; retries create a new request doc with the same `opId`.)
 
+Canonical total invariant (required):
+- The server MUST be the only writer of canonical sale transaction `amountCents`.
+- When applying a sale operation that affects a canonical sale transaction, the handler MUST recompute and persist the canonical transaction total (`amountCents`) as part of the server-owned transaction.
+
 ### Request-doc collection + payload shapes (required)
 This feature MUST define concrete request-doc shapes so implementation can be transactional, idempotent, and debuggable.
 
@@ -118,6 +122,10 @@ Payload shapes (minimum required fields):
   - `itemId`, `sourceProjectId`, `targetProjectId`
   - `sourceBudgetCategoryId` (required; resolved from the item or prompted from the source project)
   - `destinationBudgetCategoryId` (required; resolved for the destination project, prompting if missing/mismatched)
+
+Repair safety net (recommended):
+- Provide a server-owned scheduled and/or on-demand repair path that recomputes canonical sale totals (`amountCents`) and corrects drift.
+- Clients MUST NOT “self-heal” canonical totals by writing `amountCents` directly.
   - optional: `space`, `notes`, `amount`
   - `expected`: `{ itemProjectId, itemTransactionId? }`
 

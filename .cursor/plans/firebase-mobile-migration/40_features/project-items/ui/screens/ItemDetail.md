@@ -121,13 +121,13 @@ Parity evidence:
 
 ---
 
-## Canonical attribution + `inheritedBudgetCategoryId` (Firebase migration deltas; required)
+## Canonical attribution + `budgetCategoryId` (Firebase migration deltas; required)
 
-### Display of `inheritedBudgetCategoryId`
+### Display of `budgetCategoryId`
 
 Default: keep implicit (recommended):
 
-- In v1 mobile, `inheritedBudgetCategoryId` is an internal determinism field and does not need to be shown as a first-class UI field on Item Detail.
+- In v1 mobile, `budgetCategoryId` is an internal determinism field and does not need to be shown as a first-class UI field on Item Detail.
 - If missing or invalid for a destination project, the UI resolves it via **prompt + persist** during Sell flows (below).
 
 ### Sell menu structure (required)
@@ -142,9 +142,9 @@ Item actions include a single **Sell** entrypoint whose submenu options depend o
 
 ### Project → Business (Sell to Business) — category prompt (required)
 
-If `item.inheritedBudgetCategoryId` is missing when the user initiates `Sell → Sell to Business`:
+If `item.budgetCategoryId` is missing when the user initiates `Sell → Sell to Business`:
 - Prompt the user to choose a budget category from the **source project’s enabled categories**.
-- Persist the selection to `item.inheritedBudgetCategoryId`.
+- Persist the selection to `item.budgetCategoryId`.
 - Then proceed with the canonical sale (`project_to_business`) request-doc workflow.
 
 Inline messaging (recommended when prompting is needed):
@@ -154,8 +154,8 @@ Inline messaging (recommended when prompting is needed):
 ### Business → Project (Sell to Project) — conditional category prompt (required)
 
 When the user initiates `Sell → Sell to Project`, resolve a destination project category:
-- If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, use it (no prompt).
-- Otherwise prompt the user to choose a category from the destination project, persist it to `item.inheritedBudgetCategoryId`, then proceed with the canonical sale (`business_to_project`) request-doc workflow.
+- If `item.budgetCategoryId` is enabled/available in the destination project, use it (no prompt).
+- Otherwise prompt the user to choose a category from the destination project, persist it to `item.budgetCategoryId`, then proceed with the canonical sale (`business_to_project`) request-doc workflow.
 
 Batch behavior (when invoked from list/bulk flows):
 - One category selection applies to all items in the batch (fast path).
@@ -167,8 +167,8 @@ Notes:
 ### Transaction linking rule (required)
 
 - Linking an item to a **non-canonical** transaction with a category sets:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
-- When a sell/allocation prompt resolves a category, the chosen value is also persisted to `item.inheritedBudgetCategoryId` (direct assignment).
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
+- When a sell/allocation prompt resolves a category, the chosen value is also persisted to `item.budgetCategoryId` (direct assignment).
 
 ### Canonical attribution note (required)
 

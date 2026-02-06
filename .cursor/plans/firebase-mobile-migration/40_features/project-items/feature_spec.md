@@ -4,7 +4,7 @@ This spec defines **Project Items** behavior for the React Native + Firebase app
 
 - **Canonical inventory transactions** vs **user-facing (non-canonical) transactions**
 - **Budget-category attribution** (how budget rollups attribute spend)
-- The required item field **`inheritedBudgetCategoryId`** (where it comes from, when it changes, and what breaks if missing)
+- The required item field **`budgetCategoryId`** (where it comes from, when it changes, and what breaks if missing)
 
 When current web behavior differs from the desired Firebase policy, it is labeled as an **Intentional delta**.
 
@@ -113,7 +113,7 @@ A system-generated **sale** transaction used for inventory correctness across sc
 - **Direction-coded**: `business_to_project` or `project_to_business`
 - **Category-coded**: `transaction.budgetCategoryId` is required and represents the single category for the transaction
 - **Deterministic**: one canonical sale transaction per `(projectId, direction, budgetCategoryId)`
-  - recommended id: `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+  - recommended id: `SALE_<projectId>_<direction>_<budgetCategoryId>`
 
 Note: “project → project” movement is modeled as **two hops**:
 - Project A → Business Inventory (`project_to_business`)
@@ -122,8 +122,8 @@ Note: “project → project” movement is modeled as **two hops**:
 Parity evidence (web):
 
 - Canonical transaction id detection: `isCanonicalTransactionId` (`src/services/inventoryService.ts`).
-- Web parity canonical sale creation uses `INV_SALE_<projectId>` (`src/services/inventoryService.ts`).
-  Firebase migration delta: canonical sale ids are category-split and direction-coded (recommended `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`).
+- Web parity canonical sale creation uses `INV_SALE_<projectId>` (`src/services/inventoryService.ts`) (legacy).
+  Firebase migration delta: canonical sale ids are category-split and direction-coded (recommended `SALE_<projectId>_<direction>_<budgetCategoryId>`).
 
 ---
 
@@ -156,11 +156,11 @@ Intentional delta (vs current web):
 
 ---
 
-## Required item field: `inheritedBudgetCategoryId` (item-owned category id)
+## Required item field: `budgetCategoryId` (item-owned category id)
 
 ### Field requirements
 
-Every item must persist a stable `inheritedBudgetCategoryId` that:
+Every item must persist a stable `budgetCategoryId` that:
 
 - Represents the item’s **budget category id** used by canonical inventory sale mechanics.
 - Is **stable across scope changes** (project ↔ business inventory).
@@ -169,20 +169,20 @@ Every item must persist a stable `inheritedBudgetCategoryId` that:
 Source of truth:
 
 - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
-- Compatibility note in feature list: `feature_list.md` calls out `item.inheritedBudgetCategoryId` as a denormalized selector.
+- Compatibility note in feature list: `feature_list.md` calls out `item.budgetCategoryId` as a denormalized selector.
 
 ### Where it comes from (set rules)
 
-1) **Linking item to a user-facing transaction** sets `item.inheritedBudgetCategoryId`:
+1) **Linking item to a user-facing transaction** sets `item.budgetCategoryId`:
 
 - When an item is linked/assigned to a **non-canonical** transaction that has `budgetCategoryId`, set:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
 
 2) Canonical inventory sale operations may require direct assignment:
 - When a sell/allocation prompt resolves a category (source or destination), persist:
-  - `item.inheritedBudgetCategoryId = <chosenCategoryId>`
+  - `item.budgetCategoryId = <chosenCategoryId>`
 
-3) Unlinking from a transaction does **not** clear `item.inheritedBudgetCategoryId`:
+3) Unlinking from a transaction does **not** clear `item.budgetCategoryId`:
 
 - The field is “inherited historically” and should remain stable for deterministic attribution later.
 
@@ -191,7 +191,7 @@ Source of truth:
 Business Inventory → Project allocation/sale may update the field:
 - If the item’s current category is enabled/available in the destination project, keep it.
 - Otherwise prompt the user to choose a **destination project budget category** and persist:
-  - `item.inheritedBudgetCategoryId = <chosenDestinationCategoryId>`
+  - `item.budgetCategoryId = <chosenDestinationCategoryId>`
 
 Project → Business Inventory sell/deallocate may also require updating the field:
 - If the item’s category is missing, prompt the user to choose a **source project budget category** and persist it before applying the sale.
@@ -206,7 +206,7 @@ Source of truth:
 
 ### Guardrail A — Project → Business Inventory requires a resolved category (prompt + persist)
 
-If `item.inheritedBudgetCategoryId` is missing, do not block the sell.
+If `item.budgetCategoryId` is missing, do not block the sell.
 Instead, prompt the user to select a category from the source project, persist it onto the item, then apply the sale.
 
 This guardrail applies to all project → business inventory paths that would create/update canonical inventory rows:
@@ -232,7 +232,7 @@ Intentional delta (vs current web):
 ### Guardrail B — Business Inventory → Project requires conditional category prompt
 
 At BI → Project allocation/sale time:
-- If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, do not prompt.
+- If `item.budgetCategoryId` is enabled/available in the destination project, do not prompt.
 - Otherwise, prompt the user to choose a **destination project budget category**.
 
 Defaulting:
@@ -244,7 +244,7 @@ Batch behavior:
 - One category choice applies to the whole batch (fast path).
 
 Persistence:
-- As part of the operation, set/update `item.inheritedBudgetCategoryId` to the chosen category.
+- As part of the operation, set/update `item.budgetCategoryId` to the chosen category.
 
 Source of truth:
 
@@ -281,6 +281,6 @@ All Firebase/RN implementations must follow:
 
 Implications for this spec:
 
-- `inheritedBudgetCategoryId` must be a first-class field in the **item document** (it is authoritative and must sync).
-- Cross-scope operations that set/update `inheritedBudgetCategoryId` must be **atomic with the scope move** so retries are safe and deterministic (i.e., part of the same server-owned invariant operation).
+- `budgetCategoryId` must be a first-class field in the **item document** (it is authoritative and must sync).
+- Cross-scope operations that set/update `budgetCategoryId` must be **atomic with the scope move** so retries are safe and deterministic (i.e., part of the same server-owned invariant operation).
 

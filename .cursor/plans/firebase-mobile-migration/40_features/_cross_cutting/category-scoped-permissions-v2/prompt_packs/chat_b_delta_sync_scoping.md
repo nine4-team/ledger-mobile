@@ -28,6 +28,6 @@ This must remain compatible with:
 - Do not introduce new product capabilities; implement Roles v2 only.
 
 ## Edge cases that must be explicit
-- “Uncategorized item” rule is item-specific (`item.inheritedBudgetCategoryId == null`), not transaction-specific.
+- “Uncategorized item” rule is item-specific (`item.budgetCategoryId == null`), not transaction-specific.
 - Canonical inventory sale transactions are category-coded; they should not rely on “null category” semantics.
 

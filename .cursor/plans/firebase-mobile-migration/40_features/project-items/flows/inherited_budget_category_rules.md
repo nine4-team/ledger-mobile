@@ -1,4 +1,4 @@
-# Flow: item budget category id rules (`inheritedBudgetCategoryId`) — prompts + canonical sale semantics
+# Flow: item budget category id rules (`budgetCategoryId`) — prompts + canonical sale semantics
 
 This doc is the shared source for Project Items and Business Inventory specs.
 
@@ -7,7 +7,7 @@ Goal: make it unambiguous:
 - when it changes
 - what happens when it’s missing (and how the UI resolves it)
 
-> Naming note: the field is currently named `item.inheritedBudgetCategoryId` in the migration data contracts.
+> Naming note: the field is currently named `item.budgetCategoryId` in the migration data contracts.
 > In this revised model it is **item-owned** (not strictly “inherited”). A later rename to `item.budgetCategoryId` is recommended but out of scope for this spec pack.
 
 ---
@@ -18,7 +18,7 @@ Goal: make it unambiguous:
 - **Canonical inventory sale transaction (system)**: a system-generated **sale** transaction that represents cross-scope movement, and is:
   - **direction-coded**: `business_to_project` or `project_to_business`
   - **category-coded**: exactly one `transaction.budgetCategoryId`
-  - **deterministic**: `canonicalSaleTransactionId(projectId, direction, budgetCategoryId)` (recommended id prefix `INV_SALE__`)
+  - **deterministic**: `canonicalSaleTransactionId(projectId, direction, budgetCategoryId)` (recommended id prefix `SALE_`)
 - Note: “project → project” movement is modeled as **two hops**:
   - Project A → Business Inventory (`project_to_business`)
   - then Business Inventory → Project B (`business_to_project`)
@@ -41,29 +41,29 @@ Source of truth working doc:
 
 ---
 
-## 2) The item field: `inheritedBudgetCategoryId` (semantics + write rules)
+## 2) The item field: `budgetCategoryId` (semantics + write rules)
 
 ### 2.1 Required storage
-Every item persists a stable `inheritedBudgetCategoryId` field (nullable but present).
+Every item persists a stable `budgetCategoryId` field (nullable but present).
 
 ### 2.2 How it is set (inherit vs direct assignment)
 
 **A) On link to a non-canonical transaction** (inherit):
 - If a non-canonical transaction has `budgetCategoryId`, set:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
 
 **B) On canonical inventory sale operations** (direct assignment when needed):
 - Canonical sale operations may need to set or change the item’s category so the correct canonical sale transaction is used.
 - When a prompt is shown (see below), persist the chosen category onto the item as:
-  - `item.inheritedBudgetCategoryId = <chosenCategoryId>`
+  - `item.budgetCategoryId = <chosenCategoryId>`
 
 ### 2.3 When it changes
 
 - **Business Inventory → Project**:
-  - If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, keep it.
+  - If `item.budgetCategoryId` is enabled/available in the destination project, keep it.
   - Otherwise prompt for a destination project category and persist it onto the item.
 - **Project → Business Inventory**:
-  - If `item.inheritedBudgetCategoryId` is missing, prompt for a source project category and persist it onto the item.
+  - If `item.budgetCategoryId` is missing, prompt for a source project category and persist it onto the item.
   - Otherwise keep it.
 
 ### 2.4 What breaks if missing
@@ -77,9 +77,9 @@ Therefore, the UI must **prompt + persist** before the canonical sale is applied
 
 ### 3.1 Project → Business Inventory (Sell to Business)
 
-If `item.inheritedBudgetCategoryId` is missing:
+If `item.budgetCategoryId` is missing:
 - Prompt the user to select a category from the **source project’s enabled categories**.
-- Persist it to `item.inheritedBudgetCategoryId`.
+- Persist it to `item.budgetCategoryId`.
 - Then apply the canonical sale (`project_to_business`) to the matching category-coded canonical sale transaction.
 
 Correction path clarification (parity-informed):
@@ -88,9 +88,9 @@ Correction path clarification (parity-informed):
 
 ### 3.2 Business Inventory → Project (Sell to Project)
 
-If `item.inheritedBudgetCategoryId` is missing **or** not enabled/available in the destination project:
+If `item.budgetCategoryId` is missing **or** not enabled/available in the destination project:
 - Prompt the user to select a category from the destination project.
-- Persist it to `item.inheritedBudgetCategoryId`.
+- Persist it to `item.budgetCategoryId`.
 - Then apply the canonical sale (`business_to_project`) to the matching category-coded canonical sale transaction.
 
 Defaulting:

@@ -56,7 +56,7 @@ Source of truth:
 Rules:
 
 - **Non-canonical transactions**: category badge/name (if shown) comes from `transaction.budgetCategoryId`.
-- **Canonical inventory sale transactions (system)** (recommended id prefix `INV_SALE__`):
+- **Canonical inventory sale transactions (system)** (recommended id prefix `SALE_`):
   - Are category-coded (`transaction.budgetCategoryId` is populated) and direction-coded (`inventorySaleDirection` is populated).
   - Are system-owned/read-only in UI, but can be filtered/exported like any other transaction.
   - If the list displays special badges for canonical rows, it should use direction (e.g., “System: project→business”).

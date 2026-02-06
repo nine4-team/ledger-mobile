@@ -37,7 +37,7 @@ Primary entrypoints in web:
 
 ### Preconditions
 - Item exists.
-- Project → Business Inventory sell/deallocate requires the item to have a resolved budget category id (currently `item.inheritedBudgetCategoryId`).
+- Project → Business Inventory sell/deallocate requires the item to have a resolved budget category id (currently `item.budgetCategoryId`).
   - If missing, prompt the user to select a category from the **source project’s enabled categories**, persist it onto the item, then proceed.
   - Source of truth: `40_features/project-items/flows/inherited_budget_category_rules.md`.
 

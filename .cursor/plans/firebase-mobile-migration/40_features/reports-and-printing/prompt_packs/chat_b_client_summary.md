@@ -43,7 +43,7 @@ For the screen contract and acceptance criteria, include:
   - savings rule (`marketValue > 0` only)
 - Category breakdown:
   - web parity is transaction `categoryId` → category name
-  - mobile required delta uses `item.inheritedBudgetCategoryId` (and a safe fallback) so canonical transactions are attributed correctly
+  - mobile required delta uses `item.budgetCategoryId` (and a safe fallback) so canonical transactions are attributed correctly
 - Receipt link rule for each item:
   - canonical/invoiceable → link to invoice report
   - else receipt image URL → external link

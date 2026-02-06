@@ -3,7 +3,7 @@
 This doc defines **category-driven scoped permissions** for the React Native + Firebase migration, aligned with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows) and the canonical attribution model.
 
 Evidence / canonical attribution sources:
-- `40_features/project-items/flows/inherited_budget_category_rules.md` (stable selector: `item.inheritedBudgetCategoryId`)
+- `40_features/project-items/flows/inherited_budget_category_rules.md` (stable selector: `item.budgetCategoryId`)
 - `40_features/project-transactions/feature_spec.md` (canonical inventory sale rows are category-coded + direction-coded; canonical rows remain system-owned/read-only)
 - `40_features/budget-and-accounting/feature_spec.md` (budget rollups apply sign by canonical sale direction)
 
@@ -18,14 +18,14 @@ Evidence / canonical attribution sources:
 
 ### Category scope
 - **`allowedBudgetCategoryIds`**: the set of budget category IDs the scoped user is allowed to access *within an account*. This is evaluated server-side for reads and writes.
-- **Item category attribution key**: `item.inheritedBudgetCategoryId` (the *effective* budget category used for attribution/filters/visibility, including inheritance rules).
+- **Item category attribution key**: `item.budgetCategoryId` (the *effective* budget category used for attribution/filters/visibility, including inheritance rules).
   - Naming note: this intentionally maps to the transaction field `transaction.budgetCategoryId` (and the `presets/default/budgetCategories/{budgetCategoryId}` collection).
   - If we ever rename this for ergonomics, prefer something unambiguous like `effectiveBudgetCategoryId` rather than `budgetCategoryId` (since it is not necessarily “directly set on the item”).
-- **Uncategorized item**: `item.inheritedBudgetCategoryId == null`.
+- **Uncategorized item**: `item.budgetCategoryId == null`.
 
 ### Transactions: canonical vs non-canonical
 - **Non-canonical transaction**: a user-entered transaction where category attribution is transaction-driven via `transaction.budgetCategoryId`.
-- **Canonical inventory sale transaction (system)**: a system-owned sale row (recommended id prefix `INV_SALE__`) that is:
+- **Canonical inventory sale transaction (system)**: a system-owned sale row (recommended id prefix `SALE_`) that is:
   - category-coded (`transaction.budgetCategoryId` is populated)
   - direction-coded (`inventorySaleDirection` is populated)
   - deterministic (one per `(projectId, direction, budgetCategoryId)`)
@@ -44,20 +44,20 @@ Canonical sale rows are system-owned/read-only in UI, but category visibility is
 Note: UI gating is required for UX, but does not replace server-side enforcement (see §4).
 
 ### 2.2 Item read visibility
-- If `item.inheritedBudgetCategoryId == null`:
+- If `item.budgetCategoryId == null`:
   - **Scoped user** can read **only their own** uncategorized items (`item.createdBy == me`).
   - **Admin** can read all uncategorized items (including others’).
-- If `item.inheritedBudgetCategoryId != null`:
-  - **Scoped user** can read iff `item.inheritedBudgetCategoryId ∈ allowedBudgetCategoryIds`.
+- If `item.budgetCategoryId != null`:
+  - **Scoped user** can read iff `item.budgetCategoryId ∈ allowedBudgetCategoryIds`.
   - **Admin** can read all items.
 
 ### 2.3 Item writes
 - **Create**:
-  - **Scoped user** may create items with `item.inheritedBudgetCategoryId == null` (supporting minimal-field capture).
+  - **Scoped user** may create items with `item.budgetCategoryId == null` (supporting minimal-field capture).
   - **Admin** may create items in any state.
 - **Update category**:
   - **Scoped user** may set `null → allowedCategoryId` later.
-  - Once `item.inheritedBudgetCategoryId` is non-null, **scoped user cannot change it across categories** (`A → B` is disallowed).
+  - Once `item.budgetCategoryId` is non-null, **scoped user cannot change it across categories** (`A → B` is disallowed).
   - **Admin** may recategorize (see §3 for explicit decision).
 
 ### 2.4 Transaction read visibility
@@ -74,7 +74,7 @@ Note: UI gating is required for UX, but does not replace server-side enforcement
 ## 3) Edge cases + decisions (explicit)
 
 ### 3.1 “Null means private” does not apply symmetrically
-Items use `inheritedBudgetCategoryId == null` as “uncategorized item” with a restricted “only creator” read exception for scoped users.
+Items use `budgetCategoryId == null` as “uncategorized item” with a restricted “only creator” read exception for scoped users.
 Transactions may have `budgetCategoryId == null` only for truly uncategorized user-entered transactions (if allowed); canonical inventory sale transactions are category-coded and should not be null.
 
 ### 3.2 Transaction Detail behavior for scoped users (canonical sale rows)
@@ -83,7 +83,7 @@ For a canonical inventory sale transaction shown to a scoped user:
 - TransactionDetail should still enforce item read visibility for linked items (hide out-of-scope items entirely).
 
 ### 3.3 Recategorization
-- **Admin-only**: recategorization (`item.inheritedBudgetCategoryId A → B`) is admin-only in Roles v2.
+- **Admin-only**: recategorization (`item.budgetCategoryId A → B`) is admin-only in Roles v2.
 - Future extension (not implemented here): an explicit capability (e.g., “canRecategorize”) could permit this for select non-admins.
 
 ### 3.4 Budget rollups + filters

@@ -6,7 +6,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
 - [ ] **Canonical detection**: Canonical inventory transactions are detected as **canonical sale transactions**.
   Recommended detection:
   - `transaction.isCanonicalInventorySale === true`, or
-  - deterministic id prefix `INV_SALE__`.
+  - deterministic id prefix `SALE_`.
   Web parity evidence (old model): `src/services/inventoryService.ts` (`CANONICAL_TRANSACTION_PREFIXES`, `isCanonicalTransactionId`).
 - [ ] **Canonical invariants are checkable** after multi-entity ops apply (projectId/transactionId expectations).  
   Web parity evidence: `src/services/operationQueue.ts` (`verifyCanonicalInvariants`).
@@ -63,7 +63,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/services/lineageService.ts` (`updateItemLineagePointers`).
 
 ## Budget-category determinism (Firebase)
-- [ ] **BI → Project category prompt is conditional**: if the item’s current category is missing or not enabled/available in the destination project, the user is prompted and the selected destination category is persisted on the item (currently `inheritedBudgetCategoryId`).  
+- [ ] **BI → Project category prompt is conditional**: if the item’s current category is missing or not enabled/available in the destination project, the user is prompted and the selected destination category is persisted on the item (currently `budgetCategoryId`).  
   **Intentional delta / required** by `40_features/project-items/flows/inherited_budget_category_rules.md`.
 - [ ] **Project → BI category prompt is required when missing**: if the item’s category is missing, the user is prompted to pick a category from the source project and the selection is persisted onto the item before applying the canonical sale.
   Required by `40_features/project-items/flows/inherited_budget_category_rules.md`.

@@ -173,11 +173,10 @@ type Item = {
 
   transactionId?: string | null;
   spaceId?: string | null;
-  // Item-owned budget category id.
-  // Naming note: this is not strictly inherited; it may be set via:
+  // Item-owned budget category id. May be set via:
   // - linking to a non-canonical categorized transaction
   // - explicit user choice during a sell/allocation prompt
-  inheritedBudgetCategoryId?: string | null; // required field; may be null
+  budgetCategoryId?: string | null; // required field; may be null
 
   purchasePriceCents?: number | null;
   projectPriceCents?: number | null;
@@ -340,13 +339,14 @@ type ItemSaleExpectedSnapshot = {
 type ItemSaleProjectToBusinessPayload = {
   itemId: string;
   sourceProjectId: string;
+  budgetCategoryId: string;
   expected: ItemSaleExpectedSnapshot;
 };
 
 type ItemSaleBusinessToProjectPayload = {
   itemId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
+  budgetCategoryId: string;
   expected: ItemSaleExpectedSnapshot;
   // optional parity-only fields intentionally omitted here (see entity sections below)
 };
@@ -355,7 +355,8 @@ type ItemSaleProjectToProjectPayload = {
   itemId: string;
   sourceProjectId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
+  sourceBudgetCategoryId: string;
+  destinationBudgetCategoryId: string;
   expected: ItemSaleExpectedSnapshot;
   // optional parity-only fields intentionally omitted here (see entity sections below)
 };
@@ -459,6 +460,28 @@ type LineageEdge = {
 
 - **Canonical field names** are `camelCase` (TypeScript + Firestore documents).
 - **SQLite columns** are `snake_case`.
+
+### Document IDs (single source of truth)
+
+Firestore document identity is the **document id** (the `{...Id}` segment in the path). To avoid “multiple id fields” drift:
+
+- **Do not persist a separate `id` field inside the document body** for domain entities (projects, items, transactions, etc.).
+- In TypeScript/UI models we still refer to an `id: string` for convenience, but it is **derived from the Firestore document id** (e.g. `snapshot.id`) rather than stored.
+
+Contract note for this document:
+- In the `ts` code blocks below, fields like `id: string` refer to the **document id**, not a persisted field.
+
+Offline-first note:
+- Firestore can generate document ids **offline** (auto-id) for user-created docs (e.g. items/transactions/requests). These ids are stable across retries and sync.
+
+### ID character constraints (for deterministic canonical sale ids)
+
+Some system docs use deterministic ids (not auto-ids), most notably canonical inventory sale transactions:
+
+- Canonical sale transaction id format (deterministic):
+  - `SALE_<projectId>_<direction>_<budgetCategoryId>`
+- To keep this safely **parseable** by splitting on `_`, the component ids MUST NOT contain `_`:
+  - `projectId` and `budgetCategoryId` must match `^[A-Za-z0-9]+$` (no underscores).
 
 ### Money representation (decision)
 
@@ -764,7 +787,7 @@ Primary key:
 ## Entity: Item
 
 This contract must satisfy:
-- `40_features/project-items/feature_spec.md` (requires `inheritedBudgetCategoryId`)
+- `40_features/project-items/feature_spec.md` (requires `budgetCategoryId`)
 - `40_features/budget-and-accounting/feature_spec.md` (canonical attribution uses item prices)
 - `40_features/inventory-operations-and-lineage/feature_spec.md` + `flows/lineage_edges_and_pointers.md` (lineage pointers)
 - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md` (requires `createdBy` and selector semantics)
@@ -776,7 +799,7 @@ Required:
 - `accountId: string`
 - `projectId: string | null`
 - `createdBy: string`
-  - Roles v2: required to enforce “own uncategorized items” when `inheritedBudgetCategoryId == null`.
+  - Roles v2: required to enforce "own uncategorized items" when `budgetCategoryId == null`.
 - `name: string`
   - Canonical item label.
   - Parity/legacy: `name` may be an empty string.
@@ -797,7 +820,7 @@ Relationships / selectors (nullable):
 - `transactionId?: string | null`
 - `spaceId?: string | null`
   - When `projectId = null` (Business Inventory), `spaceId` is the inventory location reference (Space in inventory scope).
-- `inheritedBudgetCategoryId?: string | null`
+- `budgetCategoryId?: string | null`
   - **Required field** (may be null): stable attribution selector for budgeting + Roles v2.
   - Set/update rules are defined in `40_features/project-items/feature_spec.md` and must be enforced by server-owned invariants for cross-scope ops.
 
@@ -1152,12 +1175,13 @@ All of these use:
 - `ITEM_SALE_PROJECT_TO_BUSINESS`
   - `itemId: string`
   - `sourceProjectId: string`
+  - `budgetCategoryId: string`
   - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
 
 - `ITEM_SALE_BUSINESS_TO_PROJECT`
   - `itemId: string`
   - `targetProjectId: string`
-  - `inheritedBudgetCategoryId: string | null`
+  - `budgetCategoryId: string`
   - optional parity fields: `space`, `notes`, `amount`
   - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
 
@@ -1165,7 +1189,8 @@ All of these use:
   - `itemId: string`
   - `sourceProjectId: string`
   - `targetProjectId: string`
-  - `inheritedBudgetCategoryId: string | null`
+  - `sourceBudgetCategoryId: string`
+  - `destinationBudgetCategoryId: string`
   - optional parity fields: `space`, `notes`, `amount`
   - `expected: { itemProjectId: string | null; itemTransactionId?: string | null }`
 
@@ -1277,7 +1302,7 @@ Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
 Canonical inventory sale transactions are identified by a deterministic id.
 Recommended id prefix:
-- `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+- `SALE_<projectId>_<direction>_<budgetCategoryId>`
 
 Required attribution invariant:
 - **Non-canonical** transactions: category attribution is transaction-driven via `transaction.budgetCategoryId`.
@@ -1285,8 +1310,8 @@ Required attribution invariant:
   Sign is applied by `inventorySaleDirection`.
 
 Cross-entity invariant (required by transaction edit UX; deterministic attribution):
-- When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to match the new `budgetCategoryId`.
-  - Source of truth: `40_features/project-transactions/feature_spec.md` (“Edit a transaction” requirement).
+- When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.budgetCategoryId` updated to match the new `budgetCategoryId`.
+  - Source of truth: `40_features/project-transactions/feature_spec.md` ("Edit a transaction" requirement).
 
 Authoritative value source for canonical totals:
 - For canonical inventory sale totals, the authoritative value stored on the transaction is `transaction.amountCents`, computed by the server from linked item values (see `40_features/inventory-operations-and-lineage/feature_spec.md`).

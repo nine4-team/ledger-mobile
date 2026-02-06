@@ -40,10 +40,10 @@ You are updating Firebase mobile migration specs. Your task is to review and imp
 2) **Canonical sale identity + invariants**
    - Ensure specs define:
      - one canonical sale transaction per `(projectId, direction, budgetCategoryId)`
-     - a deterministic id format (recommended prefix `INV_SALE__`)
+    - a deterministic id format (recommended prefix `SALE_`)
      - canonical rows are system-owned (read-only in UI)
 3) **Prompt rules (replace hard blocks)**
-   - Project → Business: if `item.inheritedBudgetCategoryId` is missing, prompt the user to choose a source-project category, persist it, then proceed.
+   - Project → Business: if `item.budgetCategoryId` is missing, prompt the user to choose a source-project category, persist it, then proceed.
    - Business → Project: prompt only if the item category is missing or not enabled/available in the destination project; persist and proceed.
    - Bulk: one selection applies to the uncategorized items (fast path).
 

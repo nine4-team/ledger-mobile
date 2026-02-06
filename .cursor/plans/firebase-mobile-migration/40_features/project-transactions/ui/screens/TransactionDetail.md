@@ -43,7 +43,7 @@ Source of truth:
 Rules:
 
 - **Non-canonical**: display category name from `transaction.budgetCategoryId` and use it for itemization enablement.
-- **Canonical inventory sale (system)** (recommended id prefix `INV_SALE__`):
+- **Canonical inventory sale (system)** (recommended id prefix `SALE_`):
   - The transaction is category-coded (`transaction.budgetCategoryId` populated) and direction-coded (`inventorySaleDirection` populated).
   - Display category normally (same as non-canonical) but treat the transaction as system-owned/read-only.
     Recommended: include a small “System” badge near the title or amount.
@@ -86,12 +86,12 @@ TransactionDetail wires a rich `TransactionItemsList` surface, including:
 
 Each of these must be represented as durable, idempotent Firestore writes (and/or request-doc operations for multi-doc invariants), per `OFFLINE_FIRST_V2_SPEC.md`.
 
-### New requirement: item linking updates `inheritedBudgetCategoryId` (non-canonical only)
+### New requirement: item linking updates `budgetCategoryId` (non-canonical only)
 
 When the user links/assigns items to this transaction:
 
 - If the transaction is **non-canonical** and has a non-null `transaction.budgetCategoryId`, set:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
 - Canonical inventory sale transactions are system-owned; TransactionDetail must not offer “add existing items” or other item-linking writes for canonical rows.
   (Items linked to canonical rows are produced only by inventory sale request-doc flows.)
 

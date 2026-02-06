@@ -23,7 +23,7 @@ See: `OFFLINE_FIRST_V2_SPEC.md`.
 ## Cross-cutting links
 - Shared Items + Transactions modules (must be reused across project + business inventory):  
   `40_features/_cross_cutting/ui/shared_items_and_transactions_modules.md`
-- Budget-category inheritance and guardrails (`inheritedBudgetCategoryId`):  
+- Budget-category inheritance and guardrails (`budgetCategoryId`):  
   `40_features/project-items/flows/inherited_budget_category_rules.md`
 
 ## Scope

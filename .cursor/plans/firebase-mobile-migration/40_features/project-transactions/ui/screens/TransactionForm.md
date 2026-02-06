@@ -16,7 +16,7 @@ Source of truth:
 Rules:
 
 - This form is for **user-facing (non-canonical)** transactions.
-- **Canonical inventory sale transactions** (system-owned; recommended id prefix `INV_SALE__`) are system-generated and should be treated as **read-only**.
+- **Canonical inventory sale transactions** (system-owned; recommended id prefix `SALE_`) are system-generated and should be treated as **read-only**.
   Recommended: hide/disable “Edit” entrypoint for canonical rows.
 
 ## Inputs
@@ -99,7 +99,7 @@ Rules:
   - Required.
   - Changing category may enable/disable itemization; if disabling but there are existing items (edit), show warning and still allow managing existing items.
   - New requirement (item attribution determinism): if editing a non-canonical transaction and the category changes, update all linked items to keep attribution deterministic:
-    - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId` for each linked item
+    - `item.budgetCategoryId = transaction.budgetCategoryId` for each linked item
     - This ensures future canonical inventory transactions can attribute amounts by item category without asking the user to learn a “canonical category”.
 - **Amount**:
   - Required and must be positive.

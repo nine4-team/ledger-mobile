@@ -5,7 +5,7 @@ This report records mismatches found between **feature specs** (behavioral truth
 Scope of this pass:
 - **Items**
 - **Transactions**
-- Cross-cutting data they require: canonical `INV_*` semantics, category attribution rules, lineage, Roles v2 selectors, media/attachments
+- Cross-cutting data they require: canonical `INV_SALE_*` semantics, category attribution rules, lineage, Roles v2 selectors, media/attachments
 
 ## Summary of resolutions
 
@@ -18,42 +18,41 @@ Scope of this pass:
 
 ## Mismatches found (spec vs data docs) and how they were resolved
 
-### 1) Canonical `INV_*` attribution is item-driven, not transaction-category-driven
+### 1) Canonical `INV_SALE_*` attribution is transaction-category-driven (new model)
 
-- **Spec truth**
-  - Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must be treated as “uncategorized” at the transaction level; attribution is **item-driven** via `item.inheritedBudgetCategoryId`.
+- **Spec truth (new model)**
+  - Canonical inventory rows are **sale transactions only** and are **category-coded** via `transaction.budgetCategoryId`.
+  - Canonical inventory sale rows are also **direction-coded** via `inventorySaleDirection`.
+  - Canonical id format: `SALE_<projectId>_<direction>_<budgetCategoryId>`.
   - Sources:
-    - `40_features/project-items/feature_spec.md` (Rules 1–2; required `inheritedBudgetCategoryId`)
-    - `40_features/project-transactions/feature_spec.md` (canonical rows treated as uncategorized; budget-category filters must join via items)
-    - `40_features/budget-and-accounting/feature_spec.md` (canonical attribution grouping and value computation)
+    - `40_features/project-transactions/feature_spec.md` (canonical sale definitions + filters)
+    - `40_features/project-items/feature_spec.md` (guards for `budgetCategoryId` on items)
 
 - **Prior data doc mismatch**
-  - `20_data/firebase_data_model.md` had a longer “canonical transaction budgeting” section but also mixed in legacy “transaction category” expectations in ways that made it easy to treat canonical rows as category-driven.
+  - Legacy docs referenced `INV_PURCHASE_*` and “item-driven attribution,” which conflicts with the new canonical sale model.
 
 - **Resolution**
-  - Canonical `INV_*` semantics are now explicit in `20_data/data_contracts.md` → **Entity: Transaction**:
-    - `budgetCategoryId` is non-authoritative for canonical transactions
-    - canonical attribution uses linked items’ `inheritedBudgetCategoryId`
+  - Canonical **sale-only** semantics are now explicit in `20_data/data_contracts.md` → **Entity: Transaction**:
+    - `budgetCategoryId` is required for canonical inventory sale rows (category-coded invariant).
+    - `inventorySaleDirection` is required for canonical inventory sale rows (direction-coded invariant).
 
 ### 2) Roles v2 requires server-enforceable selectors (no “download everything then filter”)
 
 - **Spec truth**
-  - Items require `createdBy` to support scoped-user visibility for uncategorized items (`inheritedBudgetCategoryId == null`).
-  - Canonical `INV_*` transaction visibility is derived from **linked items**; you cannot treat `transaction.budgetCategoryId == null` as “private/mine”.
+  - Items require `createdBy` to support scoped-user visibility for uncategorized items (`budgetCategoryId == null`).
+  - Canonical **sale** transactions are category-coded, so visibility can use `transaction.budgetCategoryId` like non-canonical rows.
   - Sources:
     - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
 
 - **Prior data doc mismatch**
-  - Existing data docs did not clearly require the selectors needed to enforce Roles v2 without “download then filter”, especially for canonical `INV_*` transactions.
+  - Prior drafts added special selector fields for canonical rows based on item joins (no longer needed under the new canonical sale model).
 
 - **Resolution**
-  - `20_data/data_contracts.md` → **Entity: Item** now requires:
+  - `20_data/data_contracts.md` → **Entity: Item** keeps:
     - `createdBy` (security field required by Roles v2)
-    - `inheritedBudgetCategoryId` (stable selector)
-  - `20_data/data_contracts.md` → **Entity: Transaction** adds **server-maintained selector fields** for canonical transactions:
-    - `budgetCategoryIds` (unique list of categories present among linked items)
-    - `uncategorizedItemCreatorUids` (unique list of creators who have uncategorized linked items)
-  - Note: SQLite is no longer described as a mirrored local DB; any local indexing of these selectors is TBD and must be justified by an explicit feature requirement.
+    - `budgetCategoryId` (stable selector)
+  - Canonical transaction **item-join selector fields** are removed from the contracts; canonical visibility uses `budgetCategoryId` like other transactions.
+  - Note: SQLite is no longer described as a mirrored local DB; any local indexing is TBD and must be justified by an explicit feature requirement.
 
 ### 3) Lineage is required offline (append-only edges + item pointers)
 
@@ -121,14 +120,9 @@ Scope of this pass:
 
 ## Open decisions / questions (not resolvable from specs alone)
 
-### 1) How exactly are canonical transaction selector fields maintained?
+### 1) Canonical sale rows and Roles v2 selectors
 
-The contracts assume canonical transaction selector fields (`budgetCategoryIds`, `uncategorizedItemCreatorUids`) are **server-maintained** to satisfy Roles v2 enforcement constraints.
-
-Open implementation decisions:
-- Which operations update these fields (item link/unlink, item recategorization, cross-scope ops)?
-- Are these fields maintained only for `isCanonicalInventory == true`, or for all transactions (with different semantics)?
-- Do we also add a scheduled “periodic repair” job that recomputes these selectors from linked items and corrects drift (recommended as a safety net)?
+The new canonical sale model removes the need for item-join selector fields on canonical transactions. Roles v2 visibility can use `transaction.budgetCategoryId` for canonical sale rows just like non-canonical transactions.
 
 ### 2) Embedded media URL timing (placeholder → remote)
 

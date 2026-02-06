@@ -14,7 +14,7 @@ This feature is **project-only**.
 - Editing budget categories and presets (Settings) — `40_features/settings-and-admin/README.md`
 - Full Reports generation/rendering (Invoice / Client Summary / Property Mgmt) — `40_features/reports-and-printing/README.md`
 - Inventory operations that create canonical rows (allocation/sale/deallocation/lineage) — `40_features/inventory-operations-and-lineage/README.md`
-- Migration/backfill for `inheritedBudgetCategoryId` or category presets (explicitly out of scope)
+- Migration/backfill for `budgetCategoryId` or category presets (explicitly out of scope)
 
 ## Key docs
 - **Feature spec**: `feature_spec.md`

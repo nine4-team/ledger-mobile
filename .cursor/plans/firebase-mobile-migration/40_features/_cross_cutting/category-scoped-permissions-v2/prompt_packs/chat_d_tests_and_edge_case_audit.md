@@ -3,7 +3,7 @@
 ## Goal
 Reduce regression and security risk by adding targeted tests and auditing edge cases for Roles v2:
 
-- item visibility (null vs non-null `inheritedBudgetCategoryId`)
+- item visibility (null vs non-null `budgetCategoryId`)
 - item writes (null → allowed; A → B admin-only)
 - transaction visibility:
   - non-canonical by `transaction.budgetCategoryId`

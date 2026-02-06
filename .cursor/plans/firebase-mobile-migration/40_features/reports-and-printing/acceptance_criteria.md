@@ -20,7 +20,7 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/pages/ProjectInvoice.tsx` (`invoiceLines`, `missingPrice`, `lineTotal`).
 - [ ] **Sorting by date**: within Charges and Credits, lines are sorted ascending by `transaction.transactionDate`.
   Observed in `src/pages/ProjectInvoice.tsx` (`sort((a,b)=>...)`).
-- [ ] **Canonical title mapping**: canonical inventory sale transactions (recommended: `transactionId` starts with `INV_SALE__` or `isCanonicalInventorySale === true`) display canonical titles, otherwise show transaction source.
+- [ ] **Canonical title mapping**: canonical inventory sale transactions (recommended: `isCanonicalInventorySale === true`; optional fallback: `transactionId` starts with `SALE_`) display canonical titles, otherwise show transaction source.
   Observed in `src/pages/ProjectInvoice.tsx` (`getCanonicalTransactionTitle`).
 - [ ] **Totals displayed**: Charges Total, Credits Total, and Net Amount Due \(=\) charges − credits.
   Observed in `src/pages/ProjectInvoice.tsx` (`clientOwesSubtotal`, `creditsSubtotal`, `netDue`).
@@ -34,13 +34,13 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   - Saved = sum of `(marketValue - projectPrice)` only when `marketValue > 0`.
   Observed in `src/pages/ClientSummary.tsx` (the `summary` memo).
 - [ ] **Category breakdown uses canonical inventory sale model**:
-  - Items are attributed by `item.inheritedBudgetCategoryId` when present.
+  - Items are attributed by `item.budgetCategoryId` when present.
   - Fallback: for legacy/non-canonical cases, items can be attributed by their linked transaction’s `transaction.budgetCategoryId`.
-  - Canonical inventory sale transactions are category-coded and are supported via `transaction.budgetCategoryId` (but item-level grouping should still prefer `item.inheritedBudgetCategoryId`).
+  - Canonical inventory sale transactions are category-coded and are supported via `transaction.budgetCategoryId` (but item-level grouping should still prefer `item.budgetCategoryId`).
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/flows/inherited_budget_category_rules.md`.
   **Intentional delta** vs web: web groups by transaction `categoryId` only (legacy web naming; `src/pages/ClientSummary.tsx`).
 - [ ] **Receipt link behavior per item**:
-  - If item has `transactionId` and the transaction is canonical inventory sale (recommended: `INV_SALE__` prefix or `isCanonicalInventorySale === true`) or invoiceable by reimbursement type, “View Receipt” links to the project invoice report.
+  - If item has `transactionId` and the transaction is canonical inventory sale (recommended: `isCanonicalInventorySale === true`; optional fallback: `transactionId` starts with `SALE_`) or invoiceable by reimbursement type, “View Receipt” links to the project invoice report.
   - Else, if transaction has a receipt attachment (`receiptImages[0]`) and it is remote-backed, link to the external receipt URL.
   - Else (local-only placeholder), do not emit an external link in shared/printed output; show “Receipt pending upload” indicator instead.
   - Else, no receipt link.

@@ -12,7 +12,7 @@ Shared-module requirement:
   Observed in `src/pages/TransactionsList.tsx` (list item markup + `formatCurrency`, `formatDate`).
 - [ ] **Canonical title mapping**: canonical transaction IDs display special titles (inventory purchase/sale).  
   Observed in `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`).
-- [ ] **Canonical inventory sale rows are category-coded + direction-coded (new model)**: canonical inventory sale transactions (recommended id prefix `INV_SALE__`) are system-owned and must have:
+- [ ] **Canonical inventory sale rows are category-coded + direction-coded (new model)**: canonical inventory sale transactions (recommended id prefix `SALE_`) are system-owned and must have:
   - `transaction.budgetCategoryId` populated (single-category invariant)
   - `inventorySaleDirection` populated (`business_to_project` or `project_to_business`)
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.
@@ -37,8 +37,6 @@ Shared-module requirement:
   Observed in `src/pages/TransactionsList.tsx` (`needsReview` badge; `getTransactionCompleteness` usage + `completenessById`).
 - [ ] **Canonical total computation**: list computes canonical totals and displays computed value when available.  
   Observed in `src/pages/TransactionsList.tsx` (`computedTotalByTxId`, `computeCanonicalTransactionTotal`).
-- [ ] **Canonical total self-heal**: when computed canonical total differs from stored amount, the system attempts to update the stored amount.  
-  Observed in `src/pages/TransactionsList.tsx` (`transactionService.updateTransaction` in “Self-healed canonical transaction amount” path).
 
 ## Add menu (create + import entrypoints)
 - [ ] **Add menu exists**: “Add” menu includes “Create Manually” and “Import Invoice” submenu (Wayfair/Amazon).  
@@ -144,7 +142,7 @@ Shared-module requirement:
   Parity evidence: `src/components/transactions/TransactionItemPicker.tsx` (conflict preview + confirm).
 - [ ] **Transaction items operations**: supports adding existing items, creating items, updating items, duplicating, deleting, removing from transaction, and bulk/location actions.  
   Observed in `src/pages/TransactionDetail.tsx` (passes handlers into `TransactionItemsList`) and `src/components/TransactionItemsList.tsx` (feature surface).
-- [ ] **Item linking sets `inheritedBudgetCategoryId`**: when an item is linked/assigned to a **non-canonical** transaction with non-null `transaction.budgetCategoryId`, the item is updated to: `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`.  
+- [ ] **Item linking sets `budgetCategoryId`**: when an item is linked/assigned to a **non-canonical** transaction with non-null `transaction.budgetCategoryId`, the item is updated to: `item.budgetCategoryId = transaction.budgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.
 - [ ] **Actions menu**: supports Edit, Move (project/business inventory), Delete; edit/move are disabled for canonical inventory sale transactions (system-owned).  
   Observed in `src/components/transactions/TransactionActionsMenu.tsx` (canonical check + disabled reason).

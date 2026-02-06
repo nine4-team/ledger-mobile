@@ -137,7 +137,7 @@ Note:
 Web parity note:
 - Web currently uses:
   - `transactionType === 'Return'` as subtract
-  - `transactionId.startsWith('INV_SALE_')` as subtract (old model)
+  - `transactionId.startsWith('INV_SALE_')` as subtract (legacy old model; do not copy to mobile)
   - and excludes “design fee” (web naming) by category-name heuristic (`BudgetProgress.calculateSpent`)
 
 Firebase migration requirement:

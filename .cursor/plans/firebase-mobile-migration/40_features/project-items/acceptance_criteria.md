@@ -1,4 +1,4 @@
-# Acceptance criteria: Project Items — canonical attribution + `inheritedBudgetCategoryId`
+# Acceptance criteria: Project Items — canonical attribution + `budgetCategoryId`
 
 These criteria are written so a dev can implement the rules without reading the working doc.
 
@@ -14,7 +14,7 @@ Shared-module requirement:
 ## A) Canonical vs non-canonical attribution rules
 
 - **A1 (non-canonical)**: For non-canonical (user-facing) transactions, budget attribution uses `transaction.budgetCategoryId`.
-- **A2 (canonical inventory sale)**: For canonical inventory **sale** transactions (recommended id prefix `INV_SALE__` + explicit direction), budget attribution is **transaction-driven**:
+- **A2 (canonical inventory sale)**: For canonical inventory **sale** transactions (recommended id prefix `SALE_` + explicit direction), budget attribution is **transaction-driven**:
   - `transaction.budgetCategoryId` is required and is the single category for that canonical row
   - rollups apply sign based on direction (`business_to_project` adds, `project_to_business` subtracts)
 - **A3 (system-owned canonical rows)**: Canonical inventory sale transactions are system-owned (read-only in UI). Users do not “set a category on the canonical row,” but the system may prompt for an item category when missing/mismatched so it can choose the correct canonical row.
@@ -25,29 +25,29 @@ Evidence / deltas:
 
 ---
 
-## B) Item field: `inheritedBudgetCategoryId`
+## B) Item field: `budgetCategoryId`
 
-- **B1 (field exists)**: Every item record includes `inheritedBudgetCategoryId` (nullable), persisted in local DB and synced remotely.
-- **B2 (stable across scope moves)**: When an item moves between project ↔ business inventory, `inheritedBudgetCategoryId` is preserved unless explicitly updated by a rule below.
+- **B1 (field exists)**: Every item record includes `budgetCategoryId` (nullable), persisted in local DB and synced remotely.
+- **B2 (stable across scope moves)**: When an item moves between project ↔ business inventory, `budgetCategoryId` is preserved unless explicitly updated by a rule below.
 - **B3 (set on user-facing link)**: When linking an item to a **non-canonical** transaction with a non-null `budgetCategoryId`, set:
-  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
+  - `item.budgetCategoryId = transaction.budgetCategoryId`
 - **B4 (canonical sale operations may set the field)**: When a sell/allocation flow prompts the user to select a category, persist:
-  - `item.inheritedBudgetCategoryId = <chosenCategoryId>`
-- **B5 (do not clear on unlink)**: Unlinking an item from a transaction must not clear `item.inheritedBudgetCategoryId`.
+  - `item.budgetCategoryId = <chosenCategoryId>`
+- **B5 (do not clear on unlink)**: Unlinking an item from a transaction must not clear `item.budgetCategoryId`.
 
 ---
 
 ## C) Project → Business Inventory category resolution (prompt + persist)
 
 ### C1 — Prompt requirement
-If an item’s `inheritedBudgetCategoryId` is missing (null/empty), the UI must **prompt the user to select a category from the source project**, persist it onto the item, then proceed with the canonical sale (`project_to_business`).
+If an item’s `budgetCategoryId` is missing (null/empty), the UI must **prompt the user to select a category from the source project**, persist it onto the item, then proceed with the canonical sale (`project_to_business`).
 
 Explicitly allowed:
 - “Move to Design Business” (correction path) remains a separate action. It is still blocked when the item is transaction-attached (same parity behavior).
 
 Evidence / deltas:
 
-- **Intentional delta** vs current web: current UI allows these actions without `inheritedBudgetCategoryId` gating because the field doesn’t exist (`src/components/items/ItemActionsMenu.tsx`, `src/pages/ItemDetail.tsx`, `src/pages/InventoryList.tsx`).
+- **Intentional delta** vs current web: current UI allows these actions without `budgetCategoryId` gating because the field doesn’t exist (`src/components/items/ItemActionsMenu.tsx`, `src/pages/ItemDetail.tsx`, `src/pages/InventoryList.tsx`).
 
 ---
 
@@ -67,7 +67,7 @@ Evidence / deltas:
 ### D1 — Conditional prompt requirement
 
 When allocating/selling from Business Inventory to a Project, prompt the user to choose a destination **project budget category** only when needed:
-- If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, do not prompt.
+- If `item.budgetCategoryId` is enabled/available in the destination project, do not prompt.
 - Otherwise, require selection.
 
 ### D2 — Defaulting rules
@@ -82,7 +82,7 @@ If the operation is applied to a batch of items, one selected category applies t
 
 On success, persist the choice back onto the item(s):
 
-- `item.inheritedBudgetCategoryId = <chosenDestinationCategoryId>`
+- `item.budgetCategoryId = <chosenDestinationCategoryId>`
 
 Evidence / deltas:
 

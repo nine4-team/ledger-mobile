@@ -37,7 +37,7 @@ This feature must align with:
 Rule (required):
 - Reporting attribution is **transaction-driven** by `transaction.budgetCategoryId`, including canonical inventory sale transactions (system-owned).
   Canonical inventory sale rows are category-coded; reports should not require special “item-join attribution” for canonical rows.
-  (Items still carry `item.inheritedBudgetCategoryId` and reports that group by item category may use it as a primary signal.)
+  (Items still carry `item.budgetCategoryId` and reports that group by item category may use it as a primary signal.)
 
 ## Primary flows
 
@@ -71,7 +71,7 @@ Behavior summary (parity + required clarifications):
   - Charges and credits are each sorted ascending by `transaction.transactionDate` (string compare).
   - Evidence: `src/pages/ProjectInvoice.tsx` (`sort((a,b)=>...)`)
 - Canonical title mapping (display):
-  - If the transaction is a canonical inventory sale transaction (recommended: `transactionId` starts with `INV_SALE__` or `isCanonicalInventorySale === true`), display canonical titles; else display `transaction.source`.
+- If the transaction is a canonical inventory sale transaction (recommended: `isCanonicalInventorySale === true`; optional fallback: `transactionId` starts with `SALE_`), display canonical titles; else display `transaction.source`.
   - Evidence: `src/pages/ProjectInvoice.tsx` (`getCanonicalTransactionTitle`)
 - Totals:
   - Show Charges Total, Credits Total, and Net Amount Due \(=\) charges − credits.
@@ -89,13 +89,13 @@ Behavior summary (parity + required deltas for canonical attribution):
   - Evidence: `src/pages/ClientSummary.tsx` (`transactionCategoryMap`, `categoryBreakdown`)
   - **Required delta (canonical inventory sale model)**:
     - For each item, determine an attributed category id using:
-      - `item.inheritedBudgetCategoryId` when present (preferred), else
+      - `item.budgetCategoryId` when present (preferred), else
       - the linked transaction’s `budgetCategoryId` if present (fallback for non-canonical cases).
     - Group items by the attributed category id (and resolve to category name via cached categories).
-    - Canonical inventory sale transactions participate normally via `transaction.budgetCategoryId` (category-coded), but `item.inheritedBudgetCategoryId` remains preferred for item-level grouping.
+    - Canonical inventory sale transactions participate normally via `transaction.budgetCategoryId` (category-coded), but `item.budgetCategoryId` remains preferred for item-level grouping.
 - Receipt link rule (per item):
   - If item has a `transactionId`, attempt to find that transaction.
-  - If the transaction is canonical inventory sale (recommended id prefix `INV_SALE__` or `isCanonicalInventorySale === true`) **or** invoiceable by reimbursement type, the “receipt” link points to the **project invoice** screen.
+- If the transaction is canonical inventory sale (recommended: `isCanonicalInventorySale === true`; optional fallback: `transactionId` starts with `SALE_`) **or** invoiceable by reimbursement type, the “receipt” link points to the **project invoice** screen.
   - Else, if the transaction has a receipt attachment (`tx.receiptImages?.[0]`), link behavior depends on attachment readiness:
     - If the attachment is remote-backed (`AttachmentRef.url` is a remote URL), link to that URL (works for both images and PDFs).
     - If the attachment is local-only (`offline://<mediaId>` placeholder), do **not** emit an external link in a shared/printed report artifact; instead show a non-blocking “Receipt pending upload” indicator (attachment upload state is derived locally).

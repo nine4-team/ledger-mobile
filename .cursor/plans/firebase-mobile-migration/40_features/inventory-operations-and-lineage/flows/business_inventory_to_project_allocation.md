@@ -9,7 +9,7 @@ Move one or more Business Inventory items into a target project, updating canoni
 - The operation must resolve a **destination project budget category id** for the item:
   - If the item already has a category id and it is enabled/available in the destination project, use it.
   - Otherwise prompt the user to choose a category from the destination project.
-  - Persist the result onto the item (currently `item.inheritedBudgetCategoryId`).
+  - Persist the result onto the item (currently `item.budgetCategoryId`).
   Source of truth: `40_features/project-items/flows/inherited_budget_category_rules.md`.
 
 ## Behavior contract (single item)

@@ -1,6 +1,6 @@
 # Screen contract: Project Items List
 
-This contract defines **project-scope** Items list behaviors relevant to canonical attribution + `inheritedBudgetCategoryId` guardrails.
+This contract defines **project-scope** Items list behaviors relevant to canonical attribution + `budgetCategoryId` guardrails.
 
 Shared-module requirement:
 
@@ -112,9 +112,9 @@ Source of truth:
 
 ### 1) Project → Business Inventory category resolution (prompt + persist)
 
-If an item’s `inheritedBudgetCategoryId` is missing, the row actions menu must still allow `Sell → Sell to Business`, but initiating the action must:
+If an item’s `budgetCategoryId` is missing, the row actions menu must still allow `Sell → Sell to Business`, but initiating the action must:
 - Prompt the user to select a category from the source project’s enabled categories.
-- Persist it onto the item (`item.inheritedBudgetCategoryId`).
+- Persist it onto the item (`item.budgetCategoryId`).
 - Then proceed with the canonical sale (`project_to_business`) request-doc workflow.
 
 Notes:
@@ -134,7 +134,7 @@ Parity evidence (web):
 - `InventoryList` calls `integrationService.handleItemDeallocation(...)` from the item actions menu / flow (`src/pages/InventoryList.tsx`).
 
 Required Firebase-migration policy:
-- If `inheritedBudgetCategoryId` is missing, prompt for a category (per section 1) and persist it before submitting the request doc.
+- If `budgetCategoryId` is missing, prompt for a category (per section 1) and persist it before submitting the request doc.
 - If the user cancels the prompt, do not enqueue the request and keep the item unchanged.
 
 ---
@@ -144,7 +144,7 @@ Required Firebase-migration policy:
 ### 3) Bulk sell to Business
 
 If the user bulk-initiates `Sell → Sell to Business`:
-- If any selected item is missing `inheritedBudgetCategoryId`, prompt once for a category and apply it to the uncategorized items in the batch before submitting the request(s).
+- If any selected item is missing `budgetCategoryId`, prompt once for a category and apply it to the uncategorized items in the batch before submitting the request(s).
 - The backend must split the operation into one canonical sale transaction per category as needed (no special UI required beyond the prompt).
 
 Parity evidence (web):
@@ -153,7 +153,7 @@ Parity evidence (web):
 
 Intentional delta (vs web):
 
-- Current web implementation does not have the `inheritedBudgetCategoryId` field and thus cannot enforce the guardrail.
+- Current web implementation does not have the `budgetCategoryId` field and thus cannot enforce the guardrail.
 
 ### 4) Bulk move/sell (future surface)
 

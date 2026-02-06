@@ -29,7 +29,7 @@ Implement the **server-side source-of-truth** for Roles v2 category-scoped permi
 
 ## Notes / edge cases (must be handled explicitly)
 - Items:
-  - `item.inheritedBudgetCategoryId == null` ⇒ scoped user can read only if `item.createdBy == me`
+  - `item.budgetCategoryId == null` ⇒ scoped user can read only if `item.createdBy == me`
   - `null → allowedCategoryId` is allowed later
   - `A → B` recategorization is **admin-only**
 - Transactions:
