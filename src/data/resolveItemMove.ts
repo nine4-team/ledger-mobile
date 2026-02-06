@@ -16,6 +16,8 @@ export type ResolveItemMoveOptions = {
   targetSpaceId?: string | null;
   targetTransactionId?: string | null;
   inheritedBudgetCategoryId?: string | null;
+  sourceBudgetCategoryId?: string | null;
+  destinationBudgetCategoryId?: string | null;
 };
 
 export type ResolveItemMoveResult = {
@@ -35,7 +37,16 @@ export async function resolveItemMove(
   item: MovableItem,
   options: ResolveItemMoveOptions
 ): Promise<ResolveItemMoveResult> {
-  const { accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId, inheritedBudgetCategoryId } = options;
+  const {
+    accountId,
+    itemId,
+    targetProjectId,
+    targetSpaceId,
+    targetTransactionId,
+    inheritedBudgetCategoryId,
+    sourceBudgetCategoryId,
+    destinationBudgetCategoryId,
+  } = options;
   const currentProjectId = item.projectId ?? null;
 
   // If item is already in the target project, just update space/transaction
@@ -58,7 +69,8 @@ export async function resolveItemMove(
 
   // If item is in inventory (projectId is null), move to project
   if (currentProjectId == null && targetProjectId != null) {
-    if (!inheritedBudgetCategoryId) {
+    const budgetCategoryId = destinationBudgetCategoryId ?? inheritedBudgetCategoryId;
+    if (!budgetCategoryId) {
       return {
         success: false,
         error: 'Items from inventory require a budget category when moving to a project.',
@@ -68,7 +80,7 @@ export async function resolveItemMove(
     await requestBusinessToProjectPurchase({
       accountId,
       targetProjectId,
-      inheritedBudgetCategoryId,
+      budgetCategoryId,
       items: [{ id: itemId, projectId: null, transactionId: item.transactionId ?? null }],
     });
 
@@ -79,7 +91,8 @@ export async function resolveItemMove(
 
   // If item is in a project and target is inventory, move to business inventory
   if (currentProjectId != null && targetProjectId == null) {
-    if (!inheritedBudgetCategoryId) {
+    const budgetCategoryId = sourceBudgetCategoryId ?? item.inheritedBudgetCategoryId ?? inheritedBudgetCategoryId;
+    if (!budgetCategoryId) {
       return {
         success: false,
         error: 'Items moving to business inventory require a budget category.',
@@ -89,7 +102,15 @@ export async function resolveItemMove(
     await requestProjectToBusinessSale({
       accountId,
       projectId: currentProjectId,
-      items: [{ id: itemId, projectId: currentProjectId, transactionId: item.transactionId ?? null }],
+      budgetCategoryId,
+      items: [
+        {
+          id: itemId,
+          projectId: currentProjectId,
+          transactionId: item.transactionId ?? null,
+          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
+        },
+      ],
     });
 
     // Wait for the item to be in inventory scope before assigning transaction/space
@@ -99,10 +120,12 @@ export async function resolveItemMove(
 
   // If item is in a different project, move between projects
   if (currentProjectId != null && targetProjectId != null && currentProjectId !== targetProjectId) {
-    if (!inheritedBudgetCategoryId) {
+    const resolvedSourceCategoryId = sourceBudgetCategoryId ?? item.inheritedBudgetCategoryId ?? inheritedBudgetCategoryId;
+    const resolvedDestinationCategoryId = destinationBudgetCategoryId ?? inheritedBudgetCategoryId;
+    if (!resolvedSourceCategoryId || !resolvedDestinationCategoryId) {
       return {
         success: false,
-        error: 'Items moving between projects require a budget category.',
+        error: 'Items moving between projects require source and destination budget categories.',
       };
     }
 
@@ -110,8 +133,16 @@ export async function resolveItemMove(
       accountId,
       sourceProjectId: currentProjectId,
       targetProjectId,
-      inheritedBudgetCategoryId,
-      items: [{ id: itemId, projectId: currentProjectId, transactionId: item.transactionId ?? null }],
+      sourceBudgetCategoryId: resolvedSourceCategoryId,
+      destinationBudgetCategoryId: resolvedDestinationCategoryId,
+      items: [
+        {
+          id: itemId,
+          projectId: currentProjectId,
+          transactionId: item.transactionId ?? null,
+          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
+        },
+      ],
     });
 
     // Wait for the item to be in the target project before assigning space/transaction

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 
 import type { AnchoredMenuItem } from './AnchoredMenuList';
+import { resolveMenuSelection } from './AnchoredMenuList';
 import { BottomSheet } from './BottomSheet';
 import { AppScrollView } from './AppScrollView';
 
@@ -97,27 +98,14 @@ export function BottomSheetMenuList({
           const itemKey = item.key ?? `${item.label}-${idx}`;
 
           if (isSubmenuItem) {
-            const selectedByIcon = subactions.find((sub) => sub.icon === 'check');
-            const rawCurrentKey =
-              item.selectedSubactionKey ??
-              selectedSubactionByKey[itemKey] ??
-              item.defaultSelectedSubactionKey ??
-              subactions[0]?.key;
-            const isActiveGroup =
-              !activeSubactionKey || subactions.some((sub) => sub.key === activeSubactionKey);
-            const currentKey = isActiveGroup
-              ? closeOnSubactionPress
-                ? rawCurrentKey
-                : selectedByIcon?.key ?? rawCurrentKey
-              : undefined;
-            const isDefaultSelection =
-              item.defaultSelectedSubactionKey != null &&
-              currentKey === item.defaultSelectedSubactionKey;
-            const showCheckmark = isActiveGroup && (!item.suppressDefaultCheckmark || !isDefaultSelection);
-            const currentLabel =
-              currentKey && !(hideDefaultLabel && isDefaultSelection)
-                ? subactions.find((s) => s.key === currentKey)?.label ?? ''
-                : '';
+            const { currentKey, currentLabel, showCheckmark, suppressDefaultCheckmark } = resolveMenuSelection({
+              item,
+              itemKey,
+              subactions,
+              selectedSubactionByKey,
+              activeSubactionKey,
+              hideDefaultLabel,
+            });
             const isExpanded = expandedMenuKey === itemKey;
 
             return (
@@ -180,7 +168,7 @@ export function BottomSheetMenuList({
                         selectedSub &&
                         item.defaultSelectedSubactionKey != null &&
                         sub.key === item.defaultSelectedSubactionKey;
-                      const allowCheck = !item.suppressDefaultCheckmark || !isDefaultSelected;
+                      const allowCheck = !suppressDefaultCheckmark || !isDefaultSelected;
                       const isHighlighted = selectedSub && allowCheck;
 
                       return (

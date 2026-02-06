@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: CARD_PADDING,
-    paddingVertical: CARD_PADDING,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     gap: 12,
   },

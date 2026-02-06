@@ -13,49 +13,66 @@ export type InventoryOperationExpected = {
 export type ProjectToBusinessPayload = {
   itemId: string;
   sourceProjectId: string;
+  budgetCategoryId: string;
   expected: InventoryOperationExpected;
-  note?: string | null;
 };
 
 export type BusinessToProjectPayload = {
   itemId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
+  budgetCategoryId: string;
   expected: InventoryOperationExpected;
-  note?: string | null;
 };
 
 export type ProjectToProjectPayload = {
   itemId: string;
   sourceProjectId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
+  sourceBudgetCategoryId: string;
+  destinationBudgetCategoryId: string;
   expected: InventoryOperationExpected;
-  note?: string | null;
 };
 
-export function isCanonicalTransactionId(id: string | null | undefined): boolean {
-  if (!id) return false;
-  return id.startsWith('INV_PURCHASE_') || id.startsWith('INV_SALE_');
+export function isCanonicalInventorySaleTransaction(
+  transaction?: {
+    id?: string | null;
+    isCanonicalInventorySale?: boolean | null;
+    inventorySaleDirection?: string | null;
+  } | null
+): boolean {
+  if (!transaction) return false;
+  if (transaction.isCanonicalInventorySale === true) return true;
+  if (transaction.inventorySaleDirection) return true;
+  if (transaction.id) return transaction.id.startsWith('SALE_');
+  return false;
 }
 
 export async function requestProjectToBusinessSale(params: {
   accountId: string;
   projectId: string;
-  items: Array<{ id: string; projectId?: string | null; transactionId?: string | null }>;
+  items: Array<{
+    id: string;
+    projectId?: string | null;
+    transactionId?: string | null;
+    inheritedBudgetCategoryId?: string | null;
+  }>;
+  budgetCategoryId?: string;
   opId?: string;
-  note?: string;
 }): Promise<string[]> {
   const results: string[] = [];
   for (const item of params.items) {
+    const budgetCategoryId = item.inheritedBudgetCategoryId ?? params.budgetCategoryId ?? null;
+    if (!budgetCategoryId) {
+      throw new Error('Missing budgetCategoryId for project-to-business sale request.');
+    }
     const payload: ProjectToBusinessPayload = {
       itemId: item.id,
       sourceProjectId: params.projectId,
+      budgetCategoryId,
       expected: {
         itemProjectId: item.projectId ?? null,
         itemTransactionId: item.transactionId ?? null,
       },
-      note: params.note ?? null,
     };
     const opId = params.opId ?? generateRequestOpId();
     const requestId = await createRequestDoc('ITEM_SALE_PROJECT_TO_BUSINESS', payload, { accountId: params.accountId, scope: 'account' }, opId);
@@ -67,22 +84,20 @@ export async function requestProjectToBusinessSale(params: {
 export async function requestBusinessToProjectPurchase(params: {
   accountId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
+  budgetCategoryId: string;
   items: Array<{ id: string; projectId?: string | null; transactionId?: string | null }>;
   opId?: string;
-  note?: string;
 }): Promise<string[]> {
   const results: string[] = [];
   for (const item of params.items) {
     const payload: BusinessToProjectPayload = {
       itemId: item.id,
       targetProjectId: params.targetProjectId,
-      inheritedBudgetCategoryId: params.inheritedBudgetCategoryId,
+      budgetCategoryId: params.budgetCategoryId,
       expected: {
         itemProjectId: item.projectId ?? null,
         itemTransactionId: item.transactionId ?? null,
       },
-      note: params.note ?? null,
     };
     const opId = params.opId ?? generateRequestOpId();
     const requestId = await createRequestDoc('ITEM_SALE_BUSINESS_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);
@@ -95,23 +110,32 @@ export async function requestProjectToProjectMove(params: {
   accountId: string;
   sourceProjectId: string;
   targetProjectId: string;
-  inheritedBudgetCategoryId: string | null;
-  items: Array<{ id: string; projectId?: string | null; transactionId?: string | null }>;
+  sourceBudgetCategoryId?: string | null;
+  destinationBudgetCategoryId: string;
+  items: Array<{
+    id: string;
+    projectId?: string | null;
+    transactionId?: string | null;
+    inheritedBudgetCategoryId?: string | null;
+  }>;
   opId?: string;
-  note?: string;
 }): Promise<string[]> {
   const results: string[] = [];
   for (const item of params.items) {
+    const sourceBudgetCategoryId = item.inheritedBudgetCategoryId ?? params.sourceBudgetCategoryId ?? null;
+    if (!sourceBudgetCategoryId) {
+      throw new Error('Missing sourceBudgetCategoryId for project-to-project sale request.');
+    }
     const payload: ProjectToProjectPayload = {
       itemId: item.id,
       sourceProjectId: params.sourceProjectId,
       targetProjectId: params.targetProjectId,
-      inheritedBudgetCategoryId: params.inheritedBudgetCategoryId,
+      sourceBudgetCategoryId,
+      destinationBudgetCategoryId: params.destinationBudgetCategoryId,
       expected: {
         itemProjectId: item.projectId ?? null,
         itemTransactionId: item.transactionId ?? null,
       },
-      note: params.note ?? null,
     };
     const opId = params.opId ?? generateRequestOpId();
     const requestId = await createRequestDoc('ITEM_SALE_PROJECT_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);

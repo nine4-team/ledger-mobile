@@ -39,6 +39,8 @@ export type ScopedTransaction = {
   projectId?: string | null;
   isCanonicalInventory?: boolean | null;
   canonicalKind?: string | null;
+  isCanonicalInventorySale?: boolean | null;
+  inventorySaleDirection?: 'business_to_project' | 'project_to_business' | null;
   itemIds?: string[] | null;
   status?: string | null;
   purchasedBy?: string | null;

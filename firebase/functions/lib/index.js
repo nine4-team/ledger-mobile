@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.createWithQuota = void 0;
+exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -65,11 +65,18 @@ async function setRequestFailed(requestRef, errorCode, errorMessage) {
     });
 }
 const requestHandlers = {};
-function canonicalPurchaseId(projectId) {
-    return `INV_PURCHASE_${projectId}`;
+function assertCanonicalIdPart(value, label) {
+    if (!value) {
+        throw new https_1.HttpsError('invalid-argument', `Missing ${label}.`);
+    }
+    if (value.includes('_')) {
+        throw new https_1.HttpsError('invalid-argument', `${label} must not contain '_' for canonical sale ids.`);
+    }
 }
-function canonicalSaleId(projectId) {
-    return `INV_SALE_${projectId}`;
+function canonicalSaleTransactionId(projectId, direction, budgetCategoryId) {
+    assertCanonicalIdPart(projectId, 'projectId');
+    assertCanonicalIdPart(budgetCategoryId, 'budgetCategoryId');
+    return `SALE_${projectId}_${direction}_${budgetCategoryId}`;
 }
 function getItemValueCents(item) {
     if (typeof item.projectPriceCents === 'number')
@@ -78,54 +85,51 @@ function getItemValueCents(item) {
         return item.purchasePriceCents;
     return 0;
 }
-async function ensureCanonicalTransaction(params) {
-    const { tx, accountId, transactionId, projectId, kind, amountDelta, itemId } = params;
+function ensureCanonicalSaleTransaction(params) {
+    const { tx, accountId, transactionId, projectId, direction, budgetCategoryId, exists } = params;
     const txRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/transactions/${transactionId}`);
-    const snap = await tx.get(txRef);
     const now = firestore_1.FieldValue.serverTimestamp();
-    if (!snap.exists) {
+    const base = {
+        accountId,
+        projectId,
+        transactionDate: new Date().toISOString().slice(0, 10),
+        isCanonicalInventorySale: true,
+        inventorySaleDirection: direction,
+        budgetCategoryId,
+        updatedAt: now,
+    };
+    if (!exists) {
         tx.set(txRef, {
-            id: transactionId,
-            accountId,
-            projectId,
-            transactionDate: new Date().toISOString().slice(0, 10),
-            amountCents: amountDelta,
-            isCanonicalInventory: true,
-            canonicalKind: kind,
-            itemIds: [itemId],
+            ...base,
             createdAt: now,
-            updatedAt: now,
         }, { merge: true });
         return;
     }
-    const data = snap.data() ?? {};
-    const existingAmount = typeof data.amountCents === 'number' ? data.amountCents : 0;
-    const existingItemIds = Array.isArray(data.itemIds) ? data.itemIds : [];
-    const nextAmount = existingAmount + amountDelta;
-    const nextItemIds = existingItemIds.includes(itemId) ? existingItemIds : [...existingItemIds, itemId];
-    tx.set(txRef, {
-        projectId,
-        isCanonicalInventory: true,
-        canonicalKind: kind,
-        amountCents: nextAmount,
-        itemIds: nextItemIds,
-        updatedAt: now,
-    }, { merge: true });
+    tx.set(txRef, base, { merge: true });
 }
-async function removeFromCanonicalTransaction(params) {
-    const { tx, accountId, transactionId, amountDelta, itemId } = params;
+async function computeCanonicalSaleTotals(params) {
+    const { tx, accountId, transactionId, addItem, removeItem } = params;
+    const itemsRef = (0, firestore_1.getFirestore)().collection(`accounts/${accountId}/items`);
+    const snapshot = await tx.get(itemsRef.where('transactionId', '==', transactionId));
+    const items = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() ?? {} }));
+    let amountCents = items.reduce((sum, item) => sum + getItemValueCents(item.data), 0);
+    let itemIds = items.map((item) => item.id);
+    if (removeItem && itemIds.includes(removeItem.id)) {
+        amountCents -= getItemValueCents(removeItem.data);
+        itemIds = itemIds.filter((id) => id !== removeItem.id);
+    }
+    if (addItem && !itemIds.includes(addItem.id)) {
+        amountCents += getItemValueCents(addItem.data);
+        itemIds = [...itemIds, addItem.id];
+    }
+    return { amountCents: Math.max(0, amountCents), itemIds };
+}
+function persistCanonicalSaleTotals(params) {
+    const { tx, accountId, transactionId, totals } = params;
     const txRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/transactions/${transactionId}`);
-    const snap = await tx.get(txRef);
-    if (!snap.exists)
-        return;
-    const data = snap.data() ?? {};
-    const existingAmount = typeof data.amountCents === 'number' ? data.amountCents : 0;
-    const existingItemIds = Array.isArray(data.itemIds) ? data.itemIds : [];
-    const nextItemIds = existingItemIds.filter((id) => id !== itemId);
-    const nextAmount = Math.max(0, existingAmount - amountDelta);
     tx.set(txRef, {
-        amountCents: nextAmount,
-        itemIds: nextItemIds,
+        amountCents: totals.amountCents,
+        itemIds: totals.itemIds,
         updatedAt: firestore_1.FieldValue.serverTimestamp(),
     }, { merge: true });
 }
@@ -134,7 +138,6 @@ async function appendLineageEdge(params) {
     const edgeId = `edge_${requestId}_${itemId}_${movementKind}`;
     const edgeRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/lineageEdges/${edgeId}`);
     tx.set(edgeRef, {
-        id: edgeId,
         accountId,
         itemId,
         fromTransactionId: fromTransactionId ?? null,
@@ -161,9 +164,10 @@ async function handleProjectToBusiness(context) {
     const payload = context.requestData.payload ?? {};
     const itemId = payload.itemId;
     const sourceProjectId = payload.sourceProjectId;
+    const budgetCategoryId = payload.budgetCategoryId;
     const note = payload.note;
-    if (!itemId || !sourceProjectId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or sourceProjectId.');
+    if (!itemId || !sourceProjectId || !budgetCategoryId) {
+        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, sourceProjectId, or budgetCategoryId.');
         return;
     }
     const db = (0, firestore_1.getFirestore)();
@@ -181,25 +185,42 @@ async function handleProjectToBusiness(context) {
         if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
             throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
         }
-        if (!item.inheritedBudgetCategoryId) {
-            throw new https_1.HttpsError('failed-precondition', 'Missing inheritedBudgetCategoryId.');
+        if (item.inheritedBudgetCategoryId && item.inheritedBudgetCategoryId !== budgetCategoryId) {
+            throw new https_1.HttpsError('failed-precondition', 'Budget category mismatch for item.');
         }
         const previousTxId = item.transactionId ?? null;
-        const amountDelta = getItemValueCents(item);
-        const purchaseId = canonicalPurchaseId(sourceProjectId);
-        const saleId = canonicalSaleId(sourceProjectId);
-        if (previousTxId === purchaseId) {
-            await removeFromCanonicalTransaction({
+        const resolvedBudgetCategoryId = budgetCategoryId;
+        const allocationId = canonicalSaleTransactionId(sourceProjectId, 'business_to_project', resolvedBudgetCategoryId);
+        const saleId = canonicalSaleTransactionId(sourceProjectId, 'project_to_business', resolvedBudgetCategoryId);
+        if (previousTxId === allocationId) {
+            const totals = await computeCanonicalSaleTotals({
                 tx,
                 accountId: context.accountId,
-                transactionId: purchaseId,
-                amountDelta,
-                itemId,
+                transactionId: allocationId,
+                removeItem: { id: itemId, data: item },
+            });
+            const allocationRef = db.doc(`accounts/${context.accountId}/transactions/${allocationId}`);
+            const allocationSnap = await tx.get(allocationRef);
+            ensureCanonicalSaleTransaction({
+                tx,
+                accountId: context.accountId,
+                transactionId: allocationId,
+                projectId: sourceProjectId,
+                direction: 'business_to_project',
+                budgetCategoryId: resolvedBudgetCategoryId,
+                exists: allocationSnap.exists,
+            });
+            persistCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: allocationId,
+                totals,
             });
             tx.set(itemRef, {
                 projectId: null,
                 transactionId: null,
                 spaceId: null,
+                inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? resolvedBudgetCategoryId,
                 updatedAt: firestore_1.FieldValue.serverTimestamp(),
                 updatedBy: context.requestData.createdBy ?? null,
                 latestTransactionId: null,
@@ -209,7 +230,7 @@ async function handleProjectToBusiness(context) {
                 accountId: context.accountId,
                 requestId: context.requestId,
                 itemId,
-                fromTransactionId: purchaseId,
+                fromTransactionId: allocationId,
                 toTransactionId: null,
                 createdBy: context.requestData.createdBy,
                 movementKind: 'sold',
@@ -220,19 +241,34 @@ async function handleProjectToBusiness(context) {
             });
         }
         else {
-            await ensureCanonicalTransaction({
+            const totals = await computeCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: saleId,
+                addItem: { id: itemId, data: item },
+            });
+            const saleRef = db.doc(`accounts/${context.accountId}/transactions/${saleId}`);
+            const saleSnap = await tx.get(saleRef);
+            ensureCanonicalSaleTransaction({
                 tx,
                 accountId: context.accountId,
                 transactionId: saleId,
                 projectId: sourceProjectId,
-                kind: 'INV_SALE',
-                amountDelta,
-                itemId,
+                direction: 'project_to_business',
+                budgetCategoryId: resolvedBudgetCategoryId,
+                exists: saleSnap.exists,
+            });
+            persistCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: saleId,
+                totals,
             });
             tx.set(itemRef, {
                 projectId: null,
                 transactionId: saleId,
                 spaceId: null,
+                inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? resolvedBudgetCategoryId,
                 updatedAt: firestore_1.FieldValue.serverTimestamp(),
                 updatedBy: context.requestData.createdBy ?? null,
                 latestTransactionId: saleId,
@@ -259,10 +295,10 @@ async function handleBusinessToProject(context) {
     const payload = context.requestData.payload ?? {};
     const itemId = payload.itemId;
     const targetProjectId = payload.targetProjectId;
-    const inheritedBudgetCategoryId = payload.inheritedBudgetCategoryId ?? null;
+    const budgetCategoryId = payload.budgetCategoryId;
     const note = payload.note;
-    if (!itemId || !targetProjectId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or targetProjectId.');
+    if (!itemId || !targetProjectId || !budgetCategoryId) {
+        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, targetProjectId, or budgetCategoryId.');
         return;
     }
     const db = (0, firestore_1.getFirestore)();
@@ -280,27 +316,37 @@ async function handleBusinessToProject(context) {
         if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
             throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
         }
-        if (!inheritedBudgetCategoryId) {
-            throw new https_1.HttpsError('failed-precondition', 'Missing inheritedBudgetCategoryId.');
-        }
         const previousTxId = item.transactionId ?? null;
-        const amountDelta = getItemValueCents(item);
-        const purchaseId = canonicalPurchaseId(targetProjectId);
-        await ensureCanonicalTransaction({
+        const purchaseId = canonicalSaleTransactionId(targetProjectId, 'business_to_project', budgetCategoryId);
+        const totals = await computeCanonicalSaleTotals({
+            tx,
+            accountId: context.accountId,
+            transactionId: purchaseId,
+            addItem: { id: itemId, data: item },
+        });
+        const purchaseRef = db.doc(`accounts/${context.accountId}/transactions/${purchaseId}`);
+        const purchaseSnap = await tx.get(purchaseRef);
+        ensureCanonicalSaleTransaction({
             tx,
             accountId: context.accountId,
             transactionId: purchaseId,
             projectId: targetProjectId,
-            kind: 'INV_PURCHASE',
-            amountDelta,
-            itemId,
+            direction: 'business_to_project',
+            budgetCategoryId,
+            exists: purchaseSnap.exists,
+        });
+        persistCanonicalSaleTotals({
+            tx,
+            accountId: context.accountId,
+            transactionId: purchaseId,
+            totals,
         });
         tx.set(itemRef, {
             projectId: targetProjectId,
             transactionId: purchaseId,
             status: item.status ?? 'purchased',
             spaceId: null,
-            inheritedBudgetCategoryId,
+            inheritedBudgetCategoryId: budgetCategoryId,
             updatedAt: firestore_1.FieldValue.serverTimestamp(),
             updatedBy: context.requestData.createdBy ?? null,
             latestTransactionId: purchaseId,
@@ -327,10 +373,11 @@ async function handleProjectToProject(context) {
     const itemId = payload.itemId;
     const sourceProjectId = payload.sourceProjectId;
     const targetProjectId = payload.targetProjectId;
-    const inheritedBudgetCategoryId = payload.inheritedBudgetCategoryId ?? null;
+    const sourceBudgetCategoryId = payload.sourceBudgetCategoryId;
+    const destinationBudgetCategoryId = payload.destinationBudgetCategoryId;
     const note = payload.note;
-    if (!itemId || !sourceProjectId || !targetProjectId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId or project ids.');
+    if (!itemId || !sourceProjectId || !targetProjectId || !sourceBudgetCategoryId || !destinationBudgetCategoryId) {
+        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, project ids, or budget category ids.');
         return;
     }
     const db = (0, firestore_1.getFirestore)();
@@ -348,52 +395,122 @@ async function handleProjectToProject(context) {
         if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
             throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
         }
-        if (!inheritedBudgetCategoryId) {
-            throw new https_1.HttpsError('failed-precondition', 'Missing inheritedBudgetCategoryId.');
+        if (item.inheritedBudgetCategoryId && item.inheritedBudgetCategoryId !== sourceBudgetCategoryId) {
+            throw new https_1.HttpsError('failed-precondition', 'Budget category mismatch for item.');
         }
         const previousTxId = item.transactionId ?? null;
-        const amountDelta = getItemValueCents(item);
-        const saleId = canonicalSaleId(sourceProjectId);
-        const purchaseId = canonicalPurchaseId(targetProjectId);
-        await ensureCanonicalTransaction({
+        const allocationId = canonicalSaleTransactionId(sourceProjectId, 'business_to_project', sourceBudgetCategoryId);
+        const saleId = canonicalSaleTransactionId(sourceProjectId, 'project_to_business', sourceBudgetCategoryId);
+        const purchaseId = canonicalSaleTransactionId(targetProjectId, 'business_to_project', destinationBudgetCategoryId);
+        if (previousTxId === allocationId) {
+            const totals = await computeCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: allocationId,
+                removeItem: { id: itemId, data: item },
+            });
+            const allocationRef = db.doc(`accounts/${context.accountId}/transactions/${allocationId}`);
+            const allocationSnap = await tx.get(allocationRef);
+            ensureCanonicalSaleTransaction({
+                tx,
+                accountId: context.accountId,
+                transactionId: allocationId,
+                projectId: sourceProjectId,
+                direction: 'business_to_project',
+                budgetCategoryId: sourceBudgetCategoryId,
+                exists: allocationSnap.exists,
+            });
+            persistCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: allocationId,
+                totals,
+            });
+        }
+        else {
+            const totals = await computeCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: saleId,
+                addItem: { id: itemId, data: item },
+            });
+            const saleRef = db.doc(`accounts/${context.accountId}/transactions/${saleId}`);
+            const saleSnap = await tx.get(saleRef);
+            ensureCanonicalSaleTransaction({
+                tx,
+                accountId: context.accountId,
+                transactionId: saleId,
+                projectId: sourceProjectId,
+                direction: 'project_to_business',
+                budgetCategoryId: sourceBudgetCategoryId,
+                exists: saleSnap.exists,
+            });
+            persistCanonicalSaleTotals({
+                tx,
+                accountId: context.accountId,
+                transactionId: saleId,
+                totals,
+            });
+        }
+        const destinationTotals = await computeCanonicalSaleTotals({
             tx,
             accountId: context.accountId,
-            transactionId: saleId,
-            projectId: sourceProjectId,
-            kind: 'INV_SALE',
-            amountDelta,
-            itemId,
+            transactionId: purchaseId,
+            addItem: { id: itemId, data: item },
         });
-        await ensureCanonicalTransaction({
+        const purchaseRef = db.doc(`accounts/${context.accountId}/transactions/${purchaseId}`);
+        const purchaseSnap = await tx.get(purchaseRef);
+        ensureCanonicalSaleTransaction({
             tx,
             accountId: context.accountId,
             transactionId: purchaseId,
             projectId: targetProjectId,
-            kind: 'INV_PURCHASE',
-            amountDelta,
-            itemId,
+            direction: 'business_to_project',
+            budgetCategoryId: destinationBudgetCategoryId,
+            exists: purchaseSnap.exists,
+        });
+        persistCanonicalSaleTotals({
+            tx,
+            accountId: context.accountId,
+            transactionId: purchaseId,
+            totals: destinationTotals,
         });
         tx.set(itemRef, {
             projectId: targetProjectId,
             transactionId: purchaseId,
             spaceId: null,
-            inheritedBudgetCategoryId,
+            inheritedBudgetCategoryId: destinationBudgetCategoryId,
             updatedAt: firestore_1.FieldValue.serverTimestamp(),
             updatedBy: context.requestData.createdBy ?? null,
             latestTransactionId: purchaseId,
         }, { merge: true });
+        const hopOneToTx = previousTxId === allocationId ? null : saleId;
         await appendLineageEdge({
             tx,
             accountId: context.accountId,
-            requestId: context.requestId,
+            requestId: `${context.requestId}_hop1`,
             itemId,
             fromTransactionId: previousTxId,
-            toTransactionId: purchaseId,
+            toTransactionId: hopOneToTx,
             createdBy: context.requestData.createdBy,
             movementKind: 'sold',
             source: 'server',
             note: note ?? null,
             fromProjectId: sourceProjectId,
+            toProjectId: null,
+        });
+        await appendLineageEdge({
+            tx,
+            accountId: context.accountId,
+            requestId: `${context.requestId}_hop2`,
+            itemId,
+            fromTransactionId: hopOneToTx,
+            toTransactionId: purchaseId,
+            createdBy: context.requestData.createdBy,
+            movementKind: 'sold',
+            source: 'server',
+            note: note ?? null,
+            fromProjectId: null,
             toProjectId: targetProjectId,
         });
     });
@@ -405,6 +522,47 @@ requestHandlers.ITEM_SALE_PROJECT_TO_PROJECT = handleProjectToProject;
 requestHandlers.PING = async ({ requestRef }) => {
     await setRequestApplied(requestRef);
 };
+exports.repairCanonicalSaleTotals = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+    const { accountId, projectId, dryRun } = request.data ?? {};
+    if (!accountId) {
+        throw new https_1.HttpsError('invalid-argument', 'Missing accountId.');
+    }
+    const db = (0, firestore_1.getFirestore)();
+    let txQuery = db.collection(`accounts/${accountId}/transactions`).where('isCanonicalInventorySale', '==', true);
+    if (projectId) {
+        txQuery = txQuery.where('projectId', '==', projectId);
+    }
+    const snapshot = await txQuery.get();
+    const repairs = [];
+    for (const doc of snapshot.docs) {
+        const data = doc.data() ?? {};
+        const itemsSnapshot = await db
+            .collection(`accounts/${accountId}/items`)
+            .where('transactionId', '==', doc.id)
+            .get();
+        const amountCents = itemsSnapshot.docs.reduce((sum, itemDoc) => sum + getItemValueCents(itemDoc.data() ?? {}), 0);
+        const itemIds = itemsSnapshot.docs.map((itemDoc) => itemDoc.id);
+        const currentAmount = typeof data.amountCents === 'number' ? data.amountCents : 0;
+        const currentItems = Array.isArray(data.itemIds) ? data.itemIds : [];
+        const needsRepair = currentAmount !== amountCents || currentItems.length !== itemIds.length;
+        if (!needsRepair)
+            continue;
+        repairs.push({ transactionId: doc.id, before: currentAmount, after: amountCents, itemCount: itemIds.length });
+        if (!dryRun) {
+            await doc.ref.set({
+                amountCents,
+                itemIds,
+                updatedAt: firestore_1.FieldValue.serverTimestamp(),
+            }, { merge: true });
+        }
+    }
+    console.log(`[repairCanonicalSaleTotals] account=${accountId} project=${projectId ?? 'all'} repaired=${repairs.length}`);
+    return { repaired: repairs.length, repairs };
+});
 async function processRequestDoc(context) {
     const { requestRef, requestData } = context;
     if (!requestData) {
@@ -479,7 +637,6 @@ exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('account
             return;
         const now = firestore_1.FieldValue.serverTimestamp();
         tx.set(associationRef, {
-            id: associationEdgeId,
             accountId,
             itemId,
             fromTransactionId: beforeTxId,
@@ -512,7 +669,6 @@ exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('account
                     return;
                 const now = firestore_1.FieldValue.serverTimestamp();
                 tx.set(returnedRef, {
-                    id: returnedEdgeId,
                     accountId,
                     itemId,
                     fromTransactionId: beforeTxId,
@@ -558,6 +714,7 @@ exports.onInventoryRequestCreated = (0, firestore_2.onDocumentCreated)('accounts
         requestId: event.params.requestId
     });
 });
+const normalizeBudgetCategoryType = (value) => (value === 'general' ? 'standard' : value);
 const BUDGET_CATEGORY_PRESET_SEED = [
     {
         id: 'seed_furnishings',
@@ -600,6 +757,9 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
             const seedSnap = await tx.get(seedRef);
             if (seedSnap.exists)
                 continue;
+            const normalizedMetadata = seed.metadata?.categoryType
+                ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
+                : seed.metadata ?? null;
             tx.set(seedRef, {
                 id: seed.id,
                 accountId,
@@ -608,7 +768,7 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
                 slug: seed.slug,
                 isArchived: false,
                 order: seed.order,
-                metadata: seed.metadata ?? null,
+                metadata: normalizedMetadata,
                 createdAt: now,
                 updatedAt: now,
                 deletedAt: null,

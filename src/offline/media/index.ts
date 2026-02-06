@@ -18,3 +18,4 @@ export {
   cleanupOrphanedMedia,
   useMediaStore,
 } from './mediaStore';
+export { uploadMediaToFirebaseStorage } from './uploadHandler';

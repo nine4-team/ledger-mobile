@@ -23,8 +23,10 @@ import { useScopedListeners } from '../data/useScopedListeners';
 import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
 import { deleteItem, updateItem } from '../data/itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale } from '../data/inventoryOperations';
+import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
 import { resolveAttachmentUri } from '../offline/media';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
+import { BottomSheetMenuList } from './BottomSheetMenuList';
 
 type SharedItemsListProps = {
   scopeConfig: ScopeConfig;
@@ -132,7 +134,10 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const [bulkSpaceId, setBulkSpaceId] = useState('');
   const [bulkProjectId, setBulkProjectId] = useState('');
   const [bulkCategoryId, setBulkCategoryId] = useState('');
+  const [bulkSourceCategoryId, setBulkSourceCategoryId] = useState('');
   const [bulkError, setBulkError] = useState<string | null>(null);
+  const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
+  const [sourceCategoryMenuOpen, setSourceCategoryMenuOpen] = useState(false);
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const bulkSheetDividerStyle = useMemo(
@@ -175,6 +180,16 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       setIsLoading(false);
     }
   }, [accountId, scopeId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setBudgetCategories({});
+      return;
+    }
+    return subscribeToBudgetCategories(accountId, (next) => {
+      setBudgetCategories(mapBudgetCategories(next));
+    });
+  }, [accountId]);
 
   useEffect(() => {
     if (!accountId || !scopeId || refreshToken == null) {
@@ -407,7 +422,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     await requestBusinessToProjectPurchase({
       accountId,
       targetProjectId: bulkProjectId.trim(),
-      inheritedBudgetCategoryId: bulkCategoryId.trim(),
+      budgetCategoryId: bulkCategoryId.trim(),
       items: items.filter((item) => selectedIds.includes(item.id)),
     });
     setSelectedIds([]);
@@ -419,20 +434,56 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     if (!accountId || selectedIds.length === 0 || scopeConfig.scope !== 'project') return;
     const selected = items.filter((item) => selectedIds.includes(item.id));
     const missingCategory = selected.find((item) => !item.inheritedBudgetCategoryId);
-    if (missingCategory) {
-      setBulkError(
-        'Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.'
-      );
+    if (missingCategory && !bulkSourceCategoryId.trim()) {
+      setBulkError('Select a source category for uncategorized items before selling.');
       return;
     }
     setBulkError(null);
     await requestProjectToBusinessSale({
       accountId,
       projectId: scopeConfig.projectId ?? '',
+      budgetCategoryId: bulkSourceCategoryId.trim() || undefined,
       items: selected,
     });
     setSelectedIds([]);
-  }, [accountId, items, scopeConfig.projectId, scopeConfig.scope, selectedIds]);
+    setBulkSourceCategoryId('');
+  }, [accountId, bulkSourceCategoryId, items, scopeConfig.projectId, scopeConfig.scope, selectedIds]);
+
+  const bulkSourceCategoryLabel = useMemo(() => {
+    if (!bulkSourceCategoryId.trim()) return 'No source category';
+    return budgetCategories[bulkSourceCategoryId]?.name ?? bulkSourceCategoryId;
+  }, [budgetCategories, bulkSourceCategoryId]);
+
+  const sourceCategoryMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const options = Object.entries(budgetCategories)
+      .map(([id, cat]) => ({ id, label: cat.name }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    if (options.length === 0) {
+      return [
+        {
+          key: 'empty',
+          label: 'No categories yet',
+          onPress: () => {},
+        },
+      ];
+    }
+
+    return [
+      {
+        key: 'none',
+        label: 'No source category',
+        icon: !bulkSourceCategoryId.trim() ? 'check' : undefined,
+        onPress: () => setBulkSourceCategoryId(''),
+      },
+      ...options.map((option) => ({
+        key: option.id,
+        label: option.label,
+        icon: bulkSourceCategoryId === option.id ? 'check' : undefined,
+        onPress: () => setBulkSourceCategoryId(option.id),
+      })),
+    ];
+  }, [budgetCategories, bulkSourceCategoryId]);
 
   const handleToggleSort = useCallback(() => {
     setSortOpen(true);
@@ -732,12 +783,25 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
               </View>
             ) : null}
             {scopeConfig.scope === 'project' ? (
-              <AppButton
-                title="Sell to business"
-                variant="secondary"
-                onPress={handleBulkSellToBusiness}
-                style={styles.bulkActionButton}
-              />
+              <View style={styles.bulkActionGroup}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Select source category"
+                  onPress={() => setSourceCategoryMenuOpen(true)}
+                  style={[styles.filterInput, filterInputThemeStyle, styles.categoryPicker]}
+                >
+                  <AppText variant="caption" style={styles.categoryPickerLabel}>
+                    Source category (for uncategorized)
+                  </AppText>
+                  <AppText variant="body">{bulkSourceCategoryLabel}</AppText>
+                </Pressable>
+                <AppButton
+                  title="Sell to business"
+                  variant="secondary"
+                  onPress={handleBulkSellToBusiness}
+                  style={styles.bulkActionButton}
+                />
+              </View>
             ) : null}
             <AppButton
               title="Delete"
@@ -748,6 +812,12 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           </View>
         </View>
       </BottomSheet>
+      <BottomSheetMenuList
+        visible={sourceCategoryMenuOpen}
+        onRequestClose={() => setSourceCategoryMenuOpen(false)}
+        items={sourceCategoryMenuItems}
+        title="Source category"
+      />
       <FlatList
         ref={listRef}
         data={groupedRows}
@@ -979,6 +1049,12 @@ const styles = StyleSheet.create({
     minHeight: 36,
     paddingVertical: 8,
     paddingHorizontal: 12,
+  },
+  categoryPicker: {
+    gap: 4,
+  },
+  categoryPickerLabel: {
+    fontWeight: '600',
   },
   bulkBar: {
     flexDirection: 'row',

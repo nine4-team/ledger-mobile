@@ -122,7 +122,10 @@ Required identity inputs:
 - `budgetCategoryId`
 
 Recommended id format (implementation-defined but must be deterministic and parseable):
-- `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+- `SALE_<projectId>_<direction>_<budgetCategoryId>`
+
+Parseability note:
+- This format is parseable by splitting on `_` only because `projectId` and `budgetCategoryId` are constrained to contain no underscores (see `20_data/data_contracts.md`).
 
 Additionally required on the transaction doc (recommended even if direction is encoded in the id):
 - `isCanonicalInventorySale: true`

@@ -2,6 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Health check endpoint for app-specific connectivity verification.
+    // Allows any authenticated user to read the health/ping doc.
+    // This supports the app's connectivity health check per OFFLINE_CAPABILITY_SPEC.md.
+    match /health/ping {
+      allow read: if request.auth != null;
+    }
+
     function signedIn() {
       return request.auth != null;
     }
@@ -43,11 +50,34 @@ service cloud.firestore {
     // Account membership docs.
     // Membership docs are at: accounts/{accountId}/users/{uid}
     match /accounts/{accountId}/users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || request.auth.uid == resource.data.uid);
+      allow read: if isAccountMember(accountId);
       allow create: if false;
 
       // For now, membership updates are server-managed (or future work).
       allow update, delete: if false;
+    }
+
+    // Account presets (budget categories, vendor defaults, space templates).
+    match /accounts/{accountId}/presets/{presetId}/budgetCategories/{categoryId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/presets/{presetId}/vendors/{vendorId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/presets/{presetId}/spaceTemplates/{templateId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Business profile document.
+    match /accounts/{accountId}/profile/{profileId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Invites (account member visibility for now).
+    match /accounts/{accountId}/invites/{inviteId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
     }
 
     // Quota counters should only be written by trusted server code (Cloud Functions).

@@ -80,20 +80,9 @@ export const appThemeOverrides = {
     activityIndicator: '#987e55',
   },
   dark: {
-    background: {
-      screen: '#0F1115',
-      surface: '#151922',
-      tertiary: '#1A1D26',
-    },
-    tabBar: {
-      background: '#0F1115',
-      border: '#23272F',
-    },
-    button: {
-      secondary: {
-        background: '#1B2029',
-      },
-    },
+    // Base darkTheme from @nine4/ui-kit already has correct neutral grays.
+    // Only override here if we need app-specific dark mode customizations.
+    // Currently empty - base theme colors are used as-is.
   },
 } as const;
 

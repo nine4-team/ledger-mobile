@@ -8,6 +8,7 @@ import { BottomSheet } from './BottomSheet';
 import { SelectorCircle } from './SelectorCircle';
 import { FilterMenu } from './FilterMenu';
 import { SortMenu } from './SortMenu';
+import { TransactionCard } from './TransactionCard';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
@@ -22,9 +23,9 @@ import {
   subscribeToScopedItems,
   subscribeToScopedTransactions,
 } from '../data/scopedListData';
-import { isCanonicalTransactionId } from '../data/inventoryOperations';
+import { isCanonicalInventorySaleTransaction } from '../data/inventoryOperations';
 import { subscribeToBudgetCategories, mapBudgetCategories } from '../data/budgetCategoriesService';
-import { updateTransaction } from '../data/transactionsService';
+import { getBudgetCategoryColor } from '../utils/budgetCategoryColors';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 
 type SharedTransactionsListProps = {
@@ -64,10 +65,14 @@ const SORT_MODES = [
 type SortMode = (typeof SORT_MODES)[number];
 const DEFAULT_SORT: SortMode = 'date-desc';
 
-function getCanonicalTitle(id: string): string {
-  if (id.startsWith('INV_PURCHASE_')) return 'Company Inventory Purchase';
-  if (id.startsWith('INV_SALE_')) return 'Company Inventory Sale';
-  return `Transaction ${id.slice(0, 6)}`;
+function getCanonicalTitle(transaction: ScopedTransaction): string {
+  if (transaction.inventorySaleDirection === 'business_to_project') {
+    return 'Inventory → Project (System)';
+  }
+  if (transaction.inventorySaleDirection === 'project_to_business') {
+    return 'Project → Inventory (System)';
+  }
+  return 'Inventory Sale (System)';
 }
 
 function formatCents(value?: number | null) {
@@ -115,10 +120,10 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     [uiKitTheme]
   );
   const primaryTextStyle = useMemo(() => getTextColorStyle(theme.colors.primary), [theme]);
-  const rowSurfaceStyle = useMemo(
-    () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
-    [uiKitTheme]
-  );
+  // const rowSurfaceStyle = useMemo(
+  //   () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
+  //   [uiKitTheme]
+  // );
   const selectButtonThemeStyle = useMemo(
     () => ({
       backgroundColor: uiKitTheme.button.secondary.background,
@@ -130,7 +135,6 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
-  const lastSelfHealRef = useRef<Record<string, number>>({});
   const screenRefresh = useScreenRefresh();
 
   useEffect(() => {
@@ -207,13 +211,18 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const rows = useMemo(() => {
     return transactions.map((tx) => {
       const linkedItems = items.filter((item) => item.transactionId === tx.id);
-      const canonicalTotal = isCanonicalTransactionId(tx.id) ? computeCanonicalTotal(linkedItems) : null;
+      const isCanonical = isCanonicalInventorySaleTransaction(tx);
+      const canonicalTotal = isCanonical ? computeCanonicalTotal(linkedItems) : null;
       const amountValue =
-        typeof canonicalTotal === 'number' ? canonicalTotal : typeof tx.amountCents === 'number' ? tx.amountCents : null;
+        typeof tx.amountCents === 'number'
+          ? tx.amountCents
+          : typeof canonicalTotal === 'number'
+            ? canonicalTotal
+            : null;
       const amountLabel = amountValue != null ? `$${(amountValue / 100).toFixed(2)}` : 'No amount';
       const dateLabel = tx.transactionDate?.trim() || 'No date';
       const sourceLabel = tx.source?.trim() || '';
-      const label = isCanonicalTransactionId(tx.id) ? getCanonicalTitle(tx.id) : sourceLabel || tx.id.slice(0, 6);
+      const label = isCanonical ? getCanonicalTitle(tx) : sourceLabel || tx.id.slice(0, 6);
       const subtitle = [amountLabel, dateLabel, sourceLabel].filter(Boolean).join(' • ');
       return { id: tx.id, label, subtitle, transaction: tx };
     });
@@ -318,14 +327,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         const categoryIds = Array.isArray(activeFilters.budgetCategoryId)
           ? activeFilters.budgetCategoryId
           : [activeFilters.budgetCategoryId];
-        if (isCanonicalTransactionId(tx.id)) {
-          const matchingItem = items.find(
-            (item) => item.transactionId === tx.id && categoryIds.includes(item.inheritedBudgetCategoryId ?? '')
-          );
-          if (!matchingItem) return false;
-        } else {
-          if (!categoryIds.includes(tx.budgetCategoryId ?? '')) return false;
-        }
+        if (!categoryIds.includes(tx.budgetCategoryId ?? '')) return false;
       }
       
       // Source filter
@@ -415,24 +417,6 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
 
     clearRestoreHint();
   }, [clearRestoreHint, filtered, state.restore]);
-
-  useEffect(() => {
-    if (!accountId) return;
-    const now = Date.now();
-    const nextHeal: Record<string, number> = { ...lastSelfHealRef.current };
-    filtered.forEach((row) => {
-      if (!isCanonicalTransactionId(row.id)) return;
-      const linkedItems = items.filter((item) => item.transactionId === row.id);
-      const computed = computeCanonicalTotal(linkedItems);
-      if (typeof row.transaction.amountCents !== 'number') return;
-      if (row.transaction.amountCents === computed) return;
-      const last = nextHeal[row.id] ?? 0;
-      if (now - last < 10_000) return;
-      nextHeal[row.id] = now;
-      void updateTransaction(accountId, row.id, { amountCents: computed });
-    });
-    lastSelfHealRef.current = nextHeal;
-  }, [accountId, filtered, items]);
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
@@ -902,25 +886,37 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     if (!scopeConfig.capabilities?.canExportCsv) return;
     const targetIds = ids && ids.length ? new Set(ids) : null;
     const targetTransactions = targetIds ? transactions.filter((tx) => targetIds.has(tx.id)) : transactions;
-    const headers = ['id', 'date', 'source', 'amount', 'categoryName', 'budgetCategoryId', 'itemCategories'];
+    const headers = [
+      'id',
+      'date',
+      'source',
+      'amount',
+      'categoryName',
+      'budgetCategoryId',
+      'inventorySaleDirection',
+      'itemCategories',
+    ];
     const rows = targetTransactions.map((tx) => {
-      const isCanonical = isCanonicalTransactionId(tx.id);
       const categoryName =
         tx.budgetCategoryId && budgetCategories[tx.budgetCategoryId]
           ? budgetCategories[tx.budgetCategoryId].name
           : '';
-      const itemCategories = items
-        .filter((item) => item.transactionId === tx.id && item.inheritedBudgetCategoryId)
-        .map((item) => item.inheritedBudgetCategoryId)
-        .filter(Boolean)
-        .join('|');
+      const isCanonical = isCanonicalInventorySaleTransaction(tx);
+      const itemCategories = isCanonical
+        ? ''
+        : items
+            .filter((item) => item.transactionId === tx.id && item.inheritedBudgetCategoryId)
+            .map((item) => item.inheritedBudgetCategoryId)
+            .filter(Boolean)
+            .join('|');
       return [
         tx.id,
         tx.transactionDate ?? '',
         tx.source ?? '',
         typeof tx.amountCents === 'number' ? (tx.amountCents / 100).toFixed(2) : '',
-        isCanonical ? '' : (categoryName || tx.budgetCategoryId) ?? '',
-        isCanonical ? '' : tx.budgetCategoryId ?? '',
+        (categoryName || tx.budgetCategoryId) ?? '',
+        tx.budgetCategoryId ?? '',
+        tx.inventorySaleDirection ?? '',
         itemCategories,
       ];
     });
@@ -1092,7 +1088,29 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           </View>
         }
         renderItem={({ item }) => (
-          <Pressable
+          <TransactionCard
+            id={item.transaction.id}
+            source={item.transaction.source ?? ''}
+            amountCents={item.transaction.amountCents ?? null}
+            transactionDate={item.transaction.transactionDate}
+            notes={item.transaction.notes}
+            budgetCategoryName={
+              item.transaction.budgetCategoryId
+                ? budgetCategories[item.transaction.budgetCategoryId]?.name
+                : undefined
+            }
+            budgetCategoryColor={getBudgetCategoryColor(
+              item.transaction.budgetCategoryId,
+              budgetCategories
+            )}
+            transactionType={item.transaction.type as any}
+            needsReview={item.transaction.needsReview}
+            reimbursementType={item.transaction.reimbursementType as any}
+            purchasedBy={item.transaction.purchasedBy}
+            hasEmailReceipt={item.transaction.hasEmailReceipt}
+            status={item.transaction.status as any}
+            selected={selectedIds.includes(item.id)}
+            onSelectedChange={() => toggleSelection(item.id)}
             onPress={() => {
               setRestoreHint({ anchorId: item.id, scrollOffset: lastScrollOffsetRef.current });
               const backTarget =
@@ -1112,36 +1130,30 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
                 },
               });
             }}
-            style={({ pressed }) => [
-              styles.row,
-              rowSurfaceStyle,
-              selectedIds.includes(item.id) ? { borderColor: uiKitTheme.primary.main } : null,
-              pressed && styles.rowPressed,
+            menuItems={[
+              {
+                key: 'edit',
+                label: 'Edit',
+                onPress: () => {
+                  // TODO: Implement edit handler
+                },
+              },
+              {
+                key: 'duplicate',
+                label: 'Duplicate',
+                onPress: () => {
+                  // TODO: Implement duplicate handler
+                },
+              },
+              {
+                key: 'delete',
+                label: 'Delete',
+                onPress: () => {
+                  // TODO: Implement delete handler
+                },
+              },
             ]}
-          >
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                toggleSelection(item.id);
-              }}
-              accessibilityRole="checkbox"
-              accessibilityLabel={`Select ${item.label}`}
-              accessibilityState={{ checked: selectedIds.includes(item.id) }}
-              hitSlop={13}
-              style={styles.selectorContainer}
-            >
-              <SelectorCircle selected={selectedIds.includes(item.id)} indicator="dot" />
-            </Pressable>
-            <View style={styles.rowContent}>
-              <AppText variant="body">{item.label}</AppText>
-              {item.subtitle ? <AppText variant="caption">{item.subtitle}</AppText> : null}
-              {!isCanonicalTransactionId(item.id) && item.transaction.budgetCategoryId ? (
-                <AppText variant="caption">
-                  {budgetCategories[item.transaction.budgetCategoryId]?.name ?? item.transaction.budgetCategoryId}
-                </AppText>
-              ) : null}
-            </View>
-          </Pressable>
+          />
         )}
       />
       {selectedIds.length > 0 ? (
@@ -1190,25 +1202,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
-  row: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  rowPressed: {
-    opacity: 0.7,
-  },
-  selectorContainer: {
-    padding: 2,
-  },
-  rowContent: {
-    flex: 1,
-    gap: 4,
-  },
+  // row: {
+  //   borderWidth: 1,
+  //   borderRadius: 12,
+  //   paddingVertical: 12,
+  //   paddingHorizontal: 14,
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   gap: 12,
+  // },
+  // rowPressed: {
+  //   opacity: 0.7,
+  // },
+  // selectorContainer: {
+  //   padding: 2,
+  // },
+  // rowContent: {
+  //   flex: 1,
+  //   gap: 4,
+  // },
   bulkSheetTitleRow: {
     paddingHorizontal: 16,
     paddingBottom: 10,

@@ -8,12 +8,12 @@ import { useAccountContextStore } from '../src/auth/accountContextStore';
 import { useBillingStore } from '../src/billing/billingStore';
 import { LoadingScreen } from '../src/components/LoadingScreen';
 import { BackgroundSyncErrorNotifier } from '../src/components/BackgroundSyncErrorNotifier';
-import { NetworkStatusBanner } from '../src/components/NetworkStatusBanner';
 import { SyncStatusPill } from '../src/components/SyncStatusPill';
 import { isAuthBypassEnabled } from '../src/auth/authConfig';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { startRequestDocTracking } from '../src/sync/requestDocTracker';
-import { hydrateMediaStore } from '../src/offline/media/mediaStore';
+import { hydrateMediaStore, registerUploadHandler } from '../src/offline/media/mediaStore';
+import { uploadMediaToFirebaseStorage } from '../src/offline/media/uploadHandler';
 import { useListStateStore } from '../src/data/listStateStore';
 import { useProjectContextStore } from '../src/data/projectContextStore';
 
@@ -42,6 +42,7 @@ export default function RootLayout() {
     initializeBilling();
     startRequestDocTracking();
     hydrateMediaStore();
+    registerUploadHandler(uploadMediaToFirebaseStorage);
     hydrateListStateStore();
     hydrateProjectContext();
     return unsubscribe;
@@ -164,7 +165,6 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
         <View style={styles.root}>
-          <NetworkStatusBanner />
           <SyncStatusPill />
           <BackgroundSyncErrorNotifier />
           <Stack screenOptions={{ headerShown: false }}>

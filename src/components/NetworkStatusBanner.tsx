@@ -5,12 +5,19 @@ import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useTheme } from '../theme/ThemeProvider';
 import { AppText } from './AppText';
 
-export const NetworkStatusBanner: React.FC = () => {
+type NetworkStatusBannerProps = {
+  bottomOffset?: number;
+};
+
+export const NetworkStatusBanner: React.FC<NetworkStatusBannerProps> = ({ bottomOffset = 0 }) => {
   const { isOnline, isSlowConnection } = useNetworkStatus();
   const theme = useTheme();
 
   const showOffline = !isOnline;
   const showSlow = isOnline && isSlowConnection;
+
+  // DEBUG: Log banner state
+  console.log('📱 NetworkStatusBanner: Render', { isOnline, isSlowConnection, showOffline, showSlow });
 
   const themed = useMemo(
     () =>
@@ -18,12 +25,13 @@ export const NetworkStatusBanner: React.FC = () => {
         banner: {
           backgroundColor: showOffline ? theme.colors.error : theme.colors.background,
           borderColor: theme.colors.border,
+          bottom: bottomOffset,
         },
         text: {
           color: showOffline ? theme.colors.background : theme.colors.text,
         },
       }),
-    [isOnline, isSlowConnection, showOffline, theme]
+    [bottomOffset, isOnline, isSlowConnection, showOffline, theme]
   );
 
   if (!showOffline && !showSlow) {
@@ -46,12 +54,11 @@ export const NetworkStatusBanner: React.FC = () => {
 const styles = StyleSheet.create({
   banner: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
+    borderTopWidth: 1,
     zIndex: 20,
   },
   text: {

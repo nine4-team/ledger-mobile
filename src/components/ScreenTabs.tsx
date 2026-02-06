@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     paddingHorizontal: 10,
-    paddingTop: 15,
+    paddingTop: 8,
     paddingBottom: 10,
     marginBottom: -1,
     justifyContent: 'center',

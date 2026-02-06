@@ -144,7 +144,13 @@ export const Screen: React.FC<ScreenProps> = ({
         />
       ) : null}
       {hasTabs ? (
-        <ScreenTabs tabs={resolvedTabs} value={selectedKey} onChange={setSelectedKey} initialTabKey={initialTabKey} />
+        <ScreenTabs
+          tabs={resolvedTabs}
+          value={selectedKey}
+          onChange={setSelectedKey}
+          initialTabKey={initialTabKey}
+          containerStyle={title ? styles.tabsAfterTitle : undefined}
+        />
       ) : null}
       {hasTabs ? renderBelowTabs?.({ selectedKey, setSelectedKey, tabs: resolvedTabs }) : null}
       <View
@@ -187,5 +193,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingBottom: appTokens.screen.contentPaddingBottom,
+  },
+  tabsAfterTitle: {
+    marginTop: -4,
   },
 });

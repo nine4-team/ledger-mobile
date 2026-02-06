@@ -26,6 +26,51 @@ export type AnchoredMenuItem = {
   destructive?: boolean;
 };
 
+export type MenuSelectionOptions = {
+  item: AnchoredMenuItem;
+  itemKey: string;
+  subactions: AnchoredMenuSubaction[];
+  selectedSubactionByKey?: Record<string, string>;
+  activeSubactionKey?: string;
+  hideDefaultLabel?: boolean;
+};
+
+export function resolveMenuSelection({
+  item,
+  itemKey,
+  subactions,
+  selectedSubactionByKey,
+  activeSubactionKey,
+  hideDefaultLabel = false,
+}: MenuSelectionOptions) {
+  const selectedByIcon = subactions.find((sub) => sub.icon === 'check');
+  const rawCurrentKey =
+    item.selectedSubactionKey ??
+    selectedSubactionByKey?.[itemKey] ??
+    selectedByIcon?.key ??
+    item.defaultSelectedSubactionKey ??
+    subactions[0]?.key;
+  const isActiveGroup = !activeSubactionKey || subactions.some((sub) => sub.key === activeSubactionKey);
+  const currentKey = isActiveGroup ? rawCurrentKey : undefined;
+  const isDefaultSelection =
+    item.defaultSelectedSubactionKey != null && currentKey === item.defaultSelectedSubactionKey;
+  const suppressDefaultCheckmark = item.suppressDefaultCheckmark ?? true;
+  const showCheckmark = isActiveGroup && (!suppressDefaultCheckmark || !isDefaultSelection);
+  const currentLabel =
+    currentKey && !(hideDefaultLabel && isDefaultSelection)
+      ? subactions.find((s) => s.key === currentKey)?.label ?? ''
+      : '';
+
+  return {
+    currentKey,
+    currentLabel,
+    isDefaultSelection,
+    showCheckmark,
+    suppressDefaultCheckmark,
+    isActiveGroup,
+  };
+}
+
 export interface AnchoredMenuListProps {
   visible: boolean;
   anchorLayout: AnchorLayout | null;
@@ -35,6 +80,15 @@ export interface AnchoredMenuListProps {
   width?: number;
   maxWidth?: number;
   offsetY?: number;
+  /**
+   * When provided, only the group containing this subaction
+   * shows its selected value in the header.
+   */
+  activeSubactionKey?: string;
+  /**
+   * When true, hide the header value for default selections.
+   */
+  hideDefaultLabel?: boolean;
 }
 
 export function AnchoredMenuList({
@@ -46,6 +100,8 @@ export function AnchoredMenuList({
   width = 220,
   maxWidth = 280,
   offsetY = 4,
+  activeSubactionKey,
+  hideDefaultLabel = false,
 }: AnchoredMenuListProps) {
   const uiKitTheme = useUIKitTheme();
   const [expandedMenuKey, setExpandedMenuKey] = useState<string | null>(null);
@@ -76,16 +132,14 @@ export function AnchoredMenuList({
         const itemKey = item.key ?? `${item.label}-${idx}`;
 
         if (isSubmenuItem) {
-          const currentKey =
-            item.selectedSubactionKey ??
-            selectedSubactionByKey[itemKey] ??
-            item.defaultSelectedSubactionKey ??
-            subactions[0]?.key;
-          const isDefaultSelection =
-            item.defaultSelectedSubactionKey != null &&
-            currentKey === item.defaultSelectedSubactionKey;
-          const showCheckmark = !item.suppressDefaultCheckmark || !isDefaultSelection;
-          const currentLabel = subactions.find((s) => s.key === currentKey)?.label ?? '';
+          const { currentKey, currentLabel, showCheckmark, suppressDefaultCheckmark } = resolveMenuSelection({
+            item,
+            itemKey,
+            subactions,
+            selectedSubactionByKey,
+            activeSubactionKey,
+            hideDefaultLabel,
+          });
           const isExpanded = expandedMenuKey === itemKey;
 
           return (
@@ -110,14 +164,16 @@ export function AnchoredMenuList({
                   </Text>
                 </View>
                 <View style={styles.menuSectionRight}>
-                  <Text
-                    style={[
-                      styles.menuSectionValue,
-                      { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.secondary },
-                    ]}
-                  >
-                    {currentLabel}
-                  </Text>
+                  {currentLabel ? (
+                    <Text
+                      style={[
+                        styles.menuSectionValue,
+                        { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.secondary },
+                      ]}
+                    >
+                      {currentLabel}
+                    </Text>
+                  ) : null}
                   <MaterialIcons
                     name={isExpanded ? 'expand-more' : 'chevron-right'}
                     size={22}
@@ -144,7 +200,7 @@ export function AnchoredMenuList({
                       selectedSub &&
                       item.defaultSelectedSubactionKey != null &&
                       sub.key === item.defaultSelectedSubactionKey;
-                    const allowCheck = !item.suppressDefaultCheckmark || !isDefaultSelected;
+                    const allowCheck = !suppressDefaultCheckmark || !isDefaultSelected;
                     const isHighlighted = selectedSub && allowCheck;
 
                     return (
