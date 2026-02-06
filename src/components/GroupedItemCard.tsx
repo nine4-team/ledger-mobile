@@ -3,8 +3,9 @@ import React, { useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
+import { resolveAttachmentUri } from '../offline/media';
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
 import { ItemCard } from './ItemCard';
 import type { ItemCardProps } from './ItemCard';
 import { SelectorCircle } from './SelectorCircle';
@@ -142,7 +143,7 @@ export function GroupedItemCard({
         {/* Top Row: Checkbox, Total, Count, Microcopy, Chevron */}
         <View style={[styles.headerTopRow, isExpanded ? styles.headerTopRowExpanded : null]}>
           {/* Checkbox */}
-          {!isExpanded && (onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
+          {(onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();
@@ -208,12 +209,27 @@ export function GroupedItemCard({
               {summary.description}
             </Text>
             <View style={styles.summaryBottomRow}>
-              {summary.thumbnailUri ? (
+              {summary.thumbnailUri && !summary.thumbnailUri.startsWith('offline://') ? (
                 <Image
-                  source={{ uri: summary.thumbnailUri }}
+                  source={{ uri: resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' }) ?? summary.thumbnailUri }}
                   style={[styles.summaryThumb, themed.thumbBorder]}
                   accessibilityIgnoresInvertColors
                 />
+              ) : summary.thumbnailUri && summary.thumbnailUri.startsWith('offline://') ? (
+                (() => {
+                  const resolved = resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' });
+                  return resolved ? (
+                    <Image
+                      source={{ uri: resolved }}
+                      style={[styles.summaryThumb, themed.thumbBorder]}
+                      accessibilityIgnoresInvertColors
+                    />
+                  ) : (
+                    <View style={[styles.summaryThumb, themed.thumbBorder, { alignItems: 'center', justifyContent: 'center' }]}>
+                      <MaterialIcons name="image-not-supported" size={24} color={uiKitTheme.text.secondary} />
+                    </View>
+                  );
+                })()
               ) : null}
               {(summary.sourceLabel || summary.sku || summary.locationLabel) ? (
                 <View style={styles.summaryMetaCol}>
@@ -266,7 +282,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   header: {
-    padding: APP_CARD_PADDING,
+    padding: CARD_PADDING,
     gap: 0, // Gap handled by margin in summaryRow to match specific layout needs
   },
   headerPressed: {
@@ -340,9 +356,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   summaryThumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: 108,
+    height: 108,
+    borderRadius: 21,
     borderWidth: 1,
   },
   summaryTitle: {

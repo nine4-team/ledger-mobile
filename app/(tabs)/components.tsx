@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 
 import { AppScrollView } from '../../src/components/AppScrollView';
 import { AppText } from '../../src/components/AppText';
@@ -11,7 +11,7 @@ import { Screen } from '../../src/components/Screen';
 import { ScreenTabItem, useScreenTabs } from '../../src/components/ScreenTabs';
 import { TemplateToggleListCard, TemplateToggleListItem } from '../../src/components/TemplateToggleListCard';
 import { ComponentsGallery } from '../../src/screens/ComponentsGallery';
-import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '@/theme/ThemeProvider';
 import { getTextSecondaryStyle, textEmphasis } from '../../src/ui';
 
 const COMPONENT_TABS: ScreenTabItem[] = [
@@ -26,6 +26,7 @@ export default function ComponentsScreen() {
       tabs={COMPONENT_TABS}
       initialTabKey={COMPONENT_TABS[0]?.key ?? 'library'}
       hideBackButton={true}
+      includeBottomInset={false}
       infoContent={{
         title: 'Components',
         message: 'A grab-bag of reusable UI components and interaction patterns.',
@@ -50,11 +51,19 @@ function ComponentsTabContent() {
 function ComponentsLibraryTab() {
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
+  const [itemSelected, setItemSelected] = useState(false);
+  const [groupSelected, setGroupSelected] = useState(false);
+  const [groupItemSelections, setGroupItemSelections] = useState({
+    bed: false,
+    nightstand: false,
+    dresser: false,
+  });
+  const logoUri = useMemo(() => Image.resolveAssetSource(require('../../ledger_logo.png')).uri, []);
   const [templateItems, setTemplateItems] = useState<TemplateToggleListItem[]>([
-    { id: '1', name: 'Default template', itemize: true },
-    { id: '2', name: 'Rental / staging', itemize: true },
-    { id: '3', name: 'Insurance', itemize: false },
-    { id: '4', name: 'Legacy (disabled)', itemize: false, disabled: true },
+    { id: '1', name: 'Default template', disabled: false },
+    { id: '2', name: 'Rental / staging', disabled: false },
+    { id: '3', name: 'Insurance', disabled: true },
+    { id: '4', name: 'Legacy (off)', disabled: true },
   ]);
 
   const itemMenu = useMemo(
@@ -74,6 +83,10 @@ function ComponentsLibraryTab() {
     []
   );
 
+  const updateGroupItemSelection = (key: keyof typeof groupItemSelections) => (next: boolean) => {
+    setGroupItemSelections((prev) => ({ ...prev, [key]: next }));
+  };
+
   return (
     <AppScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <View style={styles.section}>
@@ -92,6 +105,9 @@ function ComponentsLibraryTab() {
           notes="Light scuffs on one leg."
           priceLabel="$480.00"
           statusLabel="In use"
+          thumbnailUri={logoUri}
+          selected={itemSelected}
+          onSelectedChange={setItemSelected}
           bookmarked
           onBookmarkPress={() => Alert.alert('Bookmark', 'Toggled')}
           menuItems={itemMenu}
@@ -105,14 +121,50 @@ function ComponentsLibraryTab() {
             sourceLabel: 'Purchased',
             locationLabel: 'Unit B',
             notes: 'Grouped example',
+            thumbnailUri: logoUri,
           }}
           countLabel="×3"
           totalLabel="$2,400.00"
           items={[
-            { description: 'Bed frame', sku: 'BED-001', priceLabel: '$900.00', sourceLabel: 'Purchased' },
-            { description: 'Nightstand', sku: 'NS-002', priceLabel: '$300.00', sourceLabel: 'Purchased' },
-            { description: 'Dresser', sku: 'DR-003', priceLabel: '$1,200.00', sourceLabel: 'Purchased' },
+            {
+              description: 'Bed frame',
+              sku: 'BED-001',
+              priceLabel: '$900.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.bed,
+              onSelectedChange: updateGroupItemSelection('bed'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              description: 'Nightstand',
+              sku: 'NS-002',
+              priceLabel: '$300.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.nightstand,
+              onSelectedChange: updateGroupItemSelection('nightstand'),
+              bookmarked: false,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              description: 'Dresser',
+              sku: 'DR-003',
+              priceLabel: '$1,200.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.dresser,
+              onSelectedChange: updateGroupItemSelection('dresser'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
           ]}
+          selected={groupSelected}
+          onSelectedChange={setGroupSelected}
           defaultExpanded={false}
         />
 
@@ -140,8 +192,8 @@ function ComponentsLibraryTab() {
           title="Templates"
           rightHeaderLabel="Itemize"
           items={templateItems}
-          onToggleItemize={(id, next) => {
-            setTemplateItems((prev) => prev.map((it) => (it.id === id ? { ...it, itemize: next } : it)));
+          onToggleDisabled={(id, next) => {
+            setTemplateItems((prev) => prev.map((it) => (it.id === id ? { ...it, disabled: next } : it)));
           }}
           onReorderItems={(next) => setTemplateItems(next)}
           onDragActiveChange={(isDragging) => {

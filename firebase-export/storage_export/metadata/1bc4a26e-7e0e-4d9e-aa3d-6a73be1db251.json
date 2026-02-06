@@ -1,0 +1,19 @@
+{
+  "name": "BusinessInventory/receipt-attachments/2026-02-01T16-48-13-320/1769964493320_image.jpg",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332740983,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "M3KQ5bSnk03MnbcOEDMG2tA08zM",
+  "customMetadata": {
+    "originalMediaId": "442aa39a1079389c6d546f76fd78ea12169b5d4a0e2852290f2da5bfba1fd038",
+    "kind": "image"
+  },
+  "timeCreated": "2026-02-05T23:05:40.983Z",
+  "updated": "2026-02-05T23:05:40.983Z",
+  "size": 2978194,
+  "md5Hash": "CovfFYgKL44s6tMVviFbnw==",
+  "crc32c": "2125296410"
+}

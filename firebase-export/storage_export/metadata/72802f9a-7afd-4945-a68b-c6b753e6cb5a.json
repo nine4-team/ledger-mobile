@@ -1,0 +1,19 @@
+{
+  "name": "Unknown_Project/item-images/2026-02-02T23-33-24-855/1770075204855_image.jpg",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332746442,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "5OU7B/sFyOcCZm52/cQPJtoHpt8",
+  "customMetadata": {
+    "originalMediaId": "a8b8ce437f256384e422a3777549abb05e95a55f9f74344b1af7036005686e89",
+    "kind": "image"
+  },
+  "timeCreated": "2026-02-05T23:05:46.442Z",
+  "updated": "2026-02-05T23:05:46.442Z",
+  "size": 402662,
+  "md5Hash": "ecICOWnD34sN6o0uqLDuQQ==",
+  "crc32c": "1166515497"
+}

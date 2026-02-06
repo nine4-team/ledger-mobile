@@ -27,7 +27,7 @@ service cloud.firestore {
 
     // Public-ish user profile document (example).
     match /users/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read, write: if signedIn() && (request.auth.uid == uid || request.auth.uid == resource.data.uid);
     }
 
     // Account document (minimal shape for now).
@@ -43,7 +43,7 @@ service cloud.firestore {
     // Account membership docs.
     // Membership docs are at: accounts/{accountId}/users/{uid}
     match /accounts/{accountId}/users/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && (request.auth.uid == uid || request.auth.uid == resource.data.uid);
       allow create: if false;
 
       // For now, membership updates are server-managed (or future work).

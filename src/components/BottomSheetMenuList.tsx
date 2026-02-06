@@ -19,6 +19,16 @@ export interface BottomSheetMenuListProps {
    * Keeps menus usable on small screens and with long lists.
    */
   maxContentHeight?: number;
+  /**
+   * If true, subactions will close the sheet when pressed. Defaults to true.
+   * Set to false for multi-select filters where users should be able to select multiple options.
+   */
+  closeOnSubactionPress?: boolean;
+  /**
+   * If true, top-level actions will close the sheet when pressed. Defaults to true.
+   * Set to false for multi-select filters where users should be able to select multiple options.
+   */
+  closeOnItemPress?: boolean;
 }
 
 export function BottomSheetMenuList({
@@ -28,6 +38,8 @@ export function BottomSheetMenuList({
   title,
   showLeadingIcons = false,
   maxContentHeight = 420,
+  closeOnSubactionPress = true,
+  closeOnItemPress = true,
 }: BottomSheetMenuListProps) {
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
@@ -78,6 +90,10 @@ export function BottomSheetMenuList({
               selectedSubactionByKey[itemKey] ??
               item.defaultSelectedSubactionKey ??
               subactions[0]?.key;
+            const isDefaultSelection =
+              item.defaultSelectedSubactionKey != null &&
+              currentKey === item.defaultSelectedSubactionKey;
+            const showCheckmark = !item.suppressDefaultCheckmark || !isDefaultSelection;
             const currentLabel = subactions.find((s) => s.key === currentKey)?.label ?? '';
             const isExpanded = expandedMenuKey === itemKey;
 
@@ -103,7 +119,9 @@ export function BottomSheetMenuList({
                         <Text style={[styles.menuSectionValue, { color: uiKitTheme.primary.main }]}>
                           {currentLabel}
                         </Text>
-                        <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
+                        {showCheckmark ? (
+                          <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
+                        ) : null}
                       </>
                     ) : null}
                     <MaterialIcons
@@ -127,7 +145,10 @@ export function BottomSheetMenuList({
                   >
                     {subactions.map((sub, subIdx) => {
                       const showSubDivider = subIdx < subactions.length - 1;
-                      const selectedSub = currentKey === sub.key;
+                      const selectedSub = closeOnSubactionPress
+                        ? currentKey === sub.key
+                        : sub.icon === 'check';
+                      const isSelected = sub.icon === 'check';
 
                       return (
                         <View key={sub.key}>
@@ -135,11 +156,15 @@ export function BottomSheetMenuList({
                             accessibilityRole="button"
                             accessibilityLabel={sub.label}
                             onPress={() => {
-                              setSelectedSubactionByKey((prev) => ({
-                                ...prev,
-                                [itemKey]: sub.key,
-                              }));
-                              onRequestClose();
+                              if (closeOnSubactionPress) {
+                                setSelectedSubactionByKey((prev) => ({
+                                  ...prev,
+                                  [itemKey]: sub.key,
+                                }));
+                              }
+                              if (closeOnSubactionPress) {
+                                onRequestClose();
+                              }
                               sub.onPress();
                             }}
                             style={({ pressed }) => [styles.submenuItem, pressed && { opacity: 0.7 }]}
@@ -147,21 +172,21 @@ export function BottomSheetMenuList({
                             <View style={styles.menuItemLeft}>
                               {showLeadingIcons ? (
                                 <MaterialIcons
-                                  name={sub.icon ?? item.icon ?? 'build'}
+                                  name={sub.icon === 'check' ? 'check' : item.icon ?? 'build'}
                                   size={20}
-                                  color={menuItemIconColor}
+                                  color={sub.icon === 'check' ? uiKitTheme.primary.main : menuItemIconColor}
                                 />
                               ) : null}
                               <Text
                                 style={[
                                   styles.menuItemText,
-                                  { color: selectedSub ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                                  { color: isSelected ? uiKitTheme.primary.main : uiKitTheme.text.primary },
                                 ]}
                               >
                                 {sub.label}
                               </Text>
                             </View>
-                            {selectedSub ? (
+                            {isSelected ? (
                               <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
                             ) : (
                               <View />
@@ -191,7 +216,9 @@ export function BottomSheetMenuList({
             <View key={itemKey}>
               <Pressable
                 onPress={() => {
+                if (closeOnItemPress) {
                   onRequestClose();
+                }
                   item.onPress?.();
                 }}
                 style={({ pressed }) => [styles.menuActionItem, pressed && { opacity: 0.7 }]}

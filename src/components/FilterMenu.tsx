@@ -10,5 +10,14 @@ export type FilterMenuProps = {
 };
 
 export function FilterMenu({ visible, onRequestClose, items, title = 'Filters' }: FilterMenuProps) {
-  return <BottomSheetMenuList visible={visible} onRequestClose={onRequestClose} items={items} title={title} />;
+  return (
+    <BottomSheetMenuList
+      visible={visible}
+      onRequestClose={onRequestClose}
+      items={items}
+      title={title}
+      closeOnSubactionPress={false}
+      closeOnItemPress={false}
+    />
+  );
 }

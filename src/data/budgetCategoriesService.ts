@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   getDocsFromCache,
@@ -11,6 +12,10 @@ import {
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 
+export type BudgetCategoryType = 'standard' | 'general' | 'itemized' | 'fee';
+
+const normalizeBudgetCategoryType = (value?: BudgetCategoryType) => (value === 'general' ? 'standard' : value);
+
 export type BudgetCategory = {
   id: string;
   name: string;
@@ -18,7 +23,7 @@ export type BudgetCategory = {
   isArchived?: boolean | null;
   order?: number | null;
   metadata?: {
-    categoryType?: 'standard' | 'itemized' | 'fee';
+    categoryType?: BudgetCategoryType;
     excludeFromOverallBudget?: boolean;
     legacy?: Record<string, unknown> | null;
   } | null;
@@ -83,22 +88,35 @@ export function mapBudgetCategories(categories: BudgetCategory[]): Record<string
   }, {} as Record<string, BudgetCategory>);
 }
 
-export async function createBudgetCategory(accountId: string, name: string): Promise<string> {
+export async function createBudgetCategory(
+  accountId: string,
+  name: string,
+  options?: {
+    metadata?: BudgetCategory['metadata'];
+  }
+): Promise<string> {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
+  const firestore = db;
   const trimmed = name.trim();
   if (!trimmed) {
     throw new Error('Category name is required.');
   }
   const now = serverTimestamp();
-  const ref = await addDoc(collection(db, `accounts/${accountId}/presets/default/budgetCategories`), {
+  const hasMetadataOption = Object.prototype.hasOwnProperty.call(options ?? {}, 'metadata');
+  const normalizedMetadata =
+    options?.metadata && options.metadata.categoryType
+      ? { ...options.metadata, categoryType: normalizeBudgetCategoryType(options.metadata.categoryType) }
+      : options?.metadata;
+  const ref = await addDoc(collection(firestore, `accounts/${accountId}/presets/default/budgetCategories`), {
     accountId,
     projectId: null,
     name: trimmed,
     slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
     isArchived: false,
     order: Date.now(),
+    ...(hasMetadataOption ? { metadata: normalizedMetadata ?? null } : {}),
     createdAt: now,
     updatedAt: now,
   });
@@ -113,11 +131,18 @@ export async function updateBudgetCategory(
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
+  const firestore = db;
   const now = serverTimestamp();
+  const hasMetadata = Object.prototype.hasOwnProperty.call(data, 'metadata');
+  const nextMetadata =
+    data.metadata && data.metadata.categoryType
+      ? { ...data.metadata, categoryType: normalizeBudgetCategoryType(data.metadata.categoryType) }
+      : data.metadata;
   await setDoc(
-    doc(db, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`),
+    doc(firestore, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`),
     {
       ...data,
+      ...(hasMetadata ? { metadata: nextMetadata ?? null } : {}),
       updatedAt: now,
     },
     { merge: true }
@@ -132,6 +157,13 @@ export async function setBudgetCategoryArchived(
   await updateBudgetCategory(accountId, categoryId, { isArchived });
 }
 
+export async function deleteBudgetCategory(accountId: string, categoryId: string): Promise<void> {
+  if (!isFirebaseConfigured || !db) {
+    throw new Error('Firebase is not configured.');
+  }
+  await deleteDoc(doc(db, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`));
+}
+
 export async function setBudgetCategoryOrder(
   accountId: string,
   orderedIds: string[]
@@ -139,11 +171,12 @@ export async function setBudgetCategoryOrder(
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
+  const firestore = db;
   const now = serverTimestamp();
   await Promise.all(
     orderedIds.map((id, index) =>
       setDoc(
-        doc(db, `accounts/${accountId}/presets/default/budgetCategories/${id}`),
+        doc(firestore, `accounts/${accountId}/presets/default/budgetCategories/${id}`),
         {
           order: index,
           updatedAt: now,

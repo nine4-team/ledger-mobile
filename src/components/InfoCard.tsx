@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import type { TextInputProps, ViewStyle } from 'react-native';
 
-import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '@/theme/ThemeProvider';
 import { getTextInputStyle } from '../ui/styles/forms';
 import { layout } from '../ui/styles/layout';
 import { getCardStyle, surface } from '../ui/styles/surfaces';

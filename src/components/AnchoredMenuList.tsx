@@ -21,6 +21,7 @@ export type AnchoredMenuItem = {
   icon?: MenuIconName;
   subactions?: AnchoredMenuSubaction[];
   defaultSelectedSubactionKey?: string;
+  suppressDefaultCheckmark?: boolean;
 };
 
 export interface AnchoredMenuListProps {
@@ -77,6 +78,10 @@ export function AnchoredMenuList({
             selectedSubactionByKey[itemKey] ??
             item.defaultSelectedSubactionKey ??
             subactions[0]?.key;
+          const isDefaultSelection =
+            item.defaultSelectedSubactionKey != null &&
+            currentKey === item.defaultSelectedSubactionKey;
+          const showCheckmark = !item.suppressDefaultCheckmark || !isDefaultSelection;
           const currentLabel = subactions.find((s) => s.key === currentKey)?.label ?? '';
           const isExpanded = expandedMenuKey === itemKey;
 
@@ -150,7 +155,7 @@ export function AnchoredMenuList({
                               {sub.label}
                             </Text>
                           </View>
-                          {selectedSub ? (
+                          {selectedSub && showCheckmark ? (
                             <MaterialIcons name="check" size={20} color={uiKitTheme.text.primary} />
                           ) : (
                             <View />

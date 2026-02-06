@@ -95,6 +95,7 @@ export function TopHeader({
         style={[
           styles.header,
           getScreenHeaderStyle(uiKitTheme, insets),
+          { backgroundColor: uiKitTheme.background.screen },
           hideBottomBorder && styles.headerNoBorder,
         ]}
       >

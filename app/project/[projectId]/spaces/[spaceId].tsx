@@ -490,13 +490,20 @@ export default function SpaceDetailScreen() {
               <View style={styles.list}>
                 {space.images.map((image) => (
                   <View key={image.url} style={styles.imageRow}>
-                    {resolveAttachmentUri(image) ? (
-                      <Image source={{ uri: resolveAttachmentUri(image) ?? image.url }} style={styles.spaceImage} />
-                    ) : (
-                      <View style={styles.spaceImage}>
-                        <AppText variant="caption">Offline image</AppText>
-                      </View>
-                    )}
+                    {(() => {
+                      const resolved = resolveAttachmentUri(image);
+                      if (resolved) {
+                        return <Image source={{ uri: resolved }} style={styles.spaceImage} />;
+                      }
+                      if (!image.url.startsWith('offline://')) {
+                        return <Image source={{ uri: image.url }} style={styles.spaceImage} />;
+                      }
+                      return (
+                        <View style={styles.spaceImage}>
+                          <AppText variant="caption">Offline image</AppText>
+                        </View>
+                      );
+                    })()}
                     <View style={styles.actions}>
                       <AppButton
                         title={image.isPrimary ? 'Primary' : 'Set primary'}

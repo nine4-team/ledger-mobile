@@ -53,6 +53,32 @@ function stablePartition<T>(arr: T[], predicate: (item: T) => boolean) {
   return yes.concat(no);
 }
 
+function areIdsEqual(a: Id[], b: Id[]) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function areItemsEqual<T>(a: T[], b: T[]) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+  }
+  return true;
+}
+
+function haveSameIdSet(a: Id[], b: Id[]) {
+  if (a.length !== b.length) return false;
+  const setA = new Set(a);
+  if (setA.size !== a.length) return false;
+  for (const id of b) {
+    if (!setA.has(id)) return false;
+  }
+  return true;
+}
+
 export function DraggableCardList<TItem>({
   items,
   getItemId,
@@ -69,14 +95,47 @@ export function DraggableCardList<TItem>({
 
   const [ordered, setOrdered] = useState<TItem[]>(items);
   const orderedRef = useRef(ordered);
+  const pendingOrderRef = useRef<Id[] | null>(null);
+  const ignoreNextAnimationRef = useRef(false);
 
   useEffect(() => {
     orderedRef.current = ordered;
   }, [ordered]);
 
   useEffect(() => {
-    setOrdered(bubbleNonDraggableToEnd(items));
-  }, [items]);
+    const nextOrdered = bubbleNonDraggableToEnd(items);
+    
+    // Optimization: If the incoming items match our current state exactly (order and content),
+    // skip the update. This prevents re-renders that can cause visual glitches (like shrinking/flickering)
+    // when the backend syncs back the state we just optimisticly updated.
+    if (areItemsEqual(nextOrdered, ordered)) {
+      // Even if items are equal, we might need to clear the pending flag if it matches.
+      // (e.g. we dragged, set pending, and now backend confirmed it)
+      const nextIds = nextOrdered.map(getItemId);
+      if (pendingOrderRef.current && areIdsEqual(nextIds, pendingOrderRef.current)) {
+        pendingOrderRef.current = null;
+      }
+      return;
+    }
+
+    const nextIds = nextOrdered.map(getItemId);
+    const pendingIds = pendingOrderRef.current;
+    if (pendingIds) {
+      if (areIdsEqual(nextIds, pendingIds)) {
+        pendingOrderRef.current = null;
+        // If IDs match pending, and we didn't return above, it means content differs.
+        // We must update.
+        ignoreNextAnimationRef.current = true;
+        setOrdered(nextOrdered);
+        return;
+      }
+      if (haveSameIdSet(nextIds, pendingIds)) {
+        return;
+      }
+      pendingOrderRef.current = null;
+    }
+    setOrdered(nextOrdered);
+  }, [items, getItemId]);
 
   const [positions, setPositions] = useState<Map<Id, Animated.Value>>(() => {
     const m = new Map<Id, Animated.Value>();
@@ -91,9 +150,24 @@ export function DraggableCardList<TItem>({
   const gestureStartPageYRef = useRef(0);
   const draggingRef = useRef(false);
 
+  const prevIdsRef = useRef<Id[]>(ordered.map(getItemId));
+
   // Sync / animate positions whenever order changes.
   useEffect(() => {
     const activeId = activeIdRef.current;
+    
+    // Check if the order actually changed to avoid restarting animations
+    // when only item content changed but position is same.
+    const currentIds = ordered.map(getItemId);
+    const orderChanged = !areIdsEqual(currentIds, prevIdsRef.current);
+    
+    if (ignoreNextAnimationRef.current) {
+      ignoreNextAnimationRef.current = false;
+      prevIdsRef.current = currentIds;
+      return;
+    }
+
+    prevIdsRef.current = currentIds;
 
     setPositions((prev) => {
       let changed = false;
@@ -122,6 +196,16 @@ export function DraggableCardList<TItem>({
         if (id === activeId) return;
         const v = next.get(id);
         if (!v) return;
+        
+        // Skip animation if the order of IDs hasn't changed.
+        // This prevents "microadjustments" when the backend syncs the same order back.
+        if (!orderChanged && !changed) {
+          // Ensure it's at the right spot though (in case of initialization or slight drift?)
+          // Actually, if we skip, we trust it's already there.
+          // But if we just mounted, 'changed' would be true (new values added).
+          return;
+        }
+
         Animated.spring(v, {
           toValue: idx * itemHeight,
           useNativeDriver: false,
@@ -205,6 +289,7 @@ export function DraggableCardList<TItem>({
       activeIdRef.current = null;
       setActiveId(null);
       setDragging(false);
+      pendingOrderRef.current = orderedRef.current.map(getItemId);
       onReorder?.(orderedRef.current);
       return;
     }
@@ -213,7 +298,9 @@ export function DraggableCardList<TItem>({
       activeIdRef.current = null;
       setActiveId(null);
       setDragging(false);
-      onReorder?.(bubbleNonDraggableToEnd(orderedRef.current));
+      const nextOrder = bubbleNonDraggableToEnd(orderedRef.current);
+      pendingOrderRef.current = nextOrder.map(getItemId);
+      onReorder?.(nextOrder);
     });
   };
 

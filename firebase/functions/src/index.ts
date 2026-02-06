@@ -787,13 +787,17 @@ type CreateProjectResponse = {
   projectId: string;
 };
 
+type BudgetCategoryType = 'standard' | 'general' | 'itemized' | 'fee';
+
+const normalizeBudgetCategoryType = (value?: BudgetCategoryType) => (value === 'general' ? 'standard' : value);
+
 type BudgetCategorySeed = {
   id: string;
   name: string;
   slug: string;
   order: number;
   metadata?: {
-    categoryType?: 'standard' | 'itemized' | 'fee';
+    categoryType?: BudgetCategoryType;
     excludeFromOverallBudget?: boolean;
   } | null;
 };
@@ -847,6 +851,9 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
       const seedRef = collectionRef.doc(seed.id);
       const seedSnap = await tx.get(seedRef);
       if (seedSnap.exists) continue;
+      const normalizedMetadata = seed.metadata?.categoryType
+        ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
+        : seed.metadata ?? null;
       tx.set(
         seedRef,
         {
@@ -857,7 +864,7 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
           slug: seed.slug,
           isArchived: false,
           order: seed.order,
-          metadata: seed.metadata ?? null,
+          metadata: normalizedMetadata,
           createdAt: now,
           updatedAt: now,
           deletedAt: null,

@@ -23,6 +23,7 @@ export default function ProjectsScreen() {
       title="Projects"
       tabs={PROJECT_TABS}
       hideBackButton={true}
+      includeBottomInset={false}
       infoContent={{
         title: 'Projects',
         message: 'Manage your projects here. Create new projects, view active and archived projects, and track budgets.',
@@ -244,11 +245,30 @@ function ProjectsList() {
                       },
                     ]}
                   >
-                    {project.mainImageUrl ? (
+                    {project.mainImageUrl && !project.mainImageUrl.startsWith('offline://') ? (
                       <Image
                         source={{ uri: resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' }) ?? project.mainImageUrl }}
                         style={styles.projectImage}
                       />
+                    ) : project.mainImageUrl && project.mainImageUrl.startsWith('offline://') ? (
+                      (() => {
+                        const resolved = resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' });
+                        return resolved ? (
+                          <Image
+                            source={{ uri: resolved }}
+                            style={styles.projectImage}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.projectImage,
+                              { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface, alignItems: 'center', justifyContent: 'center' },
+                            ]}
+                          >
+                            <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>Offline</AppText>
+                          </View>
+                        );
+                      })()
                     ) : (
                       <View
                         style={[

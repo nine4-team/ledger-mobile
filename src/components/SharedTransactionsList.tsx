@@ -41,14 +41,14 @@ type TransactionRow = {
 };
 
 type TransactionFilters = {
-  status?: 'all' | 'pending' | 'completed' | 'canceled' | 'inventory-only';
-  reimbursement?: 'all' | 'we-owe' | 'client-owes';
-  receipt?: 'all' | 'yes' | 'no';
-  type?: 'all' | 'purchase' | 'return';
-  budgetCategoryId?: string;
-  completeness?: 'all' | 'needs-review' | 'complete';
-  source?: string;
-  purchasedBy?: string;
+  status?: 'all' | 'pending' | 'completed' | 'canceled' | 'inventory-only' | Array<'pending' | 'completed' | 'canceled' | 'inventory-only'>;
+  reimbursement?: 'all' | 'we-owe' | 'client-owes' | Array<'we-owe' | 'client-owes'>;
+  receipt?: 'all' | 'yes' | 'no' | Array<'yes' | 'no'>;
+  type?: 'all' | 'purchase' | 'return' | Array<'purchase' | 'return'>;
+  budgetCategoryId?: string | string[];
+  completeness?: 'all' | 'needs-review' | 'complete' | Array<'needs-review' | 'complete'>;
+  source?: string | string[];
+  purchasedBy?: string | string[];
 };
 
 const SORT_MODES = ['date-desc', 'date-asc', 'created-desc', 'created-asc', 'source', 'amount'] as const;
@@ -213,51 +213,103 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
 
     const filteredByFilters = filteredTx.filter((row) => {
       const tx = row.transaction;
+      
+      // Status filter
       if (activeFilters.status && activeFilters.status !== 'all') {
-        if (activeFilters.status === 'inventory-only' && tx.projectId !== null) return false;
-        if (activeFilters.status !== 'inventory-only' && tx.status !== activeFilters.status) return false;
+        const statusValues = Array.isArray(activeFilters.status) ? activeFilters.status : [activeFilters.status];
+        const matches = statusValues.some((status) => {
+          if (status === 'inventory-only') return tx.projectId === null;
+          return tx.status === status;
+        });
+        if (!matches) return false;
       }
-      if (activeFilters.type && activeFilters.type !== 'all' && tx.type !== activeFilters.type) return false;
+      
+      // Type filter
+      if (activeFilters.type && activeFilters.type !== 'all') {
+        const typeValues = Array.isArray(activeFilters.type) ? activeFilters.type : [activeFilters.type];
+        if (!typeValues.includes(tx.type as any)) return false;
+      }
+      
+      // Receipt filter
       const receiptFilter = (activeFilters.receipt === ('no-email' as any) ? 'no' : activeFilters.receipt) as
         | 'all'
         | 'yes'
         | 'no'
+        | Array<'yes' | 'no'>
         | undefined;
       if (receiptFilter && receiptFilter !== 'all') {
-        if (receiptFilter === 'yes' && !tx.hasEmailReceipt) return false;
-        if (receiptFilter === 'no' && tx.hasEmailReceipt) return false;
+        const receiptValues = Array.isArray(receiptFilter) ? receiptFilter : [receiptFilter];
+        const matches = receiptValues.some((receipt) => {
+          if (receipt === 'yes') return tx.hasEmailReceipt;
+          if (receipt === 'no') return !tx.hasEmailReceipt;
+          return false;
+        });
+        if (!matches) return false;
       }
+      
+      // Reimbursement filter
       if (activeFilters.reimbursement && activeFilters.reimbursement !== 'all') {
-        const match =
-          activeFilters.reimbursement === 'we-owe'
-            ? 'owed-to-company'
-            : activeFilters.reimbursement === 'client-owes'
-              ? 'owed-to-client'
-              : '';
-        if (match && tx.reimbursementType !== match) return false;
+        const reimbursementValues = Array.isArray(activeFilters.reimbursement)
+          ? activeFilters.reimbursement
+          : [activeFilters.reimbursement];
+        const matches = reimbursementValues.some((reimbursement) => {
+          const match =
+            reimbursement === 'we-owe'
+              ? 'owed-to-company'
+              : reimbursement === 'client-owes'
+                ? 'owed-to-client'
+                : '';
+          return match && tx.reimbursementType === match;
+        });
+        if (!matches) return false;
       }
+      
+      // Completeness filter
       if (activeFilters.completeness && activeFilters.completeness !== 'all') {
-        if (activeFilters.completeness === 'needs-review' && !tx.needsReview) return false;
-        if (activeFilters.completeness === 'complete' && tx.needsReview) return false;
+        const completenessValues = Array.isArray(activeFilters.completeness)
+          ? activeFilters.completeness
+          : [activeFilters.completeness];
+        const matches = completenessValues.some((completeness) => {
+          if (completeness === 'needs-review') return tx.needsReview;
+          if (completeness === 'complete') return !tx.needsReview;
+          return false;
+        });
+        if (!matches) return false;
       }
+      
+      // Budget category filter
       if (activeFilters.budgetCategoryId) {
+        const categoryIds = Array.isArray(activeFilters.budgetCategoryId)
+          ? activeFilters.budgetCategoryId
+          : [activeFilters.budgetCategoryId];
         if (isCanonicalTransactionId(tx.id)) {
           const matchingItem = items.find(
-            (item) => item.transactionId === tx.id && item.inheritedBudgetCategoryId === activeFilters.budgetCategoryId
+            (item) => item.transactionId === tx.id && categoryIds.includes(item.inheritedBudgetCategoryId ?? '')
           );
           if (!matchingItem) return false;
-        } else if (tx.budgetCategoryId !== activeFilters.budgetCategoryId) {
-          return false;
+        } else {
+          if (!categoryIds.includes(tx.budgetCategoryId ?? '')) return false;
         }
       }
-    if (activeFilters.source) {
-      const value = tx.source?.trim().toLowerCase() ?? '';
-      if (value !== activeFilters.source.trim().toLowerCase()) return false;
-    }
-    if (activeFilters.purchasedBy) {
-      const value = tx.purchasedBy?.trim().toLowerCase() ?? '';
-      if (value !== activeFilters.purchasedBy.trim().toLowerCase()) return false;
-    }
+      
+      // Source filter
+      if (activeFilters.source) {
+        const sourceValues = Array.isArray(activeFilters.source) ? activeFilters.source : [activeFilters.source];
+        const txSource = tx.source?.trim().toLowerCase() ?? '';
+        const matches = sourceValues.some((source) => txSource === source.trim().toLowerCase());
+        if (!matches) return false;
+      }
+      
+      // Purchased by filter
+      if (activeFilters.purchasedBy) {
+        const purchasedByValues = Array.isArray(activeFilters.purchasedBy)
+          ? activeFilters.purchasedBy
+          : [activeFilters.purchasedBy];
+        const txPurchasedBy = tx.purchasedBy?.trim().toLowerCase() ?? '';
+        const matches = purchasedByValues.some((purchasedBy) => txPurchasedBy === purchasedBy.trim().toLowerCase());
+        if (!matches) return false;
+      }
+      
       return true;
     });
 
@@ -422,70 +474,203 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       label: cat.name,
     }));
 
+    // Helper to normalize filter values to arrays
+    const getStatusValues = () => {
+      const value = activeFilters.status;
+      if (!value || value === 'all') return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getReimbursementValues = () => {
+      const value = activeFilters.reimbursement;
+      if (!value || value === 'all') return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getReceiptValues = () => {
+      const value = activeFilters.receipt;
+      if (!value || value === 'all') return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getTypeValues = () => {
+      const value = activeFilters.type;
+      if (!value || value === 'all') return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getCompletenessValues = () => {
+      const value = activeFilters.completeness;
+      if (!value || value === 'all') return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getCategoryValues = () => {
+      const value = activeFilters.budgetCategoryId;
+      if (!value) return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getSourceValues = () => {
+      const value = activeFilters.source;
+      if (!value) return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    const getPurchasedByValues = () => {
+      const value = activeFilters.purchasedBy;
+      if (!value) return [];
+      return Array.isArray(value) ? value : [value];
+    };
+
     return [
       {
         key: 'status',
         label: 'Status',
-        defaultSelectedSubactionKey: activeFilters.status ?? 'all',
-        subactions: statusOptions.map((opt) => ({
-          key: opt,
-          label: statusLabels[opt] ?? opt,
-          onPress: () => setFilters({ ...activeFilters, status: opt }),
-        })),
+        suppressDefaultCheckmark: true,
+        subactions: statusOptions.map((opt) => {
+          const selectedValues = getStatusValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          return {
+            key: opt,
+            label: statusLabels[opt] ?? opt,
+            icon: isSelected ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, status: 'all' });
+                return;
+              }
+              const current = getStatusValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, status: next.length > 0 ? next : 'all' });
+            },
+          };
+        }),
       },
       {
         key: 'reimbursement',
         label: 'Reimbursement',
-        defaultSelectedSubactionKey: activeFilters.reimbursement ?? 'all',
-        subactions: (['all', 'we-owe', 'client-owes'] as const).map((opt) => ({
-          key: opt,
-          label: reimbursementLabels[opt] ?? opt,
-          onPress: () => setFilters({ ...activeFilters, reimbursement: opt }),
-        })),
+        suppressDefaultCheckmark: true,
+        subactions: (['all', 'we-owe', 'client-owes'] as const).map((opt) => {
+          const selectedValues = getReimbursementValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          return {
+            key: opt,
+            label: reimbursementLabels[opt] ?? opt,
+            icon: isSelected ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, reimbursement: 'all' });
+                return;
+              }
+              const current = getReimbursementValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, reimbursement: next.length > 0 ? next : 'all' });
+            },
+          };
+        }),
       },
       {
         key: 'receipt',
         label: 'Email Receipt',
-        defaultSelectedSubactionKey: activeFilters.receipt ?? 'all',
-        subactions: (['all', 'yes', 'no'] as const).map((opt) => ({
-          key: opt,
-          label: receiptLabels[opt] ?? opt,
-          onPress: () => setFilters({ ...activeFilters, receipt: opt }),
-        })),
+        suppressDefaultCheckmark: true,
+        subactions: (['all', 'yes', 'no'] as const).map((opt) => {
+          const selectedValues = getReceiptValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          return {
+            key: opt,
+            label: receiptLabels[opt] ?? opt,
+            icon: isSelected ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, receipt: 'all' });
+                return;
+              }
+              const current = getReceiptValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, receipt: next.length > 0 ? next : 'all' });
+            },
+          };
+        }),
       },
       {
         key: 'type',
         label: 'Transaction Type',
-        defaultSelectedSubactionKey: activeFilters.type ?? 'all',
-        subactions: (['all', 'purchase', 'return'] as const).map((opt) => ({
-          key: opt,
-          label: typeLabels[opt] ?? opt,
-          onPress: () => setFilters({ ...activeFilters, type: opt }),
-        })),
+        suppressDefaultCheckmark: true,
+        subactions: (['all', 'purchase', 'return'] as const).map((opt) => {
+          const selectedValues = getTypeValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          return {
+            key: opt,
+            label: typeLabels[opt] ?? opt,
+            icon: isSelected ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, type: 'all' });
+                return;
+              }
+              const current = getTypeValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, type: next.length > 0 ? next : 'all' });
+            },
+          };
+        }),
       },
       {
         key: 'completeness',
         label: 'Completeness',
-        defaultSelectedSubactionKey: activeFilters.completeness ?? 'all',
-        subactions: (['all', 'needs-review', 'complete'] as const).map((opt) => ({
-          key: opt,
-          label: completenessLabels[opt] ?? opt,
-          onPress: () => setFilters({ ...activeFilters, completeness: opt }),
-        })),
+        suppressDefaultCheckmark: true,
+        subactions: (['all', 'needs-review', 'complete'] as const).map((opt) => {
+          const selectedValues = getCompletenessValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          return {
+            key: opt,
+            label: completenessLabels[opt] ?? opt,
+            icon: isSelected ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, completeness: 'all' });
+                return;
+              }
+              const current = getCompletenessValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, completeness: next.length > 0 ? next : 'all' });
+            },
+          };
+        }),
       },
       ...(categoryOptions.length > 0
         ? [
             {
               key: 'budget-category',
               label: 'Budget Category',
-              defaultSelectedSubactionKey: activeFilters.budgetCategoryId ?? 'all',
+              suppressDefaultCheckmark: true,
               subactions: [
-                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, budgetCategoryId: undefined }) },
-                ...categoryOptions.map((opt) => ({
-                  key: opt.key,
-                  label: opt.label,
-                  onPress: () => setFilters({ ...activeFilters, budgetCategoryId: opt.key }),
-                })),
+                {
+                  key: 'all',
+                  label: 'All',
+                  icon: getCategoryValues().length === 0 ? 'check' : undefined,
+                  onPress: () => setFilters({ ...activeFilters, budgetCategoryId: undefined }),
+                },
+                ...categoryOptions.map((opt) => {
+                  const selectedValues = getCategoryValues();
+                  const isSelected = selectedValues.includes(opt.key);
+                  return {
+                    key: opt.key,
+                    label: opt.label,
+                    icon: isSelected ? 'check' : undefined,
+                    onPress: () => {
+                      const current = getCategoryValues();
+                      const next = current.includes(opt.key)
+                        ? current.filter((v) => v !== opt.key)
+                        : [...current, opt.key];
+                      setFilters({ ...activeFilters, budgetCategoryId: next.length > 0 ? next : undefined });
+                    },
+                  };
+                }),
               ],
             },
           ]
@@ -495,14 +680,30 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             {
               key: 'purchased-by',
               label: 'Purchased By',
-              defaultSelectedSubactionKey: activeFilters.purchasedBy ?? 'all',
+              suppressDefaultCheckmark: true,
               subactions: [
-                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, purchasedBy: undefined }) },
-                ...purchasedByOptions.map((opt) => ({
-                  key: opt,
-                  label: opt,
-                  onPress: () => setFilters({ ...activeFilters, purchasedBy: opt }),
-                })),
+                {
+                  key: 'all',
+                  label: 'All',
+                  icon: getPurchasedByValues().length === 0 ? 'check' : undefined,
+                  onPress: () => setFilters({ ...activeFilters, purchasedBy: undefined }),
+                },
+                ...purchasedByOptions.map((opt) => {
+                  const selectedValues = getPurchasedByValues();
+                  const isSelected = selectedValues.includes(opt);
+                  return {
+                    key: opt,
+                    label: opt,
+                    icon: isSelected ? 'check' : undefined,
+                    onPress: () => {
+                      const current = getPurchasedByValues();
+                      const next = current.includes(opt)
+                        ? current.filter((v) => v !== opt)
+                        : [...current, opt];
+                      setFilters({ ...activeFilters, purchasedBy: next.length > 0 ? next : undefined });
+                    },
+                  };
+                }),
               ],
             },
           ]
@@ -512,14 +713,30 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             {
               key: 'source',
               label: 'Source',
-              defaultSelectedSubactionKey: activeFilters.source ?? 'all',
+              suppressDefaultCheckmark: true,
               subactions: [
-                { key: 'all', label: 'All', onPress: () => setFilters({ ...activeFilters, source: undefined }) },
-                ...sourceOptions.map((opt) => ({
-                  key: opt,
-                  label: opt,
-                  onPress: () => setFilters({ ...activeFilters, source: opt }),
-                })),
+                {
+                  key: 'all',
+                  label: 'All',
+                  icon: getSourceValues().length === 0 ? 'check' : undefined,
+                  onPress: () => setFilters({ ...activeFilters, source: undefined }),
+                },
+                ...sourceOptions.map((opt) => {
+                  const selectedValues = getSourceValues();
+                  const isSelected = selectedValues.includes(opt);
+                  return {
+                    key: opt,
+                    label: opt,
+                    icon: isSelected ? 'check' : undefined,
+                    onPress: () => {
+                      const current = getSourceValues();
+                      const next = current.includes(opt)
+                        ? current.filter((v) => v !== opt)
+                        : [...current, opt];
+                      setFilters({ ...activeFilters, source: next.length > 0 ? next : undefined });
+                    },
+                  };
+                }),
               ],
             },
           ]
@@ -576,15 +793,49 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   }, [budgetCategories, items, scopeConfig.capabilities?.canExportCsv, scopeConfig.scope, transactions]);
 
   const isSortActive = sortMode !== DEFAULT_SORT;
-  const isFilterActive =
-    (activeFilters.status && activeFilters.status !== 'all') ||
-    (activeFilters.reimbursement && activeFilters.reimbursement !== 'all') ||
-    (activeFilters.receipt && activeFilters.receipt !== 'all') ||
-    (activeFilters.type && activeFilters.type !== 'all') ||
-    (activeFilters.completeness && activeFilters.completeness !== 'all') ||
-    Boolean(activeFilters.budgetCategoryId) ||
-    Boolean(activeFilters.source) ||
-    Boolean(activeFilters.purchasedBy);
+  const isFilterActive = (() => {
+    if (activeFilters.status && activeFilters.status !== 'all') {
+      const statusValues = Array.isArray(activeFilters.status) ? activeFilters.status : [activeFilters.status];
+      if (statusValues.length > 0) return true;
+    }
+    if (activeFilters.reimbursement && activeFilters.reimbursement !== 'all') {
+      const reimbursementValues = Array.isArray(activeFilters.reimbursement)
+        ? activeFilters.reimbursement
+        : [activeFilters.reimbursement];
+      if (reimbursementValues.length > 0) return true;
+    }
+    if (activeFilters.receipt && activeFilters.receipt !== 'all') {
+      const receiptValues = Array.isArray(activeFilters.receipt) ? activeFilters.receipt : [activeFilters.receipt];
+      if (receiptValues.length > 0) return true;
+    }
+    if (activeFilters.type && activeFilters.type !== 'all') {
+      const typeValues = Array.isArray(activeFilters.type) ? activeFilters.type : [activeFilters.type];
+      if (typeValues.length > 0) return true;
+    }
+    if (activeFilters.completeness && activeFilters.completeness !== 'all') {
+      const completenessValues = Array.isArray(activeFilters.completeness)
+        ? activeFilters.completeness
+        : [activeFilters.completeness];
+      if (completenessValues.length > 0) return true;
+    }
+    if (activeFilters.budgetCategoryId) {
+      const categoryValues = Array.isArray(activeFilters.budgetCategoryId)
+        ? activeFilters.budgetCategoryId
+        : [activeFilters.budgetCategoryId];
+      if (categoryValues.length > 0) return true;
+    }
+    if (activeFilters.source) {
+      const sourceValues = Array.isArray(activeFilters.source) ? activeFilters.source : [activeFilters.source];
+      if (sourceValues.length > 0) return true;
+    }
+    if (activeFilters.purchasedBy) {
+      const purchasedByValues = Array.isArray(activeFilters.purchasedBy)
+        ? activeFilters.purchasedBy
+        : [activeFilters.purchasedBy];
+      if (purchasedByValues.length > 0) return true;
+    }
+    return false;
+  })();
 
   return (
     <View style={styles.container}>

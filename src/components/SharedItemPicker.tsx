@@ -10,6 +10,7 @@ import { getTextInputStyle } from '../ui/styles/forms';
 import { getTextSecondaryStyle } from '../ui/styles/typography';
 import type { ScopedItem } from '../data/scopedListData';
 import type { Item } from '../data/itemsService';
+import { resolveAttachmentUri } from '../offline/media';
 
 export type ItemPickerTab = string;
 
@@ -88,6 +89,17 @@ export type SharedItemPickerProps = {
    */
   showSelectAll?: boolean;
 };
+
+function getItemLabel(item: ScopedItem | Item) {
+  return item.name?.trim() || item.description?.trim() || 'Item';
+}
+
+function getPrimaryImage(item: ScopedItem | Item) {
+  const images = item.images ?? [];
+  const primary = images.find((image) => image.isPrimary) ?? images[0];
+  if (!primary) return undefined;
+  return resolveAttachmentUri(primary) ?? primary.url;
+}
 
 /**
  * Shared component for picking items to add to transactions or spaces.
@@ -192,21 +204,36 @@ export function SharedItemPicker({
         {pickerGroups.map(([label, groupItems]) => {
           const groupEligibleIds = groupItems.filter((item) => eligibilityCheck.isEligible(item)).map((item) => item.id);
           const groupAllSelected = groupEligibleIds.length > 0 && groupEligibleIds.every((id) => selectedIds.includes(id));
+          const summaryItem = groupItems.find((item) => Boolean(getPrimaryImage(item))) ?? groupItems[0];
+          const summaryThumbnailUri = summaryItem ? getPrimaryImage(summaryItem) : undefined;
 
           if (groupItems.length > 1) {
             return (
               <GroupedItemCard
                 key={label}
-                summary={{ description: label }}
+                summary={{
+                  description: label,
+                  sku: summaryItem?.sku ?? undefined,
+                  sourceLabel: summaryItem?.source ?? undefined,
+                  locationLabel: summaryItem?.spaceId ?? undefined,
+                  notes: summaryItem?.notes ?? undefined,
+                  thumbnailUri: summaryThumbnailUri,
+                }}
                 countLabel={`×${groupItems.length}`}
                 items={groupItems.map((item) => {
-                  const description = item.name?.trim() || item.description || 'Item';
+                  const description = getItemLabel(item);
                   const locked = !eligibilityCheck.isEligible(item);
                   const statusLabel = eligibilityCheck.getStatusLabel?.(item);
                   const selected = selectedIds.includes(item.id);
+                  const thumbnailUri = getPrimaryImage(item);
 
                   return {
                     description,
+                    sku: item.sku ?? undefined,
+                    sourceLabel: item.source ?? undefined,
+                    locationLabel: item.spaceId ?? undefined,
+                    notes: item.notes ?? undefined,
+                    thumbnailUri,
                     selected,
                     onSelectedChange: locked
                       ? undefined
@@ -235,7 +262,7 @@ export function SharedItemPicker({
           }
 
           const [only] = groupItems;
-          const description = only.name?.trim() || only.description || 'Item';
+          const description = getItemLabel(only);
           const locked = !eligibilityCheck.isEligible(only);
           const selected = selectedIds.includes(only.id);
           const statusLabel = eligibilityCheck.getStatusLabel?.(only);
@@ -244,6 +271,11 @@ export function SharedItemPicker({
             <ItemCard
               key={only.id}
               description={description}
+              sku={only.sku ?? undefined}
+              sourceLabel={only.source ?? undefined}
+              locationLabel={only.spaceId ?? undefined}
+              notes={only.notes ?? undefined}
+              thumbnailUri={getPrimaryImage(only)}
               selected={selected}
               onSelectedChange={locked ? undefined : (next) => handleItemToggle(only.id)}
               onPress={locked ? undefined : () => handleItemToggle(only.id)}

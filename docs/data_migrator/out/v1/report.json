@@ -1,0 +1,185 @@
+{
+  "counts": {
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/items": 785,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/lineageEdges": 37,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/budgetCategories": 8,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/presets/default/vendors": 1,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/profile": 1,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/projects": 2,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/projects/0ee567e7-ae7b-4816-910f-2296368a6e60/budgetCategories": 8,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/projects/c093c11b-6c1e-4c54-9df2-e7ee3c74a5f0/budgetCategories": 6,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/spaces": 1,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/transactions": 175,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/users": 1,
+    "accounts/1dd4fd75-8eea-4f7a-98e7-bf45b987ae94/users/4ef35958-597c-4aea-b99e-1ef62352a72d/projectPreferences": 2
+  },
+  "errors": [],
+  "meta": {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "generatedAt": "2026-02-04T20:45:23.037Z",
+    "migrationVersion": "v1",
+    "sourceExport": "ledger-server-export-1dd4fd75-8eea-4f7a-98e7-bf45b987ae94-2026-02-04T20_45_23.037Z.json"
+  },
+  "totals": {
+    "documents": 1027,
+    "errors": 0,
+    "warnings": 17
+  },
+  "truncated": {
+    "errors": false,
+    "warnings": false
+  },
+  "warnings": [
+    {
+      "code": "invalid_money_value",
+      "details": {
+        "itemId": "I-1769043223682-b693"
+      },
+      "message": "Item contains invalid money values; set to null."
+    },
+    {
+      "code": "missing_storage_object",
+      "details": {
+        "bucket": "item-images",
+        "key": "Unknown_Project/item-images/2026-02-02T23-22-56-610/1770074576610_image.jpg",
+        "localPath": "docs/data_migrator/ledger-server-export-1dd4fd75-8eea-4f7a-98e7-bf45b987ae94-storage-2026-02-04T20_45_23.037Z/item-images/Unknown_Project/item-images/2026-02-02T23-22-56-610/1770074576610_image.jpg"
+      },
+      "message": "Media file not found in storage export directory."
+    },
+    {
+      "code": "missing_storage_object",
+      "details": {
+        "bucket": "item-images",
+        "key": "Unknown_Project/item-images/2026-02-02T23-22-56-610/1770074576610_image.jpg",
+        "localPath": "docs/data_migrator/ledger-server-export-1dd4fd75-8eea-4f7a-98e7-bf45b987ae94-storage-2026-02-04T20_45_23.037Z/item-images/Unknown_Project/item-images/2026-02-02T23-22-56-610/1770074576610_image.jpg"
+      },
+      "message": "Media file not found in storage export directory."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "a96365b3-961c-4c85-b5c6-efd507f8c6ba",
+        "field": "from_transaction_id",
+        "ref": "e013cfe7-afde-4393-882f-f60eae396288"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "28f1a3c4-1b2c-4152-896c-50840f525cbf",
+        "field": "from_transaction_id",
+        "ref": "e013cfe7-afde-4393-882f-f60eae396288"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "9443c729-da3e-4f39-a5be-4cf8e5308ce0",
+        "field": "from_transaction_id",
+        "ref": "e013cfe7-afde-4393-882f-f60eae396288"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "20f9fdd3-456c-43b5-ba3b-147977ccc2e9",
+        "field": "from_transaction_id",
+        "ref": "e013cfe7-afde-4393-882f-f60eae396288"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "61ecfab6-ce70-4b5f-a479-70a01be9e1b6",
+        "field": "from_transaction_id",
+        "ref": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "c0a6d660-469b-4856-9a33-812646cb7b4f",
+        "field": "from_transaction_id",
+        "ref": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "ac06ede3-2e01-469c-94e1-380a91c7d9e0",
+        "field": "from_transaction_id",
+        "ref": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "9d626945-6ef9-46e9-9f2a-384998bc7758",
+        "field": "from_transaction_id",
+        "ref": "cd7a4107-03eb-45ee-aeba-5f4fff6e6251"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "66f9f987-f90d-4a48-8a05-f77588861984",
+        "field": "from_transaction_id",
+        "ref": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "cf11ca40-d70e-41b8-9346-16e2c46a5368",
+        "field": "from_transaction_id",
+        "ref": "aabd966b-0bc5-470e-8d40-8d77bd97b9a4"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "acccda2d-4145-42d0-a9c0-c55458b08789",
+        "field": "from_transaction_id",
+        "ref": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "3e484742-80aa-412b-9117-03530ce174a7",
+        "field": "from_transaction_id",
+        "ref": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "256370ac-c870-4f76-b612-493a668f3e8d",
+        "field": "from_transaction_id",
+        "ref": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    },
+    {
+      "code": "missing_transaction_ref",
+      "details": {
+        "edgeId": "e37e8ec7-e7a2-454e-948f-b8df9c6b5911",
+        "field": "from_transaction_id",
+        "ref": "2327928a-6311-4c00-bfea-bc29bcc47c1c"
+      },
+      "message": "Transaction reference could not be resolved; set to null."
+    }
+  ]
+}

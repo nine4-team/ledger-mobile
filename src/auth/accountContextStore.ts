@@ -14,6 +14,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 
+const DEFAULT_ACCOUNT_ID = process.env.EXPO_PUBLIC_DEFAULT_ACCOUNT_ID?.trim() || null;
+
 const STORAGE_KEYS = {
   lastSelectedAccountId: 'ledger:lastSelectedAccountId',
   lastValidatedAccountId: 'ledger:lastValidatedAccountId',
@@ -161,6 +163,19 @@ export const useAccountContextStore = create<AccountContextState>((set, get) => 
           const membershipSnap = await getDocWithPreference(membershipRef);
           if (membershipSnap?.exists) {
             accountIds.push(lastSelected);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // Emulator/dev safety: allow a fixed account id for local testing.
+      if (accountIds.length === 0 && DEFAULT_ACCOUNT_ID) {
+        try {
+          const membershipRef = doc(db, `accounts/${DEFAULT_ACCOUNT_ID}/users/${uid}`);
+          const membershipSnap = await getDocWithPreference(membershipRef);
+          if (membershipSnap?.exists) {
+            accountIds.push(DEFAULT_ACCOUNT_ID);
           }
         } catch {
           // ignore

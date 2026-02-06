@@ -1,0 +1,19 @@
+{
+  "name": "Hyer_s_Martinique_Rental/receipt-attachments/2025-12-31T01-36-59-391/1767145019391_Invoice_4374252816.pdf",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332749684,
+  "contentType": "application/pdf",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "Mnmfz6209EcPXkgORWUXJWMfWyc",
+  "customMetadata": {
+    "originalMediaId": "ed1f872d8d3b9073f6d72f32d6899818a0c5c93b3b15a3db7e91a4f62d36a660",
+    "kind": "pdf"
+  },
+  "timeCreated": "2026-02-05T23:05:49.684Z",
+  "updated": "2026-02-05T23:05:49.684Z",
+  "size": 1443172,
+  "md5Hash": "1ZAtjHI4l7AWi4oBtlVSSw==",
+  "crc32c": "926715306"
+}

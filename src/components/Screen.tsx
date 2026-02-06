@@ -56,6 +56,12 @@ interface ScreenProps {
    * Optional actions rendered to the right of the title.
    */
   headerRight?: React.ReactNode;
+  /**
+   * Whether to include safe area bottom inset in the content padding.
+   * Defaults to true. Set to false if the screen is inside a bottom tab navigator
+   * that already handles the safe area.
+   */
+  includeBottomInset?: boolean;
 }
 
 type ScreenRefreshContextValue = {
@@ -86,6 +92,7 @@ export const Screen: React.FC<ScreenProps> = ({
   hideBackButton = false,
   infoContent,
   headerRight,
+  includeBottomInset = true,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -147,7 +154,7 @@ export const Screen: React.FC<ScreenProps> = ({
           {
             paddingHorizontal: SCREEN_PADDING,
             paddingTop: contentPaddingTop,
-            paddingBottom: (appTokens.screen.contentPaddingBottom ?? 0) + insets.bottom,
+            paddingBottom: (appTokens.screen.contentPaddingBottom ?? 0) + (includeBottomInset ? insets.bottom : 0),
           },
           style,
           contentStyle,

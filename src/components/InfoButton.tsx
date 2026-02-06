@@ -2,7 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
-import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '@/theme/ThemeProvider';
 import { getCardStyle, getTextPrimaryStyle, getTextSecondaryStyle } from '../ui';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';

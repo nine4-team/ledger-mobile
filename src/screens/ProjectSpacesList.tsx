@@ -136,10 +136,21 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
               ]}
             >
               {space.images?.length ? (
-                <Image
-                  source={{ uri: resolveAttachmentUri(space.images[0]) ?? space.images[0].url }}
-                  style={styles.previewImage}
-                />
+                (() => {
+                  const firstImage = space.images[0];
+                  const resolved = resolveAttachmentUri(firstImage);
+                  if (resolved) {
+                    return <Image source={{ uri: resolved }} style={styles.previewImage} />;
+                  }
+                  if (!firstImage.url.startsWith('offline://')) {
+                    return <Image source={{ uri: firstImage.url }} style={styles.previewImage} />;
+                  }
+                  return (
+                    <View style={[styles.previewImage, { backgroundColor: uiKitTheme.background.surface, alignItems: 'center', justifyContent: 'center' }]}>
+                      <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>Offline</AppText>
+                    </View>
+                  );
+                })()
               ) : (
                 <View style={[styles.previewImage, { backgroundColor: uiKitTheme.background.surface }]} />
               )}

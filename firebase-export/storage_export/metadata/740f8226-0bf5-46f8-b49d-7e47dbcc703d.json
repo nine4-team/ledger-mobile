@@ -1,0 +1,19 @@
+{
+  "name": "Hyer_s_Martinique_Rental/receipt-attachments/2026-01-19T16-58-21-664/1768841901664_image.jpg",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332748206,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "IomdF1QWcWWiYgIDKPaxy6BLj1E",
+  "customMetadata": {
+    "originalMediaId": "cd7f090a2fa28f9ad6395fbfce03335d1182d83764e607c16dce39c475490a89",
+    "kind": "image"
+  },
+  "timeCreated": "2026-02-05T23:05:48.206Z",
+  "updated": "2026-02-05T23:05:48.206Z",
+  "size": 2813450,
+  "md5Hash": "1/RJIUBrtNe7sBZ0oTK1UA==",
+  "crc32c": "2651661602"
+}

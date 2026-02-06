@@ -16,14 +16,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nine4.expofirebaseskeleton"
+      "bundleIdentifier": "com.nine4.ledger"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./ledger_logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nine4.expofirebaseskeleton"
+      "package": "com.nine4.ledger"
     },
     "web": {
       "favicon": "./ledger_logo.png"

@@ -18,15 +18,17 @@ type ListControlBarProps = {
   search: string;
   onChangeSearch: (value: string) => void;
   actions: ControlAction[];
+  leftElement?: React.ReactNode;
 };
 
-export function ListControlBar({ search, onChangeSearch, actions }: ListControlBarProps) {
+export function ListControlBar({ search, onChangeSearch, actions, leftElement }: ListControlBarProps) {
   const uiKitTheme = useUIKitTheme();
 
   return (
     <View style={styles.controlBar}>
       <ListStateControls search={search} onChangeSearch={onChangeSearch} />
       <View style={styles.controlButtons}>
+        {leftElement}
         {actions.map((action) => (
           <AppButton
             key={action.title}

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { darkTheme, lightTheme, type ColorTheme } from '../ui';
 import { createThemeFromUIKit, type Theme } from './theme';
+import { appThemeOverrides } from '../ui/tokens';
 import { useAppearanceStore, type AppearanceMode } from './appearanceStore';
 
 type ResolvedScheme = 'light' | 'dark';
@@ -25,7 +26,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     appearanceMode === 'system' ? (systemScheme ?? 'light') : appearanceMode;
 
   const uiKitTheme = useMemo<ColorTheme>(() => {
-    return resolvedColorScheme === 'dark' ? darkTheme : lightTheme;
+    const baseTheme = resolvedColorScheme === 'dark' ? darkTheme : lightTheme;
+    const overrides =
+      resolvedColorScheme === 'dark' ? appThemeOverrides.dark : appThemeOverrides.light;
+
+    return {
+      ...baseTheme,
+      background: {
+        ...baseTheme.background,
+        ...overrides.background,
+      },
+      tabBar: {
+        ...baseTheme.tabBar,
+        ...overrides.tabBar,
+      },
+      button: {
+        ...baseTheme.button,
+        secondary: {
+          ...baseTheme.button.secondary,
+          ...overrides.button.secondary,
+        },
+      },
+    };
   }, [resolvedColorScheme]);
 
   const theme = useMemo(() => createThemeFromUIKit(uiKitTheme), [uiKitTheme]);

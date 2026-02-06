@@ -677,6 +677,7 @@ Where:
 - `BudgetCategoryMetadata`:
   - `categoryType?: "standard" | "itemized" | "fee"`
     - Default: `"standard"` when missing.
+    - UI label: `"standard"` is shown as **General** in the app.
     - `categoryType === "itemized"` enables transaction itemization + tax inputs.
     - `categoryType === "fee"` enables “fee tracker” semantics (received, not spent) in budget rollups.
     - Mutual exclusivity is structural: a category cannot be both fee and itemized.

@@ -149,7 +149,7 @@ In the “Offline-First vs Online-First” section:
     - detach on background
     - instrument reads/writes/listener count
 
-### Update `.cursor/plans/expofirebaseskeleton_16dcfb2b.plan.md`
+### Update `.cursor/plans/firebase-mobile-migration/EXECUTION_PLAN.md`
 
 Replace the “offline-first implementation” direction:
 
@@ -286,7 +286,7 @@ Retry mechanism:
 
 - Update `src/data/offline-first.md`
 - Update `README.md` (offline-first + cost levers language)
-- Update `.cursor/plans/expofirebaseskeleton_16dcfb2b.plan.md` (offline-first direction)
+- Update `.cursor/plans/firebase-mobile-migration/EXECUTION_PLAN.md` (offline-first direction)
 
 **Done when**: the repo no longer recommends “SQLite + outbox + cursor pulls” as the default offline approach.
 
@@ -381,5 +381,5 @@ Retry mechanism:
   - treats SQLite as optional search-index-only
   - describes native Firestore offline as the offline-ready path
   - describes request-doc workflows as the multi-doc correctness primitive
-- `.cursor/plans/expofirebaseskeleton_16dcfb2b.plan.md` aligns with Offline Data v2.
+- `.cursor/plans/firebase-mobile-migration/EXECUTION_PLAN.md` aligns with Offline Data v2.
 

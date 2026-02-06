@@ -1,0 +1,19 @@
+{
+  "name": "Business_Inventory/item-images/2026-01-22T01-21-54-424/1769044914424_image.jpg",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332747539,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "rUbKeJW9glyAGlpr6e6WoV2uarA",
+  "customMetadata": {
+    "originalMediaId": "c169382d631a4dcfea07689fc28bc1f4e83ee68dc23bd82799f7290d1a8d6a9e",
+    "kind": "image"
+  },
+  "timeCreated": "2026-02-05T23:05:47.539Z",
+  "updated": "2026-02-05T23:05:47.539Z",
+  "size": 389992,
+  "md5Hash": "+EVsfHWLAKHzzKIIM/X44A==",
+  "crc32c": "1699771288"
+}

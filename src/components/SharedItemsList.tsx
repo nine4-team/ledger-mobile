@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { ListControlBar } from './ListControlBar';
 import { ListSelectAllRow } from './ListSelectionControls';
-import { BottomSheet } from './BottomSheet';
-import { ItemCard } from './ItemCard';
 import { SelectorCircle } from './SelectorCircle';
+import { BUTTON_BORDER_RADIUS } from '../ui';
+import { BottomSheet } from './BottomSheet';
+import { GroupedItemCard } from './GroupedItemCard';
+import { ItemCard } from './ItemCard';
+import type { ItemCardProps } from './ItemCard';
 import { FilterMenu } from './FilterMenu';
 import { SortMenu } from './SortMenu';
 import { useScreenRefresh } from './Screen';
@@ -54,12 +57,12 @@ type ItemFilters = {
 };
 
 type ListRow =
-  | { type: 'group'; groupId: string; label: string; count: number; itemIds: string[] }
+  | { type: 'group'; groupId: string; label: string; count: number; items: ItemRow[] }
   | { type: 'item'; item: ItemRow; groupId?: string };
 
-const SORT_MODES = ['creationDate', 'alphabetical'] as const;
+const SORT_MODES = ['created-desc', 'created-asc', 'alphabetical-asc', 'alphabetical-desc'] as const;
 type SortMode = (typeof SORT_MODES)[number];
-const DEFAULT_SORT: SortMode = 'creationDate';
+const DEFAULT_SORT: SortMode = 'created-desc';
 
 const PROJECT_FILTER_MODES: ItemFilterMode[] = [
   'all',
@@ -93,6 +96,10 @@ function formatCents(value?: number | null) {
   return `$${(value / 100).toFixed(2)}`;
 }
 
+function getItemPriceCents(item: ScopedItem) {
+  return typeof item.projectPriceCents === 'number' ? item.projectPriceCents : item.purchasePriceCents;
+}
+
 function getPrimaryImage(item: ScopedItem) {
   const images = item.images ?? [];
   const primary = images.find((image) => image.isPrimary) ?? images[0];
@@ -108,7 +115,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const [sortOpen, setSortOpen] = useState(false);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkSpaceId, setBulkSpaceId] = useState('');
   const [bulkProjectId, setBulkProjectId] = useState('');
@@ -126,8 +133,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     () => ({ borderColor: uiKitTheme.border.primary, color: theme.colors.text }),
     [uiKitTheme, theme]
   );
-  const rowSurfaceStyle = useMemo(
-    () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
+  const selectButtonThemeStyle = useMemo(
+    () => ({
+      backgroundColor: uiKitTheme.button.secondary.background,
+      borderColor: uiKitTheme.border.primary,
+    }),
     [uiKitTheme]
   );
   const router = useRouter();
@@ -181,6 +191,14 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
   useScopedListeners(scopeId, handleSubscribe);
 
+  const setItemSelected = useCallback((id: string, next: boolean) => {
+    setSelectedIds((prev) => {
+      const has = prev.includes(id);
+      if (next) return has ? prev : [...prev, id];
+      return has ? prev.filter((itemId) => itemId !== id) : prev;
+    });
+  }, []);
+
   const rows = useMemo(() => {
     return items.map((item) => {
       const label = item.name?.trim() || item.description?.trim() || 'Untitled item';
@@ -228,7 +246,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     const filteredByFilters = filteredItems.filter((row) => {
       const item = row.item;
       if (selectedModes.includes('all')) return true;
-      return selectedModes.every((mode) => {
+      return selectedModes.some((mode) => {
         if (mode === 'bookmarked') return Boolean(item.bookmark);
         if (mode === 'from-inventory') return !item.projectId;
         if (mode === 'to-return') return item.status === 'to return';
@@ -238,18 +256,22 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         if (mode === 'no-project-price') return typeof item.projectPriceCents !== 'number';
         if (mode === 'no-image') return (item.images?.length ?? 0) === 0;
         if (mode === 'no-transaction') return !item.transactionId;
-        return true;
+        return false;
       });
     });
 
     const sorted = [...filteredByFilters].sort((a, b) => {
-      if (sortMode === 'alphabetical') {
-        return a.label.localeCompare(b.label);
+      if (sortMode === 'alphabetical-asc' || sortMode === 'alphabetical-desc') {
+        const order = sortMode === 'alphabetical-asc' ? 1 : -1;
+        return order * a.label.localeCompare(b.label);
       }
-      const aDate = a.item.createdAt ? String(a.item.createdAt) : '';
-      const bDate = b.item.createdAt ? String(b.item.createdAt) : '';
-      if (aDate && bDate) {
-        return bDate.localeCompare(aDate);
+      if (sortMode === 'created-desc' || sortMode === 'created-asc') {
+        const aDate = a.item.createdAt ? String(a.item.createdAt) : '';
+        const bDate = b.item.createdAt ? String(b.item.createdAt) : '';
+        const order = sortMode === 'created-desc' ? -1 : 1;
+        if (aDate && bDate) {
+          return order * bDate.localeCompare(aDate);
+        }
       }
       return b.id.localeCompare(a.id);
     });
@@ -281,14 +303,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         groupId,
         label: groupItems[0].label,
         count: groupItems.length,
-        itemIds: groupItems.map((item) => item.id),
+        items: groupItems,
       });
-      if (!(state.filters as any)?.[`collapsed:${groupId}`]) {
-        groupItems.forEach((item) => output.push({ type: 'item', item, groupId }));
-      }
     });
     return output;
-  }, [activeFilters.showDuplicates, filtered, state.filters]);
+  }, [activeFilters.showDuplicates, filtered]);
 
   useEffect(() => {
     const restore = state.restore;
@@ -297,7 +316,9 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     let restored = false;
     if (restore.anchorId) {
       const index = groupedRows.findIndex(
-        (row) => row.type === 'item' && row.item.id === restore.anchorId
+        (row) =>
+          (row.type === 'item' && row.item.id === restore.anchorId) ||
+          (row.type === 'group' && row.items.some((item) => item.id === restore.anchorId))
       );
       if (index >= 0) {
         try {
@@ -316,19 +337,25 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     clearRestoreHint();
   }, [clearRestoreHint, groupedRows, state.restore]);
 
-  const toggleSelection = useCallback((id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
+  useEffect(() => {
+    if (selectedIds.length === 0 && bulkSheetOpen) {
+      setBulkSheetOpen(false);
+    }
+  }, [bulkSheetOpen, selectedIds.length]);
+
+  const setGroupSelection = useCallback((ids: string[], next: boolean) => {
+    setSelectedIds((prev) => {
+      if (next) return Array.from(new Set([...prev, ...ids]));
+      const remove = new Set(ids);
+      return prev.filter((itemId) => !remove.has(itemId));
+    });
   }, []);
 
-  const handleSelectGroup = useCallback((ids: string[]) => {
-    setSelectedIds((prev) => Array.from(new Set([...prev, ...ids])));
-  }, []);
-
-  const handleToggleGroup = useCallback(
-    (groupId: string) => {
+  const setGroupExpanded = useCallback(
+    (groupId: string, expanded: boolean) => {
       const nextFilters = {
         ...(state.filters ?? {}),
-        [`collapsed:${groupId}`]: !(state.filters as any)?.[`collapsed:${groupId}`],
+        [`collapsed:${groupId}`]: !expanded,
       };
       setFilters(nextFilters as Record<string, unknown>);
     },
@@ -398,16 +425,58 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, []);
 
   const sortMenuItems: AnchoredMenuItem[] = useMemo(() => {
-    const labels: Record<SortMode, string> = {
-      alphabetical: 'Alphabetical',
-      creationDate: 'Creation Date',
+    const getCreatedSubactionKey = () => {
+      if (sortMode === 'created-desc' || sortMode === 'created-asc') {
+        return sortMode;
+      }
+      return 'created-desc';
     };
-    return SORT_MODES.map((mode) => ({
-      key: mode,
-      label: labels[mode] ?? mode.replace(/\b\w/g, (l) => l.toUpperCase()),
-      onPress: () => setSort(mode),
-      icon: sortMode === mode ? 'check' : undefined,
-    }));
+
+    const getAlphabeticalSubactionKey = () => {
+      if (sortMode === 'alphabetical-asc' || sortMode === 'alphabetical-desc') {
+        return sortMode;
+      }
+      return 'alphabetical-asc';
+    };
+
+    return [
+      {
+        key: 'created',
+        label: 'Created',
+        defaultSelectedSubactionKey: getCreatedSubactionKey(),
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'created-desc',
+            label: 'Newest First',
+            onPress: () => setSort('created-desc'),
+          },
+          {
+            key: 'created-asc',
+            label: 'Oldest First',
+            onPress: () => setSort('created-asc'),
+          },
+        ],
+      },
+      {
+        key: 'alphabetical',
+        label: 'Alphabetical',
+        defaultSelectedSubactionKey: getAlphabeticalSubactionKey(),
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'alphabetical-asc',
+            label: 'A-Z',
+            onPress: () => setSort('alphabetical-asc'),
+          },
+          {
+            key: 'alphabetical-desc',
+            label: 'Z-A',
+            onPress: () => setSort('alphabetical-desc'),
+          },
+        ],
+      },
+    ];
   }, [setSort, sortMode]);
 
   const filterMenuItems: AnchoredMenuItem[] = useMemo(() => {
@@ -443,6 +512,47 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     });
   }, [listStateKey, router, scopeConfig.projectId, scopeConfig.scope]);
 
+  const handleOpenItem = useCallback(
+    (id: string) => {
+      setRestoreHint({ anchorId: id, scrollOffset: lastScrollOffsetRef.current });
+      const backTarget =
+        scopeConfig.scope === 'inventory'
+          ? '/(tabs)/screen-two?tab=items'
+          : scopeConfig.projectId
+            ? `/project/${scopeConfig.projectId}?tab=items`
+            : '/(tabs)/index';
+      router.push({
+        pathname: '/items/[id]',
+        params: {
+          id,
+          listStateKey,
+          backTarget,
+          scope: scopeConfig.scope,
+          projectId: scopeConfig.projectId ?? '',
+        },
+      });
+    },
+    [listStateKey, router, scopeConfig.projectId, scopeConfig.scope, setRestoreHint]
+  );
+
+  const handleDeleteItem = useCallback(
+    (id: string, label: string) => {
+      if (!accountId) return;
+      Alert.alert('Delete item', `Delete “${label}”? This can’t be undone.`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteItem(accountId, id);
+            setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+          },
+        },
+      ]);
+    },
+    [accountId]
+  );
+
   const handleSelectAll = useCallback(() => {
     if (selectedIds.length === filtered.length) {
       setSelectedIds([]);
@@ -452,17 +562,24 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, [filtered, selectedIds.length]);
 
   const hasFiltered = filtered.length > 0;
-  const allSelected = bulkMode && selectedIds.length === filtered.length && hasFiltered;
+  const allSelected = selectedIds.length === filtered.length && hasFiltered;
 
   const getSortLabel = useCallback(() => {
-    if (sortMode === 'alphabetical') return 'Alphabetical';
-    if (sortMode === 'creationDate') return 'Creation Date';
+    if (sortMode === 'alphabetical-asc') return 'Alphabetical (A-Z)';
+    if (sortMode === 'alphabetical-desc') return 'Alphabetical (Z-A)';
+    if (sortMode === 'created-desc') return 'Created (Newest First)';
+    if (sortMode === 'created-asc') return 'Created (Oldest First)';
     return sortMode;
   }, [sortMode]);
 
   const isSortActive = sortMode !== DEFAULT_SORT;
   const isFilterActive =
     !selectedModes.includes('all') || selectedModes.length > 1 || activeFilters.showDuplicates === false;
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds([]);
+    setBulkError(null);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -487,25 +604,31 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             },
             { title: 'Add', variant: 'primary', onPress: handleCreateItem, iconName: 'add' },
           ]}
+          leftElement={
+            scopeConfig.scope === 'inventory' ? (
+              <TouchableOpacity
+                disabled={!hasFiltered}
+                onPress={() => {
+                  if (!hasFiltered) return;
+                  handleSelectAll();
+                }}
+                style={[
+                  styles.selectButton,
+                  selectButtonThemeStyle,
+                  !hasFiltered && styles.selectButtonDisabled,
+                ]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: allSelected }}
+              >
+                <SelectorCircle selected={allSelected} indicator="check" />
+              </TouchableOpacity>
+            ) : undefined
+          }
         />
       </View>
       <SortMenu visible={sortOpen} onRequestClose={() => setSortOpen(false)} items={sortMenuItems} />
       <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
-      {/* Select All - moved below search */}
-      <ListSelectAllRow
-        disabled={!hasFiltered}
-        checked={bulkMode && allSelected}
-        onPress={() => {
-          if (!hasFiltered) return;
-          if (!bulkMode) {
-            setBulkMode(true);
-            handleSelectAll();
-          } else {
-            handleSelectAll();
-          }
-        }}
-      />
-      <BottomSheet visible={bulkMode} onRequestClose={() => setBulkMode(false)}>
+      <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
         <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
           <AppText variant="body" style={styles.bulkSheetTitle}>
             Bulk actions
@@ -516,7 +639,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             <AppText variant="caption" style={styles.semiboldText}>
               {selectedIds.length} selected
             </AppText>
-            <Pressable onPress={() => setBulkMode(false)}>
+            <Pressable onPress={clearSelection}>
               <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
                 Done
               </AppText>
@@ -594,7 +717,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         ref={listRef}
         data={groupedRows}
         keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, selectedIds.length > 0 ? styles.listWithBulkBar : null]}
         refreshControl={
           screenRefresh ? (
             <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
@@ -612,25 +735,80 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         }
         renderItem={({ item: row }) => {
           if (row.type === 'group') {
+            const groupIds = row.items.map((item) => item.id);
+            const groupSelected = groupIds.every((id) => selectedIds.includes(id));
+            const summaryItem = row.items.find((item) => getPrimaryImage(item.item)) ?? row.items[0];
+            const summaryThumbnailUri = summaryItem ? getPrimaryImage(summaryItem.item) : undefined;
+            const isCollapsed = ((state.filters as any)?.[`collapsed:${row.groupId}`] ?? true) as boolean;
+            const groupPriceCents = row.items.map((item) => getItemPriceCents(item.item)).filter((value) => typeof value === 'number');
+            const totalLabel =
+              groupPriceCents.length === row.items.length
+                ? formatCents(groupPriceCents.reduce((sum, value) => sum + value, 0))
+                : null;
+
             return (
-              <View style={styles.groupRow}>
-                <AppText variant="body">{row.label}</AppText>
-                <AppText variant="caption">{row.count} duplicates</AppText>
-                {bulkMode ? (
-                  <Pressable onPress={() => handleSelectGroup(row.itemIds)}>
-                    <AppText variant="caption">Select group</AppText>
-                  </Pressable>
-                ) : null}
-                <Pressable onPress={() => handleToggleGroup(row.groupId)}>
-                  <AppText variant="caption">
-                    {(state.filters as any)?.[`collapsed:${row.groupId}`] ? 'Expand' : 'Collapse'}
-                  </AppText>
-                </Pressable>
-              </View>
+              <GroupedItemCard
+                summary={{
+                  description: row.label,
+                  sku: summaryItem?.item.sku ?? undefined,
+                  sourceLabel: summaryItem?.item.source ?? undefined,
+                  locationLabel: scopeConfig.fields?.showBusinessInventoryLocation
+                    ? summaryItem?.item.spaceId ?? undefined
+                    : undefined,
+                  notes: summaryItem?.item.notes ?? undefined,
+                  thumbnailUri: summaryThumbnailUri,
+                }}
+                countLabel={`×${row.count}`}
+                totalLabel={totalLabel ?? undefined}
+                items={row.items.map((item) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  const menuItems: AnchoredMenuItem[] = [
+                    { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
+                    { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, item.label) },
+                  ];
+
+                  const cardProps: ItemCardProps = {
+                    description: item.label,
+                    sku: item.item.sku ?? undefined,
+                    sourceLabel: item.item.source ?? undefined,
+                    locationLabel: scopeConfig.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
+                    priceLabel: formatCents(item.item.projectPriceCents ?? item.item.purchasePriceCents) ?? undefined,
+                    statusLabel: item.item.status ?? undefined,
+                    thumbnailUri: getPrimaryImage(item.item) ?? undefined,
+                    selected: isSelected,
+                    onSelectedChange: (next) => {
+                      setItemSelected(item.id, next);
+                    },
+                    menuItems,
+                    bookmarked: Boolean(item.item.bookmark ?? (item.item as any).isBookmarked),
+                    onBookmarkPress: async () => {
+                      if (!accountId) return;
+                      const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                      await updateItem(accountId, item.id, { bookmark: next });
+                    },
+                    onPress: () => {
+                      handleOpenItem(item.id);
+                    },
+                  };
+
+                  return cardProps;
+                })}
+                expanded={!isCollapsed}
+                onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
+                selected={groupSelected}
+                onSelectedChange={(next) => {
+                  setGroupSelection(groupIds, next);
+                }}
+              />
             );
           }
 
           const item = row.item;
+          const isSelected = selectedIds.includes(item.id);
+          const menuItems: AnchoredMenuItem[] = [
+            { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
+            { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, item.label) },
+          ];
           return (
             <ItemCard
               description={item.label}
@@ -640,46 +818,38 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
               priceLabel={formatCents(item.item.projectPriceCents ?? item.item.purchasePriceCents) ?? undefined}
               statusLabel={item.item.status ?? undefined}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
-              selected={bulkMode ? selectedIds.includes(item.id) : undefined}
-              onSelectedChange={bulkMode ? () => toggleSelection(item.id) : undefined}
+              selected={isSelected}
+              onSelectedChange={(next) => setItemSelected(item.id, next)}
+              menuItems={menuItems}
               bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
-              onBookmarkPress={
-                bulkMode
-                  ? undefined
-                  : async () => {
-                      if (!accountId) return;
-                      const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                      await updateItem(accountId, item.id, { bookmark: next });
-                    }
-              }
-              onPress={() => {
-                if (bulkMode) {
-                  toggleSelection(item.id);
-                  return;
-                }
-                setRestoreHint({ anchorId: item.id, scrollOffset: lastScrollOffsetRef.current });
-                const backTarget =
-                  scopeConfig.scope === 'inventory'
-                    ? '/(tabs)/screen-two?tab=items'
-                    : scopeConfig.projectId
-                      ? `/project/${scopeConfig.projectId}?tab=items`
-                      : '/(tabs)/index';
-                router.push({
-                  pathname: '/items/[id]',
-                  params: {
-                    id: item.id,
-                    listStateKey,
-                    backTarget,
-                    scope: scopeConfig.scope,
-                    projectId: scopeConfig.projectId ?? '',
-                  },
-                });
+              onBookmarkPress={async () => {
+                if (!accountId) return;
+                const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                await updateItem(accountId, item.id, { bookmark: next });
               }}
-              style={[styles.row, rowSurfaceStyle]}
+              onPress={() => {
+                handleOpenItem(item.id);
+              }}
             />
           );
         }}
       />
+      {selectedIds.length > 0 ? (
+        <View style={styles.bulkBar}>
+          <AppText variant="caption" style={styles.semiboldText}>
+            {selectedIds.length} selected
+          </AppText>
+          <View style={styles.bulkBarSpacer} />
+          <View style={styles.bulkBarActions}>
+            <AppButton title="Clear" variant="secondary" onPress={clearSelection} />
+            <AppButton
+              title="Bulk actions"
+              variant="primary"
+              onPress={() => setBulkSheetOpen(true)}
+            />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -687,10 +857,24 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 16,
+    gap: 0,
   },
   controlSection: {
     gap: 0,
+    marginBottom: 12,
+  },
+  selectButton: {
+    borderRadius: BUTTON_BORDER_RADIUS,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
+    minWidth: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+  },
+  selectButtonDisabled: {
+    opacity: 0.5,
   },
   bulkSelectButton: {
     paddingVertical: 8,
@@ -704,16 +888,12 @@ const styles = StyleSheet.create({
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
   },
+  listWithBulkBar: {
+    paddingBottom: layout.screenBodyTopMd.paddingTop + 56,
+  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 12,
-  },
-  row: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    gap: 6,
   },
   rowPressed: {
     opacity: 0.7,
@@ -763,11 +943,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  groupRow: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    gap: 4,
+  bulkBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  bulkBarSpacer: {
+    flex: 1,
+  },
+  bulkBarActions: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
   },
 });

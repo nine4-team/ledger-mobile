@@ -41,7 +41,7 @@ import {
 import {
   subscribeToBudgetCategories,
   createBudgetCategory,
-  setBudgetCategoryArchived,
+  deleteBudgetCategory,
   updateBudgetCategory,
   setBudgetCategoryOrder,
 } from '../../src/data/budgetCategoriesService';
@@ -99,7 +99,9 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
   ) : undefined;
   const categoryTypeHelper = {
-    itemized: 'For budget categories where physical items get purchased, enabling itemization and tax tracking.',
+    standard: 'For general expenses and services like fuel, movers, and handyman invoices.',
+    general: 'For general expenses and services like fuel, movers, and handyman invoices.',
+    itemized: 'For categories where physical items get purchased, enabling itemization and tax tracking.',
     fee: 'For service fee categories, so you can track how much you have received throughout the project.',
   } as const;
   const [profileDraft, setProfileDraft] = useState<string>('');
@@ -128,15 +130,14 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       isArchived?: boolean | null;
       order?: number | null;
       metadata?: {
-        categoryType?: 'standard' | 'itemized' | 'fee';
+        categoryType?: 'standard' | 'general' | 'itemized' | 'fee';
         excludeFromOverallBudget?: boolean;
       } | null;
     }[]
   >([]);
-  const [showArchivedCategories, setShowArchivedCategories] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
-  const [editingCategoryType, setEditingCategoryType] = useState<('itemized' | 'fee')[]>([]);
+  const [editingCategoryType, setEditingCategoryType] = useState<'standard' | 'general' | 'itemized' | 'fee'>('standard');
   const [categoryStep, setCategoryStep] = useState<1 | 2>(1);
   const [categorySaveStatus, setCategorySaveStatus] = useState<'idle' | 'saving'>('idle');
   const [categorySaveError, setCategorySaveError] = useState<string>('');
@@ -417,7 +418,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       return;
     }
     const info = await FileSystem.getInfoAsync(asset.uri, { size: true });
-    const size = asset.fileSize ?? info.size ?? 0;
+    const size = asset.fileSize ?? (info.exists ? info.size ?? 0 : 0);
     if (size > 10 * 1024 * 1024) {
       setLogoError('Logo must be smaller than 10 MB.');
       return;
@@ -475,12 +476,11 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const handleOpenCategoryEdit = (category: {
     id: string;
     name: string;
-    metadata?: { categoryType?: 'standard' | 'itemized' | 'fee'; excludeFromOverallBudget?: boolean } | null;
+    metadata?: { categoryType?: 'standard' | 'general' | 'itemized' | 'fee'; excludeFromOverallBudget?: boolean } | null;
   }) => {
     setEditingCategoryId(category.id);
     setEditingCategoryName(category.name);
-    const categoryType = category.metadata?.categoryType;
-    setEditingCategoryType(categoryType === 'itemized' || categoryType === 'fee' ? [categoryType] : []);
+    setEditingCategoryType(category.metadata?.categoryType ?? 'standard');
     setCategoryStep(1);
     setCategorySaveError('');
   };
@@ -488,7 +488,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const handleStartCategoryCreate = useCallback(() => {
     setEditingCategoryId('new');
     setEditingCategoryName('');
-    setEditingCategoryType([]);
+    setEditingCategoryType('standard');
     setCategoryStep(1);
     setCategorySaveError('');
   }, []);
@@ -538,46 +538,76 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     }
     setCategorySaveStatus('saving');
     setCategorySaveError('');
+    const selectedCategoryType = editingCategoryType === 'standard' ? undefined : editingCategoryType;
+
     try {
-      // Take the first selected category type (data model supports single value)
-      const selectedCategoryType = editingCategoryType.length > 0 ? editingCategoryType[0] : undefined;
       if (editingCategoryId === 'new') {
-        const newId = await createBudgetCategory(accountId, trimmed);
-        if (selectedCategoryType) {
-          await updateBudgetCategory(accountId, newId, {
-            metadata: {
-              categoryType: selectedCategoryType,
-            },
+        // Firestore writes can take an unbounded amount of time to resolve (especially on flaky
+        // connections) even though the category shows up immediately via local persistence +
+        // subscriptions. To avoid a "frozen" UX, we only wait briefly before closing the sheet.
+        const QUICK_WAIT_MS = 1200;
+
+        const savePromise = createBudgetCategory(accountId, trimmed, {
+          metadata: selectedCategoryType ? { categoryType: selectedCategoryType } : undefined,
+        });
+
+        const finishedQuickly = await Promise.race([
+          savePromise.then(() => true),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), QUICK_WAIT_MS)),
+        ]);
+
+        // If it didn't finish quickly, close anyway and let it continue in the background.
+        // If it eventually fails, show an alert (the category may or may not have been created).
+        if (!finishedQuickly) {
+          savePromise.catch((error: any) => {
+            Alert.alert('Error', error?.message || 'Failed to save category.');
           });
         }
-      } else {
-        await updateBudgetCategory(accountId, editingCategoryId, {
-          name: trimmed,
-          slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
-          metadata: {
-            ...(selectedCategoryType ? { categoryType: selectedCategoryType } : {}),
-            ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
-          },
-        });
+
+        handleCloseCategoryModal();
+        return;
       }
+
+      await updateBudgetCategory(accountId, editingCategoryId, {
+        name: trimmed,
+        slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
+        metadata: {
+          categoryType: editingCategoryType,
+          ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
+        },
+      });
+
       handleCloseCategoryModal();
     } catch (error: any) {
-      setCategorySaveError(error?.message || 'Failed to update category.');
+      setCategorySaveError(error?.message || 'Failed to save category.');
       setCategorySaveStatus('idle');
     }
   };
 
-  const handleArchiveCategory = async (categoryId: string, shouldArchive: boolean) => {
+  const handleDeleteCategory = (categoryId: string, categoryName?: string) => {
     if (!accountId) return;
     if (!isOnline) {
       Alert.alert('Offline', 'Category changes require an internet connection.');
       return;
     }
-    try {
-      await setBudgetCategoryArchived(accountId, categoryId, shouldArchive);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to update category.');
-    }
+    const name = categoryName?.trim();
+    const message = name
+      ? `This will permanently delete "${name}".`
+      : 'This will permanently delete this category.';
+    Alert.alert('Delete category', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteBudgetCategory(accountId, categoryId);
+          } catch (error: any) {
+            Alert.alert('Error', error?.message || 'Failed to delete category.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleReorderBudgetCategories = async (nextOrder: typeof budgetCategories) => {
@@ -586,7 +616,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       Alert.alert('Offline', 'Reordering categories requires an internet connection.');
       return;
     }
-    const activeIds = nextOrder.filter((category) => !category.isArchived).map((category) => category.id);
+    const activeIds = nextOrder.map((category) => category.id);
     try {
       await setBudgetCategoryOrder(accountId, activeIds);
     } catch (error: any) {
@@ -911,6 +941,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       setExportError('Firebase is not configured.');
       return;
     }
+    const firestore = db;
     if (!FileSystem.documentDirectory) {
       setExportStatus('error');
       setExportError('Export location is unavailable.');
@@ -922,25 +953,25 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       const getDoc = async (path: string) => {
         for (const source of ['cache', 'server'] as const) {
           try {
-            const snap = await (db.doc(path) as any).get({ source });
+            const snap = await (firestore.doc(path) as any).get({ source });
             return snap.exists ? snap.data() : null;
           } catch {
             // try next
           }
         }
-        const snap = await db.doc(path).get();
+        const snap = await firestore.doc(path).get();
         return snap.exists ? snap.data() : null;
       };
       const getCollection = async (path: string) => {
         for (const source of ['cache', 'server'] as const) {
           try {
-            const snap = await (db.collection(path) as any).get({ source });
+            const snap = await (firestore.collection(path) as any).get({ source });
             return snap.docs.map((doc: any) => ({ id: doc.id, ...(doc.data() as object) }));
           } catch {
             // try next
           }
         }
-        const snap = await db.collection(path).get();
+        const snap = await firestore.collection(path).get();
         return snap.docs.map((doc: any) => ({ id: doc.id, ...(doc.data() as object) }));
       };
 
@@ -1319,8 +1350,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       );
     }
 
-    const activeCategories = sortedBudgetCategories.filter((category) => !category.isArchived);
-    const archivedCategories = sortedBudgetCategories.filter((category) => category.isArchived);
+    const activeCategories = sortedBudgetCategories;
     const activeCategoryById: Record<
       string,
       {
@@ -1328,18 +1358,17 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         name: string;
         isArchived?: boolean | null;
         order?: number | null;
-        metadata?: { categoryType?: 'standard' | 'itemized' | 'fee'; excludeFromOverallBudget?: boolean } | null;
+        metadata?: { categoryType?: 'standard' | 'general' | 'itemized' | 'fee'; excludeFromOverallBudget?: boolean } | null;
       }
     > = {};
     for (const c of activeCategories) activeCategoryById[c.id] = c;
 
     const categoryToggleItems: TemplateToggleListItem[] = activeCategories.map((category) => {
-      const categoryType = category.metadata?.categoryType ?? 'standard';
-      const isExcluded = Boolean(category.metadata?.excludeFromOverallBudget);
+      const isIncluded = !category.metadata?.excludeFromOverallBudget;
       return {
         id: category.id,
         name: category.name,
-        itemize: isExcluded,
+        disabled: !isIncluded,
       };
     });
 
@@ -1352,37 +1381,21 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       >
 
         <View style={styles.section}>
-          <Pressable
-            onPress={() => setShowArchivedCategories((prev) => !prev)}
-            style={({ pressed }) => [styles.inlineToggle, pressed && styles.pressed]}
-          >
-            <MaterialIcons
-              name={showArchivedCategories ? 'check-box' : 'check-box-outline-blank'}
-              size={20}
-              color={theme.colors.textSecondary}
-            />
-            <AppText variant="body" style={styles.inlineToggleText}>
-              Show Archived
-            </AppText>
-          </Pressable>
-        </View>
-        <View style={styles.section}>
           <AppText
             variant="caption"
             style={[styles.sectionTitle, textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme)]}
           >
-            Categories
+            Budget Categories
           </AppText>
           <TemplateToggleListCard
-            title="Categories"
-            rightHeaderLabel="Exclude"
+            title="Budget Categories"
+            rightHeaderLabel="Include"
             items={categoryToggleItems}
-            normalizeOrder={(next) => next}
             isItemDraggable={() => true}
             onDragActiveChange={setIsDragging}
             onPressCreate={handleStartCategoryCreate}
-            createPlaceholderLabel="+ create category"
-            onToggleItemize={async (id, next) => {
+            createPlaceholderLabel="Create Category"
+            onToggleDisabled={async (id, next) => {
               if (!accountId) return;
               if (!isOnline) {
                 Alert.alert('Offline', 'Category changes require an internet connection.');
@@ -1411,70 +1424,39 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
             getInfoContent={(it) => {
               const category = activeCategoryById[it.id];
               const categoryType = category?.metadata?.categoryType ?? 'standard';
-              const exclude = Boolean(category?.metadata?.excludeFromOverallBudget);
-              const typeDescription = categoryType === 'itemized' || categoryType === 'fee' 
-                ? categoryTypeHelper[categoryType] 
-                : 'Standard categories show up in budgets and reports.';
+              const included = !category?.metadata?.excludeFromOverallBudget;
+              const typeDescription = categoryTypeHelper[categoryType] ?? 'General categories show up in budgets and reports.';
               const parts = [
                 `Type: ${categoryType}`,
                 typeDescription,
-                exclude ? 'Excluded from overall budget.' : 'Included in overall budget.',
+                included ? 'Included in overall budget.' : 'Excluded from overall budget.',
               ].filter(Boolean);
               return {
                 title: category?.name ?? 'Category',
                 message: parts.join('\n\n'),
               };
             }}
-            onPressMenu={(id) => {
-              const category = activeCategoryById[id];
-              if (!category) return;
-              Alert.alert(category.name, 'Choose an action', [
+            getMenuTitle={(it) => activeCategoryById[it.id]?.name ?? it.name ?? 'Options'}
+            getMenuItems={(it) => {
+              const category = activeCategoryById[it.id];
+              if (!category) return [];
+              return [
                 {
-                  text: 'Edit',
+                  key: 'edit',
+                  label: 'Edit',
+                  icon: 'edit',
                   onPress: () => handleOpenCategoryEdit(category),
                 },
                 {
-                  text: 'Archive',
-                  style: 'destructive',
-                  onPress: () => handleArchiveCategory(category.id, true),
+                  key: 'delete',
+                  label: 'Delete',
+                  icon: 'delete',
+                  onPress: () => handleDeleteCategory(category.id, category.name),
                 },
-                { text: 'Cancel', style: 'cancel' },
-              ]);
+              ];
             }}
           />
         </View>
-
-        {showArchivedCategories ? (
-          <View style={styles.section}>
-            <AppText
-              variant="caption"
-              style={[styles.sectionTitle, textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme)]}
-            >
-              Archived Categories
-            </AppText>
-            <View style={[surface.overflowHidden, getCardStyle(uiKitTheme, { radius: 12, padding: theme.spacing.md })]}>
-              {archivedCategories.length === 0 ? (
-                <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
-                  No archived categories.
-                </AppText>
-              ) : (
-                archivedCategories.map((category) => (
-                  <View key={category.id} style={styles.listRow}>
-                    <AppText variant="body">{category.name}</AppText>
-                    <Pressable
-                      onPress={() => handleArchiveCategory(category.id, false)}
-                      style={({ pressed }) => [styles.actionChip, pressed && styles.pressed]}
-                    >
-                      <AppText variant="caption" style={styles.actionText}>
-                        Unarchive
-                      </AppText>
-                    </Pressable>
-                  </View>
-                ))
-              )}
-            </View>
-          </View>
-        ) : null}
 
         <MultiStepFormBottomSheet
           visible={editingCategoryId !== null}
@@ -1522,9 +1504,13 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
               <MultiSelectPicker
                 label="Category Type"
                 value={editingCategoryType}
-                onChange={(value) => setEditingCategoryType(value as ('itemized' | 'fee')[])}
-                multiSelect
+                onChange={(value) => setEditingCategoryType(value as 'standard' | 'general' | 'itemized' | 'fee')}
                 options={[
+                  {
+                    value: 'standard',
+                    label: 'General',
+                    description: categoryTypeHelper.standard,
+                  },
                   {
                     value: 'itemized',
                     label: 'Itemized',
@@ -2211,6 +2197,7 @@ export default function SettingsScreen() {
     <Screen
       key={visibleTabs.map((tab) => tab.key).join('|')}
       title="Settings"
+      includeBottomInset={false}
       refreshing={isRefreshing}
       onRefresh={handleRefresh}
       hideBackButton={true}

@@ -187,7 +187,7 @@ export function ComponentsGallery() {
             options={[
               {
                 value: 'standard',
-                label: 'Standard',
+                label: 'General',
                 description: 'Regular budget category for tracking expenses',
               },
               {

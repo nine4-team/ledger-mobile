@@ -1,0 +1,19 @@
+{
+  "name": "Bradshaws_Desert_Color_Rental/receipt-images/2026-01-06T02-01-01-332/1767664861332_image.jpg",
+  "bucket": "demo-ledger.appspot.com",
+  "metageneration": 1,
+  "generation": 1770332746502,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "downloadTokens": [],
+  "etag": "AkEZImlnREpfKQBqx3eifZNStAA",
+  "customMetadata": {
+    "originalMediaId": "a9934331d059d58717f2af33b2ed82556f6b121d99461c58707187ffd7653755",
+    "kind": "image"
+  },
+  "timeCreated": "2026-02-05T23:05:46.502Z",
+  "updated": "2026-02-05T23:05:46.502Z",
+  "size": 3980581,
+  "md5Hash": "dsTziKPzlNKzyFPRlKDcww==",
+  "crc32c": "2092640646"
+}

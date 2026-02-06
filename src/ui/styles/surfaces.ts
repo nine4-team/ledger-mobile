@@ -7,6 +7,14 @@ import { getCardBaseStyle, getCardBorderStyle, type ColorTheme } from '../kit';
  * Shared surface styles for cards/tiles.
  *
  * TODO(ui-kit): Add a first-class `Card` surface helper that combines base + border + background.
+ *
+ * ## Divider Pattern
+ *
+ * For dividers between list items or sections, use:
+ * - `borderTopWidth: 1` (not `height: StyleSheet.hairlineWidth`)
+ * - `borderTopColor: theme.border.secondary` (not `backgroundColor`)
+ *
+ * See `ExpandableCard` and `GroupedItemCard` for reference implementations.
  */
 export const surface = StyleSheet.create({
   overflowHidden: {

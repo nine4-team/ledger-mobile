@@ -4,7 +4,7 @@ import { StyleSheet, Text, Pressable, TouchableOpacity, View } from 'react-nativ
 import type { GestureResponderEvent } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { APP_CARD_PADDING, getCardBorderStyle, getCardBaseStyle } from '../ui';
+import { CARD_PADDING, getCardBorderStyle, getCardBaseStyle } from '../ui';
 import { AnchoredMenuItem, AnchoredMenuSubaction } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: APP_CARD_PADDING,
+    padding: CARD_PADDING,
     gap: 12,
   },
   titleRow: {
@@ -327,12 +327,12 @@ const styles = StyleSheet.create({
     minHeight: 28,
   },
   expandableRows: {
-    paddingHorizontal: APP_CARD_PADDING,
-    paddingBottom: APP_CARD_PADDING,
+    paddingHorizontal: CARD_PADDING,
+    paddingBottom: CARD_PADDING,
     gap: 12,
   },
   alwaysShowSection: {
-    padding: APP_CARD_PADDING,
+    padding: CARD_PADDING,
     borderTopWidth: 1,
     gap: 12,
   },

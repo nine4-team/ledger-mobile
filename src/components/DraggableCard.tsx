@@ -80,7 +80,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    height: 54,
+    paddingVertical: 4,
+    height: 62,
   },
   left: {
     flexDirection: 'row',

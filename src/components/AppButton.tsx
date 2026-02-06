@@ -28,8 +28,8 @@ export const AppButton: React.FC<AppButtonProps> = ({
     () =>
       StyleSheet.create({
         padding: {
-          paddingVertical: theme.spacing.md,
-          paddingHorizontal: theme.spacing.lg,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
         },
         primaryBg: {
           backgroundColor: uiKitTheme.button.primary.background,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: BUTTON_BORDER_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: 40,
   },
   content: {
     flexDirection: 'row',
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   leftIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   secondary: {
     borderWidth: 1,
@@ -107,8 +107,12 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 18,
   },
   secondaryText: {
     fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 18,
   },
 });

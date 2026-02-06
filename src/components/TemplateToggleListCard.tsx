@@ -2,8 +2,8 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
-import { useUIKitTheme } from '../theme/ThemeProvider';
-import { getCardStyle, getTextSecondaryStyle, surface, textEmphasis } from '../ui';
+import { useUIKitTheme } from '@/theme/ThemeProvider';
+import { getCardStyle, surface } from '../ui';
 import { AppText } from './AppText';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
@@ -15,17 +15,15 @@ import { InfoButton } from './InfoButton';
 export type TemplateToggleListItem = {
   id: string;
   name: string;
-  itemize: boolean;
-  disabled?: boolean;
+  disabled: boolean;
 };
 
 function bubbleDisabledToEnd(items: TemplateToggleListItem[]) {
   const enabled: TemplateToggleListItem[] = [];
   const disabled: TemplateToggleListItem[] = [];
   for (const it of items) {
-    // Bubble down items where the toggle (itemize) is OFF.
-    // Also respect the explicit disabled flag if present.
-    if (!it.itemize || it.disabled) disabled.push(it);
+    // Bubble down items where the toggle is OFF (disabled).
+    if (it.disabled) disabled.push(it);
     else enabled.push(it);
   }
   return enabled.concat(disabled);
@@ -43,17 +41,17 @@ export type TemplateToggleListCardProps = {
   title: string;
   rightHeaderLabel: string;
   items: TemplateToggleListItem[];
-  onToggleItemize: (id: string, next: boolean) => void;
+  onToggleDisabled: (id: string, next: boolean) => void;
   onReorderItems?: (nextItems: TemplateToggleListItem[]) => void;
   onDragActiveChange?: (isDragging: boolean) => void;
   /**
    * Controls which items are draggable. Defaults to:
-   * - draggable when toggle is ON (itemize === true) and not disabled.
+   * - draggable when toggle is ON (disabled === false).
    */
   isItemDraggable?: (item: TemplateToggleListItem) => boolean;
   /**
    * Optional normalization step applied any time items are set/reordered.
-   * Defaults to bubbling items with toggle OFF (or disabled) to the bottom.
+   * Defaults to bubbling items with toggle OFF (disabled) to the bottom.
    */
   normalizeOrder?: (items: TemplateToggleListItem[]) => TemplateToggleListItem[];
   /**
@@ -62,6 +60,16 @@ export type TemplateToggleListCardProps = {
    */
   getInfoContent?: (item: TemplateToggleListItem) => InfoDialogContent;
   onPressInfo?: (id: string) => void;
+  /**
+   * Preferred: provide menu items and this card will render a canonical bottom-sheet menu.
+   * If omitted, falls back to `onPressMenu` to preserve prior behavior.
+   */
+  getMenuItems?: (item: TemplateToggleListItem) => AnchoredMenuItem[];
+  /**
+   * Optional title for the bottom-sheet menu.
+   * Defaults to the item's name (or "Options").
+   */
+  getMenuTitle?: (item: TemplateToggleListItem) => string;
   onPressMenu?: (id: string) => void;
   onPressCreate?: () => void;
   createPlaceholderLabel?: string;
@@ -72,13 +80,15 @@ export function TemplateToggleListCard({
   title,
   rightHeaderLabel,
   items,
-  onToggleItemize,
+  onToggleDisabled,
   onReorderItems,
   onDragActiveChange,
   isItemDraggable,
   normalizeOrder,
   getInfoContent,
   onPressInfo,
+  getMenuItems,
+  getMenuTitle,
   onPressMenu,
   onPressCreate,
   createPlaceholderLabel = 'Click to create new',
@@ -102,11 +112,8 @@ export function TemplateToggleListCard({
     () =>
       StyleSheet.create({
         card: getCardStyle(uiKitTheme, { radius: 12 }),
-        headerBg: {
-          backgroundColor: uiKitTheme.background.tertiary ?? uiKitTheme.background.screen,
-        },
         divider: {
-          backgroundColor: uiKitTheme.border.secondary,
+          borderTopColor: uiKitTheme.border.secondary,
         },
         rowText: {
           color: uiKitTheme.text.primary,
@@ -118,7 +125,7 @@ export function TemplateToggleListCard({
           color: uiKitTheme.text.secondary,
         },
         createText: {
-          color: uiKitTheme.text.secondary,
+          color: uiKitTheme.primary.main,
         },
         toggleOnBg: {
           backgroundColor: uiKitTheme.button.primary.background ?? uiKitTheme.primary.main,
@@ -134,9 +141,11 @@ export function TemplateToggleListCard({
     [uiKitTheme]
   );
 
-  const itemHeight = 54 + StyleSheet.hairlineWidth;
+  const itemHeight = 62 + StyleSheet.hairlineWidth;
+  const itemContainerStyle = useMemo(() => ({ height: itemHeight }), [itemHeight]);
   const menuItems: AnchoredMenuItem[] = useMemo(() => {
     if (!menuTarget) return [];
+    if (getMenuItems) return getMenuItems(menuTarget);
     const name = menuTarget.name;
     return [
       {
@@ -164,37 +173,21 @@ export function TemplateToggleListCard({
 
   const handleMenuPress = useCallback(
     (item: TemplateToggleListItem) => {
-      if (onPressMenu) {
-        onPressMenu(item.id);
+      if (getMenuItems) {
+        setMenuTarget(item);
+        setMenuVisible(true);
         return;
       }
+      // Back-compat: if a parent provides its own menu handler, defer to it.
+      if (onPressMenu) return onPressMenu(item.id);
       setMenuTarget(item);
       setMenuVisible(true);
     },
-    [onPressMenu]
+    [getMenuItems, onPressMenu]
   );
 
   return (
     <View style={[surface.overflowHidden, themed.card, style]} accessibilityRole="none">
-      <View style={[styles.headerRow, themed.headerBg]}>
-        <AppText
-          variant="caption"
-          style={[textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme)]}
-          numberOfLines={1}
-        >
-          {title}
-        </AppText>
-        <AppText
-          variant="caption"
-          style={[textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme)]}
-          numberOfLines={1}
-        >
-          {rightHeaderLabel}
-        </AppText>
-      </View>
-
-      <View style={[styles.divider, themed.divider]} />
-
       <DraggableCardList
         items={orderedItems}
         getItemId={(it) => it.id}
@@ -206,34 +199,38 @@ export function TemplateToggleListCard({
         }}
         onDragActiveChange={onDragActiveChange}
         isItemDraggable={(it) =>
-          isItemDraggable ? isItemDraggable(it) : it.itemize && !Boolean(it.disabled)
+          isItemDraggable ? isItemDraggable(it) : !it.disabled
         }
         renderItem={({ item, isActive, dragHandleProps }) => {
-          const disabled = Boolean(item.disabled);
+          const isDimmed = item.disabled;
+          const iconColor = isDimmed ? uiKitTheme.text.secondary : themed.iconBrown.color;
           return (
-            <View style={{ height: itemHeight }}>
+            <View style={itemContainerStyle}>
               <DraggableCard
                 title={item.name}
-                disabled={disabled}
+                disabled={isDimmed}
                 isActive={isActive}
                 dragHandleProps={dragHandleProps}
                 right={
-                  <>
+                  <View style={[styles.rightContent, isDimmed && styles.dimmedRight]}>
                     <Pressable
                       accessibilityRole="switch"
-                      accessibilityState={{ checked: item.itemize, disabled }}
+                      accessibilityState={{ checked: !item.disabled, disabled: false }}
                       accessibilityLabel={`${rightHeaderLabel} ${item.name}`}
-                      disabled={disabled}
-                      onPress={() => onToggleItemize(item.id, !item.itemize)}
+                      disabled={false}
+                      onPress={() => onToggleDisabled(item.id, !item.disabled)}
                       hitSlop={8}
-                      style={({ pressed }) => [styles.toggleContainer, pressed && !disabled && styles.pressed]}
+                      style={({ pressed }) => [
+                        styles.toggleContainer,
+                        pressed && styles.pressed,
+                      ]}
                     >
-                      <View style={[styles.toggle, item.itemize ? themed.toggleOnBg : themed.toggleOffBg]}>
+                      <View style={[styles.toggle, !item.disabled ? themed.toggleOnBg : themed.toggleOffBg]}>
                         <View
                           style={[
                             styles.toggleThumb,
                             themed.toggleThumb,
-                            { transform: [{ translateX: item.itemize ? 20 : 0 }] },
+                            { transform: [{ translateX: !item.disabled ? 20 : 0 }] },
                           ]}
                         />
                       </View>
@@ -243,7 +240,7 @@ export function TemplateToggleListCard({
                       <InfoButton
                         accessibilityLabel={`Info for ${item.name}`}
                         content={getInfoContent(item)}
-                        iconColor={themed.iconBrown.color}
+                        iconColor={iconColor}
                         iconSize={18}
                         style={styles.iconButton}
                         onPress={() => onPressInfo?.(item.id)}
@@ -256,7 +253,7 @@ export function TemplateToggleListCard({
                         style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
                         onPress={() => onPressInfo?.(item.id)}
                       >
-                        <MaterialIcons name="info-outline" size={18} color={themed.iconBrown.color} />
+                        <MaterialIcons name="info-outline" size={18} color={iconColor} />
                       </Pressable>
                     )}
 
@@ -267,9 +264,9 @@ export function TemplateToggleListCard({
                       style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
                       onPress={() => handleMenuPress(item)}
                     >
-                      <MaterialIcons name="more-vert" size={20} color={themed.iconBrown.color} />
+                      <MaterialIcons name="more-vert" size={20} color={iconColor} />
                     </Pressable>
-                  </>
+                  </View>
                 }
               />
               <View style={[styles.divider, themed.divider]} />
@@ -287,7 +284,7 @@ export function TemplateToggleListCard({
         >
           <View style={styles.createLeft}>
             <View style={styles.createPlus}>
-              <MaterialIcons name="add" size={18} color={themed.icon.color} />
+              <MaterialIcons name="add" size={18} color={themed.iconBrown.color} />
             </View>
             <AppText variant="body" style={[styles.createLabel, themed.createText]} numberOfLines={1}>
               {createPlaceholderLabel}
@@ -297,12 +294,12 @@ export function TemplateToggleListCard({
         </Pressable>
       ) : null}
 
-      {!onPressMenu ? (
+      {!onPressMenu || getMenuItems ? (
         <BottomSheetMenuList
           visible={menuVisible}
           onRequestClose={closeMenu}
           items={menuItems}
-          title={menuTarget?.name ?? 'Options'}
+          title={menuTarget ? (getMenuTitle ? getMenuTitle(menuTarget) : menuTarget.name) : 'Options'}
         />
       ) : null}
     </View>
@@ -310,22 +307,22 @@ export function TemplateToggleListCard({
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
   divider: {
-    height: StyleSheet.hairlineWidth,
-    opacity: 0.9,
+    borderTopWidth: 1,
   },
   iconButton: {
     padding: 6,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dimmedRight: {
+    opacity: 0.6,
   },
   toggleContainer: {
     alignItems: 'center',
@@ -373,7 +370,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   createLabel: {
-    fontStyle: 'italic',
     fontWeight: '500',
   },
   createRight: {

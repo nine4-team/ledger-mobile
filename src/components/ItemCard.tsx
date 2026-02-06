@@ -3,8 +3,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
+import { resolveAttachmentUri } from '../offline/media';
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { APP_CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { CARD_PADDING, CARD_BORDER_WIDTH, getCardBaseStyle, getCardBorderStyle } from '../ui';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { SelectorCircle } from './SelectorCircle';
@@ -73,6 +74,7 @@ export function ItemCard({
         card: {
           backgroundColor: uiKitTheme.background.surface,
           shadowColor: uiKitTheme.shadow,
+          borderWidth: CARD_BORDER_WIDTH,
           borderColor: isSelected ? uiKitTheme.primary.main : uiKitTheme.border.primary,
         },
         pill: {
@@ -236,12 +238,27 @@ export function ItemCard({
 
           <View style={styles.bottomRow}>
             <View style={styles.thumbCol}>
-              {thumbnailUri ? (
+              {thumbnailUri && !thumbnailUri.startsWith('offline://') ? (
                 <Image
-                  source={{ uri: thumbnailUri }}
+                  source={{ uri: resolveAttachmentUri({ url: thumbnailUri, kind: 'image', contentType: 'image/jpeg' }) ?? thumbnailUri }}
                   style={[styles.thumb, themed.placeholderBorder]}
                   accessibilityIgnoresInvertColors
                 />
+              ) : thumbnailUri && thumbnailUri.startsWith('offline://') ? (
+                (() => {
+                  const resolved = resolveAttachmentUri({ url: thumbnailUri, kind: 'image', contentType: 'image/jpeg' });
+                  return resolved ? (
+                    <Image
+                      source={{ uri: resolved }}
+                      style={[styles.thumb, themed.placeholderBorder]}
+                      accessibilityIgnoresInvertColors
+                    />
+                  ) : (
+                    <View style={[styles.thumbPlaceholder, themed.placeholderBorder]}>
+                      <MaterialIcons name="image-not-supported" size={24} color={uiKitTheme.text.secondary} />
+                    </View>
+                  );
+                })()
               ) : (
                 <Pressable
                   onPress={(e) => {
@@ -311,7 +328,7 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   content: {
-    padding: APP_CARD_PADDING,
+    padding: CARD_PADDING,
     gap: 12,
   },
   topRow: {
@@ -361,15 +378,15 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   thumb: {
-    width: 72,
-    height: 72,
-    borderRadius: 14,
+    width: 108,
+    height: 108,
+    borderRadius: 21,
     borderWidth: 1,
   },
   thumbPlaceholder: {
-    width: 72,
-    height: 72,
-    borderRadius: 14,
+    width: 108,
+    height: 108,
+    borderRadius: 21,
     borderWidth: 1,
     borderStyle: 'dashed',
     alignItems: 'center',

@@ -9,7 +9,7 @@ import { BackgroundSyncErrorNotifier } from '../src/components/BackgroundSyncErr
 import { NetworkStatusBanner } from '../src/components/NetworkStatusBanner';
 import { SyncStatusPill } from '../src/components/SyncStatusPill';
 import { isAuthBypassEnabled } from '../src/auth/authConfig';
-import { ThemeProvider } from '../src/theme/ThemeProvider';
+import { ThemeProvider } from '@/theme/ThemeProvider';
 import { startRequestDocTracking } from '../src/sync/requestDocTracker';
 import { hydrateMediaStore } from '../src/offline/media/mediaStore';
 import { useListStateStore } from '../src/data/listStateStore';
@@ -77,6 +77,7 @@ export default function RootLayout() {
       return;
     }
     if (accountId) {
+      setIsResolvingAccountSelection(false);
       return;
     }
 

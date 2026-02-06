@@ -54,6 +54,7 @@ export default function ScreenTwo() {
   return (
     <Screen
       title="Inventory"
+      includeBottomInset={false}
       refreshing={isRefreshing}
       onRefresh={handleRefresh}
       contentStyle={{ paddingTop: SCREEN_PADDING }}
