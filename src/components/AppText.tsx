@@ -3,7 +3,11 @@ import { Text, TextProps, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 
 interface AppTextProps extends TextProps {
-  variant?: 'h1' | 'h2' | 'body' | 'caption';
+  /**
+   * `title` is kept for back-compat with earlier screens.
+   * It maps to the same typography as `h2`.
+   */
+  variant?: 'h1' | 'h2' | 'title' | 'body' | 'caption';
 }
 
 export const AppText: React.FC<AppTextProps> = ({
@@ -19,6 +23,7 @@ export const AppText: React.FC<AppTextProps> = ({
       case 'h1':
         return { ...theme.typography.h1, color: theme.colors.text };
       case 'h2':
+      case 'title':
         return { ...theme.typography.h2, color: theme.colors.text };
       case 'caption':
         return { ...theme.typography.caption, color: theme.colors.textSecondary };
@@ -39,6 +44,7 @@ const styles = StyleSheet.create({
   // NOTE: These are “base” styles; dynamic theme colors/typography are applied inline.
   h1: {},
   h2: {},
+  title: {},
   body: {},
   caption: {},
 });

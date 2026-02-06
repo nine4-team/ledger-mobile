@@ -18,6 +18,7 @@ export function FilterMenu({ visible, onRequestClose, items, title = 'Filters' }
       title={title}
       closeOnSubactionPress={false}
       closeOnItemPress={false}
+      hideDefaultLabel={true}
     />
   );
 }

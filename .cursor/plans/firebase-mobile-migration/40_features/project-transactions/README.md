@@ -30,7 +30,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **Project Tran
 - Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows)
 - Image gallery/lightbox behavior: `40_features/_cross_cutting/ui/components/image_gallery_lightbox.md`
 - Navigation/stacked back/scroll restoration parity: `40_features/feature_list.md` → `navigation-stack-and-context-links`
-- Canonical transaction semantics + item-driven attribution: `40_features/project-items/feature_spec.md`
+- Canonical inventory sale semantics (category-coded + direction-coded): `40_features/project-items/feature_spec.md`
 
 ## Parity evidence (web sources)
 - Transactions list (filters/sorts/search/export, canonical total self-heal, nav stack + scroll restore):

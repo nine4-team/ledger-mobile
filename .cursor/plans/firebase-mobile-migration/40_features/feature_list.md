@@ -358,7 +358,7 @@ Evidence sources (all in-repo):
     - Moving/selling/deallocating to Business Inventory triggers deallocation behavior (see cross-cutting “allocation/deallocation”)
 - Budget category attribution (canonical transactions):
   - Each item must persist a stable `inheritedBudgetCategoryId` (see `inventory-operations-and-lineage` + canonical attribution rules).
-  - Canonical inventory transactions should not require a user-facing budget category; budgeting attribution is item-driven via linked items.
+  - Canonical inventory sale transactions are system-owned and category-coded; budgeting attribution uses `transaction.budgetCategoryId` with sign based on direction.
 - **Entities touched**: items, item images/media, spaces, transactions (link), projects, conflicts (item conflicts), `inheritedBudgetCategoryId`
 - **Offline behaviors required**:
   - Create/edit/delete offline (local-first)
@@ -413,7 +413,7 @@ Evidence sources (all in-repo):
     - Export transactions to CSV (project-scoped filename)
   - Canonical transactions:
     - App has special casing for canonical inventory transactions (must preserve semantics in Firebase)
-    - Budget/category attribution for canonical rows is **item-driven** (group linked items by `inheritedBudgetCategoryId`), not `transaction.budgetCategoryId`
+    - Budget/category attribution for canonical inventory sale rows is **transaction-driven** (`transaction.budgetCategoryId`), with sign based on direction
     - Canonical inventory transactions should not require a user-facing budget category (keep uncategorized; attribution is derived).
 - **Entities touched**: transactions, budget categories, vendor defaults, attachments/media (receipts/other images), items (linked/itemized), conflicts
 - **Offline behaviors required**:
@@ -552,8 +552,8 @@ Evidence sources (all in-repo):
   - Budget view:
     - Spend vs budget by category
     - Includes fee tracker categories and category budgets
-  - Canonical inventory transactions contribute to category totals via **item-driven attribution** (`inheritedBudgetCategoryId` on linked items), not `transaction.budgetCategoryId`
-  - Canonical inventory transactions contribute to category totals via **item-driven attribution** (`inheritedBudgetCategoryId` on linked items), not `transaction.budgetCategoryId`
+  - Canonical inventory sale transactions contribute to category totals via `transaction.budgetCategoryId` (category-coded), with sign based on direction
+  - Canonical inventory sale transactions contribute to category totals via `transaction.budgetCategoryId` (category-coded), with sign based on direction
   - Fee tracker categories are tracked as **received** (not “spent”)
   - Categories are included in overall rollups by default; categories can be excluded from overall spent + overall budget denominator via `excludeFromOverallBudget`
   - Fee specialness should be bound to explicit category metadata (`categoryType === 'fee'`), not a mutable display name

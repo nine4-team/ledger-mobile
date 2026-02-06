@@ -20,8 +20,10 @@ export type AnchoredMenuItem = {
   onPress?: () => void;
   icon?: MenuIconName;
   subactions?: AnchoredMenuSubaction[];
+  selectedSubactionKey?: string;
   defaultSelectedSubactionKey?: string;
   suppressDefaultCheckmark?: boolean;
+  destructive?: boolean;
 };
 
 export interface AnchoredMenuListProps {
@@ -75,6 +77,7 @@ export function AnchoredMenuList({
 
         if (isSubmenuItem) {
           const currentKey =
+            item.selectedSubactionKey ??
             selectedSubactionByKey[itemKey] ??
             item.defaultSelectedSubactionKey ??
             subactions[0]?.key;
@@ -97,12 +100,22 @@ export function AnchoredMenuList({
                   {showLeadingIcons ? (
                     <MaterialIcons name={item.icon ?? 'build'} size={20} color={menuItemIconColor} />
                   ) : null}
-                  <Text style={[styles.menuSectionTitle, { color: uiKitTheme.text.primary }]}>
+                  <Text
+                    style={[
+                      styles.menuSectionTitle,
+                      { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                    ]}
+                  >
                     {item.label}
                   </Text>
                 </View>
                 <View style={styles.menuSectionRight}>
-                  <Text style={[styles.menuSectionValue, { color: uiKitTheme.text.secondary }]}>
+                  <Text
+                    style={[
+                      styles.menuSectionValue,
+                      { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.secondary },
+                    ]}
+                  >
                     {currentLabel}
                   </Text>
                   <MaterialIcons
@@ -127,6 +140,12 @@ export function AnchoredMenuList({
                   {subactions.map((sub, subIdx) => {
                     const showSubDivider = subIdx < subactions.length - 1;
                     const selectedSub = currentKey === sub.key;
+                    const isDefaultSelected =
+                      selectedSub &&
+                      item.defaultSelectedSubactionKey != null &&
+                      sub.key === item.defaultSelectedSubactionKey;
+                    const allowCheck = !item.suppressDefaultCheckmark || !isDefaultSelected;
+                    const isHighlighted = selectedSub && allowCheck;
 
                     return (
                       <View key={sub.key}>
@@ -148,15 +167,20 @@ export function AnchoredMenuList({
                               <MaterialIcons
                                 name={sub.icon ?? item.icon ?? 'build'}
                                 size={20}
-                                color={menuItemIconColor}
+                                color={isHighlighted ? uiKitTheme.primary.main : menuItemIconColor}
                               />
                             ) : null}
-                            <Text style={[styles.menuItemText, { color: uiKitTheme.text.primary }]}>
+                            <Text
+                              style={[
+                                styles.menuItemText,
+                                { color: isHighlighted ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                              ]}
+                            >
                               {sub.label}
                             </Text>
                           </View>
-                          {selectedSub && showCheckmark ? (
-                            <MaterialIcons name="check" size={20} color={uiKitTheme.text.primary} />
+                          {isHighlighted ? (
+                            <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
                           ) : (
                             <View />
                           )}

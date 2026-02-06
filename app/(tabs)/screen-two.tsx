@@ -30,7 +30,7 @@ export default function ScreenTwo() {
     if (storedTab === 'transactions' || storedTab === 'spaces') {
       return storedTab;
     }
-    return 'items';
+    return 'transactions';
   }, [params.tab, storedTab]);
 
   useEffect(() => {

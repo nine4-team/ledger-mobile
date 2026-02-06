@@ -36,12 +36,12 @@ Prompt packs:
 ## Prompt packs (copy/paste)
 Create 3 slices so separate AI dev chats can implement/validate in parallel:
 
-- Slice A: rollup math + Firestore query/join shape + canonical item-driven attribution
+- Slice A: rollup math + Firestore query shape + canonical inventory sales (direction-coded)
 - Slice B: fee category identity + category metadata strategy (`categoryType`)
 - Slice C: accounting rollups + report entrypoints wiring
 
 ## Done when (quality gates)
 - Acceptance criteria all have parity evidence or explicit deltas.
-- Canonical attribution is explicitly item-driven and ignores canonical transaction category fields.
+- Canonical attribution is explicitly transaction-driven for canonical inventory sale rows (category-coded) and applies sign by direction.
 - Fee tracker specialness is keyed by explicit category metadata (`categoryType === 'fee'`).
 - Offline behavior is explicit (computed from Firestore-cached data via Firestore-native offline persistence; no network required to render last-known data).

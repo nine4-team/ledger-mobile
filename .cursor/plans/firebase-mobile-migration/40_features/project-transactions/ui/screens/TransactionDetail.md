@@ -27,7 +27,9 @@ Shared-module requirement:
   - Lineage edges for this transaction (filter by intent `movementKind` for **Sold** and **Returned**)
 - Derived view models:
   - Canonical title mapping
-  - Canonical total computation (canonical sale/purchase) for display
+  - Canonical amount display:
+    - Prefer `transaction.amountCents` as authoritative for canonical inventory sale rows (system-owned)
+    - Optional: compute from linked items for display-only diagnostics (no client write-back)
   - Gallery images set is derived from receipts + other images (excluding non-image receipt attachments like PDFs)
 - Cached metadata dependencies:
   - Budget categories (and any itemization rules attached to them)
@@ -41,10 +43,10 @@ Source of truth:
 Rules:
 
 - **Non-canonical**: display category name from `transaction.budgetCategoryId` and use it for itemization enablement.
-- **Canonical inventory** (`INV_PURCHASE_*`, `INV_SALE_*`):
-  - Treat the transaction row as **uncategorized** (recommend `transaction.budgetCategoryId = null`).
-  - Display category as “Uncategorized” or omit the category row entirely (choose one UI pattern and keep consistent).
-  - Any budgeting attribution related to canonical rows is **item-driven** via linked items’ `inheritedBudgetCategoryId` (no “canonical category” picker).
+- **Canonical inventory sale (system)** (recommended id prefix `INV_SALE__`):
+  - The transaction is category-coded (`transaction.budgetCategoryId` populated) and direction-coded (`inventorySaleDirection` populated).
+  - Display category normally (same as non-canonical) but treat the transaction as system-owned/read-only.
+    Recommended: include a small “System” badge near the title or amount.
 
 ## Writes (local-first)
 
@@ -90,7 +92,8 @@ When the user links/assigns items to this transaction:
 
 - If the transaction is **non-canonical** and has a non-null `transaction.budgetCategoryId`, set:
   - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
-- If the transaction is **canonical inventory** (`INV_*`), do **not** overwrite `item.inheritedBudgetCategoryId`.
+- Canonical inventory sale transactions are system-owned; TransactionDetail must not offer “add existing items” or other item-linking writes for canonical rows.
+  (Items linked to canonical rows are produced only by inventory sale request-doc flows.)
 
 ## UI structure (high level)
 - Header:
@@ -137,7 +140,7 @@ When the user links/assigns items to this transaction:
   - If itemization disabled but there are existing items: show items with a warning.
 - **Transaction actions menu**:
   - Edit navigates to edit form.
-  - Move is disabled for canonical inventory sale/purchase transactions.
+  - Move is disabled for canonical inventory sale transactions.
   - Delete triggers explicit confirmation.
 
 ## States

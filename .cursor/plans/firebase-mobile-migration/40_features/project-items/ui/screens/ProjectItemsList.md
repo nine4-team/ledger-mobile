@@ -110,54 +110,42 @@ Source of truth:
 
 ## Item action restrictions (required)
 
-### 1) Project → Business Inventory guardrail (missing `inheritedBudgetCategoryId`)
+### 1) Project → Business Inventory category resolution (prompt + persist)
 
-If an item’s `inheritedBudgetCategoryId` is missing, the row actions menu must disable:
-
-- **Sell → Sell to Design Business**
-
-Required disable reason (tooltip/help text):
-
-`Link this item to a categorized transaction before moving it to Design Business Inventory.`
+If an item’s `inheritedBudgetCategoryId` is missing, the row actions menu must still allow `Sell → Sell to Business`, but initiating the action must:
+- Prompt the user to select a category from the source project’s enabled categories.
+- Persist it onto the item (`item.inheritedBudgetCategoryId`).
+- Then proceed with the canonical sale (`project_to_business`) request-doc workflow.
 
 Notes:
-
-- “Categorized transaction” means a non-canonical transaction with a category.
 - This is an **intentional Firebase-migration delta**; current web code does not check this field (field does not exist yet).
-- “Move to Design Business” is a correction path and does not create canonical transactions in current web behavior (`moveItemToBusinessInventory` in `src/services/inventoryService.ts`). It may remain enabled even when `inheritedBudgetCategoryId` is missing.
+- “Move to Business Inventory” is a correction path and does not create canonical sale transactions; it remains blocked when the item is transaction-attached (same parity behavior).
 
 ---
 
 ## Status changes (required)
 
-### 2) “Sell/Deallocate to Business Inventory” triggers deallocation (and must apply the guardrail)
+### 2) “Sell to Business” triggers canonical deallocation (and may prompt)
 
-When the user initiates “Sell/Deallocate to Business Inventory”, the system triggers deallocation (project → business inventory).
+When the user initiates `Sell → Sell to Business`, the system triggers the canonical deallocation flow (project → business inventory).
 
 Parity evidence (web):
 
 - `InventoryList` calls `integrationService.handleItemDeallocation(...)` from the item actions menu / flow (`src/pages/InventoryList.tsx`).
 
 Required Firebase-migration policy:
-
-- If `inheritedBudgetCategoryId` is missing, block the sell/deallocate action and show:
-
-**Error toast**:
-
-`Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
-
-And keep the item unchanged (no optimistic scope/status change that later reverts).
+- If `inheritedBudgetCategoryId` is missing, prompt for a category (per section 1) and persist it before submitting the request doc.
+- If the user cancels the prompt, do not enqueue the request and keep the item unchanged.
 
 ---
 
 ## Bulk actions (required)
 
-### 3) Bulk sell/deallocate to Business Inventory
+### 3) Bulk sell to Business
 
-If the user bulk-initiates sell/deallocate to Business Inventory, apply the same guardrail:
-
-- If any selected item is missing `inheritedBudgetCategoryId`, the bulk operation must not proceed.
-- Show the same error toast as the single-item flow.
+If the user bulk-initiates `Sell → Sell to Business`:
+- If any selected item is missing `inheritedBudgetCategoryId`, prompt once for a category and apply it to the uncategorized items in the batch before submitting the request(s).
+- The backend must split the operation into one canonical sale transaction per category as needed (no special UI required beyond the prompt).
 
 Parity evidence (web):
 
@@ -169,10 +157,8 @@ Intentional delta (vs web):
 
 ### 4) Bulk move/sell (future surface)
 
-If/when the Project Items list adds bulk “Move/Sell to Business Inventory” actions, they must:
-
-- Be disabled when any selected item is missing `inheritedBudgetCategoryId`
-- Use the same disable reason + error toast copy
+If/when the Project Items list adds additional bulk “Move/Sell to Business Inventory” actions, they must follow the same prompt + persist rule for missing item category id.
+Avoid “hard blocking” the operation solely due to missing category; resolve via prompt instead.
 
 ## Add item entrypoint (required; parity)
 

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
+import { BudgetProgress } from '../../src/components/BudgetProgress';
 import { layout } from '../../src/ui';
 import { AppButton } from '../../src/components/AppButton';
 import { AppScrollView } from '../../src/components/AppScrollView';
@@ -15,6 +16,7 @@ import { useAuthStore } from '../../src/auth/authStore';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
 import { fetchProjectPreferencesMap, ensureProjectPreferences } from '../../src/data/projectPreferencesService';
 import { ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
+import { refreshProjectBudgetProgress } from '../../src/data/budgetProgressService';
 import { resolveAttachmentUri } from '../../src/offline/media';
 
 export default function ProjectsScreen() {
@@ -62,6 +64,7 @@ function ProjectsList() {
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { id: string; name: string }>>({});
   const [projectPreferences, setProjectPreferences] = useState<Record<string, { pinnedBudgetCategoryIds: string[] }>>({});
   const [budgetTotals, setBudgetTotals] = useState<Record<string, number>>({});
+  const [budgetSpentTotals, setBudgetSpentTotals] = useState<Record<string, number>>({});
   const screenTabs = useScreenTabs();
   const tabKey = screenTabs?.selectedKey === 'archived' ? 'archived' : 'active';
   const theme = useTheme();
@@ -169,6 +172,30 @@ function ProjectsList() {
       }
     };
     void loadTotals();
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, projects]);
+
+  useEffect(() => {
+    if (!accountId || projects.length === 0) {
+      setBudgetSpentTotals({});
+      return;
+    }
+    let cancelled = false;
+    const loadSpentTotals = async () => {
+      const totals: Record<string, number> = {};
+      await Promise.all(
+        projects.map(async (project) => {
+          const progress = await refreshProjectBudgetProgress(accountId, project.id, 'offline');
+          totals[project.id] = progress.spentCents;
+        })
+      );
+      if (!cancelled) {
+        setBudgetSpentTotals(totals);
+      }
+    };
+    void loadSpentTotals();
     return () => {
       cancelled = true;
     };
@@ -289,6 +316,13 @@ function ProjectsList() {
                           ? `Budget: $${(budgetTotals[project.id] / 100).toFixed(2)}`
                           : 'Budget not set'}
                       </AppText>
+                      {typeof budgetTotals[project.id] === 'number' ? (
+                        <BudgetProgress
+                          spentCents={budgetSpentTotals[project.id] ?? 0}
+                          budgetCents={budgetTotals[project.id] ?? 0}
+                          compact
+                        />
+                      ) : null}
                       {projectPreferences[project.id]?.pinnedBudgetCategoryIds?.length ? (
                         <AppText variant="caption" style={styles.budgetPins}>
                           {projectPreferences[project.id].pinnedBudgetCategoryIds

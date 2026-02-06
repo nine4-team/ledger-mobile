@@ -4,7 +4,7 @@
 Implement the UX surface for Roles v2 without changing the underlying business model:
 
 - category pickers/filters show only `allowedBudgetCategoryIds` for scoped users
-- canonical `INV_*` Transaction Detail shows **only** in-scope linked items (hide out-of-scope items completely)
+- canonical inventory sale Transaction Detail shows **only** in-scope linked items (hide out-of-scope items completely)
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
@@ -19,7 +19,7 @@ Implement the UX surface for Roles v2 without changing the underlying business m
   - canonical transaction detail:
     - displays only in-scope linked items
     - does not show out-of-scope item counts or redacted placeholders
-    - uses canonical attribution semantics for category-related UI (item-driven)
+    - treats the transaction itself as category-coded (`transaction.budgetCategoryId`) but still enforces item read visibility rules for linked items
 
 ## Constraints
 - UI gating is required but not sufficient; do not weaken server-side enforcement assumptions.

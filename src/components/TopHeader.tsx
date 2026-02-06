@@ -95,7 +95,11 @@ export function TopHeader({
         style={[
           styles.header,
           getScreenHeaderStyle(uiKitTheme, insets),
-          { backgroundColor: uiKitTheme.background.screen },
+          // Force relative positioning so the header takes up space in the layout flow.
+          // This prevents content from sliding under the header and getting clipped.
+          styles.headerInFlow,
+          // Keep header on chrome layer for clearer separation from screen background.
+          { backgroundColor: uiKitTheme.background.chrome },
           hideBottomBorder && styles.headerNoBorder,
         ]}
       >
@@ -162,6 +166,10 @@ export function TopHeader({
 const styles = StyleSheet.create({
   header: {
     justifyContent: 'space-between',
+    zIndex: 1, // Ensure header stays above content if there's any overlap
+  },
+  headerInFlow: {
+    position: 'relative',
   },
   headerNoBorder: {
     borderBottomWidth: 0,
@@ -214,5 +222,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 48,
     minHeight: 48,
+  },
+  headerTransparent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    borderBottomWidth: 0,
+  },
+  headerTransparent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    borderBottomWidth: 0,
   },
 });

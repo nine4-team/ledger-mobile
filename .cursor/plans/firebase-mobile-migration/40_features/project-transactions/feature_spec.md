@@ -32,18 +32,22 @@ Definitions:
 
 - **Non-canonical (user-facing) transaction**: a normal user-entered transaction where budget category attribution is **transaction-driven** via `transaction.budgetCategoryId`.
   - Legacy naming notes: web/SQL docs may refer to this as `category_id`; the canonical SQLite column name is `budget_category_id` (see `20_data/data_contracts.md`).
-- **Canonical inventory transaction**: a system-generated row with id `INV_PURCHASE_<projectId>` or `INV_SALE_<projectId>`.
-  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
+- **Canonical inventory sale transaction (system)**: a system-generated **sale** row used for cross-scope movement.
+  Canonical inventory sale transactions are:
+  - direction-coded (`business_to_project` or `project_to_business`)
+  - category-coded (`transaction.budgetCategoryId` is required)
+  - deterministic (one per `(projectId, direction, budgetCategoryId)`, recommended id prefix `INV_SALE__`)
+  - Note: “project → project” movement is modeled as two hops (project → business, then business → project).
 
 Rules (required):
 
 - **Non-canonical**: budget category attribution comes from `transaction.budgetCategoryId`.
-- **Canonical inventory**: must be treated as **uncategorized** on the transaction row (recommend `budgetCategoryId = null`) and category attribution is **item-driven** by grouping linked items by `item.inheritedBudgetCategoryId`.
+- **Canonical inventory sale**: category attribution also comes from `transaction.budgetCategoryId` (category-coded invariant). Rollups apply sign based on direction.
 
 Implications for this feature:
 
-- “Budget category” UI (badges, filters, exports) must not assume canonical rows have a meaningful `budgetCategoryId`.
-- Any “budget category filter” must include canonical rows via linked items’ `inheritedBudgetCategoryId` rather than `transaction.budgetCategoryId`.
+- “Budget category” UI (badges, filters, exports) works uniformly for non-canonical and canonical sale rows because canonical sale rows are category-coded.
+- Canonical sale rows are still system-owned/read-only; UI should avoid exposing an “Edit category” flow for them.
 
 ## Owned screens / routes
 - **Transactions list**: `ProjectTransactionsPage` → `TransactionsList` (shared screen; business-inventory wrapper composes the same list component with `scope='inventory'`)
@@ -75,14 +79,13 @@ Filters/sorts/search (web parity):
 - Search matches title/source/type/notes and amount-ish queries.
 
 Canonical transaction display:
-- Canonical sale/purchase transaction IDs are displayed with special titles (“Company Inventory Sale/Purchase” style titles).
+- Canonical inventory sale transaction IDs are displayed with special titles that reflect direction (e.g., “Inventory → Project (System)” vs “Project → Inventory (System)”).
 - Canonical totals may be recomputed from linked items and (in web) the list self-heals stale amounts by updating the stored transaction amount.
 
 Budget category filter behavior (required; intentional delta vs web):
 
 - For **non-canonical** transactions, the “budget category” filter matches `transaction.budgetCategoryId`.
-- For **canonical inventory** transactions, the “budget category” filter matches if the transaction has **at least one linked item** with `item.inheritedBudgetCategoryId === <selectedCategoryId>`.
-  - This requires local DB support for joining items by `transactionId` and filtering by `inheritedBudgetCategoryId`.
+- For **canonical inventory sale** transactions, the “budget category” filter also matches `transaction.budgetCategoryId` (category-coded invariant).
 
 Parity evidence:
 - Filters/sorts/search state + URL params: `src/pages/TransactionsList.tsx` (searchParams `txSearch`, `txFilter`, `txSource`, `txReceipt`, `txType`, `txPurchaseMethod`, `txCategory`, `txCompleteness`, `txSort`)
@@ -103,8 +106,8 @@ Firebase migration constraint:
 Summary:
 - The list view can export a CSV of transactions (web exports “all transactions” for the project, sorted by current sort mode).
 - CSV includes both legacy and new category fields (category name + `budgetCategoryId`) **for non-canonical transactions**.
-- Canonical inventory transactions should export with `budgetCategoryId` empty and `categoryName` empty/“Uncategorized” (pick one and keep consistent).
-  - Optional (recommended): include an additional column like `budgetCategoryIds` (derived from linked items’ `inheritedBudgetCategoryId`) so exports remain useful without introducing a “canonical category”.
+- Canonical inventory sale transactions should export with `budgetCategoryId` populated like any other transaction.
+  Recommended: include an additional column like `inventorySaleDirection` so exports make it clear why some canonical rows subtract from spend.
 
 Parity evidence:
 - CSV builder + download: `src/pages/TransactionsList.tsx` (`buildTransactionsCsv`, `handleExportCsv`)

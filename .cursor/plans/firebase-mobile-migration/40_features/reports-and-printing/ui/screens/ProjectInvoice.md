@@ -44,7 +44,7 @@ Generate a printable/shareable invoice for a project by summarizing invoiceable 
   - Web parity uses `window.print()`.
   - Mobile requirement: open native share/print flow (implementation-dependent) using a rendered report artifact derived from local state.
 - View invoice lines:
-  - Each line shows canonical title mapping when transaction id is `INV_SALE_*`/`INV_PURCHASE_*`, otherwise shows source.
+  - Each line shows canonical title mapping when the transaction is a canonical inventory sale transaction (recommended: `INV_SALE__` prefix or `isCanonicalInventorySale === true`), otherwise shows source.
   - Each line shows date + notes (when present).
   - If items exist for the transaction, render item sub-lines and “Missing project price” badges where applicable.
 

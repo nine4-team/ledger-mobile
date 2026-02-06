@@ -18,6 +18,7 @@ Optional flags:
 - `--storage <dir>`: storage export directory for media
 - `--check-storage`: verify files exist in the storage export
 - `--version <version>`: migration version label (default: `v1`)
+- `--canonicalize-budget-category-ids`: emit budget categories with slug-based IDs (instead of legacy UUIDs)
 
 ## Output
 
@@ -91,6 +92,10 @@ Notes:
   legacy domain IDs. Missing references become `null` (never placeholders).
 - Amounts are parsed into integer cents using half-away-from-zero rounding.
 - Empty strings on optional fields are normalized to `null`.
+- Budget category IDs are **kept as legacy UUIDs by default** so all legacy references continue to work.
+  If you need stable cross-export IDs, pass `--canonicalize-budget-category-ids` to emit slug-based IDs
+  (e.g. `furnishings`, `design-fee`). The legacy UUID is always preserved at
+  `budgetCategories/<id>.metadata.legacy.sourceCategoryId`.
 # Data migrator workspace
 
 This folder is a scratchpad for working with legacy Supabase exports (DB + Storage) and producing migration reports / import-ready outputs for the mobile app.

@@ -6,7 +6,7 @@ Produce parity-grade specs for `project-transactions`.
 - Offline Data v2 baseline: `OFFLINE_FIRST_V2_SPEC.md`
 - Relevant existing specs:
   - Navigation + stacked back/scroll restore: `40_features/feature_list.md` → **Feature 15** (`navigation-stack-and-context-links`) (parity evidence in web)
-  - Canonical transaction semantics + item-driven attribution: `40_features/project-items/feature_spec.md`
+  - Canonical inventory sale semantics (category-coded + direction-coded): `40_features/project-items/feature_spec.md`
 
 ## Owned screens (list)
 - `ProjectTransactionsPage` / `TransactionsList` — contract required? **yes**

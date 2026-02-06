@@ -27,11 +27,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const uiKitTheme = useMemo<ColorTheme>(() => {
     const baseTheme = resolvedColorScheme === 'dark' ? darkTheme : lightTheme;
-    const overrides =
-      resolvedColorScheme === 'dark' ? appThemeOverrides.dark : appThemeOverrides.light;
+    // `appThemeOverrides` is intentionally partial; treat it as overrides, not a full theme.
+    const overrides = (resolvedColorScheme === 'dark'
+      ? appThemeOverrides.dark
+      : appThemeOverrides.light) as Partial<ColorTheme>;
 
     return {
       ...baseTheme,
+      primary: {
+        ...baseTheme.primary,
+        ...(overrides.primary ?? {}),
+      },
+      neutral: {
+        ...baseTheme.neutral,
+        ...(overrides.neutral ?? {}),
+      },
+      text: {
+        ...baseTheme.text,
+        ...(overrides.text ?? {}),
+      },
+      border: {
+        ...baseTheme.border,
+        ...(overrides.border ?? {}),
+      },
       background: {
         ...baseTheme.background,
         ...overrides.background,
@@ -42,11 +60,55 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       },
       button: {
         ...baseTheme.button,
+        primary: {
+          ...baseTheme.button.primary,
+          ...(overrides.button?.primary ?? {}),
+        },
         secondary: {
           ...baseTheme.button.secondary,
-          ...overrides.button.secondary,
+          ...(overrides.button?.secondary ?? {}),
+        },
+        disabled: {
+          ...baseTheme.button.disabled,
+          ...(overrides.button?.disabled ?? {}),
+        },
+        destructive: {
+          ...baseTheme.button.destructive,
+          ...(overrides.button?.destructive ?? {}),
+        },
+        icon: {
+          ...baseTheme.button.icon,
+          ...(overrides.button?.icon ?? {}),
         },
       },
+      input: {
+        ...baseTheme.input,
+        ...(overrides.input ?? {}),
+      },
+      status: {
+        ...baseTheme.status,
+        ...(overrides.status ?? {}),
+        met: {
+          ...baseTheme.status.met,
+          ...(overrides.status?.met ?? {}),
+        },
+        inProgress: {
+          ...baseTheme.status.inProgress,
+          ...(overrides.status?.inProgress ?? {}),
+        },
+        missed: {
+          ...baseTheme.status.missed,
+          ...(overrides.status?.missed ?? {}),
+        },
+      },
+      archive: {
+        ...baseTheme.archive,
+        ...(overrides.archive ?? {}),
+      },
+      shadow: overrides.shadow ?? baseTheme.shadow,
+      divider: overrides.divider ?? baseTheme.divider,
+      activityIndicator: overrides.activityIndicator ?? baseTheme.activityIndicator,
+      link: overrides.link ?? baseTheme.link,
     };
   }, [resolvedColorScheme]);
 

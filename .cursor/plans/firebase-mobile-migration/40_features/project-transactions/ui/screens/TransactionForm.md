@@ -16,7 +16,8 @@ Source of truth:
 Rules:
 
 - This form is for **user-facing (non-canonical)** transactions.
-- **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`) are system-generated and should be treated as **read-only** (recommended: hide/disable “Edit” entrypoint for canonical rows).
+- **Canonical inventory sale transactions** (system-owned; recommended id prefix `INV_SALE__`) are system-generated and should be treated as **read-only**.
+  Recommended: hide/disable “Edit” entrypoint for canonical rows.
 
 ## Inputs
 - Route params:

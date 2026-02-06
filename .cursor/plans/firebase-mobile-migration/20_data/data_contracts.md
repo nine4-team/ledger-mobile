@@ -159,9 +159,9 @@ type Item = {
   accountId: string;
   projectId: string | null; // null = Business Inventory scope
   createdBy: string; // required (Roles v2 selectors)
-  description: string;
+  // Canonical item label. Note: may be an empty string for parity/legacy data.
+  name: string;
 
-  name?: string | null;
   source?: string | null;
   sku?: string | null;
   notes?: string | null;
@@ -173,6 +173,10 @@ type Item = {
 
   transactionId?: string | null;
   spaceId?: string | null;
+  // Item-owned budget category id.
+  // Naming note: this is not strictly inherited; it may be set via:
+  // - linking to a non-canonical categorized transaction
+  // - explicit user choice during a sell/allocation prompt
   inheritedBudgetCategoryId?: string | null; // required field; may be null
 
   purchasePriceCents?: number | null;
@@ -382,7 +386,7 @@ type Transaction = {
   accountId: string;
   projectId: string | null; // null = Business Inventory scope
   transactionDate: string; // stored as string for parity
-  amountCents: number; // authoritative for non-canonical transactions
+  amountCents: number; // authoritative; canonical inventory sale rows are system-computed and read-only
 
   source?: string | null;
   transactionType?: string | null;
@@ -405,10 +409,11 @@ type Transaction = {
   subtotalCents?: number | null;
   sumItemPurchasePricesCents?: number | null;
 
-  isCanonicalInventory?: boolean;
-  canonicalKind?: "INV_PURCHASE" | "INV_SALE" | null;
-  budgetCategoryIds?: string[] | null;
-  uncategorizedItemCreatorUids?: string[] | null;
+  // Canonical inventory sale semantics (new model):
+  // - category-coded via `budgetCategoryId` (required for canonical inventory sale rows)
+  // - direction-coded via `inventorySaleDirection`
+  isCanonicalInventorySale?: boolean;
+  inventorySaleDirection?: "business_to_project" | "project_to_business" | null;
 
   itemIds?: string[]; // non-authoritative cache
 } & LifecycleAuditFields;
@@ -772,11 +777,11 @@ Required:
 - `projectId: string | null`
 - `createdBy: string`
   - Roles v2: required to enforce “own uncategorized items” when `inheritedBudgetCategoryId == null`.
-- `description: string`
-  - Parity: items always have a description string (may be empty).
+- `name: string`
+  - Canonical item label.
+  - Parity/legacy: `name` may be an empty string.
 
 Optional / nullable:
-- `name?: string | null`
 - `source?: string | null`
 - `sku?: string | null`
 - `notes?: string | null`
@@ -1223,7 +1228,7 @@ Required:
   - Stored as string for parity with existing flows; treat as an ISO-like date/time string.
 - `amountCents: number`
   - **Authoritative** for non-canonical transactions.
-  - For canonical inventory transactions, this may be **derived/cache** (see “INV_* semantics” below).
+  - For canonical inventory sale transactions, this is **system-computed** (server-owned invariant) and treated as read-only by clients.
 
 Optional / nullable:
 - `source?: string | null`
@@ -1249,7 +1254,7 @@ Embedded media (per feature specs; uses “Embedded media references” above):
 Budget category selector:
 - `budgetCategoryId?: string | null`
   - Non-canonical: authoritative category selector.
-  - Canonical inventory (`INV_*`): recommended to remain `null` (“uncategorized”) and must not be used for attribution.
+  - Canonical inventory sale (system): required (category-coded invariant).
 
 Completeness / rollup helpers (optional; denormalized):
 - `needsReview?: boolean`
@@ -1258,17 +1263,9 @@ Completeness / rollup helpers (optional; denormalized):
 - `subtotalCents?: number | null`
 - `sumItemPurchasePricesCents?: number | null`
 
-Canonical inventory transaction selectors (Roles v2 + queryability):
-- `isCanonicalInventory?: boolean`
-- `canonicalKind?: "INV_PURCHASE" | "INV_SALE" | null`
-- `budgetCategoryIds?: string[] | null`
-  - Server-maintained selector for canonical transactions only:
-    - **unique set** of non-null `item.inheritedBudgetCategoryId` values present among linked items
-    - used by Roles v2 to decide canonical transaction read visibility without “checking all attached items” at read-time
-- `uncategorizedItemCreatorUids?: string[] | null`
-  - Server-maintained selector for canonical transactions only:
-    - **unique set** of `item.createdBy` uids among linked items with `item.inheritedBudgetCategoryId == null`
-    - used to support the Roles v2 “own uncategorized items” exception when evaluating canonical transaction visibility
+Canonical inventory sale transaction selectors (Roles v2 + queryability):
+- `isCanonicalInventorySale?: boolean`
+- `inventorySaleDirection?: "business_to_project" | "project_to_business" | null`
 
 Linkage helpers (optional; denormalized):
 - `itemIds?: string[]`
@@ -1276,25 +1273,24 @@ Linkage helpers (optional; denormalized):
 
 Lifecycle/audit fields (required): see “Lifecycle + audit fields” above.
 
-### INV_* semantics (authoritative vs derived)
+### Canonical inventory sale semantics (authoritative)
 
-Canonical inventory transactions are identified by id prefix:
-- `INV_PURCHASE_<projectId>`
-- `INV_SALE_<projectId>`
-  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
+Canonical inventory sale transactions are identified by a deterministic id.
+Recommended id prefix:
+- `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
 
 Required attribution invariant:
 - **Non-canonical** transactions: category attribution is transaction-driven via `transaction.budgetCategoryId`.
-- **Canonical inventory (`INV_*`)** transactions: category attribution is **item-driven** by grouping linked items by `item.inheritedBudgetCategoryId`.
-  - `transaction.budgetCategoryId` must be treated as **non-authoritative** even if populated for compatibility.
+- **Canonical inventory sale (system)** transactions: category attribution is transaction-driven via `transaction.budgetCategoryId` (category-coded invariant).
+  Sign is applied by `inventorySaleDirection`.
 
 Cross-entity invariant (required by transaction edit UX; deterministic attribution):
 - When editing a **non-canonical** transaction and its `budgetCategoryId` changes, all linked items must have `item.inheritedBudgetCategoryId` updated to match the new `budgetCategoryId`.
   - Source of truth: `40_features/project-transactions/feature_spec.md` (“Edit a transaction” requirement).
 
 Authoritative value source for canonical totals:
-- For canonical `INV_*` totals, the authoritative source is the linked items’ values (see `40_features/budget-and-accounting/feature_spec.md`).
-- `transaction.amountCents` may be treated as a cached/denormalized value for list rendering, but must be safe to recompute.
+- For canonical inventory sale totals, the authoritative value stored on the transaction is `transaction.amountCents`, computed by the server from linked item values (see `40_features/inventory-operations-and-lineage/feature_spec.md`).
+- Clients must not write back “self-healed” canonical totals from UI.
 
 ### Scope semantics + Firestore locations
 
@@ -1331,10 +1327,8 @@ Workflow columns:
 
 Category + canonical semantics:
 - `budget_category_id` (TEXT NULL)
-- `is_canonical_inventory` (INTEGER NOT NULL DEFAULT 0)
-- `canonical_kind` (TEXT NULL)
-- `budget_category_ids_json` (TEXT NULL) (JSON array of category ids; canonical `INV_*` selector)
-- `uncategorized_item_creator_uids_json` (TEXT NULL) (JSON array of uids; canonical `INV_*` selector)
+- `is_canonical_inventory_sale` (INTEGER NOT NULL DEFAULT 0)
+- `inventory_sale_direction` (TEXT NULL) (`business_to_project` | `project_to_business`)
 
 Completeness / denormalized helpers:
 - `needs_review` (INTEGER NOT NULL DEFAULT 0)

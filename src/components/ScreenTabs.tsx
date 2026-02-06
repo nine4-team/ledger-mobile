@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { useTheme } from '../theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 
 export type ScreenTabItem = {
   key: string;
@@ -54,6 +54,7 @@ export function ScreenTabs({
   contentContainerStyle,
 }: ScreenTabsProps) {
   const theme = useTheme();
+  const uiKitTheme = useUIKitTheme();
   const defaultKey = useMemo(() => tabs[0]?.key ?? 'tab-one', [tabs]);
   const [uncontrolledSelectedKey, setUncontrolledSelectedKey] = useState<string>(initialTabKey ?? defaultKey);
   const selectedKey = value ?? uncontrolledSelectedKey;
@@ -61,8 +62,9 @@ export function ScreenTabs({
     () =>
       StyleSheet.create({
         container: {
-          backgroundColor: theme.colors.background,
-          borderBottomColor: theme.colors.border,
+          // Tabs live in the "chrome" layer (separate from screen background).
+          backgroundColor: uiKitTheme.background.chrome,
+          borderBottomColor: uiKitTheme.border.secondary,
         },
         scrollContent: {
           paddingHorizontal: theme.spacing.screenPadding,
@@ -77,7 +79,7 @@ export function ScreenTabs({
           color: theme.colors.textSecondary,
         },
       }),
-    [theme]
+    [theme, uiKitTheme]
   );
 
   return (

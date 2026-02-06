@@ -5,7 +5,7 @@ Optional module for **offline local search** using SQLite FTS5. This module prov
 ## When to Use
 
 Use this module when your app requires:
-- **Robust offline multi-field search** over items (name, description, SKU, vendor, etc.)
+- **Robust offline multi-field search** over items (name, SKU, vendor, etc.)
 - **Target scale**: < 1k items per scope (e.g., per project)
 - **Search while offline** without querying Firestore
 
@@ -33,12 +33,12 @@ npm install
 ```typescript
 import { SearchIndex } from '@/search-index';
 
-// Use default field mapping (name, description, sku, source, vendor, notes)
+// Use default field mapping (name, sku, source, vendor, notes)
 const searchIndex = new SearchIndex();
 
 // Or provide custom field mapping
 const searchIndex = new SearchIndex((item) => {
-  return `${item.name} ${item.description} ${item.customField}`.toLowerCase();
+  return `${item.name} ${item.customField}`.toLowerCase();
 });
 ```
 
@@ -61,7 +61,6 @@ const unsubscribe = db.collection('items').onSnapshot((snapshot) => {
         accountId: 'account-1',
         scopeId: 'project-1',
         name: item.name,
-        description: item.description,
         sku: item.sku,
         // ... other searchable fields
       });
@@ -112,7 +111,6 @@ interface SearchableItem {
   accountId: string;
   scopeId: string; // e.g., 'project-1' or 'inventory'
   name?: string;
-  description?: string;
   sku?: string;
   source?: string;
   vendor?: string;
@@ -130,7 +128,6 @@ Override the default field mapping by providing an `ItemToSearchTextFn`:
 const customMapper: ItemToSearchTextFn = (item) => {
   return combineSearchFields([
     item.name,
-    item.description,
     item.sku,
     item.customField1,
     item.customField2,

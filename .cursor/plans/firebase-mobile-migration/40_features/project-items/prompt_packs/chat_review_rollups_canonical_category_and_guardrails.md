@@ -2,9 +2,10 @@
 
 You are updating Firebase mobile migration specs. Your task is to review and improve the Project Items spec pack so it is implementation-ready, specifically around:
 
-- Canonical item-driven rollup logic (no new UI)
-- Canonical transaction “category” storage decision
-- Guardrails applying to **sell/deallocate** but not necessarily “move” corrections
+- Canonical inventory sale rollup logic (no new UI)
+- Canonical sale transaction identity (direction-coded + category-coded)
+- Category prompting rules for sell flows
+- Ensuring “move” corrections stay distinct from canonical sells
 
 ## Context (source of truth)
 
@@ -30,23 +31,24 @@ You are updating Firebase mobile migration specs. Your task is to review and imp
 ## What to do
 
 1) **Rollup logic requirement (must be explicit)**
-   - Ensure specs clearly require *new rollup computation* (no new UI) where:
+   - Ensure specs clearly require rollups where:
      - non-canonical attribution uses `transaction.budgetCategoryId`
-     - canonical inventory attribution groups linked items by `item.inheritedBudgetCategoryId`
-   - Ensure specs clearly say canonical transaction category must not drive attribution.
+     - canonical inventory sale attribution also uses `transaction.budgetCategoryId` (canonical rows are category-coded by invariant)
+     - rollups apply sign based on direction (`business_to_project` adds, `project_to_business` subtracts)
    - Add/adjust “Intentional delta” callouts pointing to `BudgetProgress.tsx`.
 
-2) **Canonical transaction category storage recommendation**
-   - Decide (and document) the recommended approach:
-     - `category_id = null` for canonical rows (preferred), OR
-     - hidden/internal “Canonical (system)” category (allowed only if it cannot leak into user attribution).
-   - Make the consequences explicit (filters, exports, compatibility).
+2) **Canonical sale identity + invariants**
+   - Ensure specs define:
+     - one canonical sale transaction per `(projectId, direction, budgetCategoryId)`
+     - a deterministic id format (recommended prefix `INV_SALE__`)
+     - canonical rows are system-owned (read-only in UI)
+3) **Prompt rules (replace hard blocks)**
+   - Project → Business: if `item.inheritedBudgetCategoryId` is missing, prompt the user to choose a source-project category, persist it, then proceed.
+   - Business → Project: prompt only if the item category is missing or not enabled/available in the destination project; persist and proceed.
+   - Bulk: one selection applies to the uncategorized items (fast path).
 
-3) **Guardrail scope: “move” vs “sell/deallocate”**
-   - Ensure specs do not incorrectly gate “Move to Design Business” with the `inheritedBudgetCategoryId` requirement, since move is a correction path in current parity code.
-   - Ensure the guardrail still applies to:
-     - “Sell to Design Business”
-     - Disposition → `inventory` deallocation trigger (single + bulk)
+4) **Guardrail scope: “move” vs “sell/deallocate”**
+   - Ensure specs keep “Move to Business Inventory” as a correction path (no canonical rows) and do not require category prompting unless/when the user uses Sell flows.
 
 ## Evidence rule (anti-hallucination)
 

@@ -7,7 +7,7 @@ Reduce regression and security risk by adding targeted tests and auditing edge c
 - item writes (null → allowed; A → B admin-only)
 - transaction visibility:
   - non-canonical by `transaction.budgetCategoryId`
-  - canonical `INV_*` derived from linked items (must not treat `budgetCategoryId == null` as globally visible)
+  - canonical inventory sale (system) by `transaction.budgetCategoryId` (canonical rows are category-coded and system-owned)
 
 ## Required reading (ground truth)
 - Spec: `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
@@ -20,7 +20,7 @@ Reduce regression and security risk by adding targeted tests and auditing edge c
 - Add tests that cover the read/write matrix:
   - admin vs scoped
   - item uncategorized ownership exception
-  - canonical transaction derived visibility
+  - canonical inventory sale transaction visibility + read-only constraints
 - Add a brief “edge-case audit” note (in the implementation PR or in a small doc update) listing what was checked and any intentional deltas.
 
 ## Constraints

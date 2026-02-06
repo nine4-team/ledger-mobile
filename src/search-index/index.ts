@@ -16,7 +16,6 @@
  *   accountId: 'account-1',
  *   scopeId: 'project-1',
  *   name: 'Widget',
- *   description: 'A useful widget',
  *   sku: 'WID-001'
  * });
  * 

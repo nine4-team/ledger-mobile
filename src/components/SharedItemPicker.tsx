@@ -91,7 +91,7 @@ export type SharedItemPickerProps = {
 };
 
 function getItemLabel(item: ScopedItem | Item) {
-  return item.name?.trim() || item.description?.trim() || 'Item';
+  return item.name?.trim() || 'Item';
 }
 
 function getPrimaryImage(item: ScopedItem | Item) {
@@ -129,7 +129,7 @@ export function SharedItemPicker({
     const needle = searchQuery.trim().toLowerCase();
     if (!needle) return items;
     return items.filter((item) => {
-      const label = item.name?.toLowerCase() ?? item.description?.toLowerCase() ?? '';
+      const label = item.name?.toLowerCase() ?? '';
       return label.includes(needle);
     });
   }, [items, searchQuery]);
@@ -138,7 +138,7 @@ export function SharedItemPicker({
   const pickerGroups = useMemo(() => {
     const groups = new Map<string, Array<ScopedItem | Item>>();
     filteredItems.forEach((item) => {
-      const label = item.name?.trim() || item.description?.trim() || 'Item';
+      const label = item.name?.trim() || 'Item';
       const key = label.toLowerCase();
       const list = groups.get(key) ?? [];
       list.push(item);
@@ -212,7 +212,7 @@ export function SharedItemPicker({
               <GroupedItemCard
                 key={label}
                 summary={{
-                  description: label,
+                  name: label,
                   sku: summaryItem?.sku ?? undefined,
                   sourceLabel: summaryItem?.source ?? undefined,
                   locationLabel: summaryItem?.spaceId ?? undefined,
@@ -221,14 +221,14 @@ export function SharedItemPicker({
                 }}
                 countLabel={`×${groupItems.length}`}
                 items={groupItems.map((item) => {
-                  const description = getItemLabel(item);
+                  const name = getItemLabel(item);
                   const locked = !eligibilityCheck.isEligible(item);
                   const statusLabel = eligibilityCheck.getStatusLabel?.(item);
                   const selected = selectedIds.includes(item.id);
                   const thumbnailUri = getPrimaryImage(item);
 
                   return {
-                    description,
+                    name,
                     sku: item.sku ?? undefined,
                     sourceLabel: item.source ?? undefined,
                     locationLabel: item.spaceId ?? undefined,
@@ -262,7 +262,7 @@ export function SharedItemPicker({
           }
 
           const [only] = groupItems;
-          const description = getItemLabel(only);
+          const name = getItemLabel(only);
           const locked = !eligibilityCheck.isEligible(only);
           const selected = selectedIds.includes(only.id);
           const statusLabel = eligibilityCheck.getStatusLabel?.(only);
@@ -270,7 +270,7 @@ export function SharedItemPicker({
           return (
             <ItemCard
               key={only.id}
-              description={description}
+              name={name}
               sku={only.sku ?? undefined}
               sourceLabel={only.source ?? undefined}
               locationLabel={only.spaceId ?? undefined}

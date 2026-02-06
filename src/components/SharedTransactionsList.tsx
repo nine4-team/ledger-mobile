@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Share, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
+import { AppButton } from './AppButton';
 import { ListControlBar } from './ListControlBar';
-import { ListSelectAllRow } from './ListSelectionControls';
 import { BottomSheet } from './BottomSheet';
 import { SelectorCircle } from './SelectorCircle';
 import { FilterMenu } from './FilterMenu';
@@ -11,7 +11,7 @@ import { SortMenu } from './SortMenu';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { getTextColorStyle, layout } from '../ui';
+import { BUTTON_BORDER_RADIUS, getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListenersMultiple } from '../data/useScopedListeners';
@@ -48,10 +48,19 @@ type TransactionFilters = {
   budgetCategoryId?: string | string[];
   completeness?: 'all' | 'needs-review' | 'complete' | Array<'needs-review' | 'complete'>;
   source?: string | string[];
-  purchasedBy?: string | string[];
+  purchasedBy?: 'all' | 'client-card' | 'design-business' | 'missing' | Array<'client-card' | 'design-business' | 'missing'>;
 };
 
-const SORT_MODES = ['date-desc', 'date-asc', 'created-desc', 'created-asc', 'source', 'amount'] as const;
+const SORT_MODES = [
+  'date-desc',
+  'date-asc',
+  'created-desc',
+  'created-asc',
+  'source-asc',
+  'source-desc',
+  'amount-desc',
+  'amount-asc',
+] as const;
 type SortMode = (typeof SORT_MODES)[number];
 const DEFAULT_SORT: SortMode = 'date-desc';
 
@@ -66,14 +75,22 @@ function formatCents(value?: number | null) {
   return `$${(value / 100).toFixed(2)}`;
 }
 
+function hasMeaningfulProjectPrice(item: ScopedItem): boolean {
+  if (typeof item.projectPriceCents !== 'number') return false;
+  if (typeof item.purchasePriceCents === 'number' && item.projectPriceCents === item.purchasePriceCents) return false;
+  return true;
+}
+
+function getDisplayPriceCents(item: ScopedItem): number {
+  if (hasMeaningfulProjectPrice(item)) return item.projectPriceCents ?? 0;
+  if (typeof item.purchasePriceCents === 'number') return item.purchasePriceCents;
+  if (typeof item.projectPriceCents === 'number') return item.projectPriceCents;
+  return 0;
+}
+
 function computeCanonicalTotal(items: ScopedItem[]): number {
   return items.reduce((sum, item) => {
-    const value =
-      typeof item.projectPriceCents === 'number'
-        ? item.projectPriceCents
-        : typeof item.purchasePriceCents === 'number'
-          ? item.purchasePriceCents
-          : 0;
+    const value = getDisplayPriceCents(item);
     return sum + value;
   }, 0);
 }
@@ -84,10 +101,11 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const [query, setQuery] = useState(state.search ?? '');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [transactions, setTransactions] = useState<ScopedTransaction[]>([]);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
   const uiKitTheme = useUIKitTheme();
@@ -99,6 +117,13 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const primaryTextStyle = useMemo(() => getTextColorStyle(theme.colors.primary), [theme]);
   const rowSurfaceStyle = useMemo(
     () => ({ borderColor: uiKitTheme.border.primary, backgroundColor: uiKitTheme.background.surface }),
+    [uiKitTheme]
+  );
+  const selectButtonThemeStyle = useMemo(
+    () => ({
+      backgroundColor: uiKitTheme.button.secondary.background,
+      borderColor: uiKitTheme.border.primary,
+    }),
     [uiKitTheme]
   );
   const router = useRouter();
@@ -118,6 +143,12 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     }, 350);
     return () => clearTimeout(handle);
   }, [query, setSearch]);
+
+  useEffect(() => {
+    if (selectedIds.length === 0 && bulkSheetOpen) {
+      setBulkSheetOpen(false);
+    }
+  }, [bulkSheetOpen, selectedIds.length]);
 
   useEffect(() => {
     if (!accountId || !scopeId) {
@@ -188,7 +219,12 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     });
   }, [items, transactions]);
 
-  const sortMode = (state.sort as SortMode | undefined) ?? DEFAULT_SORT;
+  const sortMode = (() => {
+    const rawSort = state.sort as SortMode | 'source' | 'amount' | undefined;
+    if (rawSort === 'source') return 'source-asc';
+    if (rawSort === 'amount') return 'amount-desc';
+    return rawSort ?? DEFAULT_SORT;
+  })();
 
   const activeFilters = (state.filters ?? {}) as TransactionFilters;
 
@@ -255,9 +291,9 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         const matches = reimbursementValues.some((reimbursement) => {
           const match =
             reimbursement === 'we-owe'
-              ? 'owed-to-company'
+              ? 'owed-to-client'
               : reimbursement === 'client-owes'
-                ? 'owed-to-client'
+                ? 'owed-to-company'
                 : '';
           return match && tx.reimbursementType === match;
         });
@@ -301,12 +337,22 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       }
       
       // Purchased by filter
-      if (activeFilters.purchasedBy) {
+      if (activeFilters.purchasedBy && activeFilters.purchasedBy !== 'all') {
         const purchasedByValues = Array.isArray(activeFilters.purchasedBy)
           ? activeFilters.purchasedBy
           : [activeFilters.purchasedBy];
-        const txPurchasedBy = tx.purchasedBy?.trim().toLowerCase() ?? '';
-        const matches = purchasedByValues.some((purchasedBy) => txPurchasedBy === purchasedBy.trim().toLowerCase());
+        const txPurchasedBy = (tx.purchasedBy ?? '').trim().toLowerCase();
+        const matches = purchasedByValues.some((purchasedBy) => {
+          const normalized = String(purchasedBy ?? '').trim().toLowerCase();
+          if (normalized === 'missing' || normalized === 'not set') return txPurchasedBy.length === 0;
+          if (normalized === 'client-card' || normalized === 'client card' || normalized === 'client') {
+            return txPurchasedBy === 'client-card' || txPurchasedBy.includes('client');
+          }
+          if (normalized === 'design-business' || normalized === 'design business') {
+            return txPurchasedBy === 'design-business' || txPurchasedBy.includes('design');
+          }
+          return false;
+        });
         if (!matches) return false;
       }
       
@@ -314,11 +360,17 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     });
 
     const sorted = [...filteredByFilters].sort((a, b) => {
-      if (sortMode === 'source') {
-        return (a.transaction.source ?? '').localeCompare(b.transaction.source ?? '');
+      if (sortMode === 'source-asc' || sortMode === 'source-desc') {
+        const order = sortMode === 'source-asc' ? 1 : -1;
+        const aSource = (a.label ?? '').toLowerCase();
+        const bSource = (b.label ?? '').toLowerCase();
+        return order * aSource.localeCompare(bSource);
       }
-      if (sortMode === 'amount') {
-        return (b.transaction.amountCents ?? 0) - (a.transaction.amountCents ?? 0);
+      if (sortMode === 'amount-desc' || sortMode === 'amount-asc') {
+        const order = sortMode === 'amount-asc' ? 1 : -1;
+        const aAmount = a.transaction.amountCents ?? 0;
+        const bAmount = b.transaction.amountCents ?? 0;
+        return order * (aAmount - bAmount);
       }
       if (sortMode === 'created-desc' || sortMode === 'created-asc') {
         const aDate = a.transaction.createdAt ? String(a.transaction.createdAt) : '';
@@ -386,6 +438,11 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setSelectedIds([]);
+    setBulkSheetOpen(false);
+  }, []);
+
   const handleSelectAll = useCallback(() => {
     if (selectedIds.length === filtered.length) {
       setSelectedIds([]);
@@ -395,38 +452,116 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   }, [filtered, selectedIds.length]);
 
   const hasFiltered = filtered.length > 0;
-  const allSelected = bulkMode && selectedIds.length === filtered.length && hasFiltered;
+  const allSelected = selectedIds.length === filtered.length && hasFiltered;
 
   const handleToggleSort = useCallback(() => {
     setSortOpen(true);
   }, []);
 
   const sortMenuItems: AnchoredMenuItem[] = useMemo(() => {
-    const labels: Record<SortMode, string> = {
-      'date-desc': 'Date (Newest First)',
-      'date-asc': 'Date (Oldest First)',
-      'created-desc': 'Created (Newest First)',
-      'created-asc': 'Created (Oldest First)',
-      source: 'Source',
-      amount: 'Amount',
-    };
-    return SORT_MODES.map((mode) => ({
-      key: mode,
-      label: labels[mode],
-      onPress: () => setSort(mode),
-      icon: sortMode === mode ? 'check' : undefined,
-    }));
-  }, [setSort, sortMode]);
-
-  const purchasedByOptions = useMemo(() => {
-    const unique = new Set<string>();
-    transactions.forEach((tx) => {
-      if (tx.purchasedBy?.trim()) {
-        unique.add(tx.purchasedBy.trim());
+    const getDateSubactionKey = () => {
+      if (sortMode === 'date-desc' || sortMode === 'date-asc') {
+        return sortMode;
       }
-    });
-    return Array.from(unique).sort();
-  }, [transactions]);
+      return 'date-desc';
+    };
+    const getCreatedSubactionKey = () => {
+      if (sortMode === 'created-desc' || sortMode === 'created-asc') {
+        return sortMode;
+      }
+      return 'created-desc';
+    };
+    const getSourceSubactionKey = () => {
+      if (sortMode === 'source-asc' || sortMode === 'source-desc') {
+        return sortMode;
+      }
+      return 'source-asc';
+    };
+    const getAmountSubactionKey = () => {
+      if (sortMode === 'amount-asc' || sortMode === 'amount-desc') {
+        return sortMode;
+      }
+      return 'amount-desc';
+    };
+    return [
+      {
+        key: 'purchase-date',
+        label: 'Purchase Date',
+        selectedSubactionKey: getDateSubactionKey(),
+        defaultSelectedSubactionKey: 'date-desc',
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'date-desc',
+            label: 'Newest First',
+            onPress: () => setSort('date-desc'),
+          },
+          {
+            key: 'date-asc',
+            label: 'Oldest First',
+            onPress: () => setSort('date-asc'),
+          },
+        ],
+      },
+      {
+        key: 'created-date',
+        label: 'Created Date',
+        selectedSubactionKey: getCreatedSubactionKey(),
+        defaultSelectedSubactionKey: 'created-desc',
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'created-desc',
+            label: 'Newest First',
+            onPress: () => setSort('created-desc'),
+          },
+          {
+            key: 'created-asc',
+            label: 'Oldest First',
+            onPress: () => setSort('created-asc'),
+          },
+        ],
+      },
+      {
+        key: 'source',
+        label: 'Source',
+        selectedSubactionKey: getSourceSubactionKey(),
+        defaultSelectedSubactionKey: 'source-asc',
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'source-asc',
+            label: 'A→Z',
+            onPress: () => setSort('source-asc'),
+          },
+          {
+            key: 'source-desc',
+            label: 'Z→A',
+            onPress: () => setSort('source-desc'),
+          },
+        ],
+      },
+      {
+        key: 'price',
+        label: 'Price',
+        selectedSubactionKey: getAmountSubactionKey(),
+        defaultSelectedSubactionKey: 'amount-desc',
+        suppressDefaultCheckmark: true,
+        subactions: [
+          {
+            key: 'amount-desc',
+            label: 'High→Low',
+            onPress: () => setSort('amount-desc'),
+          },
+          {
+            key: 'amount-asc',
+            label: 'Low→High',
+            onPress: () => setSort('amount-asc'),
+          },
+        ],
+      },
+    ];
+  }, [setSort, sortMode]);
 
   const sourceOptions = useMemo(() => {
     const unique = new Set<string>();
@@ -451,8 +586,8 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     };
     const reimbursementLabels: Record<string, string> = {
       all: 'All',
-      'we-owe': 'We Owe',
-      'client-owes': 'Client Owes',
+      'we-owe': 'Owed to Client',
+      'client-owes': 'Owed to Design Business',
     };
     const receiptLabels: Record<string, string> = {
       all: 'All',
@@ -512,7 +647,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     };
     const getPurchasedByValues = () => {
       const value = activeFilters.purchasedBy;
-      if (!value) return [];
+      if (!value || value === 'all') return [];
       return Array.isArray(value) ? value : [value];
     };
 
@@ -520,6 +655,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       {
         key: 'status',
         label: 'Status',
+        defaultSelectedSubactionKey: 'all',
         suppressDefaultCheckmark: true,
         subactions: statusOptions.map((opt) => {
           const selectedValues = getStatusValues();
@@ -527,7 +663,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return {
             key: opt,
             label: statusLabels[opt] ?? opt,
-            icon: isSelected ? 'check' : undefined,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
             onPress: () => {
               if (opt === 'all') {
                 setFilters({ ...activeFilters, status: 'all' });
@@ -544,7 +680,8 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       },
       {
         key: 'reimbursement',
-        label: 'Reimbursement',
+        label: 'Reimbursement Status',
+        defaultSelectedSubactionKey: 'all',
         suppressDefaultCheckmark: true,
         subactions: (['all', 'we-owe', 'client-owes'] as const).map((opt) => {
           const selectedValues = getReimbursementValues();
@@ -552,7 +689,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return {
             key: opt,
             label: reimbursementLabels[opt] ?? opt,
-            icon: isSelected ? 'check' : undefined,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
             onPress: () => {
               if (opt === 'all') {
                 setFilters({ ...activeFilters, reimbursement: 'all' });
@@ -570,6 +707,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       {
         key: 'receipt',
         label: 'Email Receipt',
+        defaultSelectedSubactionKey: 'all',
         suppressDefaultCheckmark: true,
         subactions: (['all', 'yes', 'no'] as const).map((opt) => {
           const selectedValues = getReceiptValues();
@@ -577,7 +715,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return {
             key: opt,
             label: receiptLabels[opt] ?? opt,
-            icon: isSelected ? 'check' : undefined,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
             onPress: () => {
               if (opt === 'all') {
                 setFilters({ ...activeFilters, receipt: 'all' });
@@ -595,6 +733,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       {
         key: 'type',
         label: 'Transaction Type',
+        defaultSelectedSubactionKey: 'all',
         suppressDefaultCheckmark: true,
         subactions: (['all', 'purchase', 'return'] as const).map((opt) => {
           const selectedValues = getTypeValues();
@@ -602,7 +741,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return {
             key: opt,
             label: typeLabels[opt] ?? opt,
-            icon: isSelected ? 'check' : undefined,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
             onPress: () => {
               if (opt === 'all') {
                 setFilters({ ...activeFilters, type: 'all' });
@@ -620,6 +759,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       {
         key: 'completeness',
         label: 'Completeness',
+        defaultSelectedSubactionKey: 'all',
         suppressDefaultCheckmark: true,
         subactions: (['all', 'needs-review', 'complete'] as const).map((opt) => {
           const selectedValues = getCompletenessValues();
@@ -627,7 +767,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           return {
             key: opt,
             label: completenessLabels[opt] ?? opt,
-            icon: isSelected ? 'check' : undefined,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
             onPress: () => {
               if (opt === 'all') {
                 setFilters({ ...activeFilters, completeness: 'all' });
@@ -647,12 +787,13 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             {
               key: 'budget-category',
               label: 'Budget Category',
+              defaultSelectedSubactionKey: 'all',
               suppressDefaultCheckmark: true,
               subactions: [
                 {
                   key: 'all',
                   label: 'All',
-                  icon: getCategoryValues().length === 0 ? 'check' : undefined,
+                  icon: undefined,
                   onPress: () => setFilters({ ...activeFilters, budgetCategoryId: undefined }),
                 },
                 ...categoryOptions.map((opt) => {
@@ -675,50 +816,46 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             },
           ]
         : []),
-      ...(purchasedByOptions.length > 0
-        ? [
-            {
-              key: 'purchased-by',
-              label: 'Purchased By',
-              suppressDefaultCheckmark: true,
-              subactions: [
-                {
-                  key: 'all',
-                  label: 'All',
-                  icon: getPurchasedByValues().length === 0 ? 'check' : undefined,
-                  onPress: () => setFilters({ ...activeFilters, purchasedBy: undefined }),
-                },
-                ...purchasedByOptions.map((opt) => {
-                  const selectedValues = getPurchasedByValues();
-                  const isSelected = selectedValues.includes(opt);
-                  return {
-                    key: opt,
-                    label: opt,
-                    icon: isSelected ? 'check' : undefined,
-                    onPress: () => {
-                      const current = getPurchasedByValues();
-                      const next = current.includes(opt)
-                        ? current.filter((v) => v !== opt)
-                        : [...current, opt];
-                      setFilters({ ...activeFilters, purchasedBy: next.length > 0 ? next : undefined });
-                    },
-                  };
-                }),
-              ],
+      {
+        key: 'purchased-by',
+        label: 'Purchased By',
+        defaultSelectedSubactionKey: 'all',
+        suppressDefaultCheckmark: true,
+        subactions: (['all', 'client-card', 'design-business', 'missing'] as const).map((opt) => {
+          const selectedValues = getPurchasedByValues();
+          const isSelected = opt === 'all' ? selectedValues.length === 0 : selectedValues.includes(opt as any);
+          const label =
+            opt === 'client-card' ? 'Client' : opt === 'design-business' ? 'Design Business' : opt === 'missing' ? 'Not Set' : 'All';
+          return {
+            key: opt,
+            label,
+            icon: isSelected && opt !== 'all' ? 'check' : undefined,
+            onPress: () => {
+              if (opt === 'all') {
+                setFilters({ ...activeFilters, purchasedBy: 'all' });
+                return;
+              }
+              const current = getPurchasedByValues();
+              const next = current.includes(opt as any)
+                ? current.filter((v) => v !== opt)
+                : [...current, opt as any];
+              setFilters({ ...activeFilters, purchasedBy: next.length > 0 ? next : 'all' });
             },
-          ]
-        : []),
+          };
+        }),
+      },
       ...(sourceOptions.length > 0
         ? [
             {
               key: 'source',
               label: 'Source',
+              defaultSelectedSubactionKey: 'all',
               suppressDefaultCheckmark: true,
               subactions: [
                 {
                   key: 'all',
                   label: 'All',
-                  icon: getSourceValues().length === 0 ? 'check' : undefined,
+                  icon: undefined,
                   onPress: () => setFilters({ ...activeFilters, source: undefined }),
                 },
                 ...sourceOptions.map((opt) => {
@@ -745,7 +882,6 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   }, [
     activeFilters,
     budgetCategories,
-    purchasedByOptions,
     sourceOptions,
     scopeConfig.capabilities?.supportsInventoryOnlyStatusFilter,
     setFilters,
@@ -828,7 +964,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       const sourceValues = Array.isArray(activeFilters.source) ? activeFilters.source : [activeFilters.source];
       if (sourceValues.length > 0) return true;
     }
-    if (activeFilters.purchasedBy) {
+    if (activeFilters.purchasedBy && activeFilters.purchasedBy !== 'all') {
       const purchasedByValues = Array.isArray(activeFilters.purchasedBy)
         ? activeFilters.purchasedBy
         : [activeFilters.purchasedBy];
@@ -843,7 +979,15 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         <ListControlBar
           search={query}
           onChangeSearch={setQuery}
+          showSearch={showSearch}
           actions={[
+            {
+              title: '',
+              variant: 'secondary',
+              onPress: () => setShowSearch(!showSearch),
+              iconName: 'search',
+              active: showSearch,
+            },
             {
               title: 'Sort',
               variant: 'secondary',
@@ -872,24 +1016,36 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
                 ]
               : []),
           ]}
+          leftElement={
+            scopeConfig.scope === 'inventory' ? (
+              <TouchableOpacity
+                disabled={!hasFiltered}
+                onPress={() => {
+                  if (!hasFiltered) return;
+                  handleSelectAll();
+                }}
+                style={[
+                  styles.selectButton,
+                  selectButtonThemeStyle,
+                  !hasFiltered && styles.selectButtonDisabled,
+                ]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: allSelected }}
+              >
+                <SelectorCircle selected={allSelected} indicator="check" />
+              </TouchableOpacity>
+            ) : undefined
+          }
         />
       </View>
-      <SortMenu visible={sortOpen} onRequestClose={() => setSortOpen(false)} items={sortMenuItems} />
-      <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
-      <ListSelectAllRow
-        disabled={!hasFiltered}
-        checked={bulkMode && allSelected}
-        onPress={() => {
-          if (!hasFiltered) return;
-          if (!bulkMode) {
-            setBulkMode(true);
-            handleSelectAll();
-          } else {
-            handleSelectAll();
-          }
-        }}
+      <SortMenu
+        visible={sortOpen}
+        onRequestClose={() => setSortOpen(false)}
+        items={sortMenuItems}
+        activeSubactionKey={sortMode}
       />
-      <BottomSheet visible={bulkMode} onRequestClose={() => setBulkMode(false)}>
+      <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
+      <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
         <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
           <AppText variant="body" style={styles.bulkSheetTitle}>
             Bulk actions
@@ -900,7 +1056,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             <AppText variant="caption" style={styles.semiboldText}>
               {selectedIds.length} selected
             </AppText>
-            <Pressable onPress={() => setBulkMode(false)}>
+            <Pressable onPress={clearSelection}>
               <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
                 Done
               </AppText>
@@ -919,7 +1075,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         ref={listRef}
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, selectedIds.length > 0 ? styles.listWithBulkBar : null]}
         refreshControl={
           screenRefresh ? (
             <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
@@ -938,10 +1094,6 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         renderItem={({ item }) => (
           <Pressable
             onPress={() => {
-              if (bulkMode) {
-                toggleSelection(item.id);
-                return;
-              }
               setRestoreHint({ anchorId: item.id, scrollOffset: lastScrollOffsetRef.current });
               const backTarget =
                 scopeConfig.scope === 'inventory'
@@ -963,12 +1115,23 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             style={({ pressed }) => [
               styles.row,
               rowSurfaceStyle,
+              selectedIds.includes(item.id) ? { borderColor: uiKitTheme.primary.main } : null,
               pressed && styles.rowPressed,
             ]}
           >
-            {bulkMode ? (
-              <SelectorCircle selected={selectedIds.includes(item.id)} indicator="check" />
-            ) : null}
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleSelection(item.id);
+              }}
+              accessibilityRole="checkbox"
+              accessibilityLabel={`Select ${item.label}`}
+              accessibilityState={{ checked: selectedIds.includes(item.id) }}
+              hitSlop={13}
+              style={styles.selectorContainer}
+            >
+              <SelectorCircle selected={selectedIds.includes(item.id)} indicator="dot" />
+            </Pressable>
             <View style={styles.rowContent}>
               <AppText variant="body">{item.label}</AppText>
               {item.subtitle ? <AppText variant="caption">{item.subtitle}</AppText> : null}
@@ -981,6 +1144,18 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           </Pressable>
         )}
       />
+      {selectedIds.length > 0 ? (
+        <View style={styles.bulkBar}>
+          <AppText variant="caption" style={styles.semiboldText}>
+            {selectedIds.length} selected
+          </AppText>
+          <View style={styles.bulkBarSpacer} />
+          <View style={styles.bulkBarActions}>
+            <AppButton title="Clear" variant="secondary" onPress={clearSelection} />
+            <AppButton title="Bulk actions" variant="primary" onPress={() => setBulkSheetOpen(true)} />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -993,9 +1168,23 @@ const styles = StyleSheet.create({
   controlSection: {
     gap: 0,
   },
+  selectButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BUTTON_BORDER_RADIUS,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectButtonDisabled: {
+    opacity: 0.5,
+  },
   list: {
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
+  },
+  listWithBulkBar: {
+    paddingBottom: layout.screenBodyTopMd.paddingTop + 56,
   },
   emptyState: {
     alignItems: 'center',
@@ -1012,6 +1201,9 @@ const styles = StyleSheet.create({
   },
   rowPressed: {
     opacity: 0.7,
+  },
+  selectorContainer: {
+    padding: 2,
   },
   rowContent: {
     flex: 1,
@@ -1042,5 +1234,19 @@ const styles = StyleSheet.create({
   },
   bulkActionButton: {
     paddingVertical: 6,
+  },
+  bulkBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  bulkBarSpacer: {
+    flex: 1,
+  },
+  bulkBarActions: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
   },
 });

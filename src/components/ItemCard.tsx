@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 import { resolveAttachmentUri } from '../offline/media';
 import { useUIKitTheme } from '../theme/ThemeProvider';
@@ -11,7 +11,7 @@ import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { SelectorCircle } from './SelectorCircle';
 
 export type ItemCardProps = {
-  description: string;
+  name: string;
   sku?: string;
   sourceLabel?: string;
   locationLabel?: string;
@@ -37,11 +37,11 @@ export type ItemCardProps = {
   menuItems?: AnchoredMenuItem[];
   onPress?: () => void;
 
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function ItemCard({
-  description,
+  name,
   sku,
   sourceLabel,
   locationLabel,
@@ -96,6 +96,12 @@ export function ItemCard({
         placeholderBorder: {
           borderColor: uiKitTheme.border.secondary,
         },
+        thumbBackground: {
+          backgroundColor: uiKitTheme.background.tertiary,
+        },
+        header: {
+          borderBottomColor: uiKitTheme.border.secondary,
+        },
       }),
     [uiKitTheme, isSelected]
   );
@@ -105,17 +111,7 @@ export function ItemCard({
     onSelectedChange?.(next);
   };
 
-  const showTopRow = Boolean(
-    onSelectedChange ||
-      typeof selected === 'boolean' ||
-      defaultSelected ||
-      priceLabel ||
-      indexLabel ||
-      statusLabel ||
-      onBookmarkPress ||
-      onMenuPress ||
-      (menuItems && menuItems.length > 0)
-  );
+  const showTopRow = Boolean(name);
 
   const closeMenu = useCallback(() => {
     setMenuVisible(false);
@@ -137,111 +133,111 @@ export function ItemCard({
         onPress={onPress}
         disabled={!onPress}
         accessibilityRole={onPress ? 'button' : 'none'}
-        accessibilityLabel={`Item card: ${description}`}
+        accessibilityLabel={`Item card: ${name}`}
         style={({ pressed }) => [
           styles.card,
           getCardBaseStyle({ radius: 16 }),
           getCardBorderStyle(uiKitTheme),
           themed.card,
-        pressed && onPress ? styles.cardPressed : null,
+          pressed && onPress ? styles.cardPressed : null,
           style,
         ]}
       >
+        <View style={[styles.header, themed.header]}>
+          {(onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelected(!isSelected);
+              }}
+              accessibilityRole="checkbox"
+              accessibilityLabel={`Select ${name}`}
+              accessibilityState={{ checked: isSelected }}
+              hitSlop={13}
+              style={styles.selectorContainer}
+            >
+              <SelectorCircle selected={isSelected} indicator="dot" />
+            </Pressable>
+          ) : null}
+          <View style={styles.headerSpacer} />
+          <View style={styles.headerRight}>
+            <View style={styles.headerBadges}>
+              {indexLabel ? (
+                <View
+                  style={[styles.pill, themed.pill]}
+                  accessibilityRole="text"
+                  accessibilityLabel={`Item ${indexLabel}`}
+                >
+                  <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
+                    {indexLabel}
+                  </Text>
+                </View>
+              ) : null}
+              {statusLabel ? (
+                <View
+                  style={[styles.pill, themed.pill]}
+                  accessibilityRole="text"
+                  accessibilityLabel={`Status: ${statusLabel}`}
+                >
+                  <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
+                    {statusLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            {onBookmarkPress ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onBookmarkPress();
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                style={styles.iconButton}
+              >
+                <MaterialIcons
+                  name={bookmarked ? 'bookmark' : 'bookmark-border'}
+                  size={24}
+                  color={bookmarked ? uiKitTheme.status.missed.text : themed.icon.color}
+                />
+              </Pressable>
+            ) : null}
+
+            {onMenuPress || (menuItems && menuItems.length > 0) ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleMenuPress();
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="More options"
+                style={styles.iconButton}
+              >
+                <MaterialIcons name="more-vert" size={24} color={themed.icon.color} />
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+
         <View style={styles.content}>
           {showTopRow ? (
             <View style={styles.topRow}>
-              {(onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
-                <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setSelected(!isSelected);
-                  }}
-                  accessibilityRole="checkbox"
-                  accessibilityLabel={`Select ${description}`}
-                  accessibilityState={{ checked: isSelected }}
-                  hitSlop={13}
-                >
-                  <SelectorCircle selected={isSelected} indicator="dot" />
-                </Pressable>
-              ) : null}
-
-              {priceLabel ? (
-                <Text style={[styles.price, themed.metaText]} accessibilityRole="text">
-                  {priceLabel}
+              <View style={styles.descriptionContainer}>
+                <Text style={[styles.description, themed.description]} numberOfLines={3}>
+                  {name}
                 </Text>
-              ) : null}
-
-              <View style={styles.topRowRight}>
-                {indexLabel ? (
-                  <View
-                    style={[styles.pill, themed.pill]}
-                    accessibilityRole="text"
-                    accessibilityLabel={`Item ${indexLabel}`}
-                  >
-                    <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
-                      {indexLabel}
-                    </Text>
-                  </View>
-                ) : null}
-                {statusLabel ? (
-                  <View
-                    style={[styles.pill, themed.pill]}
-                    accessibilityRole="text"
-                    accessibilityLabel={`Status: ${statusLabel}`}
-                  >
-                    <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
-                      {statusLabel}
-                    </Text>
-                  </View>
-                ) : null}
-
-                {onBookmarkPress ? (
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      onBookmarkPress();
-                    }}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                    style={styles.iconButton}
-                  >
-                    <MaterialIcons
-                      name={bookmarked ? 'bookmark' : 'bookmark-border'}
-                      size={20}
-                      color={bookmarked ? uiKitTheme.status.missed.text : themed.icon.color}
-                    />
-                  </Pressable>
-                ) : null}
-
-                {onMenuPress || (menuItems && menuItems.length > 0) ? (
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleMenuPress();
-                    }}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel="More options"
-                    style={styles.iconButton}
-                  >
-                    <MaterialIcons name="more-vert" size={20} color={themed.icon.color} />
-                  </Pressable>
-                ) : null}
               </View>
             </View>
           ) : null}
-
-          <Text style={[styles.description, themed.description]} numberOfLines={3}>
-            {description}
-          </Text>
 
           <View style={styles.bottomRow}>
             <View style={styles.thumbCol}>
               {thumbnailUri && !thumbnailUri.startsWith('offline://') ? (
                 <Image
                   source={{ uri: resolveAttachmentUri({ url: thumbnailUri, kind: 'image', contentType: 'image/jpeg' }) ?? thumbnailUri }}
-                  style={[styles.thumb, themed.placeholderBorder]}
+                  style={[styles.thumb, themed.placeholderBorder, themed.thumbBackground]}
                   accessibilityIgnoresInvertColors
                 />
               ) : thumbnailUri && thumbnailUri.startsWith('offline://') ? (
@@ -250,11 +246,11 @@ export function ItemCard({
                   return resolved ? (
                     <Image
                       source={{ uri: resolved }}
-                      style={[styles.thumb, themed.placeholderBorder]}
+                      style={[styles.thumb, themed.placeholderBorder, themed.thumbBackground]}
                       accessibilityIgnoresInvertColors
                     />
                   ) : (
-                    <View style={[styles.thumbPlaceholder, themed.placeholderBorder]}>
+                    <View style={[styles.thumbPlaceholder, themed.placeholderBorder, themed.thumbBackground]}>
                       <MaterialIcons name="image-not-supported" size={24} color={uiKitTheme.text.secondary} />
                     </View>
                   );
@@ -271,6 +267,7 @@ export function ItemCard({
                   style={[
                     styles.thumbPlaceholder,
                     themed.placeholderBorder,
+                    themed.thumbBackground,
                     !onAddImagePress ? styles.addImageDisabled : null,
                   ]}
                 >
@@ -280,25 +277,28 @@ export function ItemCard({
             </View>
 
             <View style={styles.textCol}>
-              {(sku || sourceLabel || locationLabel) ? (
-                <View style={styles.metaCol}>
-                  {sourceLabel ? (
-                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
-                      <Text style={styles.metaStrong}>Source:</Text> {sourceLabel}
-                    </Text>
-                  ) : null}
-                  {sku ? (
-                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
-                      <Text style={styles.metaStrong}>SKU:</Text> {sku}
-                    </Text>
-                  ) : null}
-                  {locationLabel ? (
-                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={2}>
-                      <Text style={styles.metaStrong}>Location:</Text> {locationLabel}
-                    </Text>
-                  ) : null}
-                </View>
-              ) : null}
+              <View style={styles.metaCol}>
+                {priceLabel ? (
+                  <Text style={[styles.description, themed.description]} numberOfLines={1}>
+                    {priceLabel}
+                  </Text>
+                ) : null}
+                {sourceLabel ? (
+                  <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
+                    <Text style={styles.metaStrong}>Source:</Text> {sourceLabel}
+                  </Text>
+                ) : null}
+                {sku ? (
+                  <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
+                    <Text style={styles.metaStrong}>SKU:</Text> {sku}
+                  </Text>
+                ) : null}
+                {locationLabel ? (
+                  <Text style={[styles.metaText, themed.metaText]} numberOfLines={2}>
+                    <Text style={styles.metaStrong}>Location:</Text> {locationLabel}
+                  </Text>
+                ) : null}
+              </View>
             </View>
           </View>
         </View>
@@ -309,7 +309,7 @@ export function ItemCard({
           visible={menuVisible}
           onRequestClose={closeMenu}
           items={menuItems}
-          title={description}
+          title={name}
           showLeadingIcons={false}
         />
       ) : null}
@@ -327,6 +327,27 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.92,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: CARD_PADDING,
+    paddingVertical: CARD_PADDING,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   content: {
     padding: CARD_PADDING,
     gap: 12,
@@ -336,8 +357,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  topRowRight: {
-    marginLeft: 'auto',
+  topRowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -360,9 +380,9 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   iconButton: {
-    padding: 4,
-    minWidth: 28,
-    minHeight: 28,
+    padding: 6,
+    minWidth: 32,
+    minHeight: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -372,7 +392,7 @@ const styles = StyleSheet.create({
   bottomRow: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   thumbCol: {
     flexShrink: 0,
@@ -397,12 +417,22 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 6,
   },
+  selectorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  descriptionContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    minHeight: 0,
+    marginBottom: 8,
+  },
   description: {
     fontSize: 15,
     fontWeight: '600',
     includeFontPadding: false,
     lineHeight: 20,
-    paddingVertical: 2,
   },
   metaRow: {
     flexDirection: 'row',
@@ -422,4 +452,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

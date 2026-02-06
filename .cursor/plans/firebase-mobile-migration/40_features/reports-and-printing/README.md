@@ -29,7 +29,7 @@ This folder defines the parity-grade behavior spec for Ledger’s **project repo
 ## Cross-cutting dependencies (canonical)
 - Offline-first architecture (Firestore-native offline persistence + scoped listeners + request-doc workflows): `OFFLINE_FIRST_V2_SPEC.md`
 - Business profile (name/logo availability, admin-gated editing): `40_features/settings-and-admin/README.md`
-- Canonical vs non-canonical budget category attribution (item-driven model):
+- Canonical inventory sale semantics (category-coded + direction-coded):
   - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
   - `40_features/project-items/flows/inherited_budget_category_rules.md`
 

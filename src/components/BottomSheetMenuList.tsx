@@ -15,6 +15,15 @@ export interface BottomSheetMenuListProps {
   title?: string;
   showLeadingIcons?: boolean;
   /**
+   * When provided, only the group containing this subaction
+   * shows its selected value in the header.
+   */
+  activeSubactionKey?: string;
+  /**
+   * When true, hide the header value for default selections.
+   */
+  hideDefaultLabel?: boolean;
+  /**
    * Max height for the sheet content area (excluding the handle).
    * Keeps menus usable on small screens and with long lists.
    */
@@ -37,6 +46,8 @@ export function BottomSheetMenuList({
   items,
   title,
   showLeadingIcons = false,
+  activeSubactionKey,
+  hideDefaultLabel = false,
   maxContentHeight = 420,
   closeOnSubactionPress = true,
   closeOnItemPress = true,
@@ -86,15 +97,27 @@ export function BottomSheetMenuList({
           const itemKey = item.key ?? `${item.label}-${idx}`;
 
           if (isSubmenuItem) {
-            const currentKey =
+            const selectedByIcon = subactions.find((sub) => sub.icon === 'check');
+            const rawCurrentKey =
+              item.selectedSubactionKey ??
               selectedSubactionByKey[itemKey] ??
               item.defaultSelectedSubactionKey ??
               subactions[0]?.key;
+            const isActiveGroup =
+              !activeSubactionKey || subactions.some((sub) => sub.key === activeSubactionKey);
+            const currentKey = isActiveGroup
+              ? closeOnSubactionPress
+                ? rawCurrentKey
+                : selectedByIcon?.key ?? rawCurrentKey
+              : undefined;
             const isDefaultSelection =
               item.defaultSelectedSubactionKey != null &&
               currentKey === item.defaultSelectedSubactionKey;
-            const showCheckmark = !item.suppressDefaultCheckmark || !isDefaultSelection;
-            const currentLabel = subactions.find((s) => s.key === currentKey)?.label ?? '';
+            const showCheckmark = isActiveGroup && (!item.suppressDefaultCheckmark || !isDefaultSelection);
+            const currentLabel =
+              currentKey && !(hideDefaultLabel && isDefaultSelection)
+                ? subactions.find((s) => s.key === currentKey)?.label ?? ''
+                : '';
             const isExpanded = expandedMenuKey === itemKey;
 
             return (
@@ -109,20 +132,25 @@ export function BottomSheetMenuList({
                     {showLeadingIcons ? (
                       <MaterialIcons name={item.icon ?? 'build'} size={20} color={menuItemIconColor} />
                     ) : null}
-                    <Text style={[styles.menuSectionTitle, { color: uiKitTheme.text.primary }]}>
+                    <Text
+                      style={[
+                        styles.menuSectionTitle,
+                        { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                      ]}
+                    >
                       {item.label}
                     </Text>
                   </View>
                   <View style={styles.menuSectionRight}>
                     {currentLabel ? (
-                      <>
-                        <Text style={[styles.menuSectionValue, { color: uiKitTheme.primary.main }]}>
-                          {currentLabel}
-                        </Text>
-                        {showCheckmark ? (
-                          <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
-                        ) : null}
-                      </>
+                      <Text
+                        style={[
+                          styles.menuSectionValue,
+                          { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.secondary },
+                        ]}
+                      >
+                        {currentLabel}
+                      </Text>
                     ) : null}
                     <MaterialIcons
                       name={isExpanded ? 'expand-more' : 'chevron-right'}
@@ -148,7 +176,12 @@ export function BottomSheetMenuList({
                       const selectedSub = closeOnSubactionPress
                         ? currentKey === sub.key
                         : sub.icon === 'check';
-                      const isSelected = sub.icon === 'check';
+                      const isDefaultSelected =
+                        selectedSub &&
+                        item.defaultSelectedSubactionKey != null &&
+                        sub.key === item.defaultSelectedSubactionKey;
+                      const allowCheck = !item.suppressDefaultCheckmark || !isDefaultSelected;
+                      const isHighlighted = selectedSub && allowCheck;
 
                       return (
                         <View key={sub.key}>
@@ -174,19 +207,19 @@ export function BottomSheetMenuList({
                                 <MaterialIcons
                                   name={sub.icon === 'check' ? 'check' : item.icon ?? 'build'}
                                   size={20}
-                                  color={sub.icon === 'check' ? uiKitTheme.primary.main : menuItemIconColor}
+                                  color={isHighlighted ? uiKitTheme.primary.main : menuItemIconColor}
                                 />
                               ) : null}
                               <Text
                                 style={[
                                   styles.menuItemText,
-                                  { color: isSelected ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                                  { color: isHighlighted ? uiKitTheme.primary.main : uiKitTheme.text.primary },
                                 ]}
                               >
                                 {sub.label}
                               </Text>
                             </View>
-                            {isSelected ? (
+                            {isHighlighted ? (
                               <MaterialIcons name="check" size={20} color={uiKitTheme.primary.main} />
                             ) : (
                               <View />

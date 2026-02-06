@@ -28,10 +28,10 @@ This feature is **project-only**.
   - `40_features/project-items/flows/inherited_budget_category_rules.md`
 
 ## Parity evidence (web sources)
-- Budget progress UI + math (current implementation we are **deviating** from for canonical attribution):
+- Budget progress UI + math (current implementation we are **deviating** from for canonical inventory sale semantics):
   - `src/components/ui/BudgetProgress.tsx`
   - `src/components/ui/__tests__/BudgetProgress.test.tsx`
 - Project budget/accounting tab shell + accounting rollups + report entrypoints:
   - `src/pages/ProjectLayout.tsx`
-- Canonical transaction totals are computed from item prices:
-  - `src/services/inventoryService.ts` (`computeCanonicalTransactionTotal`, canonical `INV_*` transaction creation/update)
+- Canonical transaction totals are computed from item prices (web parity path; mobile uses server-owned invariants for canonical rows):
+  - `src/services/inventoryService.ts` (`computeCanonicalTransactionTotal`, canonical inventory transaction creation/update)

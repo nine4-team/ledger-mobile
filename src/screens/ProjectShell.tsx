@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, StyleSheet, View } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../components/Screen';
 import { useScreenTabs } from '../components/ScreenTabs';
 import { AppText } from '../components/AppText';
 import { AppButton } from '../components/AppButton';
+import { BudgetProgress } from '../components/BudgetProgress';
 import { SharedItemsList } from '../components/SharedItemsList';
 import { SharedTransactionsList } from '../components/SharedTransactionsList';
 import { useAccountContextStore } from '../auth/accountContextStore';
@@ -19,8 +19,10 @@ import { refreshProjectBudgetCategories, subscribeToProjectBudgetCategories } fr
 import { refreshSpaces } from '../data/spacesService';
 import { refreshScopedItems, refreshScopedTransactions } from '../data/scopedListData';
 import { createRepository } from '../data/repository';
+import { subscribeToProjectBudgetProgress } from '../data/budgetProgressService';
 import { layout } from '../ui';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveAttachmentUri } from '../offline/media';
 import { ProjectSpacesList } from './ProjectSpacesList';
 
@@ -34,7 +36,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   const accountId = useAccountContextStore((store) => store.accountId);
   const userId = useAuthStore((store) => store.user?.uid ?? null);
   const { isOnline } = useNetworkStatus();
-  const isFocused = useIsFocused();
+  const isFocused = useOptionalIsFocused(true);
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -43,6 +45,9 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { id: string; name: string }>>({});
   const [pinnedBudgetCategoryIds, setPinnedBudgetCategoryIds] = useState<string[]>([]);
   const [budgetTotalCents, setBudgetTotalCents] = useState<number | null>(null);
+  const [budgetByCategory, setBudgetByCategory] = useState<Record<string, number>>({});
+  const [budgetSpentCents, setBudgetSpentCents] = useState(0);
+  const [budgetSpentByCategory, setBudgetSpentByCategory] = useState<Record<string, number>>({});
   const wasOnlineRef = useRef(isOnline);
   const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
   useScopeSwitching(scopeConfig, { isActive: isFocused });
@@ -84,11 +89,29 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   useEffect(() => {
     if (!accountId || !projectId) {
       setBudgetTotalCents(null);
+      setBudgetByCategory({});
       return;
     }
     return subscribeToProjectBudgetCategories(accountId, projectId, (categories) => {
-      const total = categories.reduce((sum, category) => sum + (category.budgetCents ?? 0), 0);
+      const nextBudgetByCategory = categories.reduce<Record<string, number>>((map, category) => {
+        map[category.id] = category.budgetCents ?? 0;
+        return map;
+      }, {});
+      const total = Object.values(nextBudgetByCategory).reduce((sum, value) => sum + value, 0);
+      setBudgetByCategory(nextBudgetByCategory);
       setBudgetTotalCents(total);
+    });
+  }, [accountId, projectId]);
+
+  useEffect(() => {
+    if (!accountId || !projectId) {
+      setBudgetSpentCents(0);
+      setBudgetSpentByCategory({});
+      return;
+    }
+    return subscribeToProjectBudgetProgress(accountId, projectId, (progress) => {
+      setBudgetSpentCents(progress.spentCents);
+      setBudgetSpentByCategory(progress.spentByCategory);
     });
   }, [accountId, projectId]);
 
@@ -164,6 +187,9 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
         budgetCategories={budgetCategories}
         pinnedBudgetCategoryIds={pinnedBudgetCategoryIds}
         budgetTotalCents={budgetTotalCents}
+        budgetByCategory={budgetByCategory}
+        budgetSpentCents={budgetSpentCents}
+        budgetSpentByCategory={budgetSpentByCategory}
       />
     </Screen>
   );
@@ -182,6 +208,9 @@ type ProjectShellContentProps = {
   budgetCategories: Record<string, { id: string; name: string }>;
   pinnedBudgetCategoryIds: string[];
   budgetTotalCents: number | null;
+  budgetByCategory: Record<string, number>;
+  budgetSpentCents: number;
+  budgetSpentByCategory: Record<string, number>;
 };
 
 function ProjectShellContent({
@@ -197,6 +226,9 @@ function ProjectShellContent({
   budgetCategories,
   pinnedBudgetCategoryIds,
   budgetTotalCents,
+  budgetByCategory,
+  budgetSpentCents,
+  budgetSpentByCategory,
 }: ProjectShellContentProps) {
   const screenTabs = useScreenTabs();
   const selectedKey = screenTabs?.selectedKey ?? 'items';
@@ -226,13 +258,25 @@ function ProjectShellContent({
               ? `Budget: $${(budgetTotalCents / 100).toFixed(2)}`
               : 'Budget not set'}
           </AppText>
+          {typeof budgetTotalCents === 'number' ? (
+            <BudgetProgress spentCents={budgetSpentCents} budgetCents={budgetTotalCents} />
+          ) : null}
           {pinnedBudgetCategoryIds.length ? (
-            <AppText variant="caption" style={styles.budgetPins}>
-              {pinnedBudgetCategoryIds
-                .slice(0, 2)
-                .map((id) => budgetCategories[id]?.name ?? id)
-                .join(' • ')}
-            </AppText>
+            <View style={styles.pinnedBudgets}>
+              {pinnedBudgetCategoryIds.slice(0, 2).map((id) => {
+                const name = budgetCategories[id]?.name ?? id;
+                const spent = budgetSpentByCategory[id] ?? 0;
+                const budget = budgetByCategory[id] ?? 0;
+                const label = budget
+                  ? `${name}: $${(spent / 100).toFixed(2)} / $${(budget / 100).toFixed(2)}`
+                  : name;
+                return (
+                  <AppText key={id} variant="caption" style={styles.budgetPins}>
+                    {label}
+                  </AppText>
+                );
+              })}
+            </View>
           ) : null}
         </View>
       </View>
@@ -290,6 +334,9 @@ const styles = StyleSheet.create({
   },
   budgetPreview: {
     gap: 4,
+  },
+  pinnedBudgets: {
+    gap: 2,
   },
   budgetPins: {
     opacity: 0.8,

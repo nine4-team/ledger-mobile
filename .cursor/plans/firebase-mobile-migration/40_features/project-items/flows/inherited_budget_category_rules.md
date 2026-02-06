@@ -1,121 +1,107 @@
-# Flow: `inheritedBudgetCategoryId` rules (Items ↔ canonical transactions)
+# Flow: item budget category id rules (`inheritedBudgetCategoryId`) — prompts + canonical sale semantics
 
 This doc is the shared source for Project Items and Business Inventory specs.
 
-Goal: make it unambiguous **where `inheritedBudgetCategoryId` comes from**, **when it changes**, and **what breaks if it’s missing**.
+Goal: make it unambiguous:
+- where the item’s budget category id comes from
+- when it changes
+- what happens when it’s missing (and how the UI resolves it)
+
+> Naming note: the field is currently named `item.inheritedBudgetCategoryId` in the migration data contracts.
+> In this revised model it is **item-owned** (not strictly “inherited”). A later rename to `item.budgetCategoryId` is recommended but out of scope for this spec pack.
 
 ---
 
 ## Definitions
 
 - **User-facing (non-canonical) transaction**: a normal transaction whose budget category is set by the user (`transaction.budgetCategoryId`).
-- **Canonical inventory transaction**: a system-generated transaction whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
-  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
+- **Canonical inventory sale transaction (system)**: a system-generated **sale** transaction that represents cross-scope movement, and is:
+  - **direction-coded**: `business_to_project` or `project_to_business`
+  - **category-coded**: exactly one `transaction.budgetCategoryId`
+  - **deterministic**: `canonicalSaleTransactionId(projectId, direction, budgetCategoryId)` (recommended id prefix `INV_SALE__`)
+- Note: “project → project” movement is modeled as **two hops**:
+  - Project A → Business Inventory (`project_to_business`)
+  - then Business Inventory → Project B (`business_to_project`)
 
-Canonical working doc (source of truth):
-
+Source of truth working doc:
 - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 
 ---
 
-## 1) Attribution rules (canonical vs non-canonical)
+## 1) Attribution rules (non-canonical vs canonical)
 
 ### 1.1 Non-canonical attribution (transaction-driven)
-
 - Category attribution comes from `transaction.budgetCategoryId`.
 
-### 1.2 Canonical inventory attribution (item-driven)
-
-- Canonical inventory transactions are attributed by **items linked to the canonical transaction**, grouped by `item.inheritedBudgetCategoryId`.
-- Canonical inventory transactions should not require a user-facing budget category.
-
-Intentional delta (vs web):
-
-- The current web budget rollups do not group canonical transactions by item categories (`src/components/ui/BudgetProgress.tsx`).
+### 1.2 Canonical inventory sale attribution (transaction-driven)
+- Canonical inventory sale transactions are **category-coded**, so attribution comes from `transaction.budgetCategoryId` (not from grouping items).
+- Budget rollups apply sign rules based on direction:
+  - `business_to_project`: adds to spend
+  - `project_to_business`: subtracts from spend
 
 ---
 
-## 2) The item field: `inheritedBudgetCategoryId`
+## 2) The item field: `inheritedBudgetCategoryId` (semantics + write rules)
 
 ### 2.1 Required storage
-
 Every item persists a stable `inheritedBudgetCategoryId` field (nullable but present).
 
-### 2.2 How it is set
+### 2.2 How it is set (inherit vs direct assignment)
 
-**On link to a non-canonical transaction**:
+**A) On link to a non-canonical transaction** (inherit):
+- If a non-canonical transaction has `budgetCategoryId`, set:
+  - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
 
-- If transaction has `budgetCategoryId`, set `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`.
-
-**On link to a canonical inventory transaction**:
-
-- Do not set or overwrite `item.inheritedBudgetCategoryId`.
+**B) On canonical inventory sale operations** (direct assignment when needed):
+- Canonical sale operations may need to set or change the item’s category so the correct canonical sale transaction is used.
+- When a prompt is shown (see below), persist the chosen category onto the item as:
+  - `item.inheritedBudgetCategoryId = <chosenCategoryId>`
 
 ### 2.3 When it changes
 
-**Business Inventory → Project allocation/sale**:
-
-- Prompt user for destination project budget category
-- Persist it as `item.inheritedBudgetCategoryId = chosenCategoryId`
+- **Business Inventory → Project**:
+  - If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, keep it.
+  - Otherwise prompt for a destination project category and persist it onto the item.
+- **Project → Business Inventory**:
+  - If `item.inheritedBudgetCategoryId` is missing, prompt for a source project category and persist it onto the item.
+  - Otherwise keep it.
 
 ### 2.4 What breaks if missing
 
-If `item.inheritedBudgetCategoryId` is missing, canonical inventory transactions cannot be deterministically attributed to project budget categories.
-
-Therefore, Project → Business Inventory **sell/deallocate-style** operations must be blocked until the field is known.
+If the item’s category is missing, the system cannot select the correct canonical sale transaction id (canonical rows are split by category).
+Therefore, the UI must **prompt + persist** before the canonical sale is applied (rather than blocking the operation outright).
 
 ---
 
-## 3) UI guardrails (required)
+## 3) UI rules (required)
 
-### 3.1 Project → Business Inventory
+### 3.1 Project → Business Inventory (Sell to Business)
 
-Block **sell/deallocate-style** moves (canonical-row paths) if `inheritedBudgetCategoryId` is missing.
-
-Required copy:
-
-- Disable reason: `Link this item to a categorized transaction before moving it to Design Business Inventory.`
-- Error toast: `Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
+If `item.inheritedBudgetCategoryId` is missing:
+- Prompt the user to select a category from the **source project’s enabled categories**.
+- Persist it to `item.inheritedBudgetCategoryId`.
+- Then apply the canonical sale (`project_to_business`) to the matching category-coded canonical sale transaction.
 
 Correction path clarification (parity-informed):
+- “Move to Design Business” (correction) is a direct item scope update and does not create canonical inventory sale transactions.
+  It remains blocked when the item is transaction-attached (same as current parity).
 
-- “Move to Design Business” (correction) is a direct item scope update and does not create canonical inventory transactions in current web behavior (`moveItemToBusinessInventory` in `src/services/inventoryService.ts`). It may remain allowed even when `inheritedBudgetCategoryId` is missing.
+### 3.2 Business Inventory → Project (Sell to Project)
 
-### 3.2 Business Inventory → Project
-
-Prompt for destination project budget category.
+If `item.inheritedBudgetCategoryId` is missing **or** not enabled/available in the destination project:
+- Prompt the user to select a category from the destination project.
+- Persist it to `item.inheritedBudgetCategoryId`.
+- Then apply the canonical sale (`business_to_project`) to the matching category-coded canonical sale transaction.
 
 Defaulting:
-
-- Preselect `item.inheritedBudgetCategoryId` only if it exists and is enabled in the destination project.
+- If the item already has a category id that is enabled/available in the destination project, do not prompt.
 
 Batch:
-
-- One selection applies to all items in the batch.
-
-Persistence:
-
-- Always write the chosen category back onto each item.
+- One selection applies to all items in the batch (fast path).
 
 ---
 
-## 4) Canonical transaction category storage (recommendation)
-
-Preferred:
-
-- Canonical inventory transactions keep `budgetCategoryId = null` and are treated as uncategorized in UI.
-
-Optional (schema compatibility):
-
-- A hidden/internal “Canonical (system)” category may exist, but rollups must ignore canonical transaction category and use item-driven attribution.
-
-Parity context:
-
-- Current web canonical transaction creation may populate legacy `category_id` / `budget_category` fields (`src/services/inventoryService.ts`). This must not be used for attribution going forward.
-
----
-
-## 5) Migration/backfill (out of scope)
+## 4) Migration/backfill (out of scope)
 
 Any one-time migration/backfill logic for existing data is handled separately and is explicitly **out of scope** for this spec pack.
 

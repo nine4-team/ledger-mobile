@@ -1,18 +1,18 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 import { resolveAttachmentUri } from '../offline/media';
 import { useUIKitTheme } from '../theme/ThemeProvider';
-import { CARD_PADDING, getCardBaseStyle, getCardBorderStyle } from '../ui';
+import { CARD_PADDING, CARD_BORDER_WIDTH, getCardBaseStyle, getCardBorderStyle } from '../ui';
 import { ItemCard } from './ItemCard';
 import type { ItemCardProps } from './ItemCard';
 import { SelectorCircle } from './SelectorCircle';
 
 export type GroupedItemListSummary = Pick<
   ItemCardProps,
-  'description' | 'sku' | 'sourceLabel' | 'locationLabel' | 'notes' | 'thumbnailUri'
+  'name' | 'sku' | 'sourceLabel' | 'locationLabel' | 'notes' | 'thumbnailUri'
 >;
 
 export type GroupedItemCardProps = {
@@ -33,7 +33,7 @@ export type GroupedItemCardProps = {
   onSelectedChange?: (selected: boolean) => void;
 
   onPress?: () => void; // optional group header press
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function GroupedItemCard({
@@ -52,16 +52,7 @@ export function GroupedItemCard({
   style,
 }: GroupedItemCardProps) {
   const uiKitTheme = useUIKitTheme();
-  const countBadgeStyle = useMemo(
-    () => ({
-      backgroundColor: uiKitTheme.primary.main + '1A',
-      borderColor: uiKitTheme.primary.main + '33',
-    }),
-    [uiKitTheme]
-  );
-  const countBadgeTextStyle = useMemo(() => ({ color: uiKitTheme.primary.main }), [uiKitTheme]);
-  const summaryTitleColorStyle = useMemo(() => ({ color: uiKitTheme.text.primary }), [uiKitTheme]);
-  
+
   // Expansion state
   const [internalExpanded, setInternalExpanded] = useState(Boolean(defaultExpanded));
   const isExpanded = typeof expanded === 'boolean' ? expanded : internalExpanded;
@@ -70,22 +61,48 @@ export function GroupedItemCard({
   const [internalSelected, setInternalSelected] = useState(Boolean(defaultSelected));
   const isSelected = typeof selected === 'boolean' ? selected : internalSelected;
 
+  const countBadgeStyle = useMemo(
+    () => ({
+      backgroundColor: uiKitTheme.primary.main + '1A',
+      borderColor: uiKitTheme.primary.main + '33',
+    }),
+    [uiKitTheme]
+  );
+  const countBadgeTextStyle = useMemo(() => ({ color: uiKitTheme.primary.main }), [uiKitTheme]);
+
   const themed = useMemo(
     () =>
       StyleSheet.create({
         card: {
           backgroundColor: uiKitTheme.background.surface,
           shadowColor: uiKitTheme.shadow,
+          borderWidth: CARD_BORDER_WIDTH,
           borderColor: isSelected ? uiKitTheme.primary.main : uiKitTheme.border.primary,
+        },
+        pill: {
+          backgroundColor: uiKitTheme.primary.main + '1A',
+          borderColor: uiKitTheme.primary.main + '33',
+        },
+        pillText: {
+          color: uiKitTheme.primary.main,
+        },
+        description: {
+          color: uiKitTheme.text.primary,
         },
         metaText: {
           color: uiKitTheme.text.secondary,
         },
         icon: {
-          color: uiKitTheme.text.secondary,
+          color: uiKitTheme.button.icon.icon,
         },
-        thumbBorder: {
+        placeholderBorder: {
           borderColor: uiKitTheme.border.secondary,
+        },
+        thumbBackground: {
+          backgroundColor: uiKitTheme.background.tertiary,
+        },
+        header: {
+          borderBottomColor: uiKitTheme.border.secondary,
         },
         childIndicator: {
           borderTopColor: uiKitTheme.border.secondary,
@@ -121,6 +138,9 @@ export function GroupedItemCard({
     return only ?? null;
   }, [items]);
 
+  const collapsedPriceLabel = totalLabel ?? perItemPriceLabel;
+  const perItemSuffix = totalLabel && perItemPriceLabel ? ` (${perItemPriceLabel} each)` : null;
+
   return (
     <View
       style={[
@@ -131,18 +151,18 @@ export function GroupedItemCard({
         style,
       ]}
       accessibilityRole="none"
-      accessibilityLabel={`Grouped item card: ${summary.description}`}
+      accessibilityLabel={`Grouped item card: ${summary.name}`}
     >
       <Pressable
         onPress={handlePress}
         accessibilityRole="button"
-        accessibilityLabel={`${isExpanded ? 'Collapse' : 'Expand'} group: ${summary.description}`}
+        accessibilityLabel={`${isExpanded ? 'Collapse' : 'Expand'} group: ${summary.name}`}
         accessibilityState={{ expanded: isExpanded }}
-        style={({ pressed }) => [styles.header, pressed ? styles.headerPressed : null]}
+        style={({ pressed }) => [
+          pressed ? styles.cardPressed : null,
+        ]}
       >
-        {/* Top Row: Checkbox, Total, Count, Microcopy, Chevron */}
-        <View style={[styles.headerTopRow, isExpanded ? styles.headerTopRowExpanded : null]}>
-          {/* Checkbox */}
+        <View style={[styles.header, themed.header]}>
           {(onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
             <Pressable
               onPress={(e) => {
@@ -150,116 +170,116 @@ export function GroupedItemCard({
                 setSelected(!isSelected);
               }}
               accessibilityRole="checkbox"
-              accessibilityLabel={`Select group`}
+              accessibilityLabel="Select group"
               accessibilityState={{ checked: isSelected }}
               hitSlop={13}
+              style={styles.selectorContainer}
             >
               <SelectorCircle selected={isSelected} indicator="dot" />
             </Pressable>
           ) : null}
 
-          {/* Total Price */}
-          {totalLabel ? (
-            <View style={styles.totalRow}>
-              <Text style={[styles.total, themed.metaText]} numberOfLines={1}>
-                {totalLabel}
-              </Text>
-              {perItemPriceLabel ? (
-                <Text style={[styles.microcopy, themed.metaText, styles.perItemText]} numberOfLines={1}>
-                  ({perItemPriceLabel} each)
-                </Text>
-              ) : null}
-            </View>
-          ) : null}
+          <View style={styles.headerSpacer} />
 
-          {/* Right Side Controls */}
           <View style={styles.headerRight}>
             {countLabel ? (
               <View
-                style={[styles.countBadge, countBadgeStyle]}
+                style={[styles.pill, countBadgeStyle]}
                 accessibilityRole="text"
                 accessibilityLabel={`Count ${countLabel}`}
               >
-                <Text style={[styles.countBadgeText, countBadgeTextStyle]} numberOfLines={1}>
+                <Text style={[styles.pillText, countBadgeTextStyle]} numberOfLines={1}>
                   {countLabel}
                 </Text>
               </View>
             ) : null}
-            
+
             {!isExpanded && microcopyWhenCollapsed ? (
               <Text style={[styles.microcopy, themed.metaText]} numberOfLines={1}>
                 {microcopyWhenCollapsed}
               </Text>
             ) : null}
-            
+
             <View style={styles.chevron}>
-              <MaterialIcons 
-                name={isExpanded ? 'keyboard-arrow-down' : 'chevron-right'} 
-                size={22} 
-                color={themed.icon.color} 
+              <MaterialIcons
+                name={isExpanded ? 'keyboard-arrow-down' : 'chevron-right'}
+                size={22}
+                color={themed.icon.color}
               />
             </View>
           </View>
         </View>
 
-        {/* Summary Content: Reusing ItemCard content via strict props */}
         {!isExpanded ? (
-          <View style={styles.summary}>
-            <Text style={[styles.summaryTitle, summaryTitleColorStyle]} numberOfLines={3}>
-              {summary.description}
-            </Text>
-            <View style={styles.summaryBottomRow}>
-              {summary.thumbnailUri && !summary.thumbnailUri.startsWith('offline://') ? (
-                <Image
-                  source={{ uri: resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' }) ?? summary.thumbnailUri }}
-                  style={[styles.summaryThumb, themed.thumbBorder]}
-                  accessibilityIgnoresInvertColors
-                />
-              ) : summary.thumbnailUri && summary.thumbnailUri.startsWith('offline://') ? (
-                (() => {
-                  const resolved = resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' });
-                  return resolved ? (
-                    <Image
-                      source={{ uri: resolved }}
-                      style={[styles.summaryThumb, themed.thumbBorder]}
-                      accessibilityIgnoresInvertColors
-                    />
-                  ) : (
-                    <View style={[styles.summaryThumb, themed.thumbBorder, { alignItems: 'center', justifyContent: 'center' }]}>
-                      <MaterialIcons name="image-not-supported" size={24} color={uiKitTheme.text.secondary} />
-                    </View>
-                  );
-                })()
-              ) : null}
-              {(summary.sourceLabel || summary.sku || summary.locationLabel) ? (
-                <View style={styles.summaryMetaCol}>
+          <View style={styles.content}>
+            <View style={styles.descriptionContainer}>
+              <Text style={[styles.description, themed.description]} numberOfLines={3}>
+                {summary.name}
+              </Text>
+            </View>
+
+            <View style={styles.bottomRow}>
+              <View style={styles.thumbCol}>
+                {summary.thumbnailUri && !summary.thumbnailUri.startsWith('offline://') ? (
+                  <Image
+                    source={{ uri: resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' }) ?? summary.thumbnailUri }}
+                    style={[styles.thumb, themed.placeholderBorder, themed.thumbBackground]}
+                    accessibilityIgnoresInvertColors
+                  />
+                ) : summary.thumbnailUri && summary.thumbnailUri.startsWith('offline://') ? (
+                  (() => {
+                    const resolved = resolveAttachmentUri({ url: summary.thumbnailUri, kind: 'image', contentType: 'image/jpeg' });
+                    return resolved ? (
+                      <Image
+                        source={{ uri: resolved }}
+                        style={[styles.thumb, themed.placeholderBorder, themed.thumbBackground]}
+                        accessibilityIgnoresInvertColors
+                      />
+                    ) : (
+                      <View style={[styles.thumbPlaceholder, themed.placeholderBorder, themed.thumbBackground]}>
+                        <MaterialIcons name="image-not-supported" size={24} color={uiKitTheme.text.secondary} />
+                      </View>
+                    );
+                  })()
+                ) : null}
+              </View>
+
+              <View style={styles.textCol}>
+                <View style={styles.metaCol}>
+                  {collapsedPriceLabel ? (
+                    <Text style={[styles.description, themed.description]} numberOfLines={1}>
+                      {collapsedPriceLabel}
+                      {perItemSuffix ? (
+                        <Text style={[styles.perItemText, themed.metaText]}>{perItemSuffix}</Text>
+                      ) : null}
+                    </Text>
+                  ) : null}
                   {summary.sourceLabel ? (
-                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
+                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
                       <Text style={styles.metaStrong}>Source:</Text> {summary.sourceLabel}
                     </Text>
                   ) : null}
                   {summary.sku ? (
-                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={1}>
+                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
                       <Text style={styles.metaStrong}>SKU:</Text> {summary.sku}
                     </Text>
                   ) : null}
                   {summary.locationLabel ? (
-                    <Text style={[styles.summaryMetaText, themed.metaText]} numberOfLines={2}>
+                    <Text style={[styles.metaText, themed.metaText]} numberOfLines={2}>
                       <Text style={styles.metaStrong}>Location:</Text> {summary.locationLabel}
                     </Text>
                   ) : null}
                 </View>
-              ) : null}
+              </View>
             </View>
           </View>
         ) : null}
       </Pressable>
 
-      {/* Expanded Children */}
       {isExpanded ? (
         <View style={[styles.childrenContainer, themed.childIndicator]}>
           {items.map((item, idx) => (
-            <View key={`${item.description}-${idx}`} style={styles.childWrapper}>
+            <View key={`${item.name}-${idx}`} style={styles.childWrapper}>
               <ItemCard
                 {...item}
                 indexLabel={`${idx + 1}/${items.length}`}
@@ -280,62 +300,51 @@ const styles = StyleSheet.create({
   card: {
     padding: 0,
     overflow: 'hidden',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardPressed: {
+    opacity: 0.92,
   },
   header: {
-    padding: CARD_PADDING,
-    gap: 0, // Gap handled by margin in summaryRow to match specific layout needs
-  },
-  headerPressed: {
-    opacity: 0.95,
-  },
-  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: CARD_PADDING,
+    paddingVertical: CARD_PADDING,
+    borderBottomWidth: 1,
     gap: 12,
-    marginBottom: 8, // Spacing between top row and summary content
-    minHeight: 24,
   },
-  headerTopRowExpanded: {
-    marginBottom: 0,
-  },
-  totalRow: {
-    flexDirection: 'row',
+  selectorContainer: {
     alignItems: 'center',
-    gap: 8,
-    flexShrink: 1,
-    minWidth: 0,
+    justifyContent: 'center',
   },
-  total: {
-    fontSize: 13,
-    fontWeight: '700',
-    includeFontPadding: false,
-  },
-  perItemText: {
-    fontStyle: 'normal',
-    fontWeight: '500',
+  headerSpacer: {
+    flex: 1,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 'auto',
     gap: 8,
+    flexShrink: 0,
   },
-  countBadge: {
+  pill: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
+    maxWidth: 140,
   },
-  countBadgeText: {
+  pillText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     includeFontPadding: false,
   },
   microcopy: {
     fontSize: 12,
     fontWeight: '500',
     includeFontPadding: false,
-    fontStyle: 'italic', // Often microcopy is italicized or distinct
+    fontStyle: 'italic',
   },
   chevron: {
     width: 22,
@@ -343,37 +352,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summary: {
-    gap: 8,
-    paddingTop: 8,
+  content: {
+    padding: CARD_PADDING,
+    gap: 12,
   },
-  itemRowSpacing: {
-    marginBottom: 12,
+  descriptionContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    minHeight: 0,
+    marginBottom: 8,
   },
-  summaryBottomRow: {
+  description: {
+    fontSize: 15,
+    fontWeight: '600',
+    includeFontPadding: false,
+    lineHeight: 20,
+  },
+  bottomRow: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
-  summaryThumb: {
+  thumbCol: {
+    flexShrink: 0,
+  },
+  thumb: {
     width: 108,
     height: 108,
     borderRadius: 21,
     borderWidth: 1,
   },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    includeFontPadding: false,
-    lineHeight: 20,
-    paddingVertical: 2,
+  thumbPlaceholder: {
+    width: 108,
+    height: 108,
+    borderRadius: 21,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  summaryMetaCol: {
+  textCol: {
     flex: 1,
     minWidth: 0,
     gap: 6,
   },
-  summaryMetaText: {
+  metaCol: {
+    gap: 6,
+  },
+  metaText: {
     fontSize: 13,
     fontWeight: '500',
     includeFontPadding: false,
@@ -382,6 +409,11 @@ const styles = StyleSheet.create({
   metaStrong: {
     fontWeight: '700',
   },
+  perItemText: {
+    fontSize: 13,
+    fontWeight: '500',
+    includeFontPadding: false,
+  },
   childrenContainer: {
     paddingTop: 12,
     paddingHorizontal: 12,
@@ -389,5 +421,8 @@ const styles = StyleSheet.create({
   },
   childWrapper: {
     // 
+  },
+  itemRowSpacing: {
+    marginBottom: 12,
   },
 });

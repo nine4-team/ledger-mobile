@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../../src/components/Screen';
 import { useScreenTabs } from '../../../../src/components/ScreenTabs';
@@ -22,6 +21,7 @@ import { createRepository } from '../../../../src/data/repository';
 import { getTextInputStyle } from '../../../../src/ui/styles/forms';
 import { deleteLocalMediaByUrl, resolveAttachmentState, resolveAttachmentUri, saveLocalMedia } from '../../../../src/offline/media';
 import { useOutsideItems } from '../../../../src/hooks/useOutsideItems';
+import { useOptionalIsFocused } from '../../../../src/hooks/useOptionalIsFocused';
 import { resolveItemMove } from '../../../../src/data/resolveItemMove';
 
 type SpaceParams = {
@@ -70,7 +70,7 @@ export default function SpaceDetailScreen() {
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
 
-  const isFocused = useIsFocused();
+  const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(() => (projectId ? createProjectScopeConfig(projectId) : null), [projectId]);
   const scopeId = useMemo(() => (scopeConfig ? getScopeId(scopeConfig) : null), [scopeConfig]);
   useScopeSwitching(scopeConfig, { isActive: isFocused });
@@ -161,7 +161,7 @@ export default function SpaceDetailScreen() {
     const hasPrimary = (space.images ?? []).some((image) => image.isPrimary);
     const nextImages = [
       ...(space.images ?? []),
-      { url: nextUrl, kind: 'image', isPrimary: !hasPrimary },
+      { url: nextUrl, kind: 'image' as const, isPrimary: !hasPrimary },
     ].slice(0, 20);
     setImageUrl('');
     setLocalImageUri('');
@@ -442,7 +442,7 @@ export default function SpaceDetailScreen() {
                         ]}
                       >
                         <View style={styles.rowHeader}>
-                          <AppText variant="body">{item.name?.trim() || item.description || 'Item'}</AppText>
+                          <AppText variant="body">{item.name?.trim() || 'Item'}</AppText>
                           {bulkMode ? (
                             <AppText variant="caption">
                               {bulkSelectedIds.includes(item.id) ? 'Selected' : 'Tap to select'}

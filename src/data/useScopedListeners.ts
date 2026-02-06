@@ -77,5 +77,5 @@ export function useScopedListenersMultiple(
         removeListener();
       });
     };
-  }, [scopeId, factories, manager]);
+  }, [scopeId, manager, ...factories]);
 }

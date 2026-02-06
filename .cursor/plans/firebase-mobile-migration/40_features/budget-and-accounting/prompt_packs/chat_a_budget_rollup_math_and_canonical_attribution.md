@@ -1,13 +1,13 @@
-# Chat A — Budget rollup math + canonical attribution (item-driven)
+# Chat A — Budget rollup math + canonical inventory sales (direction-coded)
 
 ## Goal
-Specify and/or implement the budget rollup computation layer for the Firebase mobile app (Firestore is canonical; Firestore-native offline persistence), with the **canonical item-driven attribution** model.
+Specify and/or implement the budget rollup computation layer for the Firebase mobile app (Firestore is canonical; Firestore-native offline persistence), with the **canonical inventory sale direction model**.
 
 ## Critical constraints (must obey)
 - UI reads from Firestore-cached data; rollups must be derivable offline via Firestore-native offline persistence (`OFFLINE_FIRST_V2_SPEC.md`).
-- Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must **not** require a user-facing category and must be attributed via **linked items’** `inheritedBudgetCategoryId`.
-  - Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
-  - Shared rules: `40_features/project-items/flows/inherited_budget_category_rules.md`
+- Canonical inventory sale transactions are system-owned, **category-coded** (via `transaction.budgetCategoryId`), and **direction-coded** (via `inventorySaleDirection`).
+  Rollups attribute canonical rows by `transaction.budgetCategoryId` and apply sign by direction.
+  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 
 ## Exact output files
 Update only:
@@ -22,9 +22,7 @@ If you need a shared contract doc (only if necessary), add:
   - overall spent (excluding categories marked `excludeFromOverallBudget`)
   - per-category spent (non-canonical + canonical)
   - overall budget denominator (sum of project category budgets)
-- A Firestore query/join strategy sufficient to implement:
-  - canonical attribution by `item.transactionId` join
-  - grouping by `item.inheritedBudgetCategoryId`
+- A Firestore query strategy sufficient to implement rollups from transactions directly, including canonical inventory sale transactions with direction sign.
 
 Also cover these spec-required behaviors (do not omit):
 - **Pinned categories subset + fallback**:
@@ -34,12 +32,14 @@ Also cover these spec-required behaviors (do not omit):
   - Source of truth: `20_data/data_contracts.md` → Entity `ProjectPreferences` (`pinnedBudgetCategoryIds`).
 - **Enabled category set rule**:
   - A category appears in the expanded list if a per-project budget doc exists **OR** it has non-zero attributed spend (even if no budget is set).
-- **Canonical overall spent uses item-derived values**:
-  - For canonical `INV_*` rows, overall spent must use linked item “canonical value”
-    (`projectPrice ?? purchasePrice ?? marketValue ?? 0`) with the canonical sign, not `transaction.amountCents`.
-- **Two-phase cross-project movement**:
-  - There is no standalone “transfer” canonical transaction; movement is modeled as
-    `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, and rollups apply independently per phase.
+- **Canonical overall spent uses canonical transaction amount**:
+  - For canonical inventory sale rows, overall spent uses `transaction.amountCents` with sign based on `inventorySaleDirection`.
+  - `transaction.amountCents` is system-computed from linked items by inventory invariants.
+- **Two-hop cross-project movement**:
+  - There is no standalone “transfer” canonical transaction; movement is modeled as:
+    - `project_to_business` (Project A → Business Inventory)
+    - then `business_to_project` (Business Inventory → Project B)
+  Rollups apply direction sign independently per hop.
 
 ## Parity evidence (web sources)
 - Current budget rollup UI + math (note: we are intentionally deviating for canonical attribution):

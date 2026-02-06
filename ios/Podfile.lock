@@ -3048,6 +3048,27 @@ PODS:
     - Firebase/Storage (= 11.11.0)
     - React-Core
     - RNFBApp
+  - RNGestureHandler (2.30.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNGoogleSignin (16.1.1):
     - GoogleSignIn (~> 9.0)
     - React-Core
@@ -3177,6 +3198,7 @@ DEPENDENCIES:
   - "RNFBFirestore (from `../node_modules/@react-native-firebase/firestore`)"
   - "RNFBFunctions (from `../node_modules/@react-native-firebase/functions`)"
   - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
+  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -3387,6 +3409,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/functions"
   RNFBStorage:
     :path: "../node_modules/@react-native-firebase/storage"
+  RNGestureHandler:
+    :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-google-signin/google-signin"
   RNPurchases:
@@ -3512,6 +3536,7 @@ SPEC CHECKSUMS:
   RNFBFirestore: 80b3fb2371c3289343766b8bb5a72a4abf4cc052
   RNFBFunctions: 10cb49ccb3dd3ae511e857ab0f1726f739214c23
   RNFBStorage: f1869dc67955c3cfe17ed7d18e075e9783346c2b
+  RNGestureHandler: 0bb3b05d9353ec53aa588e83c81bc565f5e32acc
   RNGoogleSignin: 5782dd7dad559608a06f3c6b1d4142c395fb5308
   RNPurchases: 6070b60f5d8f525a58905df50773f7a3252f0cfa
   RNScreens: ad2d0cfb3f15c9ed56ffb43651366ec0dcd70c36

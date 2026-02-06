@@ -17,7 +17,7 @@ This must remain compatible with:
 - Update the read/query strategy so that:
   - items fetched/listened are only those visible under Roles v2 rules
   - non-canonical transactions fetched/listened are only those visible under Roles v2 rules
-  - canonical `INV_*` transaction fetching respects derived visibility (only fetch canonical rows that have at least one in-scope linked item)
+  - canonical inventory sale transactions are fetched/listened with the same category-scope constraint as non-canonical transactions (`transaction.budgetCategoryId ∈ allowedBudgetCategoryIds`)
 - Define behavior for scope changes (`allowedBudgetCategoryIds`):
   - when it expands: newly-visible rows become available via updated queries/listeners (and optional backfill if using paginated lists)
   - when it shrinks: queries/listeners update immediately so newly-disallowed rows are no longer returned for future reads
@@ -29,5 +29,5 @@ This must remain compatible with:
 
 ## Edge cases that must be explicit
 - “Uncategorized item” rule is item-specific (`item.inheritedBudgetCategoryId == null`), not transaction-specific.
-- Canonical transactions have `categoryId == null` by design; do not treat them as globally visible.
+- Canonical inventory sale transactions are category-coded; they should not rely on “null category” semantics.
 

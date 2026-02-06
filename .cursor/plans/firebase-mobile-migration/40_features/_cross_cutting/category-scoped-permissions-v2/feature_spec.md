@@ -4,8 +4,8 @@ This doc defines **category-driven scoped permissions** for the React Native + F
 
 Evidence / canonical attribution sources:
 - `40_features/project-items/flows/inherited_budget_category_rules.md` (stable selector: `item.inheritedBudgetCategoryId`)
-- `40_features/project-transactions/feature_spec.md` (canonical `INV_*` rows: `transaction.budgetCategoryId = null`; filters/attribution are item-driven)
-- `40_features/budget-and-accounting/feature_spec.md` (budget rollups and category filters must use item-driven attribution for canonical rows)
+- `40_features/project-transactions/feature_spec.md` (canonical inventory sale rows are category-coded + direction-coded; canonical rows remain system-owned/read-only)
+- `40_features/budget-and-accounting/feature_spec.md` (budget rollups apply sign by canonical sale direction)
 
 ---
 
@@ -25,10 +25,13 @@ Evidence / canonical attribution sources:
 
 ### Transactions: canonical vs non-canonical
 - **Non-canonical transaction**: a user-entered transaction where category attribution is transaction-driven via `transaction.budgetCategoryId`.
-- **Canonical inventory transaction**: a system row whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
-  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
-  - Canonical rows are treated as `transaction.budgetCategoryId = null` **by design**.
-  - Category attribution and filtering for canonical rows is **item-driven** via linked items’ `item.inheritedBudgetCategoryId` (see evidence sources above).
+- **Canonical inventory sale transaction (system)**: a system-owned sale row (recommended id prefix `INV_SALE__`) that is:
+  - category-coded (`transaction.budgetCategoryId` is populated)
+  - direction-coded (`inventorySaleDirection` is populated)
+  - deterministic (one per `(projectId, direction, budgetCategoryId)`)
+  - Note: “project → project” movement is modeled as two hops (project → business, then business → project).
+
+Canonical sale rows are system-owned/read-only in UI, but category visibility is still evaluated via `transaction.budgetCategoryId`.
 
 ---
 
@@ -61,39 +64,33 @@ Note: UI gating is required for UX, but does not replace server-side enforcement
 - **Non-canonical transactions**:
   - **Scoped user** can read iff `transaction.budgetCategoryId ∈ allowedBudgetCategoryIds`.
   - **Admin** can read all.
-- **Canonical inventory transactions (`INV_*`)**:
-  - Do **not** treat these as globally-visible “uncategorized” just because `transaction.budgetCategoryId == null`.
-  - **Scoped user** may read a canonical transaction **only if** it has **at least one linked item** the user is allowed to read under the **item visibility** rules above (i.e., via `item.inheritedBudgetCategoryId` and the uncategorized ownership exception).
-  - **Admin** can read all canonical transactions.
-
-Implementation note (for intent): “linked item” refers to the items associated to the transaction in the existing model used for canonical attribution (see `40_features/project-transactions/feature_spec.md` and `40_features/budget-and-accounting/feature_spec.md`).
+- **Canonical inventory sale transactions (system)**:
+  - **Scoped user** can read iff `transaction.budgetCategoryId ∈ allowedBudgetCategoryIds`.
+    (Canonical sale rows are category-coded; no item-join is required for transaction visibility.)
+  - **Admin** can read all canonical sale transactions.
 
 ---
 
 ## 3) Edge cases + decisions (explicit)
 
 ### 3.1 “Null means private” does not apply symmetrically
-- Canonical transactions have `budgetCategoryId == null` **by design** (`INV_*` semantics).
-- Therefore: **do not** apply “`null` means private / only mine” rules to transactions the same way as items.
-  - Items use `inheritedBudgetCategoryId == null` as “uncategorized item” with a restricted “only creator” read exception for scoped users.
-  - Transactions use `budgetCategoryId == null` as “canonical system row”, and visibility is derived from linked items.
+Items use `inheritedBudgetCategoryId == null` as “uncategorized item” with a restricted “only creator” read exception for scoped users.
+Transactions may have `budgetCategoryId == null` only for truly uncategorized user-entered transactions (if allowed); canonical inventory sale transactions are category-coded and should not be null.
 
-### 3.2 Transaction Detail behavior for scoped users (canonical rows)
-For a canonical `INV_*` transaction shown to a scoped user:
-- **Show only in-scope linked items** (items the user is allowed to read).
-- **Hide out-of-scope linked items** entirely (no counts, no redacted placeholders).
-- Totals, category chips, and budget attribution UI must follow the canonical attribution model:
-  - attribution = group linked items by `item.inheritedBudgetCategoryId` (evidence: `40_features/budget-and-accounting/feature_spec.md`, `40_features/project-items/flows/inherited_budget_category_rules.md`).
+### 3.2 Transaction Detail behavior for scoped users (canonical sale rows)
+For a canonical inventory sale transaction shown to a scoped user:
+- Transaction visibility is already category-scoped via `transaction.budgetCategoryId`.
+- TransactionDetail should still enforce item read visibility for linked items (hide out-of-scope items entirely).
 
 ### 3.3 Recategorization
 - **Admin-only**: recategorization (`item.inheritedBudgetCategoryId A → B`) is admin-only in Roles v2.
 - Future extension (not implemented here): an explicit capability (e.g., “canRecategorize”) could permit this for select non-admins.
 
 ### 3.4 Budget rollups + filters
-- Category-based rollups and filters must use the canonical attribution model already specified:
+- Category-based rollups and filters must align with the canonical model:
   - non-canonical uses `transaction.budgetCategoryId`
-  - canonical `INV_*` uses linked items’ `item.inheritedBudgetCategoryId`
-  - Evidence: `40_features/project-transactions/feature_spec.md` and `40_features/budget-and-accounting/feature_spec.md` (and the shared rules in `40_features/project-items/flows/inherited_budget_category_rules.md`).
+  - canonical inventory sale uses `transaction.budgetCategoryId` and sign by `inventorySaleDirection`
+  - Evidence: `40_features/project-transactions/feature_spec.md` and `40_features/budget-and-accounting/feature_spec.md`.
 
 ---
 
@@ -120,25 +117,10 @@ Offline implication:
 - If `allowedBudgetCategoryIds` changes, the client must update query/listener scopes immediately so subsequent reads reflect the new visibility set.
 
 ### 4.4 Where to enforce canonical transaction visibility
-Because canonical `INV_*` visibility is **derived from linked items**, enforcement must ensure:
-- a scoped user cannot read a canonical transaction unless there exists at least one in-scope linked item.
+Canonical inventory sale transactions are category-coded, so transaction read visibility is enforced directly on `transaction.budgetCategoryId`.
+No server-maintained “linked item category id set” selector is required for transaction visibility in the new model.
 
-Recommended approach (no new product capability; implementation strategy only):
-- Add **server-maintained selector fields directly on canonical `INV_*` transaction docs** (see `20_data/data_contracts.md` → **Entity: Transaction**):
-  - `budgetCategoryIds: string[]` (unique non-null category ids present among linked items’ `item.inheritedBudgetCategoryId`)
-  - `uncategorizedItemCreatorUids: string[]` (unique uids of creators with linked items where `item.inheritedBudgetCategoryId == null`)
-- Server must update these selectors when:
-  - items are linked/unlinked to/from the canonical transaction, and
-  - a linked item’s `inheritedBudgetCategoryId` changes (recategorization / inheritance updates), since canonical visibility must reflect the current item attribution.
-- Add a scheduled “periodic repair” job as a safety net to recompute selectors from linked items and correct drift.
-
-Query shaping note (for offline-first / no large listeners):
-- A scoped user’s canonical transaction list can be produced via **bounded, mergeable queries** such as:
-  - `where("budgetCategoryIds", "array-contains-any", <allowedBudgetCategoryIds>)`
-  - plus `where("uncategorizedItemCreatorUids", "array-contains", <myUid>)` for the “own uncategorized” exception.
-- Exact pagination/merge strategy is an implementation detail, but must satisfy:
-  - no “subscribe to everything”
-  - no client-side filtering of unauthorized canonical transactions after downloading them
+However, TransactionDetail must still enforce item-level visibility for linked items (hide out-of-scope items).
 
 ---
 

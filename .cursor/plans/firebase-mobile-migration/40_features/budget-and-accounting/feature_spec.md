@@ -24,8 +24,9 @@ This spec explicitly **deviates** from the current web implementation for canoni
     - the overall budget denominator
   - Default: categories are included in overall rollups.
 - **Non-canonical transaction**: user-facing transaction where budget category attribution is transaction-driven via `transaction.budgetCategoryId` (Firestore).
-- **Canonical inventory transaction**: system row whose id begins with `INV_PURCHASE_` or `INV_SALE_`.
-  - Note: “project → project” movement is modeled as a **two-phase** operation (`INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`), not a standalone “transfer” canonical transaction.
+- **Canonical inventory sale transaction (system)**: system-owned **sale** row used for cross-scope movement.
+  Canonical inventory sale rows are direction-coded (`business_to_project` vs `project_to_business`) and category-coded (`transaction.budgetCategoryId` is required).
+  Note: “project → project” movement is modeled as two hops (project → business, then business → project).
 
 Canonical working doc (source of truth):
 - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
@@ -54,30 +55,31 @@ Excluding a category removes it from:
 Note:
 - Fee categories are still categories; they may be excluded from overall via this same flag.
 
-### 3) Canonical inventory transactions must not require a user-facing budget category
-Canonical rows exist for inventory correctness (allocation / sale / deallocation), not for user budgeting.
+### 3) Canonical inventory sale transactions are category-coded (system-owned)
+Canonical rows exist for inventory correctness (allocation / deallocation), not for user budgeting.
+Users do not “edit the canonical row,” but canonical inventory sale transactions must still be category-coded so budget rollups are simple and correct.
 
-Recommendation (preferred):
-- Canonical inventory transactions keep `budgetCategoryId = null` (uncategorized).
+Required:
+- Canonical inventory sale transactions have `transaction.budgetCategoryId` populated (single-category invariant).
+- Canonical inventory sale transactions have `inventorySaleDirection` populated.
+- Canonical inventory sale transactions are treated as system-owned/read-only in UI.
 
-Schema-compatibility fallback:
-- A hidden/internal “canonical system” category may exist, but **rollups must ignore it** for attribution.
-
-### 4) Canonical vs non-canonical attribution (the core deviation)
+### 4) Canonical vs non-canonical attribution (revised)
 
 #### Non-canonical attribution (transaction-driven)
 - Budget category attribution comes from `transaction.budgetCategoryId`.
 
-#### Canonical inventory attribution (item-driven) — required
-- Canonical inventory transactions are attributed by **items linked to the canonical transaction**, grouped by:
-  - `item.inheritedBudgetCategoryId`
+#### Canonical inventory sale attribution (transaction-driven) — required
+- Canonical inventory sale transactions are category-coded.
+  Category attribution comes from `transaction.budgetCategoryId` and sign comes from `inventorySaleDirection`.
 
 Source of truth:
 - `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`
 - `40_features/project-items/flows/inherited_budget_category_rules.md`
 
 Intentional delta (vs web):
-- Web budget rollups group canonical transactions by transaction category, not item categories (`src/components/ui/BudgetProgress.tsx`).
+- Web canonical inventory buckets are not split per budget category and use a separate `INV_PURCHASE_*` bucket.
+  Firebase migration replaces that with category-split canonical inventory **sale** transactions with explicit direction.
 
 ## Owned UI surface (project context)
 
@@ -107,7 +109,7 @@ All rollups are computed from Firestore-cached reads within the active project s
 - Transactions (project-scoped):
   - `accounts/{accountId}/transactions/{transactionId}` with `transaction.projectId = <projectId>`
 - Items (project-scoped):
-  - `accounts/{accountId}/items/{itemId}` with `item.projectId = <projectId>` and `item.inheritedBudgetCategoryId`
+  - (Items are not required inputs for rollups in the revised model; canonical sale amounts are system-computed and stored on the transaction.)
 
 ### Money normalization
 All persisted currency amounts are **integer cents** per `20_data/data_contracts.md` (e.g. `amountCents`, `purchasePriceCents`).
@@ -125,16 +127,17 @@ Overall spent is computed as:
 - Sum over all **non-canceled** transactions excluding transactions whose category is marked `excludeFromOverallBudget === true`:
   - Purchases add
   - Returns subtract
-  - Canonical purchases add (inventory purchase increases “spent”)
-  - Canonical sales subtract (inventory sale reduces “spent”)
+  - Canonical inventory sales add/subtract based on direction:
+    - `business_to_project` adds
+    - `project_to_business` subtracts
 
 Note:
-- For canonical `INV_*` rows, the authoritative amount comes from linked item values (see “Spend per category (canonical inventory transactions)”) rather than `transaction.amountCents`.
+- Canonical inventory sale transaction `amountCents` is system-computed (from linked items) and stored on the transaction; rollups use `amountCents` with direction sign.
 
 Web parity note:
 - Web currently uses:
   - `transactionType === 'Return'` as subtract
-  - `transactionId.startsWith('INV_SALE_')` as subtract
+  - `transactionId.startsWith('INV_SALE_')` as subtract (old model)
   - and excludes “design fee” (web naming) by category-name heuristic (`BudgetProgress.calculateSpent`)
 
 Firebase migration requirement:
@@ -154,21 +157,13 @@ For each non-canonical transaction with `categoryId`:
   - `+1` for purchases
   - `-1` for returns
 
-#### Spend per category (canonical inventory transactions) — required
-For each canonical inventory transaction:
-
-1) Determine the set of linked items (client-side join by `item.transactionId === transaction.transactionId`).
-2) For each linked item, compute its “canonical value”:
-   - `item.projectPriceCents ?? item.purchasePriceCents ?? item.marketValueCents ?? 0`
-   - (matches existing canonical totals logic in `src/services/inventoryService.ts`)
-3) Group items by `item.inheritedBudgetCategoryId` and sum values per group.
-4) Apply canonical sign:
-   - `INV_PURCHASE_*`: `+1`
-   - `INV_SALE_*`: `-1`
-   - Transfers are represented by sale+purchase canonical rows (no separate transfer row).
-
-Important:
-- Canonical attribution must **not** consult `transaction.budgetCategoryId` even if populated (schema-compatibility fallback).
+#### Spend per category (canonical inventory sale transactions) — required
+For each canonical inventory sale transaction:
+- Attribute spend to `transaction.budgetCategoryId`.
+- Apply sign based on `inventorySaleDirection`:
+  - `business_to_project`: `+1`
+  - `project_to_business`: `-1`
+- Use `transaction.amountCents` as the authoritative value (system-computed from linked items by inventory invariants).
 
 ### Overall budget (budget denominator)
 Overall budget is computed as:

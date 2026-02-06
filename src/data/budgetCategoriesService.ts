@@ -84,6 +84,17 @@ export async function refreshBudgetCategories(
 export function mapBudgetCategories(categories: BudgetCategory[]): Record<string, BudgetCategory> {
   return categories.reduce((acc, category) => {
     acc[category.id] = category;
+    const legacyId =
+      category.metadata && category.metadata.legacy && typeof category.metadata.legacy === 'object'
+        ? (category.metadata.legacy as any).sourceCategoryId
+        : null;
+    if (typeof legacyId === 'string' && legacyId.trim().length > 0) {
+      // Allow lookups by legacy UUID (migrated-from server exports).
+      // If collisions ever happen, we keep the first value.
+      if (!acc[legacyId]) {
+        acc[legacyId] = category;
+      }
+    }
     return acc;
   }, {} as Record<string, BudgetCategory>);
 }

@@ -12,23 +12,26 @@ Each non-obvious criterion includes **parity evidence** (web code pointer) or is
   Observed in `src/components/ui/BudgetProgress.tsx` (`overallFromCategories`).
 - [ ] **Purchases add and returns subtract** in spend totals.  
   Observed in `src/components/ui/BudgetProgress.tsx` (multiplier for `transactionType === 'Return'`).
-- [ ] **Canonical sale transactions subtract** from spent totals.  
-  Observed in `src/components/ui/BudgetProgress.tsx` (`INV_SALE_*` multiplier -1).
+- [ ] **Canonical inventory sales apply sign by direction** in spend totals:
+  - `inventorySaleDirection === "business_to_project"` adds
+  - `inventorySaleDirection === "project_to_business"` subtracts
+  Web parity evidence (old model): `src/components/ui/BudgetProgress.tsx` uses `INV_SALE_*` multiplier -1.
 
 ## Canonical attribution (required model; main intentional delta)
 
-- [ ] **Canonical inventory transactions do not require a user-facing category** and are treated as uncategorized on the transaction row (recommended: `budgetCategoryId = null`).  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.  
-  **Intentional delta** vs web: canonical rows may populate category fields (`src/services/inventoryService.ts`).
+- [ ] **Canonical inventory sale transactions are category-coded + direction-coded**:
+  - `transaction.budgetCategoryId` is populated (single-category invariant)
+  - `inventorySaleDirection` is populated (`business_to_project` or `project_to_business`)
+  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
 - [ ] **Non-canonical attribution is transaction-driven**: category attribution comes from `transaction.budgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
-- [ ] **Canonical attribution is item-driven**: canonical `INV_*` transactions are attributed by grouping linked items by `item.inheritedBudgetCategoryId`.  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/flows/inherited_budget_category_rules.md`.  
-  **Intentional delta** vs web: budget rollups do not group canonical transactions by item categories (`src/components/ui/BudgetProgress.tsx`).
-- [ ] **Canonical per-item value uses the same fallback as canonical totals**: `projectPrice ?? purchasePrice ?? marketValue ?? 0`.  
-  Observed in `src/services/inventoryService.ts` (`computeCanonicalTransactionTotal`, canonical `INV_SALE` amount recompute).
-- [ ] **Cross-project movement uses a two-phase canonical model**: there is no standalone “transfer” transaction; movement is represented as `INV_SALE_<sourceProjectId>` and `INV_PURCHASE_<targetProjectId>`.  
-  Budget rollups apply the canonical sign rules and item-driven attribution to each phase independently (source project sale subtracts, target project purchase adds).  
+- [ ] **Canonical inventory sale attribution is transaction-driven**: canonical inventory sale transactions are category-coded, so attribution comes from `transaction.budgetCategoryId` with sign from `inventorySaleDirection`.
+  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
+- [ ] **Canonical inventory sale amount is authoritative**: rollups use `transaction.amountCents` for canonical inventory sale rows (system-computed by inventory invariants).
+- [ ] **Cross-project movement uses a two-hop canonical model**: there is no standalone “transfer” transaction; movement is represented as:
+  - Project A → Business Inventory (`project_to_business`)
+  - then Business Inventory → Project B (`business_to_project`)
+  Rollups apply the direction sign rules to each hop.
   Source of truth: `40_features/budget-and-accounting/feature_spec.md` and `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
 
 ## Fee tracker categories (special semantics)

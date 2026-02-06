@@ -25,15 +25,17 @@ Shared-module requirement:
   - Budget categories (to display category name for **non-canonical** transactions)
   - Optional derived: transaction completeness (needs-review vs missing items)
 - Derived view models:
-  - Canonical title mapping for inventory purchase/sale transactions
-  - Canonical total computation for canonical transactions (computed from linked items)
+  - Canonical title mapping for canonical inventory sale transactions (direction-aware)
+  - Optional: canonical amount display helpers (prefer `transaction.amountCents` as authoritative; canonical rows are system-owned)
 - Cached metadata dependencies:
   - Budget categories (for category display and budget-category filter options)
 
 ## Writes (local-first)
-- User actions generally do not mutate transaction data from the list, except:
-  - **Canonical total “self-heal”** may update a transaction amount when computed total differs (web behavior).
-    - Firestore write: update `transaction.amount` (queued offline by Firestore if needed)
+- User actions generally do not mutate transaction data from the list.
+
+System-owned canonical rows note:
+- Canonical inventory sale transactions are system-owned; the list must not “self-heal” canonical amounts via client writes.
+  Canonical `amountCents` is maintained by server-owned inventory invariants (request-doc workflows / Cloud Functions).
 
 ## UI structure (high level)
 - Sticky controls bar:
@@ -54,14 +56,13 @@ Source of truth:
 Rules:
 
 - **Non-canonical transactions**: category badge/name (if shown) comes from `transaction.budgetCategoryId`.
-- **Canonical inventory transactions** (`INV_PURCHASE_*`, `INV_SALE_*`):
-  - Should be treated as **uncategorized** on the transaction row (recommend `transaction.budgetCategoryId = null`).
-  - If the list shows any category-related badge for canonical rows, it must be **derived** from linked items’ `inheritedBudgetCategoryId` (e.g., “Multiple categories”) and must not require a user-facing “canonical category” selection.
+- **Canonical inventory sale transactions (system)** (recommended id prefix `INV_SALE__`):
+  - Are category-coded (`transaction.budgetCategoryId` is populated) and direction-coded (`inventorySaleDirection` is populated).
+  - Are system-owned/read-only in UI, but can be filtered/exported like any other transaction.
+  - If the list displays special badges for canonical rows, it should use direction (e.g., “System: project→business”).
 
-Implementation note (required for filter + export usefulness):
-- To support “budget category” filtering and useful CSV export without a client-side join, canonical transactions should carry a denormalized field such as:
-  - `budgetCategoryIds: string[]` (set of category IDs present on linked items’ `inheritedBudgetCategoryId`)
-- This field must be maintained by a server-owned invariant (e.g., request-doc processing or a Cloud Function trigger), so it stays correct across writers.
+Implementation note:
+- Canonical rows are already category-coded, so budget-category filtering does not require joining items to canonical transactions.
 
 ## User actions → behavior (the contract)
 - **Open Add menu** → show actions; selecting an action closes menus.
@@ -71,6 +72,7 @@ Implementation note (required for filter + export usefulness):
 - **Change filters** → list re-filters and state persists.
 - **Search** → list filters by text/amount-like match and state persists.
 - **Export** → generate CSV from locally available transactions and share/save it (mobile).
+  - Recommended: include a column like `inventorySaleDirection` so canonical rows are explainable in exports.
 - **Open transaction**:
   - Navigating into a transaction detail records a restore hint for the current list:
     - preferred: `anchorId = <opened transactionId>`

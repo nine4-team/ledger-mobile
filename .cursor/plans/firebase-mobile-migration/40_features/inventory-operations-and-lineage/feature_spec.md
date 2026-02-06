@@ -16,21 +16,32 @@ This spec is written for the React Native + Firebase target architecture describ
 - **Project scope**: item has `projectId = <projectId>`.
 - **Business Inventory scope**: item has `projectId = null`.
 
-### Canonical inventory transactions
-Canonical inventory transactions are system-owned mechanics. Their ids use these prefixes:
+### Canonical inventory sale transactions (new model)
+Canonical inventory transactions are system-owned mechanics. In the new model, the only canonical inventory transactions are **sale transactions** that are:
 
-- `INV_PURCHASE_<projectId>` — canonical purchase bucket used when allocating items into a project
-- `INV_SALE_<projectId>` — canonical sale bucket used when moving items from a project into business inventory (except purchase-reversion)
+- **Direction-coded**:
+  - `business_to_project` (Business Inventory → Project)
+  - `project_to_business` (Project → Business Inventory)
+- **Category-coded**: each canonical sale transaction has exactly one `budgetCategoryId`
+- **Split per category**: a project has at most `2 × (# enabled budget categories)` canonical sale transactions
 
-Parity evidence:
-- Canonical id detection: `isCanonicalTransactionId` in `src/services/inventoryService.ts`
-- Canonical invariants verification for queued ops: `verifyCanonicalInvariants` in `src/services/operationQueue.ts`
+Deterministic identity (required):
+- `canonicalSaleTransactionId(projectId, direction, budgetCategoryId)` must be deterministic and parseable.
+- Recommended format:
+  - `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+
+Recommended explicit fields on the transaction doc (even if direction/category are encoded in the id):
+- `isCanonicalInventorySale: true`
+- `inventorySaleDirection: "business_to_project" | "project_to_business"`
+- `budgetCategoryId: string` (required on canonical sale rows)
 
 ### “Move” vs “Sell/Deallocate”
 This migration must preserve the web distinction:
 
 - **Move to business inventory (correction)**: scope correction for an item that is **not tied to a transaction**. Does **not** create/require a canonical sale.
-- **Sell/Deallocate to business inventory (canonical)**: an inventory designation operation that **creates/updates `INV_SALE_<projectId>`**, unless it is a purchase-reversion case.
+- **Sell/Deallocate to business inventory (canonical)**: an inventory designation operation that creates/updates the canonical sale transaction for:
+  - `(projectId = sourceProjectId, direction = "project_to_business", budgetCategoryId = item budget category id)`
+  - except for the **allocation-reversion** case (see core flows)
 
 Parity evidence:
 - Move correction blocks transaction-attached items: `moveItemToBusinessInventory` in `src/services/inventoryService.ts` and UI enforcement in `src/pages/ItemDetail.tsx`
@@ -96,15 +107,17 @@ Retry + idempotency rules (required):
 Payload shapes (minimum required fields):
 - `ITEM_SALE_PROJECT_TO_BUSINESS`:
   - `itemId`, `sourceProjectId`
+  - `budgetCategoryId` (required; resolved from the item or prompted from the source project)
   - `expected`: `{ itemProjectId, itemTransactionId? }` (conflict detection / precondition)
 - `ITEM_SALE_BUSINESS_TO_PROJECT`:
   - `itemId`, `targetProjectId`
-  - `inheritedBudgetCategoryId` (required; see `40_features/project-items/flows/inherited_budget_category_rules.md`)
+  - `budgetCategoryId` (required; resolved for the destination project, prompting if missing/mismatched)
   - optional: `space`, `notes`, `amount` (match parity fields if they exist)
   - `expected`: `{ itemProjectId, itemTransactionId? }`
 - `ITEM_SALE_PROJECT_TO_PROJECT`:
   - `itemId`, `sourceProjectId`, `targetProjectId`
-  - `inheritedBudgetCategoryId` (required for the destination project attribution)
+  - `sourceBudgetCategoryId` (required; resolved from the item or prompted from the source project)
+  - `destinationBudgetCategoryId` (required; resolved for the destination project, prompting if missing/mismatched)
   - optional: `space`, `notes`, `amount`
   - `expected`: `{ itemProjectId, itemTransactionId? }`
 
@@ -131,23 +144,29 @@ Parity evidence:
 User intent: “Move this item to Business Inventory (inventory designation), preserving canonical mechanics.”
 
 Required behavior:
-- If the item is currently linked to `INV_PURCHASE_<sameProjectId>`, treat as **purchase-reversion**:
-  - remove from that purchase and return to inventory (do **not** create `INV_SALE_<projectId>`)
+- If the item is currently linked to the canonical sale transaction for:
+  - `(projectId = sourceProjectId, direction = "business_to_project", budgetCategoryId = item budget category id)`
+  treat as **allocation-reversion**:
+  - remove the item from that canonical sale transaction and return to Business Inventory
+  - do **not** create/update a `project_to_business` canonical sale transaction
 - Otherwise:
-  - ensure/update `INV_SALE_<projectId>`
-  - move the item to business inventory and link it to `INV_SALE_<projectId>`
-  - append lineage edge (from prior transaction → sale transaction)
+  - ensure/update the canonical sale transaction for:
+    - `(projectId = sourceProjectId, direction = "project_to_business", budgetCategoryId = item budget category id)`
+  - move the item to Business Inventory and link it to that canonical sale transaction
+  - append lineage edge (from prior transaction → canonical sale transaction)
 
 Parity evidence:
 - Purchase-reversion path: `deallocationService.handleInventoryDesignation` in `src/services/inventoryService.ts`
 
-### 3) Business Inventory → Project (Allocate: canonical purchase)
+### 3) Business Inventory → Project (Allocate: canonical sale, direction = business_to_project)
 User intent: “Move this item into Project X.”
 
 Required behavior:
-- Ensure/update `INV_PURCHASE_<projectId>` and link the item to it.
+- Ensure/update the canonical sale transaction for:
+  - `(projectId = targetProjectId, direction = "business_to_project", budgetCategoryId = resolved destination category)`
+- Link the item to that canonical sale transaction.
 - Set item `projectId = <projectId>`.
-- Append lineage edge (from prior transaction or inventory → purchase transaction).
+- Append lineage edge (from prior transaction or inventory → canonical sale transaction).
 
 Parity evidence:
 - Allocation deterministic branching: `allocateItemToProject` in `src/services/inventoryService.ts`
@@ -158,8 +177,8 @@ User intent: “Sell this project item to Project Y.”
 
 Required behavior:
 - Two-phase canonical flow:
-  - Deallocate from source project into business inventory (canonical sale or purchase-reversion if applicable)
-  - Allocate into target project (canonical purchase)
+  - Deallocate from source project into Business Inventory (canonical sale, `project_to_business`, or allocation-reversion if applicable)
+  - Allocate into target project (canonical sale, `business_to_project`)
 - Partial completion handling must be explicit:
   - If sale completes but purchase fails, surface an error that tells the user the item is now in Business Inventory and must be allocated from there.
 
@@ -168,7 +187,10 @@ Parity evidence:
 - UI surfaces this error: `src/pages/ItemDetail.tsx` and `src/pages/TransactionDetail.tsx`
 
 ## Budget-category determinism (required)
-Business Inventory → Project operations must integrate with the destination budget category selection rule and persist it on the item as `inheritedBudgetCategoryId`.
+All canonical sale operations require a resolved `budgetCategoryId` so the server can select the correct canonical sale transaction id.
+
+- Business Inventory → Project operations must ensure the item’s category is valid for the destination project; if not, prompt and persist before sale.
+- Project → Business Inventory operations must ensure the item has a category; if missing, prompt and persist before sale.
 
 Source of truth:
 - `40_features/project-items/flows/inherited_budget_category_rules.md`
@@ -176,12 +198,8 @@ Source of truth:
 Implementation note (Firebase):
 - Category choice must be part of the server-owned invariant for BI → Project operations so retries remain deterministic.
 
-Additional required guardrail (Firebase):
-- **Project → Business Inventory sell/deallocate-style operations MUST be blocked** if `item.inheritedBudgetCategoryId` is missing (canonical attribution determinism).
-- The **correction “Move to Business Inventory”** path may remain allowed when `inheritedBudgetCategoryId` is missing (it does not create canonical inventory transactions), but it is still blocked when the item is transaction-attached (see “Move: correction path”).
-
 User-facing requirement (required):
-- When blocked for this reason, UI must show the standard **disable reason + error toast** defined in `40_features/project-items/flows/inherited_budget_category_rules.md`.
+- When prompting is required, the UI must clearly explain *why* a category is needed (the sale is tracked per budget category) and persist the selection onto the item.
 
 ## Lineage (required)
 Lineage is required to support:

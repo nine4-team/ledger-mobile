@@ -22,10 +22,15 @@ Audience: internal implementation/design discussion for the Firebase migration (
 - **Transactions**:
   - Canonical (mobile/Firebase): `transaction.budgetCategoryId` (Firestore) / `transactions.budget_category_id` (SQLite)
   - Legacy web naming (historical): `transactions.category_id` and legacy `transactions.budget_category` (string)
-- **Canonical inventory transactions**:
-  - System-generated rows such as `INV_PURCHASE_<projectId>`, `INV_SALE_<projectId>`
-  - Note: “project → project” movement is modeled as `INV_SALE_<sourceProjectId>` then `INV_PURCHASE_<targetProjectId>`, not a standalone “transfer” canonical transaction.
-  - Represent inventory allocation / return / sale mechanics (not user-entered).
+- **Canonical inventory sale transactions (new model)**:
+  - System-generated **sale** rows that represent cross-scope moves and track direction explicitly:
+    - `business_to_project` (Business Inventory → Project)
+    - `project_to_business` (Project → Business Inventory)
+  - Each canonical sale transaction is **category-coded** (exactly one `budgetCategoryId`).
+  - These rows represent inventory allocation / deallocation mechanics (not user-entered).
+  - Note: “project → project” movement is modeled as **two hops**:
+    - Project A → Business Inventory (`project_to_business`)
+    - then Business Inventory → Project B (`business_to_project`)
 
 ---
 
@@ -39,43 +44,49 @@ Audience: internal implementation/design discussion for the Firebase migration (
 
 Implementation note: the specialness should be bound to a stable identifier (slug/metadata), not a mutable display name.
 
-#### 2) Canonical inventory transactions should not require a user-facing budget category
+#### 2) Canonical inventory sale transactions are category-coded and direction-coded
 
-Canonical rows exist for inventory correctness and reconciliation. Users should not have to understand or set a “canonical category.”
+Canonical rows exist for inventory correctness and reconciliation. Users should not have to think about “canonical categories,” but the system still needs canonical rows to land in the *right* budget categories without complex attribution rules.
 
-However, budget progress still needs to land in meaningful categories.
+Therefore, canonical inventory rows are **sale transactions** that are:
 
-#### 3) Canonical vs non-canonical attribution rule (the core decision)
+- **direction-coded** (Business Inventory → Project vs Project → Business Inventory)
+- **category-coded** (each canonical row has exactly one `budgetCategoryId`)
+- **split per category** (so mixed-category items do not share a canonical row)
+
+This implies an upper bound per project: **2 × (# enabled budget categories)** canonical system sale transactions.
+
+#### 3) Canonical vs non-canonical attribution rule (revised)
 
 - **Non-canonical transactions**: category attribution comes from `transaction.budgetCategoryId` (status quo; legacy web naming: `transactions.category_id`).
-- **Canonical transactions** (`INV_PURCHASE_*`, `INV_SALE_*`): category attribution comes from **items linked to the canonical transaction**, grouped by each item’s inherited budget category.
+- **Canonical inventory sale transactions**: category attribution comes from the canonical transaction’s own `budgetCategoryId`.
 
-This avoids wrong attribution when a canonical transaction contains mixed-category items (Furniture + Accessories).
+Budget progress becomes simpler: it can compute per-category spend from transactions directly (including canonical system sale rows), applying sign rules based on direction.
 
 ---
 
-### Data we need on items (for attribution)
+### Data we need on items (for correctness + prompts)
 
-Each item must have an **inheritedBudgetCategoryId** that represents the user-facing budget category the item “belongs to” for budgeting/progress.
+Each item must have a stable **item-owned budget category id** field (currently named `inheritedBudgetCategoryId` in the migration docs/data contracts).
 
-Where it comes from:
-- If an item is linked to a user-facing transaction, it inherits that transaction’s `budgetCategoryId` (legacy web naming: `category_id`).
-
-Where it persists:
-- Store on the item as a stable field or metadata (Firebase migration should include it explicitly so it survives cross-scope moves).
+Semantics (revised):
+- The field is **not strictly inherited**. It may be set by:
+  - linking an item to a non-canonical categorized transaction (inherit)
+  - an explicit user choice during a sell/allocation prompt (direct assignment)
+- The field persists across scope moves so future canonical moves are deterministic.
 
 ---
 
 ### Guardrail: Project → Business Inventory (sell/deallocate)
 
 Constraint (required):
-- **Do not allow an item to be sold/deallocated to Business Inventory unless it has previously been linked to a transaction** (so it can inherit a budget category).
+- If the item’s budget category id is missing, **prompt the user to select a category from the source project**, persist it onto the item, then proceed.
 
 On successful move to Business Inventory:
 - Item keeps its `inheritedBudgetCategoryId`.
 
 Why:
-- Later deallocation and budget attribution need a deterministic category without asking the user to learn a new concept.
+- Canonical system rows are split by category, so the system must know which category’s canonical sale row to apply.
 
 ---
 
@@ -85,20 +96,38 @@ Concern:
 - The Business Inventory “intake” transaction category might not match the destination project’s budgets or the way the project wants to track spend.
 
 Resolution (final):
-- The destination project’s canonical purchase transaction remains uncategorized.
-- Budget attribution remains item-driven (canonical attribution sums items grouped by their budget category).
-- **At BI → Project sell/allocation time, prompt the user to choose a destination-project budget category** for the item (or batch). This removes ambiguity and ensures attribution matches the project’s budgeting intent.
+- Canonical system rows are category-coded; therefore BI → Project must ensure the item has a valid destination project category.
+- **At BI → Project sell/allocation time, if the item’s current category is not enabled/available in the destination project, prompt the user to choose a destination-project budget category** for the item (or batch), persist it onto the item, then proceed.
 
 Defaulting behavior for the prompt:
-- If the item already has `inheritedBudgetCategoryId` and that category is enabled/available for the destination project, preselect it.
+- If the item already has a category id and that category is enabled/available for the destination project, use it (no prompt required).
 - Otherwise, leave unselected and require a choice.
 
 Persistence:
-- On successful allocation, set/update the item’s `inheritedBudgetCategoryId` to the user’s chosen destination category (so future moves and canonical attribution remain deterministic).
+- On successful allocation, set/update the item’s category id field (currently `inheritedBudgetCategoryId`) to the user’s chosen destination category so future moves remain deterministic.
 
 Batch behavior (recommended):
 - One category choice applies to the whole batch (fast path).
 - (Optional later) advanced “split per item” if needed.
+
+---
+
+### Canonical sale transaction identity (deterministic)
+
+Canonical sale transactions must have a deterministic identity so retries and concurrent clients converge without creating duplicates.
+
+Required identity inputs:
+- `projectId`
+- `direction`: `business_to_project` or `project_to_business`
+- `budgetCategoryId`
+
+Recommended id format (implementation-defined but must be deterministic and parseable):
+- `INV_SALE__<projectId>__<direction>__<budgetCategoryId>`
+
+Additionally required on the transaction doc (recommended even if direction is encoded in the id):
+- `isCanonicalInventorySale: true`
+- `inventorySaleDirection: "business_to_project" | "project_to_business"`
+- `budgetCategoryId: <budgetCategoryId>` (the category-coded invariant)
 
 ---
 

@@ -39,7 +39,6 @@ export default function NewItemScreen() {
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [source, setSource] = useState('');
   const [sku, setSku] = useState('');
   const [status, setStatus] = useState('');
@@ -82,12 +81,12 @@ export default function NewItemScreen() {
       setError('Account context is missing.');
       return;
     }
-    if (!description.trim() && !sku.trim() && imageUrls.length === 0) {
-      setError('Add a description, SKU, or at least one image.');
+    if (!name.trim() && !sku.trim() && imageUrls.length === 0) {
+      setError('Add a name, SKU, or at least one image.');
       return;
     }
     const purchasePriceCents = parseCurrency(purchasePrice);
-    const projectPriceCents = parseCurrency(projectPrice) ?? purchasePriceCents ?? null;
+    const projectPriceCents = parseCurrency(projectPrice);
     const qty = Math.max(1, Number.parseInt(quantity || '1', 10) || 1);
     setError(null);
     setIsSubmitting(true);
@@ -100,8 +99,7 @@ export default function NewItemScreen() {
         }
       }
       const payload = {
-        name: name.trim() || null,
-        description: description.trim() || null,
+        name: name.trim(),
         sku: sku.trim() || null,
         source: source.trim() || null,
         status: status.trim() || null,
@@ -111,7 +109,11 @@ export default function NewItemScreen() {
         projectId: scope === 'project' ? projectId ?? null : null,
         transactionId: transactionId ?? null,
         inheritedBudgetCategoryId,
-        images: imageUrls.map((url, index) => ({ url, kind: 'image', isPrimary: index === 0 })),
+        images: imageUrls.map((url, index) => ({
+          url,
+          kind: 'image' as const,
+          ...(index === 0 ? { isPrimary: true } : {}),
+        })),
       };
       for (let index = 0; index < qty; index += 1) {
         await createItem(accountId, payload);
@@ -135,15 +137,6 @@ export default function NewItemScreen() {
           placeholder="Item name"
           placeholderTextColor={theme.colors.textSecondary}
           style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-        />
-        <AppText variant="body">Description</AppText>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Description"
-          placeholderTextColor={theme.colors.textSecondary}
-          style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-          multiline
         />
         <AppText variant="body">Source</AppText>
         <TextInput

@@ -24,11 +24,11 @@ Web parity evidence sources (key):
 ## Owned flows (list)
 - **Project → Business Inventory**
   - “Move to business inventory” (correction path; no canonical sale)
-  - “Sell/deallocate to business inventory” (canonical deallocation; creates/updates `INV_SALE_<projectId>` unless purchase-reversion)
+  - “Sell/deallocate to business inventory” (canonical deallocation; creates/updates the canonical sale transaction for `(projectId, direction = project_to_business, budgetCategoryId)` unless allocation-reversion)
 - **Business Inventory → Project**
-  - Allocate/move to project (canonical purchase; creates/updates `INV_PURCHASE_<projectId>`)
+  - Allocate/move to project (canonical sale; creates/updates the canonical sale transaction for `(projectId, direction = business_to_project, budgetCategoryId)`)
 - **Project → Project**
-  - Sell item to another project (two-phase: deallocate then allocate; `INV_SALE_<sourceProjectId>` + `INV_PURCHASE_<targetProjectId>`)
+  - Sell item to another project (two-phase: deallocate then allocate; `project_to_business` then `business_to_project`)
 - **Lineage**
   - Append lineage edges and maintain pointers for moves across canonical/non-canonical transactions and inventory (null)
 

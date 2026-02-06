@@ -14,7 +14,6 @@ import { ScopeConfig } from './scopeConfig';
 export type ScopedItem = {
   id: string;
   name?: string | null;
-  description?: string | null;
   notes?: string | null;
   sku?: string | null;
   projectId?: string | null;
@@ -68,6 +67,18 @@ type Unsubscribe = () => void;
 function toSafeArray<T>(items: T[] | null | undefined): T[] {
   if (!items) return [];
   return Array.isArray(items) ? items : [];
+}
+
+function normalizeScopedItemFromFirestore(raw: unknown, id: string): ScopedItem {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  // Legacy: older docs used `description` as the primary label.
+  const legacyDescription = typeof data.description === 'string' ? data.description : null;
+  const rawName = typeof data.name === 'string' ? data.name : null;
+  const name = rawName && rawName.trim().length > 0 ? rawName : legacyDescription;
+
+  const rest: Record<string, unknown> = { ...data };
+  delete (rest as any).description;
+  return { ...(rest as object), id, name: name ?? null } as ScopedItem;
 }
 
 function getScopeProjectId(scopeConfig: ScopeConfig): string | null {
@@ -129,7 +140,7 @@ export function subscribeToScopedItems(
   return onSnapshot(
     query,
     (snapshot) => {
-      const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ScopedItem));
+      const next = snapshot.docs.map((doc) => normalizeScopedItemFromFirestore(doc.data(), doc.id));
       onChange(toSafeArray(next));
     },
     (error) => {
@@ -184,7 +195,7 @@ export async function refreshScopedItems(
   }
   const query = getScopedItemsQuery(accountId, scopeConfig);
   const snapshot = await getQuerySnapshotWithPreference(query, mode);
-  return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as ScopedItem));
+  return snapshot.docs.map((doc: any) => normalizeScopedItemFromFirestore(doc.data(), doc.id));
 }
 
 export async function refreshScopedTransactions(

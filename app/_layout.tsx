@@ -1,6 +1,8 @@
+import 'react-native-gesture-handler';
 import { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore } from '../src/auth/authStore';
 import { useAccountContextStore } from '../src/auth/accountContextStore';
 import { useBillingStore } from '../src/billing/billingStore';
@@ -159,25 +161,27 @@ export default function RootLayout() {
   ]);
 
   return (
-    <ThemeProvider>
-      <View style={styles.root}>
-        <NetworkStatusBanner />
-        <SyncStatusPill />
-        <BackgroundSyncErrorNotifier />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="paywall" />
-        </Stack>
+    <GestureHandlerRootView style={styles.root}>
+      <ThemeProvider>
+        <View style={styles.root}>
+          <NetworkStatusBanner />
+          <SyncStatusPill />
+          <BackgroundSyncErrorNotifier />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="paywall" />
+          </Stack>
 
-        {(!isInitialized || !billingInitialized || !isAccountHydrated || isResolvingAccountSelection) &&
-          !timedOutWithoutAuth && (
-          <View style={styles.loadingOverlay} pointerEvents="auto">
-            <LoadingScreen />
-          </View>
-        )}
-      </View>
-    </ThemeProvider>
+          {(!isInitialized || !billingInitialized || !isAccountHydrated || isResolvingAccountSelection) &&
+            !timedOutWithoutAuth && (
+            <View style={styles.loadingOverlay} pointerEvents="auto">
+              <LoadingScreen />
+            </View>
+          )}
+        </View>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

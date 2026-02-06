@@ -41,6 +41,7 @@ function parseArgs(argv) {
     storageDir: flags.get('storage') || null,
     checkStorage: Boolean(flags.get('check-storage')),
     migrationVersion: flags.get('version') || 'v1',
+    canonicalizeBudgetCategoryIds: Boolean(flags.get('canonicalize-budget-category-ids')),
   };
 }
 
@@ -182,6 +183,24 @@ function mapCategoryType(category) {
   return 'standard';
 }
 
+function normalizeBudgetCategorySlug(category) {
+  const slug = normalizeOptionalString(category?.slug);
+  const name = normalizeOptionalString(category?.name);
+  const base = slug || (name ? name.toLowerCase().replace(/\s+/g, '-') : null);
+  if (!base) return null;
+  return base
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function makeStableShortHash(value) {
+  return createHash('sha256').update(String(value)).digest('hex').slice(0, 8);
+}
+
 async function fileExists(p) {
   try {
     await fs.access(p);
@@ -192,7 +211,8 @@ async function fileExists(p) {
 }
 
 async function main() {
-  const { exportPath, outDir, storageDir, checkStorage, migrationVersion } = parseArgs(process.argv);
+  const { exportPath, outDir, storageDir, checkStorage, migrationVersion, canonicalizeBudgetCategoryIds } =
+    parseArgs(process.argv);
 
   if (!exportPath) {
     console.error('Missing export path.\n');
@@ -383,28 +403,81 @@ async function main() {
 
   const presets = accountPresets?.[0]?.presets || {};
   const presetCategories = Array.isArray(presets.budget_categories) ? presets.budget_categories : [];
-  const presetCategoryIds = new Set(presetCategories.map((c) => c.id).filter(Boolean));
-  const furnishingsCategory = presetCategories.find(
-    (c) => normalizeOptionalString(c?.slug) === 'furnishings' || normalizeOptionalString(c?.name) === 'Furnishings'
+  const legacyPresetCategoryIds = new Set(
+    presetCategories.map((c) => normalizeOptionalId(c?.id)).filter(Boolean)
   );
-  const furnishingsCategoryId = normalizeOptionalId(furnishingsCategory?.id) || null;
+
+  /**
+   * Map legacy category UUID -> emitted Firestore category doc id.
+   * Default: identity (keep legacy UUIDs). Optional: canonicalize to slug-based ids.
+   */
+  const budgetCategoryIdByLegacyId = new Map();
+  const usedEmittedBudgetCategoryIds = new Set();
 
   for (const category of presetCategories) {
-    const categoryId = normalizeOptionalId(category?.id);
+    const legacyId = normalizeOptionalId(category?.id);
+    if (!legacyId) continue;
+
+    if (!canonicalizeBudgetCategoryIds) {
+      budgetCategoryIdByLegacyId.set(legacyId, legacyId);
+      usedEmittedBudgetCategoryIds.add(legacyId);
+      continue;
+    }
+
+    const slug = normalizeBudgetCategorySlug(category);
+    const baseId = slug || legacyId;
+    let emittedId = baseId;
+    if (usedEmittedBudgetCategoryIds.has(emittedId) && !budgetCategoryIdByLegacyId.has(legacyId)) {
+      emittedId = `${baseId}-${makeStableShortHash(legacyId)}`;
+      warnings.push({
+        code: 'duplicate_budget_category_slug',
+        message: 'Duplicate budget category slug/name; disambiguated with hash suffix.',
+        details: { legacyId, baseId, emittedId },
+      });
+    }
+    usedEmittedBudgetCategoryIds.add(emittedId);
+    budgetCategoryIdByLegacyId.set(legacyId, emittedId);
+  }
+
+  const resolveBudgetCategoryId = (value, context) => {
+    const legacyId = normalizeOptionalId(value);
+    if (!legacyId) return null;
+    const resolved = budgetCategoryIdByLegacyId.get(legacyId) || null;
+    if (!resolved) {
+      warnings.push({
+        code: 'missing_budget_category',
+        message: 'Budget category reference missing in presets; set to null.',
+        details: { legacyId, ...context },
+      });
+    }
+    return resolved;
+  };
+
+  const furnishingsCategory = presetCategories.find((c) => {
+    const slug = normalizeBudgetCategorySlug(c);
+    const name = normalizeOptionalString(c?.name);
+    return slug === 'furnishings' || name === 'Furnishings';
+  });
+  const furnishingsCategoryId = furnishingsCategory
+    ? resolveBudgetCategoryId(furnishingsCategory?.id, { field: 'pinnedBudgetCategoryIds' })
+    : null;
+
+  for (const category of presetCategories) {
+    const legacyCategoryId = normalizeOptionalId(category?.id);
+    if (!legacyCategoryId) continue;
+    const categoryId = resolveBudgetCategoryId(legacyCategoryId, { field: 'budgetCategories' });
     if (!categoryId) continue;
     const legacyMetadata =
       category?.metadata && typeof category.metadata === 'object' ? category.metadata : null;
     const categoryType = mapCategoryType(category);
-    const mappedMetadata =
-      categoryType !== 'standard' || legacyMetadata
-        ? {
-            categoryType,
-            ...(legacyMetadata?.excludeFromOverallBudget === true
-              ? { excludeFromOverallBudget: true }
-              : {}),
-            ...(legacyMetadata ? { legacy: legacyMetadata } : {}),
-          }
-        : null;
+    const mappedMetadata = {
+      ...(categoryType !== 'standard' ? { categoryType } : {}),
+      ...(legacyMetadata?.excludeFromOverallBudget === true ? { excludeFromOverallBudget: true } : {}),
+      legacy: {
+        ...(legacyMetadata ? legacyMetadata : {}),
+        sourceCategoryId: legacyCategoryId,
+      },
+    };
     addDoc(
       documents,
       `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`,
@@ -413,7 +486,7 @@ async function main() {
         accountId,
         projectId: null,
         name: category?.name || '',
-        slug: category?.slug || '',
+        slug: normalizeBudgetCategorySlug(category) || '',
         isArchived: Boolean(category?.is_archived),
         metadata: mappedMetadata,
         ...toAuditFields(category),
@@ -457,13 +530,14 @@ async function main() {
     const budgetEntries = project?.budget_categories && typeof project.budget_categories === 'object'
       ? Object.entries(project.budget_categories)
       : [];
-    for (const [categoryId, legacyBudget] of budgetEntries) {
-      if (!presetCategoryIds.has(categoryId)) {
-        warnings.push({
-          code: 'missing_budget_category',
-          message: 'Project budget references missing preset category.',
-          details: { projectId, categoryId },
-        });
+    for (const [legacyCategoryId, legacyBudget] of budgetEntries) {
+      if (!legacyPresetCategoryIds.has(legacyCategoryId)) {
+        // Still attempt resolution through the map (in case the presets list used a different shape).
+        const resolvedId = resolveBudgetCategoryId(legacyCategoryId, { projectId, field: 'project.budget_categories' });
+        if (!resolvedId) continue;
+      }
+      const categoryId = resolveBudgetCategoryId(legacyCategoryId, { projectId, field: 'project.budget_categories' });
+      if (!categoryId) {
         continue;
       }
       const { cents, ok } = parseDecimalToCents(legacyBudget);
@@ -471,7 +545,7 @@ async function main() {
         warnings.push({
           code: 'invalid_budget_amount',
           message: 'Project budget amount could not be parsed; set to null.',
-          details: { projectId, categoryId, legacyBudget },
+          details: { projectId, categoryId, legacyBudget, legacyCategoryId },
         });
       }
       addDoc(
@@ -560,9 +634,10 @@ async function main() {
   const txCategoryById = new Map();
   for (const tx of transactions) {
     const txId = normalizeOptionalId(tx?.transaction_id) || normalizeOptionalId(tx?.id);
-    const categoryId = normalizeOptionalId(tx?.category_id);
-    if (txId && categoryId) {
-      txCategoryById.set(txId, categoryId);
+    const legacyCategoryId = normalizeOptionalId(tx?.category_id);
+    if (txId && legacyCategoryId) {
+      const mapped = resolveBudgetCategoryId(legacyCategoryId, { transactionId: txId, field: 'transactions.category_id' });
+      if (mapped) txCategoryById.set(txId, mapped);
     }
   }
 
@@ -642,8 +717,10 @@ async function main() {
         accountId,
         projectId: resolvedProjectId,
         createdBy: normalizeOptionalId(item?.created_by) || defaultUserId,
-        description: normalizeOptionalString(item?.description) || '',
-        name: normalizeOptionalString(item?.name),
+        // Canonical: we only store `name`.
+        // Legacy exports used `description` as the primary item label, so we map:
+        //   name = item.name ?? item.description ?? ""
+        name: normalizeOptionalString(item?.name) || normalizeOptionalString(item?.description) || '',
         source: normalizeOptionalString(item?.source),
         sku: normalizeOptionalString(item?.sku),
         notes: normalizeOptionalString(item?.notes),
@@ -739,14 +816,10 @@ async function main() {
       }
     }
 
-    const budgetCategoryId = normalizeOptionalId(tx?.category_id);
-    if (budgetCategoryId && !presetCategoryIds.has(budgetCategoryId)) {
-      warnings.push({
-        code: 'missing_budget_category',
-        message: 'Transaction category_id missing in presets; set to null.',
-        details: { transactionId: txId, categoryId: budgetCategoryId },
-      });
-    }
+    const budgetCategoryId = resolveBudgetCategoryId(tx?.category_id, {
+      transactionId: txId,
+      field: 'transactions.category_id',
+    });
 
     addDoc(
       documents,
@@ -771,7 +844,7 @@ async function main() {
         receiptImages: receiptImages.length > 0 ? receiptImages : null,
         otherImages: otherImages.length > 0 ? otherImages : null,
         transactionImages: transactionImages.length > 0 ? transactionImages : null,
-        budgetCategoryId: presetCategoryIds.has(budgetCategoryId) ? budgetCategoryId : null,
+        budgetCategoryId,
         needsReview,
         taxRatePct: parseNumber(tx?.tax_rate_pct),
         subtotalCents: subtotalOk ? subtotalCents : null,

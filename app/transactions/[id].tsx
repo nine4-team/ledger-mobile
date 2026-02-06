@@ -276,7 +276,10 @@ export default function TransactionDetailScreen() {
       nextUrl = result.attachmentRef.url;
     }
     if (!nextUrl) return;
-    const nextReceipts = [...(transaction.receiptImages ?? []), { url: nextUrl, kind: nextUrl.endsWith('.pdf') ? 'pdf' : 'image' }].slice(0, 5);
+    const nextReceipts = [
+      ...(transaction.receiptImages ?? []),
+      { url: nextUrl, kind: nextUrl.endsWith('.pdf') ? ('pdf' as const) : ('image' as const) },
+    ].slice(0, 5);
     await updateTransaction(accountId, id, { receiptImages: nextReceipts, transactionImages: nextReceipts });
     setReceiptUrl('');
     setLocalReceiptUri('');
@@ -295,7 +298,7 @@ export default function TransactionDetailScreen() {
       nextUrl = result.attachmentRef.url;
     }
     if (!nextUrl) return;
-    const nextImages = [...(transaction.otherImages ?? []), { url: nextUrl, kind: 'image' }].slice(0, 5);
+    const nextImages = [...(transaction.otherImages ?? []), { url: nextUrl, kind: 'image' as const }].slice(0, 5);
     await updateTransaction(accountId, id, { otherImages: nextImages });
     setImageUrl('');
     setLocalImageUri('');
@@ -336,7 +339,7 @@ export default function TransactionDetailScreen() {
     };
 
     if (conflicts.length > 0) {
-      const conflictNames = conflicts.map((item) => item.name?.trim() || item.description || 'Item');
+      const conflictNames = conflicts.map((item) => item.name?.trim() || 'Item');
       showItemConflictDialog({
         conflictItemNames: conflictNames,
         onConfirm: performAdd,
@@ -612,7 +615,7 @@ export default function TransactionDetailScreen() {
               <View style={styles.list}>
                 {linkedItems.map((item) => (
                   <View key={item.id} style={styles.row}>
-                    <AppText variant="body">{item.name?.trim() || item.description || 'Item'}</AppText>
+                    <AppText variant="body">{item.name?.trim() || 'Item'}</AppText>
                     <AppButton title="Remove" variant="secondary" onPress={() => handleRemoveLinkedItem(item.id)} />
                   </View>
                 ))}

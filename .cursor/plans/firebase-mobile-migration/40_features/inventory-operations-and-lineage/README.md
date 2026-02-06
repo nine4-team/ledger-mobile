@@ -4,7 +4,7 @@ This feature covers **cross-entity operations** that move and link items across:
 
 - Project scope ↔ Business Inventory scope
 - Item ↔ Transaction relationships
-- Canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) used for deterministic inventory/accounting mechanics
+- Canonical inventory **sale** transactions (direction-coded + category-coded) used for deterministic inventory/accounting mechanics
 
 It is the primary correctness layer for “allocate/move/sell/deallocate” flows and must be compatible with:
 
@@ -31,11 +31,14 @@ See: `OFFLINE_FIRST_V2_SPEC.md`.
 In scope:
 - Project → Business Inventory:
   - **Move** (correction path) — item becomes Business Inventory without canonical sale
-  - **Deallocate/Sell** (canonical path) — item becomes Business Inventory and is linked to `INV_SALE_<projectId>` (with purchase-reversion exception)
+  - **Deallocate/Sell** (canonical path) — item becomes Business Inventory and is linked to the canonical sale transaction for:
+    - `(projectId, direction = project_to_business, budgetCategoryId)`
+    - (with allocation-reversion exception)
 - Business Inventory → Project:
-  - **Allocate** — item becomes project-scoped and is linked to `INV_PURCHASE_<projectId>`
+  - **Allocate** — item becomes project-scoped and is linked to the canonical sale transaction for:
+    - `(projectId, direction = business_to_project, budgetCategoryId)`
 - Project → Project:
-  - **Sell item to another project** — two-phase operation: sale then purchase
+  - **Sell item to another project** — two-phase operation: sale then sale (project → business, then business → project)
 - **Lineage**:
   - Append edges and maintain pointers so moves are auditably reconstructable
 

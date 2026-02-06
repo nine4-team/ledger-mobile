@@ -1,5 +1,13 @@
-import { Item, updateItem, subscribeToItem } from './itemsService';
+import { updateItem, subscribeToItem } from './itemsService';
+import type { ItemWrite } from './itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale, requestProjectToProjectMove } from './inventoryOperations';
+
+type MovableItem = {
+  id: string;
+  projectId?: string | null;
+  transactionId?: string | null;
+  inheritedBudgetCategoryId?: string | null;
+};
 
 export type ResolveItemMoveOptions = {
   accountId: string;
@@ -24,14 +32,15 @@ export type ResolveItemMoveResult = {
  * - Waiting for scope changes before applying final assignment
  */
 export async function resolveItemMove(
-  item: Item,
+  item: MovableItem,
   options: ResolveItemMoveOptions
 ): Promise<ResolveItemMoveResult> {
   const { accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId, inheritedBudgetCategoryId } = options;
+  const currentProjectId = item.projectId ?? null;
 
   // If item is already in the target project, just update space/transaction
-  if (item.projectId === targetProjectId) {
-    const update: Partial<Item> = {};
+  if (currentProjectId === targetProjectId) {
+    const update: ItemWrite = {};
     if (targetSpaceId !== undefined) {
       update.spaceId = targetSpaceId;
     }
@@ -48,7 +57,7 @@ export async function resolveItemMove(
   }
 
   // If item is in inventory (projectId is null), move to project
-  if (item.projectId == null && targetProjectId != null) {
+  if (currentProjectId == null && targetProjectId != null) {
     if (!inheritedBudgetCategoryId) {
       return {
         success: false,
@@ -69,7 +78,7 @@ export async function resolveItemMove(
   }
 
   // If item is in a project and target is inventory, move to business inventory
-  if (item.projectId != null && targetProjectId == null) {
+  if (currentProjectId != null && targetProjectId == null) {
     if (!inheritedBudgetCategoryId) {
       return {
         success: false,
@@ -79,8 +88,8 @@ export async function resolveItemMove(
 
     await requestProjectToBusinessSale({
       accountId,
-      projectId: item.projectId,
-      items: [{ id: itemId, projectId: item.projectId, transactionId: item.transactionId ?? null }],
+      projectId: currentProjectId,
+      items: [{ id: itemId, projectId: currentProjectId, transactionId: item.transactionId ?? null }],
     });
 
     // Wait for the item to be in inventory scope before assigning transaction/space
@@ -89,7 +98,7 @@ export async function resolveItemMove(
   }
 
   // If item is in a different project, move between projects
-  if (item.projectId != null && targetProjectId != null && item.projectId !== targetProjectId) {
+  if (currentProjectId != null && targetProjectId != null && currentProjectId !== targetProjectId) {
     if (!inheritedBudgetCategoryId) {
       return {
         success: false,
@@ -99,10 +108,10 @@ export async function resolveItemMove(
 
     await requestProjectToProjectMove({
       accountId,
-      sourceProjectId: item.projectId,
+      sourceProjectId: currentProjectId,
       targetProjectId,
       inheritedBudgetCategoryId,
-      items: [{ id: itemId, projectId: item.projectId, transactionId: item.transactionId ?? null }],
+      items: [{ id: itemId, projectId: currentProjectId, transactionId: item.transactionId ?? null }],
     });
 
     // Wait for the item to be in the target project before assigning space/transaction
@@ -142,7 +151,7 @@ async function waitForScopeThenAssign(
       clearTimeout(timeoutId);
       unsubscribe();
 
-      const update: Partial<Item> = {};
+      const update: ItemWrite = {};
       if (targetSpaceId !== undefined) {
         update.spaceId = targetSpaceId;
       }

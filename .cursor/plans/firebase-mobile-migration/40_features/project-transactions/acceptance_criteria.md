@@ -12,19 +12,19 @@ Shared-module requirement:
   Observed in `src/pages/TransactionsList.tsx` (list item markup + `formatCurrency`, `formatDate`).
 - [ ] **Canonical title mapping**: canonical transaction IDs display special titles (inventory purchase/sale).  
   Observed in `src/pages/TransactionsList.tsx` (`getCanonicalTransactionTitle`).
-- [ ] **Canonical rows are uncategorized (new model)**: canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) must not require a user-facing category selection and should be treated as uncategorized on the transaction row (recommended: `transaction.budgetCategoryId = null`).  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.  
-  **Intentional delta** vs current web: web may assign category fields on canonical rows (`src/services/inventoryService.ts`).
+- [ ] **Canonical inventory sale rows are category-coded + direction-coded (new model)**: canonical inventory sale transactions (recommended id prefix `INV_SALE__`) are system-owned and must have:
+  - `transaction.budgetCategoryId` populated (single-category invariant)
+  - `inventorySaleDirection` populated (`business_to_project` or `project_to_business`)
+  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.
 - [ ] **Sort modes**: supports sorting by purchase date, created date, source, amount, plus stable tie-breaker to avoid jitter.  
   Observed in `src/pages/TransactionsList.tsx` (`TRANSACTION_SORT_MODES`, `sortTransactionsByMode`).
 - [ ] **Search behavior**: search matches title/source/type/notes and amount-ish numeric strings.  
   Observed in `src/pages/TransactionsList.tsx` (search filter block with `numericQuery`).
 - [ ] **Filters**: filter submenus include at least: transaction type, completeness (needs review vs complete), email receipt, purchased by, budget category, source, reimbursement.  
   Observed in `src/pages/TransactionsList.tsx` (`filterMenuView` union + filter UI).
-- [ ] **Budget category filter includes canonical rows via items (new model)**:  
-  - Non-canonical transactions match by `transaction.budgetCategoryId === selectedCategoryId`.  
-  - Canonical inventory transactions match if the transaction has **any linked item** with `item.inheritedBudgetCategoryId === selectedCategoryId`.  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
+- [ ] **Budget category filter behavior (new model)**:
+  - Non-canonical transactions match by `transaction.budgetCategoryId === selectedCategoryId`.
+  - Canonical inventory sale transactions also match by `transaction.budgetCategoryId === selectedCategoryId` (category-coded invariant).
 - [ ] **Filter state persistence**: list search/filter/sort state is persisted and restored when navigating away and back.  
   Web parity evidence: `src/pages/TransactionsList.tsx` (URL params `txSearch`, `txFilter`, `txSource`, `txReceipt`, `txType`, `txPurchaseMethod`, `txCategory`, `txCompleteness`, `txSort` + `isSyncingFromUrlRef`).  
   Mobile requirement (Expo Router): persisted via `ListStateStore[listStateKey]` in the shared Transactions list module.
@@ -50,9 +50,8 @@ Shared-module requirement:
 ## CSV export
 - [ ] **Export action exists**: list can export transactions to CSV with project-scoped filename and includes category name + `budgetCategoryId`.  
   Observed in `src/pages/TransactionsList.tsx` (`buildTransactionsCsv`, `fileName = project-<id>-<date>.csv`).  
-- [ ] **Canonical rows export without a user-facing category (new model)**: canonical inventory transactions export with `budgetCategoryId` blank and category name blank/“Uncategorized” (consistent choice).  
-  Optional (recommended): include an extra column that summarizes derived item categories (e.g., `budgetCategoryIds`) based on linked items’ `inheritedBudgetCategoryId`.  
-  Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md`.
+- [ ] **Canonical inventory sale rows export with a category (new model)**: canonical inventory sale transactions export with `budgetCategoryId` populated like any other transaction.
+  Optional (recommended): include a column like `inventorySaleDirection` in CSV export.
 - [ ] **Mobile export uses share sheet**: export is shareable via native share UX rather than browser download link creation.  
   **Intentional delta** (platform difference).
 - [ ] **Export works offline**: export is generated from local DB (no network required).  
@@ -99,7 +98,7 @@ Shared-module requirement:
 ## Edit transaction
 - [ ] **Permission gating**: user must have role USER or higher to edit.  
   Observed in `src/pages/EditTransaction.tsx` (`hasRole(UserRole.USER)` guard).
-- [ ] **Canonical transactions are not editable (recommended)**: editing is disabled/hidden for canonical inventory transactions (`INV_PURCHASE_*`, `INV_SALE_*`) to prevent introducing a user-facing “canonical category” concept and to preserve system-owned mechanics.  
+- [ ] **Canonical transactions are not editable (recommended)**: editing is disabled/hidden for canonical inventory sale transactions (system-owned) to preserve system-owned mechanics.  
   **Intentional delta** vs current web: the web UI exposes Edit for all transactions (`src/components/transactions/TransactionActionsMenu.tsx`).
 - [ ] **Hydration behavior**: attempts to hydrate from cache first, then fetch latest transaction for attachments correctness.  
   Observed in `src/pages/EditTransaction.tsx` (`hydrateTransactionCache`, “Always fetch the latest transaction so attachments stay in sync”).
@@ -145,9 +144,9 @@ Shared-module requirement:
   Parity evidence: `src/components/transactions/TransactionItemPicker.tsx` (conflict preview + confirm).
 - [ ] **Transaction items operations**: supports adding existing items, creating items, updating items, duplicating, deleting, removing from transaction, and bulk/location actions.  
   Observed in `src/pages/TransactionDetail.tsx` (passes handlers into `TransactionItemsList`) and `src/components/TransactionItemsList.tsx` (feature surface).
-- [ ] **Item linking sets `inheritedBudgetCategoryId` (new model)**: when an item is linked/assigned to a **non-canonical** transaction with non-null `transaction.budgetCategoryId`, the item is updated to: `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`. Linking/unlinking to a **canonical** `INV_*` transaction must not overwrite this field.  
+- [ ] **Item linking sets `inheritedBudgetCategoryId`**: when an item is linked/assigned to a **non-canonical** transaction with non-null `transaction.budgetCategoryId`, the item is updated to: `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`.  
   Source of truth: `00_working_docs/BUDGET_CATEGORIES_CANONICAL_TRANSACTIONS_REVISIONS.md` and `40_features/project-items/feature_spec.md`.
-- [ ] **Actions menu**: supports Edit, Move (project/business inventory), Delete; move is disabled for canonical sale/purchase transactions.  
+- [ ] **Actions menu**: supports Edit, Move (project/business inventory), Delete; edit/move are disabled for canonical inventory sale transactions (system-owned).  
   Observed in `src/components/transactions/TransactionActionsMenu.tsx` (canonical check + disabled reason).
 - [ ] **Delete transaction**: delete requires explicit confirmation and shows error on failure.  
   Observed in `src/pages/TransactionDetail.tsx` (`window.confirm`, `transactionService.deleteTransaction`, toast error).

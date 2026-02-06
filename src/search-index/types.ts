@@ -7,7 +7,6 @@ export interface SearchableItem {
   accountId: string;
   scopeId: string;
   name?: string;
-  description?: string;
   sku?: string;
   source?: string;
   vendor?: string;

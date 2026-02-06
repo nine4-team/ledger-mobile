@@ -37,11 +37,9 @@ Primary entrypoints in web:
 
 ### Preconditions
 - Item exists.
-- For Firebase migration: Project → BI **sell/deallocate-style** moves (canonical-row paths) **must be blocked** if `inheritedBudgetCategoryId` is missing (deterministic attribution). See `40_features/project-items/flows/inherited_budget_category_rules.md`.
-  - Note: the correction “Move to Business Inventory” path may remain allowed when `inheritedBudgetCategoryId` is missing, since it does not create canonical inventory transactions.
-  - Required copy (per `40_features/project-items/flows/inherited_budget_category_rules.md`):
-    - Disable reason: `Link this item to a categorized transaction before moving it to Design Business Inventory.`
-    - Error toast: `Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
+- Project → Business Inventory sell/deallocate requires the item to have a resolved budget category id (currently `item.inheritedBudgetCategoryId`).
+  - If missing, prompt the user to select a category from the **source project’s enabled categories**, persist it onto the item, then proceed.
+  - Source of truth: `40_features/project-items/flows/inherited_budget_category_rules.md`.
 
 ### Behavior contract (canonical)
 
@@ -53,33 +51,37 @@ Resolve these for later metadata preservation:
 Parity evidence:
 - `_resolvePreviousProjectLink` in `src/services/inventoryService.ts` (`deallocationService`).
 
-#### Step 2: Purchase-reversion exception (required)
-If `item.transactionId == INV_PURCHASE_<projectId>` (same project):
-- Remove item from the purchase transaction (preserve empty canonical rows for lineage/history).
+#### Step 2: Allocation-reversion exception (required)
+If the item is currently linked to the canonical sale transaction for:
+- `(projectId = sourceProjectId, direction = "business_to_project", budgetCategoryId = item budget category id)`
+
+…treat this as an allocation mistake being undone:
+- Remove item from that canonical sale transaction (preserve empty canonical rows for lineage/history).
 - Update item to Business Inventory:
   - `projectId = null`
   - `transactionId = null`
   - preserve `previousProjectTransactionId` / `previousProjectId`
 - Append lineage edge:
-  - `fromTransactionId = INV_PURCHASE_<projectId>`
+  - `fromTransactionId = <the canonical sale transaction id>`
   - `toTransactionId = null`
 
 Parity evidence:
-- Purchase-reversion: `deallocationService.handleInventoryDesignation` in `src/services/inventoryService.ts`.
+- Web parity has a purchase-reversion branch in `deallocationService.handleInventoryDesignation` in `src/services/inventoryService.ts`.
+  Firebase migration delta: purchase buckets become direction-coded canonical sale transactions, so the reversion checks the `business_to_project` canonical sale row instead.
 
 #### Step 3: Canonical sale path (default)
 Otherwise:
-- Ensure canonical sale transaction exists/updates:
-  - `saleTransactionId = INV_SALE_<projectId>`
-  - Add this item to the sale transaction’s `item_ids` and recompute amount (sum of item prices in the bucket).
+- Ensure canonical sale transaction exists/updates (category-split):
+  - `saleTransactionId = canonicalSaleTransactionId(sourceProjectId, "project_to_business", budgetCategoryId)`
+  - Add this item to the canonical sale transaction and recompute amount (sum of item values in this category bucket).
 - Update item to Business Inventory and link it to the sale transaction:
   - `projectId = null`
-  - `transactionId = INV_SALE_<projectId>`
+  - `transactionId = saleTransactionId`
   - Clear `space` (scope move)
   - preserve `previousProjectTransactionId` / `previousProjectId`
 - Append lineage edge:
   - `fromTransactionId = item.transactionId || null` (pre-move)
-  - `toTransactionId = INV_SALE_<projectId>`
+  - `toTransactionId = saleTransactionId`
 
 Parity evidence:
 - `deallocationService.ensureSaleTransaction` and subsequent item update in `src/services/inventoryService.ts`.

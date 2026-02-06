@@ -13,7 +13,6 @@ import type { SearchableItem, ItemToSearchTextFn } from './types';
 export function defaultItemToSearchText(item: SearchableItem): string {
   return combineSearchFields([
     item.name,
-    item.description,
     item.sku,
     item.source,
     item.vendor,

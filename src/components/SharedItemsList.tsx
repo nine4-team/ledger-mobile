@@ -46,7 +46,7 @@ type ItemFilterMode =
   | 'to-return'
   | 'returned'
   | 'no-sku'
-  | 'no-description'
+  | 'no-name'
   | 'no-project-price'
   | 'no-image'
   | 'no-transaction';
@@ -71,7 +71,7 @@ const PROJECT_FILTER_MODES: ItemFilterMode[] = [
   'to-return',
   'returned',
   'no-sku',
-  'no-description',
+  'no-name',
   'no-project-price',
   'no-image',
   'no-transaction',
@@ -81,7 +81,7 @@ const INVENTORY_FILTER_MODES: ItemFilterMode[] = [
   'all',
   'bookmarked',
   'no-sku',
-  'no-description',
+  'no-name',
   'no-project-price',
   'no-image',
   'no-transaction',
@@ -96,8 +96,19 @@ function formatCents(value?: number | null) {
   return `$${(value / 100).toFixed(2)}`;
 }
 
-function getItemPriceCents(item: ScopedItem) {
-  return typeof item.projectPriceCents === 'number' ? item.projectPriceCents : item.purchasePriceCents;
+function hasMeaningfulProjectPrice(item: ScopedItem): boolean {
+  if (typeof item.projectPriceCents !== 'number') return false;
+  // If project price was auto-copied from purchase price, treat it as "not set"
+  // so we fall back to the purchase price for display.
+  if (typeof item.purchasePriceCents === 'number' && item.projectPriceCents === item.purchasePriceCents) return false;
+  return true;
+}
+
+function getDisplayPriceCents(item: ScopedItem): number | null {
+  if (hasMeaningfulProjectPrice(item)) return item.projectPriceCents ?? null;
+  if (typeof item.purchasePriceCents === 'number') return item.purchasePriceCents;
+  if (typeof item.projectPriceCents === 'number') return item.projectPriceCents;
+  return null;
 }
 
 function getPrimaryImage(item: ScopedItem) {
@@ -113,6 +124,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const [query, setQuery] = useState(state.search ?? '');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
@@ -201,7 +213,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
   const rows = useMemo(() => {
     return items.map((item) => {
-      const label = item.name?.trim() || item.description?.trim() || 'Untitled item';
+      const label = item.name?.trim() || 'Untitled item';
       const subtitle = item.projectId ? `Project ${item.projectId}` : 'Inventory';
       return { id: item.id, label, subtitle, item };
     });
@@ -214,10 +226,12 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
   const selectedModes = useMemo<ItemFilterMode[]>(() => {
     const modeValue = activeFilters.mode;
+    const normalizeMode = (value: string) => (value === 'no-description' ? 'no-name' : value);
     if (Array.isArray(modeValue)) {
-      return modeValue.length > 0 ? modeValue : ['all'];
+      const normalized = modeValue.map((m) => normalizeMode(String(m))) as ItemFilterMode[];
+      return normalized.length > 0 ? normalized : ['all'];
     }
-    return modeValue ? [modeValue] : ['all'];
+    return modeValue ? ([normalizeMode(String(modeValue))] as ItemFilterMode[]) : ['all'];
   }, [activeFilters.mode]);
 
   const filtered = useMemo(() => {
@@ -229,7 +243,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           const sku = item.sku ?? '';
           const haystack = [
             row.label,
-            item.description ?? '',
+            item.name ?? '',
             item.notes ?? '',
             item.source ?? '',
             item.spaceId ?? '',
@@ -252,8 +266,8 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         if (mode === 'to-return') return item.status === 'to return';
         if (mode === 'returned') return item.status === 'returned';
         if (mode === 'no-sku') return !item.sku?.trim();
-        if (mode === 'no-description') return !item.description?.trim();
-        if (mode === 'no-project-price') return typeof item.projectPriceCents !== 'number';
+        if (mode === 'no-name') return !item.name?.trim();
+        if (mode === 'no-project-price') return !hasMeaningfulProjectPrice(item);
         if (mode === 'no-image') return (item.images?.length ?? 0) === 0;
         if (mode === 'no-transaction') return !item.transactionId;
         return false;
@@ -443,7 +457,8 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       {
         key: 'created',
         label: 'Created',
-        defaultSelectedSubactionKey: getCreatedSubactionKey(),
+        selectedSubactionKey: getCreatedSubactionKey(),
+        defaultSelectedSubactionKey: 'created-desc',
         suppressDefaultCheckmark: true,
         subactions: [
           {
@@ -461,7 +476,8 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       {
         key: 'alphabetical',
         label: 'Alphabetical',
-        defaultSelectedSubactionKey: getAlphabeticalSubactionKey(),
+        selectedSubactionKey: getAlphabeticalSubactionKey(),
+        defaultSelectedSubactionKey: 'alphabetical-asc',
         suppressDefaultCheckmark: true,
         subactions: [
           {
@@ -496,7 +512,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           const nextModes = next.includes(mode) ? next.filter((value) => value !== mode) : [...next, mode];
           setFilters({ ...activeFilters, mode: nextModes.length > 0 ? nextModes : 'all' });
         },
-        icon: isSelected ? 'check' : undefined,
+        icon: isSelected && mode !== 'all' ? 'check' : undefined,
       };
     });
   }, [activeFilters, filterModes, selectedModes, setFilters]);
@@ -587,7 +603,15 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         <ListControlBar
           search={query}
           onChangeSearch={setQuery}
+          showSearch={showSearch}
           actions={[
+            {
+              title: '',
+              variant: 'secondary',
+              onPress: () => setShowSearch(!showSearch),
+              iconName: 'search',
+              active: showSearch,
+            },
             {
               title: 'Sort',
               variant: 'secondary',
@@ -602,7 +626,13 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
               iconName: 'filter-list',
               active: isFilterActive,
             },
-            { title: 'Add', variant: 'primary', onPress: handleCreateItem, iconName: 'add' },
+            {
+              title: 'Add',
+              accessibilityLabel: 'Add item',
+              variant: 'primary',
+              onPress: handleCreateItem,
+              iconName: 'add',
+            },
           ]}
           leftElement={
             scopeConfig.scope === 'inventory' ? (
@@ -626,7 +656,12 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           }
         />
       </View>
-      <SortMenu visible={sortOpen} onRequestClose={() => setSortOpen(false)} items={sortMenuItems} />
+      <SortMenu
+        visible={sortOpen}
+        onRequestClose={() => setSortOpen(false)}
+        items={sortMenuItems}
+        activeSubactionKey={sortMode}
+      />
       <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
       <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
         <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
@@ -738,9 +773,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             const groupIds = row.items.map((item) => item.id);
             const groupSelected = groupIds.every((id) => selectedIds.includes(id));
             const summaryItem = row.items.find((item) => getPrimaryImage(item.item)) ?? row.items[0];
-            const summaryThumbnailUri = summaryItem ? getPrimaryImage(summaryItem.item) : undefined;
+            const summaryThumbnailUri = summaryItem ? (getPrimaryImage(summaryItem.item) ?? undefined) : undefined;
             const isCollapsed = ((state.filters as any)?.[`collapsed:${row.groupId}`] ?? true) as boolean;
-            const groupPriceCents = row.items.map((item) => getItemPriceCents(item.item)).filter((value) => typeof value === 'number');
+            const groupPriceCents = row.items
+              .map((item) => getDisplayPriceCents(item.item))
+              .filter((value): value is number => typeof value === 'number');
             const totalLabel =
               groupPriceCents.length === row.items.length
                 ? formatCents(groupPriceCents.reduce((sum, value) => sum + value, 0))
@@ -749,7 +786,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             return (
               <GroupedItemCard
                 summary={{
-                  description: row.label,
+                  name: row.label,
                   sku: summaryItem?.item.sku ?? undefined,
                   sourceLabel: summaryItem?.item.source ?? undefined,
                   locationLabel: scopeConfig.fields?.showBusinessInventoryLocation
@@ -768,11 +805,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                   ];
 
                   const cardProps: ItemCardProps = {
-                    description: item.label,
+                    name: item.label,
                     sku: item.item.sku ?? undefined,
                     sourceLabel: item.item.source ?? undefined,
                     locationLabel: scopeConfig.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
-                    priceLabel: formatCents(item.item.projectPriceCents ?? item.item.purchasePriceCents) ?? undefined,
+                    priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
                     statusLabel: item.item.status ?? undefined,
                     thumbnailUri: getPrimaryImage(item.item) ?? undefined,
                     selected: isSelected,
@@ -811,11 +848,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           ];
           return (
             <ItemCard
-              description={item.label}
+              name={item.label}
               sku={item.item.sku ?? undefined}
               sourceLabel={item.item.source ?? undefined}
               locationLabel={scopeConfig.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
-              priceLabel={formatCents(item.item.projectPriceCents ?? item.item.purchasePriceCents) ?? undefined}
+              priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
               statusLabel={item.item.status ?? undefined}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
               selected={isSelected}

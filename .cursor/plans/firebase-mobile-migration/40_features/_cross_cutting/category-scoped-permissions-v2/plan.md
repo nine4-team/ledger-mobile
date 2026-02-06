@@ -3,9 +3,10 @@ Ship Roles v2 **category-scoped access control** in a way that:
 
 - is enforced server-side (Firebase Rules / server-side enforcement is source of truth)
 - stays compatible with `OFFLINE_FIRST_V2_SPEC.md` (Firestore-native offline persistence + scoped listeners + request-doc workflows; no “subscribe to everything”)
-- preserves canonical attribution semantics for inventory transactions:
-  - canonical `INV_*` transactions keep `transaction.budgetCategoryId = null`
-  - canonical visibility and filtering are **item-driven** via `item.inheritedBudgetCategoryId`
+- preserves canonical inventory sale semantics:
+  - canonical inventory sale transactions are category-coded (`transaction.budgetCategoryId` populated)
+  - canonical inventory sale transactions are direction-coded (`inventorySaleDirection` populated)
+  - transaction visibility is evaluated by `transaction.budgetCategoryId` (no item-join required for transaction visibility)
 
 Spec source of truth:
 - `40_features/_cross_cutting/category-scoped-permissions-v2/feature_spec.md`
@@ -16,7 +17,7 @@ Canonical attribution evidence sources (must remain consistent):
 - `40_features/budget-and-accounting/feature_spec.md`
 
 ## Primary risk (what can go wrong)
-- Accidentally treating canonical `INV_*` transactions with `budgetCategoryId == null` as “globally visible uncategorized”.
+- Accidentally treating canonical system rows as editable/mutable by users (canonical rows must be system-owned).
 - Client-side filtering after downloading unauthorized rows (violates the security model and the “no subscribe to everything” constraint).
 - Offline DB containing out-of-scope rows (privacy + confusing UX).
 
@@ -35,7 +36,7 @@ Optional (if needed by implementation complexity):
 **Goal**: establish the membership entitlement shape and hard server-side allow/deny behavior for:
 - item reads/writes (including “own uncategorized” exception)
 - non-canonical transaction reads
-- canonical transaction reads (derived-from-linked-items rule)
+- canonical inventory sale transaction reads (category-scoped by `transaction.budgetCategoryId`)
 
 **Exit criteria**
 - There is a single, explicit entitlement representation per member (admin flag + category set/map).
@@ -49,7 +50,7 @@ Optional (if needed by implementation complexity):
 
 **Exit criteria**
 - Items and non-canonical transactions are queried with scope constraints (no “fetch everything then filter”).
-- Canonical `INV_*` transaction fetching respects derived visibility (implementation-specific strategy permitted, but must meet constraints).
+- Canonical inventory sale transactions are queried with the same category scope constraints as non-canonical transactions.
 - Documented behavior when `allowedBudgetCategoryIds` changes (queries/listeners update immediately; UI reflects new visibility set).
 
 ### Phase C — UI gating + canonical Transaction Detail redaction
@@ -66,7 +67,7 @@ Optional (if needed by implementation complexity):
 
 **Exit criteria**
 - Tests cover the core read/write matrix (admin vs scoped, null vs non-null item category, canonical vs non-canonical transaction).
-- Tests cover the canonical rule: visibility derives from linked items, not `transaction.budgetCategoryId`.
+- Tests cover canonical system-row rules: canonical inventory sale rows are system-owned/read-only and category-scoped by `transaction.budgetCategoryId`.
 
 ## Prompt packs (copy/paste)
 Create `prompt_packs/` with one chat per phase:

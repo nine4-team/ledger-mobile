@@ -128,40 +128,51 @@ Parity evidence:
 Default: keep implicit (recommended):
 
 - In v1 mobile, `inheritedBudgetCategoryId` is an internal determinism field and does not need to be shown as a first-class UI field on Item Detail.
-- If missing, the UI must surface actionable guidance via disabled actions + messaging below.
+- If missing or invalid for a destination project, the UI resolves it via **prompt + persist** during Sell flows (below).
 
-### Project → Business Inventory guardrail (missing `inheritedBudgetCategoryId`)
+### Sell menu structure (required)
 
-If `item.inheritedBudgetCategoryId` is missing, disable:
+Item actions include a single **Sell** entrypoint whose submenu options depend on scope:
 
-- **Sell → Sell to Design Business**
+- **Project scope**:
+  - `Sell → Sell to Business`
+  - `Sell → Sell to Project`
+- **Business Inventory scope**:
+  - `Sell → Sell to Project`
 
-Required disable reason:
+### Project → Business (Sell to Business) — category prompt (required)
 
-`Link this item to a categorized transaction before moving it to Design Business Inventory.`
+If `item.inheritedBudgetCategoryId` is missing when the user initiates `Sell → Sell to Business`:
+- Prompt the user to choose a budget category from the **source project’s enabled categories**.
+- Persist the selection to `item.inheritedBudgetCategoryId`.
+- Then proceed with the canonical sale (`project_to_business`) request-doc workflow.
 
-Attempted operation (race / stale UI):
+Inline messaging (recommended when prompting is needed):
+- **Title**: `Choose a budget category`
+- **Body**: `This sale is tracked by budget category. Pick a category to continue.`
 
-`Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first.`
+### Business → Project (Sell to Project) — conditional category prompt (required)
 
-Inline messaging (recommended):
+When the user initiates `Sell → Sell to Project`, resolve a destination project category:
+- If `item.inheritedBudgetCategoryId` is enabled/available in the destination project, use it (no prompt).
+- Otherwise prompt the user to choose a category from the destination project, persist it to `item.inheritedBudgetCategoryId`, then proceed with the canonical sale (`business_to_project`) request-doc workflow.
 
-- **Title**: `Action required`
-- **Body**: `To move this item to Design Business Inventory, first link it to a categorized transaction so the budget category is known.`
+Batch behavior (when invoked from list/bulk flows):
+- One category selection applies to all items in the batch (fast path).
 
 Notes:
-
-- This is an intentional Firebase-migration delta; web doesn’t have the field yet.
-- “Move to Design Business” (correction path) may remain enabled because it does not create canonical inventory transactions in current web behavior.
+- “Move to Design Business” (correction path) remains separate because it does not create canonical inventory sale transactions.
+  It is still blocked when the item is transaction-attached (same parity behavior).
 
 ### Transaction linking rule (required)
 
 - Linking an item to a **non-canonical** transaction with a category sets:
   - `item.inheritedBudgetCategoryId = transaction.budgetCategoryId`
-- Linking/unlinking to a **canonical inventory** transaction (`INV_*`) must not overwrite it.
+- When a sell/allocation prompt resolves a category, the chosen value is also persisted to `item.inheritedBudgetCategoryId` (direct assignment).
 
 ### Canonical attribution note (required)
 
-Item Detail does not display canonical transaction category attribution. Budgeting attribution for canonical inventory rows is computed by grouping linked items by `inheritedBudgetCategoryId`.
+Item Detail does not attempt to “attribute” canonical rows.
+Budgeting attribution for canonical inventory sale rows is transaction-driven (category-coded) and budget rollups apply sign based on direction.
 
 

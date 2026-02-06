@@ -7,6 +7,10 @@ import { AppText } from '../../src/components/AppText';
 import { ExpandableCard } from '../../src/components/ExpandableCard';
 import { GroupedItemCard } from '../../src/components/GroupedItemCard';
 import { ItemCard } from '../../src/components/ItemCard';
+import { GroupedItemCardExperimental } from '../../src/components/GroupedItemCardExperimental';
+import { ItemCardExperimental } from '../../src/components/ItemCardExperimental';
+import { ItemCardGPT52PrototypeDesign } from '../../src/components/ItemCardGPT52PrototypeDesign';
+import { ItemCardOpusPrototype } from '../../src/components/ItemCardOpusPrototype';
 import { Screen } from '../../src/components/Screen';
 import { ScreenTabItem, useScreenTabs } from '../../src/components/ScreenTabs';
 import { TemplateToggleListCard, TemplateToggleListItem } from '../../src/components/TemplateToggleListCard';
@@ -16,6 +20,7 @@ import { getTextSecondaryStyle, textEmphasis } from '../../src/ui';
 
 const COMPONENT_TABS: ScreenTabItem[] = [
   { key: 'library', label: 'Tab 2', accessibilityLabel: 'Tab 2' },
+  { key: 'experimental', label: 'Tab 3', accessibilityLabel: 'Tab 3' },
   { key: 'settings', label: 'Tab 1', accessibilityLabel: 'Tab 1' },
 ];
 
@@ -45,6 +50,10 @@ function ComponentsTabContent() {
     return <ComponentsGallery />;
   }
 
+  if (selectedKey === 'experimental') {
+    return <ExperimentalCardsTab />;
+  }
+
   return <ComponentsLibraryTab />;
 }
 
@@ -52,6 +61,8 @@ function ComponentsLibraryTab() {
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
   const [itemSelected, setItemSelected] = useState(false);
+  const [itemExperimentalSelected, setItemExperimentalSelected] = useState(false);
+  const [itemExperimental2Selected, setItemExperimental2Selected] = useState(false);
   const [groupSelected, setGroupSelected] = useState(false);
   const [groupItemSelections, setGroupItemSelections] = useState({
     bed: false,
@@ -98,7 +109,7 @@ function ComponentsLibraryTab() {
         </AppText>
 
         <ItemCard
-          description="Dining chair (set of 4)"
+          name="Dining chair (set of 4)"
           sku="CHAIR-001"
           sourceLabel="Purchased"
           locationLabel="Warehouse"
@@ -114,9 +125,43 @@ function ComponentsLibraryTab() {
           onPress={() => Alert.alert('Item', 'Pressed')}
         />
 
+        <ItemCardExperimental
+          description="Dining chair (set of 4)"
+          sku="CHAIR-001"
+          sourceLabel="Purchased"
+          locationLabel="Warehouse"
+          notes="Light scuffs on one leg."
+          priceLabel="$480.00"
+          statusLabel="In use"
+          thumbnailUri={logoUri}
+          selected={itemExperimentalSelected}
+          onSelectedChange={setItemExperimentalSelected}
+          bookmarked
+          onBookmarkPress={() => Alert.alert('Bookmark', 'Toggled')}
+          menuItems={itemMenu}
+          onPress={() => Alert.alert('Item', 'Pressed')}
+        />
+
+        <ItemCard
+          name="Dining chair (set of 4)"
+          sku="CHAIR-001"
+          sourceLabel="Purchased"
+          locationLabel="Warehouse"
+          notes="Light scuffs on one leg."
+          priceLabel="$480.00"
+          statusLabel="In use"
+          thumbnailUri={logoUri}
+          selected={itemExperimental2Selected}
+          onSelectedChange={setItemExperimental2Selected}
+          bookmarked
+          onBookmarkPress={() => Alert.alert('Bookmark', 'Toggled')}
+          menuItems={itemMenu}
+          onPress={() => Alert.alert('Item', 'Pressed')}
+        />
+
         <GroupedItemCard
           summary={{
-            description: 'Bedroom set',
+            name: 'Bedroom set',
             sku: 'SET-12',
             sourceLabel: 'Purchased',
             locationLabel: 'Unit B',
@@ -127,7 +172,7 @@ function ComponentsLibraryTab() {
           totalLabel="$2,400.00"
           items={[
             {
-              description: 'Bed frame',
+              name: 'Bed frame',
               sku: 'BED-001',
               priceLabel: '$900.00',
               sourceLabel: 'Purchased',
@@ -139,7 +184,7 @@ function ComponentsLibraryTab() {
               menuItems: itemMenu,
             },
             {
-              description: 'Nightstand',
+              name: 'Nightstand',
               sku: 'NS-002',
               priceLabel: '$300.00',
               sourceLabel: 'Purchased',
@@ -151,7 +196,61 @@ function ComponentsLibraryTab() {
               menuItems: itemMenu,
             },
             {
-              description: 'Dresser',
+              name: 'Dresser',
+              sku: 'DR-003',
+              priceLabel: '$1,200.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.dresser,
+              onSelectedChange: updateGroupItemSelection('dresser'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+          ]}
+          selected={groupSelected}
+          onSelectedChange={setGroupSelected}
+          defaultExpanded={false}
+        />
+
+        <GroupedItemCard
+          summary={{
+            name: 'Bedroom set',
+            sku: 'SET-12',
+            sourceLabel: 'Purchased',
+            locationLabel: 'Unit B',
+            notes: 'Grouped example',
+            thumbnailUri: logoUri,
+          }}
+          countLabel="×3"
+          totalLabel="$2,400.00"
+          items={[
+            {
+              name: 'Bed frame',
+              sku: 'BED-001',
+              priceLabel: '$900.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.bed,
+              onSelectedChange: updateGroupItemSelection('bed'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              name: 'Nightstand',
+              sku: 'NS-002',
+              priceLabel: '$300.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.nightstand,
+              onSelectedChange: updateGroupItemSelection('nightstand'),
+              bookmarked: false,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              name: 'Dresser',
               sku: 'DR-003',
               priceLabel: '$1,200.00',
               sourceLabel: 'Purchased',
@@ -207,6 +306,140 @@ function ComponentsLibraryTab() {
           <MaterialIcons name="drag-handle" size={18} color={theme.colors.textSecondary} />
           <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
             Drag enabled items to reorder.
+          </AppText>
+        </View>
+      </View>
+    </AppScrollView>
+  );
+}
+
+function ExperimentalCardsTab() {
+  const theme = useTheme();
+  const uiKitTheme = useUIKitTheme();
+  const [gptPrototypeSelected, setGptPrototypeSelected] = useState(false);
+  const [opusPrototypeSelected, setOpusPrototypeSelected] = useState(false);
+  const [groupSelected, setGroupSelected] = useState(false);
+  const [groupItemSelections, setGroupItemSelections] = useState({
+    bed: false,
+    nightstand: false,
+    dresser: false,
+  });
+  const logoUri = useMemo(() => Image.resolveAssetSource(require('../../ledger_logo.png')).uri, []);
+
+  const itemMenu = useMemo(
+    () => [
+      { key: 'edit', label: 'Edit', onPress: () => Alert.alert('Item menu', 'Edit') },
+      { key: 'move', label: 'Move', onPress: () => Alert.alert('Item menu', 'Move') },
+      { key: 'delete', label: 'Delete', onPress: () => Alert.alert('Item menu', 'Delete') },
+    ],
+    []
+  );
+
+  const updateGroupItemSelection = (key: keyof typeof groupItemSelections) => (next: boolean) => {
+    setGroupItemSelections((prev) => ({ ...prev, [key]: next }));
+  };
+
+  return (
+    <AppScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <View style={styles.section}>
+        <AppText
+          variant="caption"
+          style={[styles.sectionTitle, textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme)]}
+        >
+          Experimental cards
+        </AppText>
+
+        <ItemCardGPT52PrototypeDesign
+          sku="CHAIR-001"
+          sourceLabel="Purchased"
+          locationLabel="Warehouse"
+          notes="Light scuffs on one leg."
+          priceLabel="$480.00"
+          statusLabel="In use"
+          thumbnailUri={logoUri}
+          selected={gptPrototypeSelected}
+          onSelectedChange={setGptPrototypeSelected}
+          bookmarked
+          onBookmarkPress={() => Alert.alert('Bookmark', 'Toggled')}
+          menuItems={itemMenu}
+          onPress={() => Alert.alert('Item', 'Pressed')}
+        />
+
+        <ItemCardOpusPrototype
+          description="ItemCard Opus Prototype Design"
+          sku="CHAIR-001"
+          sourceLabel="Purchased"
+          locationLabel="Warehouse"
+          notes="Light scuffs on one leg."
+          priceLabel="$480.00"
+          statusLabel="In use"
+          thumbnailUri={logoUri}
+          selected={opusPrototypeSelected}
+          onSelectedChange={setOpusPrototypeSelected}
+          bookmarked
+          onBookmarkPress={() => Alert.alert('Bookmark', 'Toggled')}
+          menuItems={itemMenu}
+          onPress={() => Alert.alert('Item', 'Pressed')}
+        />
+
+        <GroupedItemCardExperimental
+          summary={{
+            description: 'Bedroom set',
+            sku: 'SET-12',
+            sourceLabel: 'Purchased',
+            locationLabel: 'Unit B',
+            notes: 'Grouped example',
+            thumbnailUri: logoUri,
+          }}
+          countLabel="×3"
+          totalLabel="$2,400.00"
+          items={[
+            {
+              description: 'Bed frame',
+              sku: 'BED-001',
+              priceLabel: '$900.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.bed,
+              onSelectedChange: updateGroupItemSelection('bed'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              description: 'Nightstand',
+              sku: 'NS-002',
+              priceLabel: '$300.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.nightstand,
+              onSelectedChange: updateGroupItemSelection('nightstand'),
+              bookmarked: false,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+            {
+              description: 'Dresser',
+              sku: 'DR-003',
+              priceLabel: '$1,200.00',
+              sourceLabel: 'Purchased',
+              thumbnailUri: logoUri,
+              selected: groupItemSelections.dresser,
+              onSelectedChange: updateGroupItemSelection('dresser'),
+              bookmarked: true,
+              onBookmarkPress: () => Alert.alert('Bookmark', 'Toggled'),
+              menuItems: itemMenu,
+            },
+          ]}
+          selected={groupSelected}
+          onSelectedChange={setGroupSelected}
+          defaultExpanded={false}
+        />
+
+        <View style={styles.hintRow}>
+          <MaterialIcons name="widgets" size={18} color={theme.colors.textSecondary} />
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+            These are in-progress layouts for the item cards.
           </AppText>
         </View>
       </View>
