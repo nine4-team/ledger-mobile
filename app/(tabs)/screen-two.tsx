@@ -61,7 +61,7 @@ export default function ScreenTwo() {
       hideBackButton={true}
       infoContent={{
         title: 'Inventory',
-        message: 'Manage your inventory items, transactions, and spaces. Track items across projects and locations.',
+        message: 'Manage everything you own — your personal items, storage spaces, and transactions for buying from or selling to projects.',
       }}
       tabs={[
         { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
