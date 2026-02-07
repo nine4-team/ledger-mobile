@@ -62,17 +62,15 @@ The component uses semantic colors for different badge types:
 - **To Inventory**: Primary theme color
 
 ### Status Badges
-- **Needs Review**: Red (`#dc2626`)
+- **Needs Review**: Soft red (`#fee2e2` bg, `#991b1b` text, `#fecaca` border) — matches legacy `bg-red-100 text-red-800`
 - **Reimbursement (Owed to Client)**: Orange (`#d97706`)
 - **Reimbursement (Owed to Business)**: Orange (`#d97706`)
 - **Email Receipt**: Primary theme color
 
 ### Budget Category Badge
-- Uses `budgetCategoryColor` prop if provided
-- Falls back to primary theme color
-- Background: color + `33` opacity
-- Border: color + `66` opacity
-- Text: full color
+- Uses `budgetCategoryColor` prop (a `CategoryBadgeColors` object with `bg`, `text`, `border`)
+- Predefined categories use solid colors matching the legacy web app's Tailwind scheme
+- Falls back to primary theme color with opacity if no color provided
 
 ## Props Interface
 

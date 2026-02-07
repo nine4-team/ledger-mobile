@@ -19,7 +19,8 @@ export type TransactionCardProps = {
 
   // Status and categorization
   budgetCategoryName?: string;
-  budgetCategoryColor?: string; // Hex color for category badge
+  /** @deprecated Category badges now use the primary theme color */
+  budgetCategoryColor?: unknown;
   transactionType?: 'purchase' | 'return' | 'sale' | 'to-inventory';
   needsReview?: boolean;
   reimbursementType?: 'owed-to-client' | 'owed-to-company';
@@ -171,20 +172,11 @@ export function TransactionCard({
     }
   }, [transactionType, uiKitTheme.primary.main]);
 
-  const categoryBadgeStyle = useMemo(() => {
-    if (!budgetCategoryColor) {
-      return {
-        backgroundColor: uiKitTheme.primary.main + '1A',
-        borderColor: uiKitTheme.primary.main + '33',
-        textColor: uiKitTheme.primary.main,
-      };
-    }
-    return {
-      backgroundColor: budgetCategoryColor + '33',
-      borderColor: budgetCategoryColor + '66',
-      textColor: budgetCategoryColor,
-    };
-  }, [budgetCategoryColor, uiKitTheme.primary.main]);
+  const categoryBadgeStyle = useMemo(() => ({
+    backgroundColor: uiKitTheme.primary.main + '1A',
+    borderColor: uiKitTheme.primary.main + '33',
+    textColor: uiKitTheme.primary.main,
+  }), [uiKitTheme.primary.main]);
 
   const getTypeLabel = () => {
     if (!transactionType) return null;
@@ -314,12 +306,12 @@ export function TransactionCard({
                   style={[
                     styles.badge,
                     {
-                      backgroundColor: '#ef444433',
-                      borderColor: '#ef444466',
+                      backgroundColor: '#b9452014',
+                      borderColor: '#b9452033',
                     },
                   ]}
                 >
-                  <Text style={[styles.badgeText, { color: '#ef4444' }]} numberOfLines={1}>
+                  <Text style={[styles.badgeText, { color: '#b94520' }]} numberOfLines={1}>
                     Needs Review
                   </Text>
                 </View>
