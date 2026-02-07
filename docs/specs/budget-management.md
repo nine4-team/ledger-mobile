@@ -401,15 +401,15 @@ Fee categories use "received" language but same underlying calculation.
 **Element Structure**:
 ```
 Category Name Budget                    ← Title (with "Budget" suffix)
-▓▓▓▓▓▓▓▓░░░░░░░░ 65%                   ← Progress bar + percentage
 $6,500 spent • $3,500 remaining         ← Amounts
+▓▓▓▓▓▓▓▓░░░░░░░░                       ← Progress bar
 ```
 
 **Elements**:
 1. **Title Row**: Category name + "Budget" suffix (except Design Fee, Overall Budget)
-2. **Progress Bar**: Colored bar showing percentage (capped at 100% width)
-3. **Overflow Indicator**: Dark red bar at right edge if >100%
-4. **Amount Row**: Spent + remaining (or "over" if exceeded)
+2. **Amount Row**: Spent + remaining (or "over" if exceeded)
+3. **Progress Bar**: Colored bar showing visual progress (capped at 100% width)
+4. **Overflow Indicator**: Dark red bar at right edge if >100%
 
 ---
 
@@ -460,12 +460,6 @@ $6,500 spent • $3,500 remaining         ← Amounts
 - Size: `14px` (`text-sm`)
 - Weight: `400` (normal) for labels, `700` (`font-bold`) for amounts when over budget
 - Color: `#6B7280` (`text-gray-500`) for base, color-coded for emphasis
-
-**Percentage Text**:
-- Font: System
-- Size: `14px` (`text-sm`)
-- Weight: `500` (`font-medium`)
-- Color: Matches progress bar color
 
 ---
 
