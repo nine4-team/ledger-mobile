@@ -5,67 +5,25 @@ import {
   getBudgetProgressColor,
   getOverflowColor,
 } from "../../utils/budgetColors";
+import { useThemeContext } from "../../theme/ThemeProvider";
 import { AppText } from "../AppText";
 
 export type BudgetCategoryTrackerProps = {
-  /**
-   * Category name (e.g., "Furnishings", "Design Fee")
-   */
   categoryName: string;
-
-  /**
-   * Category type determines display behavior
-   * - "general": Standard spending category with "Budget" suffix
-   * - "itemized": Itemized spending category with "Budget" suffix
-   * - "fee": Fee/income category with no suffix and inverted colors
-   */
   categoryType: "general" | "itemized" | "fee";
-
-  /**
-   * Amount spent/received in cents
-   */
   spentCents: number;
-
-  /**
-   * Budget amount in cents
-   * If null, shows as "No budget set"
-   */
   budgetCents: number | null;
-
-  /**
-   * Whether to show a pin indicator
-   * @default false
-   */
   isPinned?: boolean;
-
-  /**
-   * Callback when category is tapped
-   */
   onPress?: () => void;
-
-  /**
-   * Callback when category is long-pressed (for pin/unpin menu)
-   */
   onLongPress?: () => void;
-
-  /**
-   * Whether this is the "Overall Budget" synthetic entry
-   * @default false
-   */
   isOverallBudget?: boolean;
 };
 
-/**
- * Format cents to currency string
- */
 function formatCents(cents: number): string {
   const dollars = Math.abs(cents) / 100;
-  return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-/**
- * Get display name with appropriate suffix
- */
 function getDisplayName(
   categoryName: string,
   categoryType: "general" | "itemized" | "fee",
@@ -74,45 +32,6 @@ function getDisplayName(
   if (isOverallBudget) return "Overall Budget";
   if (categoryType === "fee") return categoryName;
   return `${categoryName} Budget`;
-}
-
-/**
- * Get amount labels based on category type and state
- */
-function getAmountLabels(
-  categoryType: "general" | "itemized" | "fee",
-  spentCents: number,
-  budgetCents: number | null,
-): { spentLabel: string; remainingLabel: string } {
-  const isFee = categoryType === "fee";
-
-  if (budgetCents === null) {
-    return {
-      spentLabel: isFee
-        ? `${formatCents(spentCents)} received`
-        : `${formatCents(spentCents)} spent`,
-      remainingLabel: "No budget set",
-    };
-  }
-
-  const remaining = budgetCents - spentCents;
-  const isOver = spentCents > budgetCents;
-
-  if (isFee) {
-    return {
-      spentLabel: `${formatCents(spentCents)} received`,
-      remainingLabel: isOver
-        ? `${formatCents(Math.abs(remaining))} over received`
-        : `${formatCents(remaining)} remaining to receive`,
-    };
-  } else {
-    return {
-      spentLabel: `${formatCents(spentCents)} spent`,
-      remainingLabel: isOver
-        ? `${formatCents(Math.abs(remaining))} over`
-        : `${formatCents(remaining)} remaining`,
-    };
-  }
 }
 
 export function BudgetCategoryTracker({
@@ -125,6 +44,9 @@ export function BudgetCategoryTracker({
   onLongPress,
   isOverallBudget = false,
 }: BudgetCategoryTrackerProps) {
+  const { theme, resolvedColorScheme } = useThemeContext();
+  const isDark = resolvedColorScheme === "dark";
+
   const displayName = useMemo(
     () => getDisplayName(categoryName, categoryType, isOverallBudget),
     [categoryName, categoryType, isOverallBudget],
@@ -140,27 +62,46 @@ export function BudgetCategoryTracker({
   const overflowPercentage = isOverBudget
     ? ((spentCents - budgetCents) / budgetCents) * 100
     : 0;
-
-  // Cap display percentage at 100% for the main bar
   const displayPercentage = Math.min(percentage, 100);
 
   const colors = useMemo(
-    () => getBudgetProgressColor(percentage, isFeeCategory),
-    [percentage, isFeeCategory],
+    () => getBudgetProgressColor(percentage, isFeeCategory, isDark),
+    [percentage, isFeeCategory, isDark],
   );
 
-  const overflowColors = useMemo(() => getOverflowColor(), []);
+  const overflowColors = useMemo(() => getOverflowColor(isDark), [isDark]);
 
-  const { spentLabel, remainingLabel } = useMemo(
-    () => getAmountLabels(categoryType, spentCents, budgetCents),
-    [categoryType, spentCents, budgetCents],
-  );
+  const spentLabel = isFeeCategory
+    ? `${formatCents(spentCents)} received`
+    : `${formatCents(spentCents)} spent`;
+
+  const remainingLabel = useMemo(() => {
+    if (budgetCents === null) return "No budget set";
+    const remaining = budgetCents - spentCents;
+    const isOver = spentCents > budgetCents;
+    if (isFeeCategory) {
+      return isOver
+        ? `${formatCents(Math.abs(remaining))} over received`
+        : `${formatCents(remaining)} remaining`;
+    }
+    return isOver
+      ? `${formatCents(Math.abs(remaining))} over`
+      : `${formatCents(remaining)} remaining`;
+  }, [budgetCents, spentCents, isFeeCategory]);
+
+  const remainingColor = budgetCents === null
+    ? theme.colors.textSecondary
+    : isOverBudget
+      ? overflowColors.text
+      : colors.text;
+
+  const trackBg = isDark ? "#3A3A3C" : "#E5E7EB";
 
   const content = (
     <View style={styles.container}>
-      {/* Title Row */}
+      {/* Title */}
       <View style={styles.titleRow}>
-        <AppText variant="body" style={styles.title}>
+        <AppText variant="body" style={[styles.title, { color: theme.colors.text }]}>
           {displayName}
         </AppText>
         {isPinned && (
@@ -170,63 +111,52 @@ export function BudgetCategoryTracker({
         )}
       </View>
 
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressTrack}>
-          {/* Main progress bar (capped at 100%) */}
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${displayPercentage}%`,
-                backgroundColor: colors.bar,
-              },
-            ]}
-          />
-          {/* Overflow indicator (dark red, shown when >100%) */}
-          {isOverBudget && (
-            <View
-              style={[
-                styles.overflowIndicator,
-                {
-                  width: `${Math.min(overflowPercentage, 100)}%`,
-                  backgroundColor: overflowColors.bar,
-                },
-              ]}
-            />
-          )}
-        </View>
-        <AppText
-          variant="caption"
-          style={[styles.percentage, { color: colors.text }]}
-        >
-          {budgetCents !== null ? `${Math.round(percentage)}%` : "—"}
-        </AppText>
-      </View>
-
-      {/* Amount Row */}
+      {/* Amounts: spent (left) / remaining (right) */}
       <View style={styles.amountRow}>
         <AppText
           variant="caption"
-          style={[styles.amountText, { color: colors.text }]}
+          style={[styles.amountText, { color: theme.colors.textSecondary }]}
         >
           {spentLabel}
         </AppText>
         <AppText
           variant="caption"
           style={[
-            styles.amountText,
+            styles.remainingText,
+            { color: remainingColor },
             isOverBudget && styles.overBudgetText,
-            { color: isOverBudget ? overflowColors.text : colors.text },
           ]}
         >
           {remainingLabel}
         </AppText>
       </View>
+
+      {/* Progress Bar */}
+      <View style={[styles.progressTrack, { backgroundColor: trackBg }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              width: `${displayPercentage}%`,
+              backgroundColor: colors.bar,
+            },
+          ]}
+        />
+        {isOverBudget && (
+          <View
+            style={[
+              styles.overflowIndicator,
+              {
+                width: `${Math.min(overflowPercentage, 100)}%`,
+                backgroundColor: overflowColors.bar,
+              },
+            ]}
+          />
+        )}
+      </View>
     </View>
   );
 
-  // If onPress or onLongPress is provided, wrap in TouchableOpacity
   if (onPress || onLongPress) {
     return (
       <TouchableOpacity
@@ -245,7 +175,6 @@ export function BudgetCategoryTracker({
               }
             );
           } else {
-            // Android: use Alert
             Alert.alert(
               isPinned ? 'Unpin category?' : 'Pin category?',
               '',
@@ -272,7 +201,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   container: {
-    gap: 8,
+    gap: 4,
   },
   titleRow: {
     flexDirection: "row",
@@ -280,22 +209,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
-    color: "#111827", // text-gray-900
   },
   pinIndicator: {
     fontSize: 14,
   },
-  progressContainer: {
+  amountRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
+  },
+  amountText: {
+    fontSize: 13,
+  },
+  remainingText: {
+    fontSize: 13,
+  },
+  overBudgetText: {
+    fontWeight: "700",
   },
   progressTrack: {
-    flex: 1,
     height: 8,
-    backgroundColor: "#E5E7EB", // bg-gray-200
     borderRadius: 9999,
     overflow: "hidden",
     position: "relative",
@@ -306,7 +241,6 @@ const styles = StyleSheet.create({
     top: 0,
     height: "100%",
     borderRadius: 9999,
-    transition: "width 300ms ease",
   },
   overflowIndicator: {
     position: "absolute",
@@ -314,24 +248,5 @@ const styles = StyleSheet.create({
     top: 0,
     height: "100%",
     borderRadius: 9999,
-  },
-  percentage: {
-    fontSize: 14,
-    fontWeight: "500",
-    minWidth: 40,
-    textAlign: "right",
-  },
-  amountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-  },
-  amountText: {
-    fontSize: 14,
-    color: "#6B7280", // text-gray-500
-  },
-  overBudgetText: {
-    fontWeight: "700",
   },
 });

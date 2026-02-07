@@ -416,14 +416,6 @@ function ProjectShellContent({
           }}
         />
       </View>
-      <View style={styles.headerRow}>
-        <AppText variant="caption">
-          {project?.clientName?.trim() ? project.clientName.trim() : 'No client name'}
-        </AppText>
-        <AppText variant="caption">
-          {isOnline ? 'Online' : 'Offline'}
-        </AppText>
-      </View>
       {refreshError ? (
         <AppText variant="caption" style={styles.refreshError}>
           {isOnline ? refreshError : 'Offline. Refresh will run when you reconnect.'}
@@ -463,12 +455,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 140,
     borderRadius: 12,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
   },
   refreshError: {
     paddingBottom: 8,

@@ -39,7 +39,7 @@ export function BudgetProgressDisplay({
   const theme = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Loading state - show skeleton/placeholder
+  // Loading state
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -88,7 +88,6 @@ export function BudgetProgressDisplay({
 
     const fees = enabledCategories.filter((c) => c.metadata?.categoryType === 'fee');
 
-    // Sort unpinned by custom order or alphabetically
     const customOrder = accountPresets?.budgetCategoryOrder ?? [];
     unpinned.sort((a, b) => {
       const aIndex = customOrder.indexOf(a.id);
@@ -104,13 +103,13 @@ export function BudgetProgressDisplay({
 
   // Visible categories based on expanded state
   const visibleCategories = useMemo(() => {
-    if (!isExpanded) {
-      // Collapsed: show pinned only (or empty if no pins)
-      return sortedCategories.filter((c) => pinnedCategoryIds.includes(c.id));
-    } else {
-      // Expanded: show all
-      return sortedCategories;
-    }
+    if (isExpanded) return sortedCategories;
+    // Collapsed: show pinned categories
+    const pinned = sortedCategories.filter((c) => pinnedCategoryIds.includes(c.id));
+    if (pinned.length > 0) return pinned;
+    // No pins: show the first non-fee category as a default preview
+    const firstNonFee = sortedCategories.find((c) => c.metadata?.categoryType !== 'fee');
+    return firstNonFee ? [firstNonFee] : sortedCategories.slice(0, 1);
   }, [isExpanded, sortedCategories, pinnedCategoryIds]);
 
   // Calculate Overall Budget
@@ -126,62 +125,23 @@ export function BudgetProgressDisplay({
     return totalBudgetCents;
   }, [enabledCategories, projectBudgetCategories]);
 
-  // Show toggle button if there's hidden content
+  // Show toggle if there are more categories than visible
   const showToggle = useMemo(() => {
-    const hasUnpinned = sortedCategories.some((c) => !pinnedCategoryIds.includes(c.id));
-    return hasUnpinned || overallBudget > 0;
-  }, [sortedCategories, pinnedCategoryIds, overallBudget]);
+    return sortedCategories.length > visibleCategories.length || overallBudget > 0;
+  }, [sortedCategories, visibleCategories, overallBudget]);
 
   // Empty state: no budget categories exist at all
   if (budgetCategories.length === 0) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <AppText variant="body" style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-            No budget categories created yet
-          </AppText>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary, textAlign: 'center', marginTop: 8 }}>
-            Create categories in Budget Category Management to start tracking budgets
-          </AppText>
-        </View>
-      </View>
-    );
+    return null;
   }
 
   // Empty state: no categories enabled for this project
   if (enabledCategories.length === 0) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.emptyState}>
-          <AppText variant="body" style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-            No budget categories enabled for this project
-          </AppText>
-          {onSetBudget && (
-            <AppButton title="Set Budget" onPress={onSetBudget} style={styles.emptyButton} />
-          )}
-        </View>
-      </View>
-    );
+    return null;
   }
 
   return (
     <View style={styles.container}>
-      {/* Collapsed: pinned categories or Overall Budget if no pins */}
-      {!isExpanded && visibleCategories.length === 0 && overallBudget > 0 && (
-        <>
-          <BudgetCategoryTracker
-            categoryName="Overall"
-            categoryType="general"
-            spentCents={budgetProgress.spentCents}
-            budgetCents={overallBudget}
-            isOverallBudget={true}
-          />
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary, textAlign: 'center', marginTop: -8 }}>
-            Long-press categories below to pin your favorites here
-          </AppText>
-        </>
-      )}
-
       {/* Visible categories */}
       {visibleCategories.map((cat) => (
         <BudgetCategoryTracker
@@ -196,7 +156,7 @@ export function BudgetProgressDisplay({
         />
       ))}
 
-      {/* Expanded: Overall Budget at end (before fees if there are fees, otherwise at the very end) */}
+      {/* Expanded: Overall Budget at end */}
       {isExpanded && overallBudget > 0 && (
         <BudgetCategoryTracker
           categoryName="Overall"
@@ -213,8 +173,8 @@ export function BudgetProgressDisplay({
           onPress={() => setIsExpanded(!isExpanded)}
           style={styles.toggleButton}
         >
-          <AppText variant="body" style={{ color: theme.colors.primary }}>
-            {isExpanded ? '▲ Show Less' : '▼ Show All Budget Categories'}
+          <AppText variant="caption" style={{ color: theme.colors.primary }}>
+            {isExpanded ? 'Show Less' : 'Show All Budget Categories'}
           </AppText>
         </TouchableOpacity>
       )}
@@ -224,11 +184,11 @@ export function BudgetProgressDisplay({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 12,
   },
   toggleButton: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   emptyState: {
     gap: 16,
