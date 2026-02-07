@@ -87,6 +87,7 @@ export default function ItemDetailScreen() {
   const [transactionId, setTransactionId] = useState('');
   const [targetProjectId, setTargetProjectId] = useState('');
   const [targetCategoryId, setTargetCategoryId] = useState('');
+  const [notes, setNotes] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
 
@@ -122,6 +123,7 @@ export default function ItemDetailScreen() {
           typeof next.marketValueCents === 'number' ? (next.marketValueCents / 100).toFixed(2) : ''
         );
         setTransactionId(next.transactionId ?? '');
+        setNotes(next.notes ?? '');
       }
     });
     return () => unsubscribe();
@@ -185,6 +187,7 @@ export default function ItemDetailScreen() {
       purchasePriceCents,
       projectPriceCents,
       marketValueCents,
+      notes: notes.trim() || null,
     });
     setIsEditing(false);
   };
@@ -529,6 +532,31 @@ export default function ItemDetailScreen() {
               tileScale={1.5}
             />
 
+            {/* Notes Section */}
+            <TitledCard title="Notes">
+              <View style={styles.notesContainer}>
+                {isEditing ? (
+                  <TextInput
+                    value={notes}
+                    onChangeText={setNotes}
+                    placeholder="Add notes about this item..."
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    multiline
+                    numberOfLines={4}
+                  />
+                ) : item.notes?.trim() ? (
+                  <AppText variant="body">
+                    {item.notes.trim()}
+                  </AppText>
+                ) : (
+                  <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
+                    No notes yet.
+                  </AppText>
+                )}
+              </View>
+            </TitledCard>
+
             <TitledCard title="Details">
               {isEditing ? (
                 <View style={styles.form}>
@@ -858,5 +886,8 @@ const styles = StyleSheet.create({
   },
   addImageButton: {
     marginTop: 8,
+  },
+  notesContainer: {
+    minHeight: 40,
   },
 });

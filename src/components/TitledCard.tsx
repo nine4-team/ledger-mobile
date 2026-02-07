@@ -11,6 +11,7 @@ type TitledCardProps = {
   containerStyle?: ViewStyle;
   cardStyle?: ViewStyle;
   titleStyle?: ViewStyle;
+  headerAction?: React.ReactNode;
 };
 
 export function TitledCard({
@@ -20,24 +21,34 @@ export function TitledCard({
   containerStyle,
   cardStyle,
   titleStyle,
+  headerAction,
 }: TitledCardProps) {
   const uiKitTheme = useUIKitTheme();
 
   return (
     <View style={containerStyle}>
-      <AppText
-        variant="caption"
-        style={[styles.title, textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme), titleStyle]}
-      >
-        {title}
-      </AppText>
+      <View style={styles.header}>
+        <AppText
+          variant="caption"
+          style={[styles.title, textEmphasis.sectionLabel, getTextSecondaryStyle(uiKitTheme), titleStyle]}
+        >
+          {title}
+        </AppText>
+        {headerAction}
+      </View>
       <View style={[getCardStyle(uiKitTheme, { padding: cardPadding }), cardStyle]}>{children}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  title: {
+    flex: 1,
   },
 });

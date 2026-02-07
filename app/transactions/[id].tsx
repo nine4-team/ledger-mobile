@@ -28,10 +28,8 @@ import { createInventoryScopeConfig, createProjectScopeConfig } from '../../src/
 import { ScopedItem, subscribeToScopedItems } from '../../src/data/scopedListData';
 import { Item, updateItem } from '../../src/data/itemsService';
 import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../src/offline/media';
-import type { AttachmentRef } from '../../src/offline/media';
-import { ThumbnailGrid } from '../../src/components/ThumbnailGrid';
-import { ImageGallery } from '../../src/components/ImageGallery';
-import { ImagePickerButton } from '../../src/components/ImagePickerButton';
+import type { AttachmentRef, AttachmentKind } from '../../src/offline/media';
+import { MediaGallerySection } from '../../src/components/MediaGallerySection';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../src/data/transactionsService';
 import { isCanonicalInventorySaleTransaction } from '../../src/data/inventoryOperations';
@@ -105,10 +103,6 @@ export default function TransactionDetailScreen() {
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [receiptGalleryVisible, setReceiptGalleryVisible] = useState(false);
-  const [receiptGalleryIndex, setReceiptGalleryIndex] = useState(0);
-  const [otherGalleryVisible, setOtherGalleryVisible] = useState(false);
-  const [otherGalleryIndex, setOtherGalleryIndex] = useState(0);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -305,68 +299,70 @@ export default function TransactionDetailScreen() {
     setIsEditing(false);
   };
 
-  const handlePickReceiptImage = async (localUri: string) => {
+  const handlePickReceiptAttachment = async (localUri: string, kind: AttachmentKind) => {
     if (!accountId || !id || !transaction) return;
 
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
     const result = await saveLocalMedia({
       localUri,
-      mimeType: 'image/jpeg',
+      mimeType,
       ownerScope: `transaction:${id}`,
       persistCopy: true,
     });
 
-    const currentImages = transaction.receiptImages ?? [];
-    const hasPrimary = currentImages.some((img) => img.isPrimary);
+    const currentAttachments = transaction.receiptImages ?? [];
+    const hasPrimary = currentAttachments.some((att) => att.isPrimary);
 
-    const newImage: AttachmentRef = {
+    const newAttachment: AttachmentRef = {
       url: result.attachmentRef.url,
-      kind: 'image',
-      isPrimary: !hasPrimary,
+      kind,
+      isPrimary: !hasPrimary && kind === 'image',
     };
 
-    const nextImages = [...currentImages, newImage].slice(0, 5);
-    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+    const nextAttachments = [...currentAttachments, newAttachment].slice(0, 10);
+    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
-  const handleRemoveReceiptImage = async (url: string) => {
+  const handleRemoveReceiptAttachment = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
-    const currentImages = transaction.receiptImages ?? [];
-    const nextImages = currentImages.filter((img) => img.url !== url);
+    const currentAttachments = transaction.receiptImages ?? [];
+    const nextAttachments = currentAttachments.filter((att) => att.url !== attachment.url);
 
-    // Delete offline image if applicable
-    if (url.startsWith('offline://')) {
-      await deleteLocalMediaByUrl(url);
+    // Delete offline attachment if applicable
+    if (attachment.url.startsWith('offline://')) {
+      await deleteLocalMediaByUrl(attachment.url);
     }
 
     // Ensure at least one primary
-    if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
-      nextImages[0] = { ...nextImages[0], isPrimary: true };
+    if (!nextAttachments.some((att) => att.isPrimary) && nextAttachments.length > 0) {
+      nextAttachments[0] = { ...nextAttachments[0], isPrimary: true };
     }
 
-    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
-  const handleSetPrimaryReceiptImage = async (url: string) => {
+  const handleSetPrimaryReceiptAttachment = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
-    const nextImages = (transaction.receiptImages ?? []).map((img) => ({
-      ...img,
-      isPrimary: img.url === url,
+    const nextAttachments = (transaction.receiptImages ?? []).map((att) => ({
+      ...att,
+      isPrimary: att.url === attachment.url,
     }));
 
-    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
-  const handlePickOtherImage = async (localUri: string) => {
+  const handlePickOtherImage = async (localUri: string, kind: AttachmentKind) => {
     if (!accountId || !id || !transaction) return;
 
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
     const result = await saveLocalMedia({
       localUri,
-      mimeType: 'image/jpeg',
+      mimeType,
       ownerScope: `transaction:${id}`,
       persistCopy: true,
     });
@@ -376,8 +372,8 @@ export default function TransactionDetailScreen() {
 
     const newImage: AttachmentRef = {
       url: result.attachmentRef.url,
-      kind: 'image',
-      isPrimary: !hasPrimary,
+      kind,
+      isPrimary: !hasPrimary && kind === 'image',
     };
 
     const nextImages = [...currentImages, newImage].slice(0, 5);
@@ -387,15 +383,15 @@ export default function TransactionDetailScreen() {
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
-  const handleRemoveOtherImage = async (url: string) => {
+  const handleRemoveOtherImage = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
     const currentImages = transaction.otherImages ?? [];
-    const nextImages = currentImages.filter((img) => img.url !== url);
+    const nextImages = currentImages.filter((img) => img.url !== attachment.url);
 
     // Delete offline image if applicable
-    if (url.startsWith('offline://')) {
-      await deleteLocalMediaByUrl(url);
+    if (attachment.url.startsWith('offline://')) {
+      await deleteLocalMediaByUrl(attachment.url);
     }
 
     // Ensure at least one primary
@@ -406,12 +402,12 @@ export default function TransactionDetailScreen() {
     await updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
-  const handleSetPrimaryOtherImage = async (url: string) => {
+  const handleSetPrimaryOtherImage = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
     const nextImages = (transaction.otherImages ?? []).map((img) => ({
       ...img,
-      isPrimary: img.url === url,
+      isPrimary: img.url === attachment.url,
     }));
 
     await updateTransaction(accountId, id, { otherImages: nextImages });
@@ -573,93 +569,60 @@ export default function TransactionDetailScreen() {
               </View>
             ) : null}
 
-            {/* Receipt Images Section */}
-            {(transaction.receiptImages && transaction.receiptImages.length > 0) || isEditing ? (
-              <TitledCard title="Receipt Images">
-                {transaction.receiptImages && transaction.receiptImages.length > 0 ? (
-                  <>
-                    <ThumbnailGrid
-                      images={transaction.receiptImages}
-                      maxImages={5}
-                      size="md"
-                      tileScale={1.5}
-                      onImagePress={(image, index) => {
-                        setReceiptGalleryIndex(index);
-                        setReceiptGalleryVisible(true);
-                      }}
-                      onSetPrimary={(image) => handleSetPrimaryReceiptImage(image.url)}
-                      onDelete={(image) => handleRemoveReceiptImage(image.url)}
-                    />
-                    {isEditing && transaction.receiptImages.length < 5 && (
-                      <ImagePickerButton
-                        onImagePicked={handlePickReceiptImage}
-                        maxImages={5}
-                        currentImageCount={transaction.receiptImages.length}
-                        style={styles.imagePicker}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <View style={styles.emptyState}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      No receipt images yet.
-                    </AppText>
-                    {isEditing && (
-                      <ImagePickerButton
-                        onImagePicked={handlePickReceiptImage}
-                        maxImages={5}
-                        currentImageCount={0}
-                        style={styles.imagePicker}
-                      />
-                    )}
-                  </View>
-                )}
-              </TitledCard>
-            ) : null}
+            {/* Receipts Section */}
+            <MediaGallerySection
+              title="Receipts"
+              attachments={transaction.receiptImages ?? []}
+              maxAttachments={10}
+              allowedKinds={['image', 'pdf']}
+              onAddAttachment={handlePickReceiptAttachment}
+              onRemoveAttachment={handleRemoveReceiptAttachment}
+              onSetPrimary={handleSetPrimaryReceiptAttachment}
+              emptyStateMessage="No receipts yet."
+              pickerLabel="Add receipt"
+              size="md"
+              tileScale={1.5}
+            />
 
             {/* Other Images Section */}
-            {(transaction.otherImages && transaction.otherImages.length > 0) || isEditing ? (
-              <TitledCard title="Other Images">
-                {transaction.otherImages && transaction.otherImages.length > 0 ? (
-                  <>
-                    <ThumbnailGrid
-                      images={transaction.otherImages}
-                      maxImages={5}
-                      size="md"
-                      tileScale={1.5}
-                      onImagePress={(image, index) => {
-                        setOtherGalleryIndex(index);
-                        setOtherGalleryVisible(true);
-                      }}
-                      onSetPrimary={(image) => handleSetPrimaryOtherImage(image.url)}
-                      onDelete={(image) => handleRemoveOtherImage(image.url)}
-                    />
-                    {isEditing && transaction.otherImages.length < 5 && (
-                      <ImagePickerButton
-                        onImagePicked={handlePickOtherImage}
-                        maxImages={5}
-                        currentImageCount={transaction.otherImages.length}
-                        style={styles.imagePicker}
-                      />
-                    )}
-                  </>
+            <MediaGallerySection
+              title="Other Images"
+              attachments={transaction.otherImages ?? []}
+              maxAttachments={5}
+              allowedKinds={['image']}
+              onAddAttachment={handlePickOtherImage}
+              onRemoveAttachment={handleRemoveOtherImage}
+              onSetPrimary={handleSetPrimaryOtherImage}
+              emptyStateMessage="No other images yet."
+              pickerLabel="Add image"
+              size="md"
+              tileScale={1.5}
+            />
+
+            {/* Notes Section */}
+            <TitledCard title="Notes">
+              <View style={styles.notesContainer}>
+                {isEditing ? (
+                  <TextInput
+                    value={notes}
+                    onChangeText={setNotes}
+                    placeholder="Add notes about this transaction..."
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    multiline
+                    numberOfLines={4}
+                  />
+                ) : transaction.notes?.trim() ? (
+                  <AppText variant="body">
+                    {transaction.notes.trim()}
+                  </AppText>
                 ) : (
-                  <View style={styles.emptyState}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      No other images yet.
-                    </AppText>
-                    {isEditing && (
-                      <ImagePickerButton
-                        onImagePicked={handlePickOtherImage}
-                        maxImages={5}
-                        currentImageCount={0}
-                        style={styles.imagePicker}
-                      />
-                    )}
-                  </View>
+                  <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
+                    No notes yet.
+                  </AppText>
                 )}
-              </TitledCard>
-            ) : null}
+              </View>
+            </TitledCard>
 
             {/* Transaction Details Section */}
             <TitledCard title="Details">
@@ -735,19 +698,6 @@ export default function TransactionDetailScreen() {
                       placeholder="Reimbursement type"
                       placeholderTextColor={theme.colors.textSecondary}
                       style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Notes
-                    </AppText>
-                    <TextInput
-                      value={notes}
-                      onChangeText={setNotes}
-                      placeholder="Notes"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      multiline
                     />
                   </View>
                   <View style={styles.formGroup}>
@@ -838,15 +788,6 @@ export default function TransactionDetailScreen() {
                     </AppText>
                     <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
                       {transaction.reimbursementType?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Notes
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {transaction.notes?.trim() || '—'}
                     </AppText>
                   </View>
                   <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
@@ -1089,25 +1030,6 @@ export default function TransactionDetailScreen() {
           <AppText variant="body">Transaction not found.</AppText>
         )}
       </AppScrollView>
-
-      {/* Image Galleries */}
-      {transaction && transaction.receiptImages && transaction.receiptImages.length > 0 && (
-        <ImageGallery
-          images={transaction.receiptImages}
-          initialIndex={receiptGalleryIndex}
-          visible={receiptGalleryVisible}
-          onRequestClose={() => setReceiptGalleryVisible(false)}
-        />
-      )}
-
-      {transaction && transaction.otherImages && transaction.otherImages.length > 0 && (
-        <ImageGallery
-          images={transaction.otherImages}
-          initialIndex={otherGalleryIndex}
-          visible={otherGalleryVisible}
-          onRequestClose={() => setOtherGalleryVisible(false)}
-        />
-      )}
     </Screen>
   );
 }
@@ -1220,5 +1142,8 @@ const styles = StyleSheet.create({
   },
   warningText: {
     marginBottom: 12,
+  },
+  notesContainer: {
+    minHeight: 40,
   },
 });
