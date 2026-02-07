@@ -336,12 +336,8 @@ export function ImageGallery({
   }, [currentIndex, images.length, updateInteractionTime]);
 
   const handleClose = useCallback(() => {
-    if (zoom > 1.01) {
-      handleResetZoom();
-    } else {
-      onRequestClose();
-    }
-  }, [zoom, handleResetZoom, onRequestClose]);
+    onRequestClose();
+  }, [onRequestClose]);
 
   const handleBackgroundPress = useCallback(() => {
     updateInteractionTime();

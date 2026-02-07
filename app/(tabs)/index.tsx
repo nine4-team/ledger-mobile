@@ -1,10 +1,9 @@
-import { Image, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
-import { BudgetProgress } from '../../src/components/BudgetProgress';
 import { layout } from '../../src/ui';
 import { AppButton } from '../../src/components/AppButton';
 import { AppScrollView } from '../../src/components/AppScrollView';
@@ -13,11 +12,11 @@ import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { createRepository } from '../../src/data/repository';
 import { useAuthStore } from '../../src/auth/authStore';
-import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
+import { subscribeToBudgetCategories, type BudgetCategory } from '../../src/data/budgetCategoriesService';
 import { fetchProjectPreferencesMap, ensureProjectPreferences } from '../../src/data/projectPreferencesService';
-import { ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
-import { refreshProjectBudgetProgress } from '../../src/data/budgetProgressService';
-import { resolveAttachmentUri } from '../../src/offline/media';
+import { refreshProjectBudgetCategories, type ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
+import { refreshProjectBudgetProgress, type BudgetProgress } from '../../src/data/budgetProgressService';
+import { ProjectCard } from '../../src/components/ProjectCard';
 
 export default function ProjectsScreen() {
   return (
@@ -61,10 +60,10 @@ function ProjectsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [budgetCategories, setBudgetCategories] = useState<Record<string, { id: string; name: string }>>({});
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [projectPreferences, setProjectPreferences] = useState<Record<string, { pinnedBudgetCategoryIds: string[] }>>({});
-  const [budgetTotals, setBudgetTotals] = useState<Record<string, number>>({});
-  const [budgetSpentTotals, setBudgetSpentTotals] = useState<Record<string, number>>({});
+  const [projectBudgetCategoriesMap, setProjectBudgetCategoriesMap] = useState<Record<string, Record<string, ProjectBudgetCategory>>>({});
+  const [budgetProgressMap, setBudgetProgressMap] = useState<Record<string, BudgetProgress>>({});
   const screenTabs = useScreenTabs();
   const tabKey = screenTabs?.selectedKey === 'archived' ? 'archived' : 'active';
   const theme = useTheme();
@@ -79,11 +78,11 @@ function ProjectsList() {
 
   useEffect(() => {
     if (!accountId) {
-      setBudgetCategories({});
+      setBudgetCategories([]);
       return;
     }
     return subscribeToBudgetCategories(accountId, (next) => {
-      setBudgetCategories(mapBudgetCategories(next));
+      setBudgetCategories(next);
     });
   }, [accountId]);
 
@@ -148,27 +147,26 @@ function ProjectsList() {
 
   useEffect(() => {
     if (!accountId || projects.length === 0) {
-      setBudgetTotals({});
+      setProjectBudgetCategoriesMap({});
       return;
     }
     let cancelled = false;
-    const loadTotals = async () => {
-      const totals: Record<string, number> = {};
+    const loadProjectCategories = async () => {
+      const categoriesMap: Record<string, Record<string, ProjectBudgetCategory>> = {};
       await Promise.all(
         projects.map(async (project) => {
-          const repo = createRepository<ProjectBudgetCategory>(
-            `accounts/${accountId}/projects/${project.id}/budgetCategories`,
-            'offline'
-          );
-          const categories = await repo.list();
-          totals[project.id] = categories.reduce((sum, category) => sum + (category.budgetCents ?? 0), 0);
+          const categories = await refreshProjectBudgetCategories(accountId, project.id, 'offline');
+          categoriesMap[project.id] = categories.reduce((acc, cat) => {
+            acc[cat.id] = cat;
+            return acc;
+          }, {} as Record<string, ProjectBudgetCategory>);
         })
       );
       if (!cancelled) {
-        setBudgetTotals(totals);
+        setProjectBudgetCategoriesMap(categoriesMap);
       }
     };
-    void loadTotals();
+    void loadProjectCategories();
     return () => {
       cancelled = true;
     };
@@ -176,23 +174,23 @@ function ProjectsList() {
 
   useEffect(() => {
     if (!accountId || projects.length === 0) {
-      setBudgetSpentTotals({});
+      setBudgetProgressMap({});
       return;
     }
     let cancelled = false;
-    const loadSpentTotals = async () => {
-      const totals: Record<string, number> = {};
+    const loadProgress = async () => {
+      const progressMap: Record<string, BudgetProgress> = {};
       await Promise.all(
         projects.map(async (project) => {
           const progress = await refreshProjectBudgetProgress(accountId, project.id, 'offline');
-          totals[project.id] = progress.spentCents;
+          progressMap[project.id] = progress;
         })
       );
       if (!cancelled) {
-        setBudgetSpentTotals(totals);
+        setBudgetProgressMap(progressMap);
       }
     };
-    void loadSpentTotals();
+    void loadProgress();
     return () => {
       cancelled = true;
     };
@@ -257,82 +255,18 @@ function ProjectsList() {
             <>
               <View style={styles.projectList}>
                 {sortedProjects.map((project) => (
-                  <Pressable
+                  <ProjectCard
                     key={project.id}
+                    projectId={project.id}
+                    name={project.name}
+                    clientName={project.clientName}
+                    mainImageUrl={project.mainImageUrl}
+                    budgetCategories={budgetCategories}
+                    projectBudgetCategories={projectBudgetCategoriesMap[project.id] ?? {}}
+                    budgetProgress={budgetProgressMap[project.id] ?? { spentCents: 0, spentByCategory: {} }}
+                    pinnedCategoryIds={projectPreferences[project.id]?.pinnedBudgetCategoryIds ?? []}
                     onPress={() => router.push(`/project/${project.id}?tab=items`)}
-                    style={({ pressed }) => [
-                      styles.projectRow,
-                      {
-                        borderColor: uiKitTheme.border.primary,
-                        backgroundColor: uiKitTheme.background.surface,
-                        opacity: pressed ? 0.8 : 1,
-                      },
-                    ]}
-                  >
-                    {project.mainImageUrl && !project.mainImageUrl.startsWith('offline://') ? (
-                      <Image
-                        source={{ uri: resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' }) ?? project.mainImageUrl }}
-                        style={styles.projectImage}
-                      />
-                    ) : project.mainImageUrl && project.mainImageUrl.startsWith('offline://') ? (
-                      (() => {
-                        const resolved = resolveAttachmentUri({ url: project.mainImageUrl, kind: 'image' });
-                        return resolved ? (
-                          <Image
-                            source={{ uri: resolved }}
-                            style={styles.projectImage}
-                          />
-                        ) : (
-                          <View
-                            style={[
-                              styles.projectImage,
-                              { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface, alignItems: 'center', justifyContent: 'center' },
-                            ]}
-                          >
-                            <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>Offline</AppText>
-                          </View>
-                        );
-                      })()
-                    ) : (
-                      <View
-                        style={[
-                          styles.projectImage,
-                          { backgroundColor: uiKitTheme.background.subtle ?? uiKitTheme.background.surface },
-                        ]}
-                      />
-                    )}
-                    <AppText variant="body" style={styles.projectTitle}>
-                      {project.name?.trim() ? project.name.trim() : 'Project'}
-                    </AppText>
-                    <AppText variant="caption" style={styles.projectSub}>
-                      {project.clientName?.trim() ? project.clientName.trim() : 'No client name'}
-                    </AppText>
-                    <View style={styles.budgetRow}>
-                      <AppText variant="caption">
-                        {typeof budgetTotals[project.id] === 'number'
-                          ? `Budget: $${(budgetTotals[project.id] / 100).toFixed(2)}`
-                          : 'Budget not set'}
-                      </AppText>
-                      {typeof budgetTotals[project.id] === 'number' ? (
-                        <BudgetProgress
-                          spentCents={budgetSpentTotals[project.id] ?? 0}
-                          budgetCents={budgetTotals[project.id] ?? 0}
-                          compact
-                        />
-                      ) : null}
-                      {projectPreferences[project.id]?.pinnedBudgetCategoryIds?.length ? (
-                        <AppText variant="caption" style={styles.budgetPins}>
-                          {projectPreferences[project.id].pinnedBudgetCategoryIds
-                            .slice(0, 2)
-                            .map((categoryId) => budgetCategories[categoryId]?.name ?? categoryId)
-                            .join(' • ')}
-                        </AppText>
-                      ) : null}
-                      <AppText variant="caption" style={styles.openProject}>
-                        Open Project
-                      </AppText>
-                    </View>
-                  </Pressable>
+                  />
                 ))}
               </View>
               <View style={styles.actions}>
@@ -370,33 +304,5 @@ const styles = StyleSheet.create({
   },
   projectList: {
     gap: 10,
-  },
-  projectRow: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    gap: 6,
-  },
-  projectImage: {
-    width: '100%',
-    height: 120,
-    borderRadius: 10,
-  },
-  projectTitle: {
-    fontWeight: '600',
-  },
-  projectSub: {
-    marginTop: 4,
-  },
-  budgetRow: {
-    gap: 4,
-  },
-  budgetPins: {
-    opacity: 0.8,
-  },
-  openProject: {
-    marginTop: 4,
-    opacity: 0.7,
   },
 });
