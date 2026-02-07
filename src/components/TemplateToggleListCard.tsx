@@ -39,9 +39,9 @@ function sameIdOrder(a: TemplateToggleListItem[], b: TemplateToggleListItem[]) {
 
 export type TemplateToggleListCardProps = {
   title: string;
-  rightHeaderLabel: string;
+  rightHeaderLabel?: string;
   items: TemplateToggleListItem[];
-  onToggleDisabled: (id: string, next: boolean) => void;
+  onToggleDisabled?: (id: string, next: boolean) => void;
   onReorderItems?: (nextItems: TemplateToggleListItem[]) => void;
   onDragActiveChange?: (isDragging: boolean) => void;
   /**
@@ -213,28 +213,30 @@ export function TemplateToggleListCard({
                 dragHandleProps={dragHandleProps}
                 right={
                   <View style={[styles.rightContent, isDimmed && styles.dimmedRight]}>
-                    <Pressable
-                      accessibilityRole="switch"
-                      accessibilityState={{ checked: !item.disabled, disabled: false }}
-                      accessibilityLabel={`${rightHeaderLabel} ${item.name}`}
-                      disabled={false}
-                      onPress={() => onToggleDisabled(item.id, !item.disabled)}
-                      hitSlop={8}
-                      style={({ pressed }) => [
-                        styles.toggleContainer,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      <View style={[styles.toggle, !item.disabled ? themed.toggleOnBg : themed.toggleOffBg]}>
-                        <View
-                          style={[
-                            styles.toggleThumb,
-                            themed.toggleThumb,
-                            { transform: [{ translateX: !item.disabled ? 20 : 0 }] },
-                          ]}
-                        />
-                      </View>
-                    </Pressable>
+                    {onToggleDisabled ? (
+                      <Pressable
+                        accessibilityRole="switch"
+                        accessibilityState={{ checked: !item.disabled, disabled: false }}
+                        accessibilityLabel={`${rightHeaderLabel ?? ''} ${item.name}`}
+                        disabled={false}
+                        onPress={() => onToggleDisabled(item.id, !item.disabled)}
+                        hitSlop={8}
+                        style={({ pressed }) => [
+                          styles.toggleContainer,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <View style={[styles.toggle, !item.disabled ? themed.toggleOnBg : themed.toggleOffBg]}>
+                          <View
+                            style={[
+                              styles.toggleThumb,
+                              themed.toggleThumb,
+                              { transform: [{ translateX: !item.disabled ? 20 : 0 }] },
+                            ]}
+                          />
+                        </View>
+                      </Pressable>
+                    ) : null}
 
                     {getInfoContent ? (
                       <InfoButton
@@ -245,17 +247,17 @@ export function TemplateToggleListCard({
                         style={styles.iconButton}
                         onPress={() => onPressInfo?.(item.id)}
                       />
-                    ) : (
+                    ) : onPressInfo ? (
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={`Info for ${item.name}`}
                         hitSlop={10}
                         style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-                        onPress={() => onPressInfo?.(item.id)}
+                        onPress={() => onPressInfo(item.id)}
                       >
                         <MaterialIcons name="info-outline" size={18} color={iconColor} />
                       </Pressable>
-                    )}
+                    ) : null}
 
                     <Pressable
                       accessibilityRole="button"

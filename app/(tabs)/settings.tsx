@@ -145,6 +145,8 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const [vendorSlots, setVendorSlots] = useState<{ id: string; value: string }[]>([]);
   const [vendorStatus, setVendorStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [vendorError, setVendorError] = useState('');
+  const [editingVendorIndex, setEditingVendorIndex] = useState<number | null>(null);
+  const [editingVendorName, setEditingVendorName] = useState('');
 
   const [spaceTemplates, setSpaceTemplates] = useState<
     {
@@ -643,13 +645,27 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     }
   };
 
-  const handleClearVendorSlot = async (index: number) => {
-    const next = [...vendorSlots];
-    if (next[index]) {
-      next[index] = { ...next[index], value: '' };
-    }
-    setVendorSlots(next);
-    await handleSaveVendorSlot(index);
+  const handleClearVendorSlot = (index: number) => {
+    const slot = vendorSlots[index];
+    const name = slot?.value?.trim();
+    const message = name
+      ? `Clear "${name}" from this slot?`
+      : 'Clear this slot?';
+    Alert.alert('Clear vendor', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: async () => {
+          const next = [...vendorSlots];
+          if (next[index]) {
+            next[index] = { ...next[index], value: '' };
+          }
+          setVendorSlots(next);
+          await handleSaveVendorSlot(index);
+        },
+      },
+    ]);
   };
 
   const handleReorderVendors = async (next: { id: string; value: string }[]) => {
@@ -672,6 +688,35 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       setVendorStatus('error');
       setVendorError(error?.message || 'Failed to reorder vendors.');
     }
+  };
+
+  const handleReorderVendorItems = (nextItems: TemplateToggleListItem[]) => {
+    const mapped = nextItems.map((it) => {
+      const slot = vendorSlots.find((s) => s.id === it.id);
+      return { id: it.id, value: slot?.value ?? '' };
+    });
+    handleReorderVendors(mapped);
+  };
+
+  const handleOpenVendorEdit = (index: number) => {
+    setEditingVendorIndex(index);
+    setEditingVendorName(vendorSlots[index]?.value ?? '');
+  };
+
+  const handleCloseVendorEdit = () => {
+    setEditingVendorIndex(null);
+    setEditingVendorName('');
+  };
+
+  const handleSaveVendorEdit = async () => {
+    if (editingVendorIndex === null) return;
+    const next = [...vendorSlots];
+    if (next[editingVendorIndex]) {
+      next[editingVendorIndex] = { ...next[editingVendorIndex], value: editingVendorName.trim() };
+    }
+    setVendorSlots(next);
+    handleCloseVendorEdit();
+    await handleSaveVendorSlot(editingVendorIndex);
   };
 
   const handleStartTemplateCreate = () => {
@@ -1285,7 +1330,12 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     }
 
     if (selectedPresetTabKey === 'vendors') {
-      const vendorItems = vendorSlots;
+      const vendorToggleItems: TemplateToggleListItem[] = vendorSlots.map((slot) => ({
+        id: slot.id,
+        name: slot.value.trim() || 'Empty',
+        disabled: !slot.value.trim(),
+      }));
+
       return (
         <AppScrollView
           style={styles.scroll}
@@ -1300,52 +1350,68 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
               </AppText>
             </View>
           ) : null}
-          <View style={[surface.overflowHidden, getCardStyle(uiKitTheme, { radius: 12, padding: theme.spacing.md })]}>
-            <DraggableCardList
-              items={vendorItems}
-              getItemId={(item) => item.id}
-              itemHeight={140}
-              onReorder={handleReorderVendors}
-              onDragActiveChange={setIsDragging}
-              renderItem={({ item, index, dragHandleProps, isActive }) => (
-                <View style={styles.vendorCard}>
-                  <DraggableCard
-                    title={`Slot ${index + 1}`}
-                    dragHandleProps={dragHandleProps}
-                    isActive={isActive}
-                  />
-                  <TextInput
-                    placeholder="Vendor name"
-                    value={item.value}
-                    onChangeText={(value) =>
-                      setVendorSlots((prev) => {
-                        const next = [...prev];
-                        if (next[index]) {
-                          next[index] = { ...next[index], value };
-                        }
-                        return next;
-                      })
-                    }
-                    style={[styles.input, styles.vendorInput, textPrimaryStyle]}
-                    placeholderTextColor={theme.colors.textSecondary}
-                  />
-                  <View style={styles.inlineActions}>
-                    <AppButton
-                      title={vendorStatus === 'saving' ? 'Saving…' : 'Save'}
-                      onPress={() => handleSaveVendorSlot(index)}
-                      disabled={vendorStatus === 'saving'}
-                    />
-                    <AppButton
-                      title="Clear"
-                      variant="secondary"
-                      onPress={() => handleClearVendorSlot(index)}
-                      disabled={vendorStatus === 'saving'}
-                    />
-                  </View>
-                </View>
-              )}
+          <AppText variant="caption" style={[styles.presetDescription, getTextSecondaryStyle(uiKitTheme)]}>
+            Vendor defaults are pre-configured vendor/source names that appear as quick-select options when adding transactions. Configure up to 10 default vendors for your account.
+          </AppText>
+          <TemplateToggleListCard
+            title="Vendors"
+            items={vendorToggleItems}
+            onReorderItems={handleReorderVendorItems}
+            onDragActiveChange={setIsDragging}
+            isItemDraggable={() => true}
+            normalizeOrder={(items) => items}
+            getMenuItems={(it) => {
+              const index = vendorSlots.findIndex((s) => s.id === it.id);
+              if (index === -1) return [];
+              const hasValue = !!vendorSlots[index]?.value.trim();
+              return [
+                {
+                  key: 'edit',
+                  label: hasValue ? 'Rename' : 'Set Vendor',
+                  icon: 'edit' as const,
+                  onPress: () => handleOpenVendorEdit(index),
+                },
+                ...(hasValue
+                  ? [
+                      {
+                        key: 'clear',
+                        label: 'Clear',
+                        icon: 'delete' as const,
+                        onPress: () => handleClearVendorSlot(index),
+                      },
+                    ]
+                  : []),
+              ];
+            }}
+            getMenuTitle={(it) => it.name}
+          />
+
+          <MultiStepFormBottomSheet
+            visible={editingVendorIndex !== null}
+            onRequestClose={handleCloseVendorEdit}
+            title={vendorSlots[editingVendorIndex ?? 0]?.value.trim() ? 'Rename Vendor' : 'Set Vendor'}
+            currentStep={1}
+            totalSteps={1}
+            primaryAction={{
+              title: 'Save',
+              onPress: handleSaveVendorEdit,
+              loading: vendorStatus === 'saving',
+              disabled: vendorStatus === 'saving',
+            }}
+            secondaryAction={{
+              title: 'Cancel',
+              onPress: handleCloseVendorEdit,
+            }}
+          >
+            <TextInput
+              placeholder="Vendor name"
+              value={editingVendorName}
+              onChangeText={setEditingVendorName}
+              style={[styles.input, textPrimaryStyle]}
+              placeholderTextColor={theme.colors.textSecondary}
+              autoFocus
             />
-          </View>
+          </MultiStepFormBottomSheet>
         </AppScrollView>
       );
     }
@@ -2325,6 +2391,9 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#D9534F',
   },
+  presetDescription: {
+    marginBottom: 20,
+  },
   successText: {
     marginTop: 8,
   },
@@ -2341,12 +2410,6 @@ const styles = StyleSheet.create({
   },
   listRowText: {
     marginBottom: 8,
-  },
-  vendorInput: {
-    marginBottom: 0,
-  },
-  vendorCard: {
-    paddingVertical: 8,
   },
   draggableRow: {
     paddingVertical: 4,
