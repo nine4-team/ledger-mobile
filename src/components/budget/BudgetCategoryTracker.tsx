@@ -7,6 +7,7 @@ import {
 } from "../../utils/budgetColors";
 import { useThemeContext } from "../../theme/ThemeProvider";
 import { AppText } from "../AppText";
+import { ProgressBar } from "../ProgressBar";
 
 export type BudgetCategoryTrackerProps = {
   categoryName: string;
@@ -95,8 +96,6 @@ export function BudgetCategoryTracker({
       ? overflowColors.text
       : colors.text;
 
-  const trackBg = isDark ? "#3A3A3C" : "#E5E7EB";
-
   const content = (
     <View style={styles.container}>
       {/* Title */}
@@ -132,28 +131,12 @@ export function BudgetCategoryTracker({
       </View>
 
       {/* Progress Bar */}
-      <View style={[styles.progressTrack, { backgroundColor: trackBg }]}>
-        <View
-          style={[
-            styles.progressFill,
-            {
-              width: `${displayPercentage}%`,
-              backgroundColor: colors.bar,
-            },
-          ]}
-        />
-        {isOverBudget && (
-          <View
-            style={[
-              styles.overflowIndicator,
-              {
-                width: `${Math.min(overflowPercentage, 100)}%`,
-                backgroundColor: overflowColors.bar,
-              },
-            ]}
-          />
-        )}
-      </View>
+      <ProgressBar
+        percentage={displayPercentage}
+        color={colors.bar}
+        overflowPercentage={isOverBudget ? Math.min(overflowPercentage, 100) : undefined}
+        overflowColor={isOverBudget ? overflowColors.bar : undefined}
+      />
     </View>
   );
 
@@ -228,25 +211,5 @@ const styles = StyleSheet.create({
   },
   overBudgetText: {
     fontWeight: "700",
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: 9999,
-    overflow: "hidden",
-    position: "relative",
-  },
-  progressFill: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    height: "100%",
-    borderRadius: 9999,
-  },
-  overflowIndicator: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    height: "100%",
-    borderRadius: 9999,
   },
 });

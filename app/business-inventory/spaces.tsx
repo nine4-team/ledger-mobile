@@ -1,31 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AppText } from '../components/AppText';
-import { AppButton } from '../components/AppButton';
-import { AppScrollView } from '../components/AppScrollView';
-import { SpaceCard } from '../components/SpaceCard';
-import { SpaceCardSkeleton } from '../components/SpaceCardSkeleton';
-import { ErrorRetryView } from '../components/ErrorRetryView';
-import { NetworkStatusBanner } from '../components/NetworkStatusBanner';
-import { useScreenRefresh } from '../components/Screen';
-import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
-import { useAccountContextStore } from '../auth/accountContextStore';
-import { refreshSpaces, subscribeToSpaces, Space } from '../data/spacesService';
-import { getScopeId, createProjectScopeConfig } from '../data/scopeConfig';
-import { useScopedListenersMultiple } from '../data/useScopedListeners';
-import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
-import { getTextInputStyle } from '../ui/styles/forms';
-import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { AppText } from '../../src/components/AppText';
+import { AppButton } from '../../src/components/AppButton';
+import { AppScrollView } from '../../src/components/AppScrollView';
+import { Screen } from '../../src/components/Screen';
+import { SpaceCard } from '../../src/components/SpaceCard';
+import { SpaceCardSkeleton } from '../../src/components/SpaceCardSkeleton';
+import { ErrorRetryView } from '../../src/components/ErrorRetryView';
+import { SyncIndicator } from '../../src/components/SyncIndicator';
+import { NetworkStatusBanner } from '../../src/components/NetworkStatusBanner';
+import { useScreenRefresh } from '../../src/components/Screen';
+import { layout } from '../../src/ui';
+import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import { useAccountContextStore } from '../../src/auth/accountContextStore';
+import { refreshSpaces, subscribeToSpaces, Space } from '../../src/data/spacesService';
+import { getScopeId, createBusinessInventoryScopeConfig } from '../../src/data/scopeConfig';
+import { useScopedListenersMultiple } from '../../src/data/useScopedListeners';
+import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../../src/data/scopedListData';
+import { getTextInputStyle } from '../../src/ui/styles/forms';
+import { useDebouncedValue } from '../../src/hooks/useDebouncedValue';
+import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 
-type ProjectSpacesListProps = {
-  projectId: string;
-  refreshToken?: number;
-};
-
-export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesListProps) {
+export default function BusinessInventorySpacesScreen() {
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
   const theme = useTheme();
@@ -39,7 +36,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
   const debouncedQuery = useDebouncedValue(query, 350);
   const networkStatus = useNetworkStatus();
 
-  const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
+  const scopeConfig = useMemo(() => createBusinessInventoryScopeConfig(), []);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
 
   useEffect(() => {
@@ -59,12 +56,12 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
     }
     setIsLoading(true);
     setError(null);
-    return subscribeToSpaces(accountId, projectId, (next) => {
+    return subscribeToSpaces(accountId, null, (next) => {
       setSpaces(next);
       setIsLoading(false);
       setError(null);
     });
-  }, [accountId, projectId]);
+  }, [accountId]);
 
   const handleItemsSubscribe = useCallback(() => {
     if (!accountId) {
@@ -82,7 +79,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
     if (!accountId) return;
     setError(null);
     setIsLoading(true);
-    refreshSpaces(accountId, projectId, 'online')
+    refreshSpaces(accountId, null, 'online')
       .then(() => {
         setError(null);
       })
@@ -91,17 +88,16 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
         setIsLoading(false);
       });
     void refreshScopedItems(accountId, scopeConfig, 'online');
-  }, [accountId, projectId, scopeConfig]);
+  }, [accountId, scopeConfig]);
 
   useEffect(() => {
-    if (!accountId || refreshToken == null) return;
-    void refreshSpaces(accountId, projectId, 'online').catch((err) => {
+    if (!accountId || screenRefresh?.refreshToken == null) return;
+    void refreshSpaces(accountId, null, 'online').catch((err) => {
       setError(err instanceof Error ? err.message : 'Failed to load spaces');
     });
     void refreshScopedItems(accountId, scopeConfig, 'online');
-  }, [accountId, projectId, refreshToken, scopeConfig]);
+  }, [accountId, screenRefresh?.refreshToken, scopeConfig]);
 
-  // Use debounced query for filtering to improve performance
   const filteredSpaces = useMemo(() => {
     const needle = debouncedQuery.trim().toLowerCase();
     if (!needle) return spaces;
@@ -112,7 +108,6 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
     });
   }, [debouncedQuery, spaces]);
 
-  // Memoize item counts calculation to avoid recalculating on every render
   const itemCountsBySpace = useMemo(() => {
     const counts: Record<string, number> = {};
     items.forEach((item) => {
@@ -122,7 +117,6 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
     return counts;
   }, [items]);
 
-  // Memoize grid items with proper aspect ratio
   const gridItems = useMemo(() => {
     return filteredSpaces.map((space) => {
       const primaryImage = space.images?.find((img) => img.isPrimary) ?? space.images?.[0] ?? null;
@@ -138,17 +132,17 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
 
   const handleSpacePress = useCallback(
     (spaceId: string) => {
-      router.push(`/project/${projectId}/spaces/${spaceId}`);
+      router.push(`/business-inventory/spaces/${spaceId}`);
     },
-    [router, projectId]
+    [router]
   );
 
   const handleAddSpace = useCallback(() => {
-    router.push(`/project/${projectId}/spaces/new`);
-  }, [router, projectId]);
+    router.push('/business-inventory/spaces/new');
+  }, [router]);
 
   return (
-    <>
+    <Screen title="Business Inventory Spaces">
       <AppScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.container, styles.scrollContent]}
@@ -158,27 +152,29 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
           ) : undefined
         }
       >
-        <View style={styles.controlSection}>
-          <View style={[styles.controlBar, { backgroundColor: uiKitTheme.background.chrome, borderColor: uiKitTheme.border.secondary }]}>
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search spaces"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={[getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 }), styles.searchInput]}
-              accessibilityLabel="Search spaces"
-              accessibilityHint="Type to filter spaces by name or notes"
-              returnKeyType="search"
-            />
-            <AppButton
-              title="Add"
-              variant="primary"
-              onPress={handleAddSpace}
-              leftIcon={<MaterialIcons name="add" size={18} color={uiKitTheme.button.primary.text} />}
-              accessibilityLabel="Add new space"
-              style={styles.addButton}
-            />
-          </View>
+        <View style={styles.header}>
+          <AppText variant="body" style={styles.title}>
+            Spaces
+          </AppText>
+          <SyncIndicator />
+        </View>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search spaces"
+          placeholderTextColor={theme.colors.textSecondary}
+          style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          accessibilityLabel="Search spaces"
+          accessibilityHint="Type to filter spaces by name or notes"
+          returnKeyType="search"
+        />
+        <View style={styles.actions}>
+          <AppButton
+            title="Add space"
+            onPress={handleAddSpace}
+            accessibilityLabel="Add new space"
+            accessibilityHint="Tap to create a new space"
+          />
         </View>
 
         {error ? (
@@ -200,7 +196,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
             </AppText>
             {!query.trim() && (
               <AppText variant="caption" style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
-                Create your first space to organize items by location
+                Create your first space to organize inventory items by location
               </AppText>
             )}
           </View>
@@ -221,7 +217,7 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
       </AppScrollView>
 
       {!networkStatus.isOnline && <NetworkStatusBanner />}
-    </>
+    </Screen>
   );
 }
 
@@ -230,35 +226,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    gap: 16,
+    gap: 12,
+    paddingTop: layout.screenBodyTopMd.paddingTop,
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 24,
   },
-  controlSection: {
-    gap: 0,
-  },
-  controlBar: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  searchInput: {
-    flex: 1,
+  title: {
+    fontWeight: '600',
   },
-  addButton: {
-    minHeight: 40,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
   },
   list: {
     gap: 12,
