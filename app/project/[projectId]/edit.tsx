@@ -5,7 +5,7 @@ import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
 import { AppButton } from '../../../src/components/AppButton';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
-import { useTheme } from '../../../src/theme/ThemeProvider';
+import { useUIKitTheme } from '../../../src/theme/ThemeProvider';
 import { getTextInputStyle } from '../../../src/ui/styles/forms';
 import { layout } from '../../../src/ui';
 import { Project, subscribeToProject, updateProject } from '../../../src/data/projectService';
@@ -19,7 +19,7 @@ export default function EditProjectScreen() {
   const params = useLocalSearchParams<EditParams>();
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const accountId = useAccountContextStore((store) => store.accountId);
-  const theme = useTheme();
+  const theme = useUIKitTheme();
   const [project, setProject] = useState<Project | null>(null);
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
@@ -85,7 +85,7 @@ export default function EditProjectScreen() {
               value={name}
               onChangeText={setName}
               placeholder="Project name"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={theme.text.secondary}
               style={getTextInputStyle(theme, { padding: 12, radius: 10 })}
             />
             <AppText variant="body">Client name</AppText>
@@ -93,11 +93,11 @@ export default function EditProjectScreen() {
               value={clientName}
               onChangeText={setClientName}
               placeholder="Client name"
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={theme.text.secondary}
               style={getTextInputStyle(theme, { padding: 12, radius: 10 })}
             />
             {error ? (
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+              <AppText variant="caption" style={{ color: theme.text.secondary }}>
                 {error}
               </AppText>
             ) : null}
