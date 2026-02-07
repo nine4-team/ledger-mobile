@@ -11,6 +11,8 @@ import {
   where,
 } from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
+import { refreshBudgetCategories } from './budgetCategoriesService';
+import { refreshProjectBudgetCategories } from './projectBudgetCategoriesService';
 
 export type ProjectPreferences = {
   id: string;
@@ -53,26 +55,54 @@ export function subscribeToProjectPreferences(
 
 export async function ensureProjectPreferences(
   accountId: string,
+  projectId: string
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) return;
+
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const ref = doc(db, `accounts/${accountId}/users/${uid}/projectPreferences/${projectId}`);
+  const snapshot = await getDoc(ref);
+
+  // Only create if doesn't exist
+  if (snapshot.exists()) return;
+
+  // Find Furnishings category
+  const budgetCategories = await refreshBudgetCategories(accountId, 'online');
+  const furnishings = budgetCategories.find(c => c.name === 'Furnishings' && !c.isArchived);
+
+  // Check if Furnishings is enabled in this project
+  const projectBudgets = await refreshProjectBudgetCategories(accountId, projectId, 'online');
+  const isFurnishingsEnabled = furnishings && projectBudgets.some(pb => pb.id === furnishings.id);
+
+  const pinnedBudgetCategoryIds = isFurnishingsEnabled ? [furnishings.id] : [];
+
+  await setDoc(ref, {
+    id: projectId,
+    accountId,
+    userId: uid,
+    projectId,
+    pinnedBudgetCategoryIds,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateProjectPreferences(
+  accountId: string,
+  userId: string,
   projectId: string,
-  pinnedBudgetCategoryIds: string[]
+  data: Partial<Omit<ProjectPreferences, 'id' | 'accountId' | 'userId' | 'projectId' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  const uid = auth?.currentUser?.uid;
-  if (!uid) return;
-  const ref = doc(db, `accounts/${accountId}/users/${uid}/projectPreferences/${projectId}`);
-  const snapshot = await getDoc(ref);
-  if (snapshot.exists) return;
+  const ref = doc(db, `accounts/${accountId}/users/${userId}/projectPreferences/${projectId}`);
   await setDoc(
     ref,
     {
-      id: projectId,
-      accountId,
-      userId: uid,
-      projectId,
-      pinnedBudgetCategoryIds,
-      createdAt: serverTimestamp(),
+      ...data,
       updatedAt: serverTimestamp(),
     },
     { merge: true }

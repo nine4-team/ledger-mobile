@@ -54,14 +54,14 @@ export async function requestProjectToBusinessSale(params: {
     id: string;
     projectId?: string | null;
     transactionId?: string | null;
-    inheritedBudgetCategoryId?: string | null;
+    budgetCategoryId?: string | null;
   }>;
   budgetCategoryId?: string;
   opId?: string;
 }): Promise<string[]> {
   const results: string[] = [];
   for (const item of params.items) {
-    const budgetCategoryId = item.inheritedBudgetCategoryId ?? params.budgetCategoryId ?? null;
+    const budgetCategoryId = item.budgetCategoryId ?? params.budgetCategoryId ?? null;
     if (!budgetCategoryId) {
       throw new Error('Missing budgetCategoryId for project-to-business sale request.');
     }
@@ -116,13 +116,13 @@ export async function requestProjectToProjectMove(params: {
     id: string;
     projectId?: string | null;
     transactionId?: string | null;
-    inheritedBudgetCategoryId?: string | null;
+    budgetCategoryId?: string | null;
   }>;
   opId?: string;
 }): Promise<string[]> {
   const results: string[] = [];
   for (const item of params.items) {
-    const sourceBudgetCategoryId = item.inheritedBudgetCategoryId ?? params.sourceBudgetCategoryId ?? null;
+    const sourceBudgetCategoryId = item.budgetCategoryId ?? params.sourceBudgetCategoryId ?? null;
     if (!sourceBudgetCategoryId) {
       throw new Error('Missing sourceBudgetCategoryId for project-to-project sale request.');
     }

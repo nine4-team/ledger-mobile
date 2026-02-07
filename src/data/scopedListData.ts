@@ -27,7 +27,7 @@ export type ScopedItem = {
   purchasedBy?: string | null;
   bookmark?: boolean | null;
   images?: AttachmentRef[] | null;
-  inheritedBudgetCategoryId?: string | null;
+  budgetCategoryId?: string | null;
   createdAt?: unknown;
 };
 
@@ -46,7 +46,8 @@ export type ScopedTransaction = {
   purchasedBy?: string | null;
   reimbursementType?: string | null;
   notes?: string | null;
-  type?: string | null;
+  transactionType?: string | null;
+  isCanceled?: boolean | null;
   budgetCategoryId?: string | null;
   hasEmailReceipt?: boolean | null;
   receiptImages?: AttachmentRef[] | null;

@@ -4,9 +4,22 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
+import { AppScrollView } from '../../src/components/AppScrollView';
+import { TitledCard } from '../../src/components/TitledCard';
+import { BottomSheetMenuList } from '../../src/components/BottomSheetMenuList';
+import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
 import { SharedItemPicker } from '../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../src/components/ItemConflictDialog';
-import { layout } from '../../src/ui';
+import { ItemCard } from '../../src/components/ItemCard';
+import type { ItemCardProps } from '../../src/components/ItemCard';
+import {
+  CARD_PADDING,
+  getCardStyle,
+  getTextColorStyle,
+  getTextSecondaryStyle,
+  layout,
+  textEmphasis,
+} from '../../src/ui';
 import { useProjectContextStore } from '../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
@@ -14,7 +27,11 @@ import { getTextInputStyle } from '../../src/ui/styles/forms';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../src/data/scopeConfig';
 import { ScopedItem, subscribeToScopedItems } from '../../src/data/scopedListData';
 import { Item, updateItem } from '../../src/data/itemsService';
-import { saveLocalMedia } from '../../src/offline/media';
+import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../src/offline/media';
+import type { AttachmentRef } from '../../src/offline/media';
+import { ThumbnailGrid } from '../../src/components/ThumbnailGrid';
+import { ImageGallery } from '../../src/components/ImageGallery';
+import { ImagePickerButton } from '../../src/components/ImagePickerButton';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../src/data/transactionsService';
 import { isCanonicalInventorySaleTransaction } from '../../src/data/inventoryOperations';
@@ -37,6 +54,21 @@ function parseCurrency(value: string): number | null {
   const num = Number.parseFloat(normalized);
   if (Number.isNaN(num)) return null;
   return Math.round(num * 100);
+}
+
+function formatMoney(cents: number | null | undefined): string {
+  if (typeof cents !== 'number') return '—';
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—';
+  return dateStr;
+}
+
+function formatPercent(pct: number | null | undefined): string {
+  if (typeof pct !== 'number') return '—';
+  return `${pct.toFixed(2)}%`;
 }
 
 export default function TransactionDetailScreen() {
@@ -69,13 +101,14 @@ export default function TransactionDetailScreen() {
   const [taxRatePct, setTaxRatePct] = useState('');
   const [subtotal, setSubtotal] = useState('');
   const [taxAmount, setTaxAmount] = useState('');
-  const [receiptUrl, setReceiptUrl] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [localReceiptUri, setLocalReceiptUri] = useState('');
-  const [localImageUri, setLocalImageUri] = useState('');
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [receiptGalleryVisible, setReceiptGalleryVisible] = useState(false);
+  const [receiptGalleryIndex, setReceiptGalleryIndex] = useState(0);
+  const [otherGalleryVisible, setOtherGalleryVisible] = useState(false);
+  const [otherGalleryIndex, setOtherGalleryIndex] = useState(0);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -197,6 +230,15 @@ export default function TransactionDetailScreen() {
     return options;
   }, [projectId]);
 
+  const budgetCategoryLabel = useMemo(() => {
+    if (!transaction?.budgetCategoryId) return 'None';
+    const category = budgetCategories[transaction.budgetCategoryId];
+    return category?.name?.trim() || transaction.budgetCategoryId;
+  }, [transaction, budgetCategories]);
+
+  const hasReceiptLabel = transaction?.hasEmailReceipt ? 'Yes' : 'No';
+  const statusLabel = transaction?.status?.trim() || '';
+
   useEffect(() => {
     if (!isPickingItems || pickerTab !== 'outside') return;
     void outsideItemsHook.reload();
@@ -257,51 +299,122 @@ export default function TransactionDetailScreen() {
     });
     if (categoryChanged && nextCategoryId) {
       await Promise.all(
-        linkedItems.map((item) => updateItem(accountId, item.id, { inheritedBudgetCategoryId: nextCategoryId }))
+        linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
       );
     }
     setIsEditing(false);
   };
 
-  const handleAddReceipt = async () => {
+  const handlePickReceiptImage = async (localUri: string) => {
     if (!accountId || !id || !transaction) return;
-    let nextUrl = receiptUrl.trim();
-    if (!nextUrl && localReceiptUri.trim()) {
-      const result = await saveLocalMedia({
-        localUri: localReceiptUri.trim(),
-        mimeType: 'application/pdf',
-        ownerScope: `transaction:${id}`,
-        persistCopy: false,
-      });
-      nextUrl = result.attachmentRef.url;
-    }
-    if (!nextUrl) return;
-    const nextReceipts = [
-      ...(transaction.receiptImages ?? []),
-      { url: nextUrl, kind: nextUrl.endsWith('.pdf') ? ('pdf' as const) : ('image' as const) },
-    ].slice(0, 5);
-    await updateTransaction(accountId, id, { receiptImages: nextReceipts, transactionImages: nextReceipts });
-    setReceiptUrl('');
-    setLocalReceiptUri('');
+
+    const result = await saveLocalMedia({
+      localUri,
+      mimeType: 'image/jpeg',
+      ownerScope: `transaction:${id}`,
+      persistCopy: true,
+    });
+
+    const currentImages = transaction.receiptImages ?? [];
+    const hasPrimary = currentImages.some((img) => img.isPrimary);
+
+    const newImage: AttachmentRef = {
+      url: result.attachmentRef.url,
+      kind: 'image',
+      isPrimary: !hasPrimary,
+    };
+
+    const nextImages = [...currentImages, newImage].slice(0, 5);
+    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+
+    // Enqueue upload in background
+    await enqueueUpload({ mediaId: result.mediaId });
   };
 
-  const handleAddImage = async () => {
+  const handleRemoveReceiptImage = async (url: string) => {
     if (!accountId || !id || !transaction) return;
-    let nextUrl = imageUrl.trim();
-    if (!nextUrl && localImageUri.trim()) {
-      const result = await saveLocalMedia({
-        localUri: localImageUri.trim(),
-        mimeType: 'image/jpeg',
-        ownerScope: `transaction:${id}`,
-        persistCopy: false,
-      });
-      nextUrl = result.attachmentRef.url;
+
+    const currentImages = transaction.receiptImages ?? [];
+    const nextImages = currentImages.filter((img) => img.url !== url);
+
+    // Delete offline image if applicable
+    if (url.startsWith('offline://')) {
+      await deleteLocalMediaByUrl(url);
     }
-    if (!nextUrl) return;
-    const nextImages = [...(transaction.otherImages ?? []), { url: nextUrl, kind: 'image' as const }].slice(0, 5);
+
+    // Ensure at least one primary
+    if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
+      nextImages[0] = { ...nextImages[0], isPrimary: true };
+    }
+
+    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+  };
+
+  const handleSetPrimaryReceiptImage = async (url: string) => {
+    if (!accountId || !id || !transaction) return;
+
+    const nextImages = (transaction.receiptImages ?? []).map((img) => ({
+      ...img,
+      isPrimary: img.url === url,
+    }));
+
+    await updateTransaction(accountId, id, { receiptImages: nextImages, transactionImages: nextImages });
+  };
+
+  const handlePickOtherImage = async (localUri: string) => {
+    if (!accountId || !id || !transaction) return;
+
+    const result = await saveLocalMedia({
+      localUri,
+      mimeType: 'image/jpeg',
+      ownerScope: `transaction:${id}`,
+      persistCopy: true,
+    });
+
+    const currentImages = transaction.otherImages ?? [];
+    const hasPrimary = currentImages.some((img) => img.isPrimary);
+
+    const newImage: AttachmentRef = {
+      url: result.attachmentRef.url,
+      kind: 'image',
+      isPrimary: !hasPrimary,
+    };
+
+    const nextImages = [...currentImages, newImage].slice(0, 5);
     await updateTransaction(accountId, id, { otherImages: nextImages });
-    setImageUrl('');
-    setLocalImageUri('');
+
+    // Enqueue upload in background
+    await enqueueUpload({ mediaId: result.mediaId });
+  };
+
+  const handleRemoveOtherImage = async (url: string) => {
+    if (!accountId || !id || !transaction) return;
+
+    const currentImages = transaction.otherImages ?? [];
+    const nextImages = currentImages.filter((img) => img.url !== url);
+
+    // Delete offline image if applicable
+    if (url.startsWith('offline://')) {
+      await deleteLocalMediaByUrl(url);
+    }
+
+    // Ensure at least one primary
+    if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
+      nextImages[0] = { ...nextImages[0], isPrimary: true };
+    }
+
+    await updateTransaction(accountId, id, { otherImages: nextImages });
+  };
+
+  const handleSetPrimaryOtherImage = async (url: string) => {
+    if (!accountId || !id || !transaction) return;
+
+    const nextImages = (transaction.otherImages ?? []).map((img) => ({
+      ...img,
+      isPrimary: img.url === url,
+    }));
+
+    await updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
   const handleAddSelectedItems = useCallback(async () => {
@@ -313,9 +426,9 @@ export default function TransactionDetailScreen() {
       await Promise.all(
         selectedItems.map(async (item) => {
           const targetProjectId = scope === 'inventory' ? null : projectId ?? null;
-          const inheritedBudgetCategoryId =
+          const budgetCategoryId =
             scope === 'inventory'
-              ? item.inheritedBudgetCategoryId ?? null
+              ? item.budgetCategoryId ?? null
               : !isCanonical && transaction?.budgetCategoryId
                 ? transaction.budgetCategoryId
                 : undefined;
@@ -326,7 +439,7 @@ export default function TransactionDetailScreen() {
             targetProjectId,
             targetSpaceId: null,
             targetTransactionId: id,
-            inheritedBudgetCategoryId,
+            budgetCategoryId,
           });
 
           if (!result.success) {
@@ -390,259 +503,699 @@ export default function TransactionDetailScreen() {
     ]);
   };
 
+  const menuItems = useMemo<AnchoredMenuItem[]>(() => {
+    const items: AnchoredMenuItem[] = [
+      {
+        label: isEditing ? 'Finish editing' : 'Edit details',
+        onPress: () => setIsEditing((prev) => !prev),
+        icon: 'edit',
+      },
+    ];
+
+    if (isEditing) {
+      items.push({
+        label: 'Save changes',
+        onPress: handleSave,
+        icon: 'save',
+      });
+    }
+
+    items.push({
+      label: 'Delete transaction',
+      onPress: handleDelete,
+      icon: 'delete',
+    });
+
+    return items;
+  }, [isEditing]);
+
+  const headerActions = statusLabel ? (
+    <View style={styles.headerRight}>
+      <View style={[styles.statusPill, { backgroundColor: `${uiKitTheme.primary.main}1A` }]}>
+        <AppText variant="caption" style={[styles.statusText, { color: uiKitTheme.primary.main }]}>
+          {statusLabel}
+        </AppText>
+      </View>
+    </View>
+  ) : undefined;
+
   return (
-    <Screen title="Transaction" backTarget={fallbackTarget}>
-      <View style={styles.container}>
-        <AppText variant="title">Transaction detail</AppText>
+    <Screen
+      title=" "
+      backTarget={fallbackTarget}
+      headerRight={headerActions}
+      onPressMenu={() => setMenuVisible(true)}
+      contentStyle={styles.screenContent}
+    >
+      <AppScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {isLoading ? (
           <AppText variant="body">Loading transaction…</AppText>
         ) : transaction ? (
           <>
-            <View style={styles.actions}>
-              <AppButton
-                title={isEditing ? 'Cancel edit' : 'Edit'}
-                variant="secondary"
-                onPress={() => setIsEditing((prev) => !prev)}
-                disabled={isCanonical}
-              />
-              <AppButton title="Delete" variant="secondary" onPress={handleDelete} />
-            </View>
-            {isEditing ? (
-              <>
-                <AppText variant="body">Source</AppText>
-                <TextInput
-                  value={source}
-                  onChangeText={setSource}
-                  placeholder="Source"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Date</AppText>
-                <TextInput
-                  value={transactionDate}
-                  onChangeText={setTransactionDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Amount</AppText>
-                <TextInput
-                  value={amount}
-                  onChangeText={setAmount}
-                  placeholder="$0.00"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Status</AppText>
-                <TextInput
-                  value={status}
-                  onChangeText={setStatus}
-                  placeholder="needs_review / complete"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Purchased by</AppText>
-                <TextInput
-                  value={purchasedBy}
-                  onChangeText={setPurchasedBy}
-                  placeholder="Purchased by"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Reimbursement</AppText>
-                <TextInput
-                  value={reimbursementType}
-                  onChangeText={setReimbursementType}
-                  placeholder="Reimbursement type"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Notes</AppText>
-                <TextInput
-                  value={notes}
-                  onChangeText={setNotes}
-                  placeholder="Notes"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                  multiline
-                />
-                <AppText variant="body">Budget category id</AppText>
-                <TextInput
-                  value={budgetCategoryId}
-                  onChangeText={setBudgetCategoryId}
-                  placeholder="Budget category id"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <AppText variant="body">Transaction type</AppText>
-                <TextInput
-                  value={type}
-                  onChangeText={setType}
-                  placeholder="Transaction type"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                />
-                <View style={styles.actions}>
-                  <AppButton
-                    title={hasEmailReceipt ? 'Email receipt: yes' : 'Email receipt: no'}
-                    variant="secondary"
-                    onPress={() => setHasEmailReceipt((prev) => !prev)}
-                  />
-                </View>
-                {itemizationEnabled ? (
-                  <>
-                    <AppText variant="body">Tax rate (%)</AppText>
-                    <TextInput
-                      value={taxRatePct}
-                      onChangeText={setTaxRatePct}
-                      placeholder="0"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      keyboardType="numeric"
-                    />
-                    <AppText variant="body">Subtotal</AppText>
-                    <TextInput
-                      value={subtotal}
-                      onChangeText={setSubtotal}
-                      placeholder="$0.00"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                    <AppText variant="body">Tax amount</AppText>
-                    <TextInput
-                      value={taxAmount}
-                      onChangeText={setTaxAmount}
-                      placeholder="$0.00"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </>
-                ) : null}
-                <AppButton title="Save" onPress={handleSave} />
-              </>
-            ) : (
-              <>
-                <AppText variant="body">Source: {transaction.source ?? '—'}</AppText>
-                <AppText variant="body">Date: {transaction.transactionDate ?? '—'}</AppText>
-                <AppText variant="body">
-                  Amount:{' '}
-                  {typeof transaction.amountCents === 'number' ? `$${(transaction.amountCents / 100).toFixed(2)}` : '—'}
+            {/* Hero Header Card */}
+            <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
+              <View style={styles.heroHeader}>
+                <AppText variant="h2" style={styles.heroTitle}>
+                  {transaction.source?.trim() || 'Untitled transaction'}
                 </AppText>
-                <AppText variant="body">Status: {transaction.status ?? '—'}</AppText>
-                <AppText variant="body">Purchased by: {transaction.purchasedBy ?? '—'}</AppText>
-                <AppText variant="body">Reimbursement: {transaction.reimbursementType ?? '—'}</AppText>
-                <AppText variant="body">Notes: {transaction.notes?.trim() || '—'}</AppText>
-              </>
-            )}
-            <AppText variant="caption">Scope: {scope ?? 'Unknown'}</AppText>
-            {transaction.projectId ? <AppText variant="caption">Project: {transaction.projectId}</AppText> : null}
-            <AppText variant="body">Receipts</AppText>
-            <TextInput
-              value={receiptUrl}
-              onChangeText={setReceiptUrl}
-              placeholder="Receipt URL"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-            />
-            <TextInput
-              value={localReceiptUri}
-              onChangeText={setLocalReceiptUri}
-              placeholder="Local receipt URI (offline)"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-            />
-            <AppButton title="Add receipt" onPress={handleAddReceipt} />
-            <AppText variant="body">Other images</AppText>
-            <TextInput
-              value={imageUrl}
-              onChangeText={setImageUrl}
-              placeholder="Image URL"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-            />
-            <TextInput
-              value={localImageUri}
-              onChangeText={setLocalImageUri}
-              placeholder="Local image URI (offline)"
-              placeholderTextColor={theme.colors.textSecondary}
-              style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-            />
-            <AppButton title="Add image" onPress={handleAddImage} />
-            <AppText variant="body">Itemization</AppText>
-            {!itemizationEnabled && linkedItems.length > 0 ? (
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                Itemization is off, but this transaction already has items.
-              </AppText>
-            ) : null}
-            <View style={styles.actions}>
-              <AppButton title="Create item" variant="secondary" onPress={handleCreateItem} disabled={isCanonical} />
-              <AppButton
-                title={isPickingItems ? 'Close picker' : 'Add existing items'}
-                variant="secondary"
-                onPress={() => {
-                  setIsPickingItems((prev) => !prev);
-                  setPickerSelectedIds([]);
-                  setPickerTab('suggested');
-                }}
-                disabled={isCanonical}
-              />
-            </View>
-            {isPickingItems ? (
-              <SharedItemPicker
-                tabs={pickerTabOptions}
-                selectedTab={pickerTab}
-                onTabChange={(next) => {
-                  setPickerTab(next);
-                  setPickerSelectedIds([]);
-                }}
-                items={activePickerItems}
-                selectedIds={pickerSelectedIds}
-                onSelectionChange={setPickerSelectedIds}
-                eligibilityCheck={{
-                  isEligible: (item) => item.transactionId !== id,
-                  getStatusLabel: (item) => {
-                    if (item.transactionId === id) return 'Already linked';
-                    if (item.transactionId) return 'Linked elsewhere';
-                    return undefined;
-                  },
-                }}
-                onAddSelected={handleAddSelectedItems}
-                outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
-                outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
-              />
-            ) : null}
-            {linkedItems.length ? (
-              <View style={styles.list}>
-                {linkedItems.map((item) => (
-                  <View key={item.id} style={styles.row}>
-                    <AppText variant="body">{item.name?.trim() || 'Item'}</AppText>
-                    <AppButton title="Remove" variant="secondary" onPress={() => handleRemoveLinkedItem(item.id)} />
-                  </View>
-                ))}
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  {formatMoney(transaction.amountCents)}
+                </AppText>
               </View>
-            ) : (
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                No items linked yet.
-              </AppText>
-            )}
+            </View>
+
+            {/* Error Card */}
             {error ? (
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                {error}
-              </AppText>
+              <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
+                <AppText variant="caption" style={[styles.errorText, getTextSecondaryStyle(uiKitTheme)]}>
+                  {error}
+                </AppText>
+              </View>
             ) : null}
+
+            {/* Receipt Images Section */}
+            {(transaction.receiptImages && transaction.receiptImages.length > 0) || isEditing ? (
+              <TitledCard title="Receipt Images">
+                {transaction.receiptImages && transaction.receiptImages.length > 0 ? (
+                  <>
+                    <ThumbnailGrid
+                      images={transaction.receiptImages}
+                      maxImages={5}
+                      size="md"
+                      tileScale={1.5}
+                      onImagePress={(image, index) => {
+                        setReceiptGalleryIndex(index);
+                        setReceiptGalleryVisible(true);
+                      }}
+                      onSetPrimary={(image) => handleSetPrimaryReceiptImage(image.url)}
+                      onDelete={(image) => handleRemoveReceiptImage(image.url)}
+                    />
+                    {isEditing && transaction.receiptImages.length < 5 && (
+                      <ImagePickerButton
+                        onImagePicked={handlePickReceiptImage}
+                        maxImages={5}
+                        currentImageCount={transaction.receiptImages.length}
+                        style={styles.imagePicker}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      No receipt images yet.
+                    </AppText>
+                    {isEditing && (
+                      <ImagePickerButton
+                        onImagePicked={handlePickReceiptImage}
+                        maxImages={5}
+                        currentImageCount={0}
+                        style={styles.imagePicker}
+                      />
+                    )}
+                  </View>
+                )}
+              </TitledCard>
+            ) : null}
+
+            {/* Other Images Section */}
+            {(transaction.otherImages && transaction.otherImages.length > 0) || isEditing ? (
+              <TitledCard title="Other Images">
+                {transaction.otherImages && transaction.otherImages.length > 0 ? (
+                  <>
+                    <ThumbnailGrid
+                      images={transaction.otherImages}
+                      maxImages={5}
+                      size="md"
+                      tileScale={1.5}
+                      onImagePress={(image, index) => {
+                        setOtherGalleryIndex(index);
+                        setOtherGalleryVisible(true);
+                      }}
+                      onSetPrimary={(image) => handleSetPrimaryOtherImage(image.url)}
+                      onDelete={(image) => handleRemoveOtherImage(image.url)}
+                    />
+                    {isEditing && transaction.otherImages.length < 5 && (
+                      <ImagePickerButton
+                        onImagePicked={handlePickOtherImage}
+                        maxImages={5}
+                        currentImageCount={transaction.otherImages.length}
+                        style={styles.imagePicker}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      No other images yet.
+                    </AppText>
+                    {isEditing && (
+                      <ImagePickerButton
+                        onImagePicked={handlePickOtherImage}
+                        maxImages={5}
+                        currentImageCount={0}
+                        style={styles.imagePicker}
+                      />
+                    )}
+                  </View>
+                )}
+              </TitledCard>
+            ) : null}
+
+            {/* Transaction Details Section */}
+            <TitledCard title="Details">
+              {isEditing ? (
+                <View style={styles.form}>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Source
+                    </AppText>
+                    <TextInput
+                      value={source}
+                      onChangeText={setSource}
+                      placeholder="Source"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Date
+                    </AppText>
+                    <TextInput
+                      value={transactionDate}
+                      onChangeText={setTransactionDate}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Amount
+                    </AppText>
+                    <TextInput
+                      value={amount}
+                      onChangeText={setAmount}
+                      placeholder="$0.00"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Status
+                    </AppText>
+                    <TextInput
+                      value={status}
+                      onChangeText={setStatus}
+                      placeholder="needs_review / complete"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Purchased by
+                    </AppText>
+                    <TextInput
+                      value={purchasedBy}
+                      onChangeText={setPurchasedBy}
+                      placeholder="Purchased by"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Reimbursement type
+                    </AppText>
+                    <TextInput
+                      value={reimbursementType}
+                      onChangeText={setReimbursementType}
+                      placeholder="Reimbursement type"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Notes
+                    </AppText>
+                    <TextInput
+                      value={notes}
+                      onChangeText={setNotes}
+                      placeholder="Notes"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                      multiline
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Budget category id
+                    </AppText>
+                    <TextInput
+                      value={budgetCategoryId}
+                      onChangeText={setBudgetCategoryId}
+                      placeholder="Budget category id"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Transaction type
+                    </AppText>
+                    <TextInput
+                      value={type}
+                      onChangeText={setType}
+                      placeholder="Transaction type"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Email receipt
+                    </AppText>
+                    <AppButton
+                      title={hasEmailReceipt ? 'Email receipt: yes' : 'Email receipt: no'}
+                      variant="secondary"
+                      onPress={() => setHasEmailReceipt((prev) => !prev)}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.detailRows}>
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Source
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {transaction.source?.trim() || '—'}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Date
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {formatDate(transaction.transactionDate)}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Amount
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {formatMoney(transaction.amountCents)}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Status
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {transaction.status?.trim() || '—'}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Purchased by
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {transaction.purchasedBy?.trim() || '—'}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Reimbursement type
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {transaction.reimbursementType?.trim() || '—'}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Notes
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {transaction.notes?.trim() || '—'}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Budget category
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {budgetCategoryLabel}
+                    </AppText>
+                  </View>
+                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                  <View style={styles.detailRow}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Email receipt
+                    </AppText>
+                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                      {hasReceiptLabel}
+                    </AppText>
+                  </View>
+                </View>
+              )}
+            </TitledCard>
+
+            {/* Tax & Itemization Section */}
+            {itemizationEnabled ? (
+              <TitledCard title="Tax & Itemization">
+                {isEditing ? (
+                  <View style={styles.form}>
+                    <View style={styles.formGroup}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Tax rate (%)
+                      </AppText>
+                      <TextInput
+                        value={taxRatePct}
+                        onChangeText={setTaxRatePct}
+                        placeholder="0"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View style={styles.formGroup}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Subtotal
+                      </AppText>
+                      <TextInput
+                        value={subtotal}
+                        onChangeText={setSubtotal}
+                        placeholder="$0.00"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                      />
+                    </View>
+                    <View style={styles.formGroup}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Tax amount
+                      </AppText>
+                      <TextInput
+                        value={taxAmount}
+                        onChangeText={setTaxAmount}
+                        placeholder="$0.00"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.detailRows}>
+                    <View style={styles.detailRow}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Subtotal
+                      </AppText>
+                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                        {formatMoney(transaction.subtotalCents)}
+                      </AppText>
+                    </View>
+                    <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                    <View style={styles.detailRow}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Tax rate
+                      </AppText>
+                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                        {formatPercent(transaction.taxRatePct)}
+                      </AppText>
+                    </View>
+                    <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                    <View style={styles.detailRow}>
+                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                        Tax amount
+                      </AppText>
+                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                        {typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
+                          ? formatMoney(transaction.amountCents - transaction.subtotalCents)
+                          : '—'}
+                      </AppText>
+                    </View>
+                  </View>
+                )}
+              </TitledCard>
+            ) : null}
+
+            {/* Transaction Items Section */}
+            <TitledCard title="Transaction Items">
+              {itemizationEnabled && (
+                <View style={styles.infoRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Itemization enabled
+                  </AppText>
+                </View>
+              )}
+              {!itemizationEnabled && linkedItems.length > 0 ? (
+                <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
+                  Itemization is off, but this transaction already has items.
+                </AppText>
+              ) : null}
+
+              <View style={styles.actions}>
+                <AppButton title="Create item" variant="secondary" onPress={handleCreateItem} disabled={isCanonical} />
+                <AppButton
+                  title={isPickingItems ? 'Close picker' : 'Add existing items'}
+                  variant="secondary"
+                  onPress={() => {
+                    setIsPickingItems((prev) => !prev);
+                    setPickerSelectedIds([]);
+                    setPickerTab('suggested');
+                  }}
+                  disabled={isCanonical}
+                />
+              </View>
+
+              {isPickingItems ? (
+                <SharedItemPicker
+                  tabs={pickerTabOptions}
+                  selectedTab={pickerTab}
+                  onTabChange={(next) => {
+                    setPickerTab(next);
+                    setPickerSelectedIds([]);
+                  }}
+                  items={activePickerItems}
+                  selectedIds={pickerSelectedIds}
+                  onSelectionChange={setPickerSelectedIds}
+                  eligibilityCheck={{
+                    isEligible: (item) => item.transactionId !== id,
+                    getStatusLabel: (item) => {
+                      if (item.transactionId === id) return 'Already linked';
+                      if (item.transactionId) return 'Linked elsewhere';
+                      return undefined;
+                    },
+                  }}
+                  onAddSelected={handleAddSelectedItems}
+                  outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
+                  outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
+                />
+              ) : null}
+
+              {linkedItems.length > 0 ? (
+                <View style={styles.list}>
+                  {linkedItems.map((item) => {
+                    const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
+                    const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
+                    const priceLabel = typeof item.purchasePriceCents === 'number'
+                      ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
+                      : undefined;
+
+                    return (
+                      <ItemCard
+                        key={item.id}
+                        name={item.name?.trim() || 'Untitled item'}
+                        sku={item.sku}
+                        priceLabel={priceLabel}
+                        thumbnailUri={thumbnailUri}
+                        bookmarked={item.bookmarked}
+                        onPress={() => router.push(`/items/${item.id}`)}
+                        menuItems={[
+                          {
+                            label: 'View item',
+                            onPress: () => router.push(`/items/${item.id}`),
+                            icon: 'open-in-new',
+                          },
+                          {
+                            label: 'Remove from transaction',
+                            onPress: () => handleRemoveLinkedItem(item.id),
+                            icon: 'remove-circle-outline',
+                          },
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    No items linked yet.
+                  </AppText>
+                </View>
+              )}
+            </TitledCard>
+
+            {/* Transaction Audit Section - Placeholder */}
+            <TitledCard title="Transaction Audit">
+              <View style={styles.auditPlaceholder}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Transaction audit section coming soon.
+                </AppText>
+                <AppText variant="caption" style={[styles.auditDescription, getTextSecondaryStyle(uiKitTheme)]}>
+                  This will show:
+                </AppText>
+                <View style={styles.auditFeaturesList}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    • Items total vs transaction subtotal
+                  </AppText>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    • Completeness indicators
+                  </AppText>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    • Missing price warnings
+                  </AppText>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    • Tax variance calculations
+                  </AppText>
+                </View>
+              </View>
+            </TitledCard>
+            {/* TODO: Full implementation required
+             * See: docs/specs/transaction_audit_spec.md
+             * Reference: /Users/benjaminmackenzie/Dev/ledger/src/components/ui/TransactionAudit.tsx
+             */}
+
+            {/* Bottom Sheet Menu */}
+            <BottomSheetMenuList
+              visible={menuVisible}
+              onRequestClose={() => setMenuVisible(false)}
+              items={menuItems}
+              title="Transaction actions"
+              showLeadingIcons={true}
+            />
           </>
         ) : (
           <AppText variant="body">Transaction not found.</AppText>
         )}
-      </View>
+      </AppScrollView>
+
+      {/* Image Galleries */}
+      {transaction && transaction.receiptImages && transaction.receiptImages.length > 0 && (
+        <ImageGallery
+          images={transaction.receiptImages}
+          initialIndex={receiptGalleryIndex}
+          visible={receiptGalleryVisible}
+          onRequestClose={() => setReceiptGalleryVisible(false)}
+        />
+      )}
+
+      {transaction && transaction.otherImages && transaction.otherImages.length > 0 && (
+        <ImageGallery
+          images={transaction.otherImages}
+          initialIndex={otherGalleryIndex}
+          visible={otherGalleryVisible}
+          onRequestClose={() => setOtherGalleryVisible(false)}
+        />
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 12,
+  scroll: {
+    flex: 1,
+  },
+  content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
+    paddingBottom: 24,
+    gap: 18,
+  },
+  screenContent: {
+    paddingTop: 0,
+  },
+  card: {},
+  heroHeader: {
+    gap: 6,
+  },
+  heroTitle: {
+    lineHeight: 26,
+  },
+  form: {
+    gap: 12,
+  },
+  formGroup: {
+    gap: 8,
+  },
+  formRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  formHalf: {
+    flex: 1,
+  },
+  detailRows: {
+    gap: 12,
+  },
+  detailRow: {
+    ...layout.rowBetween,
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  valueText: {
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  divider: {
+    borderTopWidth: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  statusText: {
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  errorText: {
+    lineHeight: 18,
+  },
+  emptyState: {
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 16,
+  },
+  imagePicker: {
+    marginTop: 12,
+  },
+  auditPlaceholder: {
+    gap: 12,
+    paddingVertical: 8,
+  },
+  auditDescription: {
+    marginTop: 4,
+  },
+  auditFeaturesList: {
+    gap: 6,
+    marginTop: 8,
+    paddingLeft: 8,
   },
   actions: {
     flexDirection: 'row',
@@ -651,5 +1204,21 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  warningText: {
+    marginBottom: 12,
   },
 });

@@ -433,7 +433,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const handleBulkSellToBusiness = useCallback(async () => {
     if (!accountId || selectedIds.length === 0 || scopeConfig.scope !== 'project') return;
     const selected = items.filter((item) => selectedIds.includes(item.id));
-    const missingCategory = selected.find((item) => !item.inheritedBudgetCategoryId);
+    const missingCategory = selected.find((item) => !item.budgetCategoryId);
     if (missingCategory && !bulkSourceCategoryId.trim()) {
       setBulkError('Select a source category for uncategorized items before selling.');
       return;

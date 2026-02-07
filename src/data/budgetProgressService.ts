@@ -9,6 +9,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import type { Transaction } from './transactionsService';
+import type { BudgetCategory } from './budgetCategoriesService';
+import { refreshBudgetCategories, mapBudgetCategories } from './budgetCategoriesService';
 
 export type BudgetProgress = {
   spentCents: number;
@@ -30,28 +32,57 @@ async function getQuerySnapshotWithPreference(queryRef: unknown, mode: 'online' 
 }
 
 function normalizeSpendAmount(tx: Transaction): number {
-  if (tx.status === 'canceled') return 0;
+  // Exclude canceled transactions
+  if (tx.isCanceled === true) return 0;
+
   if (typeof tx.amountCents !== 'number') return 0;
   const amount = tx.amountCents;
-  const type = tx.type?.trim().toLowerCase();
-  if (type === 'return') {
+  const txType = tx.transactionType?.trim().toLowerCase();
+
+  // Handle returns (negative amount)
+  if (txType === 'return') {
     return -Math.abs(amount);
   }
+
+  // Handle canonical inventory sales with direction-based multiplier
+  if (tx.isCanonicalInventorySale && tx.inventorySaleDirection) {
+    // project_to_business: subtract from spent (money back)
+    // business_to_project: add to spent (money out)
+    return tx.inventorySaleDirection === 'project_to_business'
+      ? -Math.abs(amount)
+      : Math.abs(amount);
+  }
+
+  // Default: purchases add to spent
   return amount;
 }
 
-function buildBudgetProgress(transactions: Transaction[]): BudgetProgress {
+function buildBudgetProgress(
+  transactions: Transaction[],
+  budgetCategories: Record<string, BudgetCategory>
+): BudgetProgress {
   const spentByCategory: Record<string, number> = {};
-  let spentCents = 0;
+  let overallSpentCents = 0;
+
   transactions.forEach((tx) => {
     const categoryId = tx.budgetCategoryId?.trim();
     if (!categoryId) return;
+
     const amount = normalizeSpendAmount(tx);
-    if (!amount) return;
-    spentCents += amount;
+    if (amount === 0) return; // Skip canceled
+
+    // Track per-category spending (always include)
     spentByCategory[categoryId] = (spentByCategory[categoryId] ?? 0) + amount;
+
+    // Track overall spending (exclude if category has excludeFromOverallBudget)
+    const category = budgetCategories[categoryId];
+    const shouldExclude = category?.metadata?.excludeFromOverallBudget === true;
+    if (!shouldExclude) {
+      overallSpentCents += amount;
+    }
   });
-  return { spentCents, spentByCategory };
+
+  return { spentCents: overallSpentCents, spentByCategory };
 }
 
 export function subscribeToProjectBudgetProgress(
@@ -63,6 +94,13 @@ export function subscribeToProjectBudgetProgress(
     onChange({ spentCents: 0, spentByCategory: {} });
     return () => {};
   }
+
+  // Fetch budget categories once for the subscription
+  let budgetCategoriesMap: Record<string, BudgetCategory> = {};
+  refreshBudgetCategories(accountId, 'offline').then((categories) => {
+    budgetCategoriesMap = mapBudgetCategories(categories);
+  });
+
   const collectionRef = collection(db, `accounts/${accountId}/transactions`);
   const projectQuery = query(collectionRef, where('projectId', '==', projectId));
   return onSnapshot(
@@ -71,7 +109,7 @@ export function subscribeToProjectBudgetProgress(
       const transactions = snapshot.docs.map(
         (doc) => ({ ...(doc.data() as object), id: doc.id } as Transaction)
       );
-      onChange(buildBudgetProgress(transactions));
+      onChange(buildBudgetProgress(transactions, budgetCategoriesMap));
     },
     (error) => {
       console.warn('[budgetProgressService] project subscription failed', error);
@@ -88,11 +126,16 @@ export async function refreshProjectBudgetProgress(
   if (!isFirebaseConfigured || !db) {
     return { spentCents: 0, spentByCategory: {} };
   }
+
+  // Fetch budget categories
+  const budgetCategories = await refreshBudgetCategories(accountId, mode);
+  const budgetCategoriesMap = mapBudgetCategories(budgetCategories);
+
   const collectionRef = collection(db, `accounts/${accountId}/transactions`);
   const projectQuery = query(collectionRef, where('projectId', '==', projectId));
   const snapshot = await getQuerySnapshotWithPreference(projectQuery, mode);
   const transactions = snapshot.docs.map(
     (doc: any) => ({ ...(doc.data() as object), id: doc.id } as Transaction)
   );
-  return buildBudgetProgress(transactions);
+  return buildBudgetProgress(transactions, budgetCategoriesMap);
 }

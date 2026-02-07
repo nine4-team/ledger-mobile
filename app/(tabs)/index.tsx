@@ -135,19 +135,16 @@ function ProjectsList() {
     fetchProjectPreferencesMap({ accountId, userId, projectIds })
       .then((prefs) => {
         setProjectPreferences(prefs);
-        const furnishings = Object.values(budgetCategories).find(
-          (category) => category.name.toLowerCase() === 'furnishings'
-        );
         projectIds.forEach((projectId) => {
           if (!prefs[projectId]) {
-            void ensureProjectPreferences(accountId, projectId, furnishings ? [furnishings.id] : []);
+            void ensureProjectPreferences(accountId, projectId);
           }
         });
       })
       .catch(() => {
         setProjectPreferences({});
       });
-  }, [accountId, budgetCategories, projects, userId]);
+  }, [accountId, projects, userId]);
 
   useEffect(() => {
     if (!accountId || projects.length === 0) {

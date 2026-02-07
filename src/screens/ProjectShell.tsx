@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, StyleSheet, View } from 'react-native';
+import { Alert, Image, Share, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../components/Screen';
 import { useScreenTabs } from '../components/ScreenTabs';
 import { AppText } from '../components/AppText';
-import { AppButton } from '../components/AppButton';
-import { BudgetProgress } from '../components/BudgetProgress';
 import { SharedItemsList } from '../components/SharedItemsList';
 import { SharedTransactionsList } from '../components/SharedTransactionsList';
 import { useAccountContextStore } from '../auth/accountContextStore';
@@ -14,17 +12,24 @@ import { createProjectScopeConfig, getListStateKey } from '../data/scopeConfig';
 import { useScopeSwitching } from '../data/useScopeSwitching';
 import { Project, deleteProject, subscribeToProject } from '../data/projectService';
 import { mapBudgetCategories, refreshBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
-import { subscribeToProjectPreferences } from '../data/projectPreferencesService';
+import { subscribeToProjectPreferences, updateProjectPreferences } from '../data/projectPreferencesService';
 import { refreshProjectBudgetCategories, subscribeToProjectBudgetCategories } from '../data/projectBudgetCategoriesService';
+import { subscribeToAccountPresets } from '../data/accountPresetsService';
+import { BudgetProgressDisplay } from '../components/budget/BudgetProgressDisplay';
+import type { AccountPresets } from '../data/accountPresetsService';
+import type { ProjectBudgetCategory } from '../data/projectBudgetCategoriesService';
 import { refreshSpaces } from '../data/spacesService';
-import { refreshScopedItems, refreshScopedTransactions } from '../data/scopedListData';
+import { refreshScopedItems, refreshScopedTransactions, ScopedTransaction, ScopedItem, subscribeToScopedTransactions, subscribeToScopedItems } from '../data/scopedListData';
 import { createRepository } from '../data/repository';
 import { subscribeToProjectBudgetProgress } from '../data/budgetProgressService';
+import { isCanonicalInventorySaleTransaction } from '../data/inventoryOperations';
 import { layout } from '../ui';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveAttachmentUri } from '../offline/media';
 import { ProjectSpacesList } from './ProjectSpacesList';
+import { BottomSheetMenuList } from '../components/BottomSheetMenuList';
+import type { AnchoredMenuItem } from '../components/AnchoredMenuList';
 
 type ProjectShellProps = {
   projectId: string;
@@ -48,6 +53,11 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   const [budgetByCategory, setBudgetByCategory] = useState<Record<string, number>>({});
   const [budgetSpentCents, setBudgetSpentCents] = useState(0);
   const [budgetSpentByCategory, setBudgetSpentByCategory] = useState<Record<string, number>>({});
+  const [accountPresets, setAccountPresets] = useState<AccountPresets | null>(null);
+  const [projectBudgetCategories, setProjectBudgetCategories] = useState<Record<string, ProjectBudgetCategory>>({});
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [transactions, setTransactions] = useState<ScopedTransaction[]>([]);
+  const [items, setItems] = useState<ScopedItem[]>([]);
   const wasOnlineRef = useRef(isOnline);
   const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
   useScopeSwitching(scopeConfig, { isActive: isFocused });
@@ -90,6 +100,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
     if (!accountId || !projectId) {
       setBudgetTotalCents(null);
       setBudgetByCategory({});
+      setProjectBudgetCategories({});
       return;
     }
     return subscribeToProjectBudgetCategories(accountId, projectId, (categories) => {
@@ -97,9 +108,14 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
         map[category.id] = category.budgetCents ?? 0;
         return map;
       }, {});
+      const projectBudgetMap = categories.reduce<Record<string, ProjectBudgetCategory>>((map, category) => {
+        map[category.id] = category;
+        return map;
+      }, {});
       const total = Object.values(nextBudgetByCategory).reduce((sum, value) => sum + value, 0);
       setBudgetByCategory(nextBudgetByCategory);
       setBudgetTotalCents(total);
+      setProjectBudgetCategories(projectBudgetMap);
     });
   }, [accountId, projectId]);
 
@@ -114,6 +130,34 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
       setBudgetSpentByCategory(progress.spentByCategory);
     });
   }, [accountId, projectId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setAccountPresets(null);
+      return;
+    }
+    return subscribeToAccountPresets(accountId, setAccountPresets);
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId || !projectId) {
+      setTransactions([]);
+      return;
+    }
+    return subscribeToScopedTransactions(accountId, scopeConfig, (next) => {
+      setTransactions(next);
+    });
+  }, [accountId, projectId, scopeConfig]);
+
+  useEffect(() => {
+    if (!accountId || !projectId) {
+      setItems([]);
+      return;
+    }
+    return subscribeToScopedItems(accountId, scopeConfig, (next) => {
+      setItems(next);
+    });
+  }, [accountId, projectId, scopeConfig]);
 
   const handleRefresh = useCallback(async () => {
     if (!accountId || isRefreshing) return;
@@ -162,36 +206,136 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
     ]);
   }, [accountId, projectId, router]);
 
+  const handlePinToggle = useCallback(
+    async (categoryId: string) => {
+      if (!userId || !projectId || !accountId) return;
+
+      const isPinned = pinnedBudgetCategoryIds.includes(categoryId);
+      const nextPinned = isPinned
+        ? pinnedBudgetCategoryIds.filter((id) => id !== categoryId)
+        : [...pinnedBudgetCategoryIds, categoryId];
+
+      await updateProjectPreferences(accountId, userId, projectId, {
+        pinnedBudgetCategoryIds: nextPinned,
+      });
+    },
+    [accountId, userId, projectId, pinnedBudgetCategoryIds]
+  );
+
+  const handleExportTransactions = useCallback(async () => {
+    if (!accountId) return;
+    const headers = [
+      'id',
+      'date',
+      'source',
+      'amount',
+      'categoryName',
+      'budgetCategoryId',
+      'inventorySaleDirection',
+      'itemCategories',
+    ];
+    const rows = transactions.map((tx) => {
+      const categoryName =
+        tx.budgetCategoryId && budgetCategories[tx.budgetCategoryId]
+          ? budgetCategories[tx.budgetCategoryId].name
+          : '';
+      const isCanonical = isCanonicalInventorySaleTransaction(tx);
+      const itemCategories = isCanonical
+        ? ''
+        : items
+            .filter((item) => item.transactionId === tx.id && item.budgetCategoryId)
+            .map((item) => item.budgetCategoryId)
+            .filter(Boolean)
+            .join('|');
+      return [
+        tx.id,
+        tx.transactionDate ?? '',
+        tx.source ?? '',
+        typeof tx.amountCents === 'number' ? (tx.amountCents / 100).toFixed(2) : '',
+        (categoryName || tx.budgetCategoryId) ?? '',
+        tx.budgetCategoryId ?? '',
+        tx.inventorySaleDirection ?? '',
+        itemCategories,
+      ];
+    });
+    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    await Share.share({ message: csv, title: `project-${projectId}-transactions.csv` });
+  }, [accountId, budgetCategories, items, projectId, transactions]);
+
+  const handleMenuPress = useCallback(() => {
+    setMenuVisible(true);
+  }, []);
+
+  const menuItems: AnchoredMenuItem[] = useMemo(() => {
+    return [
+      {
+        key: 'edit',
+        label: 'Edit Project',
+        onPress: () => {
+          setMenuVisible(false);
+          router.push(`/project/${projectId}/edit`);
+        },
+      },
+      {
+        key: 'export',
+        label: 'Export Transactions',
+        onPress: () => {
+          setMenuVisible(false);
+          void handleExportTransactions();
+        },
+      },
+      {
+        key: 'delete',
+        label: 'Delete Project',
+        onPress: () => {
+          setMenuVisible(false);
+          handleDelete();
+        },
+      },
+    ];
+  }, [handleDelete, handleExportTransactions, projectId, router]);
+
   return (
-    <Screen
-      title={project?.name?.trim() || 'Project'}
-      refreshing={isRefreshing}
-      onRefresh={handleRefresh}
-      tabs={[
-        { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
-        { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
-        { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
-      ]}
-      initialTabKey={initialTabKey ?? 'items'}
-    >
-      <ProjectShellContent
-        projectId={projectId}
-        project={project}
-        isOnline={isOnline}
-        isLoading={isLoading}
-        refreshError={refreshError}
-        refreshToken={refreshToken}
-        onEdit={() => router.push(`/project/${projectId}/edit`)}
-        onDelete={handleDelete}
-        scopeConfig={scopeConfig}
-        budgetCategories={budgetCategories}
-        pinnedBudgetCategoryIds={pinnedBudgetCategoryIds}
-        budgetTotalCents={budgetTotalCents}
-        budgetByCategory={budgetByCategory}
-        budgetSpentCents={budgetSpentCents}
-        budgetSpentByCategory={budgetSpentByCategory}
+    <>
+      <Screen
+        title={project?.name?.trim() || 'Project'}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        onPressMenu={handleMenuPress}
+        tabs={[
+          { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
+          { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
+          { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
+        ]}
+        initialTabKey={initialTabKey ?? 'items'}
+      >
+        <ProjectShellContent
+          projectId={projectId}
+          project={project}
+          isOnline={isOnline}
+          isLoading={isLoading}
+          refreshError={refreshError}
+          refreshToken={refreshToken}
+          scopeConfig={scopeConfig}
+          budgetCategories={budgetCategories}
+          pinnedBudgetCategoryIds={pinnedBudgetCategoryIds}
+          budgetTotalCents={budgetTotalCents}
+          budgetByCategory={budgetByCategory}
+          budgetSpentCents={budgetSpentCents}
+          budgetSpentByCategory={budgetSpentByCategory}
+          accountPresets={accountPresets}
+          projectBudgetCategories={projectBudgetCategories}
+          onPinToggle={handlePinToggle}
+        />
+      </Screen>
+      <BottomSheetMenuList
+        visible={menuVisible}
+        onRequestClose={() => setMenuVisible(false)}
+        items={menuItems}
+        title={project?.name?.trim() || 'Project'}
+        showLeadingIcons={false}
       />
-    </Screen>
+    </>
   );
 }
 
@@ -202,8 +346,6 @@ type ProjectShellContentProps = {
   isLoading: boolean;
   refreshError: string | null;
   refreshToken: number;
-  onEdit: () => void;
-  onDelete: () => void;
   scopeConfig: ReturnType<typeof createProjectScopeConfig>;
   budgetCategories: Record<string, { id: string; name: string }>;
   pinnedBudgetCategoryIds: string[];
@@ -211,6 +353,9 @@ type ProjectShellContentProps = {
   budgetByCategory: Record<string, number>;
   budgetSpentCents: number;
   budgetSpentByCategory: Record<string, number>;
+  accountPresets: AccountPresets | null;
+  projectBudgetCategories: Record<string, ProjectBudgetCategory>;
+  onPinToggle: (categoryId: string) => void;
 };
 
 function ProjectShellContent({
@@ -220,8 +365,6 @@ function ProjectShellContent({
   isLoading,
   refreshError,
   refreshToken,
-  onEdit,
-  onDelete,
   scopeConfig,
   budgetCategories,
   pinnedBudgetCategoryIds,
@@ -229,7 +372,11 @@ function ProjectShellContent({
   budgetByCategory,
   budgetSpentCents,
   budgetSpentByCategory,
+  accountPresets,
+  projectBudgetCategories,
+  onPinToggle,
 }: ProjectShellContentProps) {
+  const router = useRouter();
   const screenTabs = useScreenTabs();
   const selectedKey = screenTabs?.selectedKey ?? 'items';
   const listStateKeyItems = getListStateKey(scopeConfig, 'items');
@@ -252,33 +399,22 @@ function ProjectShellContent({
         <AppText variant="caption">
           {project?.clientName?.trim() ? project.clientName.trim() : 'No client name'}
         </AppText>
-        <View style={styles.budgetPreview}>
-          <AppText variant="caption">
-            {typeof budgetTotalCents === 'number'
-              ? `Budget: $${(budgetTotalCents / 100).toFixed(2)}`
-              : 'Budget not set'}
-          </AppText>
-          {typeof budgetTotalCents === 'number' ? (
-            <BudgetProgress spentCents={budgetSpentCents} budgetCents={budgetTotalCents} />
-          ) : null}
-          {pinnedBudgetCategoryIds.length ? (
-            <View style={styles.pinnedBudgets}>
-              {pinnedBudgetCategoryIds.slice(0, 2).map((id) => {
-                const name = budgetCategories[id]?.name ?? id;
-                const spent = budgetSpentByCategory[id] ?? 0;
-                const budget = budgetByCategory[id] ?? 0;
-                const label = budget
-                  ? `${name}: $${(spent / 100).toFixed(2)} / $${(budget / 100).toFixed(2)}`
-                  : name;
-                return (
-                  <AppText key={id} variant="caption" style={styles.budgetPins}>
-                    {label}
-                  </AppText>
-                );
-              })}
-            </View>
-          ) : null}
-        </View>
+        <BudgetProgressDisplay
+          projectId={projectId}
+          budgetCategories={Object.values(budgetCategories)}
+          projectBudgetCategories={projectBudgetCategories}
+          budgetProgress={{ spentCents: budgetSpentCents, spentByCategory: budgetSpentByCategory }}
+          pinnedCategoryIds={pinnedBudgetCategoryIds}
+          accountPresets={accountPresets}
+          onPinToggle={onPinToggle}
+          onCategoryPress={(categoryId) => {
+            // Navigate to transactions filtered by category
+            router.push(`/project/${projectId}?tab=transactions&categoryId=${categoryId}`);
+          }}
+          onSetBudget={() => {
+            router.push(`/project/${projectId}/budget`);
+          }}
+        />
       </View>
       <View style={styles.headerRow}>
         <AppText variant="caption">
@@ -287,10 +423,6 @@ function ProjectShellContent({
         <AppText variant="caption">
           {isOnline ? 'Online' : 'Offline'}
         </AppText>
-      </View>
-      <View style={styles.actions}>
-        <AppButton title="Edit" variant="secondary" onPress={onEdit} />
-        <AppButton title="Delete" variant="secondary" onPress={onDelete} />
       </View>
       {refreshError ? (
         <AppText variant="caption" style={styles.refreshError}>
@@ -332,26 +464,11 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 12,
   },
-  budgetPreview: {
-    gap: 4,
-  },
-  pinnedBudgets: {
-    gap: 2,
-  },
-  budgetPins: {
-    opacity: 0.8,
-  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    paddingVertical: 8,
   },
   refreshError: {
     paddingBottom: 8,

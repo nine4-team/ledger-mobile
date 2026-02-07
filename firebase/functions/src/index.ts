@@ -342,7 +342,7 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
     if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
       throw new HttpsError('failed-precondition', 'Item transaction changed.');
     }
-    if (item.inheritedBudgetCategoryId && item.inheritedBudgetCategoryId !== budgetCategoryId) {
+    if (item.budgetCategoryId && item.budgetCategoryId !== budgetCategoryId) {
       throw new HttpsError('failed-precondition', 'Budget category mismatch for item.');
     }
     const previousTxId = item.transactionId ?? null;
@@ -387,7 +387,7 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
           projectId: null,
           transactionId: null,
           spaceId: null,
-          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? resolvedBudgetCategoryId,
+          budgetCategoryId: item.budgetCategoryId ?? resolvedBudgetCategoryId,
           updatedAt: FieldValue.serverTimestamp(),
           updatedBy: context.requestData.createdBy ?? null,
           latestTransactionId: null,
@@ -438,7 +438,7 @@ async function handleProjectToBusiness(context: RequestHandlerContext) {
           projectId: null,
           transactionId: saleId,
           spaceId: null,
-          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? resolvedBudgetCategoryId,
+          budgetCategoryId: item.budgetCategoryId ?? resolvedBudgetCategoryId,
           updatedAt: FieldValue.serverTimestamp(),
           updatedBy: context.requestData.createdBy ?? null,
           latestTransactionId: saleId,
@@ -521,7 +521,7 @@ async function handleBusinessToProject(context: RequestHandlerContext) {
         transactionId: purchaseId,
         status: item.status ?? 'purchased',
         spaceId: null,
-        inheritedBudgetCategoryId: budgetCategoryId,
+        budgetCategoryId: budgetCategoryId,
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: context.requestData.createdBy ?? null,
         latestTransactionId: purchaseId,
@@ -573,7 +573,7 @@ async function handleProjectToProject(context: RequestHandlerContext) {
     if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
       throw new HttpsError('failed-precondition', 'Item transaction changed.');
     }
-    if (item.inheritedBudgetCategoryId && item.inheritedBudgetCategoryId !== sourceBudgetCategoryId) {
+    if (item.budgetCategoryId && item.budgetCategoryId !== sourceBudgetCategoryId) {
       throw new HttpsError('failed-precondition', 'Budget category mismatch for item.');
     }
     const previousTxId = item.transactionId ?? null;
@@ -670,7 +670,7 @@ async function handleProjectToProject(context: RequestHandlerContext) {
         projectId: targetProjectId,
         transactionId: purchaseId,
         spaceId: null,
-        inheritedBudgetCategoryId: destinationBudgetCategoryId,
+        budgetCategoryId: destinationBudgetCategoryId,
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: context.requestData.createdBy ?? null,
         latestTransactionId: purchaseId,
@@ -949,6 +949,117 @@ export const onInventoryRequestCreated = onDocumentCreated(
   }
 );
 
+/**
+ * Phase 6: Space Deletion Cleanup Cloud Function
+ *
+ * When a space is soft-deleted (isArchived changes from false to true),
+ * this function clears the spaceId field from all items that belong to that space.
+ *
+ * Key features:
+ * - Triggers on space update (Firestore trigger)
+ * - Detects isArchived change from false to true
+ * - Batch updates items to clear spaceId field
+ * - Handles large batches (Firestore batch limit = 500)
+ * - Scoped to correct workspace (respects projectId)
+ * - Logs success/failure
+ */
+export const onSpaceArchived = onDocumentUpdated(
+  'accounts/{accountId}/spaces/{spaceId}',
+  async (event) => {
+    const before = event.data?.before.data() as any;
+    const after = event.data?.after.data() as any;
+
+    if (!before || !after) {
+      console.warn('[onSpaceArchived] Missing before/after data');
+      return;
+    }
+
+    const accountId = event.params.accountId as string;
+    const spaceId = event.params.spaceId as string;
+
+    // Only process when isArchived changes from false to true
+    const wasArchived = before.isArchived === true;
+    const nowArchived = after.isArchived === true;
+
+    if (wasArchived || !nowArchived) {
+      // Not a soft delete operation, skip
+      return;
+    }
+
+    console.log(`[onSpaceArchived] Space ${spaceId} archived, clearing items...`);
+
+    const db = getFirestore();
+    const projectId = after.projectId ?? null;
+
+    try {
+      // Query all items that belong to this space
+      let itemsQuery = db
+        .collection(`accounts/${accountId}/items`)
+        .where('spaceId', '==', spaceId);
+
+      // Scope to the correct workspace (project or business inventory)
+      if (projectId !== null) {
+        itemsQuery = itemsQuery.where('projectId', '==', projectId);
+      } else {
+        // Business inventory context (projectId is null)
+        itemsQuery = itemsQuery.where('projectId', '==', null);
+      }
+
+      const snapshot = await itemsQuery.get();
+      const itemCount = snapshot.docs.length;
+
+      if (itemCount === 0) {
+        console.log(`[onSpaceArchived] No items found for space ${spaceId}`);
+        return;
+      }
+
+      console.log(`[onSpaceArchived] Found ${itemCount} items to update for space ${spaceId}`);
+
+      // Firestore batch limit is 500 operations
+      const BATCH_SIZE = 500;
+      const batches: any[] = [];
+      let currentBatch = db.batch();
+      let operationCount = 0;
+
+      snapshot.docs.forEach((doc) => {
+        currentBatch.update(doc.ref, {
+          spaceId: null,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        operationCount++;
+
+        // Create a new batch if we hit the limit
+        if (operationCount === BATCH_SIZE) {
+          batches.push(currentBatch);
+          currentBatch = db.batch();
+          operationCount = 0;
+        }
+      });
+
+      // Add the last batch if it has any operations
+      if (operationCount > 0) {
+        batches.push(currentBatch);
+      }
+
+      // Commit all batches
+      console.log(`[onSpaceArchived] Committing ${batches.length} batch(es) for space ${spaceId}`);
+      await Promise.all(batches.map((batch) => batch.commit()));
+
+      console.log(
+        `[onSpaceArchived] Successfully cleared spaceId from ${itemCount} items for space ${spaceId}`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(
+        `[onSpaceArchived] Failed to clear items for space ${spaceId}: ${message}`,
+        error
+      );
+      // Don't throw - we want the space deletion to succeed even if cleanup fails
+      // Items will still be accessible, just with an invalid spaceId reference
+    }
+  }
+);
+
 type AcceptInviteRequest = {
   token: string;
   deviceInfo?: Record<string, unknown>;
@@ -1004,11 +1115,25 @@ const BUDGET_CATEGORY_PRESET_SEED: BudgetCategorySeed[] = [
     metadata: { categoryType: 'itemized', excludeFromOverallBudget: false },
   },
   {
+    id: 'seed_install',
+    name: 'Install',
+    slug: 'install',
+    order: 1,
+    metadata: { categoryType: 'general', excludeFromOverallBudget: false },
+  },
+  {
     id: 'seed_design_fee',
     name: 'Design Fee',
     slug: 'design-fee',
-    order: 1,
-    metadata: { categoryType: 'fee', excludeFromOverallBudget: false },
+    order: 2,
+    metadata: { categoryType: 'fee', excludeFromOverallBudget: true },
+  },
+  {
+    id: 'seed_storage_receiving',
+    name: 'Storage & Receiving',
+    slug: 'storage-receiving',
+    order: 3,
+    metadata: { categoryType: 'general', excludeFromOverallBudget: false },
   },
 ];
 
@@ -1018,6 +1143,7 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
   const now = FieldValue.serverTimestamp();
 
   const collectionRef = db.collection(`accounts/${accountId}/presets/default/budgetCategories`);
+  const accountPresetsRef = db.doc(`accounts/${accountId}/presets/default`);
 
   await db.runTransaction(async (tx) => {
     // Fast path: if Furnishings exists, ensure it's usable (not archived) and exit.
@@ -1039,7 +1165,7 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
       return;
     }
 
-    // Seed minimal required set (currently just Furnishings) in an idempotent way.
+    // Seed all 4 default budget categories in an idempotent way.
     for (const seed of BUDGET_CATEGORY_PRESET_SEED) {
       const seedRef = collectionRef.doc(seed.id);
       const seedSnap = await tx.get(seedRef);
@@ -1065,6 +1191,21 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
           updatedBy: createdBy ?? null,
         },
         { merge: false }
+      );
+    }
+
+    // Set Furnishings as the default category in AccountPresets
+    const accountPresetsSnap = await tx.get(accountPresetsRef);
+    if (!accountPresetsSnap.exists || !accountPresetsSnap.data()?.defaultBudgetCategoryId) {
+      tx.set(
+        accountPresetsRef,
+        {
+          id: 'default',
+          accountId,
+          defaultBudgetCategoryId: 'seed_furnishings',
+          updatedAt: now,
+        },
+        { merge: true }
       );
     }
   });

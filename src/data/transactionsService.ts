@@ -29,7 +29,8 @@ export type Transaction = {
   purchasedBy?: string | null;
   reimbursementType?: string | null;
   notes?: string | null;
-  type?: string | null;
+  transactionType?: string | null;
+  isCanceled?: boolean | null;
   budgetCategoryId?: string | null;
   hasEmailReceipt?: boolean | null;
   receiptImages?: AttachmentRef[] | null;

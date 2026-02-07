@@ -6,7 +6,7 @@ type MovableItem = {
   id: string;
   projectId?: string | null;
   transactionId?: string | null;
-  inheritedBudgetCategoryId?: string | null;
+  budgetCategoryId?: string | null;
 };
 
 export type ResolveItemMoveOptions = {
@@ -15,7 +15,7 @@ export type ResolveItemMoveOptions = {
   targetProjectId: string | null;
   targetSpaceId?: string | null;
   targetTransactionId?: string | null;
-  inheritedBudgetCategoryId?: string | null;
+  budgetCategoryId?: string | null;
   sourceBudgetCategoryId?: string | null;
   destinationBudgetCategoryId?: string | null;
 };
@@ -43,7 +43,7 @@ export async function resolveItemMove(
     targetProjectId,
     targetSpaceId,
     targetTransactionId,
-    inheritedBudgetCategoryId,
+    budgetCategoryId,
     sourceBudgetCategoryId,
     destinationBudgetCategoryId,
   } = options;
@@ -58,8 +58,8 @@ export async function resolveItemMove(
     if (targetTransactionId !== undefined) {
       update.transactionId = targetTransactionId;
     }
-    if (inheritedBudgetCategoryId !== undefined) {
-      update.inheritedBudgetCategoryId = inheritedBudgetCategoryId;
+    if (budgetCategoryId !== undefined) {
+      update.budgetCategoryId = budgetCategoryId;
     }
     if (Object.keys(update).length > 0) {
       await updateItem(accountId, itemId, update);
@@ -69,7 +69,7 @@ export async function resolveItemMove(
 
   // If item is in inventory (projectId is null), move to project
   if (currentProjectId == null && targetProjectId != null) {
-    const budgetCategoryId = destinationBudgetCategoryId ?? inheritedBudgetCategoryId;
+    const budgetCategoryId = destinationBudgetCategoryId ?? budgetCategoryId;
     if (!budgetCategoryId) {
       return {
         success: false,
@@ -91,7 +91,7 @@ export async function resolveItemMove(
 
   // If item is in a project and target is inventory, move to business inventory
   if (currentProjectId != null && targetProjectId == null) {
-    const budgetCategoryId = sourceBudgetCategoryId ?? item.inheritedBudgetCategoryId ?? inheritedBudgetCategoryId;
+    const budgetCategoryId = sourceBudgetCategoryId ?? item.budgetCategoryId ?? budgetCategoryId;
     if (!budgetCategoryId) {
       return {
         success: false,
@@ -108,7 +108,7 @@ export async function resolveItemMove(
           id: itemId,
           projectId: currentProjectId,
           transactionId: item.transactionId ?? null,
-          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
+          budgetCategoryId: item.budgetCategoryId ?? null,
         },
       ],
     });
@@ -120,8 +120,8 @@ export async function resolveItemMove(
 
   // If item is in a different project, move between projects
   if (currentProjectId != null && targetProjectId != null && currentProjectId !== targetProjectId) {
-    const resolvedSourceCategoryId = sourceBudgetCategoryId ?? item.inheritedBudgetCategoryId ?? inheritedBudgetCategoryId;
-    const resolvedDestinationCategoryId = destinationBudgetCategoryId ?? inheritedBudgetCategoryId;
+    const resolvedSourceCategoryId = sourceBudgetCategoryId ?? item.budgetCategoryId ?? budgetCategoryId;
+    const resolvedDestinationCategoryId = destinationBudgetCategoryId ?? budgetCategoryId;
     if (!resolvedSourceCategoryId || !resolvedDestinationCategoryId) {
       return {
         success: false,
@@ -140,7 +140,7 @@ export async function resolveItemMove(
           id: itemId,
           projectId: currentProjectId,
           transactionId: item.transactionId ?? null,
-          inheritedBudgetCategoryId: item.inheritedBudgetCategoryId ?? null,
+          budgetCategoryId: item.budgetCategoryId ?? null,
         },
       ],
     });

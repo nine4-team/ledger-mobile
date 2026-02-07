@@ -1,15 +1,24 @@
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   getDocsFromCache,
   getDocsFromServer,
   onSnapshot,
+  serverTimestamp,
+  setDoc,
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { auth } from '../firebase/firebase';
 
 export type ProjectBudgetCategory = {
   id: string;
   budgetCents: number | null;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  createdBy?: string;
+  updatedBy?: string;
 };
 
 type Unsubscribe = () => void;
@@ -64,4 +73,41 @@ export async function refreshProjectBudgetCategories(
   return snapshot.docs.map(
     (doc: any) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
   );
+}
+
+export async function setProjectBudgetCategory(
+  accountId: string,
+  projectId: string,
+  categoryId: string,
+  data: Partial<ProjectBudgetCategory>
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) {
+    return;
+  }
+
+  const uid = auth?.currentUser?.uid;
+  const ref = doc(db, `accounts/${accountId}/projects/${projectId}/budgetCategories/${categoryId}`);
+
+  // Check if document exists to determine if we need createdAt
+  const snapshot = await getDoc(ref);
+  const exists = snapshot.exists;
+
+  const now = serverTimestamp();
+  const payload: any = {
+    ...data,
+    updatedAt: now,
+  };
+
+  if (uid) {
+    payload.updatedBy = uid;
+  }
+
+  if (!exists) {
+    payload.createdAt = now;
+    if (uid) {
+      payload.createdBy = uid;
+    }
+  }
+
+  await setDoc(ref, payload, { merge: true });
 }

@@ -12,12 +12,13 @@ import {
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 
-export type BudgetCategoryType = 'standard' | 'general' | 'itemized' | 'fee';
+export type BudgetCategoryType = 'general' | 'itemized' | 'fee';
 
-const normalizeBudgetCategoryType = (value?: BudgetCategoryType) => (value === 'general' ? 'standard' : value);
 
 export type BudgetCategory = {
   id: string;
+  accountId?: string | null;
+  projectId?: string | null;
   name: string;
   slug?: string | null;
   isArchived?: boolean | null;
@@ -27,6 +28,10 @@ export type BudgetCategory = {
     excludeFromOverallBudget?: boolean;
     legacy?: Record<string, unknown> | null;
   } | null;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  createdBy?: string | null;
+  updatedBy?: string | null;
 };
 
 type Unsubscribe = () => void;
@@ -116,10 +121,6 @@ export async function createBudgetCategory(
   }
   const now = serverTimestamp();
   const hasMetadataOption = Object.prototype.hasOwnProperty.call(options ?? {}, 'metadata');
-  const normalizedMetadata =
-    options?.metadata && options.metadata.categoryType
-      ? { ...options.metadata, categoryType: normalizeBudgetCategoryType(options.metadata.categoryType) }
-      : options?.metadata;
   const ref = await addDoc(collection(firestore, `accounts/${accountId}/presets/default/budgetCategories`), {
     accountId,
     projectId: null,
@@ -127,7 +128,7 @@ export async function createBudgetCategory(
     slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
     isArchived: false,
     order: Date.now(),
-    ...(hasMetadataOption ? { metadata: normalizedMetadata ?? null } : {}),
+    ...(hasMetadataOption ? { metadata: options?.metadata ?? null } : {}),
     createdAt: now,
     updatedAt: now,
   });
@@ -145,15 +146,11 @@ export async function updateBudgetCategory(
   const firestore = db;
   const now = serverTimestamp();
   const hasMetadata = Object.prototype.hasOwnProperty.call(data, 'metadata');
-  const nextMetadata =
-    data.metadata && data.metadata.categoryType
-      ? { ...data.metadata, categoryType: normalizeBudgetCategoryType(data.metadata.categoryType) }
-      : data.metadata;
   await setDoc(
     doc(firestore, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`),
     {
       ...data,
-      ...(hasMetadata ? { metadata: nextMetadata ?? null } : {}),
+      ...(hasMetadata ? { metadata: data.metadata ?? null } : {}),
       updatedAt: now,
     },
     { merge: true }

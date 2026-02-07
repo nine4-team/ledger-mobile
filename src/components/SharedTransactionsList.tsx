@@ -905,8 +905,8 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       const itemCategories = isCanonical
         ? ''
         : items
-            .filter((item) => item.transactionId === tx.id && item.inheritedBudgetCategoryId)
-            .map((item) => item.inheritedBudgetCategoryId)
+            .filter((item) => item.transactionId === tx.id && item.budgetCategoryId)
+            .map((item) => item.budgetCategoryId)
             .filter(Boolean)
             .join('|');
       return [
@@ -999,7 +999,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
               active: isFilterActive,
             },
             { title: 'Add', variant: 'primary', onPress: handleCreateTransaction, iconName: 'add' },
-            ...(scopeConfig.capabilities?.canExportCsv
+            ...(scopeConfig.capabilities?.canExportCsv && scopeConfig.scope !== 'project'
               ? [
                   {
                     title: 'Export',

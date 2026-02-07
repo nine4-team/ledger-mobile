@@ -11,6 +11,7 @@ import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../src/components/TitledCard';
 import { ThumbnailGrid } from '../../src/components/ThumbnailGrid';
 import { ImageGallery } from '../../src/components/ImageGallery';
+import { SpaceSelector } from '../../src/components/SpaceSelector';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -203,7 +204,7 @@ export default function ItemDetailScreen() {
     const isCanonical = isCanonicalTransactionId(transaction.id);
     const update: Partial<Item> = { transactionId: transaction.id };
     if (!isCanonical && transaction.budgetCategoryId) {
-      update.inheritedBudgetCategoryId = transaction.budgetCategoryId;
+      update.budgetCategoryId = transaction.budgetCategoryId;
     }
     await updateItem(accountId, id, update);
     setError(null);
@@ -278,7 +279,7 @@ export default function ItemDetailScreen() {
 
   const handleSellToInventory = async () => {
     if (!accountId || !id || !projectId) return;
-    if (!item?.inheritedBudgetCategoryId) {
+    if (!item?.budgetCategoryId) {
       setError(
         "Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first."
       );
@@ -306,7 +307,7 @@ export default function ItemDetailScreen() {
     await requestBusinessToProjectPurchase({
       accountId,
       targetProjectId: targetProjectId.trim(),
-      inheritedBudgetCategoryId: targetCategoryId.trim(),
+      budgetCategoryId: targetCategoryId.trim(),
       items: [item],
     });
     setTargetProjectId('');
@@ -319,7 +320,7 @@ export default function ItemDetailScreen() {
       accountId,
       sourceProjectId: projectId,
       targetProjectId: targetProjectId.trim(),
-      inheritedBudgetCategoryId: targetCategoryId.trim(),
+      budgetCategoryId: targetCategoryId.trim(),
       items: [item],
     });
     setTargetProjectId('');
@@ -351,8 +352,8 @@ export default function ItemDetailScreen() {
   const spaceLabel = item?.spaceId
     ? spaces[item.spaceId]?.name?.trim() || item.spaceId
     : 'None';
-  const budgetCategoryLabel = item?.inheritedBudgetCategoryId
-    ? budgetCategories[item.inheritedBudgetCategoryId]?.name?.trim() || item.inheritedBudgetCategoryId
+  const budgetCategoryLabel = item?.budgetCategoryId
+    ? budgetCategories[item.budgetCategoryId]?.name?.trim() || item.budgetCategoryId
     : 'None';
   const locationLabel = useMemo(() => {
     if (scope === 'inventory') return 'Inventory';
@@ -657,6 +658,22 @@ export default function ItemDetailScreen() {
                       placeholder="$0.00"
                       placeholderTextColor={theme.colors.textSecondary}
                       style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+                    />
+                  </View>
+                  <View style={styles.formGroup}>
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      Space
+                    </AppText>
+                    <SpaceSelector
+                      projectId={item?.projectId ?? null}
+                      value={item?.spaceId ?? null}
+                      onChange={async (newSpaceId) => {
+                        if (accountId && id) {
+                          await updateItem(accountId, id, { spaceId: newSpaceId });
+                        }
+                      }}
+                      allowCreate={true}
+                      placeholder="Select space (optional)"
                     />
                   </View>
                 </View>

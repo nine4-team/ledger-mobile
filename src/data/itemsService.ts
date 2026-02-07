@@ -38,7 +38,7 @@ export type Item = {
   purchasedBy?: string | null;
   bookmark?: boolean | null;
   images?: AttachmentRef[] | null;
-  inheritedBudgetCategoryId?: string | null;
+  budgetCategoryId?: string | null;
 };
 
 export type ItemWrite = Omit<Partial<Item>, 'name'> & {

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
+import { SpaceSelector } from '../../src/components/SpaceSelector';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { getTextInputStyle } from '../../src/ui/styles/forms';
@@ -49,6 +50,7 @@ export default function NewItemScreen() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [localImageUri, setLocalImageUri] = useState('');
+  const [spaceId, setSpaceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,11 +93,11 @@ export default function NewItemScreen() {
     setError(null);
     setIsSubmitting(true);
     try {
-      let inheritedBudgetCategoryId: string | null = null;
+      let budgetCategoryId: string | null = null;
       if (transactionId) {
         const transaction = await getTransaction(accountId, transactionId, 'online');
         if (transaction && !isCanonicalTransactionId(transaction.id) && transaction.budgetCategoryId) {
-          inheritedBudgetCategoryId = transaction.budgetCategoryId;
+          budgetCategoryId = transaction.budgetCategoryId;
         }
       }
       const payload = {
@@ -108,7 +110,8 @@ export default function NewItemScreen() {
         projectPriceCents,
         projectId: scope === 'project' ? projectId ?? null : null,
         transactionId: transactionId ?? null,
-        inheritedBudgetCategoryId,
+        budgetCategoryId,
+        spaceId: spaceId ?? null,
         images: imageUrls.map((url, index) => ({
           url,
           kind: 'image' as const,
@@ -199,6 +202,14 @@ export default function NewItemScreen() {
           placeholder="needs_review / complete"
           placeholderTextColor={theme.colors.textSecondary}
           style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+        />
+        <AppText variant="body">Space</AppText>
+        <SpaceSelector
+          projectId={scope === 'project' ? projectId ?? null : null}
+          value={spaceId}
+          onChange={setSpaceId}
+          allowCreate={true}
+          placeholder="Select space (optional)"
         />
         <AppText variant="body">Images</AppText>
         <TextInput
