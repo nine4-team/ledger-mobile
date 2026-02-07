@@ -9,8 +9,7 @@ import { AppScrollView } from '../../src/components/AppScrollView';
 import { BottomSheetMenuList } from '../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../src/components/TitledCard';
-import { ThumbnailGrid } from '../../src/components/ThumbnailGrid';
-import { ImageGallery } from '../../src/components/ImageGallery';
+import { MediaGallerySection } from '../../src/components/MediaGallerySection';
 import { SpaceSelector } from '../../src/components/SpaceSelector';
 import {
   CARD_PADDING,
@@ -38,8 +37,8 @@ import {
   requestProjectToBusinessSale,
   requestProjectToProjectMove,
 } from '../../src/data/inventoryOperations';
-import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia } from '../../src/offline/media';
-import type { AttachmentRef } from '../../src/offline/media';
+import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../src/offline/media';
+import type { AttachmentRef, AttachmentKind } from '../../src/offline/media';
 
 type ItemDetailParams = {
   id?: string;
@@ -90,10 +89,6 @@ export default function ItemDetailScreen() {
   const [targetCategoryId, setTargetCategoryId] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
-  const [imageUrl, setImageUrl] = useState('');
-  const [localImageUri, setLocalImageUri] = useState('');
-  const [galleryVisible, setGalleryVisible] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     if (scope === 'project' && projectId) {
@@ -229,32 +224,35 @@ export default function ItemDetailScreen() {
     });
   };
 
-  const handleAddImage = async () => {
+  const handleAddImage = async (localUri: string, kind: AttachmentKind) => {
     if (!accountId || !id || !item) return;
-    let nextUrl = imageUrl.trim();
-    if (!nextUrl && localImageUri.trim()) {
-      const result = await saveLocalMedia({
-        localUri: localImageUri.trim(),
-        mimeType: 'image/jpeg',
-        ownerScope: `item:${id}`,
-        persistCopy: false,
-      });
-      nextUrl = result.attachmentRef.url;
-    }
-    if (!nextUrl) return;
+
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    const result = await saveLocalMedia({
+      localUri,
+      mimeType,
+      ownerScope: `item:${id}`,
+      persistCopy: false,
+    });
+
     const hasPrimary = (item.images ?? []).some((image) => image.isPrimary);
-    const newImage: AttachmentRef = { url: nextUrl, kind: 'image', isPrimary: !hasPrimary };
+    const newImage: AttachmentRef = {
+      url: result.attachmentRef.url,
+      kind,
+      isPrimary: !hasPrimary && kind === 'image',
+    };
     const nextImages: AttachmentRef[] = [...(item.images ?? []), newImage].slice(0, 5);
     await updateItem(accountId, id, { images: nextImages });
-    setImageUrl('');
-    setLocalImageUri('');
+
+    // Enqueue upload in background
+    await enqueueUpload({ mediaId: result.mediaId });
   };
 
-  const handleRemoveImage = async (url: string) => {
+  const handleRemoveImage = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !item) return;
-    const nextImages = (item.images ?? []).filter((image) => image.url !== url);
-    if (url.startsWith('offline://')) {
-      await deleteLocalMediaByUrl(url);
+    const nextImages = (item.images ?? []).filter((image) => image.url !== attachment.url);
+    if (attachment.url.startsWith('offline://')) {
+      await deleteLocalMediaByUrl(attachment.url);
     }
     if (!nextImages.some((image) => image.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
@@ -262,11 +260,11 @@ export default function ItemDetailScreen() {
     await updateItem(accountId, id, { images: nextImages });
   };
 
-  const handleSetPrimaryImage = async (url: string) => {
+  const handleSetPrimaryImage = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !item) return;
     const nextImages = (item.images ?? []).map((image) => ({
       ...image,
-      isPrimary: image.url === url,
+      isPrimary: image.url === attachment.url,
     }));
     await updateItem(accountId, id, { images: nextImages });
   };
@@ -377,21 +375,14 @@ export default function ItemDetailScreen() {
       });
     }
 
-    items.push(
-      {
-        label: 'Add image',
-        onPress: handleAddImage,
-        icon: 'add-photo-alternate',
-      },
-      {
-        label: 'Transaction',
-        icon: 'link',
-        subactions: [
-          { key: 'link', label: 'Link transaction', onPress: handleLinkTransaction, icon: 'link' },
-          { key: 'unlink', label: 'Unlink transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
-        ],
-      }
-    );
+    items.push({
+      label: 'Transaction',
+      icon: 'link',
+      subactions: [
+        { key: 'link', label: 'Link transaction', onPress: handleLinkTransaction, icon: 'link' },
+        { key: 'unlink', label: 'Unlink transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
+      ],
+    });
 
     if (scope === 'inventory') {
       items.push({
@@ -491,9 +482,28 @@ export default function ItemDetailScreen() {
                 <AppText variant="h2" style={styles.heroTitle}>
                   {item.name?.trim() || 'Untitled item'}
                 </AppText>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  {item.projectId ? `Project ${item.projectId}` : ''}
-                </AppText>
+                <View style={styles.heroSubtitle}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Transaction:{' '}
+                  </AppText>
+                  {trimmedTransactionId ? (
+                    <Pressable accessibilityRole="link" onPress={handleOpenTransaction}>
+                      <AppText
+                        variant="caption"
+                        style={[
+                          styles.linkText,
+                          getTextColorStyle(uiKitTheme.link),
+                        ]}
+                      >
+                        {transactionLabel}
+                      </AppText>
+                    </Pressable>
+                  ) : (
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      None
+                    </AppText>
+                  )}
+                </View>
               </View>
             </View>
 
@@ -505,71 +515,19 @@ export default function ItemDetailScreen() {
               </View>
             ) : null}
 
-            <TitledCard title="Images">
-              {isEditing && (
-                <View style={styles.form}>
-                  <TextInput
-                    value={imageUrl}
-                    onChangeText={setImageUrl}
-                    placeholder="Image URL"
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                  />
-                  <TextInput
-                    value={localImageUri}
-                    onChangeText={setLocalImageUri}
-                    placeholder="Local image URI (offline)"
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                  />
-                </View>
-              )}
-
-              {item.images && item.images.length > 0 ? (
-                <ThumbnailGrid
-                  images={item.images}
-                  maxImages={5}
-                  size="md"
-                  tileScale={1.5}
-                  onImagePress={(image, index) => {
-                    setGalleryIndex(index);
-                    setGalleryVisible(true);
-                  }}
-                  onSetPrimary={(image) => handleSetPrimaryImage(image.url)}
-                  onDelete={(image) => handleRemoveImage(image.url)}
-                  onAddImage={
-                    isEditing && item.images.length < 5
-                      ? () => {
-                          handleAddImage();
-                        }
-                      : undefined
-                  }
-                />
-              ) : (
-                <View style={styles.emptyState}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    No images yet.
-                  </AppText>
-                  {isEditing && (
-                    <AppButton
-                      title="Add image"
-                      variant="secondary"
-                      onPress={handleAddImage}
-                      style={styles.addImageButton}
-                    />
-                  )}
-                </View>
-              )}
-            </TitledCard>
-
-            {item.images && item.images.length > 0 && (
-              <ImageGallery
-                images={item.images}
-                initialIndex={galleryIndex}
-                visible={galleryVisible}
-                onRequestClose={() => setGalleryVisible(false)}
-              />
-            )}
+            <MediaGallerySection
+              title="Images"
+              attachments={item.images ?? []}
+              maxAttachments={5}
+              allowedKinds={['image']}
+              onAddAttachment={handleAddImage}
+              onRemoveAttachment={handleRemoveImage}
+              onSetPrimary={handleSetPrimaryImage}
+              emptyStateMessage="No images yet."
+              pickerLabel="Add image"
+              size="md"
+              tileScale={1.5}
+            />
 
             <TitledCard title="Details">
               {isEditing ? (
@@ -741,34 +699,6 @@ export default function ItemDetailScreen() {
                       {budgetCategoryLabel}
                     </AppText>
                   </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Transaction
-                    </AppText>
-                    {trimmedTransactionId ? (
-                      <Pressable accessibilityRole="link" onPress={handleOpenTransaction}>
-                        <AppText
-                          variant="body"
-                          style={[
-                            styles.valueText,
-                            textEmphasis.value,
-                            styles.linkText,
-                            getTextColorStyle(uiKitTheme.link),
-                          ]}
-                        >
-                          {transactionLabel}
-                        </AppText>
-                      </Pressable>
-                    ) : (
-                      <AppText
-                        variant="body"
-                        style={[styles.valueText, textEmphasis.value, getTextSecondaryStyle(uiKitTheme)]}
-                      >
-                        {transactionLabel}
-                      </AppText>
-                    )}
-                  </View>
                 </View>
               )}
             </TitledCard>
@@ -831,6 +761,10 @@ const styles = StyleSheet.create({
   heroTitle: {
     // Let long names wrap, but keep the screen feeling deliberate.
     lineHeight: 26,
+  },
+  heroSubtitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   heroDescription: {
     marginTop: 10,
