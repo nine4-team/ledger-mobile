@@ -25,7 +25,7 @@ export default function ProjectShellRoute() {
   }
 
   const initialTabKey =
-    tab === 'transactions' || tab === 'spaces' || tab === 'items' ? tab : 'items';
+    tab === 'budget' || tab === 'transactions' || tab === 'spaces' || tab === 'items' ? tab : 'budget';
 
   return <ProjectShell projectId={projectId} initialTabKey={initialTabKey} />;
 }

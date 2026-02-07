@@ -14,6 +14,10 @@ import { InfoButton, InfoDialogContent } from './InfoButton';
 export interface TopHeaderProps {
   title: string;
   /**
+   * Optional subtitle displayed below the title in smaller, lighter text.
+   */
+  subtitle?: string;
+  /**
    * Optional custom handler for the kebab button.
    * If omitted, a default example menu will open.
    */
@@ -42,6 +46,7 @@ export interface TopHeaderProps {
 
 export function TopHeader({
   title,
+  subtitle,
   onPressMenu,
   menuAccessibilityLabel,
   onPressBack,
@@ -130,9 +135,16 @@ export function TopHeader({
           ) : null}
           {!infoContent && !onPressBack ? <View style={styles.leftSpacer} /> : null}
         </View>
-        <AppText variant="h2" style={styles.title}>
-          {title}
-        </AppText>
+        <View style={styles.titleContainer}>
+          <AppText variant="h2" style={styles.title} numberOfLines={1}>
+            {title}
+          </AppText>
+          {subtitle ? (
+            <AppText variant="caption" style={styles.subtitle} numberOfLines={1}>
+              {subtitle}
+            </AppText>
+          ) : null}
+        </View>
 
         <View style={styles.rightButtonOuter}>
           {rightActions ? <View style={styles.rightActions}>{rightActions}</View> : null}
@@ -174,9 +186,18 @@ const styles = StyleSheet.create({
   headerNoBorder: {
     borderBottomWidth: 0,
   },
-  title: {
+  titleContainer: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
     textAlign: 'center',
+  },
+  subtitle: {
+    textAlign: 'center',
+    opacity: 0.7,
+    marginTop: -2,
   },
   leftSpacer: {
     width: 60,

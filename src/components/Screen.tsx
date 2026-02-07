@@ -18,6 +18,7 @@ interface ScreenProps {
   containerStyle?: ViewStyle;
   contentStyle?: ViewStyle;
   title?: string;
+  subtitle?: string;
   onPressMenu?: () => void;
   tabs?: ScreenTabItem[];
   initialTabKey?: string;
@@ -81,6 +82,7 @@ export const Screen: React.FC<ScreenProps> = ({
   containerStyle,
   contentStyle,
   title,
+  subtitle,
   onPressMenu,
   tabs,
   initialTabKey,
@@ -136,6 +138,7 @@ export const Screen: React.FC<ScreenProps> = ({
       {title ? (
         <TopHeader
           title={title}
+          subtitle={subtitle}
           onPressMenu={onPressMenu}
           onPressBack={shouldShowBackButton ? handleBack : undefined}
           hideBottomBorder={true}

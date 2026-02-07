@@ -33,7 +33,7 @@ import type { AnchoredMenuItem } from '../components/AnchoredMenuList';
 
 type ProjectShellProps = {
   projectId: string;
-  initialTabKey?: 'items' | 'transactions' | 'spaces';
+  initialTabKey?: 'budget' | 'items' | 'transactions' | 'spaces';
 };
 
 export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
@@ -299,15 +299,18 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
     <>
       <Screen
         title={project?.name?.trim() || 'Project'}
+        subtitle={project?.clientName?.trim()}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}
         onPressMenu={handleMenuPress}
         tabs={[
+          { key: 'budget', label: 'Budget', accessibilityLabel: 'Budget tab' },
           { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
           { key: 'transactions', label: 'Transactions', accessibilityLabel: 'Transactions tab' },
           { key: 'spaces', label: 'Spaces', accessibilityLabel: 'Spaces tab' },
         ]}
-        initialTabKey={initialTabKey ?? 'items'}
+        initialTabKey={initialTabKey ?? 'budget'}
+        includeBottomInset={false}
       >
         <ProjectShellContent
           projectId={projectId}
@@ -395,10 +398,19 @@ function ProjectShellContent({
             style={styles.projectImage}
           />
         ) : null}
-        <AppText variant="title">{project?.name?.trim() || 'Project'}</AppText>
-        <AppText variant="caption">
-          {project?.clientName?.trim() ? project.clientName.trim() : 'No client name'}
+      </View>
+      {refreshError ? (
+        <AppText variant="caption" style={styles.refreshError}>
+          {isOnline ? refreshError : 'Offline. Refresh will run when you reconnect.'}
         </AppText>
+      ) : null}
+      {isLoading ? (
+        <AppText variant="body">Loading project…</AppText>
+      ) : !project ? (
+        <AppText variant="body">
+          {isOnline ? 'Project not found.' : 'Offline. Project data unavailable.'}
+        </AppText>
+      ) : selectedKey === 'budget' ? (
         <BudgetProgressDisplay
           projectId={projectId}
           budgetCategories={Object.values(budgetCategories)}
@@ -415,18 +427,6 @@ function ProjectShellContent({
             router.push(`/project/${projectId}/budget`);
           }}
         />
-      </View>
-      {refreshError ? (
-        <AppText variant="caption" style={styles.refreshError}>
-          {isOnline ? refreshError : 'Offline. Refresh will run when you reconnect.'}
-        </AppText>
-      ) : null}
-      {isLoading ? (
-        <AppText variant="body">Loading project…</AppText>
-      ) : !project ? (
-        <AppText variant="body">
-          {isOnline ? 'Project not found.' : 'Offline. Project data unavailable.'}
-        </AppText>
       ) : selectedKey === 'items' && listStateKeyItems ? (
         <SharedItemsList
           scopeConfig={scopeConfig}
@@ -455,6 +455,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 140,
     borderRadius: 12,
+  },
+  projectNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+  },
+  projectName: {
+    flexShrink: 1,
+  },
+  clientName: {
+    flexShrink: 0,
   },
   refreshError: {
     paddingBottom: 8,
