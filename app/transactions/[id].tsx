@@ -17,7 +17,7 @@ import { Item, updateItem } from '../../src/data/itemsService';
 import { saveLocalMedia } from '../../src/offline/media';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../src/data/transactionsService';
-import { isCanonicalTransactionId } from '../../src/data/inventoryOperations';
+import { isCanonicalInventorySaleTransaction } from '../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../src/data/resolveItemMove';
 
@@ -166,7 +166,7 @@ export default function TransactionDetailScreen() {
     router.replace(fallbackTarget);
   };
 
-  const isCanonical = isCanonicalTransactionId(id ?? '');
+  const isCanonical = isCanonicalInventorySaleTransaction(transaction);
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
   const selectedCategory = budgetCategories[budgetCategoryId];
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';

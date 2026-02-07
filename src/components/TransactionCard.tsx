@@ -59,12 +59,6 @@ function formatDate(dateString?: string): string {
   }
 }
 
-function getPurchasedByLabel(purchasedBy?: string): string {
-  if (!purchasedBy) return '';
-  if (purchasedBy === 'client-card') return 'Client';
-  if (purchasedBy === 'design-business') return 'Design Business';
-  return purchasedBy;
-}
 
 export function TransactionCard({
   id,
@@ -210,7 +204,6 @@ export function TransactionCard({
 
   const amountLabel = formatCurrency(amountCents);
   const dateLabel = formatDate(transactionDate);
-  const purchasedByLabel = getPurchasedByLabel(purchasedBy);
   const typeLabel = getTypeLabel();
 
   return (
@@ -246,7 +239,113 @@ export function TransactionCard({
               <SelectorCircle selected={isSelected} indicator="dot" />
             </Pressable>
           ) : null}
+
           <View style={styles.headerSpacer} />
+
+          {/* Badges in header - right side, specific order */}
+          {(budgetCategoryName || typeLabel || needsReview || reimbursementType || hasEmailReceipt) ? (
+            <View style={styles.headerBadgesRow}>
+              {typeLabel && typeBadgeStyle ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: typeBadgeStyle.backgroundColor,
+                      borderColor: typeBadgeStyle.borderColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: typeBadgeStyle.textColor }]} numberOfLines={1}>
+                    {typeLabel}
+                  </Text>
+                </View>
+              ) : null}
+
+              {reimbursementType === 'owed-to-client' ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: '#f59e0b33',
+                      borderColor: '#f59e0b66',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
+                    Owed to Client
+                  </Text>
+                </View>
+              ) : null}
+
+              {reimbursementType === 'owed-to-company' ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: '#f59e0b33',
+                      borderColor: '#f59e0b66',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
+                    Owed to Business
+                  </Text>
+                </View>
+              ) : null}
+
+              {hasEmailReceipt ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: uiKitTheme.primary.main + '1A',
+                      borderColor: uiKitTheme.primary.main + '33',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: uiKitTheme.primary.main }]} numberOfLines={1}>
+                    Receipt
+                  </Text>
+                </View>
+              ) : null}
+
+              {needsReview ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: '#ef444433',
+                      borderColor: '#ef444466',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: '#ef4444' }]} numberOfLines={1}>
+                    Needs Review
+                  </Text>
+                </View>
+              ) : null}
+
+              {budgetCategoryName ? (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: categoryBadgeStyle.backgroundColor,
+                      borderColor: categoryBadgeStyle.borderColor,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.badgeText, { color: categoryBadgeStyle.textColor }]}
+                    numberOfLines={1}
+                  >
+                    {budgetCategoryName}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
           <View style={styles.headerRight}>
             {onBookmarkPress ? (
               <Pressable
@@ -300,14 +399,6 @@ export function TransactionCard({
 
           {/* Transaction details row */}
           <View style={styles.detailsRow}>
-            {purchasedByLabel ? (
-              <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
-                {purchasedByLabel}
-              </Text>
-            ) : null}
-            {purchasedByLabel && dateLabel ? (
-              <Text style={[styles.metaText, themed.metaText]}> • </Text>
-            ) : null}
             <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
               {dateLabel}
             </Text>
@@ -318,110 +409,6 @@ export function TransactionCard({
             <Text style={[styles.notes, themed.metaText]} numberOfLines={2}>
               {notes}
             </Text>
-          ) : null}
-
-          {/* Badges row */}
-          {(budgetCategoryName || typeLabel || needsReview || reimbursementType || hasEmailReceipt) ? (
-            <View style={styles.badgesRow}>
-              {budgetCategoryName ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: categoryBadgeStyle.backgroundColor,
-                      borderColor: categoryBadgeStyle.borderColor,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.badgeText, { color: categoryBadgeStyle.textColor }]}
-                    numberOfLines={1}
-                  >
-                    {budgetCategoryName}
-                  </Text>
-                </View>
-              ) : null}
-
-              {typeLabel && typeBadgeStyle ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: typeBadgeStyle.backgroundColor,
-                      borderColor: typeBadgeStyle.borderColor,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: typeBadgeStyle.textColor }]} numberOfLines={1}>
-                    {typeLabel}
-                  </Text>
-                </View>
-              ) : null}
-
-              {needsReview ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: '#ef444433',
-                      borderColor: '#ef444466',
-                    },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: '#dc2626' }]} numberOfLines={1}>
-                    Needs Review
-                  </Text>
-                </View>
-              ) : null}
-
-              {reimbursementType === 'owed-to-client' ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: '#f59e0b33',
-                      borderColor: '#f59e0b66',
-                    },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
-                    Owed to Client
-                  </Text>
-                </View>
-              ) : null}
-
-              {reimbursementType === 'owed-to-company' ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: '#f59e0b33',
-                      borderColor: '#f59e0b66',
-                    },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
-                    Owed to Business
-                  </Text>
-                </View>
-              ) : null}
-
-              {hasEmailReceipt ? (
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: uiKitTheme.primary.main + '1A',
-                      borderColor: uiKitTheme.primary.main + '33',
-                    },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: uiKitTheme.primary.main }]} numberOfLines={1}>
-                    Receipt
-                  </Text>
-                </View>
-              ) : null}
-            </View>
           ) : null}
         </View>
       </Pressable>
@@ -456,6 +443,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     gap: 12,
+  },
+  headerBadgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
   },
   headerSpacer: {
     flex: 1,
@@ -519,12 +511,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     lineHeight: 18,
     fontStyle: 'italic',
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    alignItems: 'center',
   },
   badge: {
     paddingHorizontal: 10,
