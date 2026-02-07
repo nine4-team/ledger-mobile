@@ -48,6 +48,10 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Ledger needs access to your photo library to attach images to items, spaces, and transactions.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Ledger needs access to your camera to take photos for items, spaces, and transactions.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
