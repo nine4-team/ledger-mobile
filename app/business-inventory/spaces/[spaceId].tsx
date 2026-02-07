@@ -1,35 +1,34 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen } from '../../../../src/components/Screen';
-import { useScreenTabs } from '../../../../src/components/ScreenTabs';
-import { AppText } from '../../../../src/components/AppText';
-import { AppButton } from '../../../../src/components/AppButton';
-import { SharedItemPicker } from '../../../../src/components/SharedItemPicker';
-import { ThumbnailGrid } from '../../../../src/components/ThumbnailGrid';
-import { ImageGallery } from '../../../../src/components/ImageGallery';
-import { ImagePickerButton } from '../../../../src/components/ImagePickerButton';
-import { layout } from '../../../../src/ui';
-import { useTheme, useUIKitTheme } from '../../../../src/theme/ThemeProvider';
-import { useAccountContextStore } from '../../../../src/auth/accountContextStore';
-import { useAuthStore } from '../../../../src/auth/authStore';
-import { subscribeToSpace, subscribeToSpaces, Space, updateSpace, deleteSpace, Checklist } from '../../../../src/data/spacesService';
-import { createSpaceTemplate } from '../../../../src/data/spaceTemplatesService';
-import { createProjectScopeConfig, getScopeId } from '../../../../src/data/scopeConfig';
-import { useScopeSwitching } from '../../../../src/data/useScopeSwitching';
-import { useScopedListeners } from '../../../../src/data/useScopedListeners';
-import { subscribeToScopedItems, ScopedItem } from '../../../../src/data/scopedListData';
-import { updateItem } from '../../../../src/data/itemsService';
-import { createRepository } from '../../../../src/data/repository';
-import { getTextInputStyle } from '../../../../src/ui/styles/forms';
-import { deleteLocalMediaByUrl, saveLocalMedia } from '../../../../src/offline/media';
-import type { AttachmentRef } from '../../../../src/offline/media';
-import { useOutsideItems } from '../../../../src/hooks/useOutsideItems';
-import { useOptionalIsFocused } from '../../../../src/hooks/useOptionalIsFocused';
-import { resolveItemMove } from '../../../../src/data/resolveItemMove';
+import { Screen } from '../../../src/components/Screen';
+import { useScreenTabs } from '../../../src/components/ScreenTabs';
+import { AppText } from '../../../src/components/AppText';
+import { AppButton } from '../../../src/components/AppButton';
+import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
+import { ThumbnailGrid } from '../../../src/components/ThumbnailGrid';
+import { ImageGallery } from '../../../src/components/ImageGallery';
+import { ImagePickerButton } from '../../../src/components/ImagePickerButton';
+import { layout } from '../../../src/ui';
+import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
+import { useAccountContextStore } from '../../../src/auth/accountContextStore';
+import { useAuthStore } from '../../../src/auth/authStore';
+import { subscribeToSpace, subscribeToSpaces, Space, updateSpace, deleteSpace, Checklist } from '../../../src/data/spacesService';
+import { createSpaceTemplate } from '../../../src/data/spaceTemplatesService';
+import { createBusinessInventoryScopeConfig, getScopeId } from '../../../src/data/scopeConfig';
+import { useScopeSwitching } from '../../../src/data/useScopeSwitching';
+import { useScopedListeners } from '../../../src/data/useScopedListeners';
+import { subscribeToScopedItems, ScopedItem } from '../../../src/data/scopedListData';
+import { updateItem } from '../../../src/data/itemsService';
+import { createRepository } from '../../../src/data/repository';
+import { getTextInputStyle } from '../../../src/ui/styles/forms';
+import { deleteLocalMediaByUrl, saveLocalMedia } from '../../../src/offline/media';
+import type { AttachmentRef } from '../../../src/offline/media';
+import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
+import { useOptionalIsFocused } from '../../../src/hooks/useOptionalIsFocused';
+import { resolveItemMove } from '../../../src/data/resolveItemMove';
 
 type SpaceParams = {
-  projectId?: string;
   spaceId?: string;
 };
 
@@ -40,10 +39,9 @@ function randomId(prefix: string) {
   return cryptoApi?.randomUUID ? cryptoApi.randomUUID() : `${prefix}_${Date.now()}_${Math.random()}`;
 }
 
-export default function SpaceDetailScreen() {
+export default function BusinessInventorySpaceDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<SpaceParams>();
-  const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const spaceId = Array.isArray(params.spaceId) ? params.spaceId[0] : params.spaceId;
   const accountId = useAccountContextStore((store) => store.accountId);
   const userId = useAuthStore((store) => store.user?.uid ?? null);
@@ -60,11 +58,12 @@ export default function SpaceDetailScreen() {
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('current');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
 
+  // Business Inventory context: scope = 'inventory', includeInventory = false (only BI items)
   const outsideItemsHook = useOutsideItems({
     accountId,
-    currentProjectId: projectId ?? null,
-    scope: 'project',
-    includeInventory: true,
+    currentProjectId: null,
+    scope: 'inventory',
+    includeInventory: false,
   });
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
@@ -75,7 +74,8 @@ export default function SpaceDetailScreen() {
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   const isFocused = useOptionalIsFocused(true);
-  const scopeConfig = useMemo(() => (projectId ? createProjectScopeConfig(projectId) : null), [projectId]);
+  // Business Inventory scope config
+  const scopeConfig = useMemo(() => createBusinessInventoryScopeConfig(), []);
   const scopeId = useMemo(() => (scopeConfig ? getScopeId(scopeConfig) : null), [scopeConfig]);
   useScopeSwitching(scopeConfig, { isActive: isFocused });
 
@@ -95,16 +95,16 @@ export default function SpaceDetailScreen() {
   }, [accountId, spaceId]);
 
   useEffect(() => {
-    if (!accountId || !projectId) {
+    if (!accountId) {
       setSpaces([]);
       return;
     }
-    const unsubscribe = subscribeToSpaces(accountId, projectId, (next) => {
+    // Subscribe to BI spaces (projectId = null)
+    const unsubscribe = subscribeToSpaces(accountId, null, (next) => {
       setSpaces(next);
     });
     return () => unsubscribe();
-  }, [accountId, projectId]);
-
+  }, [accountId]);
 
   useEffect(() => {
     if (!accountId || !userId) {
@@ -196,11 +196,11 @@ export default function SpaceDetailScreen() {
   );
 
   const handleAddSelectedItems = useCallback(async () => {
-    if (!accountId || pickerSelectedIds.length === 0 || !projectId) return;
+    if (!accountId || pickerSelectedIds.length === 0) return;
     const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
-    
+
     if (pickerTab !== 'outside') {
-      // Items already in the project, just assign to space
+      // Items already in BI, just assign to space
       await Promise.all(
         selectedItems.map((item) => updateItem(accountId, item.id, { spaceId }))
       );
@@ -209,7 +209,7 @@ export default function SpaceDetailScreen() {
       return;
     }
 
-    // Items from outside need to be moved first
+    // Items from outside (projects) need to be moved to BI first
     const missingCategory = selectedItems.filter((item) => !item.budgetCategoryId);
     if (missingCategory.length > 0) {
       Alert.alert(
@@ -226,11 +226,11 @@ export default function SpaceDetailScreen() {
           return;
         }
 
-        // Use resolveItemMove to handle project moves and space assignment
+        // Use resolveItemMove to handle moves to BI and space assignment
         const result = await resolveItemMove(item, {
           accountId,
           itemId: item.id,
-          targetProjectId: projectId,
+          targetProjectId: null, // Moving to Business Inventory
           targetSpaceId: spaceId ?? null,
           budgetCategoryId: item.budgetCategoryId ?? null,
         });
@@ -247,7 +247,6 @@ export default function SpaceDetailScreen() {
     activePickerItems,
     pickerSelectedIds,
     pickerTab,
-    projectId,
     spaceId,
   ]);
 
@@ -267,7 +266,7 @@ export default function SpaceDetailScreen() {
   }, [accountId, bulkSelectedIds, bulkTargetSpaceId]);
 
   const handleDelete = () => {
-    if (!accountId || !projectId || !spaceId) return;
+    if (!accountId || !spaceId) return;
     const itemCount = spaceItems.length;
     const message = itemCount > 0
       ? `This space has ${itemCount} item${itemCount === 1 ? '' : 's'}. Items will not be deleted, but their space assignment will be cleared.`
@@ -279,7 +278,7 @@ export default function SpaceDetailScreen() {
         style: 'destructive',
         onPress: async () => {
           await deleteSpace(accountId, spaceId);
-          router.replace(`/project/${projectId}?tab=spaces`);
+          router.replace('/business-inventory/spaces');
         },
       },
     ]);
@@ -294,15 +293,13 @@ export default function SpaceDetailScreen() {
         notes: space.notes ?? null,
         checklists: space.checklists ?? null,
       });
-      Alert.alert('Success', 'Space saved as template successfully');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to save template.';
       setTemplateError(message);
-      Alert.alert('Error', message);
     }
   }, [accountId, space]);
 
-  if (!projectId || !spaceId) {
+  if (!spaceId) {
     return (
       <Screen title="Space">
         <View style={styles.container}>
@@ -321,32 +318,15 @@ export default function SpaceDetailScreen() {
         { key: 'checklists', label: 'Checklists', accessibilityLabel: 'Checklists tab' },
       ]}
       initialTabKey="items"
+      backTarget="/business-inventory/spaces"
     >
       <View style={styles.container}>
         <View style={styles.actions}>
-          <AppButton
-            title="Edit"
-            variant="secondary"
-            onPress={() => router.push(`/project/${projectId}/spaces/${spaceId}/edit`)}
-            accessibilityLabel="Edit space"
-            accessibilityHint="Navigate to edit this space"
-          />
+          <AppButton title="Edit" variant="secondary" onPress={() => router.push(`/business-inventory/spaces/${spaceId}/edit`)} />
           {canSaveTemplate ? (
-            <AppButton
-              title="Save as template"
-              variant="secondary"
-              onPress={handleSaveTemplate}
-              accessibilityLabel="Save as template"
-              accessibilityHint="Save this space as a reusable template"
-            />
+            <AppButton title="Save as template" variant="secondary" onPress={handleSaveTemplate} />
           ) : null}
-          <AppButton
-            title="Delete"
-            variant="secondary"
-            onPress={handleDelete}
-            accessibilityLabel="Delete space"
-            accessibilityHint="Permanently delete this space"
-          />
+          <AppButton title="Delete" variant="secondary" onPress={handleDelete} />
         </View>
         {templateError ? (
           <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
@@ -354,12 +334,9 @@ export default function SpaceDetailScreen() {
           </AppText>
         ) : null}
         {isLoading ? (
-          <View style={styles.loadingContainer} accessibilityRole="progressbar" accessibilityLabel="Loading space details">
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <AppText variant="body">Loading space…</AppText>
-          </View>
+          <AppText variant="body">Loading space…</AppText>
         ) : !space ? (
-          <AppText variant="body" accessibilityRole="alert">Space not found.</AppText>
+          <AppText variant="body">Space not found.</AppText>
         ) : selectedKey === 'items' ? (
           <>
             <View style={styles.actions}>
@@ -371,8 +348,6 @@ export default function SpaceDetailScreen() {
                   setPickerTab('current');
                   setPickerSelectedIds([]);
                 }}
-                accessibilityLabel={isPickingItems ? 'Close item picker' : 'Add existing items'}
-                accessibilityHint={isPickingItems ? 'Close the item picker' : 'Open item picker to add existing items to this space'}
               />
               <AppButton
                 title={bulkMode ? 'Done' : 'Bulk edit'}
@@ -381,14 +356,12 @@ export default function SpaceDetailScreen() {
                   setBulkMode((prev) => !prev);
                   setBulkSelectedIds([]);
                 }}
-                accessibilityLabel={bulkMode ? 'Exit bulk edit mode' : 'Enter bulk edit mode'}
-                accessibilityHint={bulkMode ? 'Exit bulk edit and return to normal view' : 'Enter bulk edit mode to move or remove multiple items at once'}
               />
             </View>
             {isPickingItems ? (
               <SharedItemPicker
                 tabs={[
-                  { value: 'current', label: 'In this project', accessibilityLabel: 'In this project tab' },
+                  { value: 'current', label: 'In Business Inventory', accessibilityLabel: 'In Business Inventory tab' },
                   { value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' },
                 ]}
                 selectedTab={pickerTab}
@@ -454,9 +427,8 @@ export default function SpaceDetailScreen() {
                             pathname: '/items/[id]',
                             params: {
                               id: item.id,
-                              scope: 'project',
-                              projectId: projectId ?? '',
-                              backTarget: projectId ? `/project/${projectId}?tab=spaces` : '/(tabs)',
+                              scope: 'inventory',
+                              backTarget: '/business-inventory/spaces',
                             },
                           });
                         }}
@@ -467,9 +439,6 @@ export default function SpaceDetailScreen() {
                             backgroundColor: uiKitTheme.background.surface,
                           },
                         ]}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${item.name?.trim() || 'Item'}${bulkMode ? (bulkSelectedIds.includes(item.id) ? ', selected' : ', not selected') : ''}`}
-                        accessibilityHint={bulkMode ? 'Tap to toggle selection' : 'Tap to view item details'}
                       >
                         <View style={styles.rowHeader}>
                           <AppText variant="body">{item.name?.trim() || 'Item'}</AppText>
@@ -542,8 +511,6 @@ export default function SpaceDetailScreen() {
                   { id: randomId('checklist'), name: 'Checklist', items: [] },
                 ])
               }
-              accessibilityLabel="Add new checklist"
-              accessibilityHint="Create a new checklist for this space"
             />
             {checklists.length === 0 ? (
               <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
@@ -582,10 +549,6 @@ export default function SpaceDetailScreen() {
                               { borderColor: uiKitTheme.border.primary },
                               item.isChecked && styles.checkboxChecked,
                             ]}
-                            accessibilityRole="checkbox"
-                            accessibilityState={{ checked: item.isChecked }}
-                            accessibilityLabel={item.text}
-                            accessibilityHint="Tap to toggle checklist item"
                           />
                           <TextInput
                             value={item.text}
@@ -696,11 +659,5 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: {
     backgroundColor: '#4c6ef5',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 32,
   },
 });

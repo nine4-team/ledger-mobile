@@ -1,7 +1,6 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDocs,
   getDocsFromCache,
@@ -30,11 +29,13 @@ export type Checklist = {
 
 export type Space = {
   id: string;
+  accountId: string;
   projectId: string | null;
   name: string;
   notes?: string | null;
   images?: AttachmentRef[] | null;
   checklists?: Checklist[] | null;
+  isArchived: boolean;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -51,7 +52,11 @@ export function subscribeToSpaces(
     return () => {};
   }
   const collectionRef = collection(db, `accounts/${accountId}/spaces`);
-  const queryRef = query(collectionRef, where('projectId', '==', projectId));
+  const queryRef = query(
+    collectionRef,
+    where('projectId', '==', projectId),
+    where('isArchived', '==', false)
+  );
   return onSnapshot(
     queryRef,
     (snapshot) => {
@@ -74,7 +79,11 @@ export async function refreshSpaces(
     return [];
   }
   const collectionRef = collection(db, `accounts/${accountId}/spaces`);
-  const queryRef = query(collectionRef, where('projectId', '==', projectId));
+  const queryRef = query(
+    collectionRef,
+    where('projectId', '==', projectId),
+    where('isArchived', '==', false)
+  );
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
     try {
@@ -101,11 +110,13 @@ export async function createSpace(
   }
   const now = serverTimestamp();
   const docRef = await addDoc(collection(db, `accounts/${accountId}/spaces`), {
+    accountId,
     name: data.name,
     notes: data.notes ?? null,
     projectId: data.projectId ?? null,
     checklists: data.checklists ?? null,
     images: data.images ?? null,
+    isArchived: false,
     createdAt: now,
     updatedAt: now,
   });
@@ -136,7 +147,14 @@ export async function deleteSpace(accountId: string, spaceId: string): Promise<v
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await deleteDoc(doc(db, `accounts/${accountId}/spaces/${spaceId}`));
+  await setDoc(
+    doc(db, `accounts/${accountId}/spaces/${spaceId}`),
+    {
+      isArchived: true,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
   trackPendingWrite();
 }
 

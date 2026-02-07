@@ -1,0 +1,7 @@
+Create an implementation plan for Spaces feature.
+
+Spec: /Users/benjaminmackenzie/Dev/ledger_mobile/docs/specs/spaces_feature_spec.md
+
+Break into phases. List what gets built, dependencies, and risks. Break each phase into tickets.
+
+Output to: /Users/benjaminmackenzie/Dev/ledger_mobile/.plans/spaces_implementation_plan.md

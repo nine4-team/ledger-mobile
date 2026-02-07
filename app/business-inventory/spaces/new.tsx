@@ -1,0 +1,48 @@
+import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Screen } from '../../../src/components/Screen';
+import { SpaceForm } from '../../../src/components/SpaceForm';
+import type { SpaceFormValues } from '../../../src/components/SpaceForm';
+import { useAccountContextStore } from '../../../src/auth/accountContextStore';
+import { createSpace } from '../../../src/data/spacesService';
+import { layout } from '../../../src/ui';
+
+export default function NewBusinessInventorySpaceScreen() {
+  const router = useRouter();
+  const accountId = useAccountContextStore((store) => store.accountId);
+
+  const backTarget = '/business-inventory/spaces';
+
+  const handleSubmit = async (values: SpaceFormValues) => {
+    if (!accountId) {
+      throw new Error('Account context is missing.');
+    }
+
+    // Create space for Business Inventory (projectId = null)
+    await createSpace(accountId, {
+      name: values.name,
+      notes: values.notes || null,
+      projectId: null,
+    });
+
+    router.replace(backTarget);
+  };
+
+  const handleCancel = () => {
+    router.replace(backTarget);
+  };
+
+  return (
+    <Screen title="New Space" backTarget={backTarget}>
+      <View style={styles.container}>
+        <SpaceForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} />
+      </View>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: layout.screenBodyTopMd.paddingTop,
+  },
+});

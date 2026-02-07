@@ -1,33 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen } from '../../../../../src/components/Screen';
-import { AppText } from '../../../../../src/components/AppText';
-import { SpaceForm } from '../../../../../src/components/SpaceForm';
-import type { SpaceFormValues } from '../../../../../src/components/SpaceForm';
-import { useAccountContextStore } from '../../../../../src/auth/accountContextStore';
-import { layout } from '../../../../../src/ui';
-import { Space, subscribeToSpace, updateSpace } from '../../../../../src/data/spacesService';
+import { Screen } from '../../../../src/components/Screen';
+import { AppText } from '../../../../src/components/AppText';
+import { SpaceForm } from '../../../../src/components/SpaceForm';
+import type { SpaceFormValues } from '../../../../src/components/SpaceForm';
+import { useAccountContextStore } from '../../../../src/auth/accountContextStore';
+import { layout } from '../../../../src/ui';
+import { Space, subscribeToSpace, updateSpace } from '../../../../src/data/spacesService';
 
 type EditSpaceParams = {
-  projectId?: string;
   spaceId?: string;
 };
 
-export default function EditSpaceScreen() {
+export default function EditBusinessInventorySpaceScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<EditSpaceParams>();
-  const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const spaceId = Array.isArray(params.spaceId) ? params.spaceId[0] : params.spaceId;
   const accountId = useAccountContextStore((store) => store.accountId);
   const [space, setSpace] = useState<Space | null>(null);
 
-  const backTarget = useMemo(() => {
-    if (projectId && spaceId) {
-      return `/project/${projectId}/spaces/${spaceId}`;
-    }
-    return undefined;
-  }, [projectId, spaceId]);
+  const backTarget = spaceId ? `/business-inventory/spaces/${spaceId}` : '/business-inventory/spaces';
 
   useEffect(() => {
     if (!accountId || !spaceId) {
@@ -53,11 +46,11 @@ export default function EditSpaceScreen() {
       notes: values.notes || null,
     });
 
-    router.replace(backTarget ?? '/(tabs)/index');
+    router.replace(backTarget);
   };
 
   const handleCancel = () => {
-    router.replace(backTarget ?? '/(tabs)/index');
+    router.replace(backTarget);
   };
 
   return (
