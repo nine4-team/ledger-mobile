@@ -131,6 +131,7 @@ export function InventorySpacesList({ refreshToken }: InventorySpacesListProps) 
         itemCount: itemCountsBySpace[space.id] ?? 0,
         primaryImage,
         checklists: space.checklists ?? null,
+        notes: space.notes,
       };
     });
   }, [filteredSpaces, itemCountsBySpace]);
@@ -212,6 +213,7 @@ export function InventorySpacesList({ refreshToken }: InventorySpacesListProps) 
                 itemCount={item.itemCount}
                 primaryImage={item.primaryImage}
                 checklists={item.checklists}
+                notes={item.notes}
                 onPress={() => handleSpacePress(item.id)}
               />
             ))}

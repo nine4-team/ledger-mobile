@@ -14,6 +14,8 @@ export type SpaceCardProps = {
   itemCount: number;
   primaryImage?: AttachmentRef | null;
   checklists?: Checklist[] | null;
+  notes?: string | null;
+  showNotes?: boolean;
   onPress: () => void;
   style?: ViewStyle;
 };
@@ -23,6 +25,8 @@ export function SpaceCard({
   itemCount,
   primaryImage,
   checklists,
+  notes,
+  showNotes = true,
   onPress,
   style,
 }: SpaceCardProps) {
@@ -82,6 +86,16 @@ export function SpaceCard({
             height={6}
           />
         </View>
+      )}
+      {showNotes && notes && (
+        <AppText
+          variant="caption"
+          style={{ color: uiKitTheme.text.secondary, marginTop: 6 }}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {notes}
+        </AppText>
       )}
     </ImageCard>
   );
