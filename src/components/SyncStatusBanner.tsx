@@ -4,18 +4,18 @@ import { Pressable } from 'react-native';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { dismissAllSyncErrors, triggerManualSync } from '../sync/syncActions';
 import { useSyncStatusStore } from '../sync/syncStatusStore';
-import { useTheme } from '../theme/ThemeProvider';
 import { AppText } from './AppText';
 import { StatusBanner } from './StatusBanner';
 
 export { STATUS_BANNER_HEIGHT as SYNC_BANNER_HEIGHT } from './StatusBanner';
+
+const ERROR_COLOR = '#b94520'; // Matches "Needs Review" badge color
 
 type SyncStatusBannerProps = {
   bottomOffset?: number;
 };
 
 export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset = 0 }) => {
-  const theme = useTheme();
   const { isOnline } = useNetworkStatus();
   const {
     pendingWritesCount,
@@ -73,12 +73,12 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
   const actions = isError ? (
     <>
       <Pressable onPress={handleRetry} hitSlop={8} accessibilityRole="button" accessibilityLabel="Retry sync">
-        <AppText variant="caption" style={{ color: theme.colors.error, fontWeight: '700', textDecorationLine: 'underline' }}>
+        <AppText variant="caption" style={{ color: ERROR_COLOR, fontWeight: '600', textDecorationLine: 'underline' }}>
           {isRetrying ? 'Retrying…' : 'Retry'}
         </AppText>
       </Pressable>
       <Pressable onPress={dismissAllSyncErrors} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss sync error">
-        <AppText variant="caption" style={{ color: theme.colors.error, fontWeight: '700', textDecorationLine: 'underline' }}>
+        <AppText variant="caption" style={{ color: ERROR_COLOR, fontWeight: '600', textDecorationLine: 'underline' }}>
           Dismiss
         </AppText>
       </Pressable>

@@ -6,6 +6,8 @@ import { AppText } from './AppText';
 
 export const STATUS_BANNER_HEIGHT = 32;
 
+const ERROR_COLOR = '#b94520'; // Matches "Needs Review" badge color
+
 type StatusBannerProps = {
   bottomOffset?: number;
   message: string;
@@ -30,7 +32,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
           bottom: bottomOffset,
         },
         text: {
-          color: variant === 'error' ? theme.colors.error : theme.colors.text,
+          color: variant === 'error' ? ERROR_COLOR : theme.colors.text,
         },
       }),
     [bottomOffset, variant, theme]
@@ -62,7 +64,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'center',
   },
   actions: {
