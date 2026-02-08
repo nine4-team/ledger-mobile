@@ -937,7 +937,7 @@ function SpaceDetailContent({
           <AppText variant="h2" style={styles.pickerTitle}>Add Existing Items</AppText>
           <SharedItemPicker
             tabs={[
-              { value: 'current', label: 'In this project', accessibilityLabel: 'In this project tab' },
+              { value: 'current', label: 'Project', accessibilityLabel: 'Project items tab' },
               { value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' },
             ]}
             tabCounts={{ current: availableItems.length, outside: outsideItemsHook.items.length }}

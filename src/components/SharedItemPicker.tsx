@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
@@ -151,6 +151,13 @@ export function SharedItemPicker({
   }, [items, searchQuery]);
 
   // Group items by name/description (for duplicate grouping)
+  // Flatten for FlatList rendering
+  type PickerGroupItem = {
+    key: string;
+    label: string;
+    groupItems: Array<ScopedItem | Item>;
+  };
+
   const pickerGroups = useMemo(() => {
     const groups = new Map<string, Array<ScopedItem | Item>>();
     filteredItems.forEach((item) => {
@@ -160,7 +167,12 @@ export function SharedItemPicker({
       list.push(item);
       groups.set(key, list);
     });
-    return Array.from(groups.entries());
+
+    return Array.from(groups.entries()).map(([label, groupItems], index) => ({
+      key: `group-${index}-${label}`,
+      label,
+      groupItems,
+    }));
   }, [filteredItems]);
 
   // Get eligible item IDs for "select all visible"
@@ -316,8 +328,11 @@ export function SharedItemPicker({
           disabled={selectedIds.length === 0}
         />
       </View>
-      <ScrollView style={styles.listScroll} contentContainerStyle={styles.list}>
-        {pickerGroups.map(([label, groupItems]) => {
+      <FlatList
+        data={pickerGroups}
+        keyExtractor={(item) => item.key}
+        renderItem={({ item: group }) => {
+          const { label, groupItems } = group;
           const groupEligibleIds = groupItems.filter((item) => eligibilityCheck.isEligible(item)).map((item) => item.id);
           const groupAllSelected = groupEligibleIds.length > 0 && groupEligibleIds.every((id) => selectedIds.includes(id));
           const summaryItem = groupItems.find((item) => Boolean(getPrimaryImage(item))) ?? groupItems[0];
@@ -326,7 +341,6 @@ export function SharedItemPicker({
           if (groupItems.length > 1) {
             return (
               <GroupedItemCard
-                key={label}
                 summary={{
                   name: label,
                   sku: summaryItem?.sku ?? undefined,
@@ -385,7 +399,6 @@ export function SharedItemPicker({
 
           return (
             <ItemCard
-              key={only.id}
               name={name}
               sku={only.sku ?? undefined}
               sourceLabel={only.source ?? undefined}
@@ -400,23 +413,33 @@ export function SharedItemPicker({
               style={locked ? styles.lockedItem : undefined}
             />
           );
-        })}
-        {pickerGroups.length === 0 ? (
+        }}
+        contentContainerStyle={styles.list}
+        style={styles.listScroll}
+        ListEmptyComponent={
           <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
             No items available.
           </AppText>
-        ) : null}
-        {selectedTab === 'outside' && outsideLoading ? (
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Loading outside items…
-          </AppText>
-        ) : null}
-        {selectedTab === 'outside' && outsideError ? (
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            {outsideError}
-          </AppText>
-        ) : null}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          <>
+            {selectedTab === 'outside' && outsideLoading ? (
+              <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                Loading outside items…
+              </AppText>
+            ) : null}
+            {selectedTab === 'outside' && outsideError ? (
+              <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                {outsideError}
+              </AppText>
+            ) : null}
+          </>
+        }
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+      />
     </View>
   );
 }
