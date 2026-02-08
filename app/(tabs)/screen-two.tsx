@@ -13,7 +13,9 @@ import { AppScrollView } from '../../src/components/AppScrollView';
 import { createInventoryScopeConfig, getListStateKey } from '../../src/data/scopeConfig';
 import { useScopeSwitching } from '../../src/data/useScopeSwitching';
 import { refreshScopedItems, refreshScopedTransactions } from '../../src/data/scopedListData';
+import { refreshSpaces } from '../../src/data/spacesService';
 import { layout, SCREEN_PADDING } from '../../src/ui';
+import { InventorySpacesList } from '../../src/screens/InventorySpacesList';
 
 export default function ScreenTwo() {
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -44,6 +46,7 @@ export default function ScreenTwo() {
       await Promise.all([
         refreshScopedItems(accountId, scopeConfig, 'online'),
         refreshScopedTransactions(accountId, scopeConfig, 'online'),
+        refreshSpaces(accountId, null, 'online'),
       ]);
       setRefreshToken((prev) => prev + 1);
     } finally {
@@ -134,9 +137,9 @@ function InventoryScreenContent({
   }
 
   return (
-    <AppScrollView style={styles.scroll} contentContainerStyle={styles.placeholder} refreshControl={refreshControl}>
-      <AppText variant="body">Inventory spaces go here.</AppText>
-    </AppScrollView>
+    <View style={styles.content}>
+      <InventorySpacesList refreshToken={refreshToken} />
+    </View>
   );
 }
 
