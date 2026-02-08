@@ -5,6 +5,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Screen } from '../components/Screen';
 import { AppText } from '../components/AppText';
 import { AppButton } from '../components/AppButton';
+import { FormActions } from '../components/FormActions';
 import { CategoryBudgetInput } from '../components/budget/CategoryBudgetInput';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useUIKitTheme, useTheme } from '../theme/ThemeProvider';
@@ -254,7 +255,7 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
   }, []);
 
   return (
-    <Screen title="Project Budget">
+    <Screen title="Project Budget" includeBottomInset={false}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Loading State */}
         {isLoading && (
@@ -385,26 +386,26 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
               </View>
             )}
 
-            {/* Actions */}
-            <View style={styles.actions}>
-              <AppButton
-                title="Cancel"
-                variant="secondary"
-                onPress={handleCancel}
-                disabled={isSaving}
-                style={styles.actionButton}
-              />
-              <AppButton
-                title={isSaving ? 'Saving...' : 'Save Budget'}
-                onPress={handleSave}
-                disabled={isSaving || !hasChanges}
-                loading={isSaving}
-                style={styles.actionButton}
-              />
-            </View>
           </>
         )}
       </ScrollView>
+
+      <FormActions>
+        <AppButton
+          title="Cancel"
+          variant="secondary"
+          onPress={handleCancel}
+          disabled={isSaving}
+          style={styles.actionButton}
+        />
+        <AppButton
+          title={isSaving ? 'Saving...' : 'Save Budget'}
+          onPress={handleSave}
+          disabled={isSaving || !hasChanges}
+          loading={isSaving}
+          style={styles.actionButton}
+        />
+      </FormActions>
     </Screen>
   );
 }
@@ -413,9 +414,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    paddingBottom: 32,
-  },
+  scrollContent: {},
   totalCard: {
     marginBottom: 24,
     alignItems: 'center',
@@ -484,11 +483,6 @@ const styles = StyleSheet.create({
   enableButton: {
     minWidth: 100,
     minHeight: 36,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
   },
   actionButton: {
     flex: 1,

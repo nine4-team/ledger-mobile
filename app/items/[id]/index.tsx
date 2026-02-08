@@ -2,15 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen } from '../../src/components/Screen';
-import { AppText } from '../../src/components/AppText';
-import { AppButton } from '../../src/components/AppButton';
-import { AppScrollView } from '../../src/components/AppScrollView';
-import { BottomSheetMenuList } from '../../src/components/BottomSheetMenuList';
-import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
-import { TitledCard } from '../../src/components/TitledCard';
-import { MediaGallerySection } from '../../src/components/MediaGallerySection';
-import { SpaceSelector } from '../../src/components/SpaceSelector';
+import { Screen } from '../../../src/components/Screen';
+import { AppText } from '../../../src/components/AppText';
+import { AppScrollView } from '../../../src/components/AppScrollView';
+import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
+import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
+import { TitledCard } from '../../../src/components/TitledCard';
+import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -18,27 +16,27 @@ import {
   getTextSecondaryStyle,
   layout,
   textEmphasis,
-} from '../../src/ui';
-import { useProjectContextStore } from '../../src/data/projectContextStore';
-import { useAccountContextStore } from '../../src/auth/accountContextStore';
-import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
-import { getTextInputStyle } from '../../src/ui/styles/forms';
-import { deleteItem, Item, subscribeToItem, updateItem } from '../../src/data/itemsService';
+} from '../../../src/ui';
+import { useProjectContextStore } from '../../../src/data/projectContextStore';
+import { useAccountContextStore } from '../../../src/auth/accountContextStore';
+import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
+import { getTextInputStyle } from '../../../src/ui/styles/forms';
+import { deleteItem, Item, subscribeToItem, updateItem } from '../../../src/data/itemsService';
 import {
   mapBudgetCategories,
   subscribeToBudgetCategories,
   type BudgetCategory,
-} from '../../src/data/budgetCategoriesService';
-import { subscribeToSpaces, type Space } from '../../src/data/spacesService';
-import { getTransaction } from '../../src/data/transactionsService';
+} from '../../../src/data/budgetCategoriesService';
+import { subscribeToSpaces, type Space } from '../../../src/data/spacesService';
+import { getTransaction } from '../../../src/data/transactionsService';
 import {
   isCanonicalTransactionId,
   requestBusinessToProjectPurchase,
   requestProjectToBusinessSale,
   requestProjectToProjectMove,
-} from '../../src/data/inventoryOperations';
-import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../src/offline/media';
-import type { AttachmentRef, AttachmentKind } from '../../src/offline/media';
+} from '../../../src/data/inventoryOperations';
+import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
+import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 
 type ItemDetailParams = {
   id?: string;
@@ -47,14 +45,6 @@ type ItemDetailParams = {
   backTarget?: string;
   listStateKey?: string;
 };
-
-function parseCurrency(value: string): number | null {
-  const normalized = value.replace(/[^0-9.]/g, '');
-  if (!normalized) return null;
-  const num = Number.parseFloat(normalized);
-  if (Number.isNaN(num)) return null;
-  return Math.round(num * 100);
-}
 
 function formatMoney(cents: number | null | undefined): string {
   if (typeof cents !== 'number') return '—';
@@ -74,20 +64,11 @@ export default function ItemDetailScreen() {
   const uiKitTheme = useUIKitTheme();
   const [item, setItem] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [source, setSource] = useState('');
-  const [status, setStatus] = useState('');
-  const [sku, setSku] = useState('');
-  const [purchasePrice, setPurchasePrice] = useState('');
-  const [projectPrice, setProjectPrice] = useState('');
-  const [marketValue, setMarketValue] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [targetProjectId, setTargetProjectId] = useState('');
   const [targetCategoryId, setTargetCategoryId] = useState('');
-  const [notes, setNotes] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
 
@@ -109,21 +90,7 @@ export default function ItemDetailScreen() {
       setItem(next);
       setIsLoading(false);
       if (next) {
-        setName(next.name ?? '');
-        setSource(next.source ?? '');
-        setStatus(next.status ?? '');
-        setSku(next.sku ?? '');
-        setPurchasePrice(
-          typeof next.purchasePriceCents === 'number' ? (next.purchasePriceCents / 100).toFixed(2) : ''
-        );
-        setProjectPrice(
-          typeof next.projectPriceCents === 'number' ? (next.projectPriceCents / 100).toFixed(2) : ''
-        );
-        setMarketValue(
-          typeof next.marketValueCents === 'number' ? (next.marketValueCents / 100).toFixed(2) : ''
-        );
         setTransactionId(next.transactionId ?? '');
-        setNotes(next.notes ?? '');
       }
     });
     return () => unsubscribe();
@@ -166,30 +133,6 @@ export default function ItemDetailScreen() {
       return;
     }
     router.replace(fallbackTarget);
-  };
-
-  const handleSave = async () => {
-    if (!accountId || !id) return;
-    const hasImages = (item?.images?.length ?? 0) > 0;
-    if (!name.trim() && !sku.trim() && !hasImages) {
-      setError('Add a name, SKU, or at least one image.');
-      return;
-    }
-    const purchasePriceCents = parseCurrency(purchasePrice);
-    const projectPriceCents = parseCurrency(projectPrice);
-    const marketValueCents = parseCurrency(marketValue);
-    setError(null);
-    await updateItem(accountId, id, {
-      name: name.trim(),
-      sku: sku.trim() || null,
-      source: source.trim() || null,
-      status: status.trim() || null,
-      purchasePriceCents,
-      projectPriceCents,
-      marketValueCents,
-      notes: notes.trim() || null,
-    });
-    setIsEditing(false);
   };
 
   const handleLinkTransaction = async () => {
@@ -364,19 +307,20 @@ export default function ItemDetailScreen() {
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
     const items: AnchoredMenuItem[] = [
       {
-        label: isEditing ? 'Finish editing' : 'Edit details',
-        onPress: () => setIsEditing((prev) => !prev),
+        label: 'Edit details',
+        onPress: () => {
+          router.push({
+            pathname: '/items/[id]/edit',
+            params: {
+              id: id!,
+              scope: scope ?? '',
+              projectId: projectId ?? '',
+            },
+          });
+        },
         icon: 'edit',
       },
     ];
-
-    if (isEditing) {
-      items.push({
-        label: 'Save changes',
-        onPress: handleSave,
-        icon: 'save',
-      });
-    }
 
     items.push({
       label: 'Transaction',
@@ -425,16 +369,16 @@ export default function ItemDetailScreen() {
 
     return items;
   }, [
-    handleAddImage,
     handleAllocateToProject,
     handleDelete,
     handleLinkTransaction,
     handleMoveToInventoryCorrection,
     handleMoveToProject,
-    handleSave,
     handleSellToInventory,
     handleUnlinkTransaction,
-    isEditing,
+    id,
+    projectId,
+    router,
     scope,
   ]);
 
@@ -532,20 +476,9 @@ export default function ItemDetailScreen() {
               tileScale={1.5}
             />
 
-            {/* Notes Section */}
             <TitledCard title="Notes">
               <View style={styles.notesContainer}>
-                {isEditing ? (
-                  <TextInput
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Add notes about this item..."
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    multiline
-                    numberOfLines={4}
-                  />
-                ) : item.notes?.trim() ? (
+                {item.notes?.trim() ? (
                   <AppText variant="body">
                     {item.notes.trim()}
                   </AppText>
@@ -558,182 +491,75 @@ export default function ItemDetailScreen() {
             </TitledCard>
 
             <TitledCard title="Details">
-              {isEditing ? (
-                <View style={styles.form}>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Name
-                    </AppText>
-                    <TextInput
-                      value={name}
-                      onChangeText={setName}
-                      placeholder="Item name"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Status
-                    </AppText>
-                    <TextInput
-                      value={status}
-                      onChangeText={setStatus}
-                      placeholder="needs_review / complete"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Source
-                    </AppText>
-                    <TextInput
-                      value={source}
-                      onChangeText={setSource}
-                      placeholder="Source"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      SKU
-                    </AppText>
-                    <TextInput
-                      value={sku}
-                      onChangeText={setSku}
-                      placeholder="SKU"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formRow}>
-                    <View style={styles.formHalf}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Purchase price
-                      </AppText>
-                      <TextInput
-                        value={purchasePrice}
-                        onChangeText={setPurchasePrice}
-                        placeholder="$0.00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      />
-                    </View>
-                    <View style={styles.formHalf}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Project price
-                      </AppText>
-                      <TextInput
-                        value={projectPrice}
-                        onChangeText={setProjectPrice}
-                        placeholder="$0.00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Market value
-                    </AppText>
-                    <TextInput
-                      value={marketValue}
-                      onChangeText={setMarketValue}
-                      placeholder="$0.00"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Space
-                    </AppText>
-                    <SpaceSelector
-                      projectId={item?.projectId ?? null}
-                      value={item?.spaceId ?? null}
-                      onChange={async (newSpaceId) => {
-                        if (accountId && id) {
-                          await updateItem(accountId, id, { spaceId: newSpaceId });
-                        }
-                      }}
-                      allowCreate={true}
-                      placeholder="Select space (optional)"
-                    />
-                  </View>
+              <View style={styles.detailRows}>
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Source
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {item.source?.trim() || '—'}
+                  </AppText>
                 </View>
-              ) : (
-                <View style={styles.detailRows}>
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Source
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {item.source?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      SKU
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {item.sku?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Purchase price
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatMoney(item.purchasePriceCents)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Project price
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatMoney(item.projectPriceCents)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Market value
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatMoney(item.marketValueCents)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Space
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {spaceLabel}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Budget category
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {budgetCategoryLabel}
-                    </AppText>
-                  </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    SKU
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {item.sku?.trim() || '—'}
+                  </AppText>
                 </View>
-              )}
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Purchase price
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {formatMoney(item.purchasePriceCents)}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Project price
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {formatMoney(item.projectPriceCents)}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Market value
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {formatMoney(item.marketValueCents)}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Space
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {spaceLabel}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Budget category
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {budgetCategoryLabel}
+                  </AppText>
+                </View>
+              </View>
             </TitledCard>
 
             {scope !== 'inventory' ? (
               <TitledCard title="Move item">
-                  <View style={styles.form}>
+                  <View style={styles.moveForm}>
                     <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
                       Move to another project
                     </AppText>
@@ -825,19 +651,8 @@ const styles = StyleSheet.create({
   errorText: {
     lineHeight: 18,
   },
-  form: {
+  moveForm: {
     gap: 12,
-  },
-  formGroup: {
-    gap: 8,
-  },
-  formRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  formHalf: {
-    flex: 1,
   },
   detailRows: {
     gap: 12,

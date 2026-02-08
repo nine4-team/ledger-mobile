@@ -61,7 +61,7 @@ export default function EditSpaceScreen() {
   };
 
   return (
-    <Screen title="Edit Space" backTarget={backTarget}>
+    <Screen title="Edit Space" backTarget={backTarget} includeBottomInset={false}>
       <View style={styles.container}>
         {!space ? (
           <AppText variant="body">Loading space…</AppText>
@@ -83,6 +83,7 @@ export default function EditSpaceScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
 });

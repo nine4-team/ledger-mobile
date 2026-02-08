@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
+import { AppScrollView } from '../../src/components/AppScrollView';
+import { FormActions } from '../../src/components/FormActions';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { getTextInputStyle } from '../../src/ui/styles/forms';
@@ -179,8 +181,8 @@ export default function NewTransactionScreen() {
   };
 
   return (
-    <Screen title="New Transaction" backTarget={fallbackTarget}>
-      <View style={styles.container}>
+    <Screen title="New Transaction" backTarget={fallbackTarget} includeBottomInset={false}>
+      <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
         <AppText variant="body">Source</AppText>
         <TextInput
           value={source}
@@ -327,20 +329,25 @@ export default function NewTransactionScreen() {
             {error}
           </AppText>
         ) : null}
-        <View style={styles.actions}>
-          <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} />
-          <AppButton
-            title={isSubmitting ? 'Creating…' : 'Create transaction'}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          />
-        </View>
-      </View>
+      </AppScrollView>
+
+      <FormActions>
+        <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} style={styles.actionButton} />
+        <AppButton
+          title={isSubmitting ? 'Creating…' : 'Create transaction'}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+          style={styles.actionButton}
+        />
+      </FormActions>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   container: {
     gap: 12,
     paddingTop: layout.screenBodyTopMd.paddingTop,
@@ -350,9 +357,7 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'center',
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
+  actionButton: {
+    flex: 1,
   },
 });

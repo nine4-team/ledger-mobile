@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen } from '../../src/components/Screen';
-import { AppText } from '../../src/components/AppText';
-import { AppButton } from '../../src/components/AppButton';
-import { AppScrollView } from '../../src/components/AppScrollView';
-import { TitledCard } from '../../src/components/TitledCard';
-import { BottomSheetMenuList } from '../../src/components/BottomSheetMenuList';
-import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
-import { SharedItemPicker } from '../../src/components/SharedItemPicker';
-import { showItemConflictDialog } from '../../src/components/ItemConflictDialog';
-import { ItemCard } from '../../src/components/ItemCard';
-import type { ItemCardProps } from '../../src/components/ItemCard';
+import { Screen } from '../../../src/components/Screen';
+import { AppText } from '../../../src/components/AppText';
+import { AppButton } from '../../../src/components/AppButton';
+import { AppScrollView } from '../../../src/components/AppScrollView';
+import { TitledCard } from '../../../src/components/TitledCard';
+import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
+import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
+import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
+import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
+import { ItemCard } from '../../../src/components/ItemCard';
+import type { ItemCardProps } from '../../../src/components/ItemCard';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -19,22 +19,21 @@ import {
   getTextSecondaryStyle,
   layout,
   textEmphasis,
-} from '../../src/ui';
-import { useProjectContextStore } from '../../src/data/projectContextStore';
-import { useAccountContextStore } from '../../src/auth/accountContextStore';
-import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
-import { getTextInputStyle } from '../../src/ui/styles/forms';
-import { createInventoryScopeConfig, createProjectScopeConfig } from '../../src/data/scopeConfig';
-import { ScopedItem, subscribeToScopedItems } from '../../src/data/scopedListData';
-import { Item, updateItem } from '../../src/data/itemsService';
-import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../src/offline/media';
-import type { AttachmentRef, AttachmentKind } from '../../src/offline/media';
-import { MediaGallerySection } from '../../src/components/MediaGallerySection';
-import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
-import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../src/data/transactionsService';
-import { isCanonicalInventorySaleTransaction } from '../../src/data/inventoryOperations';
-import { useOutsideItems } from '../../src/hooks/useOutsideItems';
-import { resolveItemMove } from '../../src/data/resolveItemMove';
+} from '../../../src/ui';
+import { useProjectContextStore } from '../../../src/data/projectContextStore';
+import { useAccountContextStore } from '../../../src/auth/accountContextStore';
+import { useUIKitTheme } from '../../../src/theme/ThemeProvider';
+import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../src/data/scopeConfig';
+import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedListData';
+import { Item, updateItem } from '../../../src/data/itemsService';
+import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
+import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
+import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
+import { mapBudgetCategories, subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
+import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../../src/data/transactionsService';
+import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
+import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
+import { resolveItemMove } from '../../../src/data/resolveItemMove';
 
 type TransactionDetailParams = {
   id?: string;
@@ -45,14 +44,6 @@ type TransactionDetailParams = {
 };
 
 type ItemPickerTab = 'suggested' | 'project' | 'outside';
-
-function parseCurrency(value: string): number | null {
-  const normalized = value.replace(/[^0-9.]/g, '');
-  if (!normalized) return null;
-  const num = Number.parseFloat(normalized);
-  if (Number.isNaN(num)) return null;
-  return Math.round(num * 100);
-}
 
 function formatMoney(cents: number | null | undefined): string {
   if (typeof cents !== 'number') return '—';
@@ -78,27 +69,12 @@ export default function TransactionDetailScreen() {
   const scope = Array.isArray(params.scope) ? params.scope[0] : params.scope;
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
-  const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [source, setSource] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
-  const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('');
-  const [purchasedBy, setPurchasedBy] = useState('');
-  const [reimbursementType, setReimbursementType] = useState('');
-  const [notes, setNotes] = useState('');
-  const [type, setType] = useState('');
-  const [budgetCategoryId, setBudgetCategoryId] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string; metadata?: any }>>({});
-  const [hasEmailReceipt, setHasEmailReceipt] = useState(false);
-  const [taxRatePct, setTaxRatePct] = useState('');
-  const [subtotal, setSubtotal] = useState('');
-  const [taxAmount, setTaxAmount] = useState('');
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
@@ -128,26 +104,6 @@ export default function TransactionDetailScreen() {
     const unsubscribe = subscribeToTransaction(accountId, id, (next) => {
       setTransaction(next);
       setIsLoading(false);
-      if (next) {
-        setSource(next.source ?? '');
-        setTransactionDate(next.transactionDate ?? '');
-        setAmount(
-          typeof next.amountCents === 'number' ? (next.amountCents / 100).toFixed(2) : ''
-        );
-        setStatus(next.status ?? '');
-        setPurchasedBy(next.purchasedBy ?? '');
-        setReimbursementType(next.reimbursementType ?? '');
-        setNotes(next.notes ?? '');
-        setType(next.type ?? '');
-        setBudgetCategoryId(next.budgetCategoryId ?? '');
-        setHasEmailReceipt(!!next.hasEmailReceipt);
-        setTaxRatePct(
-          typeof next.taxRatePct === 'number' ? next.taxRatePct.toFixed(2) : ''
-        );
-        setSubtotal(
-          typeof next.subtotalCents === 'number' ? (next.subtotalCents / 100).toFixed(2) : ''
-        );
-      }
     });
     return () => unsubscribe();
   }, [accountId, id]);
@@ -195,7 +151,7 @@ export default function TransactionDetailScreen() {
 
   const isCanonical = isCanonicalInventorySaleTransaction(transaction);
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
-  const selectedCategory = budgetCategories[budgetCategoryId];
+  const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
 
@@ -237,67 +193,6 @@ export default function TransactionDetailScreen() {
     if (!isPickingItems) return;
     void outsideItemsHook.reload();
   }, [isPickingItems, outsideItemsHook]);
-
-  const handleSave = async () => {
-    if (!accountId || !id) return;
-    if (isCanonical) {
-      setError('Canonical transactions cannot be edited.');
-      return;
-    }
-    const amountCents = parseCurrency(amount);
-    const hasReceipt = (transaction?.receiptImages?.length ?? 0) > 0;
-    const hasSource = !!source.trim();
-    const hasAmount = typeof amountCents === 'number' && amountCents > 0;
-    if (!hasReceipt && (!hasSource || !hasAmount)) {
-      setError('Add a receipt or provide source and amount.');
-      return;
-    }
-    setError(null);
-    let subtotalCents: number | null = null;
-    let taxRateValue: number | null = null;
-    if (itemizationEnabled) {
-      const amountValue = typeof amountCents === 'number' ? amountCents : null;
-      if (amountValue != null) {
-        const parsedSubtotal = parseCurrency(subtotal);
-        const parsedTaxAmount = parseCurrency(taxAmount);
-        const parsedTaxRate = Number.parseFloat(taxRatePct);
-        if (Number.isFinite(parsedTaxRate) && parsedTaxRate > 0) {
-          const rate = parsedTaxRate / 100;
-          subtotalCents = Math.round(amountValue / (1 + rate));
-          taxRateValue = parsedTaxRate;
-        } else if (parsedSubtotal != null && parsedSubtotal > 0 && parsedSubtotal <= amountValue) {
-          subtotalCents = parsedSubtotal;
-          const taxCents = amountValue - parsedSubtotal;
-          taxRateValue = taxCents > 0 ? (taxCents / parsedSubtotal) * 100 : 0;
-        } else if (parsedTaxAmount != null && parsedTaxAmount >= 0 && parsedTaxAmount < amountValue) {
-          subtotalCents = amountValue - parsedTaxAmount;
-          taxRateValue = subtotalCents > 0 ? (parsedTaxAmount / subtotalCents) * 100 : 0;
-        }
-      }
-    }
-    const nextCategoryId = budgetCategoryId.trim() || null;
-    const categoryChanged = nextCategoryId !== (transaction?.budgetCategoryId ?? null);
-    await updateTransaction(accountId, id, {
-      source: source.trim() || null,
-      transactionDate: transactionDate.trim() || null,
-      amountCents: amountCents ?? null,
-      status: status.trim() || null,
-      purchasedBy: purchasedBy.trim() || null,
-      reimbursementType: reimbursementType.trim() || null,
-      notes: notes.trim() || null,
-      type: type.trim() || null,
-      budgetCategoryId: nextCategoryId,
-      hasEmailReceipt,
-      taxRatePct: taxRateValue,
-      subtotalCents,
-    });
-    if (categoryChanged && nextCategoryId) {
-      await Promise.all(
-        linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
-      );
-    }
-    setIsEditing(false);
-  };
 
   const handlePickReceiptAttachment = async (localUri: string, kind: AttachmentKind) => {
     if (!accountId || !id || !transaction) return;
@@ -502,19 +397,20 @@ export default function TransactionDetailScreen() {
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
     const items: AnchoredMenuItem[] = [
       {
-        label: isEditing ? 'Finish editing' : 'Edit details',
-        onPress: () => setIsEditing((prev) => !prev),
+        label: 'Edit details',
+        onPress: () => {
+          router.push({
+            pathname: '/transactions/[id]/edit',
+            params: {
+              id: id!,
+              scope: scope ?? '',
+              projectId: projectId ?? '',
+            },
+          });
+        },
         icon: 'edit',
       },
     ];
-
-    if (isEditing) {
-      items.push({
-        label: 'Save changes',
-        onPress: handleSave,
-        icon: 'save',
-      });
-    }
 
     items.push({
       label: 'Delete transaction',
@@ -523,7 +419,7 @@ export default function TransactionDetailScreen() {
     });
 
     return items;
-  }, [isEditing]);
+  }, [handleDelete, id, projectId, router, scope]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -599,20 +495,9 @@ export default function TransactionDetailScreen() {
               tileScale={1.5}
             />
 
-            {/* Notes Section */}
             <TitledCard title="Notes">
               <View style={styles.notesContainer}>
-                {isEditing ? (
-                  <TextInput
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Add notes about this transaction..."
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    multiline
-                    numberOfLines={4}
-                  />
-                ) : transaction.notes?.trim() ? (
+                {transaction.notes?.trim() ? (
                   <AppText variant="body">
                     {transaction.notes.trim()}
                   </AppText>
@@ -624,269 +509,114 @@ export default function TransactionDetailScreen() {
               </View>
             </TitledCard>
 
-            {/* Transaction Details Section */}
             <TitledCard title="Details">
-              {isEditing ? (
-                <View style={styles.form}>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Source
-                    </AppText>
-                    <TextInput
-                      value={source}
-                      onChangeText={setSource}
-                      placeholder="Source"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Date
-                    </AppText>
-                    <TextInput
-                      value={transactionDate}
-                      onChangeText={setTransactionDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Amount
-                    </AppText>
-                    <TextInput
-                      value={amount}
-                      onChangeText={setAmount}
-                      placeholder="$0.00"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Status
-                    </AppText>
-                    <TextInput
-                      value={status}
-                      onChangeText={setStatus}
-                      placeholder="needs_review / complete"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Purchased by
-                    </AppText>
-                    <TextInput
-                      value={purchasedBy}
-                      onChangeText={setPurchasedBy}
-                      placeholder="Purchased by"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Reimbursement type
-                    </AppText>
-                    <TextInput
-                      value={reimbursementType}
-                      onChangeText={setReimbursementType}
-                      placeholder="Reimbursement type"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Budget category id
-                    </AppText>
-                    <TextInput
-                      value={budgetCategoryId}
-                      onChangeText={setBudgetCategoryId}
-                      placeholder="Budget category id"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Transaction type
-                    </AppText>
-                    <TextInput
-                      value={type}
-                      onChangeText={setType}
-                      placeholder="Transaction type"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-                  <View style={styles.formGroup}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Email receipt
-                    </AppText>
-                    <AppButton
-                      title={hasEmailReceipt ? 'Email receipt: yes' : 'Email receipt: no'}
-                      variant="secondary"
-                      onPress={() => setHasEmailReceipt((prev) => !prev)}
-                    />
-                  </View>
+              <View style={styles.detailRows}>
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Source
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {transaction.source?.trim() || '—'}
+                  </AppText>
                 </View>
-              ) : (
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Date
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {formatDate(transaction.transactionDate)}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Amount
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {formatMoney(transaction.amountCents)}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Status
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {transaction.status?.trim() || '—'}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Purchased by
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {transaction.purchasedBy?.trim() || '—'}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Reimbursement type
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {transaction.reimbursementType?.trim() || '—'}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Budget category
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {budgetCategoryLabel}
+                  </AppText>
+                </View>
+                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+                <View style={styles.detailRow}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Email receipt
+                  </AppText>
+                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                    {hasReceiptLabel}
+                  </AppText>
+                </View>
+              </View>
+            </TitledCard>
+
+            {itemizationEnabled ? (
+              <TitledCard title="Tax & Itemization">
                 <View style={styles.detailRows}>
                   <View style={styles.detailRow}>
                     <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Source
+                      Subtotal
                     </AppText>
                     <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {transaction.source?.trim() || '—'}
+                      {formatMoney(transaction.subtotalCents)}
                     </AppText>
                   </View>
                   <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
                   <View style={styles.detailRow}>
                     <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Date
+                      Tax rate
                     </AppText>
                     <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatDate(transaction.transactionDate)}
+                      {formatPercent(transaction.taxRatePct)}
                     </AppText>
                   </View>
                   <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
                   <View style={styles.detailRow}>
                     <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Amount
+                      Tax amount
                     </AppText>
                     <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatMoney(transaction.amountCents)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Status
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {transaction.status?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Purchased by
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {transaction.purchasedBy?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Reimbursement type
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {transaction.reimbursementType?.trim() || '—'}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Budget category
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {budgetCategoryLabel}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Email receipt
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {hasReceiptLabel}
+                      {typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
+                        ? formatMoney(transaction.amountCents - transaction.subtotalCents)
+                        : '—'}
                     </AppText>
                   </View>
                 </View>
-              )}
-            </TitledCard>
-
-            {/* Tax & Itemization Section */}
-            {itemizationEnabled ? (
-              <TitledCard title="Tax & Itemization">
-                {isEditing ? (
-                  <View style={styles.form}>
-                    <View style={styles.formGroup}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Tax rate (%)
-                      </AppText>
-                      <TextInput
-                        value={taxRatePct}
-                        onChangeText={setTaxRatePct}
-                        placeholder="0"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                    <View style={styles.formGroup}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Subtotal
-                      </AppText>
-                      <TextInput
-                        value={subtotal}
-                        onChangeText={setSubtotal}
-                        placeholder="$0.00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      />
-                    </View>
-                    <View style={styles.formGroup}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Tax amount
-                      </AppText>
-                      <TextInput
-                        value={taxAmount}
-                        onChangeText={setTaxAmount}
-                        placeholder="$0.00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                      />
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.detailRows}>
-                    <View style={styles.detailRow}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Subtotal
-                      </AppText>
-                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                        {formatMoney(transaction.subtotalCents)}
-                      </AppText>
-                    </View>
-                    <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                    <View style={styles.detailRow}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Tax rate
-                      </AppText>
-                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                        {formatPercent(transaction.taxRatePct)}
-                      </AppText>
-                    </View>
-                    <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                    <View style={styles.detailRow}>
-                      <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                        Tax amount
-                      </AppText>
-                      <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                        {typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
-                          ? formatMoney(transaction.amountCents - transaction.subtotalCents)
-                          : '—'}
-                      </AppText>
-                    </View>
-                  </View>
-                )}
               </TitledCard>
             ) : null}
 
@@ -1057,20 +787,6 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     lineHeight: 26,
-  },
-  form: {
-    gap: 12,
-  },
-  formGroup: {
-    gap: 8,
-  },
-  formRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  formHalf: {
-    flex: 1,
   },
   detailRows: {
     gap: 12,

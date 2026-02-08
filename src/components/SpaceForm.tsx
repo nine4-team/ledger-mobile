@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
+import { AppScrollView } from './AppScrollView';
+import { FormActions } from './FormActions';
 import { MultiSelectPicker } from './MultiSelectPicker';
 import type { MultiSelectPickerOption } from './MultiSelectPicker';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
@@ -116,68 +118,76 @@ export function SpaceForm({ mode, initialValues, onSubmit, onCancel }: SpaceForm
 
   return (
     <View style={styles.container}>
-      {mode === 'create' && templates.length > 0 ? (
-        <MultiSelectPicker
-          label="Template"
-          value={selectedTemplateId}
-          options={templateOptions}
-          onChange={(next) => handleTemplateChange(next as string)}
-          multiSelect={false}
-          helperText="Select a template to prefill, or start blank"
-          accessibilityLabel="Space template picker"
+      <AppScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        {mode === 'create' && templates.length > 0 ? (
+          <MultiSelectPicker
+            label="Template"
+            value={selectedTemplateId}
+            options={templateOptions}
+            onChange={(next) => handleTemplateChange(next as string)}
+            multiSelect={false}
+            helperText="Select a template to prefill, or start blank"
+            accessibilityLabel="Space template picker"
+          />
+        ) : null}
+
+        <AppText variant="body">Name *</AppText>
+        <TextInput
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            if (error) setError(null);
+          }}
+          placeholder="Space name"
+          placeholderTextColor={theme.colors.textSecondary}
+          style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          autoFocus={mode === 'create'}
         />
-      ) : null}
 
-      <AppText variant="body">Name *</AppText>
-      <TextInput
-        value={name}
-        onChangeText={(text) => {
-          setName(text);
-          if (error) setError(null);
-        }}
-        placeholder="Space name"
-        placeholderTextColor={theme.colors.textSecondary}
-        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-        autoFocus={mode === 'create'}
-      />
+        <AppText variant="body">Notes</AppText>
+        <TextInput
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Optional notes"
+          placeholderTextColor={theme.colors.textSecondary}
+          style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
 
-      <AppText variant="body">Notes</AppText>
-      <TextInput
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="Optional notes"
-        placeholderTextColor={theme.colors.textSecondary}
-        style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
-      />
+        {error ? (
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {error}
+          </AppText>
+        ) : null}
+      </AppScrollView>
 
-      {error ? (
-        <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-          {error}
-        </AppText>
-      ) : null}
-
-      <View style={styles.actions}>
-        <AppButton title="Cancel" variant="secondary" onPress={onCancel} disabled={isSubmitting} />
+      <FormActions>
+        <AppButton title="Cancel" variant="secondary" onPress={onCancel} disabled={isSubmitting} style={styles.actionButton} />
         <AppButton
           title={isSubmitting ? 'Saving…' : mode === 'create' ? 'Create space' : 'Save changes'}
           onPress={handleSubmit}
           disabled={isSubmitting}
+          style={styles.actionButton}
         />
-      </View>
+      </FormActions>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     gap: 12,
   },
-  actions: {
-    flexDirection: 'row',
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
     gap: 12,
-    alignItems: 'center',
+  },
+  actionButton: {
+    flex: 1,
   },
 });

@@ -5,6 +5,7 @@ import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
 import { AppButton } from '../../../src/components/AppButton';
 import { AppScrollView } from '../../../src/components/AppScrollView';
+import { FormActions } from '../../../src/components/FormActions';
 import { FormField } from '../../../src/components/FormField';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { CategoryBudgetInput } from '../../../src/components/budget/CategoryBudgetInput';
@@ -206,7 +207,7 @@ export default function EditProjectScreen() {
   }
 
   return (
-    <Screen title="Edit Project" backTarget={backTarget} hideMenu>
+    <Screen title="Edit Project" backTarget={backTarget} hideMenu includeBottomInset={false}>
       {isLoadingProject || isLoadingCategories || isLoadingProjectBudgets ? (
         <View style={styles.container}>
           <AppText variant="body">Loading project...</AppText>
@@ -216,7 +217,8 @@ export default function EditProjectScreen() {
           <AppText variant="body">Project not found.</AppText>
         </View>
       ) : (
-        <AppScrollView contentContainerStyle={styles.container}>
+        <>
+        <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
           {/* Section 1: Basic Info */}
           <FormField
             label="Project name"
@@ -288,27 +290,30 @@ export default function EditProjectScreen() {
 
           {/* Error Display */}
           {error ? <AppText variant="caption" style={{ color: 'red' }}>{error}</AppText> : null}
-
-          {/* Section 5: Actions */}
-          <View style={styles.actions}>
-            <AppButton title="Cancel" variant="secondary" onPress={() => router.back()} />
-            <AppButton
-              title={isSubmitting ? 'Saving…' : 'Save'}
-              onPress={handleSubmit}
-              disabled={isSubmitting || isLoadingCategories}
-            />
-          </View>
         </AppScrollView>
+
+        <FormActions>
+          <AppButton title="Cancel" variant="secondary" onPress={() => router.back()} style={styles.actionButton} />
+          <AppButton
+            title={isSubmitting ? 'Saving…' : 'Save'}
+            onPress={handleSubmit}
+            disabled={isSubmitting || isLoadingCategories}
+            style={styles.actionButton}
+          />
+        </FormActions>
+        </>
       )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   container: {
     gap: 16,
     paddingTop: layout.screenBodyTopMd.paddingTop,
-    paddingBottom: 24,
   },
   budgetSection: {
     gap: 12,
@@ -317,9 +322,7 @@ const styles = StyleSheet.create({
     padding: CARD_PADDING,
     gap: 4,
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
+  actionButton: {
+    flex: 1,
   },
 });

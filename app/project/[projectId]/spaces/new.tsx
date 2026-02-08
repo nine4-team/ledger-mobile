@@ -33,11 +33,15 @@ export default function NewSpaceScreen() {
       throw new Error('Project ID is missing.');
     }
 
-    await createSpace(accountId, {
+    // Kick off the write — Firestore caches it locally for offline-first sync.
+    // Don't await: the native SDK blocks until server ack, which hangs when offline.
+    createSpace(accountId, {
       name: values.name,
       notes: values.notes || null,
       checklists: values.checklists ?? null,
       projectId,
+    }).catch((err) => {
+      console.warn('[spaces] create failed:', err);
     });
 
     router.replace(backTarget);
@@ -48,7 +52,7 @@ export default function NewSpaceScreen() {
   };
 
   return (
-    <Screen title="New Space" backTarget={backTarget}>
+    <Screen title="New Space" backTarget={backTarget} includeBottomInset={false}>
       <View style={styles.container}>
         <SpaceForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} />
       </View>
@@ -58,6 +62,7 @@ export default function NewSpaceScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
 });

@@ -236,6 +236,7 @@ export default function EditItemScreen() {
 
             <TitledCard title="Images">
               <MediaGallerySection
+                title="Images"
                 attachments={item.images ?? []}
                 maxAttachments={5}
                 allowedKinds={['image']}
