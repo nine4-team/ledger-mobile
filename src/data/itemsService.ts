@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -132,10 +131,10 @@ export async function updateItem(
   trackPendingWrite();
 }
 
-export async function createItem(
+export function createItem(
   accountId: string,
   data: ItemWrite
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
@@ -143,13 +142,14 @@ export async function createItem(
   }
   const now = serverTimestamp();
   const uid = auth?.currentUser?.uid ?? null;
-  const docRef = await addDoc(collection(db, `accounts/${accountId}/items`), {
+  const docRef = doc(collection(db, `accounts/${accountId}/items`));
+  setDoc(docRef, {
     ...normalizeItemWrite(data),
     createdAt: now,
     updatedAt: now,
     createdBy: uid,
     updatedBy: uid,
-  });
+  }).catch(err => console.error('[items] create failed:', err));
   trackPendingWrite();
   return docRef.id;
 }

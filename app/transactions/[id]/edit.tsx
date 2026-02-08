@@ -47,7 +47,6 @@ export default function EditTransactionScreen() {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -143,7 +142,9 @@ export default function EditTransactionScreen() {
     const hasPrimary = currentAttachments.some((att) => att.isPrimary);
     const newAttachment: AttachmentRef = { url: result.attachmentRef.url, kind, isPrimary: !hasPrimary && kind === 'image' };
     const nextAttachments = [...currentAttachments, newAttachment].slice(0, 10);
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] update receipt attachments failed:', err);
+    });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -154,13 +155,17 @@ export default function EditTransactionScreen() {
     if (!nextAttachments.some((att) => att.isPrimary) && nextAttachments.length > 0) {
       nextAttachments[0] = { ...nextAttachments[0], isPrimary: true };
     }
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] remove receipt attachment failed:', err);
+    });
   };
 
-  const handleSetPrimaryReceiptAttachment = async (attachment: AttachmentRef) => {
+  const handleSetPrimaryReceiptAttachment = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
     const nextAttachments = (transaction.receiptImages ?? []).map((att) => ({ ...att, isPrimary: att.url === attachment.url }));
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] set primary receipt failed:', err);
+    });
   };
 
   // Other image handlers
@@ -172,7 +177,9 @@ export default function EditTransactionScreen() {
     const hasPrimary = currentImages.some((img) => img.isPrimary);
     const newImage: AttachmentRef = { url: result.attachmentRef.url, kind, isPrimary: !hasPrimary && kind === 'image' };
     const nextImages = [...currentImages, newImage].slice(0, 5);
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] update other images failed:', err);
+    });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -183,16 +190,20 @@ export default function EditTransactionScreen() {
     if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] remove other image failed:', err);
+    });
   };
 
-  const handleSetPrimaryOtherImage = async (attachment: AttachmentRef) => {
+  const handleSetPrimaryOtherImage = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
     const nextImages = (transaction.otherImages ?? []).map((img) => ({ ...img, isPrimary: img.url === attachment.url }));
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] set primary other image failed:', err);
+    });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!accountId || !id) return;
     if (isCanonical) {
       setError('Canonical transactions cannot be edited.');
@@ -207,58 +218,55 @@ export default function EditTransactionScreen() {
       return;
     }
     setError(null);
-    setIsSubmitting(true);
-    try {
-      let subtotalCents: number | null = null;
-      let taxRateValue: number | null = null;
-      if (itemizationEnabled) {
-        const amountValue = typeof amountCents === 'number' ? amountCents : null;
-        if (amountValue != null) {
-          const parsedSubtotal = parseCurrency(subtotal);
-          const parsedTaxAmount = parseCurrency(taxAmount);
-          const parsedTaxRate = Number.parseFloat(taxRatePct);
-          if (Number.isFinite(parsedTaxRate) && parsedTaxRate > 0) {
-            const rate = parsedTaxRate / 100;
-            subtotalCents = Math.round(amountValue / (1 + rate));
-            taxRateValue = parsedTaxRate;
-          } else if (parsedSubtotal != null && parsedSubtotal > 0 && parsedSubtotal <= amountValue) {
-            subtotalCents = parsedSubtotal;
-            const taxCents = amountValue - parsedSubtotal;
-            taxRateValue = taxCents > 0 ? (taxCents / parsedSubtotal) * 100 : 0;
-          } else if (parsedTaxAmount != null && parsedTaxAmount >= 0 && parsedTaxAmount < amountValue) {
-            subtotalCents = amountValue - parsedTaxAmount;
-            taxRateValue = subtotalCents > 0 ? (parsedTaxAmount / subtotalCents) * 100 : 0;
-          }
+
+    let subtotalCents: number | null = null;
+    let taxRateValue: number | null = null;
+    if (itemizationEnabled) {
+      const amountValue = typeof amountCents === 'number' ? amountCents : null;
+      if (amountValue != null) {
+        const parsedSubtotal = parseCurrency(subtotal);
+        const parsedTaxAmount = parseCurrency(taxAmount);
+        const parsedTaxRate = Number.parseFloat(taxRatePct);
+        if (Number.isFinite(parsedTaxRate) && parsedTaxRate > 0) {
+          const rate = parsedTaxRate / 100;
+          subtotalCents = Math.round(amountValue / (1 + rate));
+          taxRateValue = parsedTaxRate;
+        } else if (parsedSubtotal != null && parsedSubtotal > 0 && parsedSubtotal <= amountValue) {
+          subtotalCents = parsedSubtotal;
+          const taxCents = amountValue - parsedSubtotal;
+          taxRateValue = taxCents > 0 ? (taxCents / parsedSubtotal) * 100 : 0;
+        } else if (parsedTaxAmount != null && parsedTaxAmount >= 0 && parsedTaxAmount < amountValue) {
+          subtotalCents = amountValue - parsedTaxAmount;
+          taxRateValue = subtotalCents > 0 ? (parsedTaxAmount / subtotalCents) * 100 : 0;
         }
       }
-      const nextCategoryId = budgetCategoryId.trim() || null;
-      const categoryChanged = nextCategoryId !== (transaction?.budgetCategoryId ?? null);
-      await updateTransaction(accountId, id, {
-        source: source.trim() || null,
-        transactionDate: transactionDate.trim() || null,
-        amountCents: amountCents ?? null,
-        status: status.trim() || null,
-        purchasedBy: purchasedBy.trim() || null,
-        reimbursementType: reimbursementType.trim() || null,
-        notes: notes.trim() || null,
-        transactionType: type.trim() || null,
-        budgetCategoryId: nextCategoryId,
-        hasEmailReceipt,
-        taxRatePct: taxRateValue,
-        subtotalCents,
-      });
-      if (categoryChanged && nextCategoryId) {
-        await Promise.all(
-          linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
-        );
-      }
-      router.replace(fallbackTarget);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to save transaction.';
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
     }
+    const nextCategoryId = budgetCategoryId.trim() || null;
+    const categoryChanged = nextCategoryId !== (transaction?.budgetCategoryId ?? null);
+    updateTransaction(accountId, id, {
+      source: source.trim() || null,
+      transactionDate: transactionDate.trim() || null,
+      amountCents: amountCents ?? null,
+      status: status.trim() || null,
+      purchasedBy: purchasedBy.trim() || null,
+      reimbursementType: reimbursementType.trim() || null,
+      notes: notes.trim() || null,
+      transactionType: type.trim() || null,
+      budgetCategoryId: nextCategoryId,
+      hasEmailReceipt,
+      taxRatePct: taxRateValue,
+      subtotalCents,
+    }).catch(err => {
+      console.warn('[transactions] save failed:', err);
+    });
+    if (categoryChanged && nextCategoryId) {
+      Promise.all(
+        linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
+      ).catch(err => {
+        console.warn('[transactions] category propagation failed:', err);
+      });
+    }
+    router.replace(fallbackTarget);
   };
 
   if (!id) {
@@ -399,9 +407,8 @@ export default function EditTransactionScreen() {
               style={styles.actionButton}
             />
             <AppButton
-              title={isSubmitting ? 'Saving...' : 'Save'}
+              title="Save"
               onPress={handleSave}
-              disabled={isSubmitting}
               style={styles.actionButton}
             />
           </FormActions>

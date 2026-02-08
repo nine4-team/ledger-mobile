@@ -33,10 +33,10 @@ export type ResolveItemMoveResult = {
  * - Simple project/space assignment when already in the correct project
  * - Waiting for scope changes before applying final assignment
  */
-export async function resolveItemMove(
+export function resolveItemMove(
   item: MovableItem,
   options: ResolveItemMoveOptions
-): Promise<ResolveItemMoveResult> {
+): ResolveItemMoveResult {
   const {
     accountId,
     itemId,
@@ -62,7 +62,9 @@ export async function resolveItemMove(
       update.budgetCategoryId = budgetCategoryId;
     }
     if (Object.keys(update).length > 0) {
-      await updateItem(accountId, itemId, update);
+      updateItem(accountId, itemId, update).catch((err) => {
+        console.warn('[items] updateItem failed:', err);
+      });
     }
     return { success: true };
   }
@@ -77,15 +79,17 @@ export async function resolveItemMove(
       };
     }
 
-    await requestBusinessToProjectPurchase({
+    requestBusinessToProjectPurchase({
       accountId,
       targetProjectId,
       budgetCategoryId,
       items: [{ id: itemId, projectId: null, transactionId: item.transactionId ?? null }],
     });
 
-    // Wait for the item to be in the target project before assigning space/transaction
-    await waitForScopeThenAssign(accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId);
+    // Fire-and-forget: wait for scope change then assign space/transaction in background
+    waitForScopeThenAssign(accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId).catch((err) => {
+      console.warn('[items] waitForScopeThenAssign failed:', err);
+    });
     return { success: true };
   }
 
@@ -99,7 +103,7 @@ export async function resolveItemMove(
       };
     }
 
-    await requestProjectToBusinessSale({
+    requestProjectToBusinessSale({
       accountId,
       projectId: currentProjectId,
       budgetCategoryId,
@@ -113,8 +117,10 @@ export async function resolveItemMove(
       ],
     });
 
-    // Wait for the item to be in inventory scope before assigning transaction/space
-    await waitForScopeThenAssign(accountId, itemId, null, targetSpaceId, targetTransactionId);
+    // Fire-and-forget: wait for scope change then assign space/transaction in background
+    waitForScopeThenAssign(accountId, itemId, null, targetSpaceId, targetTransactionId).catch((err) => {
+      console.warn('[items] waitForScopeThenAssign failed:', err);
+    });
     return { success: true };
   }
 
@@ -129,7 +135,7 @@ export async function resolveItemMove(
       };
     }
 
-    await requestProjectToProjectMove({
+    requestProjectToProjectMove({
       accountId,
       sourceProjectId: currentProjectId,
       targetProjectId,
@@ -145,8 +151,10 @@ export async function resolveItemMove(
       ],
     });
 
-    // Wait for the item to be in the target project before assigning space/transaction
-    await waitForScopeThenAssign(accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId);
+    // Fire-and-forget: wait for scope change then assign space/transaction in background
+    waitForScopeThenAssign(accountId, itemId, targetProjectId, targetSpaceId, targetTransactionId).catch((err) => {
+      console.warn('[items] waitForScopeThenAssign failed:', err);
+    });
     return { success: true };
   }
 

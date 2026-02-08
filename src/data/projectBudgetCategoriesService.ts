@@ -11,6 +11,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { auth } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export type ProjectBudgetCategory = {
   id: string;
@@ -110,4 +111,5 @@ export async function setProjectBudgetCategory(
   }
 
   await setDoc(ref, payload, { merge: true });
+  trackPendingWrite();
 }

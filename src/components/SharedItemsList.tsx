@@ -391,35 +391,43 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     [setFilters, state.filters]
   );
 
-  const handleBulkDelete = useCallback(async () => {
+  const handleBulkDelete = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
-    await Promise.all(selectedIds.map((id) => deleteItem(accountId, id)));
+    selectedIds.forEach((id) => {
+      deleteItem(accountId, id).catch((err) => console.warn('[items] bulk delete failed:', err));
+    });
     setSelectedIds([]);
   }, [accountId, selectedIds]);
 
-  const handleBulkMoveToSpace = useCallback(async () => {
+  const handleBulkMoveToSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || !bulkSpaceId.trim()) return;
-    await Promise.all(
-      selectedIds.map((id) => updateItem(accountId, id, { spaceId: bulkSpaceId.trim() }))
-    );
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { spaceId: bulkSpaceId.trim() }).catch((err) =>
+        console.warn('[items] bulk move to space failed:', err)
+      );
+    });
     setSelectedIds([]);
     setBulkSpaceId('');
   }, [accountId, bulkSpaceId, selectedIds]);
 
-  const handleBulkRemoveFromSpace = useCallback(async () => {
+  const handleBulkRemoveFromSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
-    await Promise.all(selectedIds.map((id) => updateItem(accountId, id, { spaceId: null })));
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { spaceId: null }).catch((err) =>
+        console.warn('[items] bulk remove from space failed:', err)
+      );
+    });
     setSelectedIds([]);
   }, [accountId, selectedIds]);
 
-  const handleBulkAllocateToProject = useCallback(async () => {
+  const handleBulkAllocateToProject = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || !bulkProjectId.trim()) return;
     if (!bulkCategoryId.trim()) {
       setBulkError('Select a destination category before allocating.');
       return;
     }
     setBulkError(null);
-    await requestBusinessToProjectPurchase({
+    requestBusinessToProjectPurchase({
       accountId,
       targetProjectId: bulkProjectId.trim(),
       budgetCategoryId: bulkCategoryId.trim(),
@@ -430,7 +438,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     setBulkCategoryId('');
   }, [accountId, bulkCategoryId, bulkProjectId, items, selectedIds]);
 
-  const handleBulkSellToBusiness = useCallback(async () => {
+  const handleBulkSellToBusiness = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || scopeConfig.scope !== 'project') return;
     const selected = items.filter((item) => selectedIds.includes(item.id));
     const missingCategory = selected.find((item) => !item.budgetCategoryId);
@@ -439,7 +447,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       return;
     }
     setBulkError(null);
-    await requestProjectToBusinessSale({
+    requestProjectToBusinessSale({
       accountId,
       projectId: scopeConfig.projectId ?? '',
       budgetCategoryId: bulkSourceCategoryId.trim() || undefined,
@@ -610,8 +618,8 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteItem(accountId, id);
+          onPress: () => {
+            deleteItem(accountId, id).catch(err => console.warn('[items] delete failed:', err));
             setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
           },
         },
@@ -864,10 +872,10 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                     },
                     menuItems,
                     bookmarked: Boolean(item.item.bookmark ?? (item.item as any).isBookmarked),
-                    onBookmarkPress: async () => {
+                    onBookmarkPress: () => {
                       if (!accountId) return;
                       const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                      await updateItem(accountId, item.id, { bookmark: next });
+                      updateItem(accountId, item.id, { bookmark: next }).catch(err => console.warn('[items] update failed:', err));
                     },
                     onPress: () => {
                       handleOpenItem(item.id);
@@ -905,10 +913,10 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
               onSelectedChange={(next) => setItemSelected(item.id, next)}
               menuItems={menuItems}
               bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
-              onBookmarkPress={async () => {
+              onBookmarkPress={() => {
                 if (!accountId) return;
                 const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                await updateItem(accountId, item.id, { bookmark: next });
+                updateItem(accountId, item.id, { bookmark: next }).catch(err => console.warn('[items] update failed:', err));
               }}
               onPress={() => {
                 handleOpenItem(item.id);

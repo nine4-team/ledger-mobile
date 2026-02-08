@@ -56,7 +56,6 @@ export default function NewItemScreen() {
   const [localImageUri, setLocalImageUri] = useState('');
   const [spaceId, setSpaceId] = useState<string | null>(initialSpaceId ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fallbackTarget = useMemo(() => {
     if (backTarget) return backTarget;
@@ -95,11 +94,10 @@ export default function NewItemScreen() {
     const projectPriceCents = parseCurrency(projectPrice);
     const qty = Math.max(1, Number.parseInt(quantity || '1', 10) || 1);
     setError(null);
-    setIsSubmitting(true);
     try {
       let budgetCategoryId: string | null = null;
       if (transactionId) {
-        const transaction = await getTransaction(accountId, transactionId, 'online');
+        const transaction = await getTransaction(accountId, transactionId, 'offline');
         if (transaction && !isCanonicalTransactionId(transaction.id) && transaction.budgetCategoryId) {
           budgetCategoryId = transaction.budgetCategoryId;
         }
@@ -123,14 +121,12 @@ export default function NewItemScreen() {
         })),
       };
       for (let index = 0; index < qty; index += 1) {
-        await createItem(accountId, payload);
+        createItem(accountId, payload);
       }
       router.replace(fallbackTarget);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to create item.';
       setError(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -244,9 +240,8 @@ export default function NewItemScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Adding…' : 'Add Item'}
+          title="Add Item"
           onPress={handleSubmit}
-          disabled={isSubmitting}
           style={styles.actionButton}
         />
       </FormActions>

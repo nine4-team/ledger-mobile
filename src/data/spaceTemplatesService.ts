@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
@@ -10,6 +9,7 @@ import {
   setDoc,
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 import type { Checklist } from './spacesService';
 
 export type SpaceTemplate = {
@@ -84,26 +84,25 @@ function normalizeChecklists(checklists: Checklist[] | null | undefined): Checkl
   }));
 }
 
-export async function createSpaceTemplate(
+export function createSpaceTemplate(
   accountId: string,
   data: Omit<SpaceTemplate, 'id' | 'accountId' | 'isArchived' | 'createdAt' | 'updatedAt'>
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  const docRef = await addDoc(
-    collection(db, `accounts/${accountId}/presets/default/spaceTemplates`),
-    {
-      ...data,
-      accountId,
-      isArchived: false,
-      order: data.order ?? Date.now(),
-      checklists: normalizeChecklists(data.checklists ?? null),
-      createdAt: now,
-      updatedAt: now,
-    }
-  );
+  const docRef = doc(collection(db, `accounts/${accountId}/presets/default/spaceTemplates`));
+  setDoc(docRef, {
+    ...data,
+    accountId,
+    isArchived: false,
+    order: data.order ?? Date.now(),
+    checklists: normalizeChecklists(data.checklists ?? null),
+    createdAt: now,
+    updatedAt: now,
+  }).catch(err => console.error('[spaceTemplates] create failed:', err));
+  trackPendingWrite();
   return docRef.id;
 }
 
@@ -125,6 +124,7 @@ export async function updateSpaceTemplate(
     },
     { merge: true }
   );
+  trackPendingWrite();
 }
 
 export async function setSpaceTemplateArchived(
@@ -155,4 +155,5 @@ export async function setSpaceTemplateOrder(
       )
     )
   );
+  trackPendingWrite();
 }

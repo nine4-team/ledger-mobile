@@ -8,6 +8,7 @@ import {
   setDoc,
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export type AccountPresets = {
   id: string;
@@ -89,4 +90,5 @@ export async function updateAccountPresets(
     },
     { merge: true }
   );
+  trackPendingWrite();
 }

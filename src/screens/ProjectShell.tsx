@@ -199,8 +199,9 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          await deleteProject(accountId, projectId);
+        onPress: () => {
+          deleteProject(accountId, projectId)
+            .catch(err => console.error('[projects] delete failed:', err));
           router.replace('/(tabs)');
         },
       },
@@ -208,7 +209,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
   }, [accountId, projectId, router]);
 
   const handlePinToggle = useCallback(
-    async (categoryId: string) => {
+    (categoryId: string) => {
       if (!userId || !projectId || !accountId) return;
 
       const isPinned = pinnedBudgetCategoryIds.includes(categoryId);
@@ -216,9 +217,9 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
         ? pinnedBudgetCategoryIds.filter((id) => id !== categoryId)
         : [...pinnedBudgetCategoryIds, categoryId];
 
-      await updateProjectPreferences(accountId, userId, projectId, {
+      updateProjectPreferences(accountId, userId, projectId, {
         pinnedBudgetCategoryIds: nextPinned,
-      });
+      }).catch(err => console.error('[projects] pin toggle failed:', err));
     },
     [accountId, userId, projectId, pinnedBudgetCategoryIds]
   );

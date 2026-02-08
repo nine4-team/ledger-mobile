@@ -38,7 +38,6 @@ export default function EditProjectScreen() {
   const [selectedImage, setSelectedImage] = useState<AttachmentRef | null>(null);
   const [originalMainImageUrl, setOriginalMainImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Budget state
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
@@ -139,10 +138,9 @@ export default function EditProjectScreen() {
     }
 
     setError(null);
-    setIsSubmitting(true);
 
     try {
-      // 1. Update basic fields (only if changed)
+      // 1. Update basic fields (fire-and-forget, only if changed)
       const updates: Partial<Project> = {};
       if (name.trim() !== project?.name) updates.name = name.trim();
       if (clientName.trim() !== project?.clientName) updates.clientName = clientName.trim();
@@ -150,31 +148,38 @@ export default function EditProjectScreen() {
         updates.description = description.trim() || null;
       }
       if (Object.keys(updates).length > 0) {
-        await updateProject(accountId, projectId, updates);
+        updateProject(accountId, projectId, updates)
+          .catch(err => console.error('[projects] update failed:', err));
       }
 
-      // 2. Handle image changes
+      // 2. Handle image changes (keep await on Storage upload)
       const hasNewImage = selectedImage?.url.startsWith('offline://');
       const imageRemoved = originalMainImageUrl && !selectedImage;
 
       if (hasNewImage) {
         const mediaId = selectedImage!.url.replace('offline://', '');
         const destinationPath = `projects/${accountId}/${projectId}/main-image/${mediaId}.jpg`;
-        await enqueueUpload({
-          mediaId,
-          destinationPath,
-          idempotencyKey: `project-${projectId}-main-image`,
-        });
-        await processUploadQueue();
-        const mediaState = resolveAttachmentState(selectedImage!);
-        if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
-          await updateProject(accountId, projectId, { mainImageUrl: mediaState.record.remoteUrl });
+        try {
+          await enqueueUpload({
+            mediaId,
+            destinationPath,
+            idempotencyKey: `project-${projectId}-main-image`,
+          });
+          await processUploadQueue();
+          const mediaState = resolveAttachmentState(selectedImage!);
+          if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
+            updateProject(accountId, projectId, { mainImageUrl: mediaState.record.remoteUrl })
+              .catch(err => console.error('[projects] update mainImageUrl failed:', err));
+          }
+        } catch (err) {
+          console.error('[projects] image upload failed:', err);
         }
       } else if (imageRemoved) {
-        await updateProject(accountId, projectId, { mainImageUrl: null });
+        updateProject(accountId, projectId, { mainImageUrl: null })
+          .catch(err => console.error('[projects] clear mainImageUrl failed:', err));
       }
 
-      // 3. Save changed budget categories
+      // 3. Save changed budget categories (fire-and-forget)
       const changedBudgets = Object.entries(localBudgets).filter(([categoryId, cents]) => {
         const existing = projectBudgetCategories[categoryId]?.budgetCents;
         return cents !== existing;
@@ -182,15 +187,16 @@ export default function EditProjectScreen() {
       const budgetPromises = changedBudgets.map(([categoryId, cents]) =>
         setProjectBudgetCategory(accountId, projectId, categoryId, { budgetCents: cents })
       );
-      await Promise.allSettled(budgetPromises);
+      Promise.allSettled(budgetPromises).catch(err =>
+        console.error('[projects] budget category writes failed:', err)
+      );
 
+      // 4. Navigate immediately
       router.replace(`/project/${projectId}?tab=items`);
 
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to update project.';
       setError(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -295,9 +301,9 @@ export default function EditProjectScreen() {
         <FormActions>
           <AppButton title="Cancel" variant="secondary" onPress={() => router.back()} style={styles.actionButton} />
           <AppButton
-            title={isSubmitting ? 'Saving…' : 'Save'}
+            title="Save"
             onPress={handleSubmit}
-            disabled={isSubmitting || isLoadingCategories}
+            disabled={isLoadingCategories}
             style={styles.actionButton}
           />
         </FormActions>

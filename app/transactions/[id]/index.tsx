@@ -216,7 +216,9 @@ export default function TransactionDetailScreen() {
     };
 
     const nextAttachments = [...currentAttachments, newAttachment].slice(0, 10);
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] update receipt attachments failed:', err);
+    });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
@@ -238,10 +240,12 @@ export default function TransactionDetailScreen() {
       nextAttachments[0] = { ...nextAttachments[0], isPrimary: true };
     }
 
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] remove receipt attachment failed:', err);
+    });
   };
 
-  const handleSetPrimaryReceiptAttachment = async (attachment: AttachmentRef) => {
+  const handleSetPrimaryReceiptAttachment = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
     const nextAttachments = (transaction.receiptImages ?? []).map((att) => ({
@@ -249,7 +253,9 @@ export default function TransactionDetailScreen() {
       isPrimary: att.url === attachment.url,
     }));
 
-    await updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
+      console.warn('[transactions] set primary receipt failed:', err);
+    });
   };
 
   const handlePickOtherImage = async (localUri: string, kind: AttachmentKind) => {
@@ -273,7 +279,9 @@ export default function TransactionDetailScreen() {
     };
 
     const nextImages = [...currentImages, newImage].slice(0, 5);
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] update other images failed:', err);
+    });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
@@ -295,10 +303,12 @@ export default function TransactionDetailScreen() {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
 
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] remove other image failed:', err);
+    });
   };
 
-  const handleSetPrimaryOtherImage = async (attachment: AttachmentRef) => {
+  const handleSetPrimaryOtherImage = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
     const nextImages = (transaction.otherImages ?? []).map((img) => ({
@@ -306,39 +316,39 @@ export default function TransactionDetailScreen() {
       isPrimary: img.url === attachment.url,
     }));
 
-    await updateTransaction(accountId, id, { otherImages: nextImages });
+    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
+      console.warn('[transactions] set primary other image failed:', err);
+    });
   };
 
-  const handleAddSelectedItems = useCallback(async () => {
+  const handleAddSelectedItems = useCallback(() => {
     if (!accountId || !id || pickerSelectedIds.length === 0) return;
     const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
     const conflicts = selectedItems.filter((item) => item.transactionId && item.transactionId !== id);
-    
-    const performAdd = async () => {
-      await Promise.all(
-        selectedItems.map(async (item) => {
-          const targetProjectId = scope === 'inventory' ? null : projectId ?? null;
-          const budgetCategoryId =
-            scope === 'inventory'
-              ? item.budgetCategoryId ?? null
-              : !isCanonical && transaction?.budgetCategoryId
-                ? transaction.budgetCategoryId
-                : undefined;
 
-          const result = await resolveItemMove(item, {
-            accountId,
-            itemId: item.id,
-            targetProjectId,
-            targetSpaceId: null,
-            targetTransactionId: id,
-            budgetCategoryId,
-          });
+    const performAdd = () => {
+      selectedItems.forEach((item) => {
+        const targetProjectId = scope === 'inventory' ? null : projectId ?? null;
+        const budgetCategoryId =
+          scope === 'inventory'
+            ? item.budgetCategoryId ?? null
+            : !isCanonical && transaction?.budgetCategoryId
+              ? transaction.budgetCategoryId
+              : undefined;
 
-          if (!result.success) {
-            console.error(`Failed to move item ${item.id}: ${result.error}`);
-          }
-        })
-      );
+        const result = resolveItemMove(item, {
+          accountId,
+          itemId: item.id,
+          targetProjectId,
+          targetSpaceId: null,
+          targetTransactionId: id,
+          budgetCategoryId,
+        });
+
+        if (!result.success) {
+          console.warn(`[items] move failed for ${item.id}: ${result.error}`);
+        }
+      });
       setPickerSelectedIds([]);
       setIsPickingItems(false);
     };
@@ -351,7 +361,7 @@ export default function TransactionDetailScreen() {
       });
       return;
     }
-    await performAdd();
+    performAdd();
   }, [
     accountId,
     activePickerItems,
@@ -363,9 +373,11 @@ export default function TransactionDetailScreen() {
     transaction?.budgetCategoryId,
   ]);
 
-  const handleRemoveLinkedItem = async (itemId: string) => {
+  const handleRemoveLinkedItem = (itemId: string) => {
     if (!accountId) return;
-    await updateItem(accountId, itemId, { transactionId: null });
+    updateItem(accountId, itemId, { transactionId: null }).catch(err => {
+      console.warn('[transactions] remove linked item failed:', err);
+    });
   };
 
   const handleCreateItem = () => {
@@ -387,8 +399,10 @@ export default function TransactionDetailScreen() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          await deleteTransaction(accountId, id);
+        onPress: () => {
+          deleteTransaction(accountId, id).catch(err => {
+            console.warn('[transactions] delete failed:', err);
+          });
           router.replace(fallbackTarget);
         },
       },

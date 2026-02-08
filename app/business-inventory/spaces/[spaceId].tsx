@@ -255,10 +255,12 @@ function BISpaceDetailContent({
   // --- Handlers ---
 
   const handleSaveChecklists = useCallback(
-    async (next: Checklist[]) => {
+    (next: Checklist[]) => {
       if (!accountId || !spaceId) return;
       setChecklists(next);
-      await updateSpace(accountId, spaceId, { checklists: next });
+      updateSpace(accountId, spaceId, { checklists: next }).catch((err) => {
+        console.warn('[spaces] checklist update failed:', err);
+      });
     },
     [accountId, spaceId]
   );
@@ -279,7 +281,9 @@ function BISpaceDetailContent({
       isPrimary: !hasPrimary && kind === 'image',
     };
     const nextImages = [...(space.images ?? []), newImage].slice(0, 50);
-    await updateSpace(accountId, spaceId, { images: nextImages });
+    updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
+      console.warn('[spaces] image add failed:', err);
+    });
   }, [accountId, space, spaceId]);
 
   const handleRemoveImage = useCallback(
@@ -292,31 +296,37 @@ function BISpaceDetailContent({
       if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
         nextImages[0] = { ...nextImages[0], isPrimary: true };
       }
-      await updateSpace(accountId, spaceId, { images: nextImages });
+      updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
+        console.warn('[spaces] image remove failed:', err);
+      });
     },
     [accountId, space, spaceId]
   );
 
   const handleSetPrimaryImage = useCallback(
-    async (image: AttachmentRef) => {
+    (image: AttachmentRef) => {
       if (!accountId || !spaceId) return;
       const nextImages = (space?.images ?? []).map((img) => ({
         ...img,
         isPrimary: img.url === image.url,
       }));
-      await updateSpace(accountId, spaceId, { images: nextImages });
+      updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
+        console.warn('[spaces] set primary image failed:', err);
+      });
     },
     [accountId, space?.images, spaceId]
   );
 
-  const handleAddSelectedItems = useCallback(async () => {
+  const handleAddSelectedItems = useCallback(() => {
     if (!accountId || pickerSelectedIds.length === 0) return;
     const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
 
     if (pickerTab !== 'outside') {
-      await Promise.all(
-        selectedItems.map((item) => updateItem(accountId, item.id, { spaceId }))
-      );
+      selectedItems.forEach((item) => {
+        updateItem(accountId, item.id, { spaceId }).catch((err) => {
+          console.warn(`[spaces] move item ${item.id} failed:`, err);
+        });
+      });
       setPickerSelectedIds([]);
       setIsPickingItems(false);
       return;
@@ -331,33 +341,33 @@ function BISpaceDetailContent({
       return;
     }
 
-    await Promise.all(
-      selectedItems.map(async (item) => {
-        if (item.transactionId) return;
-        const result = await resolveItemMove(item, {
-          accountId,
-          itemId: item.id,
-          targetProjectId: null,
-          targetSpaceId: spaceId,
-          budgetCategoryId: item.budgetCategoryId ?? null,
-        });
-        if (!result.success) {
-          console.error(`Failed to move item ${item.id}: ${result.error}`);
-        }
-      })
-    );
+    selectedItems.forEach((item) => {
+      if (item.transactionId) return;
+      const result = resolveItemMove(item, {
+        accountId,
+        itemId: item.id,
+        targetProjectId: null,
+        targetSpaceId: spaceId,
+        budgetCategoryId: item.budgetCategoryId ?? null,
+      });
+      if (!result.success) {
+        console.warn(`[items] move failed for ${item.id}: ${result.error}`);
+      }
+    });
     setPickerSelectedIds([]);
     setIsPickingItems(false);
   }, [accountId, activePickerItems, pickerSelectedIds, pickerTab, spaceId]);
 
-  const handleAddSingleItem = useCallback(async (item: ScopedItem | { id: string; transactionId?: string | null; budgetCategoryId?: string | null; [key: string]: any }) => {
+  const handleAddSingleItem = useCallback((item: ScopedItem | { id: string; transactionId?: string | null; budgetCategoryId?: string | null; [key: string]: any }) => {
     if (!accountId) return;
     const isOutside = pickerTab === 'outside';
     if (!isOutside) {
-      await updateItem(accountId, item.id, { spaceId });
+      updateItem(accountId, item.id, { spaceId }).catch((err) => {
+        console.warn(`[spaces] move item ${item.id} failed:`, err);
+      });
     } else {
       if (item.transactionId) return;
-      const result = await resolveItemMove(item as any, {
+      const result = resolveItemMove(item as any, {
         accountId,
         itemId: item.id,
         targetProjectId: null as any,
@@ -365,24 +375,30 @@ function BISpaceDetailContent({
         budgetCategoryId: item.budgetCategoryId ?? null,
       });
       if (!result.success) {
-        console.error(`Failed to move item ${item.id}: ${result.error}`);
+        console.warn(`[items] move failed for ${item.id}: ${result.error}`);
       }
     }
   }, [accountId, pickerTab, spaceId]);
 
   const spaceItemIds = useMemo(() => new Set(spaceItems.map((item) => item.id)), [spaceItems]);
 
-  const handleBulkRemove = useCallback(async () => {
+  const handleBulkRemove = useCallback(() => {
     if (!accountId || bulkSelectedIds.length === 0) return;
-    await Promise.all(bulkSelectedIds.map((itemId) => updateItem(accountId, itemId, { spaceId: null })));
+    bulkSelectedIds.forEach((itemId) => {
+      updateItem(accountId, itemId, { spaceId: null }).catch((err) => {
+        console.warn(`[spaces] bulk remove item ${itemId} failed:`, err);
+      });
+    });
     setBulkSelectedIds([]);
   }, [accountId, bulkSelectedIds]);
 
-  const handleBulkMove = useCallback(async () => {
+  const handleBulkMove = useCallback(() => {
     if (!accountId || bulkSelectedIds.length === 0 || !bulkTargetSpaceId) return;
-    await Promise.all(
-      bulkSelectedIds.map((itemId) => updateItem(accountId, itemId, { spaceId: bulkTargetSpaceId }))
-    );
+    bulkSelectedIds.forEach((itemId) => {
+      updateItem(accountId, itemId, { spaceId: bulkTargetSpaceId }).catch((err) => {
+        console.warn(`[spaces] bulk move item ${itemId} failed:`, err);
+      });
+    });
     setBulkSelectedIds([]);
     setBulkTargetSpaceId(null);
   }, [accountId, bulkSelectedIds, bulkTargetSpaceId]);
@@ -398,27 +414,24 @@ function BISpaceDetailContent({
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          await deleteSpace(accountId, spaceId);
+        onPress: () => {
+          deleteSpace(accountId, spaceId).catch((err) => {
+            console.warn('[spaces] delete failed:', err);
+          });
           router.replace('/business-inventory/spaces');
         },
       },
     ]);
   }, [accountId, router, spaceId, spaceItems.length]);
 
-  const handleSaveTemplate = useCallback(async () => {
+  const handleSaveTemplate = useCallback(() => {
     if (!accountId || !space) return;
-    try {
-      await createSpaceTemplate(accountId, {
-        name: space.name?.trim() || 'Untitled space',
-        notes: space.notes ?? null,
-        checklists: space.checklists ?? null,
-      });
-      Alert.alert('Success', 'Space saved as template successfully');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to save template.';
-      Alert.alert('Error', message);
-    }
+    createSpaceTemplate(accountId, {
+      name: space.name?.trim() || 'Untitled space',
+      notes: space.notes ?? null,
+      checklists: space.checklists ?? null,
+    });
+    Alert.alert('Success', 'Space saved as template successfully');
   }, [accountId, space]);
 
   const handleCreateItemInSpace = useCallback(() => {
@@ -612,7 +625,12 @@ function BISpaceDetailContent({
                       {
                         key: 'remove-from-space',
                         label: 'Remove from Space',
-                        onPress: () => accountId && updateItem(accountId, item.id, { spaceId: null }),
+                        onPress: () => {
+                          if (!accountId) return;
+                          updateItem(accountId, item.id, { spaceId: null }).catch((err) => {
+                            console.warn(`[spaces] remove item from space failed:`, err);
+                          });
+                        },
                       },
                     ];
 
@@ -636,9 +654,11 @@ function BISpaceDetailContent({
                         }
                         menuItems={bulkMode ? undefined : itemMenuItems}
                         bookmarked={Boolean((item as any).bookmark)}
-                        onBookmarkPress={async () => {
+                        onBookmarkPress={() => {
                           if (!accountId) return;
-                          await updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
+                          updateItem(accountId, item.id, { bookmark: !(item as any).bookmark }).catch((err) => {
+                            console.warn(`[spaces] bookmark toggle failed:`, err);
+                          });
                         }}
                         onPress={() => {
                           if (bulkMode) {

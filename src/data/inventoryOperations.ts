@@ -47,7 +47,7 @@ export function isCanonicalInventorySaleTransaction(
   return false;
 }
 
-export async function requestProjectToBusinessSale(params: {
+export function requestProjectToBusinessSale(params: {
   accountId: string;
   projectId: string;
   items: Array<{
@@ -58,7 +58,7 @@ export async function requestProjectToBusinessSale(params: {
   }>;
   budgetCategoryId?: string;
   opId?: string;
-}): Promise<string[]> {
+}): string[] {
   const results: string[] = [];
   for (const item of params.items) {
     const budgetCategoryId = item.budgetCategoryId ?? params.budgetCategoryId ?? null;
@@ -75,19 +75,19 @@ export async function requestProjectToBusinessSale(params: {
       },
     };
     const opId = params.opId ?? generateRequestOpId();
-    const requestId = await createRequestDoc('ITEM_SALE_PROJECT_TO_BUSINESS', payload, { accountId: params.accountId, scope: 'account' }, opId);
+    const requestId = createRequestDoc('ITEM_SALE_PROJECT_TO_BUSINESS', payload, { accountId: params.accountId, scope: 'account' }, opId);
     results.push(requestId);
   }
   return results;
 }
 
-export async function requestBusinessToProjectPurchase(params: {
+export function requestBusinessToProjectPurchase(params: {
   accountId: string;
   targetProjectId: string;
   budgetCategoryId: string;
   items: Array<{ id: string; projectId?: string | null; transactionId?: string | null }>;
   opId?: string;
-}): Promise<string[]> {
+}): string[] {
   const results: string[] = [];
   for (const item of params.items) {
     const payload: BusinessToProjectPayload = {
@@ -100,13 +100,13 @@ export async function requestBusinessToProjectPurchase(params: {
       },
     };
     const opId = params.opId ?? generateRequestOpId();
-    const requestId = await createRequestDoc('ITEM_SALE_BUSINESS_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);
+    const requestId = createRequestDoc('ITEM_SALE_BUSINESS_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);
     results.push(requestId);
   }
   return results;
 }
 
-export async function requestProjectToProjectMove(params: {
+export function requestProjectToProjectMove(params: {
   accountId: string;
   sourceProjectId: string;
   targetProjectId: string;
@@ -119,7 +119,7 @@ export async function requestProjectToProjectMove(params: {
     budgetCategoryId?: string | null;
   }>;
   opId?: string;
-}): Promise<string[]> {
+}): string[] {
   const results: string[] = [];
   for (const item of params.items) {
     const sourceBudgetCategoryId = item.budgetCategoryId ?? params.sourceBudgetCategoryId ?? null;
@@ -138,7 +138,7 @@ export async function requestProjectToProjectMove(params: {
       },
     };
     const opId = params.opId ?? generateRequestOpId();
-    const requestId = await createRequestDoc('ITEM_SALE_PROJECT_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);
+    const requestId = createRequestDoc('ITEM_SALE_PROJECT_TO_PROJECT', payload, { accountId: params.accountId, scope: 'account' }, opId);
     results.push(requestId);
   }
   return results;

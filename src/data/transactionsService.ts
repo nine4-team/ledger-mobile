@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -43,21 +42,22 @@ export type Transaction = {
   updatedAt?: unknown;
 };
 
-export async function createTransaction(
+export function createTransaction(
   accountId: string,
   data: Partial<Transaction>
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
     );
   }
   const now = serverTimestamp();
-  const docRef = await addDoc(collection(db, `accounts/${accountId}/transactions`), {
+  const docRef = doc(collection(db, `accounts/${accountId}/transactions`));
+  setDoc(docRef, {
     ...data,
     createdAt: now,
     updatedAt: now,
-  });
+  }).catch(err => console.error('[transactions] create failed:', err));
   trackPendingWrite();
   return docRef.id;
 }

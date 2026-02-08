@@ -42,7 +42,6 @@ export default function EditItemScreen() {
 
   const [item, setItem] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -111,7 +110,9 @@ export default function EditItemScreen() {
       isPrimary: !hasPrimary && kind === 'image',
     };
     const nextImages: AttachmentRef[] = [...(item.images ?? []), newImage].slice(0, 5);
-    await updateItem(accountId, id, { images: nextImages });
+    updateItem(accountId, id, { images: nextImages }).catch(err => {
+      console.warn('[items] update failed:', err);
+    });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -124,19 +125,23 @@ export default function EditItemScreen() {
     if (!nextImages.some((image) => image.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
-    await updateItem(accountId, id, { images: nextImages });
+    updateItem(accountId, id, { images: nextImages }).catch(err => {
+      console.warn('[items] update failed:', err);
+    });
   };
 
-  const handleSetPrimaryImage = async (attachment: AttachmentRef) => {
+  const handleSetPrimaryImage = (attachment: AttachmentRef) => {
     if (!accountId || !id || !item) return;
     const nextImages = (item.images ?? []).map((image) => ({
       ...image,
       isPrimary: image.url === attachment.url,
     }));
-    await updateItem(accountId, id, { images: nextImages });
+    updateItem(accountId, id, { images: nextImages }).catch(err => {
+      console.warn('[items] update failed:', err);
+    });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!accountId || !id) return;
     const hasImages = (item?.images?.length ?? 0) > 0;
     if (!name.trim() && !sku.trim() && !hasImages) {
@@ -144,26 +149,20 @@ export default function EditItemScreen() {
       return;
     }
     setError(null);
-    setIsSubmitting(true);
-    try {
-      await updateItem(accountId, id, {
-        name: name.trim(),
-        sku: sku.trim() || null,
-        source: source.trim() || null,
-        status: status.trim() || null,
-        purchasePriceCents: parseCurrency(purchasePrice),
-        projectPriceCents: parseCurrency(projectPrice),
-        marketValueCents: parseCurrency(marketValue),
-        notes: notes.trim() || null,
-        spaceId,
-      });
-      router.replace(fallbackTarget);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to save item.';
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    updateItem(accountId, id, {
+      name: name.trim(),
+      sku: sku.trim() || null,
+      source: source.trim() || null,
+      status: status.trim() || null,
+      purchasePriceCents: parseCurrency(purchasePrice),
+      projectPriceCents: parseCurrency(projectPrice),
+      marketValueCents: parseCurrency(marketValue),
+      notes: notes.trim() || null,
+      spaceId,
+    }).catch(err => {
+      console.warn('[items] update failed:', err);
+    });
+    router.replace(fallbackTarget);
   };
 
   if (!id) {
@@ -271,9 +270,8 @@ export default function EditItemScreen() {
               style={styles.actionButton}
             />
             <AppButton
-              title={isSubmitting ? 'Saving...' : 'Save'}
+              title="Save"
               onPress={handleSave}
-              disabled={isSubmitting}
               style={styles.actionButton}
             />
           </FormActions>

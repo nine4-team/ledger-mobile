@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
@@ -12,7 +12,6 @@ import { CategoryBudgetInput } from '../../src/components/budget/CategoryBudgetI
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { layout, CARD_PADDING, getCardBaseStyle } from '../../src/ui';
-import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { createProject, updateProject } from '../../src/data/projectService';
 import { subscribeToBudgetCategories, type BudgetCategory } from '../../src/data/budgetCategoriesService';
 import { setProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
@@ -24,7 +23,6 @@ export default function NewProjectScreen() {
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
   const theme = useTheme();
-  const { isOnline } = useNetworkStatus();
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
@@ -33,7 +31,6 @@ export default function NewProjectScreen() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | null>>({});
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Subscribe to budget categories
   useEffect(() => {
@@ -96,34 +93,27 @@ export default function NewProjectScreen() {
       setError('Project name and client name are required.');
       return;
     }
-    if (!isOnline) {
-      setError('Go online to create a project.');
-      return;
-    }
     if (isLoadingCategories) {
       setError('Budget categories are still loading.');
       return;
     }
 
     setError(null);
-    setIsSubmitting(true);
 
     try {
-      // 1. Create project
-      const result = await createProject({
+      // 1. Create project (synchronous — offline-safe)
+      const { projectId } = createProject({
         accountId,
         name: name.trim(),
         clientName: clientName.trim(),
         description: description.trim() || null,
       });
-      const { projectId } = result;
 
-      // 2. Upload image if selected (non-blocking)
-      let uploadError: string | null = null;
+      // 2. Upload image if selected (keep await on Storage upload)
       if (selectedImage?.url.startsWith('offline://')) {
+        const mediaId = selectedImage.url.replace('offline://', '');
+        const destinationPath = `projects/${accountId}/${projectId}/main-image/${mediaId}.jpg`;
         try {
-          const mediaId = selectedImage.url.replace('offline://', '');
-          const destinationPath = `projects/${accountId}/${projectId}/main-image/${mediaId}.jpg`;
           await enqueueUpload({
             mediaId,
             destinationPath,
@@ -132,36 +122,31 @@ export default function NewProjectScreen() {
           await processUploadQueue();
           const mediaState = resolveAttachmentState(selectedImage);
           if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
-            await updateProject(accountId, projectId, {
+            updateProject(accountId, projectId, {
               mainImageUrl: mediaState.record.remoteUrl,
-            });
-          } else {
-            uploadError = 'Image upload failed. You can re-upload from edit screen.';
+            }).catch(err => console.error('[projects] update mainImageUrl failed:', err));
           }
         } catch (err) {
-          uploadError = 'Image upload failed. You can re-upload from edit screen.';
+          console.error('[projects] image upload failed:', err);
         }
       }
 
-      // 3. Save budget categories (non-blocking)
+      // 3. Save budget categories (fire-and-forget)
       const budgetPromises = Object.entries(localBudgets)
         .filter(([_, cents]) => cents !== null && cents !== undefined)
         .map(([categoryId, cents]) =>
           setProjectBudgetCategory(accountId, projectId, categoryId, { budgetCents: cents })
         );
-      await Promise.allSettled(budgetPromises);
+      Promise.allSettled(budgetPromises).catch(err =>
+        console.error('[projects] budget category writes failed:', err)
+      );
 
-      // 4. Navigate with warning if needed
-      if (uploadError) {
-        Alert.alert('Project Created', `Project created successfully. ${uploadError}`);
-      }
+      // 4. Navigate immediately
       router.replace(`/project/${projectId}?tab=items`);
 
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to create project.';
       setError(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -244,9 +229,9 @@ export default function NewProjectScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.back()} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Adding…' : 'Add Project'}
+          title="Add Project"
           onPress={handleSubmit}
-          disabled={isSubmitting || isLoadingCategories}
+          disabled={isLoadingCategories}
           style={styles.actionButton}
         />
       </FormActions>

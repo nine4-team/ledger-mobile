@@ -123,7 +123,7 @@ export function ImportAmazonInvoice({ projectId }: ImportAmazonInvoiceProps) {
     try {
       const opId = generateRequestOpId();
 
-      await createRequestDoc(
+      createRequestDoc(
         'import-invoice',
         {
           vendor: 'amazon',

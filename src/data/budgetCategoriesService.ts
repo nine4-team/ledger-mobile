@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -11,6 +10,7 @@ import {
   setDoc,
 } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export type BudgetCategoryType = 'general' | 'itemized' | 'fee';
 
@@ -104,13 +104,13 @@ export function mapBudgetCategories(categories: BudgetCategory[]): Record<string
   }, {} as Record<string, BudgetCategory>);
 }
 
-export async function createBudgetCategory(
+export function createBudgetCategory(
   accountId: string,
   name: string,
   options?: {
     metadata?: BudgetCategory['metadata'];
   }
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
@@ -121,7 +121,8 @@ export async function createBudgetCategory(
   }
   const now = serverTimestamp();
   const hasMetadataOption = Object.prototype.hasOwnProperty.call(options ?? {}, 'metadata');
-  const ref = await addDoc(collection(firestore, `accounts/${accountId}/presets/default/budgetCategories`), {
+  const docRef = doc(collection(firestore, `accounts/${accountId}/presets/default/budgetCategories`));
+  setDoc(docRef, {
     accountId,
     projectId: null,
     name: trimmed,
@@ -131,8 +132,9 @@ export async function createBudgetCategory(
     ...(hasMetadataOption ? { metadata: options?.metadata ?? null } : {}),
     createdAt: now,
     updatedAt: now,
-  });
-  return ref.id;
+  }).catch(err => console.error('[budgetCategories] create failed:', err));
+  trackPendingWrite();
+  return docRef.id;
 }
 
 export async function updateBudgetCategory(
@@ -155,6 +157,7 @@ export async function updateBudgetCategory(
     },
     { merge: true }
   );
+  trackPendingWrite();
 }
 
 export async function setBudgetCategoryArchived(
@@ -170,6 +173,7 @@ export async function deleteBudgetCategory(accountId: string, categoryId: string
     throw new Error('Firebase is not configured.');
   }
   await deleteDoc(doc(db, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`));
+  trackPendingWrite();
 }
 
 export async function setBudgetCategoryOrder(
@@ -193,4 +197,5 @@ export async function setBudgetCategoryOrder(
       )
     )
   );
+  trackPendingWrite();
 }

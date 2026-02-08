@@ -11,6 +11,7 @@ import {
   where,
 } from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 import { refreshBudgetCategories } from './budgetCategoriesService';
 import { refreshProjectBudgetCategories } from './projectBudgetCategoriesService';
 
@@ -87,6 +88,7 @@ export async function ensureProjectPreferences(
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  trackPendingWrite();
 }
 
 export async function updateProjectPreferences(
@@ -107,6 +109,7 @@ export async function updateProjectPreferences(
     },
     { merge: true }
   );
+  trackPendingWrite();
 }
 
 export async function fetchProjectPreferencesMap(params: {

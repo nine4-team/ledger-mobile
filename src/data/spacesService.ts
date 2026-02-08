@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDocs,
@@ -98,18 +97,19 @@ export async function refreshSpaces(
   return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Space));
 }
 
-export async function createSpace(
+export function createSpace(
   accountId: string,
   data: Pick<Space, 'name' | 'notes' | 'projectId'> &
     Partial<Pick<Space, 'checklists' | 'images'>>
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
     );
   }
   const now = serverTimestamp();
-  const docRef = await addDoc(collection(db, `accounts/${accountId}/spaces`), {
+  const docRef = doc(collection(db, `accounts/${accountId}/spaces`));
+  setDoc(docRef, {
     accountId,
     name: data.name,
     notes: data.notes ?? null,
@@ -119,7 +119,7 @@ export async function createSpace(
     isArchived: false,
     createdAt: now,
     updatedAt: now,
-  });
+  }).catch(err => console.error('[spaces] create failed:', err));
   trackPendingWrite();
   return docRef.id;
 }

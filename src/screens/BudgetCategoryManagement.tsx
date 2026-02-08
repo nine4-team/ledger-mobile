@@ -70,7 +70,6 @@ export function BudgetCategoryManagement() {
   // UI state
   const [showArchived, setShowArchived] = useState(false);
   const [editingState, setEditingState] = useState<EditingState>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
   // Loading and error states
@@ -143,40 +142,31 @@ export function BudgetCategoryManagement() {
 
   // Handle reordering
   const handleReorder = useCallback(
-    async (reorderedCategories: BudgetCategory[]) => {
+    (reorderedCategories: BudgetCategory[]) => {
       if (!accountId) return;
       const orderedIds = reorderedCategories.map((c) => c.id);
-      try {
-        await setBudgetCategoryOrder(accountId, orderedIds);
-      } catch (error) {
+      setBudgetCategoryOrder(accountId, orderedIds).catch((error) => {
         console.error('[BudgetCategoryManagement] Reorder failed:', error);
-        Alert.alert('Error', 'Failed to update category order. Please try again.');
-      }
+      });
     },
     [accountId]
   );
 
   // Handle default category change
   const handleDefaultCategoryChange = useCallback(
-    async (categoryId: string) => {
+    (categoryId: string) => {
       if (!accountId) return;
-      try {
-        await updateAccountPresets(accountId, { defaultBudgetCategoryId: categoryId });
-      } catch (error) {
+      updateAccountPresets(accountId, { defaultBudgetCategoryId: categoryId }).catch((error) => {
         console.error('[BudgetCategoryManagement] Failed to update default category:', error);
-        Alert.alert('Error', 'Failed to update default category. Please try again.');
-      }
+      });
     },
     [accountId]
   );
 
   // Handle archive with confirmation
   const handleArchive = useCallback(
-    async (category: BudgetCategory) => {
+    (category: BudgetCategory) => {
       if (!accountId) return;
-
-      // TODO: Implement getTransactionCount function to get actual count
-      // For now, we'll show a generic warning
 
       Alert.alert(
         'Archive Category?',
@@ -186,13 +176,10 @@ export function BudgetCategoryManagement() {
           {
             text: 'Archive',
             style: 'destructive',
-            onPress: async () => {
-              try {
-                await setBudgetCategoryArchived(accountId, category.id, true);
-              } catch (error) {
+            onPress: () => {
+              setBudgetCategoryArchived(accountId, category.id, true).catch((error) => {
                 console.error('[BudgetCategoryManagement] Archive failed:', error);
-                Alert.alert('Error', 'Failed to archive category. Please try again.');
-              }
+              });
             },
           },
         ]
@@ -203,53 +190,44 @@ export function BudgetCategoryManagement() {
 
   // Handle unarchive
   const handleUnarchive = useCallback(
-    async (categoryId: string) => {
+    (categoryId: string) => {
       if (!accountId) return;
-      try {
-        await setBudgetCategoryArchived(accountId, categoryId, false);
-      } catch (error) {
+      setBudgetCategoryArchived(accountId, categoryId, false).catch((error) => {
         console.error('[BudgetCategoryManagement] Unarchive failed:', error);
-        Alert.alert('Error', 'Failed to unarchive category. Please try again.');
-      }
+      });
     },
     [accountId]
   );
 
   // Handle form save
   const handleSave = useCallback(
-    async (data: CategoryFormData) => {
+    (data: CategoryFormData) => {
       if (!accountId || !editingState) return;
 
-      setIsSaving(true);
       setSaveError(undefined);
 
-      try {
-        if (editingState.mode === 'create') {
-          // Create new category
-          await createBudgetCategory(accountId, data.name, {
-            metadata: {
-              categoryType: data.isItemized ? 'itemized' : data.isFee ? 'fee' : 'general',
-              excludeFromOverallBudget: data.excludeFromOverallBudget,
-            },
-          });
-        } else {
-          // Update existing category
-          const category = editingState.category;
-          await updateBudgetCategory(accountId, category.id, {
-            name: data.name,
-            metadata: {
-              categoryType: data.isItemized ? 'itemized' : data.isFee ? 'fee' : 'general',
-              excludeFromOverallBudget: data.excludeFromOverallBudget,
-            },
-          });
-        }
-        setEditingState(null);
-      } catch (error) {
-        console.error('[BudgetCategoryManagement] Save failed:', error);
-        setSaveError('Failed to save category. Please try again.');
-      } finally {
-        setIsSaving(false);
+      if (editingState.mode === 'create') {
+        // createBudgetCategory is now synchronous
+        createBudgetCategory(accountId, data.name, {
+          metadata: {
+            categoryType: data.isItemized ? 'itemized' : data.isFee ? 'fee' : 'general',
+            excludeFromOverallBudget: data.excludeFromOverallBudget,
+          },
+        });
+      } else {
+        // Fire-and-forget: update existing category
+        const category = editingState.category;
+        updateBudgetCategory(accountId, category.id, {
+          name: data.name,
+          metadata: {
+            categoryType: data.isItemized ? 'itemized' : data.isFee ? 'fee' : 'general',
+            excludeFromOverallBudget: data.excludeFromOverallBudget,
+          },
+        }).catch((error) => {
+          console.error('[BudgetCategoryManagement] Update failed:', error);
+        });
       }
+      setEditingState(null);
     },
     [accountId, editingState]
   );
@@ -376,7 +354,6 @@ export function BudgetCategoryManagement() {
               onPress={() => setEditingState({ mode: 'create' })}
               leftIcon={<MaterialIcons name="add" size={18} color={uiKitTheme.button.primary.text} />}
               style={styles.addButton}
-              disabled={isSaving}
             />
 
             {/* Archived Section */}
@@ -440,7 +417,7 @@ export function BudgetCategoryManagement() {
               : undefined
           }
           onSave={handleSave}
-          isSaving={isSaving}
+          isSaving={false}
           error={saveError}
         />
       )}

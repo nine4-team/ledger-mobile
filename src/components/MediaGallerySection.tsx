@@ -25,9 +25,9 @@ export type MediaGallerySectionProps = {
   allowedKinds?: AttachmentKind[];
 
   // Handlers (all use AttachmentRef, not just URL strings)
-  onAddAttachment?: (localUri: string, kind: AttachmentKind) => Promise<void>;
-  onRemoveAttachment?: (attachment: AttachmentRef) => Promise<void>;
-  onSetPrimary?: (attachment: AttachmentRef) => Promise<void>;
+  onAddAttachment?: (localUri: string, kind: AttachmentKind) => void | Promise<void>;
+  onRemoveAttachment?: (attachment: AttachmentRef) => void | Promise<void>;
+  onSetPrimary?: (attachment: AttachmentRef) => void | Promise<void>;
 
   // Display customization
   size?: 'sm' | 'md' | 'lg';

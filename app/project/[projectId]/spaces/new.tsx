@@ -33,15 +33,13 @@ export default function NewSpaceScreen() {
       throw new Error('Project ID is missing.');
     }
 
-    // Kick off the write — Firestore caches it locally for offline-first sync.
-    // Don't await: the native SDK blocks until server ack, which hangs when offline.
+    // createSpace is now synchronous (fire-and-forget write).
+    // The ID is available immediately; Firestore syncs in the background.
     createSpace(accountId, {
       name: values.name,
       notes: values.notes || null,
       checklists: values.checklists ?? null,
       projectId,
-    }).catch((err) => {
-      console.warn('[spaces] create failed:', err);
     });
 
     router.replace(backTarget);

@@ -139,7 +139,7 @@ export function ImportWayfairInvoice({ projectId }: ImportWayfairInvoiceProps) {
     try {
       const opId = generateRequestOpId();
 
-      await createRequestDoc(
+      createRequestDoc(
         'import-invoice',
         {
           vendor: 'wayfair',

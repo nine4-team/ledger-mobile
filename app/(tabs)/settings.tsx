@@ -139,12 +139,9 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingCategoryType, setEditingCategoryType] = useState<'standard' | 'general' | 'itemized' | 'fee'>('standard');
   const [categoryStep, setCategoryStep] = useState<1 | 2>(1);
-  const [categorySaveStatus, setCategorySaveStatus] = useState<'idle' | 'saving'>('idle');
   const [categorySaveError, setCategorySaveError] = useState<string>('');
 
   const [vendorSlots, setVendorSlots] = useState<{ id: string; value: string }[]>([]);
-  const [vendorStatus, setVendorStatus] = useState<'idle' | 'saving' | 'error'>('idle');
-  const [vendorError, setVendorError] = useState('');
   const [editingVendorIndex, setEditingVendorIndex] = useState<number | null>(null);
   const [editingVendorName, setEditingVendorName] = useState('');
 
@@ -439,11 +436,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       setProfileError('No account selected.');
       return;
     }
-    if (!isOnline) {
-      setProfileStatus('error');
-      setProfileError('Business profile updates require an internet connection.');
-      return;
-    }
     const trimmed = profileDraft.trim();
     if (!trimmed) {
       setProfileStatus('error');
@@ -464,7 +456,12 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         });
         nextLogo = { url: upload.url, kind: 'image', storagePath: upload.storagePath };
       }
-      await saveBusinessProfile(accountId, { businessName: trimmed, logo: nextLogo }, user?.uid ?? null);
+      // Fire-and-forget: saveBusinessProfile is a Firestore write
+      saveBusinessProfile(accountId, { businessName: trimmed, logo: nextLogo }, user?.uid ?? null).catch(
+        (error: any) => {
+          console.error('[Settings] Failed to save business profile:', error);
+        }
+      );
       setProfileLogo(nextLogo);
       setLogoSelection(null);
       setProfileStatus('success');
@@ -500,7 +497,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     setEditingCategoryName('');
     setCategoryStep(1);
     setCategorySaveError('');
-    setCategorySaveStatus('idle');
   }, []);
 
   const handleNextStep = useCallback(() => {
@@ -522,12 +518,8 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     }
   }, [categoryStep]);
 
-  const handleSaveCategoryDetails = async () => {
+  const handleSaveCategoryDetails = () => {
     if (!accountId || !editingCategoryId) return;
-    if (!isOnline) {
-      setCategorySaveError('Category changes require an internet connection.');
-      return;
-    }
     const existingCategory =
       editingCategoryId === 'new'
         ? null
@@ -538,60 +530,31 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       setCategorySaveError('Category name is required.');
       return;
     }
-    setCategorySaveStatus('saving');
     setCategorySaveError('');
     const selectedCategoryType = editingCategoryType === 'standard' ? undefined : editingCategoryType;
 
-    try {
-      if (editingCategoryId === 'new') {
-        // Firestore writes can take an unbounded amount of time to resolve (especially on flaky
-        // connections) even though the category shows up immediately via local persistence +
-        // subscriptions. To avoid a "frozen" UX, we only wait briefly before closing the sheet.
-        const QUICK_WAIT_MS = 1200;
-
-        const savePromise = createBudgetCategory(accountId, trimmed, {
-          metadata: selectedCategoryType ? { categoryType: selectedCategoryType } : undefined,
-        });
-
-        const finishedQuickly = await Promise.race([
-          savePromise.then(() => true),
-          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), QUICK_WAIT_MS)),
-        ]);
-
-        // If it didn't finish quickly, close anyway and let it continue in the background.
-        // If it eventually fails, show an alert (the category may or may not have been created).
-        if (!finishedQuickly) {
-          savePromise.catch((error: any) => {
-            Alert.alert('Error', error?.message || 'Failed to save category.');
-          });
-        }
-
-        handleCloseCategoryModal();
-        return;
-      }
-
-      await updateBudgetCategory(accountId, editingCategoryId, {
+    if (editingCategoryId === 'new') {
+      createBudgetCategory(accountId, trimmed, {
+        metadata: selectedCategoryType ? { categoryType: selectedCategoryType } : undefined,
+      });
+    } else {
+      updateBudgetCategory(accountId, editingCategoryId, {
         name: trimmed,
         slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
         metadata: {
           categoryType: editingCategoryType,
           ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
         },
+      }).catch((error: any) => {
+        console.error('[Settings] Failed to update budget category:', error);
       });
-
-      handleCloseCategoryModal();
-    } catch (error: any) {
-      setCategorySaveError(error?.message || 'Failed to save category.');
-      setCategorySaveStatus('idle');
     }
+
+    handleCloseCategoryModal();
   };
 
   const handleDeleteCategory = (categoryId: string, categoryName?: string) => {
     if (!accountId) return;
-    if (!isOnline) {
-      Alert.alert('Offline', 'Category changes require an internet connection.');
-      return;
-    }
     const name = categoryName?.trim();
     const message = name
       ? `This will permanently delete "${name}".`
@@ -601,48 +564,29 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteBudgetCategory(accountId, categoryId);
-          } catch (error: any) {
-            Alert.alert('Error', error?.message || 'Failed to delete category.');
-          }
+        onPress: () => {
+          deleteBudgetCategory(accountId, categoryId).catch((error: any) => {
+            console.error('[Settings] Failed to delete budget category:', error);
+          });
         },
       },
     ]);
   };
 
-  const handleReorderBudgetCategories = async (nextOrder: typeof budgetCategories) => {
+  const handleReorderBudgetCategories = (nextOrder: typeof budgetCategories) => {
     if (!accountId) return;
-    if (!isOnline) {
-      Alert.alert('Offline', 'Reordering categories requires an internet connection.');
-      return;
-    }
     const activeIds = nextOrder.map((category) => category.id);
-    try {
-      await setBudgetCategoryOrder(accountId, activeIds);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to reorder categories.');
-    }
+    setBudgetCategoryOrder(accountId, activeIds).catch((error: any) => {
+      console.error('[Settings] Failed to reorder budget categories:', error);
+    });
   };
 
-  const handleSaveVendorSlot = async (index: number) => {
+  const handleSaveVendorSlot = (index: number) => {
     if (!accountId) return;
-    if (!isOnline) {
-      setVendorStatus('error');
-      setVendorError('Vendor updates require an internet connection.');
-      return;
-    }
-    setVendorStatus('saving');
-    setVendorError('');
-    try {
-      const next = vendorSlots.map((slot) => slot.value);
-      await replaceVendorSlots(accountId, next);
-      setVendorStatus('idle');
-    } catch (error: any) {
-      setVendorStatus('error');
-      setVendorError(error?.message || 'Failed to save vendors.');
-    }
+    const next = vendorSlots.map((slot) => slot.value);
+    replaceVendorSlots(accountId, next).catch((error: any) => {
+      console.error('[Settings] Failed to save vendor slots:', error);
+    });
   };
 
   const handleClearVendorSlot = (index: number) => {
@@ -656,38 +600,27 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       {
         text: 'Clear',
         style: 'destructive',
-        onPress: async () => {
+        onPress: () => {
           const next = [...vendorSlots];
           if (next[index]) {
             next[index] = { ...next[index], value: '' };
           }
           setVendorSlots(next);
-          await handleSaveVendorSlot(index);
+          handleSaveVendorSlot(index);
         },
       },
     ]);
   };
 
-  const handleReorderVendors = async (next: { id: string; value: string }[]) => {
+  const handleReorderVendors = (next: { id: string; value: string }[]) => {
     if (!accountId) return;
-    if (!isOnline) {
-      setVendorStatus('error');
-      setVendorError('Reordering vendors requires an internet connection.');
-      return;
-    }
-    setVendorStatus('saving');
-    setVendorError('');
-    try {
-      await replaceVendorSlots(
-        accountId,
-        next.map((slot) => slot.value)
-      );
-      setVendorSlots(next);
-      setVendorStatus('idle');
-    } catch (error: any) {
-      setVendorStatus('error');
-      setVendorError(error?.message || 'Failed to reorder vendors.');
-    }
+    setVendorSlots(next);
+    replaceVendorSlots(
+      accountId,
+      next.map((slot) => slot.value)
+    ).catch((error: any) => {
+      console.error('[Settings] Failed to reorder vendors:', error);
+    });
   };
 
   const handleReorderVendorItems = (nextItems: TemplateToggleListItem[]) => {
@@ -708,7 +641,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     setEditingVendorName('');
   };
 
-  const handleSaveVendorEdit = async () => {
+  const handleSaveVendorEdit = () => {
     if (editingVendorIndex === null) return;
     const next = [...vendorSlots];
     if (next[editingVendorIndex]) {
@@ -716,7 +649,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     }
     setVendorSlots(next);
     handleCloseVendorEdit();
-    await handleSaveVendorSlot(editingVendorIndex);
+    handleSaveVendorSlot(editingVendorIndex);
   };
 
   const handleStartTemplateCreate = () => {
@@ -738,63 +671,45 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     });
   };
 
-  const handleSaveTemplate = async () => {
+  const handleSaveTemplate = () => {
     if (!accountId) return;
-    if (!isOnline) {
-      Alert.alert('Offline', 'Template changes require an internet connection.');
-      return;
-    }
     const trimmed = templateDraft.name.trim();
     if (!trimmed) {
       Alert.alert('Error', 'Template name is required.');
       return;
     }
-    try {
-      if (editingTemplateId === 'new') {
-        await createSpaceTemplate(accountId, {
-          name: trimmed,
-          notes: templateDraft.notes.trim() || null,
-          checklists: templateDraft.checklists,
-        });
-      } else if (editingTemplateId) {
-        await updateSpaceTemplate(accountId, editingTemplateId, {
-          name: trimmed,
-          notes: templateDraft.notes.trim() || null,
-          checklists: templateDraft.checklists,
-        });
-      }
-      setEditingTemplateId(null);
-      setTemplateDraft({ name: '', notes: '', checklists: [] });
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to save template.');
+    if (editingTemplateId === 'new') {
+      createSpaceTemplate(accountId, {
+        name: trimmed,
+        notes: templateDraft.notes.trim() || null,
+        checklists: templateDraft.checklists,
+      });
+    } else if (editingTemplateId) {
+      updateSpaceTemplate(accountId, editingTemplateId, {
+        name: trimmed,
+        notes: templateDraft.notes.trim() || null,
+        checklists: templateDraft.checklists,
+      }).catch((error: any) => {
+        console.error('[Settings] Failed to update space template:', error);
+      });
     }
+    setEditingTemplateId(null);
+    setTemplateDraft({ name: '', notes: '', checklists: [] });
   };
 
-  const handleArchiveTemplate = async (templateId: string, shouldArchive: boolean) => {
+  const handleArchiveTemplate = (templateId: string, shouldArchive: boolean) => {
     if (!accountId) return;
-    if (!isOnline) {
-      Alert.alert('Offline', 'Template changes require an internet connection.');
-      return;
-    }
-    try {
-      await setSpaceTemplateArchived(accountId, templateId, shouldArchive);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to update template.');
-    }
+    setSpaceTemplateArchived(accountId, templateId, shouldArchive).catch((error: any) => {
+      console.error('[Settings] Failed to archive/unarchive space template:', error);
+    });
   };
 
-  const handleReorderTemplates = async (nextOrder: typeof spaceTemplates) => {
+  const handleReorderTemplates = (nextOrder: typeof spaceTemplates) => {
     if (!accountId) return;
-    if (!isOnline) {
-      Alert.alert('Offline', 'Reordering templates requires an internet connection.');
-      return;
-    }
     const activeIds = nextOrder.filter((template) => !template.isArchived).map((template) => template.id);
-    try {
-      await setSpaceTemplateOrder(accountId, activeIds);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to reorder templates.');
-    }
+    setSpaceTemplateOrder(accountId, activeIds).catch((error: any) => {
+      console.error('[Settings] Failed to reorder space templates:', error);
+    });
   };
 
   const handleAddChecklist = () => {
@@ -1063,29 +978,24 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     setSelectedIssuePaths({});
   };
 
-  const handleRecreateSelectedIssues = async () => {
+  const handleRecreateSelectedIssues = () => {
     const selected = syncIssues.filter((issue) => selectedIssuePaths[issue.path]);
     if (selected.length === 0) return;
     setSyncActionStatus('working');
     setSyncActionError('');
-    try {
-      for (const issue of selected) {
-        if (!issue.type || !issue.payload) {
-          continue;
-        }
-        const scope = parseRequestDocPath(issue.path);
-        if (!scope) {
-          continue;
-        }
-        await createRequestDoc(issue.type, issue.payload, scope, generateRequestOpId());
-        untrackRequestDocPath(issue.path);
+    for (const issue of selected) {
+      if (!issue.type || !issue.payload) {
+        continue;
       }
-      setSyncActionStatus('idle');
-      setSelectedIssuePaths({});
-    } catch (error: any) {
-      setSyncActionStatus('error');
-      setSyncActionError(error?.message || 'Failed to recreate issues.');
+      const scope = parseRequestDocPath(issue.path);
+      if (!scope) {
+        continue;
+      }
+      createRequestDoc(issue.type, issue.payload, scope, generateRequestOpId());
+      untrackRequestDocPath(issue.path);
     }
+    setSyncActionStatus('idle');
+    setSelectedIssuePaths({});
   };
 
   const handleDiscardSelectedIssues = () => {
@@ -1343,13 +1253,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
           refreshControl={refreshControl}
           scrollEnabled={!isDragging}
         >
-          {vendorError ? (
-            <View style={styles.errorBanner}>
-              <AppText variant="body" style={styles.errorText}>
-                {vendorError}
-              </AppText>
-            </View>
-          ) : null}
           <AppText variant="caption" style={[styles.presetDescription, getTextSecondaryStyle(uiKitTheme)]}>
             Vendor defaults are pre-configured vendor/source names that appear as quick-select options when adding transactions. Configure up to 10 default vendors for your account.
           </AppText>
@@ -1395,8 +1298,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
             primaryAction={{
               title: 'Save',
               onPress: handleSaveVendorEdit,
-              loading: vendorStatus === 'saving',
-              disabled: vendorStatus === 'saving',
             }}
             secondaryAction={{
               title: 'Cancel',
@@ -1461,31 +1362,25 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
             onDragActiveChange={setIsDragging}
             onPressCreate={handleStartCategoryCreate}
             createPlaceholderLabel="Create Category"
-            onToggleDisabled={async (id, next) => {
+            onToggleDisabled={(id, next) => {
               if (!accountId) return;
-              if (!isOnline) {
-                Alert.alert('Offline', 'Category changes require an internet connection.');
-                return;
-              }
               const category = activeCategoryById[id];
               if (!category) return;
               const categoryType = category.metadata?.categoryType ?? 'standard';
-              try {
-                await updateBudgetCategory(accountId, id, {
-                  metadata: {
-                    categoryType,
-                    excludeFromOverallBudget: next,
-                  },
-                });
-              } catch (error: any) {
-                Alert.alert('Error', error?.message || 'Failed to update category.');
-              }
+              updateBudgetCategory(accountId, id, {
+                metadata: {
+                  categoryType,
+                  excludeFromOverallBudget: next,
+                },
+              }).catch((error: any) => {
+                console.error('[Settings] Failed to toggle budget category exclude:', error);
+              });
             }}
-            onReorderItems={async (nextItems) => {
+            onReorderItems={(nextItems) => {
               const nextOrder = nextItems
                 .map((it) => activeCategoryById[it.id])
                 .filter(Boolean) as typeof activeCategories;
-              await handleReorderBudgetCategories(nextOrder);
+              handleReorderBudgetCategories(nextOrder);
             }}
             getInfoContent={(it) => {
               const category = activeCategoryById[it.id];
@@ -1533,16 +1428,11 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
           primaryAction={{
             title: categoryStep === 1 ? 'Next' : editingCategoryId === 'new' ? 'Create' : 'Save',
             onPress: categoryStep === 1 ? handleNextStep : handleSaveCategoryDetails,
-            loading: categoryStep === 2 && categorySaveStatus === 'saving',
-            disabled:
-              categoryStep === 1
-                ? categorySaveStatus === 'saving' || !editingCategoryName.trim()
-                : categorySaveStatus === 'saving',
+            disabled: categoryStep === 1 ? !editingCategoryName.trim() : false,
           }}
           secondaryAction={{
             title: categoryStep === 1 ? 'Cancel' : 'Back',
             onPress: categoryStep === 1 ? handleCloseCategoryModal : handleBackStep,
-            disabled: categorySaveStatus === 'saving',
           }}
           error={categorySaveError && categoryStep === 2 ? categorySaveError : undefined}
         >

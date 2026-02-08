@@ -1,5 +1,6 @@
-import { serverTimestamp } from '@react-native-firebase/firestore';
-import { functions, isFirebaseConfigured } from '../firebase/firebase';
+import { collection, doc, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
+import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 import { createRepository } from './repository';
 
 export type Project = {
@@ -25,15 +26,26 @@ type CreateProjectResponse = {
   projectId: string;
 };
 
-export async function createProject(payload: CreateProjectPayload): Promise<CreateProjectResponse> {
-  if (!isFirebaseConfigured || !functions) {
-    throw new Error(
-      'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
-    );
+export function createProject(payload: CreateProjectPayload): CreateProjectResponse {
+  if (!isFirebaseConfigured || !db) {
+    throw new Error('Firebase is not configured.');
   }
-  const callable = functions.httpsCallable<CreateProjectPayload, CreateProjectResponse>('createProject');
-  const response = await callable(payload);
-  return response.data;
+  const projectRef = doc(collection(db, `accounts/${payload.accountId}/projects`));
+  const projectId = projectRef.id;
+
+  // Write project doc (fire-and-forget)
+  setDoc(projectRef, {
+    accountId: payload.accountId,
+    name: payload.name,
+    clientName: payload.clientName,
+    description: payload.description ?? null,
+    isArchived: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }).catch(err => console.error('[projects] create failed:', err));
+  trackPendingWrite();
+
+  return { projectId };
 }
 
 export function subscribeToProject(

@@ -1,9 +1,9 @@
 import {
-  addDoc,
   collection,
   doc,
   onSnapshot,
   serverTimestamp,
+  setDoc,
 } from '@react-native-firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
@@ -67,12 +67,12 @@ export function parseRequestDocPath(path: string): RequestScope | null {
   return null;
 }
 
-export async function createRequestDoc<TPayload extends Record<string, unknown>>(
+export function createRequestDoc<TPayload extends Record<string, unknown>>(
   type: string,
   payload: TPayload,
   scope: RequestScope,
   opId: string
-): Promise<string> {
+): string {
   if (!isFirebaseConfigured || !db) {
     throw new Error(
       'Firebase is not configured. Add google-services.json / GoogleService-Info.plist and rebuild the dev client.'
@@ -95,7 +95,8 @@ export async function createRequestDoc<TPayload extends Record<string, unknown>>
     payload
   };
 
-  const docRef = await addDoc(collection(db, getRequestCollectionPath(scope)), requestDoc);
+  const docRef = doc(collection(db, getRequestCollectionPath(scope)));
+  setDoc(docRef, requestDoc).catch(err => console.error('[requestDocs] create failed:', err));
   trackPendingWrite();
   trackRequestDocPath(docRef.path);
   return docRef.id;

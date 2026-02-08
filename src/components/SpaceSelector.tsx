@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText } from './AppText';
 import { BottomSheet } from './BottomSheet';
 import { AppScrollView } from './AppScrollView';
@@ -44,7 +44,6 @@ export function SpaceSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Subscribe to spaces for the current workspace
@@ -96,10 +95,9 @@ export function SpaceSelector({
     return (
       allowCreate &&
       debouncedSearch.trim() &&
-      !hasExactMatch &&
-      !isCreating
+      !hasExactMatch
     );
-  }, [allowCreate, debouncedSearch, hasExactMatch, isCreating]);
+  }, [allowCreate, debouncedSearch, hasExactMatch]);
 
   const handleOpen = useCallback(() => {
     if (!disabled) {
@@ -123,30 +121,20 @@ export function SpaceSelector({
     [onChange, handleClose]
   );
 
-  const handleCreateSpace = useCallback(async () => {
+  const handleCreateSpace = useCallback(() => {
     if (!accountId || !debouncedSearch.trim()) return;
 
     const newName = debouncedSearch.trim();
-    setIsCreating(true);
     setError(null);
 
-    try {
-      // Create space with optimistic approach
-      const newSpaceId = await createSpace(accountId, {
-        name: newName,
-        notes: '',
-        projectId,
-      });
+    const newSpaceId = createSpace(accountId, {
+      name: newName,
+      notes: '',
+      projectId,
+    });
 
-      // Auto-select the new space
-      onChange(newSpaceId);
-      handleClose();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create space';
-      setError(message);
-    } finally {
-      setIsCreating(false);
-    }
+    onChange(newSpaceId);
+    handleClose();
   }, [accountId, debouncedSearch, projectId, onChange, handleClose]);
 
   const displayValue = selectedSpace?.name ?? placeholder;
@@ -287,7 +275,6 @@ export function SpaceSelector({
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={`Create space "${debouncedSearch.trim()}"`}
-                  disabled={isCreating}
                 >
                   <View style={styles.createOptionLeft}>
                     <MaterialIcons
@@ -302,9 +289,6 @@ export function SpaceSelector({
                       Create "{debouncedSearch.trim()}"
                     </AppText>
                   </View>
-                  {isCreating && (
-                    <ActivityIndicator size="small" color={uiKitTheme.primary.main} />
-                  )}
                 </Pressable>
                 <View style={[styles.divider, { backgroundColor: uiKitTheme.border.secondary }]} />
               </>
@@ -351,13 +335,6 @@ export function SpaceSelector({
                   </View>
                 );
               })
-            ) : isCreating ? (
-              <View style={styles.emptyState}>
-                <ActivityIndicator size="small" color={uiKitTheme.text.secondary} />
-                <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
-                  Creating space...
-                </AppText>
-              </View>
             ) : debouncedSearch.trim() ? (
               <View style={styles.emptyState}>
                 <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>

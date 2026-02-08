@@ -58,7 +58,6 @@ export default function NewTransactionScreen() {
   const [localReceiptUri, setLocalReceiptUri] = useState('');
   const [localImageUri, setLocalImageUri] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedCategory = budgetCategories[budgetCategoryId];
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
@@ -112,7 +111,7 @@ export default function NewTransactionScreen() {
     setLocalImageUri('');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!accountId) {
       setError('Account context is missing.');
       return;
@@ -152,32 +151,24 @@ export default function NewTransactionScreen() {
       }
     }
     setError(null);
-    setIsSubmitting(true);
-    try {
-      await createTransaction(accountId, {
-        source: source.trim(),
-        transactionDate: transactionDate.trim() || null,
-        amountCents,
-        status: status.trim() || null,
-        purchasedBy: purchasedBy.trim() || null,
-        reimbursementType: reimbursementType.trim() || null,
-        notes: notes.trim() || null,
-        type: type.trim() || null,
-        budgetCategoryId: budgetCategoryId.trim(),
-        hasEmailReceipt,
-        taxRatePct: taxRateValue,
-        subtotalCents,
-        receiptImages: receipts.map((url) => ({ url, kind: url.endsWith('.pdf') ? 'pdf' : 'image' })),
-        otherImages: images.map((url) => ({ url, kind: 'image' })),
-        projectId: scope === 'project' ? projectId ?? null : null,
-      });
-      router.replace(fallbackTarget);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to create transaction.';
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    createTransaction(accountId, {
+      source: source.trim(),
+      transactionDate: transactionDate.trim() || null,
+      amountCents,
+      status: status.trim() || null,
+      purchasedBy: purchasedBy.trim() || null,
+      reimbursementType: reimbursementType.trim() || null,
+      notes: notes.trim() || null,
+      type: type.trim() || null,
+      budgetCategoryId: budgetCategoryId.trim(),
+      hasEmailReceipt,
+      taxRatePct: taxRateValue,
+      subtotalCents,
+      receiptImages: receipts.map((url) => ({ url, kind: url.endsWith('.pdf') ? 'pdf' : 'image' })),
+      otherImages: images.map((url) => ({ url, kind: 'image' })),
+      projectId: scope === 'project' ? projectId ?? null : null,
+    });
+    router.replace(fallbackTarget);
   };
 
   return (
@@ -334,9 +325,8 @@ export default function NewTransactionScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Adding…' : 'Add Transaction'}
+          title="Add Transaction"
           onPress={handleSubmit}
-          disabled={isSubmitting}
           style={styles.actionButton}
         />
       </FormActions>

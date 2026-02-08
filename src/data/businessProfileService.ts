@@ -1,6 +1,7 @@
 import { doc, onSnapshot, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export type BusinessProfile = {
   id: 'default';
@@ -64,6 +65,7 @@ export async function saveBusinessProfile(
     },
     { merge: true }
   );
+  trackPendingWrite();
 }
 
 export async function uploadBusinessLogo(params: {

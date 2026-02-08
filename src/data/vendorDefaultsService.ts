@@ -1,5 +1,6 @@
 import { doc, onSnapshot, serverTimestamp, setDoc } from '@react-native-firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase/firebase';
+import { trackPendingWrite } from '../sync/pendingWrites';
 
 export type VendorDefaults = {
   vendors: string[];
@@ -58,6 +59,7 @@ export async function saveVendorDefaults(accountId: string, vendors: string[]): 
     },
     { merge: true }
   );
+  trackPendingWrite();
 }
 
 export async function replaceVendorSlots(accountId: string, vendors: string[]): Promise<void> {
