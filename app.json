@@ -29,6 +29,7 @@
       "favicon": "./ledger_logo.png"
     },
     "scheme": "ledger",
+    "newArchEnabled": false,
     "plugins": [
       "expo-router",
       "expo-asset",
