@@ -234,7 +234,7 @@ function ProjectsList() {
           <AppText variant="body">
             No Account Selected.
           </AppText>
-          <AppButton title="Choose account" onPress={() => router.replace('/account-select')} />
+          <AppButton title="Choose Account" onPress={() => router.replace('/account-select')} />
         </View>
       ) : isLoading && !isHydrated ? (
         <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
@@ -248,7 +248,7 @@ function ProjectsList() {
                 {tabKey === 'archived' ? 'No archived projects yet.' : 'No active projects yet.'}
               </AppText>
               {tabKey !== 'archived' && (
-                <AppButton title="New project" onPress={() => router.push('/project/new')} />
+                <AppButton title="New Project" onPress={() => router.push('/project/new')} />
               )}
             </View>
           ) : (
@@ -270,7 +270,7 @@ function ProjectsList() {
                 ))}
               </View>
               <View style={styles.actions}>
-                <AppButton title="New project" onPress={() => router.push('/project/new')} />
+                <AppButton title="New Project" onPress={() => router.push('/project/new')} />
               </View>
             </>
           )}

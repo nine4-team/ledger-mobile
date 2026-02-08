@@ -181,7 +181,7 @@ export default function NewTransactionScreen() {
   };
 
   return (
-    <Screen title="New Transaction" backTarget={fallbackTarget} includeBottomInset={false}>
+    <Screen title="New Transaction" backTarget={fallbackTarget} hideMenu includeBottomInset={false}>
       <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
         <AppText variant="body">Source</AppText>
         <TextInput
@@ -307,7 +307,7 @@ export default function NewTransactionScreen() {
           placeholderTextColor={theme.colors.textSecondary}
           style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
         />
-        <AppButton title="Add receipt" onPress={handleAddReceipt} />
+        <AppButton title="Add Receipt" onPress={handleAddReceipt} />
         <AppText variant="body">Other images</AppText>
         <TextInput
           value={imageUrl}
@@ -323,7 +323,7 @@ export default function NewTransactionScreen() {
           placeholderTextColor={theme.colors.textSecondary}
           style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
         />
-        <AppButton title="Add image" onPress={handleAddImage} />
+        <AppButton title="Add Image" onPress={handleAddImage} />
         {error ? (
           <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
             {error}
@@ -334,7 +334,7 @@ export default function NewTransactionScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Creating…' : 'Create transaction'}
+          title={isSubmitting ? 'Adding…' : 'Add Transaction'}
           onPress={handleSubmit}
           disabled={isSubmitting}
           style={styles.actionButton}

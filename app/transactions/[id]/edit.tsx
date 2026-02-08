@@ -304,7 +304,7 @@ export default function EditTransactionScreen() {
                 <FormField label="Status" value={status} onChangeText={setStatus} placeholder="Status" />
                 <FormField label="Type" value={type} onChangeText={setType} placeholder="Transaction type" />
                 <AppButton
-                  title={hasEmailReceipt ? 'Email receipt: yes' : 'Email receipt: no'}
+                  title={hasEmailReceipt ? 'Email Receipt: Yes' : 'Email Receipt: No'}
                   variant="secondary"
                   onPress={() => setHasEmailReceipt((prev) => !prev)}
                 />

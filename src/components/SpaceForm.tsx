@@ -166,7 +166,7 @@ export function SpaceForm({ mode, initialValues, onSubmit, onCancel }: SpaceForm
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={onCancel} disabled={isSubmitting} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Saving…' : mode === 'create' ? 'Create space' : 'Save changes'}
+          title={isSubmitting ? (mode === 'create' ? 'Adding…' : 'Saving…') : mode === 'create' ? 'Add Space' : 'Save Changes'}
           onPress={handleSubmit}
           disabled={isSubmitting}
           style={styles.actionButton}

@@ -255,7 +255,7 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
   }, []);
 
   return (
-    <Screen title="Project Budget" includeBottomInset={false}>
+    <Screen title="Project Budget" hideMenu includeBottomInset={false}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Loading State */}
         {isLoading && (

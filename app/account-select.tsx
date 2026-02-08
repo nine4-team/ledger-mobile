@@ -243,7 +243,7 @@ export default function AccountSelectScreen() {
             </AppText>
           ) : accounts.length === 0 ? (
             <View style={styles.actions}>
-              <AppButton title="Create account" onPress={onCreateAccount} loading={creating} />
+              <AppButton title="Create Account" onPress={onCreateAccount} loading={creating} />
               <AppButton title="Reload" variant="secondary" onPress={onReload} />
             </View>
           ) : (

@@ -1210,7 +1210,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
           <View style={styles.bulkBarSpacer} />
           <View style={styles.bulkBarActions}>
             <AppButton title="Clear" variant="secondary" onPress={clearSelection} />
-            <AppButton title="Bulk actions" variant="primary" onPress={() => setBulkSheetOpen(true)} />
+            <AppButton title="Bulk Actions" variant="primary" onPress={() => setBulkSheetOpen(true)} />
           </View>
         </View>
       ) : null}

@@ -147,7 +147,7 @@ export function InfoButton({
               {content.message}
             </AppText>
 
-            <AppButton title="Got it" variant="secondary" onPress={() => setVisible(false)} />
+            <AppButton title="Got It" variant="secondary" onPress={() => setVisible(false)} />
           </View>
         </Pressable>
       </Modal>

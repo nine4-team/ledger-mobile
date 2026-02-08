@@ -54,7 +54,7 @@ export default function EditBusinessInventorySpaceScreen() {
   };
 
   return (
-    <Screen title="Edit Space" backTarget={backTarget} includeBottomInset={false}>
+    <Screen title="Edit Space" backTarget={backTarget} hideMenu includeBottomInset={false}>
       <View style={styles.container}>
         {!space ? (
           <AppText variant="body">Loading space…</AppText>

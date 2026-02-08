@@ -636,9 +636,9 @@ export default function TransactionDetailScreen() {
               ) : null}
 
               <View style={styles.actions}>
-                <AppButton title="Create item" variant="secondary" onPress={handleCreateItem} disabled={isCanonical} />
+                <AppButton title="Create Item" variant="secondary" onPress={handleCreateItem} disabled={isCanonical} />
                 <AppButton
-                  title={isPickingItems ? 'Close picker' : 'Add existing items'}
+                  title={isPickingItems ? 'Close Picker' : 'Add Existing Items'}
                   variant="secondary"
                   onPress={() => {
                     setIsPickingItems((prev) => !prev);

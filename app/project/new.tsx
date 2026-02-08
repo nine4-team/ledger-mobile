@@ -244,7 +244,7 @@ export default function NewProjectScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.back()} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Creating…' : 'Create project'}
+          title={isSubmitting ? 'Adding…' : 'Add Project'}
           onPress={handleSubmit}
           disabled={isSubmitting || isLoadingCategories}
           style={styles.actionButton}

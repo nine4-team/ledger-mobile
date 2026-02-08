@@ -37,7 +37,7 @@ export default function NewBusinessInventorySpaceScreen() {
   };
 
   return (
-    <Screen title="New Space" backTarget={backTarget} includeBottomInset={false}>
+    <Screen title="New Space" backTarget={backTarget} hideMenu includeBottomInset={false}>
       <View style={styles.container}>
         <SpaceForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} />
       </View>

@@ -135,7 +135,7 @@ export default function NewItemScreen() {
   };
 
   return (
-    <Screen title="New Item" backTarget={fallbackTarget} includeBottomInset={false}>
+    <Screen title="New Item" backTarget={fallbackTarget} hideMenu includeBottomInset={false}>
       <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
         <AppText variant="body">Name</AppText>
         <TextInput
@@ -230,7 +230,7 @@ export default function NewItemScreen() {
           placeholderTextColor={theme.colors.textSecondary}
           style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
         />
-        <AppButton title="Add image" onPress={handleAddImage} />
+        <AppButton title="Add Image" onPress={handleAddImage} />
         {imageUrls.length ? (
           <AppText variant="caption">{imageUrls.length} image(s) added</AppText>
         ) : null}
@@ -244,7 +244,7 @@ export default function NewItemScreen() {
       <FormActions>
         <AppButton title="Cancel" variant="secondary" onPress={() => router.replace(fallbackTarget)} style={styles.actionButton} />
         <AppButton
-          title={isSubmitting ? 'Creating…' : 'Create item'}
+          title={isSubmitting ? 'Adding…' : 'Add Item'}
           onPress={handleSubmit}
           disabled={isSubmitting}
           style={styles.actionButton}
