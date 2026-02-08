@@ -61,4 +61,4 @@ if (!bypassFirebase) {
   }
 }
 
-export { authInstance as auth, db, functionsInstance as functions };
+export { authInstance as auth, db, functionsInstance as functions, storageInstance as storage };

@@ -281,6 +281,27 @@ export async function retryPendingUploads(): Promise<void> {
   await processUploadQueue();
 }
 
+export async function dismissFailedUploads(): Promise<void> {
+  const { jobs, records } = useMediaStore.getState();
+  const failedJobs = Object.values(jobs).filter((job) => job.status === 'failed');
+
+  for (const job of failedJobs) {
+    useMediaStore.getState().removeJob(job.id);
+    const record = records[job.mediaId];
+    if (record) {
+      if (FileSystem && MEDIA_CACHE_DIR && record.localUri?.startsWith(MEDIA_CACHE_DIR)) {
+        try {
+          await FileSystem.deleteAsync(record.localUri, { idempotent: true });
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+      useMediaStore.getState().removeRecord(job.mediaId);
+    }
+  }
+  await persistState();
+}
+
 export function resolveAttachmentUri(ref: AttachmentRef): string | null {
   if (!ref.url.startsWith('offline://')) {
     return ref.url;

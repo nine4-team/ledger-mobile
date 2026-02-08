@@ -7,8 +7,6 @@ import { useAuthStore } from '../src/auth/authStore';
 import { useAccountContextStore } from '../src/auth/accountContextStore';
 import { useBillingStore } from '../src/billing/billingStore';
 import { LoadingScreen } from '../src/components/LoadingScreen';
-import { BackgroundSyncErrorNotifier } from '../src/components/BackgroundSyncErrorNotifier';
-import { SyncStatusPill } from '../src/components/SyncStatusPill';
 import { isAuthBypassEnabled } from '../src/auth/authConfig';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { startRequestDocTracking } from '../src/sync/requestDocTracker';
@@ -165,8 +163,6 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
         <View style={styles.root}>
-          <SyncStatusPill />
-          <BackgroundSyncErrorNotifier />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />

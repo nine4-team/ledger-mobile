@@ -25,6 +25,7 @@ export interface SyncStatusState {
   setLastError: (message?: string) => void;
   pushBackgroundError: (message: string, isOffline: boolean) => void;
   clearBackgroundError: () => void;
+  dismissSyncErrors: () => void;
 }
 
 const BACKGROUND_ERROR_DEDUP_MS = 5000;
@@ -74,4 +75,10 @@ export const useSyncStatusStore = create<SyncStatusState>((set, get) => ({
     });
   },
   clearBackgroundError: () => set({ backgroundError: undefined }),
+  dismissSyncErrors: () =>
+    set({
+      lastError: undefined,
+      lastErrorAt: undefined,
+      backgroundError: undefined,
+    }),
 }));

@@ -3,6 +3,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NetworkStatusBanner } from '../../src/components/NetworkStatusBanner';
+import { SyncStatusBanner } from '../../src/components/SyncStatusBanner';
+import { STATUS_BANNER_HEIGHT } from '../../src/components/StatusBanner';
+import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { getTabBarStyle } from '../../src/ui';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 
@@ -10,6 +13,7 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
+  const { isOnline, isSlowConnection } = useNetworkStatus();
   const tabBarStyle = [
     getTabBarStyle(uiKitTheme, insets),
     {
@@ -20,6 +24,8 @@ export default function TabsLayout() {
   ];
   const flattenedTabBarStyle = StyleSheet.flatten(tabBarStyle);
   const tabBarHeight = typeof flattenedTabBarStyle?.height === 'number' ? flattenedTabBarStyle.height : 0;
+  const networkBannerVisible = !isOnline || isSlowConnection;
+  const syncBannerOffset = tabBarHeight + (networkBannerVisible ? STATUS_BANNER_HEIGHT : 0);
 
   return (
     <View style={styles.root}>
@@ -83,6 +89,7 @@ export default function TabsLayout() {
         />
       </Tabs>
       <NetworkStatusBanner bottomOffset={tabBarHeight} />
+      <SyncStatusBanner bottomOffset={syncBannerOffset} />
     </View>
   );
 }

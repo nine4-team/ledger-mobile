@@ -172,3 +172,13 @@ export function subscribeToTrackedRequests(onChange: (requests: TrackedRequest[]
 export function getTrackedRequestsSnapshot(): TrackedRequest[] {
   return Array.from(trackedRequests.values());
 }
+
+export function dismissFailedRequestDocs(): void {
+  const paths = Array.from(trackedRequests.keys());
+  for (const path of paths) {
+    const request = trackedRequests.get(path);
+    if (request && (request.status === 'failed' || request.status === 'denied')) {
+      untrackRequestDocPath(path);
+    }
+  }
+}
