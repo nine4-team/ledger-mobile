@@ -8,7 +8,7 @@ import { layout } from '../../src/ui';
 import { AppButton } from '../../src/components/AppButton';
 import { AppScrollView } from '../../src/components/AppScrollView';
 import { ScreenTabItem, useScreenTabs } from '../../src/components/ScreenTabs';
-import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { createRepository } from '../../src/data/repository';
 import { useAuthStore } from '../../src/auth/authStore';
@@ -19,12 +19,15 @@ import { refreshProjectBudgetProgress, type BudgetProgress } from '../../src/dat
 import { ProjectCard } from '../../src/components/ProjectCard';
 
 export default function ProjectsScreen() {
+  const router = useRouter();
+
   return (
     <Screen
       title="Projects"
       tabs={PROJECT_TABS}
       hideBackButton={true}
       includeBottomInset={false}
+      onPressAdd={() => router.push('/project/new')}
       infoContent={{
         title: 'Projects',
         message: 'Manage your projects here. Create new projects, view active and archived projects, and track budgets.',
@@ -67,7 +70,6 @@ function ProjectsList() {
   const screenTabs = useScreenTabs();
   const tabKey = screenTabs?.selectedKey === 'archived' ? 'archived' : 'active';
   const theme = useTheme();
-  const uiKitTheme = useUIKitTheme();
 
   useEffect(() => {
     if (!accountId) {
@@ -247,32 +249,24 @@ function ProjectsList() {
               <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
                 {tabKey === 'archived' ? 'No archived projects yet.' : 'No active projects yet.'}
               </AppText>
-              {tabKey !== 'archived' && (
-                <AppButton title="New Project" onPress={() => router.push('/project/new')} />
-              )}
             </View>
           ) : (
-            <>
-              <View style={styles.projectList}>
-                {sortedProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    projectId={project.id}
-                    name={project.name}
-                    clientName={project.clientName}
-                    mainImageUrl={project.mainImageUrl}
-                    budgetCategories={budgetCategories}
-                    projectBudgetCategories={projectBudgetCategoriesMap[project.id] ?? {}}
-                    budgetProgress={budgetProgressMap[project.id] ?? { spentCents: 0, spentByCategory: {} }}
-                    pinnedCategoryIds={projectPreferences[project.id]?.pinnedBudgetCategoryIds ?? []}
-                    onPress={() => router.push(`/project/${project.id}?tab=items`)}
-                  />
-                ))}
-              </View>
-              <View style={styles.actions}>
-                <AppButton title="New Project" onPress={() => router.push('/project/new')} />
-              </View>
-            </>
+            <View style={styles.projectList}>
+              {sortedProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  projectId={project.id}
+                  name={project.name}
+                  clientName={project.clientName}
+                  mainImageUrl={project.mainImageUrl}
+                  budgetCategories={budgetCategories}
+                  projectBudgetCategories={projectBudgetCategoriesMap[project.id] ?? {}}
+                  budgetProgress={budgetProgressMap[project.id] ?? { spentCents: 0, spentByCategory: {} }}
+                  pinnedCategoryIds={projectPreferences[project.id]?.pinnedBudgetCategoryIds ?? []}
+                  onPress={() => router.push(`/project/${project.id}?tab=items`)}
+                />
+              ))}
+            </View>
           )}
         </>
       )}

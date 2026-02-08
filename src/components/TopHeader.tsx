@@ -46,6 +46,12 @@ export interface TopHeaderProps {
    * If true, hides the kebab menu button.
    */
   hideMenu?: boolean;
+  /**
+   * Optional handler for add button press.
+   * If provided, a plus button will be shown instead of the kebab menu.
+   */
+  onPressAdd?: () => void;
+  addAccessibilityLabel?: string;
 }
 
 export function TopHeader({
@@ -59,6 +65,8 @@ export function TopHeader({
   infoContent,
   rightActions,
   hideMenu = false,
+  onPressAdd,
+  addAccessibilityLabel,
 }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -153,7 +161,21 @@ export function TopHeader({
 
         <View style={styles.rightButtonOuter}>
           {rightActions ? <View style={styles.rightActions}>{rightActions}</View> : null}
-          {!hideMenu ? (
+          {onPressAdd ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={addAccessibilityLabel ?? 'Add new'}
+              hitSlop={10}
+              onPress={onPressAdd}
+              style={styles.menuButton}
+            >
+              <MaterialIcons
+                name="add"
+                size={24}
+                color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
+              />
+            </Pressable>
+          ) : !hideMenu ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={menuAccessibilityLabel ?? 'Open menu'}
@@ -250,14 +272,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 48,
     minHeight: 48,
-  },
-  headerTransparent: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    borderBottomWidth: 0,
   },
   headerTransparent: {
     position: 'absolute',

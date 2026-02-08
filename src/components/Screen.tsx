@@ -68,6 +68,11 @@ interface ScreenProps {
    * Useful for screens like forms that don't need menu actions.
    */
   hideMenu?: boolean;
+  /**
+   * Optional handler for add button press.
+   * If provided, a plus button will be shown instead of the kebab menu.
+   */
+  onPressAdd?: () => void;
 }
 
 type ScreenRefreshContextValue = {
@@ -101,6 +106,7 @@ export const Screen: React.FC<ScreenProps> = ({
   headerRight,
   includeBottomInset = true,
   hideMenu = false,
+  onPressAdd,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -151,6 +157,7 @@ export const Screen: React.FC<ScreenProps> = ({
           infoContent={infoContent}
           rightActions={headerRight}
           hideMenu={hideMenu}
+          onPressAdd={onPressAdd}
         />
       ) : null}
       {hasTabs ? (
