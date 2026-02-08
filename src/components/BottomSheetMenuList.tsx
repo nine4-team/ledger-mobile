@@ -154,14 +154,7 @@ export function BottomSheetMenuList({
                 <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
 
                 {isExpanded ? (
-                  <View
-                    style={[
-                      styles.menuSectionBody,
-                      {
-                        backgroundColor: uiKitTheme.background.tertiary ?? uiKitTheme.background.surface,
-                      },
-                    ]}
-                  >
+                  <View style={styles.menuSectionBody}>
                     {subactions.map((sub, subIdx) => {
                       const showSubDivider = subIdx < subactions.length - 1;
                       const selectedSub = isActionOnly
