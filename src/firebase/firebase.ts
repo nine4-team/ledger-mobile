@@ -12,11 +12,13 @@ import firebaseApp from '@react-native-firebase/app';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import functions, { FirebaseFunctionsTypes } from '@react-native-firebase/functions';
+import storage, { FirebaseStorageTypes } from '@react-native-firebase/storage';
 
 let app: firebaseApp.FirebaseApp | null = null;
 let authInstance: FirebaseAuthTypes.Module | null = null;
 let db: FirebaseFirestoreTypes.Module | null = null;
 let functionsInstance: FirebaseFunctionsTypes.Module | null = null;
+let storageInstance: FirebaseStorageTypes.Module | null = null;
 
 export let isFirebaseConfigured = false;
 
@@ -50,6 +52,13 @@ if (!bypassFirebase) {
       const functionsHost = process.env.EXPO_PUBLIC_FUNCTIONS_EMULATOR_HOST || 'localhost';
       const functionsPort = process.env.EXPO_PUBLIC_FUNCTIONS_EMULATOR_PORT || '5001';
       functionsInstance.useEmulator(functionsHost, parseInt(functionsPort, 10));
+    }
+
+    storageInstance = storage();
+    if (useEmulators && storageInstance) {
+      const storageHost = process.env.EXPO_PUBLIC_STORAGE_EMULATOR_HOST || 'localhost';
+      const storagePort = process.env.EXPO_PUBLIC_STORAGE_EMULATOR_PORT || '9199';
+      storageInstance.useEmulator(storageHost, parseInt(storagePort, 10));
     }
   } catch (error) {
     console.warn(
