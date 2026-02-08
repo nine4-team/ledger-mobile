@@ -7,15 +7,19 @@ This guide covers the daily development workflow and common commands for working
 ### Starting Development (Most Common)
 
 ```bash
+# 1. Start Metro bundler
 npm start
+
+# 2. Manually launch the "Ledger" app from your simulator
+# (The app was installed when you ran npx expo run:ios)
 ```
 
-This command:
-- Starts the Metro bundler
-- Auto-connects to the app if already installed on simulator
-- Enables hot refresh for JS/React changes
-- Press `i` to open iOS simulator if needed
-- Press `a` to open Android emulator if needed
+**IMPORTANT**:
+- ❌ **Don't press `i` in the Metro terminal** - this opens Expo Go (which doesn't support native modules)
+- ✅ **Do manually tap the "Ledger" app** in your iOS simulator to launch it
+- The app auto-connects to Metro and enables hot refresh for JS/React changes
+
+**Alternative**: Use `npm run ios` to rebuild and launch automatically
 
 ---
 
