@@ -389,8 +389,8 @@ Two side-by-side summary cards:
 
 | Card | Calculation | Description |
 |------|-------------|-------------|
-| Owed to Design Business | Sum of `amount` for non-canceled transactions where `reimbursementType === 'CLIENT_OWES_COMPANY'` | Total amount clients owe the business |
-| Owed to Client | Sum of `amount` for non-canceled transactions where `reimbursementType === 'COMPANY_OWES_CLIENT'` | Total amount the business owes clients |
+| Owed to Design Business | Sum of `amount` for non-canceled transactions where `reimbursementType === 'owed-to-company'` | Total amount clients owe the design business |
+| Owed to Client | Sum of `amount` for non-canceled transactions where `reimbursementType === 'owed-to-client'` | Total amount the design business owes clients |
 
 ### Report Generation
 
@@ -404,7 +404,7 @@ Three action buttons for generating reports:
 
 ### Mobile Implementation Notes
 
-When implemented, the accounting tab could be added as a fifth tab on the `Screen` component or as a sub-tab within the budget tab. The reimbursement type fields would need to be part of the transaction data model in the mobile app.
+When implemented, the accounting tab could be added as a fifth tab on the `Screen` component or as a sub-tab within the budget tab. The reimbursement type values (`'owed-to-company'`, `'owed-to-client'`) are the canonical Firestore field values for `transaction.reimbursementType`. Constants are defined in `src/constants/reimbursement.ts`.
 
 ---
 

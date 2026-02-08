@@ -63,6 +63,11 @@ interface ScreenProps {
    * that already handles the safe area.
    */
   includeBottomInset?: boolean;
+  /**
+   * If true, hides the kebab menu button in the header.
+   * Useful for screens like forms that don't need menu actions.
+   */
+  hideMenu?: boolean;
 }
 
 type ScreenRefreshContextValue = {
@@ -95,6 +100,7 @@ export const Screen: React.FC<ScreenProps> = ({
   infoContent,
   headerRight,
   includeBottomInset = true,
+  hideMenu = false,
 }) => {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -144,6 +150,7 @@ export const Screen: React.FC<ScreenProps> = ({
           hideBottomBorder={true}
           infoContent={infoContent}
           rightActions={headerRight}
+          hideMenu={hideMenu}
         />
       ) : null}
       {hasTabs ? (

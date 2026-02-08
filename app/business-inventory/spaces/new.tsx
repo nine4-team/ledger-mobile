@@ -22,6 +22,7 @@ export default function NewBusinessInventorySpaceScreen() {
     await createSpace(accountId, {
       name: values.name,
       notes: values.notes || null,
+      checklists: values.checklists ?? null,
       projectId: null,
     });
 

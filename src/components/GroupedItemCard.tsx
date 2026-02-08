@@ -29,7 +29,6 @@ export type GroupedItemCardProps = {
 
   // Group level selection
   selected?: boolean;
-  defaultSelected?: boolean;
   onSelectedChange?: (selected: boolean) => void;
 
   onPress?: () => void; // optional group header press
@@ -46,7 +45,6 @@ export function GroupedItemCard({
   defaultExpanded,
   onExpandedChange,
   selected,
-  defaultSelected,
   onSelectedChange,
   onPress,
   style,
@@ -58,8 +56,16 @@ export function GroupedItemCard({
   const isExpanded = typeof expanded === 'boolean' ? expanded : internalExpanded;
 
   // Selection state
-  const [internalSelected, setInternalSelected] = useState(Boolean(defaultSelected));
-  const isSelected = typeof selected === 'boolean' ? selected : internalSelected;
+  // Compute group selection based on child items
+  const derivedSelected = useMemo(() => {
+    if (items.length === 0) return false;
+    // Group is selected if all items are selected
+    const selectableItems = items.filter((item) => item.onSelectedChange !== undefined || typeof item.selected === 'boolean');
+    if (selectableItems.length === 0) return false;
+    return selectableItems.every((item) => item.selected === true);
+  }, [items]);
+
+  const isSelected = typeof selected === 'boolean' ? selected : derivedSelected;
 
   const countBadgeStyle = useMemo(
     () => ({
@@ -118,8 +124,20 @@ export function GroupedItemCard({
   };
 
   const setSelected = (next: boolean) => {
-    if (typeof selected !== 'boolean') setInternalSelected(next);
-    onSelectedChange?.(next);
+    // If there's an external selection handler (e.g., SharedItemPicker, SharedItemsList),
+    // let it handle the update. The parent will update its state and re-render children
+    // with new `selected` props, avoiding duplicate/conflicting updates.
+    if (onSelectedChange) {
+      onSelectedChange(next);
+    } else {
+      // No external handler: propagate selection directly to all child items.
+      // This allows GroupedItemCard to work standalone without a parent managing state.
+      items.forEach((item) => {
+        if (item.onSelectedChange) {
+          item.onSelectedChange(next);
+        }
+      });
+    }
   };
 
   const handlePress = () => {
@@ -163,7 +181,7 @@ export function GroupedItemCard({
         ]}
       >
         <View style={[styles.header, themed.header]}>
-          {(onSelectedChange || typeof selected === 'boolean' || defaultSelected) ? (
+          {(onSelectedChange || typeof selected === 'boolean') ? (
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();

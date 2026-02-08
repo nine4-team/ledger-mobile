@@ -24,6 +24,8 @@ export type AnchoredMenuItem = {
   defaultSelectedSubactionKey?: string;
   suppressDefaultCheckmark?: boolean;
   destructive?: boolean;
+  /** When true, subactions are plain navigation/action items with no selection state, checkmarks, or header value display. */
+  actionOnly?: boolean;
 };
 
 export type MenuSelectionOptions = {

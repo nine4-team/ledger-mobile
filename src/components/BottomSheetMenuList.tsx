@@ -98,14 +98,17 @@ export function BottomSheetMenuList({
           const itemKey = item.key ?? `${item.label}-${idx}`;
 
           if (isSubmenuItem) {
-            const { currentKey, currentLabel, showCheckmark, suppressDefaultCheckmark } = resolveMenuSelection({
-              item,
-              itemKey,
-              subactions,
-              selectedSubactionByKey,
-              activeSubactionKey,
-              hideDefaultLabel,
-            });
+            const isActionOnly = item.actionOnly === true;
+            const { currentKey, currentLabel, showCheckmark, suppressDefaultCheckmark } = isActionOnly
+              ? { currentKey: '', currentLabel: '', showCheckmark: false, suppressDefaultCheckmark: false }
+              : resolveMenuSelection({
+                  item,
+                  itemKey,
+                  subactions,
+                  selectedSubactionByKey,
+                  activeSubactionKey,
+                  hideDefaultLabel,
+                });
             const isExpanded = expandedMenuKey === itemKey;
 
             return (
@@ -123,14 +126,14 @@ export function BottomSheetMenuList({
                     <Text
                       style={[
                         styles.menuSectionTitle,
-                        { color: showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.primary },
+                        { color: !isActionOnly && showCheckmark ? uiKitTheme.primary.main : uiKitTheme.text.primary },
                       ]}
                     >
                       {item.label}
                     </Text>
                   </View>
                   <View style={styles.menuSectionRight}>
-                    {currentLabel ? (
+                    {!isActionOnly && currentLabel ? (
                       <Text
                         style={[
                           styles.menuSectionValue,
@@ -161,15 +164,17 @@ export function BottomSheetMenuList({
                   >
                     {subactions.map((sub, subIdx) => {
                       const showSubDivider = subIdx < subactions.length - 1;
-                      const selectedSub = closeOnSubactionPress
-                        ? currentKey === sub.key
-                        : sub.icon === 'check';
+                      const selectedSub = isActionOnly
+                        ? false
+                        : closeOnSubactionPress
+                          ? currentKey === sub.key
+                          : sub.icon === 'check';
                       const isDefaultSelected =
                         selectedSub &&
                         item.defaultSelectedSubactionKey != null &&
                         sub.key === item.defaultSelectedSubactionKey;
                       const allowCheck = !suppressDefaultCheckmark || !isDefaultSelected;
-                      const isHighlighted = selectedSub && allowCheck;
+                      const isHighlighted = !isActionOnly && selectedSub && allowCheck;
 
                       return (
                         <View key={sub.key}>
@@ -177,7 +182,7 @@ export function BottomSheetMenuList({
                             accessibilityRole="button"
                             accessibilityLabel={sub.label}
                             onPress={() => {
-                              if (closeOnSubactionPress) {
+                              if (!isActionOnly && closeOnSubactionPress) {
                                 setSelectedSubactionByKey((prev) => ({
                                   ...prev,
                                   [itemKey]: sub.key,
@@ -193,7 +198,7 @@ export function BottomSheetMenuList({
                             <View style={styles.menuItemLeft}>
                               {showLeadingIcons ? (
                                 <MaterialIcons
-                                  name={sub.icon === 'check' ? 'check' : item.icon ?? 'build'}
+                                  name={sub.icon ?? item.icon ?? 'build'}
                                   size={20}
                                   color={isHighlighted ? uiKitTheme.primary.main : menuItemIconColor}
                                 />

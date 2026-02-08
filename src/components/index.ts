@@ -34,6 +34,7 @@ export { RetrySyncButton } from './RetrySyncButton';
 export { BackgroundSyncErrorNotifier } from './BackgroundSyncErrorNotifier';
 export { getSortFilterText, ListSelectionInfo, ListSelectAllRow } from './ListSelectionControls';
 export { SharedItemPicker } from './SharedItemPicker';
+export { ItemPickerControlBar } from './ItemPickerControlBar';
 export { showItemConflictDialog } from './ItemConflictDialog';
 export { InfoCard } from './InfoCard';
 export { FormModal } from './FormModal';

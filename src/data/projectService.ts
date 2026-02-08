@@ -18,6 +18,7 @@ type CreateProjectPayload = {
   accountId: string;
   name: string;
   clientName: string;
+  description?: string | null;
 };
 
 type CreateProjectResponse = {

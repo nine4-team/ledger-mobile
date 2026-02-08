@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Share, StyleSheet, View } from 'react-native';
+import { Alert, Image, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../components/Screen';
 import { useScreenTabs } from '../components/ScreenTabs';
 import { AppText } from '../components/AppText';
+import { useTheme } from '../theme/ThemeProvider';
 import { SharedItemsList } from '../components/SharedItemsList';
 import { SharedTransactionsList } from '../components/SharedTransactionsList';
 import { useAccountContextStore } from '../auth/accountContextStore';
@@ -16,6 +17,7 @@ import { subscribeToProjectPreferences, updateProjectPreferences } from '../data
 import { refreshProjectBudgetCategories, subscribeToProjectBudgetCategories } from '../data/projectBudgetCategoriesService';
 import { subscribeToAccountPresets } from '../data/accountPresetsService';
 import { BudgetProgressDisplay } from '../components/budget/BudgetProgressDisplay';
+import { AccountingOverview } from '../components/accounting/AccountingOverview';
 import type { AccountPresets } from '../data/accountPresetsService';
 import type { ProjectBudgetCategory } from '../data/projectBudgetCategoriesService';
 import { refreshSpaces } from '../data/spacesService';
@@ -329,6 +331,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
           accountPresets={accountPresets}
           projectBudgetCategories={projectBudgetCategories}
           onPinToggle={handlePinToggle}
+          transactions={transactions}
         />
       </Screen>
       <BottomSheetMenuList
@@ -359,7 +362,10 @@ type ProjectShellContentProps = {
   accountPresets: AccountPresets | null;
   projectBudgetCategories: Record<string, ProjectBudgetCategory>;
   onPinToggle: (categoryId: string) => void;
+  transactions: ScopedTransaction[];
 };
+
+type BudgetSubTab = 'budget' | 'accounting';
 
 function ProjectShellContent({
   projectId,
@@ -378,12 +384,15 @@ function ProjectShellContent({
   accountPresets,
   projectBudgetCategories,
   onPinToggle,
+  transactions,
 }: ProjectShellContentProps) {
   const router = useRouter();
+  const theme = useTheme();
   const screenTabs = useScreenTabs();
   const selectedKey = screenTabs?.selectedKey ?? 'items';
   const listStateKeyItems = getListStateKey(scopeConfig, 'items');
   const listStateKeyTransactions = getListStateKey(scopeConfig, 'transactions');
+  const [budgetSubTab, setBudgetSubTab] = useState<BudgetSubTab>('budget');
 
   return (
     <>
@@ -411,22 +420,68 @@ function ProjectShellContent({
           {isOnline ? 'Project not found.' : 'Offline. Project data unavailable.'}
         </AppText>
       ) : selectedKey === 'budget' ? (
-        <BudgetProgressDisplay
-          projectId={projectId}
-          budgetCategories={Object.values(budgetCategories)}
-          projectBudgetCategories={projectBudgetCategories}
-          budgetProgress={{ spentCents: budgetSpentCents, spentByCategory: budgetSpentByCategory }}
-          pinnedCategoryIds={pinnedBudgetCategoryIds}
-          accountPresets={accountPresets}
-          onPinToggle={onPinToggle}
-          onCategoryPress={(categoryId) => {
-            // Navigate to transactions filtered by category
-            router.push(`/project/${projectId}?tab=transactions&categoryId=${categoryId}`);
-          }}
-          onSetBudget={() => {
-            router.push(`/project/${projectId}/budget`);
-          }}
-        />
+        <>
+          {/* Budget / Accounting segmented control */}
+          <View style={[styles.segmentedControl, { borderColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={[
+                styles.segmentButton,
+                budgetSubTab === 'budget' && [styles.segmentButtonActive, { backgroundColor: theme.colors.primary }],
+              ]}
+              onPress={() => setBudgetSubTab('budget')}
+              activeOpacity={0.7}
+            >
+              <AppText
+                variant="body"
+                style={[
+                  styles.segmentButtonText,
+                  { color: budgetSubTab === 'budget' ? '#FFFFFF' : theme.colors.textSecondary },
+                ]}
+              >
+                Budget
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.segmentButton,
+                budgetSubTab === 'accounting' && [styles.segmentButtonActive, { backgroundColor: theme.colors.primary }],
+              ]}
+              onPress={() => setBudgetSubTab('accounting')}
+              activeOpacity={0.7}
+            >
+              <AppText
+                variant="body"
+                style={[
+                  styles.segmentButtonText,
+                  { color: budgetSubTab === 'accounting' ? '#FFFFFF' : theme.colors.textSecondary },
+                ]}
+              >
+                Accounting
+              </AppText>
+            </TouchableOpacity>
+          </View>
+
+          {budgetSubTab === 'accounting' ? (
+            <AccountingOverview transactions={transactions} projectId={projectId} />
+          ) : (
+            <BudgetProgressDisplay
+              projectId={projectId}
+              budgetCategories={Object.values(budgetCategories)}
+              projectBudgetCategories={projectBudgetCategories}
+              budgetProgress={{ spentCents: budgetSpentCents, spentByCategory: budgetSpentByCategory }}
+              pinnedCategoryIds={pinnedBudgetCategoryIds}
+              accountPresets={accountPresets}
+              onPinToggle={onPinToggle}
+              onCategoryPress={(categoryId) => {
+                // Navigate to transactions filtered by category
+                router.push(`/project/${projectId}?tab=transactions&categoryId=${categoryId}`);
+              }}
+              onSetBudget={() => {
+                router.push(`/project/${projectId}/budget`);
+              }}
+            />
+          )}
+        </>
       ) : selectedKey === 'items' && listStateKeyItems ? (
         <SharedItemsList
           scopeConfig={scopeConfig}
@@ -469,5 +524,24 @@ const styles = StyleSheet.create({
   },
   refreshError: {
     paddingBottom: 8,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  segmentButtonActive: {
+    borderRadius: 8,
+  },
+  segmentButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

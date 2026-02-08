@@ -95,6 +95,7 @@ export default function SpaceDetailScreen() {
         { key: 'checklists', label: 'Checklists', accessibilityLabel: 'Checklists tab' },
       ]}
       initialTabKey="items"
+      backTarget={`/project/${projectId}?tab=spaces`}
       onPressMenu={() => setSpaceMenuVisible(true)}
     >
       <SpaceDetailContent

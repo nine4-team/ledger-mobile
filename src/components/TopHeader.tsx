@@ -42,6 +42,10 @@ export interface TopHeaderProps {
    * Optional right-side actions rendered before the menu button.
    */
   rightActions?: React.ReactNode;
+  /**
+   * If true, hides the kebab menu button.
+   */
+  hideMenu?: boolean;
 }
 
 export function TopHeader({
@@ -54,6 +58,7 @@ export function TopHeader({
   hideBottomBorder = false,
   infoContent,
   rightActions,
+  hideMenu = false,
 }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
@@ -148,19 +153,21 @@ export function TopHeader({
 
         <View style={styles.rightButtonOuter}>
           {rightActions ? <View style={styles.rightActions}>{rightActions}</View> : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={menuAccessibilityLabel ?? 'Open menu'}
-            hitSlop={10}
-            onPress={handleMenuButtonPress}
-            style={styles.menuButton}
-          >
-            <MaterialIcons
-              name="more-vert"
-              size={24}
-              color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
-            />
-          </Pressable>
+          {!hideMenu ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={menuAccessibilityLabel ?? 'Open menu'}
+              hitSlop={10}
+              onPress={handleMenuButtonPress}
+              style={styles.menuButton}
+            >
+              <MaterialIcons
+                name="more-vert"
+                size={24}
+                color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
+              />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -197,7 +204,7 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     opacity: 0.7,
-    marginTop: -2,
+    marginTop: 6,
   },
   leftSpacer: {
     width: 60,

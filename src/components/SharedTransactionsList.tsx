@@ -26,6 +26,7 @@ import {
 import { isCanonicalInventorySaleTransaction } from '../data/inventoryOperations';
 import { subscribeToBudgetCategories, mapBudgetCategories } from '../data/budgetCategoriesService';
 import { getBudgetCategoryColor } from '../utils/budgetCategoryColors';
+import { BottomSheetMenuList } from './BottomSheetMenuList';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 
 type SharedTransactionsListProps = {
@@ -111,6 +112,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
   const uiKitTheme = useUIKitTheme();
@@ -882,6 +884,49 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     });
   }, [listStateKey, router, scopeConfig.projectId, scopeConfig.scope]);
 
+  const addMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const items: AnchoredMenuItem[] = [
+      {
+        key: 'create-new',
+        label: 'Create New',
+        icon: 'add-circle-outline',
+        onPress: () => {
+          setAddMenuVisible(false);
+          handleCreateTransaction();
+        },
+      },
+    ];
+
+    if (scopeConfig.scope === 'project' && scopeConfig.projectId) {
+      items.push({
+        key: 'import-from-invoice',
+        label: 'Import from Invoice',
+        icon: 'description',
+        actionOnly: true,
+        subactions: [
+          {
+            key: 'import-amazon',
+            label: 'Amazon',
+            onPress: () => {
+              setAddMenuVisible(false);
+              router.push(`/project/${scopeConfig.projectId}/import-amazon`);
+            },
+          },
+          {
+            key: 'import-wayfair',
+            label: 'Wayfair',
+            onPress: () => {
+              setAddMenuVisible(false);
+              router.push(`/project/${scopeConfig.projectId}/import-wayfair`);
+            },
+          },
+        ],
+      });
+    }
+
+    return items;
+  }, [handleCreateTransaction, router, scopeConfig.projectId, scopeConfig.scope]);
+
   const handleExportCsv = useCallback(async (ids?: string[]) => {
     if (!scopeConfig.capabilities?.canExportCsv) return;
     const targetIds = ids && ids.length ? new Set(ids) : null;
@@ -970,6 +1015,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
   })();
 
   return (
+    <>
     <View style={styles.container}>
       <View style={styles.controlSection}>
         <ListControlBar
@@ -998,7 +1044,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
               iconName: 'filter-list',
               active: isFilterActive,
             },
-            { title: 'Add', variant: 'primary', onPress: handleCreateTransaction, iconName: 'add' },
+            { title: 'Add', variant: 'primary', onPress: () => setAddMenuVisible(true), iconName: 'add' },
             ...(scopeConfig.capabilities?.canExportCsv && scopeConfig.scope !== 'project'
               ? [
                   {
@@ -1169,6 +1215,14 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         </View>
       ) : null}
     </View>
+    <BottomSheetMenuList
+      visible={addMenuVisible}
+      onRequestClose={() => setAddMenuVisible(false)}
+      items={addMenuItems}
+      title="Add Transaction"
+      showLeadingIcons
+    />
+    </>
   );
 }
 

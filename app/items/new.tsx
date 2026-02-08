@@ -18,6 +18,7 @@ type NewItemParams = {
   scope?: string;
   projectId?: string;
   transactionId?: string;
+  spaceId?: string;
   backTarget?: string;
 };
 
@@ -36,6 +37,7 @@ export default function NewItemScreen() {
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const transactionId = Array.isArray(params.transactionId) ? params.transactionId[0] : params.transactionId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
+  const initialSpaceId = Array.isArray(params.spaceId) ? params.spaceId[0] : params.spaceId;
   const accountId = useAccountContextStore((store) => store.accountId);
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
@@ -50,7 +52,7 @@ export default function NewItemScreen() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [localImageUri, setLocalImageUri] = useState('');
-  const [spaceId, setSpaceId] = useState<string | null>(null);
+  const [spaceId, setSpaceId] = useState<string | null>(initialSpaceId ?? null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

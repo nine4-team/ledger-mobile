@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
-import { AppButton } from './AppButton';
 import { ItemCard } from './ItemCard';
 import { GroupedItemCard } from './GroupedItemCard';
+import { ItemPickerControlBar } from './ItemPickerControlBar';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
-import { getTextInputStyle } from '../ui/styles/forms';
 import { getTextSecondaryStyle } from '../ui/styles/typography';
 import type { ScopedItem } from '../data/scopedListData';
 import type { Item } from '../data/itemsService';
@@ -81,13 +80,9 @@ export type SharedItemPickerProps = {
    */
   searchPlaceholder?: string;
   /**
-   * Label for the "Add Selected" button (default: "Add Selected").
+   * Label for the "Add Selected" button (default: "Add").
    */
   addButtonLabel?: string;
-  /**
-   * Whether to show the "Select all visible" button (default: true).
-   */
-  showSelectAll?: boolean;
   /**
    * Callback for individual item quick-add. When provided, each eligible item
    * gets an "Add" button for single-item adds (in addition to bulk selection).
@@ -130,8 +125,7 @@ export function SharedItemPicker({
   outsideLoading = false,
   outsideError = null,
   searchPlaceholder = 'Search items',
-  addButtonLabel = 'Add Selected',
-  showSelectAll = true,
+  addButtonLabel = 'Add',
   onAddSingle,
   addedIds,
   tabCounts,
@@ -180,8 +174,19 @@ export function SharedItemPicker({
     return filteredItems.filter((item) => eligibilityCheck.isEligible(item)).map((item) => item.id);
   }, [filteredItems, eligibilityCheck]);
 
+  const allVisibleSelected = useMemo(() => {
+    return eligibleIds.length > 0 && eligibleIds.every((id) => selectedIds.includes(id));
+  }, [eligibleIds, selectedIds]);
+
   const handleSelectAll = () => {
-    onSelectionChange(Array.from(new Set([...selectedIds, ...eligibleIds])));
+    if (allVisibleSelected) {
+      // Deselect all eligible items
+      const eligibleSet = new Set(eligibleIds);
+      onSelectionChange(selectedIds.filter((id) => !eligibleSet.has(id)));
+    } else {
+      // Select all eligible items
+      onSelectionChange(Array.from(new Set([...selectedIds, ...eligibleIds])));
+    }
   };
 
   const handleItemToggle = (itemId: string) => {
@@ -190,13 +195,12 @@ export function SharedItemPicker({
     );
   };
 
-  const handleGroupToggle = (groupItemIds: string[]) => {
-    const allSelected = groupItemIds.length > 0 && groupItemIds.every((id) => selectedIds.includes(id));
-    if (allSelected) {
+  const handleGroupToggle = (groupItemIds: string[], next: boolean) => {
+    if (next) {
+      onSelectionChange(Array.from(new Set([...selectedIds, ...groupItemIds])));
+    } else {
       const remove = new Set(groupItemIds);
       onSelectionChange(selectedIds.filter((id) => !remove.has(id)));
-    } else {
-      onSelectionChange(Array.from(new Set([...selectedIds, ...groupItemIds])));
     }
   };
 
@@ -311,25 +315,20 @@ export function SharedItemPicker({
           );
         })}
       </View>
-      <TextInput
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder={searchPlaceholder}
-        placeholderTextColor={theme.colors.textSecondary}
-        style={getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 })}
+      <ItemPickerControlBar
+        search={searchQuery}
+        onChangeSearch={setSearchQuery}
+        searchPlaceholder={searchPlaceholder}
+        onSelectAll={handleSelectAll}
+        allSelected={allVisibleSelected}
+        hasItems={eligibleIds.length > 0}
+        onAddSelected={onAddSelected}
+        selectedCount={selectedIds.length}
+        addButtonLabel={addButtonLabel}
       />
-      <View style={styles.actions}>
-        {showSelectAll ? (
-          <AppButton title="Select all visible" variant="secondary" onPress={handleSelectAll} />
-        ) : null}
-        <AppButton
-          title={`${addButtonLabel} (${selectedIds.length})`}
-          onPress={onAddSelected}
-          disabled={selectedIds.length === 0}
-        />
-      </View>
       <FlatList
         data={pickerGroups}
+        extraData={selectedIds}
         keyExtractor={(item) => item.key}
         renderItem={({ item: group }) => {
           const { label, groupItems } = group;
@@ -384,7 +383,7 @@ export function SharedItemPicker({
                   groupEligibleIds.length === 0
                     ? undefined
                     : (next) => {
-                        handleGroupToggle(groupEligibleIds);
+                        handleGroupToggle(groupEligibleIds, next);
                       }
                 }
               />
@@ -479,11 +478,6 @@ const styles = StyleSheet.create({
   },
   lockedItem: {
     opacity: 0.6,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
   },
   listScroll: {
     flex: 1,

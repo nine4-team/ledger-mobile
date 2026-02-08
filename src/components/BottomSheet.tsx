@@ -80,7 +80,7 @@ export function BottomSheet({ visible, onRequestClose, containerStyle, children 
           style={[
             styles.sheet,
             {
-              backgroundColor: uiKitTheme.background.modal ?? uiKitTheme.background.surface,
+              backgroundColor: uiKitTheme.background.screen,
               borderColor: uiKitTheme.border.secondary,
               paddingBottom: sheetPaddingBottom,
               transform: [{ translateY }],
