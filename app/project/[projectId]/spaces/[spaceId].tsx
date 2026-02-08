@@ -15,6 +15,7 @@ import { ImageGallery } from '../../../../src/components/ImageGallery';
 import { ImagePickerButton } from '../../../../src/components/ImagePickerButton';
 import { BottomSheet } from '../../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../../src/components/BottomSheetMenuList';
+import { NotesSection } from '../../../../src/components/NotesSection';
 import type { AnchoredMenuItem } from '../../../../src/components/AnchoredMenuList';
 import { layout } from '../../../../src/ui';
 import { useTheme, useUIKitTheme } from '../../../../src/theme/ThemeProvider';
@@ -90,11 +91,12 @@ export default function SpaceDetailScreen() {
     <Screen
       title={spaceName}
       tabs={[
+        { key: 'info', label: 'Info', accessibilityLabel: 'Info tab' },
         { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
         { key: 'images', label: 'Images', accessibilityLabel: 'Images tab' },
         { key: 'checklists', label: 'Checklists', accessibilityLabel: 'Checklists tab' },
       ]}
-      initialTabKey="items"
+      initialTabKey="info"
       backTarget={`/project/${projectId}?tab=spaces`}
       onPressMenu={() => setSpaceMenuVisible(true)}
     >
@@ -130,7 +132,7 @@ function SpaceDetailContent({
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
   const screenTabs = useScreenTabs();
-  const selectedKey = screenTabs?.selectedKey ?? 'items';
+  const selectedKey = screenTabs?.selectedKey ?? 'info';
 
   const [space, setSpace] = useState<Space | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
@@ -161,7 +163,6 @@ function SpaceDetailContent({
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
   const [galleryVisible, setGalleryVisible] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const [notesExpanded, setNotesExpanded] = useState(false);
 
   const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
@@ -539,27 +540,13 @@ function SpaceDetailContent({
 
   return (
     <View style={styles.container}>
-      {/* Notes section */}
-      {space.notes?.trim() ? (
-        <View style={styles.notesSection}>
-          <Pressable
-            onPress={() => setNotesExpanded((prev) => !prev)}
-            disabled={space.notes.length <= 120}
-          >
-            <AppText variant="body" numberOfLines={notesExpanded ? undefined : 2}>
-              {space.notes}
-            </AppText>
-            {space.notes.length > 120 ? (
-              <AppText variant="caption" style={{ color: theme.colors.primary, marginTop: 4 }}>
-                {notesExpanded ? 'Show less' : 'Show more'}
-              </AppText>
-            ) : null}
-          </Pressable>
+      {/* Info Tab */}
+      {selectedKey === 'info' ? (
+        <View style={styles.infoContainer}>
+          <NotesSection notes={space.notes} expandable={true} />
         </View>
-      ) : null}
-
-      {/* Items Tab */}
-      {selectedKey === 'items' ? (
+      ) : selectedKey === 'items' ? (
+        /* Items Tab */
         <>
           <ItemsListControlBar
             search={searchQuery}
@@ -975,8 +962,8 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
-  notesSection: {
-    paddingBottom: 4,
+  infoContainer: {
+    gap: 12,
   },
   list: {
     gap: 10,

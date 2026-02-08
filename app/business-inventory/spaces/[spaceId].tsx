@@ -15,6 +15,7 @@ import { ImageGallery } from '../../../src/components/ImageGallery';
 import { ImagePickerButton } from '../../../src/components/ImagePickerButton';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
+import { NotesSection } from '../../../src/components/NotesSection';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { layout } from '../../../src/ui';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
@@ -156,7 +157,6 @@ function BISpaceDetailContent({
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
   const [galleryVisible, setGalleryVisible] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const [notesExpanded, setNotesExpanded] = useState(false);
 
   const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(() => createInventoryScopeConfig(), []);
@@ -534,23 +534,7 @@ function BISpaceDetailContent({
   return (
     <View style={styles.container}>
       {/* Notes section */}
-      {space.notes?.trim() ? (
-        <View style={styles.notesSection}>
-          <Pressable
-            onPress={() => setNotesExpanded((prev) => !prev)}
-            disabled={space.notes.length <= 120}
-          >
-            <AppText variant="body" numberOfLines={notesExpanded ? undefined : 2}>
-              {space.notes}
-            </AppText>
-            {space.notes.length > 120 ? (
-              <AppText variant="caption" style={{ color: theme.colors.primary, marginTop: 4 }}>
-                {notesExpanded ? 'Show less' : 'Show more'}
-              </AppText>
-            ) : null}
-          </Pressable>
-        </View>
-      ) : null}
+      <NotesSection notes={space.notes} expandable={true} />
 
       {/* Items Tab */}
       {selectedKey === 'items' ? (
@@ -966,9 +950,6 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
     paddingTop: layout.screenBodyTopMd.paddingTop,
-  },
-  notesSection: {
-    paddingBottom: 4,
   },
   list: {
     gap: 10,

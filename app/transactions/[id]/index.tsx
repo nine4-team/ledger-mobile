@@ -7,6 +7,7 @@ import { AppButton } from '../../../src/components/AppButton';
 import { AppScrollView } from '../../../src/components/AppScrollView';
 import { TitledCard } from '../../../src/components/TitledCard';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
+import { NotesSection } from '../../../src/components/NotesSection';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
@@ -495,19 +496,7 @@ export default function TransactionDetailScreen() {
               tileScale={1.5}
             />
 
-            <TitledCard title="Notes">
-              <View style={styles.notesContainer}>
-                {transaction.notes?.trim() ? (
-                  <AppText variant="body">
-                    {transaction.notes.trim()}
-                  </AppText>
-                ) : (
-                  <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
-                    No notes yet.
-                  </AppText>
-                )}
-              </View>
-            </TitledCard>
+            <NotesSection notes={transaction.notes} expandable={true} />
 
             <TitledCard title="Details">
               <View style={styles.detailRows}>
@@ -863,8 +852,5 @@ const styles = StyleSheet.create({
   },
   warningText: {
     marginBottom: 12,
-  },
-  notesContainer: {
-    minHeight: 40,
   },
 });

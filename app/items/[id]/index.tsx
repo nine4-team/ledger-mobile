@@ -9,6 +9,7 @@ import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../../src/components/TitledCard';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
+import { NotesSection } from '../../../src/components/NotesSection';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -476,19 +477,7 @@ export default function ItemDetailScreen() {
               tileScale={1.5}
             />
 
-            <TitledCard title="Notes">
-              <View style={styles.notesContainer}>
-                {item.notes?.trim() ? (
-                  <AppText variant="body">
-                    {item.notes.trim()}
-                  </AppText>
-                ) : (
-                  <AppText variant="body" style={getTextSecondaryStyle(uiKitTheme)}>
-                    No notes yet.
-                  </AppText>
-                )}
-              </View>
-            </TitledCard>
+            <NotesSection notes={item.notes} expandable={true} />
 
             <TitledCard title="Details">
               <View style={styles.detailRows}>
@@ -701,8 +690,5 @@ const styles = StyleSheet.create({
   },
   addImageButton: {
     marginTop: 8,
-  },
-  notesContainer: {
-    minHeight: 40,
   },
 });
