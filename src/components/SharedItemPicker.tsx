@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { ItemCard } from './ItemCard';
 import { GroupedItemCard } from './GroupedItemCard';
-import { SegmentedControl } from './SegmentedControl';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { getTextInputStyle } from '../ui/styles/forms';
 import { getTextSecondaryStyle } from '../ui/styles/typography';
@@ -88,6 +88,19 @@ export type SharedItemPickerProps = {
    * Whether to show the "Select all visible" button (default: true).
    */
   showSelectAll?: boolean;
+  /**
+   * Callback for individual item quick-add. When provided, each eligible item
+   * gets an "Add" button for single-item adds (in addition to bulk selection).
+   */
+  onAddSingle?: (item: ScopedItem | Item) => void | Promise<void>;
+  /**
+   * Set of item IDs that have already been added (shows "Added" badge, disables add button).
+   */
+  addedIds?: Set<string>;
+  /**
+   * Item counts per tab, keyed by tab value. Shown as a badge next to the tab label.
+   */
+  tabCounts?: Record<string, number>;
 };
 
 function getItemLabel(item: ScopedItem | Item) {
@@ -119,6 +132,9 @@ export function SharedItemPicker({
   searchPlaceholder = 'Search items',
   addButtonLabel = 'Add Selected',
   showSelectAll = true,
+  onAddSingle,
+  addedIds,
+  tabCounts,
 }: SharedItemPickerProps) {
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
@@ -172,17 +188,117 @@ export function SharedItemPicker({
     }
   };
 
+  const renderAddButton = useCallback(
+    (item: ScopedItem | Item, locked: boolean) => {
+      if (!onAddSingle) return undefined;
+      const alreadyAdded = addedIds?.has(item.id) ?? false;
+      return (
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            if (!locked && !alreadyAdded) void onAddSingle(item);
+          }}
+          disabled={locked || alreadyAdded}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={alreadyAdded ? 'Already added' : `Add ${item.name ?? 'item'}`}
+          style={[
+            styles.addButton,
+            {
+              backgroundColor: alreadyAdded
+                ? uiKitTheme.background.tertiary
+                : uiKitTheme.button.primary.background,
+              opacity: locked ? 0.4 : 1,
+            },
+          ]}
+        >
+          <MaterialIcons
+            name={alreadyAdded ? 'check' : 'add'}
+            size={14}
+            color={alreadyAdded ? uiKitTheme.text.secondary : uiKitTheme.button.primary.text}
+          />
+          <Text
+            style={[
+              styles.addButtonText,
+              {
+                color: alreadyAdded ? uiKitTheme.text.secondary : uiKitTheme.button.primary.text,
+              },
+            ]}
+          >
+            {alreadyAdded ? 'Added' : 'Add'}
+          </Text>
+        </Pressable>
+      );
+    },
+    [addedIds, onAddSingle, uiKitTheme]
+  );
+
   return (
     <View style={styles.container}>
-      <SegmentedControl
-        value={selectedTab}
-        options={tabs}
-        onChange={(next) => {
-          onTabChange(next);
-          onSelectionChange([]); // Clear selection when switching tabs
-        }}
+      <View
+        style={[styles.tabBar, { borderBottomColor: uiKitTheme.border.secondary }]}
+        accessibilityRole="tablist"
         accessibilityLabel="Item picker tabs"
-      />
+      >
+        {tabs.map((tab) => {
+          const isSelected = tab.value === selectedTab;
+          const count = tabCounts?.[tab.value];
+          return (
+            <TouchableOpacity
+              key={tab.value}
+              style={[
+                styles.tab,
+                isSelected && { borderBottomColor: theme.tabBar.activeTint },
+              ]}
+              onPress={() => {
+                onTabChange(tab.value);
+                onSelectionChange([]);
+              }}
+              activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={tab.accessibilityLabel ?? tab.label}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  theme.typography.body,
+                  isSelected
+                    ? { color: theme.tabBar.activeTint, fontWeight: '700' }
+                    : { color: theme.colors.textSecondary },
+                ]}
+              >
+                {tab.label}
+              </Text>
+              {count != null ? (
+                <View
+                  style={[
+                    styles.tabCount,
+                    {
+                      backgroundColor: isSelected
+                        ? theme.tabBar.activeTint + '1A'
+                        : uiKitTheme.background.tertiary,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabCountText,
+                      {
+                        color: isSelected
+                          ? theme.tabBar.activeTint
+                          : theme.colors.textSecondary,
+                      },
+                    ]}
+                  >
+                    {count}
+                  </Text>
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
       <TextInput
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -200,7 +316,7 @@ export function SharedItemPicker({
           disabled={selectedIds.length === 0}
         />
       </View>
-      <View style={styles.list}>
+      <ScrollView style={styles.listScroll} contentContainerStyle={styles.list}>
         {pickerGroups.map(([label, groupItems]) => {
           const groupEligibleIds = groupItems.filter((item) => eligibilityCheck.isEligible(item)).map((item) => item.id);
           const groupAllSelected = groupEligibleIds.length > 0 && groupEligibleIds.every((id) => selectedIds.includes(id));
@@ -280,6 +396,7 @@ export function SharedItemPicker({
               onSelectedChange={locked ? undefined : (next) => handleItemToggle(only.id)}
               onPress={locked ? undefined : () => handleItemToggle(only.id)}
               statusLabel={statusLabel}
+              headerAction={renderAddButton(only, locked)}
               style={locked ? styles.lockedItem : undefined}
             />
           );
@@ -299,14 +416,43 @@ export function SharedItemPicker({
             {outsideError}
           </AppText>
         ) : null}
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     gap: 12,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 10,
+    marginBottom: -1,
+    borderBottomColor: 'transparent',
+    borderBottomWidth: 3,
+  },
+  tabText: {
+  },
+  tabCount: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    minWidth: 22,
+    alignItems: 'center',
+  },
+  tabCountText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   lockedItem: {
     opacity: 0.6,
@@ -316,7 +462,22 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'center',
   },
+  listScroll: {
+    flex: 1,
+  },
   list: {
     gap: 8,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

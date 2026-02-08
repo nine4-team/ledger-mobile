@@ -3,7 +3,7 @@ import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, TextInput, Touc
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
-import { ListControlBar } from './ListControlBar';
+import { ItemsListControlBar } from './ItemsListControlBar';
 import { ListSelectAllRow } from './ListSelectionControls';
 import { SelectorCircle } from './SelectorCircle';
 import { BUTTON_BORDER_RADIUS } from '../ui';
@@ -651,40 +651,16 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   return (
     <View style={styles.container}>
       <View style={styles.controlSection}>
-        <ListControlBar
+        <ItemsListControlBar
           search={query}
           onChangeSearch={setQuery}
           showSearch={showSearch}
-          actions={[
-            {
-              title: '',
-              variant: 'secondary',
-              onPress: () => setShowSearch(!showSearch),
-              iconName: 'search',
-              active: showSearch,
-            },
-            {
-              title: 'Sort',
-              variant: 'secondary',
-              onPress: handleToggleSort,
-              iconName: 'sort',
-              active: isSortActive,
-            },
-            {
-              title: 'Filter',
-              variant: 'secondary',
-              onPress: () => setFiltersOpen(true),
-              iconName: 'filter-list',
-              active: isFilterActive,
-            },
-            {
-              title: 'Add',
-              accessibilityLabel: 'Add item',
-              variant: 'primary',
-              onPress: handleCreateItem,
-              iconName: 'add',
-            },
-          ]}
+          onToggleSearch={() => setShowSearch(!showSearch)}
+          onSort={handleToggleSort}
+          isSortActive={isSortActive}
+          onFilter={() => setFiltersOpen(true)}
+          isFilterActive={isFilterActive}
+          onAdd={handleCreateItem}
           leftElement={
             scopeConfig.scope === 'inventory' ? (
               <TouchableOpacity

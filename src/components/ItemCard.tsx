@@ -37,6 +37,11 @@ export type ItemCardProps = {
   menuItems?: AnchoredMenuItem[];
   onPress?: () => void;
 
+  /**
+   * Custom action element rendered in the card header (e.g., an "Add" button in item pickers).
+   */
+  headerAction?: React.ReactNode;
+
   style?: StyleProp<ViewStyle>;
 };
 
@@ -60,6 +65,7 @@ export function ItemCard({
   onMenuPress,
   menuItems,
   onPress,
+  headerAction,
   style,
 }: ItemCardProps) {
   const uiKitTheme = useUIKitTheme();
@@ -185,6 +191,7 @@ export function ItemCard({
                 </View>
               ) : null}
             </View>
+            {headerAction ?? null}
             {onBookmarkPress ? (
               <Pressable
                 onPress={(e) => {

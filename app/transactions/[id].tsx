@@ -234,9 +234,9 @@ export default function TransactionDetailScreen() {
   const statusLabel = transaction?.status?.trim() || '';
 
   useEffect(() => {
-    if (!isPickingItems || pickerTab !== 'outside') return;
+    if (!isPickingItems) return;
     void outsideItemsHook.reload();
-  }, [isPickingItems, pickerTab, outsideItemsHook]);
+  }, [isPickingItems, outsideItemsHook]);
 
   const handleSave = async () => {
     if (!accountId || !id) return;
@@ -922,6 +922,11 @@ export default function TransactionDetailScreen() {
               {isPickingItems ? (
                 <SharedItemPicker
                   tabs={pickerTabOptions}
+                  tabCounts={{
+                    suggested: suggestedItems.length,
+                    ...(projectId ? { project: projectItems.length } : {}),
+                    outside: outsideItemsHook.items.length,
+                  }}
                   selectedTab={pickerTab}
                   onTabChange={(next) => {
                     setPickerTab(next);
