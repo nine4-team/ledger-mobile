@@ -48,9 +48,11 @@ export default function EditSpaceScreen() {
       throw new Error('Space ID is missing.');
     }
 
-    await updateSpace(accountId, spaceId, {
+    updateSpace(accountId, spaceId, {
       name: values.name,
       notes: values.notes || null,
+    }).catch((err) => {
+      console.warn('[spaces] update failed:', err);
     });
 
     router.replace(backTarget ?? '/(tabs)/index');
