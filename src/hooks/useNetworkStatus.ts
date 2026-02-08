@@ -62,10 +62,10 @@ export function useNetworkStatus(): NetworkStatus {
   const [isHealthy, setIsHealthy] = useState<boolean>(true);
 
   // DEBUG: Verify hook is mounting
-  useEffect(() => {
-    console.log('🔌 useNetworkStatus: Hook mounted');
-    return () => console.log('🔌 useNetworkStatus: Hook unmounted');
-  }, []);
+  // useEffect(() => {
+  //   console.log('🔌 useNetworkStatus: Hook mounted');
+  //   return () => console.log('🔌 useNetworkStatus: Hook unmounted');
+  // }, []);
 
   // Raw signal tracking (internal)
   const rawOnlineRef = useRef<boolean>(true);
@@ -124,12 +124,12 @@ export function useNetworkStatus(): NetworkStatus {
       const rawOnline = state.isConnected ?? false;
 
       // DEBUG: Log network state changes
-      console.log('🔌 useNetworkStatus: Network change detected', {
-        isConnected: state.isConnected,
-        type: state.type,
-        rawOnline,
-        currentIsOnline: isOnline
-      });
+      // console.log('🔌 useNetworkStatus: Network change detected', {
+      //   isConnected: state.isConnected,
+      //   type: state.type,
+      //   rawOnline,
+      //   currentIsOnline: isOnline
+      // });
 
       // Update raw signal
       rawOnlineRef.current = rawOnline;

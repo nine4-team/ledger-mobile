@@ -17,7 +17,7 @@ export const NetworkStatusBanner: React.FC<NetworkStatusBannerProps> = ({ bottom
   const showSlow = isOnline && isSlowConnection;
 
   // DEBUG: Log banner state
-  console.log('📱 NetworkStatusBanner: Render', { isOnline, isSlowConnection, showOffline, showSlow });
+  // console.log('📱 NetworkStatusBanner: Render', { isOnline, isSlowConnection, showOffline, showSlow });
 
   const themed = useMemo(
     () =>
