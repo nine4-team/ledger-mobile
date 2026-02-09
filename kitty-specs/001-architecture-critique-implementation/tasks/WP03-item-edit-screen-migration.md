@@ -1,27 +1,30 @@
 ---
-work_package_id: "WP03"
-subtasks:
-  - "T011"
-  - "T012"
-  - "T013"
-  - "T014"
-  - "T015"
-  - "T016"
-title: "Item Edit Screen Migration"
-phase: "Phase 2C - Edit Screen Migrations"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP03
+title: Item Edit Screen Migration
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: c64b91de6acfeaa5d4c063c8d2d2c91eaaffabef
+created_at: '2026-02-09T21:22:48.324318+00:00'
+subtasks:
+- T011
+- T012
+- T013
+- T014
+- T015
+- T016
+phase: Phase 2C - Edit Screen Migrations
+assignee: ''
+agent: ''
+shell_pid: "22113"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-09T08:45:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-09T08:45:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP03 - Item Edit Screen Migration
