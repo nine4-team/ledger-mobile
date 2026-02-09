@@ -37,8 +37,6 @@ export function BudgetProgressDisplay({
   error = null,
 }: BudgetProgressDisplayProps) {
   const theme = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
-
   // Loading state
   if (isLoading) {
     return (
@@ -66,13 +64,14 @@ export function BudgetProgressDisplay({
     );
   }
 
-  // Determine enabled categories (has budget OR has spend)
+  // Determine enabled categories (has non-zero budget OR has spend)
   const enabledCategories = useMemo(() => {
     return budgetCategories.filter((cat) => {
-      const hasProjectBudget = projectBudgetCategories[cat.id] !== undefined;
+      const budgetCents = projectBudgetCategories[cat.id]?.budgetCents ?? 0;
+      const hasNonZeroBudget = budgetCents > 0;
       const hasSpend = (budgetProgress.spentByCategory[cat.id] ?? 0) !== 0;
       const isArchived = cat.isArchived === true;
-      return (hasProjectBudget || hasSpend) && !isArchived;
+      return (hasNonZeroBudget || hasSpend) && !isArchived;
     });
   }, [budgetCategories, projectBudgetCategories, budgetProgress]);
 
@@ -101,17 +100,6 @@ export function BudgetProgressDisplay({
     return [...pinned, ...unpinned, ...fees];
   }, [enabledCategories, pinnedCategoryIds, accountPresets]);
 
-  // Visible categories based on expanded state
-  const visibleCategories = useMemo(() => {
-    if (isExpanded) return sortedCategories;
-    // Collapsed: show pinned categories
-    const pinned = sortedCategories.filter((c) => pinnedCategoryIds.includes(c.id));
-    if (pinned.length > 0) return pinned;
-    // No pins: show the first non-fee category as a default preview
-    const firstNonFee = sortedCategories.find((c) => c.metadata?.categoryType !== 'fee');
-    return firstNonFee ? [firstNonFee] : sortedCategories.slice(0, 1);
-  }, [isExpanded, sortedCategories, pinnedCategoryIds]);
-
   // Calculate Overall Budget
   const overallBudget = useMemo(() => {
     let totalBudgetCents = 0;
@@ -125,11 +113,6 @@ export function BudgetProgressDisplay({
     return totalBudgetCents;
   }, [enabledCategories, projectBudgetCategories]);
 
-  // Show toggle if there are more categories than visible
-  const showToggle = useMemo(() => {
-    return sortedCategories.length > visibleCategories.length || overallBudget > 0;
-  }, [sortedCategories, visibleCategories, overallBudget]);
-
   // Empty state: no budget categories exist at all
   if (budgetCategories.length === 0) {
     return null;
@@ -142,22 +125,22 @@ export function BudgetProgressDisplay({
 
   return (
     <View style={styles.container}>
-      {/* Visible categories */}
-      {visibleCategories.map((cat) => (
+      {/* All categories */}
+      {sortedCategories.map((cat) => (
         <BudgetCategoryTracker
           key={cat.id}
           categoryName={cat.name}
           categoryType={cat.metadata?.categoryType ?? 'general'}
           spentCents={budgetProgress.spentByCategory[cat.id] ?? 0}
           budgetCents={projectBudgetCategories[cat.id]?.budgetCents ?? null}
-          isPinned={!isExpanded && pinnedCategoryIds.includes(cat.id)}
+          isPinned={pinnedCategoryIds.includes(cat.id)}
           onPress={onCategoryPress ? () => onCategoryPress(cat.id) : undefined}
           onLongPress={onPinToggle ? () => onPinToggle(cat.id) : undefined}
         />
       ))}
 
-      {/* Expanded: Overall Budget at end */}
-      {isExpanded && overallBudget > 0 && (
+      {/* Overall Budget at end */}
+      {overallBudget > 0 && (
         <BudgetCategoryTracker
           categoryName="Overall"
           categoryType="general"
@@ -165,18 +148,6 @@ export function BudgetProgressDisplay({
           budgetCents={overallBudget}
           isOverallBudget={true}
         />
-      )}
-
-      {/* Toggle button */}
-      {showToggle && (
-        <TouchableOpacity
-          onPress={() => setIsExpanded(!isExpanded)}
-          style={styles.toggleButton}
-        >
-          <AppText variant="caption" style={{ color: theme.colors.primary }}>
-            {isExpanded ? 'Show Less' : 'Show All Budget Categories'}
-          </AppText>
-        </TouchableOpacity>
       )}
     </View>
   );

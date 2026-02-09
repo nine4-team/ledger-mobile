@@ -124,7 +124,7 @@ export default function NewProjectScreen() {
           if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
             updateProject(accountId, projectId, {
               mainImageUrl: mediaState.record.remoteUrl,
-            }).catch(err => console.error('[projects] update mainImageUrl failed:', err));
+            });
           }
         } catch (err) {
           console.error('[projects] image upload failed:', err);

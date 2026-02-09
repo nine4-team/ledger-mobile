@@ -46,22 +46,22 @@ export function subscribeToVendorDefaults(
   );
 }
 
-export async function saveVendorDefaults(accountId: string, vendors: string[]): Promise<void> {
+export function saveVendorDefaults(accountId: string, vendors: string[]): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/presets/default/vendors/default`),
     {
       vendors,
       updatedAt: now,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[vendorDefaults] saveVendorDefaults failed:', err));
   trackPendingWrite();
 }
 
-export async function replaceVendorSlots(accountId: string, vendors: string[]): Promise<void> {
-  await saveVendorDefaults(accountId, normalizeSlots(vendors));
+export function replaceVendorSlots(accountId: string, vendors: string[]): void {
+  saveVendorDefaults(accountId, normalizeSlots(vendors));
 }

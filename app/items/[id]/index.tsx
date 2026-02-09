@@ -148,17 +148,13 @@ export default function ItemDetailScreen() {
     if (!isCanonical && transaction.budgetCategoryId) {
       update.budgetCategoryId = transaction.budgetCategoryId;
     }
-    updateItem(accountId, id, update).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, update);
     setError(null);
   };
 
   const handleUnlinkTransaction = () => {
     if (!accountId || !id) return;
-    updateItem(accountId, id, { transactionId: null }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { transactionId: null });
   };
 
   const handleOpenTransaction = () => {
@@ -193,9 +189,7 @@ export default function ItemDetailScreen() {
       isPrimary: !hasPrimary && kind === 'image',
     };
     const nextImages: AttachmentRef[] = [...(item.images ?? []), newImage].slice(0, 5);
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
@@ -210,9 +204,7 @@ export default function ItemDetailScreen() {
     if (!nextImages.some((image) => image.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
   };
 
   const handleSetPrimaryImage = (attachment: AttachmentRef) => {
@@ -221,17 +213,13 @@ export default function ItemDetailScreen() {
       ...image,
       isPrimary: image.url === attachment.url,
     }));
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
   };
 
   const handleToggleBookmark = () => {
     if (!accountId || !id || !item) return;
     const next = !(item.bookmark ?? (item as any).isBookmarked);
-    updateItem(accountId, id, { bookmark: next }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { bookmark: next });
   };
 
   const handleSellToInventory = async () => {
@@ -256,9 +244,7 @@ export default function ItemDetailScreen() {
       setError('This item is tied to a transaction. Move the transaction instead.');
       return;
     }
-    updateItem(accountId, id, { projectId: null, transactionId: null, spaceId: null }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { projectId: null, transactionId: null, spaceId: null });
   };
 
   const handleAllocateToProject = async () => {
@@ -294,9 +280,7 @@ export default function ItemDetailScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteItem(accountId, id).catch(err => {
-            console.warn('[items] delete failed:', err);
-          });
+          deleteItem(accountId, id);
           router.replace(fallbackTarget);
         },
       },

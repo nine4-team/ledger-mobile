@@ -43,12 +43,13 @@ export function BudgetProgressPreview({
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
 
-  // Determine enabled categories (has budget OR has spend)
+  // Determine enabled categories (has non-zero budget OR has spend)
   const enabledCategories = useMemo(() => {
     return budgetCategories.filter((cat) => {
-      const hasProjectBudget = projectBudgetCategories[cat.id] !== undefined;
+      const budgetCents = projectBudgetCategories[cat.id]?.budgetCents ?? 0;
+      const hasNonZeroBudget = budgetCents > 0;
       const hasSpend = (budgetProgress.spentByCategory[cat.id] ?? 0) !== 0;
-      return (hasProjectBudget || hasSpend) && !cat.isArchived;
+      return (hasNonZeroBudget || hasSpend) && !cat.isArchived;
     });
   }, [budgetCategories, projectBudgetCategories, budgetProgress]);
 
@@ -73,16 +74,38 @@ export function BudgetProgressPreview({
     return totalBudgetCents;
   }, [enabledCategories, projectBudgetCategories]);
 
-  // Visible categories: pinned categories, or Overall Budget if no pins
+  // Fallback categories: top 1-2 by spend percentage when nothing is pinned
+  const fallbackCategories = useMemo(() => {
+    if (pinnedCategories.length > 0) return [];
+    // Pick categories that have any budget activity
+    const withActivity = enabledCategories.filter((cat) => {
+      const spent = budgetProgress.spentByCategory[cat.id] ?? 0;
+      const budget = projectBudgetCategories[cat.id]?.budgetCents ?? 0;
+      return spent > 0 || budget > 0;
+    });
+    // Sort by spend percentage descending (highest usage first)
+    return withActivity
+      .sort((a, b) => {
+        const aSpent = budgetProgress.spentByCategory[a.id] ?? 0;
+        const aBudget = projectBudgetCategories[a.id]?.budgetCents ?? 0;
+        const bSpent = budgetProgress.spentByCategory[b.id] ?? 0;
+        const bBudget = projectBudgetCategories[b.id]?.budgetCents ?? 0;
+        const aPct = aBudget > 0 ? aSpent / aBudget : aSpent > 0 ? Infinity : 0;
+        const bPct = bBudget > 0 ? bSpent / bBudget : bSpent > 0 ? Infinity : 0;
+        return bPct - aPct;
+      })
+      .slice(0, maxCategories);
+  }, [pinnedCategories, enabledCategories, budgetProgress, projectBudgetCategories, maxCategories]);
+
+  // Visible categories: pinned categories, or top active categories as fallback
   const visibleCategories = useMemo(() => {
     if (pinnedCategories.length > 0) {
       return pinnedCategories;
     }
-    // Return synthetic "overall" category
-    return [];
-  }, [pinnedCategories]);
+    return fallbackCategories;
+  }, [pinnedCategories, fallbackCategories]);
 
-  const showOverall = pinnedCategories.length === 0 && overallBudget > 0;
+  const showOverall = pinnedCategories.length === 0 && visibleCategories.length === 0 && overallBudget > 0;
 
   // If no categories and no overall budget, don't render anything
   if (visibleCategories.length === 0 && !showOverall) {
@@ -98,14 +121,9 @@ export function BudgetProgressPreview({
             <AppText variant="caption" style={[styles.categoryName, { color: theme.colors.textSecondary }]}>
               Overall Budget
             </AppText>
-            <View style={styles.amountRow}>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                {formatCurrency(budgetProgress.spentCents)} / {formatCurrency(overallBudget)}
-              </AppText>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                {overallBudget > 0 ? `${Math.round((budgetProgress.spentCents / overallBudget) * 100)}%` : '—'}
-              </AppText>
-            </View>
+            <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+              {formatCurrency(budgetProgress.spentCents)} / {formatCurrency(overallBudget)}
+            </AppText>
           </View>
           <View style={[styles.track, { backgroundColor: uiKitTheme.border.secondary }]}>
             <View
@@ -137,14 +155,9 @@ export function BudgetProgressPreview({
               <AppText variant="caption" style={[styles.categoryName, { color: theme.colors.textSecondary }]}>
                 {category.name}
               </AppText>
-              <View style={styles.amountRow}>
-                <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                  {formatCurrency(spentCents)} / {formatCurrency(budgetCents)}
-                </AppText>
-                <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                  {budgetCents > 0 ? `${Math.round(percentage)}%` : '—'}
-                </AppText>
-              </View>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                {formatCurrency(spentCents)} / {formatCurrency(budgetCents)}
+              </AppText>
             </View>
             <View style={[styles.track, { backgroundColor: uiKitTheme.border.secondary }]}>
               <View
@@ -167,6 +180,7 @@ export function BudgetProgressPreview({
 const styles = StyleSheet.create({
   container: {
     gap: 8,
+    marginTop: 16,
   },
   categoryRow: {
     gap: 4,

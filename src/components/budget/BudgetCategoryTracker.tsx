@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View, TouchableOpacity, Platform, ActionSheetIOS, Alert } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import {
   getBudgetProgressColor,
@@ -99,44 +100,59 @@ export function BudgetCategoryTracker({
   const content = (
     <View style={styles.container}>
       {/* Title */}
-      <View style={styles.titleRow}>
-        <AppText variant="body" style={[styles.title, { color: theme.colors.text }]}>
-          {displayName}
-        </AppText>
-        {isPinned && (
-          <AppText variant="caption" style={styles.pinIndicator}>
-            📌
-          </AppText>
+      <AppText variant="body" style={[styles.title, { color: theme.colors.text }]}>
+        {displayName}
+      </AppText>
+
+      {/* Progress bar row with optional pin icon */}
+      <View style={styles.progressRow}>
+        <View style={styles.progressBarWrapper}>
+          {/* Amounts: spent (left) / remaining (right) */}
+          <View style={styles.amountRow}>
+            <AppText
+              variant="caption"
+              style={[styles.amountText, { color: theme.colors.textSecondary }]}
+            >
+              {spentLabel}
+            </AppText>
+            <AppText
+              variant="caption"
+              style={[
+                styles.remainingText,
+                { color: remainingColor },
+                isOverBudget && styles.overBudgetText,
+              ]}
+            >
+              {remainingLabel}
+            </AppText>
+          </View>
+
+          {/* Progress Bar */}
+          <ProgressBar
+            percentage={displayPercentage}
+            color={colors.bar}
+            overflowPercentage={isOverBudget ? Math.min(overflowPercentage, 100) : undefined}
+            overflowColor={isOverBudget ? overflowColors.bar : undefined}
+          />
+        </View>
+
+        {/* Pin icon */}
+        {onLongPress && (
+          <TouchableOpacity
+            onPress={onLongPress}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.6}
+            style={styles.pinButton}
+          >
+            <Ionicons
+              name={isPinned ? "pin" : "pin-outline"}
+              size={isPinned ? 15 : 12}
+              color={isPinned ? theme.colors.primary : theme.colors.textSecondary}
+              style={{ opacity: isPinned ? 1 : 0.5 }}
+            />
+          </TouchableOpacity>
         )}
       </View>
-
-      {/* Amounts: spent (left) / remaining (right) */}
-      <View style={styles.amountRow}>
-        <AppText
-          variant="caption"
-          style={[styles.amountText, { color: theme.colors.textSecondary }]}
-        >
-          {spentLabel}
-        </AppText>
-        <AppText
-          variant="caption"
-          style={[
-            styles.remainingText,
-            { color: remainingColor },
-            isOverBudget && styles.overBudgetText,
-          ]}
-        >
-          {remainingLabel}
-        </AppText>
-      </View>
-
-      {/* Progress Bar */}
-      <ProgressBar
-        percentage={displayPercentage}
-        color={colors.bar}
-        overflowPercentage={isOverBudget ? Math.min(overflowPercentage, 100) : undefined}
-        overflowColor={isOverBudget ? overflowColors.bar : undefined}
-      />
     </View>
   );
 
@@ -186,17 +202,18 @@ const styles = StyleSheet.create({
   container: {
     gap: 4,
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   title: {
     fontSize: 15,
     fontWeight: "500",
   },
-  pinIndicator: {
-    fontSize: 14,
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  progressBarWrapper: {
+    flex: 1,
+    gap: 2,
   },
   amountRow: {
     flexDirection: "row",
@@ -211,5 +228,8 @@ const styles = StyleSheet.create({
   },
   overBudgetText: {
     fontWeight: "700",
+  },
+  pinButton: {
+    paddingBottom: 1,
   },
 });

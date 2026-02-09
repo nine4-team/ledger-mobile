@@ -51,8 +51,6 @@ export default function EditSpaceScreen() {
     updateSpace(accountId, spaceId, {
       name: values.name,
       notes: values.notes || null,
-    }).catch((err) => {
-      console.warn('[spaces] update failed:', err);
     });
 
     router.replace(backTarget ?? '/(tabs)/index');

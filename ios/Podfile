@@ -11,9 +11,6 @@ platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
 install! 'cocoapods',
   :deterministic_uuids => false
 
-# Explicit project selection prevents CocoaPods ambiguity.
-project 'Ledger.xcodeproj'
-
 # Needed for Firebase Swift pods when CocoaPods is building pods as static libraries.
 # See: "Swift pods cannot yet be integrated as static libraries" error.
 use_modular_headers!

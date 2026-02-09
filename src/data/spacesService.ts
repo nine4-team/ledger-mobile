@@ -124,37 +124,37 @@ export function createSpace(
   return docRef.id;
 }
 
-export async function updateSpace(
+export function updateSpace(
   accountId: string,
   spaceId: string,
   data: Partial<Space>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/spaces/${spaceId}`),
     {
       ...data,
       updatedAt: serverTimestamp(),
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[spaces] updateSpace failed:', err));
   trackPendingWrite();
 }
 
-export async function deleteSpace(accountId: string, spaceId: string): Promise<void> {
+export function deleteSpace(accountId: string, spaceId: string): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/spaces/${spaceId}`),
     {
       isArchived: true,
       updatedAt: serverTimestamp(),
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[spaces] deleteSpace failed:', err));
   trackPendingWrite();
 }
 

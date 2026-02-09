@@ -3,7 +3,11 @@ import {
   collection,
   doc,
   getDoc,
+  getDocFromCache,
+  getDocFromServer,
   getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
   onSnapshot,
   query,
   serverTimestamp,
@@ -57,58 +61,75 @@ export function subscribeToProjectPreferences(
 export async function ensureProjectPreferences(
   accountId: string,
   projectId: string
-): Promise<void> {
-  if (!isFirebaseConfigured || !db) return;
+): Promise<ProjectPreferences | null> {
+  if (!isFirebaseConfigured || !db) return null;
 
   const uid = auth?.currentUser?.uid;
-  if (!uid) return;
+  if (!uid) return null;
 
   const ref = doc(db, `accounts/${accountId}/users/${uid}/projectPreferences/${projectId}`);
-  const snapshot = await getDoc(ref);
+
+  // Try cache first, then server, then fallback to bare getDoc
+  let snapshot;
+  try {
+    snapshot = await getDocFromCache(ref);
+  } catch {
+    try {
+      snapshot = await getDocFromServer(ref);
+    } catch {
+      snapshot = await getDoc(ref);
+    }
+  }
 
   // Only create if doesn't exist
-  if (snapshot.exists()) return;
+  if (snapshot.exists) return null;
 
   // Find Furnishings category
-  const budgetCategories = await refreshBudgetCategories(accountId, 'online');
+  const budgetCategories = await refreshBudgetCategories(accountId, 'offline');
   const furnishings = budgetCategories.find(c => c.name === 'Furnishings' && !c.isArchived);
 
   // Check if Furnishings is enabled in this project
-  const projectBudgets = await refreshProjectBudgetCategories(accountId, projectId, 'online');
+  const projectBudgets = await refreshProjectBudgetCategories(accountId, projectId, 'offline');
   const isFurnishingsEnabled = furnishings && projectBudgets.some(pb => pb.id === furnishings.id);
 
   const pinnedBudgetCategoryIds = isFurnishingsEnabled ? [furnishings.id] : [];
 
-  await setDoc(ref, {
+  const prefs: ProjectPreferences = {
     id: projectId,
     accountId,
     userId: uid,
     projectId,
     pinnedBudgetCategoryIds,
+  };
+
+  setDoc(ref, {
+    ...prefs,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  }).catch(err => console.error('[projectPreferencesService] ensureProjectPreferences write failed:', err));
   trackPendingWrite();
+
+  return prefs;
 }
 
-export async function updateProjectPreferences(
+export function updateProjectPreferences(
   accountId: string,
   userId: string,
   projectId: string,
   data: Partial<Omit<ProjectPreferences, 'id' | 'accountId' | 'userId' | 'projectId' | 'createdAt' | 'updatedAt'>>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
   const ref = doc(db, `accounts/${accountId}/users/${userId}/projectPreferences/${projectId}`);
-  await setDoc(
+  setDoc(
     ref,
     {
       ...data,
       updatedAt: serverTimestamp(),
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[projectPreferences] updateProjectPreferences failed:', err));
   trackPendingWrite();
 }
 
@@ -128,12 +149,23 @@ export async function fetchProjectPreferencesMap(params: {
     chunks.push(projectIds.slice(i, i + 10));
   }
   for (const chunk of chunks) {
-    const snapshot = await getDocs(
-      query(
-        collection(db, `accounts/${accountId}/users/${userId}/projectPreferences`),
-        where(FieldPath.documentId(), 'in', chunk)
-      )
+    const q = query(
+      collection(db, `accounts/${accountId}/users/${userId}/projectPreferences`),
+      where(FieldPath.documentId(), 'in', chunk)
     );
+
+    // Try cache first, then server, then fallback to bare getDocs
+    let snapshot;
+    try {
+      snapshot = await getDocsFromCache(q);
+    } catch {
+      try {
+        snapshot = await getDocsFromServer(q);
+      } catch {
+        snapshot = await getDocs(q);
+      }
+    }
+
     snapshot.docs.forEach((doc) => {
       output[doc.id] = { ...(doc.data() as object), id: doc.id } as ProjectPreferences;
     });

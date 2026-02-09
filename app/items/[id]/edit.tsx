@@ -110,9 +110,7 @@ export default function EditItemScreen() {
       isPrimary: !hasPrimary && kind === 'image',
     };
     const nextImages: AttachmentRef[] = [...(item.images ?? []), newImage].slice(0, 5);
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -125,9 +123,7 @@ export default function EditItemScreen() {
     if (!nextImages.some((image) => image.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
   };
 
   const handleSetPrimaryImage = (attachment: AttachmentRef) => {
@@ -136,9 +132,7 @@ export default function EditItemScreen() {
       ...image,
       isPrimary: image.url === attachment.url,
     }));
-    updateItem(accountId, id, { images: nextImages }).catch(err => {
-      console.warn('[items] update failed:', err);
-    });
+    updateItem(accountId, id, { images: nextImages });
   };
 
   const handleSave = () => {
@@ -159,8 +153,6 @@ export default function EditItemScreen() {
       marketValueCents: parseCurrency(marketValue),
       notes: notes.trim() || null,
       spaceId,
-    }).catch(err => {
-      console.warn('[items] update failed:', err);
     });
     router.replace(fallbackTarget);
   };

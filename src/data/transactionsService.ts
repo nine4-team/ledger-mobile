@@ -62,30 +62,30 @@ export function createTransaction(
   return docRef.id;
 }
 
-export async function updateTransaction(
+export function updateTransaction(
   accountId: string,
   transactionId: string,
   data: Partial<Transaction>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/transactions/${transactionId}`),
     {
       ...data,
       updatedAt: serverTimestamp(),
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[transactions] updateTransaction failed:', err));
   trackPendingWrite();
 }
 
-export async function deleteTransaction(accountId: string, transactionId: string): Promise<void> {
+export function deleteTransaction(accountId: string, transactionId: string): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await deleteDoc(doc(db, `accounts/${accountId}/transactions/${transactionId}`));
+  deleteDoc(doc(db, `accounts/${accountId}/transactions/${transactionId}`)).catch(err => console.error('[transactions] deleteTransaction failed:', err));
   trackPendingWrite();
 }
 

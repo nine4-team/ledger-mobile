@@ -254,9 +254,7 @@ function SpaceDetailContent({
     (next: Checklist[]) => {
       if (!accountId || !spaceId) return;
       setChecklists(next);
-      updateSpace(accountId, spaceId, { checklists: next }).catch((err) => {
-        console.warn('[spaces] checklist update failed:', err);
-      });
+      updateSpace(accountId, spaceId, { checklists: next });
     },
     [accountId, spaceId]
   );
@@ -277,9 +275,7 @@ function SpaceDetailContent({
       isPrimary: !hasPrimary && kind === 'image',
     };
     const nextImages = [...(space.images ?? []), newImage].slice(0, 50);
-    updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
-      console.warn('[spaces] image add failed:', err);
-    });
+    updateSpace(accountId, spaceId, { images: nextImages });
   }, [accountId, space, spaceId]);
 
   const handleRemoveImage = useCallback(
@@ -292,9 +288,7 @@ function SpaceDetailContent({
       if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
         nextImages[0] = { ...nextImages[0], isPrimary: true };
       }
-      updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
-        console.warn('[spaces] image remove failed:', err);
-      });
+      updateSpace(accountId, spaceId, { images: nextImages });
     },
     [accountId, space, spaceId]
   );
@@ -306,9 +300,7 @@ function SpaceDetailContent({
         ...img,
         isPrimary: img.url === image.url,
       }));
-      updateSpace(accountId, spaceId, { images: nextImages }).catch((err) => {
-        console.warn('[spaces] set primary image failed:', err);
-      });
+      updateSpace(accountId, spaceId, { images: nextImages });
     },
     [accountId, space?.images, spaceId]
   );
@@ -319,9 +311,7 @@ function SpaceDetailContent({
 
     if (pickerTab !== 'outside') {
       selectedItems.forEach((item) => {
-        updateItem(accountId, item.id, { spaceId }).catch((err) => {
-          console.warn(`[spaces] move item ${item.id} failed:`, err);
-        });
+        updateItem(accountId, item.id, { spaceId });
       });
       setPickerSelectedIds([]);
       setIsPickingItems(false);
@@ -358,9 +348,7 @@ function SpaceDetailContent({
     if (!accountId || !projectId) return;
     const isOutside = pickerTab === 'outside';
     if (!isOutside) {
-      updateItem(accountId, item.id, { spaceId }).catch((err) => {
-        console.warn(`[spaces] move item ${item.id} failed:`, err);
-      });
+      updateItem(accountId, item.id, { spaceId });
     } else {
       if (item.transactionId) return;
       const result = resolveItemMove(item as any, {
@@ -381,9 +369,7 @@ function SpaceDetailContent({
   const handleBulkRemove = useCallback(() => {
     if (!accountId || bulkSelectedIds.length === 0) return;
     bulkSelectedIds.forEach((itemId) => {
-      updateItem(accountId, itemId, { spaceId: null }).catch((err) => {
-        console.warn(`[spaces] bulk remove item ${itemId} failed:`, err);
-      });
+      updateItem(accountId, itemId, { spaceId: null });
     });
     setBulkSelectedIds([]);
   }, [accountId, bulkSelectedIds]);
@@ -391,9 +377,7 @@ function SpaceDetailContent({
   const handleBulkMove = useCallback(() => {
     if (!accountId || bulkSelectedIds.length === 0 || !bulkTargetSpaceId) return;
     bulkSelectedIds.forEach((itemId) => {
-      updateItem(accountId, itemId, { spaceId: bulkTargetSpaceId }).catch((err) => {
-        console.warn(`[spaces] bulk move item ${itemId} failed:`, err);
-      });
+      updateItem(accountId, itemId, { spaceId: bulkTargetSpaceId });
     });
     setBulkSelectedIds([]);
     setBulkTargetSpaceId(null);
@@ -411,9 +395,7 @@ function SpaceDetailContent({
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteSpace(accountId, spaceId).catch((err) => {
-            console.warn('[spaces] delete failed:', err);
-          });
+          deleteSpace(accountId, spaceId);
           router.replace(`/project/${projectId}?tab=spaces`);
         },
       },
@@ -663,9 +645,7 @@ function SpaceDetailContent({
                     label: 'Remove from Space',
                     onPress: () => {
                       if (!accountId) return;
-                      updateItem(accountId, item.id, { spaceId: null }).catch((err) => {
-                        console.warn(`[spaces] remove item from space failed:`, err);
-                      });
+                      updateItem(accountId, item.id, { spaceId: null });
                     },
                   },
                 ];
@@ -692,9 +672,7 @@ function SpaceDetailContent({
                     bookmarked={Boolean((item as any).bookmark)}
                     onBookmarkPress={() => {
                       if (!accountId) return;
-                      updateItem(accountId, item.id, { bookmark: !(item as any).bookmark }).catch((err) => {
-                        console.warn(`[spaces] bookmark toggle failed:`, err);
-                      });
+                      updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
                     }}
                     onPress={() => {
                       if (bulkMode) {

@@ -200,8 +200,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteProject(accountId, projectId)
-            .catch(err => console.error('[projects] delete failed:', err));
+          deleteProject(accountId, projectId);
           router.replace('/(tabs)');
         },
       },
@@ -219,7 +218,7 @@ export function ProjectShell({ projectId, initialTabKey }: ProjectShellProps) {
 
       updateProjectPreferences(accountId, userId, projectId, {
         pinnedBudgetCategoryIds: nextPinned,
-      }).catch(err => console.error('[projects] pin toggle failed:', err));
+      });
     },
     [accountId, userId, projectId, pinnedBudgetCategoryIds]
   );

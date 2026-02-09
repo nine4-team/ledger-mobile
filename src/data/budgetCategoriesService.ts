@@ -137,18 +137,18 @@ export function createBudgetCategory(
   return docRef.id;
 }
 
-export async function updateBudgetCategory(
+export function updateBudgetCategory(
   accountId: string,
   categoryId: string,
   data: Partial<BudgetCategory>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const firestore = db;
   const now = serverTimestamp();
   const hasMetadata = Object.prototype.hasOwnProperty.call(data, 'metadata');
-  await setDoc(
+  setDoc(
     doc(firestore, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`),
     {
       ...data,
@@ -156,36 +156,36 @@ export async function updateBudgetCategory(
       updatedAt: now,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[budgetCategories] updateBudgetCategory failed:', err));
   trackPendingWrite();
 }
 
-export async function setBudgetCategoryArchived(
+export function setBudgetCategoryArchived(
   accountId: string,
   categoryId: string,
   isArchived: boolean
-): Promise<void> {
-  await updateBudgetCategory(accountId, categoryId, { isArchived });
+): void {
+  updateBudgetCategory(accountId, categoryId, { isArchived });
 }
 
-export async function deleteBudgetCategory(accountId: string, categoryId: string): Promise<void> {
+export function deleteBudgetCategory(accountId: string, categoryId: string): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
-  await deleteDoc(doc(db, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`));
+  deleteDoc(doc(db, `accounts/${accountId}/presets/default/budgetCategories/${categoryId}`)).catch(err => console.error('[budgetCategories] deleteBudgetCategory failed:', err));
   trackPendingWrite();
 }
 
-export async function setBudgetCategoryOrder(
+export function setBudgetCategoryOrder(
   accountId: string,
   orderedIds: string[]
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const firestore = db;
   const now = serverTimestamp();
-  await Promise.all(
+  Promise.all(
     orderedIds.map((id, index) =>
       setDoc(
         doc(firestore, `accounts/${accountId}/presets/default/budgetCategories/${id}`),
@@ -196,6 +196,6 @@ export async function setBudgetCategoryOrder(
         { merge: true }
       )
     )
-  );
+  ).catch(err => console.error('[budgetCategories] setBudgetCategoryOrder failed:', err));
   trackPendingWrite();
 }

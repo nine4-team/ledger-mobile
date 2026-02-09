@@ -45,16 +45,16 @@ export function subscribeToBusinessProfile(
   );
 }
 
-export async function saveBusinessProfile(
+export function saveBusinessProfile(
   accountId: string,
   updates: Pick<BusinessProfile, 'businessName' | 'logo'>,
   updatedBy?: string | null
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/profile/default`),
     {
       accountId,
@@ -64,7 +64,7 @@ export async function saveBusinessProfile(
       updatedAt: now,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[businessProfile] saveBusinessProfile failed:', err));
   trackPendingWrite();
 }
 

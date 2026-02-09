@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   getDocsFromCache,
   getDocsFromServer,
@@ -76,12 +75,17 @@ export async function refreshProjectBudgetCategories(
   );
 }
 
-export async function setProjectBudgetCategory(
+/**
+ * Set a project budget category. Fire-and-forget: does not await the
+ * Firestore write so the UI never blocks on network.  Uses `merge: true`
+ * so both create and update work without an existence check.
+ */
+export function setProjectBudgetCategory(
   accountId: string,
   projectId: string,
   categoryId: string,
   data: Partial<ProjectBudgetCategory>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
@@ -89,27 +93,21 @@ export async function setProjectBudgetCategory(
   const uid = auth?.currentUser?.uid;
   const ref = doc(db, `accounts/${accountId}/projects/${projectId}/budgetCategories/${categoryId}`);
 
-  // Check if document exists to determine if we need createdAt
-  const snapshot = await getDoc(ref);
-  const exists = snapshot.exists;
-
   const now = serverTimestamp();
   const payload: any = {
     ...data,
     updatedAt: now,
+    createdAt: now,
   };
 
   if (uid) {
     payload.updatedBy = uid;
+    payload.createdBy = uid;
   }
 
-  if (!exists) {
-    payload.createdAt = now;
-    if (uid) {
-      payload.createdBy = uid;
-    }
-  }
-
-  await setDoc(ref, payload, { merge: true });
+  // Fire-and-forget write — merge:true preserves existing fields on updates
+  setDoc(ref, payload, { merge: true }).catch(err =>
+    console.error('[projectBudgetCategories] set failed:', err)
+  );
   trackPendingWrite();
 }

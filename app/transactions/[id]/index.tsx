@@ -3,7 +3,6 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
-import { AppButton } from '../../../src/components/AppButton';
 import { AppScrollView } from '../../../src/components/AppScrollView';
 import { TitledCard } from '../../../src/components/TitledCard';
 import { BottomSheet } from '../../../src/components/BottomSheet';
@@ -14,6 +13,8 @@ import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
 import type { ItemCardProps } from '../../../src/components/ItemCard';
+import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
+import { ListControlBar } from '../../../src/components/ListControlBar';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -46,6 +47,22 @@ type TransactionDetailParams = {
 };
 
 type ItemPickerTab = 'suggested' | 'project' | 'outside';
+
+type TransactionItemSortMode =
+  | 'alphabetical-asc'
+  | 'alphabetical-desc'
+  | 'price-desc'
+  | 'price-asc'
+  | 'created-desc'
+  | 'created-asc';
+
+type TransactionItemFilterMode =
+  | 'all'
+  | 'bookmarked'
+  | 'no-sku'
+  | 'no-name'
+  | 'no-price'
+  | 'no-image';
 
 function formatMoney(cents: number | null | undefined): string {
   if (typeof cents !== 'number') return '—';
@@ -82,6 +99,18 @@ export default function TransactionDetailScreen() {
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+
+  // Sort/filter/search state
+  const [sortMode, setSortMode] = useState<TransactionItemSortMode>('created-desc');
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [filterMode, setFilterMode] = useState<TransactionItemFilterMode>('all');
+  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Bulk selection state
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [bulkMenuVisible, setBulkMenuVisible] = useState(false);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -154,6 +183,46 @@ export default function TransactionDetailScreen() {
 
   const isCanonical = isCanonicalInventorySaleTransaction(transaction);
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
+
+  // Filtered and sorted transaction items
+  const filteredAndSortedItems = useMemo(() => {
+    let result = linkedItems;
+
+    // Apply filter
+    result = result.filter((item) => {
+      if (filterMode === 'bookmarked') return Boolean(item.bookmark);
+      if (filterMode === 'no-sku') return !item.sku?.trim();
+      if (filterMode === 'no-name') return !item.name?.trim();
+      if (filterMode === 'no-price') return !item.purchasePriceCents || item.purchasePriceCents === 0;
+      if (filterMode === 'no-image') return !item.images || item.images.length === 0;
+      return true; // 'all'
+    });
+
+    // Apply search
+    const needle = searchQuery.trim().toLowerCase();
+    if (needle) {
+      result = result.filter((item) => {
+        const haystack = [
+          item.name ?? '',
+          item.sku ?? '',
+          item.source ?? '',
+          item.notes ?? '',
+        ].join(' ').toLowerCase();
+        return haystack.includes(needle);
+      });
+    }
+
+    // Apply sort
+    return [...result].sort((a, b) => {
+      if (sortMode === 'alphabetical-asc') return (a.name ?? '').localeCompare(b.name ?? '');
+      if (sortMode === 'alphabetical-desc') return (b.name ?? '').localeCompare(a.name ?? '');
+      if (sortMode === 'price-desc') return (b.purchasePriceCents ?? 0) - (a.purchasePriceCents ?? 0);
+      if (sortMode === 'price-asc') return (a.purchasePriceCents ?? 0) - (b.purchasePriceCents ?? 0);
+      if (sortMode === 'created-asc') return String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? ''));
+      return String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')); // 'created-desc'
+    });
+  }, [linkedItems, searchQuery, sortMode, filterMode]);
+
   const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
@@ -218,9 +287,7 @@ export default function TransactionDetailScreen() {
     };
 
     const nextAttachments = [...currentAttachments, newAttachment].slice(0, 10);
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] update receipt attachments failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
@@ -242,9 +309,7 @@ export default function TransactionDetailScreen() {
       nextAttachments[0] = { ...nextAttachments[0], isPrimary: true };
     }
 
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] remove receipt attachment failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
   const handleSetPrimaryReceiptAttachment = (attachment: AttachmentRef) => {
@@ -255,9 +320,7 @@ export default function TransactionDetailScreen() {
       isPrimary: att.url === attachment.url,
     }));
 
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] set primary receipt failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
   const handlePickOtherImage = async (localUri: string, kind: AttachmentKind) => {
@@ -281,9 +344,7 @@ export default function TransactionDetailScreen() {
     };
 
     const nextImages = [...currentImages, newImage].slice(0, 5);
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] update other images failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
@@ -305,9 +366,7 @@ export default function TransactionDetailScreen() {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
 
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] remove other image failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
   const handleSetPrimaryOtherImage = (attachment: AttachmentRef) => {
@@ -318,9 +377,7 @@ export default function TransactionDetailScreen() {
       isPrimary: img.url === attachment.url,
     }));
 
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] set primary other image failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
   const handleAddSelectedItems = useCallback(() => {
@@ -377,10 +434,179 @@ export default function TransactionDetailScreen() {
 
   const handleRemoveLinkedItem = (itemId: string) => {
     if (!accountId) return;
-    updateItem(accountId, itemId, { transactionId: null }).catch(err => {
-      console.warn('[transactions] remove linked item failed:', err);
+    updateItem(accountId, itemId, { transactionId: null });
+  };
+
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedItemIds.size === filteredAndSortedItems.length) {
+      setSelectedItemIds(new Set()); // Deselect all
+    } else {
+      setSelectedItemIds(new Set(filteredAndSortedItems.map(item => item.id))); // Select all
+    }
+  };
+
+  const handleItemSelectionChange = (itemId: string, selected: boolean) => {
+    setSelectedItemIds(prev => {
+      const next = new Set(prev);
+      if (selected) next.add(itemId);
+      else next.delete(itemId);
+      return next;
     });
   };
+
+  // Bulk operation handlers (placeholders for Phase D)
+  const handleBulkSetSpace = () => {
+    console.log('[bulk] Set space for', selectedItemIds.size, 'items');
+    setBulkMenuVisible(false);
+  };
+
+  const handleBulkSetStatus = () => {
+    console.log('[bulk] Set status for', selectedItemIds.size, 'items');
+    setBulkMenuVisible(false);
+  };
+
+  const handleBulkSetSKU = () => {
+    console.log('[bulk] Set SKU for', selectedItemIds.size, 'items');
+    setBulkMenuVisible(false);
+  };
+
+  const handleBulkRemove = () => {
+    console.log('[bulk] Remove', selectedItemIds.size, 'items from transaction');
+    setBulkMenuVisible(false);
+  };
+
+  const handleBulkDelete = () => {
+    console.log('[bulk] Delete', selectedItemIds.size, 'items');
+    setBulkMenuVisible(false);
+  };
+
+  // Enhanced item menu handlers (Phase C)
+  const handleDuplicateItem = (itemId: string) => {
+    console.log('[item] Make copies:', itemId);
+  };
+
+  const handleSetSpace = (itemId: string) => {
+    console.log('[item] Set space:', itemId);
+  };
+
+  const handleSetStatus = (itemId: string, status: string) => {
+    console.log('[item] Set status:', itemId, status);
+  };
+
+  const handleSellToDesign = (itemId: string) => {
+    console.log('[item] Sell to Design Business:', itemId);
+  };
+
+  const handleSellToProject = (itemId: string) => {
+    console.log('[item] Sell to Project:', itemId);
+  };
+
+  const handleMoveToDesign = (itemId: string) => {
+    console.log('[item] Move to Design Business:', itemId);
+  };
+
+  const handleMoveToProject = (itemId: string) => {
+    console.log('[item] Move to Project:', itemId);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    console.log('[item] Delete:', itemId);
+  };
+
+  // Enhanced item context menu (Phase C)
+  const getItemMenuItems = useCallback((item: ScopedItem): AnchoredMenuItem[] => [
+    {
+      label: 'View item',
+      onPress: () => router.push(`/items/${item.id}`),
+      icon: 'open-in-new',
+    },
+    {
+      label: 'Edit',
+      onPress: () => router.push(`/items/${item.id}/edit`),
+      icon: 'edit',
+    },
+    {
+      label: 'Make copies',
+      onPress: () => handleDuplicateItem(item.id),
+      icon: 'content-copy',
+    },
+    {
+      label: 'Set space',
+      onPress: () => handleSetSpace(item.id),
+      icon: 'place',
+    },
+    {
+      label: 'Remove from transaction',
+      onPress: () => handleRemoveLinkedItem(item.id),
+      icon: 'remove-circle-outline',
+      destructive: true,
+    },
+    {
+      label: 'Status',
+      subactions: [
+        {
+          key: 'to-purchase',
+          label: 'To Purchase',
+          onPress: () => handleSetStatus(item.id, 'to-purchase'),
+        },
+        {
+          key: 'purchased',
+          label: 'Purchased',
+          onPress: () => handleSetStatus(item.id, 'purchased'),
+        },
+        {
+          key: 'to-return',
+          label: 'To Return',
+          onPress: () => handleSetStatus(item.id, 'to-return'),
+        },
+        {
+          key: 'returned',
+          label: 'Returned',
+          onPress: () => handleSetStatus(item.id, 'returned'),
+        },
+      ],
+      selectedSubactionKey: item.status ?? undefined,
+    },
+    {
+      label: 'Sell',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'sell-to-design',
+          label: 'Sell to Design Business',
+          onPress: () => handleSellToDesign(item.id),
+        },
+        {
+          key: 'sell-to-project',
+          label: 'Sell to Project',
+          onPress: () => handleSellToProject(item.id),
+        },
+      ],
+    },
+    {
+      label: 'Move',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'move-to-design',
+          label: 'Move to Design Business',
+          onPress: () => handleMoveToDesign(item.id),
+        },
+        {
+          key: 'move-to-project',
+          label: 'Move to Project',
+          onPress: () => handleMoveToProject(item.id),
+        },
+      ],
+    },
+    {
+      label: 'Delete',
+      onPress: () => handleDeleteItem(item.id),
+      icon: 'delete',
+      destructive: true,
+    },
+  ], [router]);
 
   const handleCreateItem = () => {
     router.push({
@@ -416,6 +642,161 @@ export default function TransactionDetailScreen() {
     },
   ], [handleCreateItem]);
 
+  // Sort menu items
+  const sortMenuItems = useMemo<AnchoredMenuItem[]>(() => [
+    {
+      label: 'Sort by',
+      subactions: [
+        {
+          key: 'alphabetical-asc',
+          label: 'Name A → Z',
+          onPress: () => {
+            setSortMode('alphabetical-asc');
+            setSortMenuVisible(false);
+          },
+        },
+        {
+          key: 'alphabetical-desc',
+          label: 'Name Z → A',
+          onPress: () => {
+            setSortMode('alphabetical-desc');
+            setSortMenuVisible(false);
+          },
+        },
+        {
+          key: 'price-desc',
+          label: 'Price high → low',
+          onPress: () => {
+            setSortMode('price-desc');
+            setSortMenuVisible(false);
+          },
+        },
+        {
+          key: 'price-asc',
+          label: 'Price low → high',
+          onPress: () => {
+            setSortMode('price-asc');
+            setSortMenuVisible(false);
+          },
+        },
+        {
+          key: 'created-desc',
+          label: 'Newest first',
+          onPress: () => {
+            setSortMode('created-desc');
+            setSortMenuVisible(false);
+          },
+        },
+        {
+          key: 'created-asc',
+          label: 'Oldest first',
+          onPress: () => {
+            setSortMode('created-asc');
+            setSortMenuVisible(false);
+          },
+        },
+      ],
+      selectedSubactionKey: sortMode,
+    },
+  ], [sortMode]);
+
+  // Filter menu items
+  const filterMenuItems = useMemo<AnchoredMenuItem[]>(() => [
+    {
+      key: 'all',
+      label: 'All items',
+      onPress: () => {
+        setFilterMode('all');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'all' ? 'check' : undefined,
+    },
+    {
+      key: 'bookmarked',
+      label: 'Bookmarked',
+      onPress: () => {
+        setFilterMode('bookmarked');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'bookmarked' ? 'check' : undefined,
+    },
+    {
+      key: 'no-sku',
+      label: 'No SKU',
+      onPress: () => {
+        setFilterMode('no-sku');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'no-sku' ? 'check' : undefined,
+    },
+    {
+      key: 'no-name',
+      label: 'No name',
+      onPress: () => {
+        setFilterMode('no-name');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'no-name' ? 'check' : undefined,
+    },
+    {
+      key: 'no-price',
+      label: 'No project price',
+      onPress: () => {
+        setFilterMode('no-price');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'no-price' ? 'check' : undefined,
+    },
+    {
+      key: 'no-image',
+      label: 'No image',
+      onPress: () => {
+        setFilterMode('no-image');
+        setFilterMenuVisible(false);
+      },
+      icon: filterMode === 'no-image' ? 'check' : undefined,
+    },
+  ], [filterMode]);
+
+  // Bulk menu items
+  const bulkMenuItems = useMemo<AnchoredMenuItem[]>(() => [
+    {
+      key: 'set-space',
+      label: 'Set space',
+      onPress: handleBulkSetSpace,
+    },
+    {
+      key: 'set-status',
+      label: 'Set status',
+      onPress: handleBulkSetStatus,
+    },
+    {
+      key: 'set-sku',
+      label: 'Set SKU',
+      onPress: handleBulkSetSKU,
+    },
+    {
+      key: 'remove-from-transaction',
+      label: 'Remove from transaction',
+      onPress: handleBulkRemove,
+      destructive: true,
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      onPress: handleBulkDelete,
+      destructive: true,
+    },
+    {
+      key: 'clear-selection',
+      label: 'Clear selection',
+      onPress: () => {
+        setSelectedItemIds(new Set());
+        setBulkMenuVisible(false);
+      },
+    },
+  ], [selectedItemIds.size]);
+
   const handleDelete = () => {
     if (!accountId || !id) return;
     Alert.alert('Delete transaction', 'This will permanently delete this transaction.', [
@@ -424,9 +805,7 @@ export default function TransactionDetailScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteTransaction(accountId, id).catch(err => {
-            console.warn('[transactions] delete failed:', err);
-          });
+          deleteTransaction(accountId, id);
           router.replace(fallbackTarget);
         },
       },
@@ -655,13 +1034,35 @@ export default function TransactionDetailScreen() {
                 </AppText>
               ) : null}
 
-              <View style={styles.actions}>
-                <AppButton title="Add Item" variant="secondary" onPress={() => setAddMenuVisible(true)} disabled={isCanonical} />
-              </View>
+              {selectedItemIds.size > 0 ? (
+                <ListControlBar
+                  actions={[
+                    { title: '', iconName: 'search', variant: 'secondary', onPress: () => setShowSearch(!showSearch) },
+                    { title: 'Sort', iconName: 'sort', variant: 'secondary', onPress: () => setSortMenuVisible(true), active: sortMode !== 'created-desc' },
+                    { title: 'Filter', iconName: 'filter-list', variant: 'secondary', onPress: () => setFilterMenuVisible(true), active: filterMode !== 'all' },
+                    { title: `${selectedItemIds.size} selected`, variant: 'secondary', iconName: 'more-horiz', onPress: () => setBulkMenuVisible(true) },
+                  ]}
+                  search={searchQuery}
+                  onChangeSearch={setSearchQuery}
+                  showSearch={showSearch}
+                />
+              ) : (
+                <ItemsListControlBar
+                  search={searchQuery}
+                  onChangeSearch={setSearchQuery}
+                  showSearch={showSearch}
+                  onToggleSearch={() => setShowSearch(!showSearch)}
+                  onSort={() => setSortMenuVisible(true)}
+                  isSortActive={sortMode !== 'created-desc'}
+                  onFilter={() => setFilterMenuVisible(true)}
+                  isFilterActive={filterMode !== 'all'}
+                  onAdd={() => setAddMenuVisible(true)}
+                />
+              )}
 
-              {linkedItems.length > 0 ? (
+              {filteredAndSortedItems.length > 0 ? (
                 <View style={styles.list}>
-                  {linkedItems.map((item) => {
+                  {filteredAndSortedItems.map((item) => {
                     const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
                     const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
                     const priceLabel = typeof item.purchasePriceCents === 'number'
@@ -672,23 +1073,14 @@ export default function TransactionDetailScreen() {
                       <ItemCard
                         key={item.id}
                         name={item.name?.trim() || 'Untitled item'}
-                        sku={item.sku}
+                        sku={item.sku ?? undefined}
                         priceLabel={priceLabel}
                         thumbnailUri={thumbnailUri}
-                        bookmarked={item.bookmarked}
+                        bookmarked={item.bookmark ?? undefined}
+                        selected={selectedItemIds.has(item.id)}
+                        onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
                         onPress={() => router.push(`/items/${item.id}`)}
-                        menuItems={[
-                          {
-                            label: 'View item',
-                            onPress: () => router.push(`/items/${item.id}`),
-                            icon: 'open-in-new',
-                          },
-                          {
-                            label: 'Remove from transaction',
-                            onPress: () => handleRemoveLinkedItem(item.id),
-                            icon: 'remove-circle-outline',
-                          },
-                        ]}
+                        menuItems={getItemMenuItems(item)}
                       />
                     );
                   })}
@@ -750,6 +1142,33 @@ export default function TransactionDetailScreen() {
               showLeadingIcons={true}
             />
 
+            {/* Sort menu */}
+            <BottomSheetMenuList
+              visible={sortMenuVisible}
+              onRequestClose={() => setSortMenuVisible(false)}
+              items={sortMenuItems}
+              title="Sort by"
+              showLeadingIcons={false}
+            />
+
+            {/* Filter menu */}
+            <BottomSheetMenuList
+              visible={filterMenuVisible}
+              onRequestClose={() => setFilterMenuVisible(false)}
+              items={filterMenuItems}
+              title="Filter items"
+              showLeadingIcons={false}
+            />
+
+            {/* Bulk actions menu */}
+            <BottomSheetMenuList
+              visible={bulkMenuVisible}
+              onRequestClose={() => setBulkMenuVisible(false)}
+              items={bulkMenuItems}
+              title="Bulk actions"
+              showLeadingIcons={false}
+            />
+
             {/* Add existing items picker modal */}
             <BottomSheet
               visible={isPickingItems}
@@ -770,7 +1189,7 @@ export default function TransactionDetailScreen() {
                   }}
                   selectedTab={pickerTab}
                   onTabChange={(next) => {
-                    setPickerTab(next);
+                    setPickerTab(next as ItemPickerTab);
                     setPickerSelectedIds([]);
                   }}
                   items={activePickerItems}
@@ -870,13 +1289,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingLeft: 8,
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
   list: {
     gap: 8,
+    marginTop: 12,
   },
   itemRow: {
     flexDirection: 'row',

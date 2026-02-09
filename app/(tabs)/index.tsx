@@ -13,7 +13,7 @@ import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { createRepository } from '../../src/data/repository';
 import { useAuthStore } from '../../src/auth/authStore';
 import { subscribeToBudgetCategories, type BudgetCategory } from '../../src/data/budgetCategoriesService';
-import { fetchProjectPreferencesMap, ensureProjectPreferences } from '../../src/data/projectPreferencesService';
+import { fetchProjectPreferencesMap, ensureProjectPreferences, type ProjectPreferences } from '../../src/data/projectPreferencesService';
 import { refreshProjectBudgetCategories, type ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
 import { refreshProjectBudgetProgress, type BudgetProgress } from '../../src/data/budgetProgressService';
 import { ProjectCard } from '../../src/components/ProjectCard';
@@ -134,13 +134,26 @@ function ProjectsList() {
     }
     const projectIds = projects.map((project) => project.id);
     fetchProjectPreferencesMap({ accountId, userId, projectIds })
-      .then((prefs) => {
+      .then(async (prefs) => {
         setProjectPreferences(prefs);
-        projectIds.forEach((projectId) => {
-          if (!prefs[projectId]) {
-            void ensureProjectPreferences(accountId, projectId);
-          }
+
+        const missingIds = projectIds.filter((id) => !prefs[id]);
+        if (missingIds.length === 0) return;
+
+        const results = await Promise.all(
+          missingIds.map((id) =>
+            ensureProjectPreferences(accountId, id).catch(() => null)
+          )
+        );
+
+        const seeded: Record<string, ProjectPreferences> = {};
+        results.forEach((r) => {
+          if (r) seeded[r.projectId] = r;
         });
+
+        if (Object.keys(seeded).length > 0) {
+          setProjectPreferences((prev) => ({ ...prev, ...seeded }));
+        }
       })
       .catch(() => {
         setProjectPreferences({});

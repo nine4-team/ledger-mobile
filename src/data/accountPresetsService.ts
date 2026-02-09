@@ -74,21 +74,21 @@ export async function refreshAccountPresets(
   return { ...(snapshot.data() as object), id: snapshot.id } as AccountPresets;
 }
 
-export async function updateAccountPresets(
+export function updateAccountPresets(
   accountId: string,
   data: Partial<Omit<AccountPresets, 'id' | 'accountId' | 'createdAt' | 'updatedAt'>>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/presets/default`),
     {
       ...data,
       updatedAt: now,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[accountPresets] updateAccountPresets failed:', err));
   trackPendingWrite();
 }

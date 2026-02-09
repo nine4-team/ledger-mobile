@@ -57,19 +57,19 @@ export function subscribeToProject(
   return repo.subscribe(projectId, onChange);
 }
 
-export async function updateProject(
+export function updateProject(
   accountId: string,
   projectId: string,
   data: Partial<Project>
-): Promise<void> {
+): void {
   const repo = createRepository<Project>(`accounts/${accountId}/projects`, 'online');
-  await repo.upsert(projectId, {
+  repo.upsert(projectId, {
     ...data,
     updatedAt: serverTimestamp(),
   });
 }
 
-export async function deleteProject(accountId: string, projectId: string): Promise<void> {
+export function deleteProject(accountId: string, projectId: string): void {
   const repo = createRepository<Project>(`accounts/${accountId}/projects`, 'online');
-  await repo.delete(projectId);
+  repo.delete(projectId);
 }

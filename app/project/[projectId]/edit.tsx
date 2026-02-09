@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
@@ -43,6 +43,7 @@ export default function EditProjectScreen() {
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [projectBudgetCategories, setProjectBudgetCategories] = useState<Record<string, ProjectBudgetCategory>>({});
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | null>>({});
+  const initialBudgets = useRef<Record<string, number | null>>({});
 
   // Loading state
   const [isLoadingProject, setIsLoadingProject] = useState(true);
@@ -80,6 +81,10 @@ export default function EditProjectScreen() {
       });
       setProjectBudgetCategories(budgetsMap);
       setLocalBudgets(budgets);
+      // Store initial budgets on first load only
+      if (Object.keys(initialBudgets.current).length === 0) {
+        initialBudgets.current = { ...budgets };
+      }
       setIsLoadingProjectBudgets(false);
     });
     return unsubscribe;
@@ -169,14 +174,14 @@ export default function EditProjectScreen() {
           const mediaState = resolveAttachmentState(selectedImage!);
           if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
             updateProject(accountId, projectId, { mainImageUrl: mediaState.record.remoteUrl })
-              .catch(err => console.error('[projects] update mainImageUrl failed:', err));
+;
           }
         } catch (err) {
           console.error('[projects] image upload failed:', err);
         }
       } else if (imageRemoved) {
         updateProject(accountId, projectId, { mainImageUrl: null })
-          .catch(err => console.error('[projects] clear mainImageUrl failed:', err));
+;
       }
 
       // 3. Save changed budget categories (fire-and-forget)

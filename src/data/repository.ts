@@ -5,8 +5,8 @@
 export interface Repository<T> {
   list(): Promise<T[]>;
   get(id: string): Promise<T | null>;
-  upsert(id: string, data: Partial<T>): Promise<void>;
-  delete(id: string): Promise<void>;
+  upsert(id: string, data: Partial<T>): void;
+  delete(id: string): void;
   
   /**
    * Subscribe to real-time updates for a single document.
@@ -110,19 +110,19 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     return { ...(snapshot.data() as object), id: snapshot.id } as T;
   }
 
-  async upsert(id: string, data: Partial<T>): Promise<void> {
+  upsert(id: string, data: Partial<T>): void {
     if (!isFirebaseConfigured || !db) {
       return;
     }
-    await setDoc(doc(db, `${this.collectionPath}/${id}`), data as object, { merge: true });
+    setDoc(doc(db, `${this.collectionPath}/${id}`), data as object, { merge: true }).catch(err => console.error('[repository] upsert failed:', err));
     trackPendingWrite();
   }
 
-  async delete(id: string): Promise<void> {
+  delete(id: string): void {
     if (!isFirebaseConfigured || !db) {
       return;
     }
-    await deleteDoc(doc(db, `${this.collectionPath}/${id}`));
+    deleteDoc(doc(db, `${this.collectionPath}/${id}`)).catch(err => console.error('[repository] delete failed:', err));
     trackPendingWrite();
   }
 

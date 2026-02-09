@@ -106,16 +106,16 @@ export function createSpaceTemplate(
   return docRef.id;
 }
 
-export async function updateSpaceTemplate(
+export function updateSpaceTemplate(
   accountId: string,
   templateId: string,
   data: Partial<SpaceTemplate>
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/presets/default/spaceTemplates/${templateId}`),
     {
       ...data,
@@ -123,27 +123,27 @@ export async function updateSpaceTemplate(
       updatedAt: now,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[spaceTemplates] updateSpaceTemplate failed:', err));
   trackPendingWrite();
 }
 
-export async function setSpaceTemplateArchived(
+export function setSpaceTemplateArchived(
   accountId: string,
   templateId: string,
   isArchived: boolean
-): Promise<void> {
-  await updateSpaceTemplate(accountId, templateId, { isArchived });
+): void {
+  updateSpaceTemplate(accountId, templateId, { isArchived });
 }
 
-export async function setSpaceTemplateOrder(
+export function setSpaceTemplateOrder(
   accountId: string,
   orderedIds: string[]
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
-  await Promise.all(
+  Promise.all(
     orderedIds.map((id, index) =>
       setDoc(
         doc(db, `accounts/${accountId}/presets/default/spaceTemplates/${id}`),
@@ -154,6 +154,6 @@ export async function setSpaceTemplateOrder(
         { merge: true }
       )
     )
-  );
+  ).catch(err => console.error('[spaceTemplates] setSpaceTemplateOrder failed:', err));
   trackPendingWrite();
 }

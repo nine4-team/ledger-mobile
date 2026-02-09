@@ -110,16 +110,16 @@ export async function listItemsByProject(
   return snapshot.docs.map((doc: any) => normalizeItemFromFirestore(doc.data(), doc.id));
 }
 
-export async function updateItem(
+export function updateItem(
   accountId: string,
   itemId: string,
   data: ItemWrite
-): Promise<void> {
+): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
   const uid = auth?.currentUser?.uid ?? null;
-  await setDoc(
+  setDoc(
     doc(db, `accounts/${accountId}/items/${itemId}`),
     {
       ...normalizeItemWrite(data),
@@ -127,7 +127,7 @@ export async function updateItem(
       updatedBy: uid,
     },
     { merge: true }
-  );
+  ).catch(err => console.error('[items] updateItem failed:', err));
   trackPendingWrite();
 }
 
@@ -154,11 +154,11 @@ export function createItem(
   return docRef.id;
 }
 
-export async function deleteItem(accountId: string, itemId: string): Promise<void> {
+export function deleteItem(accountId: string, itemId: string): void {
   if (!isFirebaseConfigured || !db) {
     return;
   }
-  await deleteDoc(doc(db, `accounts/${accountId}/items/${itemId}`));
+  deleteDoc(doc(db, `accounts/${accountId}/items/${itemId}`)).catch(err => console.error('[items] deleteItem failed:', err));
   trackPendingWrite();
 }
 

@@ -57,7 +57,6 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
     Record<string, ProjectBudgetCategory>
   >({});
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | null>>({});
-  const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Loading and error states
@@ -182,34 +181,21 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
     setHasChanges(true);
   }, []);
 
-  // Save all budgets to Firestore
-  const handleSave = useCallback(async () => {
+  // Save all budgets to Firestore (fire-and-forget, navigate immediately)
+  const handleSave = useCallback(() => {
     if (!accountId || !projectId) return;
 
-    setIsSaving(true);
-    try {
-      // Save all enabled categories
-      const savePromises = Object.entries(localBudgets).map(([categoryId, budgetCents]) =>
-        setProjectBudgetCategory(accountId, projectId, categoryId, { budgetCents })
-      );
+    // Fire-and-forget writes — service handles errors via .catch()
+    Object.entries(localBudgets).forEach(([categoryId, budgetCents]) =>
+      setProjectBudgetCategory(accountId, projectId, categoryId, { budgetCents })
+    );
 
-      await Promise.all(savePromises);
+    // TODO: Delete disabled categories from Firestore
+    // This would require a delete function in projectBudgetCategoriesService
 
-      // TODO: Delete disabled categories from Firestore
-      // This would require a delete function in projectBudgetCategoriesService
-
-      Alert.alert('Success', 'Budget saved successfully');
-      setHasChanges(false);
-
-      // Navigate back
-      if (router.canGoBack()) {
-        router.back();
-      }
-    } catch (error) {
-      console.error('Failed to save budget:', error);
-      Alert.alert('Error', 'Failed to save budget. Please try again.');
-    } finally {
-      setIsSaving(false);
+    // Navigate back immediately — no waiting on Firestore writes
+    if (router.canGoBack()) {
+      router.back();
     }
   }, [accountId, projectId, localBudgets, router]);
 
@@ -321,14 +307,12 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
                           categoryName={category.name}
                           budgetCents={localBudgets[category.id]}
                           onChange={(cents) => handleBudgetChange(category.id, cents)}
-                          disabled={isSaving}
-                        />
+                          />
                         <AppButton
                           title="Remove"
                           variant="secondary"
                           onPress={() => handleDisableCategory(category.id)}
-                          disabled={isSaving}
-                          style={styles.removeButton}
+                            style={styles.removeButton}
                         />
                       </View>
                     </View>
@@ -377,7 +361,6 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
                         title="Enable"
                         variant="secondary"
                         onPress={() => handleEnableCategory(category.id)}
-                        disabled={isSaving}
                         style={styles.enableButton}
                       />
                     </View>
@@ -395,14 +378,12 @@ export function ProjectBudgetForm({ projectId }: ProjectBudgetFormProps) {
           title="Cancel"
           variant="secondary"
           onPress={handleCancel}
-          disabled={isSaving}
           style={styles.actionButton}
         />
         <AppButton
-          title={isSaving ? 'Saving...' : 'Save Budget'}
+          title="Save Budget"
           onPress={handleSave}
-          disabled={isSaving || !hasChanges}
-          loading={isSaving}
+          disabled={!hasChanges}
           style={styles.actionButton}
         />
       </FormActions>

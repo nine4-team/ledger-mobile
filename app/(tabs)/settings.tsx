@@ -457,11 +457,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         nextLogo = { url: upload.url, kind: 'image', storagePath: upload.storagePath };
       }
       // Fire-and-forget: saveBusinessProfile is a Firestore write
-      saveBusinessProfile(accountId, { businessName: trimmed, logo: nextLogo }, user?.uid ?? null).catch(
-        (error: any) => {
-          console.error('[Settings] Failed to save business profile:', error);
-        }
-      );
+      saveBusinessProfile(accountId, { businessName: trimmed, logo: nextLogo }, user?.uid ?? null);
       setProfileLogo(nextLogo);
       setLogoSelection(null);
       setProfileStatus('success');
@@ -545,8 +541,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
           categoryType: editingCategoryType,
           ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
         },
-      }).catch((error: any) => {
-        console.error('[Settings] Failed to update budget category:', error);
       });
     }
 
@@ -565,9 +559,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteBudgetCategory(accountId, categoryId).catch((error: any) => {
-            console.error('[Settings] Failed to delete budget category:', error);
-          });
+          deleteBudgetCategory(accountId, categoryId);
         },
       },
     ]);
@@ -576,17 +568,13 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const handleReorderBudgetCategories = (nextOrder: typeof budgetCategories) => {
     if (!accountId) return;
     const activeIds = nextOrder.map((category) => category.id);
-    setBudgetCategoryOrder(accountId, activeIds).catch((error: any) => {
-      console.error('[Settings] Failed to reorder budget categories:', error);
-    });
+    setBudgetCategoryOrder(accountId, activeIds);
   };
 
   const handleSaveVendorSlot = (index: number) => {
     if (!accountId) return;
     const next = vendorSlots.map((slot) => slot.value);
-    replaceVendorSlots(accountId, next).catch((error: any) => {
-      console.error('[Settings] Failed to save vendor slots:', error);
-    });
+    replaceVendorSlots(accountId, next);
   };
 
   const handleClearVendorSlot = (index: number) => {
@@ -618,9 +606,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
     replaceVendorSlots(
       accountId,
       next.map((slot) => slot.value)
-    ).catch((error: any) => {
-      console.error('[Settings] Failed to reorder vendors:', error);
-    });
+    );
   };
 
   const handleReorderVendorItems = (nextItems: TemplateToggleListItem[]) => {
@@ -689,8 +675,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         name: trimmed,
         notes: templateDraft.notes.trim() || null,
         checklists: templateDraft.checklists,
-      }).catch((error: any) => {
-        console.error('[Settings] Failed to update space template:', error);
       });
     }
     setEditingTemplateId(null);
@@ -699,17 +683,13 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
 
   const handleArchiveTemplate = (templateId: string, shouldArchive: boolean) => {
     if (!accountId) return;
-    setSpaceTemplateArchived(accountId, templateId, shouldArchive).catch((error: any) => {
-      console.error('[Settings] Failed to archive/unarchive space template:', error);
-    });
+    setSpaceTemplateArchived(accountId, templateId, shouldArchive);
   };
 
   const handleReorderTemplates = (nextOrder: typeof spaceTemplates) => {
     if (!accountId) return;
     const activeIds = nextOrder.filter((template) => !template.isArchived).map((template) => template.id);
-    setSpaceTemplateOrder(accountId, activeIds).catch((error: any) => {
-      console.error('[Settings] Failed to reorder space templates:', error);
-    });
+    setSpaceTemplateOrder(accountId, activeIds);
   };
 
   const handleAddChecklist = () => {
@@ -1372,8 +1352,6 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
                   categoryType,
                   excludeFromOverallBudget: next,
                 },
-              }).catch((error: any) => {
-                console.error('[Settings] Failed to toggle budget category exclude:', error);
               });
             }}
             onReorderItems={(nextItems) => {

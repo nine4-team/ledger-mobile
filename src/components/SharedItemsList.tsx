@@ -394,7 +394,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const handleBulkDelete = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
-      deleteItem(accountId, id).catch((err) => console.warn('[items] bulk delete failed:', err));
+      deleteItem(accountId, id);
     });
     setSelectedIds([]);
   }, [accountId, selectedIds]);
@@ -402,9 +402,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const handleBulkMoveToSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || !bulkSpaceId.trim()) return;
     selectedIds.forEach((id) => {
-      updateItem(accountId, id, { spaceId: bulkSpaceId.trim() }).catch((err) =>
-        console.warn('[items] bulk move to space failed:', err)
-      );
+      updateItem(accountId, id, { spaceId: bulkSpaceId.trim() });
     });
     setSelectedIds([]);
     setBulkSpaceId('');
@@ -413,9 +411,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const handleBulkRemoveFromSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
-      updateItem(accountId, id, { spaceId: null }).catch((err) =>
-        console.warn('[items] bulk remove from space failed:', err)
-      );
+      updateItem(accountId, id, { spaceId: null });
     });
     setSelectedIds([]);
   }, [accountId, selectedIds]);
@@ -619,7 +615,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            deleteItem(accountId, id).catch(err => console.warn('[items] delete failed:', err));
+            deleteItem(accountId, id);
             setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
           },
         },
@@ -875,7 +871,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                     onBookmarkPress: () => {
                       if (!accountId) return;
                       const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                      updateItem(accountId, item.id, { bookmark: next }).catch(err => console.warn('[items] update failed:', err));
+                      updateItem(accountId, item.id, { bookmark: next });
                     },
                     onPress: () => {
                       handleOpenItem(item.id);
@@ -916,7 +912,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
               onBookmarkPress={() => {
                 if (!accountId) return;
                 const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                updateItem(accountId, item.id, { bookmark: next }).catch(err => console.warn('[items] update failed:', err));
+                updateItem(accountId, item.id, { bookmark: next });
               }}
               onPress={() => {
                 handleOpenItem(item.id);

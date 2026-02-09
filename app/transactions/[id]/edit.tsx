@@ -142,9 +142,7 @@ export default function EditTransactionScreen() {
     const hasPrimary = currentAttachments.some((att) => att.isPrimary);
     const newAttachment: AttachmentRef = { url: result.attachmentRef.url, kind, isPrimary: !hasPrimary && kind === 'image' };
     const nextAttachments = [...currentAttachments, newAttachment].slice(0, 10);
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] update receipt attachments failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -155,17 +153,13 @@ export default function EditTransactionScreen() {
     if (!nextAttachments.some((att) => att.isPrimary) && nextAttachments.length > 0) {
       nextAttachments[0] = { ...nextAttachments[0], isPrimary: true };
     }
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] remove receipt attachment failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
   const handleSetPrimaryReceiptAttachment = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
     const nextAttachments = (transaction.receiptImages ?? []).map((att) => ({ ...att, isPrimary: att.url === attachment.url }));
-    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments }).catch(err => {
-      console.warn('[transactions] set primary receipt failed:', err);
-    });
+    updateTransaction(accountId, id, { receiptImages: nextAttachments, transactionImages: nextAttachments });
   };
 
   // Other image handlers
@@ -177,9 +171,7 @@ export default function EditTransactionScreen() {
     const hasPrimary = currentImages.some((img) => img.isPrimary);
     const newImage: AttachmentRef = { url: result.attachmentRef.url, kind, isPrimary: !hasPrimary && kind === 'image' };
     const nextImages = [...currentImages, newImage].slice(0, 5);
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] update other images failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
@@ -190,17 +182,13 @@ export default function EditTransactionScreen() {
     if (!nextImages.some((img) => img.isPrimary) && nextImages.length > 0) {
       nextImages[0] = { ...nextImages[0], isPrimary: true };
     }
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] remove other image failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
   const handleSetPrimaryOtherImage = (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
     const nextImages = (transaction.otherImages ?? []).map((img) => ({ ...img, isPrimary: img.url === attachment.url }));
-    updateTransaction(accountId, id, { otherImages: nextImages }).catch(err => {
-      console.warn('[transactions] set primary other image failed:', err);
-    });
+    updateTransaction(accountId, id, { otherImages: nextImages });
   };
 
   const handleSave = () => {
@@ -256,15 +244,11 @@ export default function EditTransactionScreen() {
       hasEmailReceipt,
       taxRatePct: taxRateValue,
       subtotalCents,
-    }).catch(err => {
-      console.warn('[transactions] save failed:', err);
     });
     if (categoryChanged && nextCategoryId) {
       Promise.all(
         linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
-      ).catch(err => {
-        console.warn('[transactions] category propagation failed:', err);
-      });
+      );
     }
     router.replace(fallbackTarget);
   };

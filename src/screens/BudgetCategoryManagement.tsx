@@ -145,9 +145,7 @@ export function BudgetCategoryManagement() {
     (reorderedCategories: BudgetCategory[]) => {
       if (!accountId) return;
       const orderedIds = reorderedCategories.map((c) => c.id);
-      setBudgetCategoryOrder(accountId, orderedIds).catch((error) => {
-        console.error('[BudgetCategoryManagement] Reorder failed:', error);
-      });
+      setBudgetCategoryOrder(accountId, orderedIds);
     },
     [accountId]
   );
@@ -156,9 +154,7 @@ export function BudgetCategoryManagement() {
   const handleDefaultCategoryChange = useCallback(
     (categoryId: string) => {
       if (!accountId) return;
-      updateAccountPresets(accountId, { defaultBudgetCategoryId: categoryId }).catch((error) => {
-        console.error('[BudgetCategoryManagement] Failed to update default category:', error);
-      });
+      updateAccountPresets(accountId, { defaultBudgetCategoryId: categoryId });
     },
     [accountId]
   );
@@ -177,9 +173,7 @@ export function BudgetCategoryManagement() {
             text: 'Archive',
             style: 'destructive',
             onPress: () => {
-              setBudgetCategoryArchived(accountId, category.id, true).catch((error) => {
-                console.error('[BudgetCategoryManagement] Archive failed:', error);
-              });
+              setBudgetCategoryArchived(accountId, category.id, true);
             },
           },
         ]
@@ -192,9 +186,7 @@ export function BudgetCategoryManagement() {
   const handleUnarchive = useCallback(
     (categoryId: string) => {
       if (!accountId) return;
-      setBudgetCategoryArchived(accountId, categoryId, false).catch((error) => {
-        console.error('[BudgetCategoryManagement] Unarchive failed:', error);
-      });
+      setBudgetCategoryArchived(accountId, categoryId, false);
     },
     [accountId]
   );
@@ -223,8 +215,6 @@ export function BudgetCategoryManagement() {
             categoryType: data.isItemized ? 'itemized' : data.isFee ? 'fee' : 'general',
             excludeFromOverallBudget: data.excludeFromOverallBudget,
           },
-        }).catch((error) => {
-          console.error('[BudgetCategoryManagement] Update failed:', error);
         });
       }
       setEditingState(null);

@@ -62,9 +62,7 @@ export function resolveItemMove(
       update.budgetCategoryId = budgetCategoryId;
     }
     if (Object.keys(update).length > 0) {
-      updateItem(accountId, itemId, update).catch((err) => {
-        console.warn('[items] updateItem failed:', err);
-      });
+      updateItem(accountId, itemId, update);
     }
     return { success: true };
   }
