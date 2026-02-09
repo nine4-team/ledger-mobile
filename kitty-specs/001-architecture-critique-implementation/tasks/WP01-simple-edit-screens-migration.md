@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Simple Edit Screens Migration
-lane: "planned"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: c969f7b10576fed880f5ff39d28a5fa35e7f016f
@@ -14,8 +14,8 @@ subtasks:
 - T005
 phase: Phase 2A - Edit Screen Migrations
 assignee: ''
-agent: "claude-orchestrator"
-shell_pid: "376"
+agent: "claude-fixer"
+shell_pid: "19771"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -597,3 +597,4 @@ Manual testing (T005) provides sufficient verification for form behavior changes
 - 2026-02-09T20:57:57Z – claude-sonnet – shell_pid=15640 – lane=for_review – Ready for review: Migrated 3 simple edit screens with change tracking. All screens skip writes when unchanged. Subscription protection added to project edit screen.
 - 2026-02-09T21:02:50Z – claude-orchestrator – shell_pid=376 – lane=doing – Started review via workflow command
 - 2026-02-09T21:12:20Z – claude-orchestrator – shell_pid=376 – lane=planned – Moved to planned
+- 2026-02-09T21:21:00Z – claude-fixer – shell_pid=19771 – lane=doing – Started implementation via workflow command
