@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Settings Budget Category Edit
-lane: "planned"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 0d298151592022fcdcc5596d7fe115049199aaa8
@@ -463,3 +463,4 @@ Manual testing (T010) provides sufficient verification for modal behavior.
 - 2026-02-09T22:53:45Z – claude-wp02 – shell_pid=97222 – lane=for_review – Ready for review: Added field-level change tracking to budget category edit. Only changed fields sent to updateBudgetCategory. No-change saves skip Firestore write. TypeScript passes with no new errors. Manual testing documented in prompt (T010).
 - 2026-02-09T22:56:12Z – claude-reviewer-3 – shell_pid=12578 – lane=doing – Started review via workflow command
 - 2026-02-09T23:02:07Z – claude-reviewer-3 – shell_pid=12578 – lane=planned – Moved to planned
+- 2026-02-09T23:07:45Z – claude-reviewer-3 – shell_pid=12578 – lane=for_review – Fixed: Removed try-catch block to match offline-first pattern. Direct call to updateBudgetCategory now matches existing codebase pattern. TypeScript passes with only pre-existing errors.
