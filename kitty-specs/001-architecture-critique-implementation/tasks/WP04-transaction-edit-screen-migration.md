@@ -1,28 +1,31 @@
 ---
-work_package_id: "WP04"
-subtasks:
-  - "T017"
-  - "T018"
-  - "T019"
-  - "T020"
-  - "T021"
-  - "T022"
-  - "T023"
-title: "Transaction Edit Screen Migration"
-phase: "Phase 2D - Edit Screen Migrations"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP04
+title: Transaction Edit Screen Migration
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 44138a3773cb9b0c00e927dd9b6b6f6540b01521
+created_at: '2026-02-09T23:56:48.359199+00:00'
+subtasks:
+- T017
+- T018
+- T019
+- T020
+- T021
+- T022
+- T023
+phase: Phase 2D - Edit Screen Migrations
+assignee: ''
+agent: ''
+shell_pid: "85892"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-09T08:45:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-09T08:45:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP04 - Transaction Edit Screen Migration
