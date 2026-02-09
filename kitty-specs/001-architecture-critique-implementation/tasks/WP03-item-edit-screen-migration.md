@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Item Edit Screen Migration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: c64b91de6acfeaa5d4c063c8d2d2c91eaaffabef
@@ -17,8 +17,8 @@ phase: Phase 2C - Edit Screen Migrations
 assignee: ''
 agent: "claude-reviewer-3"
 shell_pid: "59448"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-09T08:45:00Z'
   lane: planned
@@ -42,11 +42,88 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** - Reviewers add detailed feedback here when work needs changes. Implementation must address every item listed below before returning for re-review.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-09
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review. If you see feedback here, treat each item as a must-do before completion.]*
+# WP03 Review Feedback - Changes Requested
+
+Reviewer: claude-reviewer-3
+Date: 2026-02-09
+
+## Critical Issue: Incomplete Subscription Protection
+
+**Location**: [app/items/[id]/edit.tsx:126-145](app/items/[id]/edit.tsx#L126-L145)
+
+**Problem**: The subscription effect (lines 126-145) only updates the display strings for price fields, but **does NOT update the form values** via `form.setFields()`. This violates the spec requirement in T013.
+
+**Current Code**:
+```typescript
+useEffect(() => {
+  if (item && form.shouldAcceptSubscriptionData) {
+    // Only updates display strings - form values are NOT updated!
+    setPurchasePriceDisplay(...);
+    setProjectPriceDisplay(...);
+    setMarketValueDisplay(...);
+  }
+}, [item, form.shouldAcceptSubscriptionData]);
+```
+
+**Expected (per spec lines 408-442)**:
+```typescript
+useEffect(() => {
+  if (item && form.shouldAcceptSubscriptionData) {
+    // Update form values from subscription
+    form.setFields({
+      name: item.name || '',
+      source: item.source ?? null,
+      sku: item.sku ?? null,
+      status: item.status ?? null,
+      purchasePriceCents: item.purchasePriceCents ?? null,
+      projectPriceCents: item.projectPriceCents ?? null,
+      marketValueCents: item.marketValueCents ?? null,
+      notes: item.notes ?? null,
+      spaceId: item.spaceId ?? null,
+    });
+
+    // Update display strings too
+    setPurchasePriceDisplay(
+      item.purchasePriceCents !== null && item.purchasePriceCents !== undefined
+        ? formatCentsToDisplay(item.purchasePriceCents)
+        : ''
+    );
+    setProjectPriceDisplay(
+      item.projectPriceCents !== null && item.projectPriceCents !== undefined
+        ? formatCentsToDisplay(item.projectPriceCents)
+        : ''
+    );
+    setMarketValueDisplay(
+      item.marketValueCents !== null && item.marketValueCents !== undefined
+        ? formatCentsToDisplay(item.marketValueCents)
+        : ''
+    );
+  }
+}, [item, form.shouldAcceptSubscriptionData]);
+```
+
+**Why This Matters**: Without calling `form.setFields()`, the form values won't reflect subscription updates. The form will be stuck with the initial values from the hook initialization (line 65-77), and any subscription updates will only affect display strings, causing a disconnect between form state and displayed values.
+
+**Fix Required**: Add `form.setFields()` call at the start of the subscription effect to update all 9 form fields, then update display strings.
 
 ---
+
+## Summary
+
+- ✅ All 9 fields correctly migrated to `useEditForm<ItemFormValues>`
+- ✅ Price field handlers correctly convert display → cents → `setField()`
+- ✅ Save handler uses `getChangedFields()` for partial updates
+- ✅ No-change saves skip Firestore writes (line 192-196)
+- ✅ TypeScript compilation passes with no new errors
+- ✅ Offline-first pattern followed (no `await` on `updateItem`)
+- ❌ **Subscription effect incomplete - missing `form.setFields()` call**
+
+**Action Required**: Add `form.setFields()` call to the subscription effect before updating display strings.
+
 
 ## Markdown Formatting
 Wrap HTML/XML tags in backticks: `` `<div>` ``, `` `<script>` ``
@@ -703,3 +780,4 @@ Manual testing (T016) provides comprehensive verification for form behavior and 
 - 2026-02-09T21:22:48Z – claude-implementer – shell_pid=22113 – lane=doing – Assigned agent via workflow command
 - 2026-02-09T23:27:00Z – claude-implementer – shell_pid=22113 – lane=for_review – Ready for review: Migrated item edit screen to useEditForm hook with price field handling and change tracking
 - 2026-02-09T23:33:41Z – claude-reviewer-3 – shell_pid=59448 – lane=doing – Started review via workflow command
+- 2026-02-09T23:39:03Z – claude-reviewer-3 – shell_pid=59448 – lane=planned – Moved to planned
