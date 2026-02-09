@@ -6,6 +6,7 @@ import { AppText } from '../../../src/components/AppText';
 import { AppButton } from '../../../src/components/AppButton';
 import { AppScrollView } from '../../../src/components/AppScrollView';
 import { TitledCard } from '../../../src/components/TitledCard';
+import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import { NotesSection } from '../../../src/components/NotesSection';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
@@ -80,6 +81,7 @@ export default function TransactionDetailScreen() {
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -392,6 +394,28 @@ export default function TransactionDetailScreen() {
     });
   };
 
+  const addMenuItems: AnchoredMenuItem[] = useMemo(() => [
+    {
+      key: 'create',
+      label: 'Create Item',
+      icon: 'add' as const,
+      onPress: handleCreateItem,
+    },
+    {
+      key: 'add-existing',
+      label: 'Add Existing Items',
+      icon: 'playlist-add' as const,
+      onPress: () => {
+        setAddMenuVisible(false);
+        setTimeout(() => {
+          setIsPickingItems(true);
+          setPickerTab('suggested');
+          setPickerSelectedIds([]);
+        }, 300);
+      },
+    },
+  ], [handleCreateItem]);
+
   const handleDelete = () => {
     if (!accountId || !id) return;
     Alert.alert('Delete transaction', 'This will permanently delete this transaction.', [
@@ -625,13 +649,6 @@ export default function TransactionDetailScreen() {
 
             {/* Transaction Items Section */}
             <TitledCard title="Transaction Items">
-              {itemizationEnabled && (
-                <View style={styles.infoRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Itemization enabled
-                  </AppText>
-                </View>
-              )}
               {!itemizationEnabled && linkedItems.length > 0 ? (
                 <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
                   Itemization is off, but this transaction already has items.
@@ -639,48 +656,8 @@ export default function TransactionDetailScreen() {
               ) : null}
 
               <View style={styles.actions}>
-                <AppButton title="Create Item" variant="secondary" onPress={handleCreateItem} disabled={isCanonical} />
-                <AppButton
-                  title={isPickingItems ? 'Close Picker' : 'Add Existing Items'}
-                  variant="secondary"
-                  onPress={() => {
-                    setIsPickingItems((prev) => !prev);
-                    setPickerSelectedIds([]);
-                    setPickerTab('suggested');
-                  }}
-                  disabled={isCanonical}
-                />
+                <AppButton title="Add Item" variant="secondary" onPress={() => setAddMenuVisible(true)} disabled={isCanonical} />
               </View>
-
-              {isPickingItems ? (
-                <SharedItemPicker
-                  tabs={pickerTabOptions}
-                  tabCounts={{
-                    suggested: suggestedItems.length,
-                    ...(projectId ? { project: projectItems.length } : {}),
-                    outside: outsideItemsHook.items.length,
-                  }}
-                  selectedTab={pickerTab}
-                  onTabChange={(next) => {
-                    setPickerTab(next);
-                    setPickerSelectedIds([]);
-                  }}
-                  items={activePickerItems}
-                  selectedIds={pickerSelectedIds}
-                  onSelectionChange={setPickerSelectedIds}
-                  eligibilityCheck={{
-                    isEligible: (item) => item.transactionId !== id,
-                    getStatusLabel: (item) => {
-                      if (item.transactionId === id) return 'Already linked';
-                      if (item.transactionId) return 'Linked elsewhere';
-                      return undefined;
-                    },
-                  }}
-                  onAddSelected={handleAddSelectedItems}
-                  outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
-                  outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
-                />
-              ) : null}
 
               {linkedItems.length > 0 ? (
                 <View style={styles.list}>
@@ -763,6 +740,56 @@ export default function TransactionDetailScreen() {
               title="Transaction actions"
               showLeadingIcons={true}
             />
+
+            {/* Add item menu */}
+            <BottomSheetMenuList
+              visible={addMenuVisible}
+              onRequestClose={() => setAddMenuVisible(false)}
+              items={addMenuItems}
+              title="Add Item"
+              showLeadingIcons={true}
+            />
+
+            {/* Add existing items picker modal */}
+            <BottomSheet
+              visible={isPickingItems}
+              onRequestClose={() => {
+                setIsPickingItems(false);
+                setPickerSelectedIds([]);
+              }}
+              containerStyle={styles.pickerSheet}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Add Existing Items</AppText>
+                <SharedItemPicker
+                  tabs={pickerTabOptions}
+                  tabCounts={{
+                    suggested: suggestedItems.length,
+                    ...(projectId ? { project: projectItems.length } : {}),
+                    outside: outsideItemsHook.items.length,
+                  }}
+                  selectedTab={pickerTab}
+                  onTabChange={(next) => {
+                    setPickerTab(next);
+                    setPickerSelectedIds([]);
+                  }}
+                  items={activePickerItems}
+                  selectedIds={pickerSelectedIds}
+                  onSelectionChange={setPickerSelectedIds}
+                  eligibilityCheck={{
+                    isEligible: (item) => item.transactionId !== id,
+                    getStatusLabel: (item) => {
+                      if (item.transactionId === id) return 'Already linked';
+                      if (item.transactionId) return 'Linked elsewhere';
+                      return undefined;
+                    },
+                  }}
+                  onAddSelected={handleAddSelectedItems}
+                  outsideLoading={pickerTab === 'outside' ? outsideItemsHook.loading : false}
+                  outsideError={pickerTab === 'outside' ? outsideItemsHook.error : null}
+                />
+              </View>
+            </BottomSheet>
           </>
         ) : (
           <AppText variant="body">Transaction not found.</AppText>
@@ -858,13 +885,19 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
   warningText: {
     marginBottom: 12,
+  },
+  pickerSheet: {
+    height: '85%',
+  },
+  pickerContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  pickerTitle: {
+    textAlign: 'center',
   },
 });
