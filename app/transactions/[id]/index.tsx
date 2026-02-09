@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
@@ -1266,8 +1266,11 @@ export default function TransactionDetailScreen() {
             </StickyHeader>
 
             {filteredAndSortedItems.length > 0 ? (
-              <View style={styles.list}>
-                {filteredAndSortedItems.map((item) => {
+              <FlatList
+                data={filteredAndSortedItems}
+                contentContainerStyle={styles.list}
+                scrollEnabled={false}
+                renderItem={({ item }) => {
                   const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
                   const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
                   const priceLabel = typeof item.purchasePriceCents === 'number'
@@ -1276,7 +1279,6 @@ export default function TransactionDetailScreen() {
 
                   return (
                     <ItemCard
-                      key={item.id}
                       name={item.name?.trim() || 'Untitled item'}
                       sku={item.sku ?? undefined}
                       priceLabel={priceLabel}
@@ -1288,8 +1290,9 @@ export default function TransactionDetailScreen() {
                       menuItems={getItemMenuItems(item)}
                     />
                   );
-                })}
-              </View>
+                }}
+                keyExtractor={(item) => item.id}
+              />
             ) : (
               <View style={styles.emptyState}>
                 <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
@@ -1617,8 +1620,9 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   list: {
-    gap: 8,
+    gap: 10,
     marginTop: 12,
+    flexDirection: 'column',
   },
   itemRow: {
     flexDirection: 'row',
