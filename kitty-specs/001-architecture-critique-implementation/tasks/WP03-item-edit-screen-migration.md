@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Item Edit Screen Migration
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: c64b91de6acfeaa5d4c063c8d2d2c91eaaffabef
@@ -15,8 +15,8 @@ subtasks:
 - T016
 phase: Phase 2C - Edit Screen Migrations
 assignee: ''
-agent: "claude-implementer"
-shell_pid: "22113"
+agent: "claude-reviewer-3"
+shell_pid: "59448"
 review_status: ''
 reviewed_by: ''
 history:
@@ -702,3 +702,4 @@ Manual testing (T016) provides comprehensive verification for form behavior and 
 - 2026-02-09T08:45:00Z - system - lane=planned - Prompt created via /spec-kitty.tasks
 - 2026-02-09T21:22:48Z – claude-implementer – shell_pid=22113 – lane=doing – Assigned agent via workflow command
 - 2026-02-09T23:27:00Z – claude-implementer – shell_pid=22113 – lane=for_review – Ready for review: Migrated item edit screen to useEditForm hook with price field handling and change tracking
+- 2026-02-09T23:33:41Z – claude-reviewer-3 – shell_pid=59448 – lane=doing – Started review via workflow command
