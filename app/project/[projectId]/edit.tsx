@@ -39,13 +39,12 @@ export default function EditProjectScreen() {
 
   // Form state - basic fields migrated to useEditForm
   const [project, setProject] = useState<Project | null>(null);
-  const form = useEditForm<ProjectBasicFields>(
-    project ? {
-      name: project.name || '',
-      clientName: project.clientName || '',
-      description: project.description || ''
-    } : null
-  );
+  const initialData = useMemo(() => project ? {
+    name: project.name || '',
+    clientName: project.clientName || '',
+    description: project.description || ''
+  } : null, [project]);
+  const form = useEditForm<ProjectBasicFields>(initialData);
   const [selectedImage, setSelectedImage] = useState<AttachmentRef | null>(null);
   const [originalMainImageUrl, setOriginalMainImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
