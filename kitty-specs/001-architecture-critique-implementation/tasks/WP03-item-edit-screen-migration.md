@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Item Edit Screen Migration
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: c64b91de6acfeaa5d4c063c8d2d2c91eaaffabef
@@ -15,8 +15,8 @@ subtasks:
 - T016
 phase: Phase 2C - Edit Screen Migrations
 assignee: ''
-agent: "claude-implementer"
-shell_pid: "78865"
+agent: "claude-reviewer-4"
+shell_pid: "82747"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -783,3 +783,4 @@ Manual testing (T016) provides comprehensive verification for form behavior and 
 - 2026-02-09T23:39:03Z – claude-reviewer-3 – shell_pid=59448 – lane=planned – Moved to planned
 - 2026-02-09T23:51:08Z – claude-implementer – shell_pid=78865 – lane=doing – Started implementation via workflow command
 - 2026-02-09T23:52:21Z – claude-implementer – shell_pid=78865 – lane=for_review – Ready for review: Fixed subscription effect to call form.setFields() before updating display strings. All 9 form fields now properly synchronized with subscription updates.
+- 2026-02-09T23:54:09Z – claude-reviewer-4 – shell_pid=82747 – lane=doing – Started review via workflow command
