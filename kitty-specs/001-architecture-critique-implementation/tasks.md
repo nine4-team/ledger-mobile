@@ -27,11 +27,11 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP01-simple-edit-screens-migration.md`
 
 ### Included Subtasks
-- [ ] T001 Migrate project edit screen (`app/project/[projectId]/edit.tsx`) - 3 basic fields (name, clientName, description)
-- [ ] T002 [P] Migrate business inventory space edit (`app/business-inventory/spaces/[spaceId]/edit.tsx`) - 2 fields (name, notes)
-- [ ] T003 [P] Migrate project space edit (`app/project/[projectId]/spaces/[spaceId]/edit.tsx`) - 2 fields (name, notes)
-- [ ] T004 Verify TypeScript compilation passes with no new errors
-- [ ] T005 Manual verification: test each screen with single-field changes and no-change saves
+- [x] T001 Migrate project edit screen (`app/project/[projectId]/edit.tsx`) - 3 basic fields (name, clientName, description)
+- [x] T002 [P] Migrate business inventory space edit (`app/business-inventory/spaces/[spaceId]/edit.tsx`) - 2 fields (name, notes)
+- [x] T003 [P] Migrate project space edit (`app/project/[projectId]/spaces/[spaceId]/edit.tsx`) - 2 fields (name, notes)
+- [x] T004 Verify TypeScript compilation passes with no new errors
+- [x] T005 Manual verification: test each screen with single-field changes and no-change saves
 
 ### Implementation Notes
 - Project edit already has partial writes; migrate basic fields to `useEditForm` for consistency
