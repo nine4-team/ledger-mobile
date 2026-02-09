@@ -557,12 +557,8 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         return;
       }
 
-      // Fire-and-forget Firestore write (updateBudgetCategory returns void)
-      try {
-        updateBudgetCategory(accountId, editingCategoryId, changedFields);
-      } catch (err) {
-        console.error('Failed to update budget category:', err);
-      }
+      // Fire-and-forget Firestore write (offline-first)
+      updateBudgetCategory(accountId, editingCategoryId, changedFields);
     }
 
     handleCloseCategoryModal();
