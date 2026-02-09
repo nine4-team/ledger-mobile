@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Simple Edit Screens Migration
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: c969f7b10576fed880f5ff39d28a5fa35e7f016f
@@ -517,3 +517,4 @@ Manual testing (T005) provides sufficient verification for form behavior changes
 **Initial entry**:
 - 2026-02-09T08:45:00Z - system - lane=planned - Prompt created via /spec-kitty.tasks
 - 2026-02-09T19:39:50Z – claude-sonnet – shell_pid=15640 – lane=doing – Assigned agent via workflow command
+- 2026-02-09T20:57:57Z – claude-sonnet – shell_pid=15640 – lane=for_review – Ready for review: Migrated 3 simple edit screens with change tracking. All screens skip writes when unchanged. Subscription protection added to project edit screen.
