@@ -39,7 +39,13 @@ export default function EditProjectScreen() {
 
   // Form state - basic fields migrated to useEditForm
   const [project, setProject] = useState<Project | null>(null);
-  const form = useEditForm<ProjectBasicFields>(null);
+  const form = useEditForm<ProjectBasicFields>(
+    project ? {
+      name: project.name || '',
+      clientName: project.clientName || '',
+      description: project.description || ''
+    } : null
+  );
   const [selectedImage, setSelectedImage] = useState<AttachmentRef | null>(null);
   const [originalMainImageUrl, setOriginalMainImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,17 +74,6 @@ export default function EditProjectScreen() {
     });
     return unsubscribe;
   }, [accountId, projectId]);
-
-  // Update form values from subscription data (only when shouldAcceptSubscriptionData is true)
-  useEffect(() => {
-    if (project && form.shouldAcceptSubscriptionData) {
-      form.setFields({
-        name: project.name || '',
-        clientName: project.clientName || '',
-        description: project.description || '',
-      });
-    }
-  }, [project, form.shouldAcceptSubscriptionData]);
 
   // Project budget categories — accept subscription updates until the user
   // starts editing, then let user edits own localBudgets. This allows both

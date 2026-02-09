@@ -50,8 +50,9 @@ export default function EditSpaceScreen() {
 
     // Inline change detection - skip write if nothing changed
     const updates: Partial<Space> = {};
-    if (values.name.trim() !== space?.name) {
-      updates.name = values.name;
+    const normalizedName = values.name.trim();
+    if (normalizedName !== space?.name) {
+      updates.name = normalizedName;
     }
     const normalizedNotes = values.notes?.trim() || null;
     if (normalizedNotes !== (space?.notes ?? null)) {
