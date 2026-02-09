@@ -42,6 +42,8 @@ interface ScopeListenerEntry {
 interface ScopeListeners {
   entries: ScopeListenerEntry[];
   isAttached: boolean;
+  retryTimeout?: NodeJS.Timeout;
+  retryAttempt?: number;
 }
 
 /**
@@ -109,15 +111,21 @@ export class ScopedListenerManager {
 
   /**
    * Detach all listeners for a scope.
-   * 
+   *
    * This unsubscribes all active listeners and marks the scope as detached.
    * Factories are preserved, so listeners can be reattached later.
-   * 
+   *
    * @param scopeId - Scope identifier
    */
   detach(scopeId: ScopeId): void {
     const scope = this.scopes.get(scopeId);
     if (!scope) return;
+
+    // Clear any pending retry
+    if (scope.retryTimeout) {
+      clearTimeout(scope.retryTimeout);
+      scope.retryTimeout = undefined;
+    }
 
     // Unsubscribe all active listeners
     scope.entries.forEach((entry) => {
@@ -161,19 +169,53 @@ export class ScopedListenerManager {
 
   /**
    * Attach all listeners for a scope.
-   * 
+   *
    * Called internally when app resumes or when a scope is first attached.
-   * 
+   *
    * @param scopeId - Scope identifier
    */
   private attachScope(scopeId: ScopeId): void {
     const scope = this.scopes.get(scopeId);
     if (!scope || scope.isAttached) return;
 
+    // Clear any pending retry
+    if (scope.retryTimeout) {
+      clearTimeout(scope.retryTimeout);
+      scope.retryTimeout = undefined;
+    }
+
+    let anySucceeded = false;
+
     scope.entries.forEach((entry) => {
       entry.unsubscribe = this.safeAttachFactory(scopeId, entry.factory);
+      if (entry.unsubscribe) {
+        anySucceeded = true;
+      }
     });
-    scope.isAttached = true;
+
+    // Only mark as attached if at least one listener succeeded
+    if (anySucceeded) {
+      scope.isAttached = true;
+      scope.retryAttempt = 0;
+    } else {
+      // All listeners failed - schedule retry with exponential backoff
+      const attempt = (scope.retryAttempt ?? 0) + 1;
+      const maxAttempts = 3;
+
+      if (attempt <= maxAttempts) {
+        const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+        console.warn(`[ScopedListenerManager] All listeners failed for scope ${scopeId}. Retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})`);
+
+        scope.retryAttempt = attempt;
+        scope.retryTimeout = setTimeout(() => {
+          scope.retryTimeout = undefined;
+          this.attachScope(scopeId);
+        }, delay);
+      } else {
+        console.error(`[ScopedListenerManager] All listeners failed for scope ${scopeId} after ${maxAttempts} attempts. Giving up.`);
+        scope.retryAttempt = 0;
+      }
+    }
   }
 
   /**
@@ -247,11 +289,11 @@ export class ScopedListenerManager {
 
   /**
    * Cleanup all listeners and remove all scopes.
-   * 
+   *
    * Call this when the manager is no longer needed (e.g., app unmount).
    */
   cleanup(): void {
-    // Detach all scopes
+    // Detach all scopes (this also clears retry timeouts)
     this.scopes.forEach((_, scopeId) => {
       this.detach(scopeId);
     });

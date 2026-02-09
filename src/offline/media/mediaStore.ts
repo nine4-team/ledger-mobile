@@ -382,4 +382,42 @@ export async function cleanupOrphanedMedia(referencedMediaIds: string[]): Promis
   await persistState();
 }
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function cleanupStaleMedia(maxAgeMs = SEVEN_DAYS_MS): Promise<void> {
+  const { records, jobs } = useMediaStore.getState();
+  const now = Date.now();
+  const threshold = now - maxAgeMs;
+  const removedRecords: string[] = [];
+
+  // Find uploaded records older than threshold
+  Object.values(records).forEach((record) => {
+    if (record.status === 'uploaded' && record.createdAt < threshold) {
+      removedRecords.push(record.id);
+    }
+  });
+
+  // Delete local files and remove records
+  for (const recordId of removedRecords) {
+    const record = records[recordId];
+    if (FileSystem && MEDIA_CACHE_DIR && record?.localUri?.startsWith(MEDIA_CACHE_DIR)) {
+      try {
+        await FileSystem.deleteAsync(record.localUri, { idempotent: true });
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+    useMediaStore.getState().removeRecord(recordId);
+  }
+
+  // Remove associated completed jobs
+  Object.values(jobs).forEach((job) => {
+    if (removedRecords.includes(job.mediaId) && job.status === 'completed') {
+      useMediaStore.getState().removeJob(job.id);
+    }
+  });
+
+  await persistState();
+}
+
 export { useMediaStore };

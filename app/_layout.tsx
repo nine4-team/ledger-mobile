@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, AppState } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore } from '../src/auth/authStore';
 import { useAccountContextStore } from '../src/auth/accountContextStore';
@@ -10,7 +10,7 @@ import { LoadingScreen } from '../src/components/LoadingScreen';
 import { isAuthBypassEnabled } from '../src/auth/authConfig';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { startRequestDocTracking } from '../src/sync/requestDocTracker';
-import { hydrateMediaStore, registerUploadHandler } from '../src/offline/media/mediaStore';
+import { hydrateMediaStore, registerUploadHandler, processUploadQueue, cleanupStaleMedia } from '../src/offline/media/mediaStore';
 import { uploadMediaToFirebaseStorage } from '../src/offline/media/uploadHandler';
 import { useListStateStore } from '../src/data/listStateStore';
 import { useProjectContextStore } from '../src/data/projectContextStore';
@@ -39,11 +39,27 @@ export default function RootLayout() {
     hydrateAccountContext();
     initializeBilling();
     startRequestDocTracking();
-    hydrateMediaStore();
+    hydrateMediaStore().then(() => {
+      processUploadQueue().catch(console.error);
+      cleanupStaleMedia().catch(console.error);
+    });
     registerUploadHandler(uploadMediaToFirebaseStorage);
     hydrateListStateStore();
     hydrateProjectContext();
     return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    // Auto-retry pending uploads when app returns to foreground
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        processUploadQueue().catch(console.error);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
