@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Simple Edit Screens Migration
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: c969f7b10576fed880f5ff39d28a5fa35e7f016f
@@ -14,8 +14,8 @@ subtasks:
 - T005
 phase: Phase 2A - Edit Screen Migrations
 assignee: ''
-agent: "claude-fixer"
-shell_pid: "19771"
+agent: "claude-reviewer"
+shell_pid: "26790"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -599,3 +599,4 @@ Manual testing (T005) provides sufficient verification for form behavior changes
 - 2026-02-09T21:12:20Z – claude-orchestrator – shell_pid=376 – lane=planned – Moved to planned
 - 2026-02-09T21:21:00Z – claude-fixer – shell_pid=19771 – lane=doing – Started implementation via workflow command
 - 2026-02-09T21:23:27Z – claude-fixer – shell_pid=19771 – lane=for_review – Review feedback addressed: Fixed subscription update mechanism and whitespace handling
+- 2026-02-09T21:26:19Z – claude-reviewer – shell_pid=26790 – lane=doing – Started review via workflow command
