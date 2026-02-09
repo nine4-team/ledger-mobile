@@ -44,6 +44,7 @@ import {
   deleteBudgetCategory,
   updateBudgetCategory,
   setBudgetCategoryOrder,
+  type BudgetCategory,
 } from '../../src/data/budgetCategoriesService';
 import {
   subscribeToSpaceTemplates,
@@ -123,18 +124,7 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   const [userProfileError, setUserProfileError] = useState<string>('');
   const [userProfileEditorVisible, setUserProfileEditorVisible] = useState(false);
 
-  const [budgetCategories, setBudgetCategories] = useState<
-    {
-      id: string;
-      name: string;
-      isArchived?: boolean | null;
-      order?: number | null;
-      metadata?: {
-        categoryType?: 'standard' | 'general' | 'itemized' | 'fee';
-        excludeFromOverallBudget?: boolean;
-      } | null;
-    }[]
-  >([]);
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingCategoryType, setEditingCategoryType] = useState<'standard' | 'general' | 'itemized' | 'fee'>('standard');
@@ -534,14 +524,45 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         metadata: selectedCategoryType ? { categoryType: selectedCategoryType } : undefined,
       });
     } else {
-      updateBudgetCategory(accountId, editingCategoryId, {
-        name: trimmed,
-        slug: trimmed.toLowerCase().replace(/\s+/g, '-'),
-        metadata: {
-          categoryType: editingCategoryType,
-          ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
-        },
-      });
+      // Change detection for existing category edits
+      const changedFields: Partial<BudgetCategory> = {};
+
+      // Check if name changed
+      if (trimmed !== existingCategory?.name) {
+        changedFields.name = trimmed;
+      }
+
+      // Check if slug changed (derived from name)
+      const newSlug = trimmed.toLowerCase().replace(/\s+/g, '-');
+      const existingSlug = existingCategory?.slug ?? '';
+      if (newSlug !== existingSlug) {
+        changedFields.slug = newSlug;
+      }
+
+      // Check if metadata changed
+      const newMetadata = {
+        categoryType: editingCategoryType === 'standard' ? undefined : editingCategoryType,
+        ...(typeof existingExclude === 'boolean' ? { excludeFromOverallBudget: existingExclude } : {}),
+      };
+
+      // Deep comparison for metadata
+      if (JSON.stringify(newMetadata) !== JSON.stringify(existingCategory?.metadata ?? {})) {
+        changedFields.metadata = newMetadata;
+      }
+
+      // Skip write if no changes
+      if (Object.keys(changedFields).length === 0) {
+        // Close modal immediately (no write needed)
+        handleCloseCategoryModal();
+        return;
+      }
+
+      // Fire-and-forget Firestore write (updateBudgetCategory returns void)
+      try {
+        updateBudgetCategory(accountId, editingCategoryId, changedFields);
+      } catch (err) {
+        console.error('Failed to update budget category:', err);
+      }
     }
 
     handleCloseCategoryModal();
