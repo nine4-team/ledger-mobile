@@ -1,26 +1,29 @@
 ---
-work_package_id: "WP02"
-subtasks:
-  - "T006"
-  - "T007"
-  - "T008"
-  - "T009"
-  - "T010"
-title: "Settings Budget Category Edit"
-phase: "Phase 2B - Edit Screen Migrations"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP02
+title: Settings Budget Category Edit
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 0d298151592022fcdcc5596d7fe115049199aaa8
+created_at: '2026-02-09T21:00:19.325783+00:00'
+subtasks:
+- T006
+- T007
+- T008
+- T009
+- T010
+phase: Phase 2B - Edit Screen Migrations
+assignee: ''
+agent: ''
+shell_pid: "97222"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-09T08:45:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-09T08:45:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP02 - Settings Budget Category Edit
