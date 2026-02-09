@@ -54,9 +54,9 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
-# Dev working notes
-.plans/
-.troubleshooting/
+# Dev working notes (preserved for cross-session continuity)
+# .plans/
+# .troubleshooting/
 
 # Worktrees
 .worktrees/
