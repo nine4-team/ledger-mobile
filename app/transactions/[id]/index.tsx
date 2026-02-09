@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
+import { AppButton } from '../../../src/components/AppButton';
 import { AppScrollView } from '../../../src/components/AppScrollView';
 import { TitledCard } from '../../../src/components/TitledCard';
 import { BottomSheet } from '../../../src/components/BottomSheet';
@@ -12,9 +13,8 @@ import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList'
 import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
-import type { ItemCardProps } from '../../../src/components/ItemCard';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
-import { ListControlBar } from '../../../src/components/ListControlBar';
+import { SelectorCircle } from '../../../src/components/SelectorCircle';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -28,10 +28,12 @@ import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useUIKitTheme } from '../../../src/theme/ThemeProvider';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../src/data/scopeConfig';
 import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedListData';
-import { Item, updateItem } from '../../../src/data/itemsService';
+import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
 import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
+import { SpaceSelector } from '../../../src/components/SpaceSelector';
+import { getTextInputStyle } from '../../../src/ui/styles/forms';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../../src/data/transactionsService';
 import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
@@ -92,7 +94,6 @@ export default function TransactionDetailScreen() {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string; metadata?: any }>>({});
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
@@ -172,14 +173,6 @@ export default function TransactionDetailScreen() {
     if (scope === 'project' && projectId) return `/project/${projectId}?tab=transactions`;
     return '/(tabs)/index';
   }, [backTarget, projectId, scope]);
-
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace(fallbackTarget);
-  };
 
   const isCanonical = isCanonicalInventorySaleTransaction(transaction);
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
@@ -438,14 +431,6 @@ export default function TransactionDetailScreen() {
   };
 
   // Bulk selection handlers
-  const handleSelectAll = () => {
-    if (selectedItemIds.size === filteredAndSortedItems.length) {
-      setSelectedItemIds(new Set()); // Deselect all
-    } else {
-      setSelectedItemIds(new Set(filteredAndSortedItems.map(item => item.id))); // Select all
-    }
-  };
-
   const handleItemSelectionChange = (itemId: string, selected: boolean) => {
     setSelectedItemIds(prev => {
       const next = new Set(prev);
@@ -455,63 +440,281 @@ export default function TransactionDetailScreen() {
     });
   };
 
-  // Bulk operation handlers (placeholders for Phase D)
+  const handleSelectAll = () => {
+    if (selectedItemIds.size === filteredAndSortedItems.length) {
+      // Deselect all
+      setSelectedItemIds(new Set());
+    } else {
+      // Select all filtered items
+      setSelectedItemIds(new Set(filteredAndSortedItems.map(item => item.id)));
+    }
+  };
+
+  // Bulk operation state
+  const [bulkSpacePickerVisible, setBulkSpacePickerVisible] = useState(false);
+  const [bulkStatusPickerVisible, setBulkStatusPickerVisible] = useState(false);
+  const [bulkSKUInputVisible, setBulkSKUInputVisible] = useState(false);
+  const [bulkSKUValue, setBulkSKUValue] = useState('');
+
+  // Bulk operation handlers
   const handleBulkSetSpace = () => {
-    console.log('[bulk] Set space for', selectedItemIds.size, 'items');
     setBulkMenuVisible(false);
+    // Delay to allow menu to close
+    setTimeout(() => setBulkSpacePickerVisible(true), 300);
   };
 
   const handleBulkSetStatus = () => {
-    console.log('[bulk] Set status for', selectedItemIds.size, 'items');
     setBulkMenuVisible(false);
+    // Delay to allow menu to close
+    setTimeout(() => setBulkStatusPickerVisible(true), 300);
   };
 
   const handleBulkSetSKU = () => {
-    console.log('[bulk] Set SKU for', selectedItemIds.size, 'items');
     setBulkMenuVisible(false);
+    setBulkSKUValue('');
+    // Delay to allow menu to close
+    setTimeout(() => setBulkSKUInputVisible(true), 300);
   };
 
   const handleBulkRemove = () => {
-    console.log('[bulk] Remove', selectedItemIds.size, 'items from transaction');
+    if (!accountId || selectedItemIds.size === 0) return;
+
     setBulkMenuVisible(false);
+
+    Alert.alert(
+      'Remove from transaction',
+      `Remove ${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'} from this transaction?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            selectedItemIds.forEach((itemId) => {
+              updateItem(accountId, itemId, { transactionId: null });
+            });
+            setSelectedItemIds(new Set());
+          },
+        },
+      ]
+    );
   };
 
   const handleBulkDelete = () => {
-    console.log('[bulk] Delete', selectedItemIds.size, 'items');
+    if (!accountId || selectedItemIds.size === 0) return;
+
     setBulkMenuVisible(false);
+
+    Alert.alert(
+      'Delete items',
+      `Permanently delete ${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'}? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            selectedItemIds.forEach((itemId) => {
+              deleteItem(accountId, itemId);
+            });
+            setSelectedItemIds(new Set());
+          },
+        },
+      ]
+    );
   };
 
-  // Enhanced item menu handlers (Phase C)
+  const handleBulkSpaceConfirm = (spaceId: string | null) => {
+    if (!accountId || selectedItemIds.size === 0) return;
+
+    selectedItemIds.forEach((itemId) => {
+      updateItem(accountId, itemId, { spaceId });
+    });
+
+    setBulkSpacePickerVisible(false);
+    setSelectedItemIds(new Set());
+  };
+
+  const handleBulkStatusConfirm = (status: string) => {
+    if (!accountId || selectedItemIds.size === 0) return;
+
+    selectedItemIds.forEach((itemId) => {
+      updateItem(accountId, itemId, { status });
+    });
+
+    setBulkStatusPickerVisible(false);
+    setSelectedItemIds(new Set());
+  };
+
+  const handleBulkSKUConfirm = () => {
+    if (!accountId || selectedItemIds.size === 0) return;
+
+    const sku = bulkSKUValue.trim();
+    selectedItemIds.forEach((itemId) => {
+      updateItem(accountId, itemId, { sku });
+    });
+
+    setBulkSKUInputVisible(false);
+    setBulkSKUValue('');
+    setSelectedItemIds(new Set());
+  };
+
+  // Single item operation state
+  const [singleItemSpacePickerVisible, setSingleItemSpacePickerVisible] = useState(false);
+  const [singleItemOperationId, setSingleItemOperationId] = useState<string | null>(null);
+
+  // Enhanced item menu handlers (Phase C & D)
   const handleDuplicateItem = (itemId: string) => {
-    console.log('[item] Make copies:', itemId);
+    if (!accountId) return;
+
+    const item = filteredAndSortedItems.find((i) => i.id === itemId);
+    if (!item) return;
+
+    Alert.alert(
+      'Make copies',
+      'How many copies would you like to create?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: '1 copy',
+          onPress: () => {
+            createItem(accountId, {
+              name: item.name ?? '',
+              notes: item.notes,
+              status: item.status,
+              source: item.source,
+              sku: item.sku,
+              transactionId: item.transactionId,
+              purchasePriceCents: item.purchasePriceCents,
+              projectPriceCents: item.projectPriceCents,
+              marketValueCents: item.marketValueCents,
+              purchasedBy: item.purchasedBy,
+              budgetCategoryId: item.budgetCategoryId,
+              projectId: item.projectId,
+              spaceId: item.spaceId,
+            });
+          },
+        },
+        {
+          text: '3 copies',
+          onPress: () => {
+            const newItem = {
+              name: item.name ?? '',
+              notes: item.notes,
+              status: item.status,
+              source: item.source,
+              sku: item.sku,
+              transactionId: item.transactionId,
+              purchasePriceCents: item.purchasePriceCents,
+              projectPriceCents: item.projectPriceCents,
+              marketValueCents: item.marketValueCents,
+              purchasedBy: item.purchasedBy,
+              budgetCategoryId: item.budgetCategoryId,
+              projectId: item.projectId,
+              spaceId: item.spaceId,
+            };
+            for (let i = 0; i < 3; i++) {
+              createItem(accountId, newItem);
+            }
+          },
+        },
+        {
+          text: '5 copies',
+          onPress: () => {
+            const newItem = {
+              name: item.name ?? '',
+              notes: item.notes,
+              status: item.status,
+              source: item.source,
+              sku: item.sku,
+              transactionId: item.transactionId,
+              purchasePriceCents: item.purchasePriceCents,
+              projectPriceCents: item.projectPriceCents,
+              marketValueCents: item.marketValueCents,
+              purchasedBy: item.purchasedBy,
+              budgetCategoryId: item.budgetCategoryId,
+              projectId: item.projectId,
+              spaceId: item.spaceId,
+            };
+            for (let i = 0; i < 5; i++) {
+              createItem(accountId, newItem);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSetSpace = (itemId: string) => {
-    console.log('[item] Set space:', itemId);
+    setSingleItemOperationId(itemId);
+    setSingleItemSpacePickerVisible(true);
   };
 
   const handleSetStatus = (itemId: string, status: string) => {
-    console.log('[item] Set status:', itemId, status);
+    if (!accountId) return;
+    updateItem(accountId, itemId, { status });
   };
 
-  const handleSellToDesign = (itemId: string) => {
-    console.log('[item] Sell to Design Business:', itemId);
+  const handleSellToDesign = (_itemId: string) => {
+    if (!accountId) return;
+    Alert.alert(
+      'Sell to Design Business',
+      'This feature will be available soon.',
+      [{ text: 'OK' }]
+    );
   };
 
-  const handleSellToProject = (itemId: string) => {
-    console.log('[item] Sell to Project:', itemId);
+  const handleSellToProject = (_itemId: string) => {
+    if (!accountId) return;
+    Alert.alert(
+      'Sell to Project',
+      'This feature will be available soon.',
+      [{ text: 'OK' }]
+    );
   };
 
-  const handleMoveToDesign = (itemId: string) => {
-    console.log('[item] Move to Design Business:', itemId);
+  const handleMoveToDesign = (_itemId: string) => {
+    if (!accountId) return;
+    Alert.alert(
+      'Move to Design Business',
+      'This feature will be available soon.',
+      [{ text: 'OK' }]
+    );
   };
 
-  const handleMoveToProject = (itemId: string) => {
-    console.log('[item] Move to Project:', itemId);
+  const handleMoveToProject = (_itemId: string) => {
+    if (!accountId) return;
+    Alert.alert(
+      'Move to Project',
+      'This feature will be available soon.',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleDeleteItem = (itemId: string) => {
-    console.log('[item] Delete:', itemId);
+    if (!accountId) return;
+
+    Alert.alert(
+      'Delete item',
+      'Permanently delete this item? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteItem(accountId, itemId);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSingleItemSpaceConfirm = (spaceId: string | null) => {
+    if (!accountId || !singleItemOperationId) return;
+    updateItem(accountId, singleItemOperationId, { spaceId });
+    setSingleItemSpacePickerVisible(false);
+    setSingleItemOperationId(null);
   };
 
   // Enhanced item context menu (Phase C)
@@ -645,58 +848,58 @@ export default function TransactionDetailScreen() {
   // Sort menu items
   const sortMenuItems = useMemo<AnchoredMenuItem[]>(() => [
     {
-      label: 'Sort by',
-      subactions: [
-        {
-          key: 'alphabetical-asc',
-          label: 'Name A → Z',
-          onPress: () => {
-            setSortMode('alphabetical-asc');
-            setSortMenuVisible(false);
-          },
-        },
-        {
-          key: 'alphabetical-desc',
-          label: 'Name Z → A',
-          onPress: () => {
-            setSortMode('alphabetical-desc');
-            setSortMenuVisible(false);
-          },
-        },
-        {
-          key: 'price-desc',
-          label: 'Price high → low',
-          onPress: () => {
-            setSortMode('price-desc');
-            setSortMenuVisible(false);
-          },
-        },
-        {
-          key: 'price-asc',
-          label: 'Price low → high',
-          onPress: () => {
-            setSortMode('price-asc');
-            setSortMenuVisible(false);
-          },
-        },
-        {
-          key: 'created-desc',
-          label: 'Newest first',
-          onPress: () => {
-            setSortMode('created-desc');
-            setSortMenuVisible(false);
-          },
-        },
-        {
-          key: 'created-asc',
-          label: 'Oldest first',
-          onPress: () => {
-            setSortMode('created-asc');
-            setSortMenuVisible(false);
-          },
-        },
-      ],
-      selectedSubactionKey: sortMode,
+      key: 'alphabetical-asc',
+      label: 'Name A → Z',
+      onPress: () => {
+        setSortMode('alphabetical-asc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'alphabetical-asc' ? 'check' : undefined,
+    },
+    {
+      key: 'alphabetical-desc',
+      label: 'Name Z → A',
+      onPress: () => {
+        setSortMode('alphabetical-desc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'alphabetical-desc' ? 'check' : undefined,
+    },
+    {
+      key: 'price-desc',
+      label: 'Price high → low',
+      onPress: () => {
+        setSortMode('price-desc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'price-desc' ? 'check' : undefined,
+    },
+    {
+      key: 'price-asc',
+      label: 'Price low → high',
+      onPress: () => {
+        setSortMode('price-asc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'price-asc' ? 'check' : undefined,
+    },
+    {
+      key: 'created-desc',
+      label: 'Newest first',
+      onPress: () => {
+        setSortMode('created-desc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'created-desc' ? 'check' : undefined,
+    },
+    {
+      key: 'created-asc',
+      label: 'Oldest first',
+      onPress: () => {
+        setSortMode('created-asc');
+        setSortMenuVisible(false);
+      },
+      icon: sortMode === 'created-asc' ? 'check' : undefined,
     },
   ], [sortMode]);
 
@@ -874,15 +1077,6 @@ export default function TransactionDetailScreen() {
               </View>
             </View>
 
-            {/* Error Card */}
-            {error ? (
-              <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
-                <AppText variant="caption" style={[styles.errorText, getTextSecondaryStyle(uiKitTheme)]}>
-                  {error}
-                </AppText>
-              </View>
-            ) : null}
-
             {/* Receipts Section */}
             <MediaGallerySection
               title="Receipts"
@@ -1034,31 +1228,36 @@ export default function TransactionDetailScreen() {
                 </AppText>
               ) : null}
 
-              {selectedItemIds.size > 0 ? (
-                <ListControlBar
-                  actions={[
-                    { title: '', iconName: 'search', variant: 'secondary', onPress: () => setShowSearch(!showSearch) },
-                    { title: 'Sort', iconName: 'sort', variant: 'secondary', onPress: () => setSortMenuVisible(true), active: sortMode !== 'created-desc' },
-                    { title: 'Filter', iconName: 'filter-list', variant: 'secondary', onPress: () => setFilterMenuVisible(true), active: filterMode !== 'all' },
-                    { title: `${selectedItemIds.size} selected`, variant: 'secondary', iconName: 'more-horiz', onPress: () => setBulkMenuVisible(true) },
-                  ]}
-                  search={searchQuery}
-                  onChangeSearch={setSearchQuery}
-                  showSearch={showSearch}
-                />
-              ) : (
-                <ItemsListControlBar
-                  search={searchQuery}
-                  onChangeSearch={setSearchQuery}
-                  showSearch={showSearch}
-                  onToggleSearch={() => setShowSearch(!showSearch)}
-                  onSort={() => setSortMenuVisible(true)}
-                  isSortActive={sortMode !== 'created-desc'}
-                  onFilter={() => setFilterMenuVisible(true)}
-                  isFilterActive={filterMode !== 'all'}
-                  onAdd={() => setAddMenuVisible(true)}
-                />
-              )}
+              <ItemsListControlBar
+                search={searchQuery}
+                onChangeSearch={setSearchQuery}
+                showSearch={showSearch}
+                onToggleSearch={() => setShowSearch(!showSearch)}
+                onSort={() => setSortMenuVisible(true)}
+                isSortActive={sortMode !== 'created-desc'}
+                onFilter={() => setFilterMenuVisible(true)}
+                isFilterActive={filterMode !== 'all'}
+                onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+                leftElement={
+                  <TouchableOpacity
+                    onPress={handleSelectAll}
+                    style={[
+                      styles.selectButton,
+                      {
+                        backgroundColor: uiKitTheme.button.secondary.background,
+                        borderColor: uiKitTheme.border.primary,
+                      },
+                    ]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+                  >
+                    <SelectorCircle
+                      selected={selectedItemIds.size === filteredAndSortedItems.length}
+                      indicator="check"
+                    />
+                  </TouchableOpacity>
+                }
+              />
 
               {filteredAndSortedItems.length > 0 ? (
                 <View style={styles.list}>
@@ -1209,6 +1408,129 @@ export default function TransactionDetailScreen() {
                 />
               </View>
             </BottomSheet>
+
+            {/* Bulk space picker */}
+            <BottomSheet
+              visible={bulkSpacePickerVisible}
+              onRequestClose={() => setBulkSpacePickerVisible(false)}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Set Space</AppText>
+                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
+                  {selectedItemIds.size} item{selectedItemIds.size === 1 ? '' : 's'} selected
+                </AppText>
+                <SpaceSelector
+                  projectId={projectId ?? null}
+                  value={null}
+                  onChange={handleBulkSpaceConfirm}
+                  allowCreate={true}
+                  placeholder="Select space"
+                />
+              </View>
+            </BottomSheet>
+
+            {/* Bulk status picker */}
+            <BottomSheetMenuList
+              visible={bulkStatusPickerVisible}
+              onRequestClose={() => setBulkStatusPickerVisible(false)}
+              items={[
+                {
+                  key: 'to-purchase',
+                  label: 'To Purchase',
+                  onPress: () => handleBulkStatusConfirm('to-purchase'),
+                },
+                {
+                  key: 'purchased',
+                  label: 'Purchased',
+                  onPress: () => handleBulkStatusConfirm('purchased'),
+                },
+                {
+                  key: 'to-return',
+                  label: 'To Return',
+                  onPress: () => handleBulkStatusConfirm('to-return'),
+                },
+                {
+                  key: 'returned',
+                  label: 'Returned',
+                  onPress: () => handleBulkStatusConfirm('returned'),
+                },
+              ]}
+              title={`Set Status (${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'})`}
+              showLeadingIcons={false}
+            />
+
+            {/* Bulk SKU input */}
+            <BottomSheet
+              visible={bulkSKUInputVisible}
+              onRequestClose={() => {
+                setBulkSKUInputVisible(false);
+                setBulkSKUValue('');
+              }}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Set SKU</AppText>
+                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
+                  {selectedItemIds.size} item{selectedItemIds.size === 1 ? '' : 's'} selected
+                </AppText>
+                <View style={styles.inputContainer}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    SKU
+                  </AppText>
+                  <TextInput
+                    value={bulkSKUValue}
+                    onChangeText={setBulkSKUValue}
+                    placeholder="Enter SKU"
+                    placeholderTextColor={uiKitTheme.text.secondary}
+                    style={[
+                      styles.textInput,
+                      getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 }),
+                      getTextColorStyle(uiKitTheme.text.primary),
+                    ]}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleBulkSKUConfirm}
+                  />
+                </View>
+                <View style={styles.buttonRow}>
+                  <AppButton
+                    title="Cancel"
+                    variant="secondary"
+                    onPress={() => {
+                      setBulkSKUInputVisible(false);
+                      setBulkSKUValue('');
+                    }}
+                    style={styles.button}
+                  />
+                  <AppButton
+                    title="Apply"
+                    variant="primary"
+                    onPress={handleBulkSKUConfirm}
+                    style={styles.button}
+                  />
+                </View>
+              </View>
+            </BottomSheet>
+
+            {/* Single item space picker */}
+            <BottomSheet
+              visible={singleItemSpacePickerVisible}
+              onRequestClose={() => {
+                setSingleItemSpacePickerVisible(false);
+                setSingleItemOperationId(null);
+              }}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Set Space</AppText>
+                <SpaceSelector
+                  projectId={projectId ?? null}
+                  value={null}
+                  onChange={handleSingleItemSpaceConfirm}
+                  allowCreate={true}
+                  placeholder="Select space"
+                />
+              </View>
+            </BottomSheet>
           </>
         ) : (
           <AppText variant="body">Transaction not found.</AppText>
@@ -1314,5 +1636,34 @@ const styles = StyleSheet.create({
   },
   pickerTitle: {
     textAlign: 'center',
+  },
+  pickerSubtitle: {
+    textAlign: 'center',
+    marginTop: -8,
+  },
+  inputContainer: {
+    gap: 8,
+    marginTop: 8,
+  },
+  textInput: {
+    minHeight: 44,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  button: {
+    flex: 1,
+  },
+  selectButton: {
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
+    minWidth: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
   },
 });
