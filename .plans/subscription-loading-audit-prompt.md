@@ -2,27 +2,95 @@
 
 ## Background
 
-**Issue Found:** The edit project screen (`app/project/[projectId]/edit.tsx`) hung at "Loading project..." with poor connectivity because subscription functions used `onSnapshot` without cache-first reads. The app waited 30+ seconds for server responses instead of showing cached data immediately.
+**Issue Found:** The edit project screen hung at "Loading project..." for 5-7 seconds on cold start (empty cache).
 
-**Root Cause:** `onSnapshot` in React Native Firebase waits for the first server response before firing its callback, even when cached data exists locally. This violates offline-first principles and creates "spinners of doom."
+**Root Causes (both issues were present):**
+
+1. **Missing cache-first reads:** `onSnapshot` waits for server response before first callback, even when cached data exists
+2. **The "empty cache" anti-pattern (CRITICAL):** Cache-first reads only called `onChange` if cache was NOT empty:
+   ```typescript
+   // ❌ ANTI-PATTERN - causes 5-7 sec hang on cold start
+   getDocsFromCache(query)
+     .then(snapshot => {
+       if (!snapshot.empty) {  // <-- THIS IS THE PROBLEM
+         onChange(mapData(snapshot));
+       }
+     })
+     .catch(() => {
+       // onChange never called, loading stays true
+     });
+   ```
+
+**Why this is catastrophic:**
+- On cold start (empty cache), `onChange` is NEVER called
+- Loading states stay `true` indefinitely
+- UI waits 5-7+ seconds for `onSnapshot` to get server data
+- Violates "no spinners of doom" principle
 
 ## Your Task: Comprehensive Audit
 
 Search the entire codebase for similar patterns and violations. Focus on:
 
-### 1. Find All `onSnapshot` Usages
+### 1. Find the "Empty Cache" Anti-Pattern (HIGHEST PRIORITY)
+
+**This is the #1 cause of loading hangs. Search for:**
+
+```bash
+rg "if.*!.*snapshot\.empty" src/data/
+rg "if.*snapshot\.exists" src/data/
+```
+
+**The Anti-Pattern:**
+```typescript
+// ❌ BROKEN - onChange only fires if cache is NOT empty
+getDocsFromCache(query)
+  .then(snapshot => {
+    if (!snapshot.empty) {  // <-- REMOVE THIS CHECK
+      onChange(mapData(snapshot));
+    }
+  })
+  .catch(() => {}); // <-- Also bad: swallows errors silently
+```
+
+**The Fix:**
+```typescript
+// ✅ CORRECT - onChange ALWAYS fires immediately
+getDocsFromCache(query)
+  .then(snapshot => {
+    // Always call onChange, even with empty array
+    onChange(mapData(snapshot));
+  })
+  .catch(() => {
+    // Cache miss: call onChange with empty data so UI renders
+    onChange([]);
+  });
+```
+
+**For single documents:**
+```typescript
+// ✅ CORRECT - onChange ALWAYS fires
+getDocFromCache(docRef)
+  .then(snapshot => {
+    onChange(snapshot.exists ? mapData(snapshot) : null);
+  })
+  .catch(() => {
+    onChange(null); // Let UI render with no data
+  });
+```
+
+### 2. Find All `onSnapshot` Usages
 
 **Search Pattern:**
 ```bash
-grep -r "onSnapshot" --include="*.ts" --include="*.tsx" src/
+rg "onSnapshot" -t ts -t tsx src/data/
 ```
 
 For each `onSnapshot` usage, check:
-- ✅ **GOOD:** Is there a cache-first read (`getDocFromCache` or `getDocsFromCache`) before the `onSnapshot` call?
-- ❌ **BAD:** Does it directly call `onSnapshot` without trying cache first?
-- ❌ **BAD:** Is there a loading state that stays `true` until the snapshot callback fires?
+- ✅ **GOOD:** Cache-first read before `onSnapshot` AND no empty check blocking `onChange`
+- ❌ **BAD:** Direct `onSnapshot` without cache-first read
+- ❌ **CRITICAL:** Has cache-first read BUT uses `if (!snapshot.empty)` check
 
-### 2. Find Components with Permanent Loading States
+### 3. Find Components with Permanent Loading States
 
 **Pattern to look for:**
 ```typescript
@@ -45,7 +113,7 @@ if (isLoading) return <LoadingSpinner />; // ❌ Blocks until server responds
 - Return early with loading UI before data is ready
 - Use subscription functions from service files
 
-### 3. Audit Service Files with Subscribe Functions
+### 4. Audit Service Files with Subscribe Functions
 
 **Files to check:**
 - `src/data/repository.ts` - Already fixed ✅
@@ -62,7 +130,7 @@ For each subscribe function:
 2. Does it attempt a cache-first read before setting up the listener?
 3. Would poor connectivity cause the caller to hang?
 
-### 4. Check for Awaited Firestore Reads in Load Paths
+### 5. Check for Awaited Firestore Reads in Load Paths
 
 **Pattern to look for:**
 ```typescript
@@ -81,7 +149,7 @@ const loadProject = async () => {
 - Check if those get functions use `mode: 'offline'` (cache-first)
 - Verify no blocking server reads in initial load paths
 
-### 5. Review All Screen/Page Loading Patterns
+### 6. Review All Screen/Page Loading Patterns
 
 **Screens to audit:**
 ```bash
@@ -94,7 +162,7 @@ For each screen:
 - How long could the user stare at "Loading..." with no connectivity?
 - Does it show cached data immediately or wait for server?
 
-### 6. Check Conditional Rendering Blocking Patterns
+### 7. Check Conditional Rendering Blocking Patterns
 
 **Pattern:**
 ```typescript
@@ -160,21 +228,66 @@ The user should NEVER see indefinite loading spinners when cached data exists.
 
 ## Search Commands to Get Started
 
+**MOST IMPORTANT - Run these first:**
+
+```bash
+# 🚨 CRITICAL: Find the "empty cache" anti-pattern
+rg "if.*!.*snapshot\.empty" src/data/ -A 3 -B 3
+rg "if.*snapshot\.exists.*{" src/data/ -A 3 -B 3
+
+# Find cache reads that might have the anti-pattern
+rg "getDocsFromCache|getDocFromCache" src/data/ -A 5
+```
+
+**Then run these:**
+
 ```bash
 # Find all onSnapshot usages
-rg "onSnapshot" -t ts -t tsx src/
+rg "onSnapshot" -t ts -t tsx src/data/
 
 # Find components with loading states
-rg "useState.*Loading.*true" -t ts -t tsx src/
+rg "useState.*[Ll]oading.*true" app/
 
 # Find subscribe functions
-rg "subscribe.*=.*\(" src/data/
+rg "^export function subscribe" src/data/
 
 # Find screens with conditional loading returns
-rg "if.*isLoading.*return" -t ts -t tsx app/
+rg "if.*isLoading.*return" app/ -A 1
 
 # Check for awaited Firestore reads
-rg "await.*get.*\(" src/ -A 2 -B 2
+rg "await.*get[A-Z]" src/ -A 2 -B 2
+```
+
+## Quick Reference: The Fix Pattern
+
+**For collections (arrays):**
+```typescript
+// Cache first
+getDocsFromCache(query)
+  .then(snapshot => {
+    onChange(snapshot.docs.map(mapFn)); // NO if (!snapshot.empty) check
+  })
+  .catch(() => onChange([])); // Always call onChange
+
+// Then real-time
+return onSnapshot(query, snapshot => {
+  onChange(snapshot.docs.map(mapFn));
+}, onError);
+```
+
+**For documents (single):**
+```typescript
+// Cache first
+getDocFromCache(docRef)
+  .then(snapshot => {
+    onChange(snapshot.exists ? mapData(snapshot) : null); // NO if (snapshot.exists) block
+  })
+  .catch(() => onChange(null)); // Always call onChange
+
+// Then real-time
+return onSnapshot(docRef, snapshot => {
+  onChange(snapshot.exists ? mapData(snapshot) : null);
+}, onError);
 ```
 
 Good hunting! 🐛
