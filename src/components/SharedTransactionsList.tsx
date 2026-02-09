@@ -1059,24 +1059,22 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
               : []),
           ]}
           leftElement={
-            scopeConfig.scope === 'inventory' ? (
-              <TouchableOpacity
-                disabled={!hasFiltered}
-                onPress={() => {
-                  if (!hasFiltered) return;
-                  handleSelectAll();
-                }}
-                style={[
-                  styles.selectButton,
-                  selectButtonThemeStyle,
-                  !hasFiltered && styles.selectButtonDisabled,
-                ]}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: allSelected }}
-              >
-                <SelectorCircle selected={allSelected} indicator="check" />
-              </TouchableOpacity>
-            ) : undefined
+            <TouchableOpacity
+              disabled={!hasFiltered}
+              onPress={() => {
+                if (!hasFiltered) return;
+                handleSelectAll();
+              }}
+              style={[
+                styles.selectButton,
+                selectButtonThemeStyle,
+                !hasFiltered && styles.selectButtonDisabled,
+              ]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: allSelected }}
+            >
+              <SelectorCircle selected={allSelected} indicator="check" />
+            </TouchableOpacity>
           }
         />
       </View>
