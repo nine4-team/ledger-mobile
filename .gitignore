@@ -75,3 +75,6 @@ ui-debug.log
 .amazonq/
 .github/copilot/
 .kittify/.dashboard
+.kittify/workspaces/
+__pycache__/
+*.pyc
