@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
@@ -31,7 +32,8 @@ import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
 import {
   HeroSection,
-  MediaSection,
+  ReceiptsSection,
+  OtherImagesSection,
   NotesSection,
   DetailsSection,
   TaxesSection,
@@ -65,7 +67,7 @@ type TransactionItemFilterMode =
   | 'no-price'
   | 'no-image';
 
-type SectionKey = 'hero' | 'media' | 'notes' | 'details' | 'taxes' | 'items' | 'audit';
+type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'taxes' | 'items' | 'audit';
 
 type TransactionSection = {
   key: SectionKey;
@@ -109,12 +111,13 @@ export default function TransactionDetailScreen() {
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    media: true,     // Default collapsed
-    notes: true,     // Default collapsed
-    details: true,   // Default collapsed
-    taxes: true,     // Default collapsed
-    items: true,     // Default collapsed
-    audit: false,    // Default EXPANDED
+    receipts: false,    // Default EXPANDED
+    otherImages: true,  // Default collapsed
+    notes: true,        // Default collapsed
+    details: true,      // Default collapsed
+    taxes: true,        // Default collapsed
+    items: true,        // Default collapsed
+    audit: true,        // Default collapsed
   });
 
   const handleToggleSection = useCallback((key: string) => {
@@ -241,7 +244,8 @@ export default function TransactionDetailScreen() {
 
     const result: TransactionSection[] = [
       { key: 'hero', data: [transaction] },
-      { key: 'media', title: 'RECEIPTS', data: collapsedSections.media ? [] : [transaction] },
+      { key: 'receipts', title: 'RECEIPTS', data: collapsedSections.receipts ? [] : [transaction] },
+      { key: 'otherImages', title: 'OTHER IMAGES', data: collapsedSections.otherImages ? [] : [transaction] },
       { key: 'notes', title: 'NOTES', data: collapsedSections.notes ? [] : [transaction] },
       { key: 'details', title: 'DETAILS', data: collapsedSections.details ? [] : [transaction] },
     ];
@@ -1093,52 +1097,89 @@ export default function TransactionDetailScreen() {
     if (section.key === 'items') {
       const collapsed = collapsedSections.items ?? true;
 
-      if (collapsed) {
-        // Collapsed: show CollapsibleSectionHeader with count
-        return (
+      return (
+        <View style={{ backgroundColor: theme.colors.background }}>
           <CollapsibleSectionHeader
             title={section.title!}
-            collapsed={true}
+            collapsed={collapsed}
             onToggle={() => handleToggleSection('items')}
             badge={section.badge}
           />
-        );
-      }
-
-      // Expanded: show control bar (sticky)
-      return (
-        <View style={{ backgroundColor: theme.colors.background }}>
-          <ItemsListControlBar
-            search={searchQuery}
-            onChangeSearch={setSearchQuery}
-            showSearch={showSearch}
-            onToggleSearch={() => setShowSearch(!showSearch)}
-            onSort={() => setSortMenuVisible(true)}
-            isSortActive={sortMode !== 'created-desc'}
-            onFilter={() => setFilterMenuVisible(true)}
-            isFilterActive={filterMode !== 'all'}
-            onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
-            leftElement={
-              <TouchableOpacity
-                onPress={handleSelectAll}
-                style={[
-                  styles.selectButton,
-                  {
-                    backgroundColor: uiKitTheme.button.secondary.background,
-                    borderColor: uiKitTheme.border.primary,
-                  },
-                ]}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
-              >
-                <SelectorCircle
-                  selected={selectedItemIds.size === filteredAndSortedItems.length}
-                  indicator="check"
-                />
-              </TouchableOpacity>
-            }
-          />
+          {!collapsed && (
+            <View
+              style={{
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: uiKitTheme.border.secondary,
+              }}
+            >
+              <ItemsListControlBar
+                search={searchQuery}
+                onChangeSearch={setSearchQuery}
+                showSearch={showSearch}
+                onToggleSearch={() => setShowSearch(!showSearch)}
+                onSort={() => setSortMenuVisible(true)}
+                isSortActive={sortMode !== 'created-desc'}
+                onFilter={() => setFilterMenuVisible(true)}
+                isFilterActive={filterMode !== 'all'}
+                onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+                leftElement={
+                  <TouchableOpacity
+                    onPress={handleSelectAll}
+                    style={[
+                      styles.selectButton,
+                      {
+                        backgroundColor: uiKitTheme.button.secondary.background,
+                        borderColor: uiKitTheme.border.primary,
+                      },
+                    ]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+                  >
+                    <SelectorCircle
+                      selected={selectedItemIds.size === filteredAndSortedItems.length}
+                      indicator="check"
+                    />
+                  </TouchableOpacity>
+                }
+              />
+            </View>
+          )}
         </View>
+      );
+    }
+
+    // Audit section with warning indicator
+    if (section.key === 'audit') {
+      const showWarning = transaction?.needsReview === true;
+      const collapsed = collapsedSections[section.key] ?? false;
+
+      return (
+        <TouchableOpacity
+          onPress={() => handleToggleSection(section.key)}
+          style={styles.sectionHeader}
+          accessibilityRole="button"
+          accessibilityLabel={`${section.title} section, ${collapsed ? 'collapsed' : 'expanded'}`}
+        >
+          <View style={styles.sectionHeaderContent}>
+            <MaterialIcons
+              name={collapsed ? 'chevron-right' : 'expand-more'}
+              size={24}
+              color={uiKitTheme.text.secondary}
+            />
+            <AppText variant="caption" style={[styles.sectionHeaderTitle, { color: uiKitTheme.text.secondary }]}>
+              {section.title}
+            </AppText>
+            {showWarning && (
+              <MaterialIcons
+                name="warning"
+                size={20}
+                color="#FF3B30"
+                style={styles.warningIcon}
+              />
+            )}
+          </View>
+        </TouchableOpacity>
       );
     }
 
@@ -1177,8 +1218,11 @@ export default function TransactionDetailScreen() {
       case 'hero':
         return <HeroSection transaction={item} />;
 
-      case 'media':
-        return <MediaSection transaction={item} handlers={mediaHandlers} />;
+      case 'receipts':
+        return <ReceiptsSection transaction={item} handlers={mediaHandlers} />;
+
+      case 'otherImages':
+        return <OtherImagesSection transaction={item} handlers={mediaHandlers} />;
 
       case 'notes':
         return <NotesSection transaction={item} />;
@@ -1541,5 +1585,23 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderWidth: 1,
+  },
+  sectionHeader: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+  },
+  sectionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionHeaderTitle: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  warningIcon: {
+    marginLeft: 'auto',
   },
 });

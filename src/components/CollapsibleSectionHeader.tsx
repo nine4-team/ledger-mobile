@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   container: {
     minHeight: 44,
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
   },
   content: {
     flexDirection: 'row',
