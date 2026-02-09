@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Settings Budget Category Edit
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 0d298151592022fcdcc5596d7fe115049199aaa8
@@ -389,3 +389,4 @@ Manual testing (T010) provides sufficient verification for modal behavior.
 **Initial entry**:
 - 2026-02-09T08:45:00Z - system - lane=planned - Prompt created via /spec-kitty.tasks
 - 2026-02-09T21:00:19Z – claude-wp02 – shell_pid=97222 – lane=doing – Assigned agent via workflow command
+- 2026-02-09T22:53:45Z – claude-wp02 – shell_pid=97222 – lane=for_review – Ready for review: Added field-level change tracking to budget category edit. Only changed fields sent to updateBudgetCategory. No-change saves skip Firestore write. TypeScript passes with no new errors. Manual testing documented in prompt (T010).
