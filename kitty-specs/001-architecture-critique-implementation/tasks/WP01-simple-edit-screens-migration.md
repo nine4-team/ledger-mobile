@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Simple Edit Screens Migration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: c969f7b10576fed880f5ff39d28a5fa35e7f016f
@@ -16,8 +16,8 @@ phase: Phase 2A - Edit Screen Migrations
 assignee: ''
 agent: "claude-orchestrator"
 shell_pid: "376"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-09T08:45:00Z'
   lane: planned
@@ -41,11 +41,88 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** - Reviewers add detailed feedback here when work needs changes. Implementation must address every item listed below before returning for re-review.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-09
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review. If you see feedback here, treat each item as a must-do before completion.]*
+## Issue 1: Project Edit - Broken Subscription Updates (CRITICAL)
+
+**Location:** [app/project/[projectId]/edit.tsx:42](app/project/[projectId]/edit.tsx#L42)
+
+**Problem:** The `useEditForm` hook is initialized with `null` instead of the project data:
+```typescript
+const form = useEditForm<ProjectBasicFields>(null);
+```
+
+This breaks the subscription update mechanism. Here's what happens:
+1. Hook starts with `hasEdited = false`, so `shouldAcceptSubscriptionData = true`
+2. Manual subscription effect (lines 72-80) calls `form.setFields()` on first project update
+3. `setFields()` sets `hasEdited = true`, making `shouldAcceptSubscriptionData = false`
+4. **Result:** No further subscription updates are accepted, even though the user hasn't actually edited anything
+
+**Required Fix:** Pass the project data to the hook constructor (as specified in the prompt, lines 218-226):
+```typescript
+const form = useEditForm<ProjectBasicFields>(
+  project ? {
+    name: project.name || '',
+    clientName: project.clientName || '',
+    description: project.description || ''
+  } : null
+);
+```
+
+**Then remove the manual subscription effect** (lines 72-80) since the hook's internal effect will handle it correctly.
+
+**Why this matters:** 
+- Violates success criteria: "Subscription updates do not overwrite user edits"
+- In this case, subscription updates stop working entirely after first load
+- If another user/device updates the project, changes won't appear until reload
 
 ---
+
+## Issue 2: Space Edit Screens - Inconsistent Whitespace Handling
+
+**Locations:** 
+- [app/business-inventory/spaces/[spaceId]/edit.tsx:46-48](app/business-inventory/spaces/[spaceId]/edit.tsx#L46-L48)
+- [app/project/[projectId]/spaces/[spaceId]/edit.tsx:53-55](app/project/[projectId]/spaces/[spaceId]/edit.tsx#L53-L55)
+
+**Problem:** The name field compares trimmed values but stores untrimmed:
+```typescript
+if (values.name.trim() !== space?.name) {
+  updates.name = values.name;  // ❌ stores UNTRIMMED value
+}
+```
+
+This means trailing/leading whitespace can be saved to Firestore, causing data inconsistency.
+
+**Contrast with notes field** (done correctly):
+```typescript
+const normalizedNotes = values.notes?.trim() || null;
+if (normalizedNotes !== (space?.notes ?? null)) {
+  updates.notes = normalizedNotes;  // ✅ stores TRIMMED value
+}
+```
+
+**Required Fix:** Apply the same pattern to the name field:
+```typescript
+const normalizedName = values.name.trim();
+if (normalizedName !== space?.name) {
+  updates.name = normalizedName;
+}
+```
+
+---
+
+## Verification Checklist After Fixes
+
+- [ ] TypeScript compilation passes with no NEW errors (pre-existing errors are OK)
+- [ ] Project edit: Open project, don't edit, wait for subscription update → form accepts the update
+- [ ] Project edit: Open project, start typing in name field, wait for subscription update → typed value is NOT overwritten
+- [ ] Project edit: Save with no changes → navigates immediately, no Firestore write
+- [ ] Project edit: Change name only → update payload contains only `{name: "..."}`
+- [ ] Space edits: Enter name with trailing spaces → saved value has spaces trimmed
+- [ ] Space edits: Save with no changes → navigates immediately, no Firestore write
+
 
 ## Markdown Formatting
 Wrap HTML/XML tags in backticks: `` `<div>` ``, `` `<script>` ``
@@ -519,3 +596,4 @@ Manual testing (T005) provides sufficient verification for form behavior changes
 - 2026-02-09T19:39:50Z – claude-sonnet – shell_pid=15640 – lane=doing – Assigned agent via workflow command
 - 2026-02-09T20:57:57Z – claude-sonnet – shell_pid=15640 – lane=for_review – Ready for review: Migrated 3 simple edit screens with change tracking. All screens skip writes when unchanged. Subscription protection added to project edit screen.
 - 2026-02-09T21:02:50Z – claude-orchestrator – shell_pid=376 – lane=doing – Started review via workflow command
+- 2026-02-09T21:12:20Z – claude-orchestrator – shell_pid=376 – lane=planned – Moved to planned
