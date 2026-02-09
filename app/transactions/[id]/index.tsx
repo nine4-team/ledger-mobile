@@ -1221,7 +1221,11 @@ export default function TransactionDetailScreen() {
             ) : null}
 
             {/* Transaction Items Section */}
-            <TitledCard title="Transaction Items">
+            <View style={styles.itemsSection}>
+              <AppText variant="caption" style={styles.sectionHeader}>
+                TRANSACTION ITEMS
+              </AppText>
+
               {!itemizationEnabled && linkedItems.length > 0 ? (
                 <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
                   Itemization is off, but this transaction already has items.
@@ -1291,7 +1295,7 @@ export default function TransactionDetailScreen() {
                   </AppText>
                 </View>
               )}
-            </TitledCard>
+            </View>
 
             {/* Transaction Audit Section - Placeholder */}
             <TitledCard title="Transaction Audit">
@@ -1665,5 +1669,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderWidth: 1,
+  },
+  itemsSection: {
+    gap: 12,
+    marginTop: 24,
+  },
+  sectionHeader: {
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    fontWeight: '600',
   },
 });

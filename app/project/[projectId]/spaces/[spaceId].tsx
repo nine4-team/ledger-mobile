@@ -566,9 +566,9 @@ function SpaceDetailContent({
 
         {/* Items */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <AppText variant="h2">Items</AppText>
-          </View>
+          <AppText variant="caption" style={styles.sectionHeader}>
+            ITEMS
+          </AppText>
           <ItemsListControlBar
             search={searchQuery}
             onChangeSearch={setSearchQuery}
@@ -716,9 +716,7 @@ function SpaceDetailContent({
 
         {/* Checklists */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <AppText variant="h2">Checklists</AppText>
-          </View>
+          <AppText variant="h2">Checklists</AppText>
           <AppButton
             title="Add checklist"
             onPress={() =>
@@ -957,9 +955,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   list: {
     gap: 10,
