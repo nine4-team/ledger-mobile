@@ -1,10 +1,9 @@
 {
-  "feature_number": "001",
-  "slug": "architecture-critique-implementation",
-  "friendly_name": "Architecture Critique Implementation",
+  "feature_slug": "001-architecture-critique-implementation",
+  "title": "Architecture Critique Implementation",
   "mission": "software-dev",
-  "source_description": "Implement remaining phases (2-5) of architecture critique remediation plan to address 10 findings across the Ledger Mobile codebase",
-  "created_at": "2026-02-09T08:43:00Z",
   "target_branch": "main",
-  "vcs": "git"
+  "created_at": "2026-02-09T08:43:00Z",
+  "status": "in_progress",
+  "phase": "implementation"
 }
