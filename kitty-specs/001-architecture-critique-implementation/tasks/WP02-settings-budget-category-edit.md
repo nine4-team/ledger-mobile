@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Settings Budget Category Edit
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: 0d298151592022fcdcc5596d7fe115049199aaa8
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 2B - Edit Screen Migrations
 assignee: ''
 agent: "claude-reviewer-3"
-shell_pid: "12578"
+shell_pid: "34669"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -464,3 +464,4 @@ Manual testing (T010) provides sufficient verification for modal behavior.
 - 2026-02-09T22:56:12Z – claude-reviewer-3 – shell_pid=12578 – lane=doing – Started review via workflow command
 - 2026-02-09T23:02:07Z – claude-reviewer-3 – shell_pid=12578 – lane=planned – Moved to planned
 - 2026-02-09T23:07:45Z – claude-reviewer-3 – shell_pid=12578 – lane=for_review – Fixed: Removed try-catch block to match offline-first pattern. Direct call to updateBudgetCategory now matches existing codebase pattern. TypeScript passes with only pre-existing errors.
+- 2026-02-09T23:11:04Z – claude-reviewer-3 – shell_pid=34669 – lane=doing – Started review via workflow command
