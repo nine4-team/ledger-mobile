@@ -62,11 +62,11 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP02-settings-budget-category-edit.md`
 
 ### Included Subtasks
-- [ ] T006 Add inline comparison in `handleSaveCategoryDetails` (`app/(tabs)/settings.tsx`) for 3 fields (name, slug, metadata)
-- [ ] T007 Implement change detection logic - compare against existing category
-- [ ] T008 Update save handler to skip write if no changes detected
-- [ ] T009 Verify TypeScript compilation passes
-- [ ] T010 Manual verification: test single-field edits and no-change saves
+- [x] T006 Add inline comparison in `handleSaveCategoryDetails` (`app/(tabs)/settings.tsx`) for 3 fields (name, slug, metadata)
+- [x] T007 Implement change detection logic - compare against existing category
+- [x] T008 Update save handler to skip write if no changes detected
+- [x] T009 Verify TypeScript compilation passes
+- [x] T010 Manual verification: test single-field edits and no-change saves
 
 ### Implementation Notes
 - No hook needed - this is a modal form with simple fields
