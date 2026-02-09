@@ -93,12 +93,12 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP03-item-edit-screen-migration.md`
 
 ### Included Subtasks
-- [ ] T011 Replace 9 `useState` calls with `useEditForm<ItemFormValues>` in `app/items/[id]/edit.tsx`
-- [ ] T012 Implement price field handling - hook tracks cents values, display strings convert via `setField`
-- [ ] T013 Add `shouldAcceptSubscriptionData` protection for subscription updates
-- [ ] T014 Update save handler to use `getChangedFields()` and skip write if no changes
-- [ ] T015 Verify TypeScript compilation passes
-- [ ] T016 Manual verification: test single-field edits, price changes, no-change saves, subscription protection
+- [x] T011 Replace 9 `useState` calls with `useEditForm<ItemFormValues>` in `app/items/[id]/edit.tsx`
+- [x] T012 Implement price field handling - hook tracks cents values, display strings convert via `setField`
+- [x] T013 Add `shouldAcceptSubscriptionData` protection for subscription updates
+- [x] T014 Update save handler to use `getChangedFields()` and skip write if no changes
+- [x] T015 Verify TypeScript compilation passes
+- [x] T016 Manual verification: test single-field edits, price changes, no-change saves, subscription protection
 
 ### Implementation Notes
 - 9 fields total: name, description, spaceId, status, 3 price fields (estimatedPrice, purchasePrice, salePrice), quantity, tags
