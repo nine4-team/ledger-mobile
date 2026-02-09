@@ -1,28 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
 import { AppButton } from '../../../src/components/AppButton';
-import { AppScrollView } from '../../../src/components/AppScrollView';
-import { TitledCard } from '../../../src/components/TitledCard';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
-import { NotesSection } from '../../../src/components/NotesSection';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
-import {
-  CARD_PADDING,
-  getCardStyle,
-  getTextColorStyle,
-  getTextSecondaryStyle,
-  layout,
-  textEmphasis,
-} from '../../../src/ui';
+import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
+import { SpaceSelector } from '../../../src/components/SpaceSelector';
+import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
@@ -31,14 +23,21 @@ import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedList
 import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
 import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
-import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
-import { SpaceSelector } from '../../../src/components/SpaceSelector';
 import { getTextInputStyle } from '../../../src/ui/styles/forms';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../../src/data/transactionsService';
 import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
+import {
+  HeroSection,
+  MediaSection,
+  NotesSection,
+  DetailsSection,
+  TaxesSection,
+  AuditSection,
+  type MediaHandlers,
+} from './sections';
 
 type TransactionDetailParams = {
   id?: string;
@@ -66,20 +65,14 @@ type TransactionItemFilterMode =
   | 'no-price'
   | 'no-image';
 
-function formatMoney(cents: number | null | undefined): string {
-  if (typeof cents !== 'number') return '—';
-  return `$${(cents / 100).toFixed(2)}`;
-}
+type SectionKey = 'hero' | 'media' | 'notes' | 'details' | 'taxes' | 'items' | 'audit';
 
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '—';
-  return dateStr;
-}
-
-function formatPercent(pct: number | null | undefined): string {
-  if (typeof pct !== 'number') return '—';
-  return `${pct.toFixed(2)}%`;
-}
+type TransactionSection = {
+  key: SectionKey;
+  title?: string;
+  data: any[];
+  badge?: string;
+};
 
 export default function TransactionDetailScreen() {
   const router = useRouter();
@@ -110,14 +103,23 @@ export default function TransactionDetailScreen() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Manual sticky control bar state
-  const [controlBarSticky, setControlBarSticky] = useState(false);
-  const controlBarYRef = useRef(Infinity);
-  const controlBarStickyRef = useRef(false);
-
   // Bulk selection state
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [bulkMenuVisible, setBulkMenuVisible] = useState(false);
+
+  // Collapsible sections state (Phase 2)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    media: true,     // Default collapsed
+    notes: true,     // Default collapsed
+    details: true,   // Default collapsed
+    taxes: true,     // Default collapsed
+    items: true,     // Default collapsed
+    audit: false,    // Default EXPANDED
+  });
+
+  const handleToggleSection = useCallback((key: string) => {
+    setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -183,6 +185,12 @@ export default function TransactionDetailScreen() {
   const isCanonical = isCanonicalInventorySaleTransaction(transaction);
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
 
+  // Helper to get primary image URI
+  const getPrimaryImageUri = (item: ScopedItem) => {
+    const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
+    return primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
+  };
+
   // Filtered and sorted transaction items
   const filteredAndSortedItems = useMemo(() => {
     let result = linkedItems;
@@ -225,6 +233,44 @@ export default function TransactionDetailScreen() {
   const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
+  const statusLabel = transaction?.status?.trim() || '';
+
+  // Compute sections array for SectionList
+  const sections = useMemo<TransactionSection[]>(() => {
+    if (!transaction) return [];
+
+    const result: TransactionSection[] = [
+      { key: 'hero', data: [transaction] },
+      { key: 'media', title: 'RECEIPTS', data: collapsedSections.media ? [] : [transaction] },
+      { key: 'notes', title: 'NOTES', data: collapsedSections.notes ? [] : [transaction] },
+      { key: 'details', title: 'DETAILS', data: collapsedSections.details ? [] : [transaction] },
+    ];
+
+    // Taxes section only if itemization enabled
+    if (itemizationEnabled) {
+      result.push({
+        key: 'taxes',
+        title: 'TAX & ITEMIZATION',
+        data: collapsedSections.taxes ? [] : [transaction]
+      });
+    }
+
+    result.push(
+      {
+        key: 'items',
+        title: 'TRANSACTION ITEMS',
+        data: collapsedSections.items ? [] : filteredAndSortedItems,
+        badge: `${filteredAndSortedItems.length}`,
+      },
+      {
+        key: 'audit',
+        title: 'TRANSACTION AUDIT',
+        data: collapsedSections.audit ? [] : [transaction]
+      }
+    );
+
+    return result;
+  }, [transaction, filteredAndSortedItems, itemizationEnabled, collapsedSections]);
 
   const suggestedItems = useMemo(() => {
     if (!normalizedSource) return [];
@@ -250,15 +296,6 @@ export default function TransactionDetailScreen() {
     options.push({ value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' });
     return options;
   }, [projectId]);
-
-  const budgetCategoryLabel = useMemo(() => {
-    if (!transaction?.budgetCategoryId) return 'None';
-    const category = budgetCategories[transaction.budgetCategoryId];
-    return category?.name?.trim() || transaction.budgetCategoryId;
-  }, [transaction, budgetCategories]);
-
-  const hasReceiptLabel = transaction?.hasEmailReceipt ? 'Yes' : 'No';
-  const statusLabel = transaction?.status?.trim() || '';
 
   useEffect(() => {
     if (!isPickingItems) return;
@@ -1048,51 +1085,135 @@ export default function TransactionDetailScreen() {
     return items;
   }, [handleDelete, id, projectId, router, scope]);
 
-  const handleScrollEvent = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const shouldBeSticky = offsetY >= controlBarYRef.current;
-    if (shouldBeSticky !== controlBarStickyRef.current) {
-      controlBarStickyRef.current = shouldBeSticky;
-      setControlBarSticky(shouldBeSticky);
-    }
-  }, []);
 
-  const handleControlBarLayout = useCallback((event: LayoutChangeEvent) => {
-    controlBarYRef.current = event.nativeEvent.layout.y;
-  }, []);
+  // Section renderers for SectionList
+  const renderSectionHeader = useCallback(({ section }: { section: TransactionSection }) => {
+    if (section.key === 'hero') return null;
 
-  const renderControlBar = () => (
-    <ItemsListControlBar
-      search={searchQuery}
-      onChangeSearch={setSearchQuery}
-      showSearch={showSearch}
-      onToggleSearch={() => setShowSearch(!showSearch)}
-      onSort={() => setSortMenuVisible(true)}
-      isSortActive={sortMode !== 'created-desc'}
-      onFilter={() => setFilterMenuVisible(true)}
-      isFilterActive={filterMode !== 'all'}
-      onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
-      leftElement={
-        <TouchableOpacity
-          onPress={handleSelectAll}
-          style={[
-            styles.selectButton,
-            {
-              backgroundColor: uiKitTheme.button.secondary.background,
-              borderColor: uiKitTheme.border.primary,
-            },
-          ]}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
-        >
-          <SelectorCircle
-            selected={selectedItemIds.size === filteredAndSortedItems.length}
-            indicator="check"
+    if (section.key === 'items') {
+      const collapsed = collapsedSections.items ?? true;
+
+      if (collapsed) {
+        // Collapsed: show CollapsibleSectionHeader with count
+        return (
+          <CollapsibleSectionHeader
+            title={section.title!}
+            collapsed={true}
+            onToggle={() => handleToggleSection('items')}
+            badge={section.badge}
           />
-        </TouchableOpacity>
+        );
       }
-    />
-  );
+
+      // Expanded: show control bar (sticky)
+      return (
+        <View style={{ backgroundColor: theme.colors.background }}>
+          <ItemsListControlBar
+            search={searchQuery}
+            onChangeSearch={setSearchQuery}
+            showSearch={showSearch}
+            onToggleSearch={() => setShowSearch(!showSearch)}
+            onSort={() => setSortMenuVisible(true)}
+            isSortActive={sortMode !== 'created-desc'}
+            onFilter={() => setFilterMenuVisible(true)}
+            isFilterActive={filterMode !== 'all'}
+            onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+            leftElement={
+              <TouchableOpacity
+                onPress={handleSelectAll}
+                style={[
+                  styles.selectButton,
+                  {
+                    backgroundColor: uiKitTheme.button.secondary.background,
+                    borderColor: uiKitTheme.border.primary,
+                  },
+                ]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+              >
+                <SelectorCircle
+                  selected={selectedItemIds.size === filteredAndSortedItems.length}
+                  indicator="check"
+                />
+              </TouchableOpacity>
+            }
+          />
+        </View>
+      );
+    }
+
+    // Other collapsible sections
+    return (
+      <CollapsibleSectionHeader
+        title={section.title!}
+        collapsed={collapsedSections[section.key] ?? false}
+        onToggle={() => handleToggleSection(section.key)}
+        badge={section.badge}
+      />
+    );
+  }, [collapsedSections, handleToggleSection, searchQuery, showSearch, sortMode, filterMode, selectedItemIds, filteredAndSortedItems, theme.colors.background, uiKitTheme, handleSelectAll]);
+
+  // Prepare media handlers object for MediaSection
+  const mediaHandlers: MediaHandlers = useMemo(() => ({
+    handlePickReceiptAttachment,
+    handleRemoveReceiptAttachment,
+    handleSetPrimaryReceiptAttachment,
+    handlePickOtherImage,
+    handleRemoveOtherImage,
+    handleSetPrimaryOtherImage,
+  }), [
+    handlePickReceiptAttachment,
+    handleRemoveReceiptAttachment,
+    handleSetPrimaryReceiptAttachment,
+    handlePickOtherImage,
+    handleRemoveOtherImage,
+    handleSetPrimaryOtherImage,
+  ]);
+
+  const renderItem = useCallback(({ item, section }: { item: any; section: TransactionSection }) => {
+    if (!transaction) return null;
+
+    switch (section.key) {
+      case 'hero':
+        return <HeroSection transaction={item} />;
+
+      case 'media':
+        return <MediaSection transaction={item} handlers={mediaHandlers} />;
+
+      case 'notes':
+        return <NotesSection transaction={item} />;
+
+      case 'details':
+        return <DetailsSection transaction={item} budgetCategories={budgetCategories} />;
+
+      case 'taxes':
+        return <TaxesSection transaction={item} />;
+
+      case 'items':
+        return (
+          <ItemCard
+            key={item.id}
+            name={item.name?.trim() || 'Untitled item'}
+            sku={item.sku ?? undefined}
+            priceLabel={typeof item.purchasePriceCents === 'number'
+              ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
+              : undefined}
+            thumbnailUri={getPrimaryImageUri(item)}
+            bookmarked={item.bookmark ?? undefined}
+            selected={selectedItemIds.has(item.id)}
+            onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
+            onPress={() => router.push(`/items/${item.id}`)}
+            menuItems={getItemMenuItems(item)}
+          />
+        );
+
+      case 'audit':
+        return <AuditSection transaction={item} />;
+
+      default:
+        return null;
+    }
+  }, [transaction, budgetCategories, mediaHandlers, selectedItemIds, router, getItemMenuItems, handleItemSelectionChange, getPrimaryImageUri]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -1112,252 +1233,26 @@ export default function TransactionDetailScreen() {
       onPressMenu={() => setMenuVisible(true)}
       contentStyle={styles.screenContent}
     >
-      <View style={styles.scrollContainer}>
-        {controlBarSticky && !isLoading && transaction ? (
-          <View style={[styles.floatingControlBar, { backgroundColor: theme.colors.background }]}>
-            {renderControlBar()}
-          </View>
-        ) : null}
-        <AppScrollView style={styles.scroll} contentContainerStyle={styles.content} onScroll={handleScrollEvent} scrollEventThrottle={16}>
-        {isLoading ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
           <AppText variant="body">Loading transaction…</AppText>
-        ) : transaction ? (
-          <>
-            {/* Hero Header Card */}
-            <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
-              <View style={styles.heroHeader}>
-                <AppText variant="h2" style={styles.heroTitle}>
-                  {transaction.source?.trim() || 'Untitled transaction'}
-                </AppText>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  {formatMoney(transaction.amountCents)}
-                </AppText>
-              </View>
-            </View>
+        </View>
+      ) : transaction ? (
+        <>
+          <SectionList
+            sections={sections}
+            renderSectionHeader={renderSectionHeader}
+            renderItem={renderItem}
+            stickySectionHeadersEnabled={true}
+            keyExtractor={(item, index) => item.id ?? `section-${index}`}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={({ section }) =>
+              section.key === 'items' ? <View style={styles.itemSeparator} /> : null
+            }
+          />
 
-            {/* Receipts Section */}
-            <MediaGallerySection
-              title="Receipts"
-              attachments={transaction.receiptImages ?? []}
-              maxAttachments={10}
-              allowedKinds={['image', 'pdf']}
-              onAddAttachment={handlePickReceiptAttachment}
-              onRemoveAttachment={handleRemoveReceiptAttachment}
-              onSetPrimary={handleSetPrimaryReceiptAttachment}
-              emptyStateMessage="No receipts yet."
-              pickerLabel="Add receipt"
-              size="md"
-              tileScale={1.5}
-            />
-
-            {/* Other Images Section */}
-            <MediaGallerySection
-              title="Other Images"
-              attachments={transaction.otherImages ?? []}
-              maxAttachments={5}
-              allowedKinds={['image']}
-              onAddAttachment={handlePickOtherImage}
-              onRemoveAttachment={handleRemoveOtherImage}
-              onSetPrimary={handleSetPrimaryOtherImage}
-              emptyStateMessage="No other images yet."
-              pickerLabel="Add image"
-              size="md"
-              tileScale={1.5}
-            />
-
-            <NotesSection notes={transaction.notes} expandable={true} />
-
-            <TitledCard title="Details">
-              <View style={styles.detailRows}>
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Source
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {transaction.source?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Date
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {formatDate(transaction.transactionDate)}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Amount
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {formatMoney(transaction.amountCents)}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Status
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {transaction.status?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Purchased by
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {transaction.purchasedBy?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Reimbursement type
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {transaction.reimbursementType?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Budget category
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {budgetCategoryLabel}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Email receipt
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {hasReceiptLabel}
-                  </AppText>
-                </View>
-              </View>
-            </TitledCard>
-
-            {itemizationEnabled ? (
-              <TitledCard title="Tax & Itemization">
-                <View style={styles.detailRows}>
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Subtotal
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatMoney(transaction.subtotalCents)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Tax rate
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {formatPercent(transaction.taxRatePct)}
-                    </AppText>
-                  </View>
-                  <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                  <View style={styles.detailRow}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Tax amount
-                    </AppText>
-                    <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                      {typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
-                        ? formatMoney(transaction.amountCents - transaction.subtotalCents)
-                        : '—'}
-                    </AppText>
-                  </View>
-                </View>
-              </TitledCard>
-            ) : null}
-
-            {/* Transaction Items Section */}
-            <AppText variant="caption" style={styles.sectionHeader}>
-              TRANSACTION ITEMS
-            </AppText>
-
-            {!itemizationEnabled && linkedItems.length > 0 ? (
-              <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
-                Itemization is off, but this transaction already has items.
-              </AppText>
-            ) : null}
-
-            <View onLayout={handleControlBarLayout}>
-              {renderControlBar()}
-            </View>
-
-            {filteredAndSortedItems.length > 0 ? (
-              <View style={styles.list}>
-                {filteredAndSortedItems.map((item) => {
-                  const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
-                  const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
-                  const priceLabel = typeof item.purchasePriceCents === 'number'
-                    ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
-                    : undefined;
-
-                  return (
-                    <ItemCard
-                      key={item.id}
-                      name={item.name?.trim() || 'Untitled item'}
-                      sku={item.sku ?? undefined}
-                      priceLabel={priceLabel}
-                      thumbnailUri={thumbnailUri}
-                      bookmarked={item.bookmark ?? undefined}
-                      selected={selectedItemIds.has(item.id)}
-                      onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
-                      onPress={() => router.push(`/items/${item.id}`)}
-                      menuItems={getItemMenuItems(item)}
-                    />
-                  );
-                })}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  No items linked yet.
-                </AppText>
-              </View>
-            )}
-
-            {/* Transaction Audit Section - Placeholder */}
-            <TitledCard title="Transaction Audit">
-              <View style={styles.auditPlaceholder}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Transaction audit section coming soon.
-                </AppText>
-                <AppText variant="caption" style={[styles.auditDescription, getTextSecondaryStyle(uiKitTheme)]}>
-                  This will show:
-                </AppText>
-                <View style={styles.auditFeaturesList}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    • Items total vs transaction subtotal
-                  </AppText>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    • Completeness indicators
-                  </AppText>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    • Missing price warnings
-                  </AppText>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    • Tax variance calculations
-                  </AppText>
-                </View>
-              </View>
-            </TitledCard>
-            {/* TODO: Full implementation required
-             * See: docs/specs/transaction_audit_spec.md
-             * Reference: /Users/benjaminmackenzie/Dev/ledger/src/components/ui/TransactionAudit.tsx
-             */}
-
-            {/* Bottom Sheet Menu */}
-            <BottomSheetMenuList
+          <BottomSheetMenuList
               visible={menuVisible}
               onRequestClose={() => setMenuVisible(false)}
               items={menuItems}
@@ -1566,18 +1461,15 @@ export default function TransactionDetailScreen() {
             </BottomSheet>
           </>
         ) : (
-          <AppText variant="body">Transaction not found.</AppText>
+          <View style={styles.loadingContainer}>
+            <AppText variant="body">Transaction not found.</AppText>
+          </View>
         )}
-        </AppScrollView>
-      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
   content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
@@ -1586,37 +1478,14 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingTop: 0,
   },
-  scrollContainer: {
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
   },
-  floatingControlBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  card: {},
-  heroHeader: {
-    gap: 6,
-  },
-  heroTitle: {
-    lineHeight: 26,
-  },
-  detailRows: {
-    gap: 12,
-  },
-  detailRow: {
-    ...layout.rowBetween,
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  valueText: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  divider: {
-    borderTopWidth: 1,
+  itemSeparator: {
+    height: 10,
   },
   headerRight: {
     flexDirection: 'row',
@@ -1631,43 +1500,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontWeight: '600',
     textTransform: 'capitalize',
-  },
-  errorText: {
-    lineHeight: 18,
-  },
-  emptyState: {
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
-  },
-  imagePicker: {
-    marginTop: 12,
-  },
-  auditPlaceholder: {
-    gap: 12,
-    paddingVertical: 8,
-  },
-  auditDescription: {
-    marginTop: 4,
-  },
-  auditFeaturesList: {
-    gap: 6,
-    marginTop: 8,
-    paddingLeft: 8,
-  },
-  list: {
-    gap: 10,
-    marginTop: 12,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  warningText: {
-    marginBottom: 12,
   },
   pickerSheet: {
     height: '85%',
@@ -1709,11 +1541,5 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderWidth: 1,
-  },
-  sectionHeader: {
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    fontWeight: '600',
-    marginTop: 24,
   },
 });

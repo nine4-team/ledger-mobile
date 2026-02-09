@@ -14,6 +14,7 @@ import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { ImageGallery } from './ImageGallery';
 import { ThumbnailGrid } from './ThumbnailGrid';
 import { TitledCard } from './TitledCard';
+import { Card } from './Card';
 
 export type MediaGallerySectionProps = {
   // Content
@@ -34,6 +35,7 @@ export type MediaGallerySectionProps = {
   tileScale?: number;
   emptyStateMessage?: string;
   pickerLabel?: string;
+  hideTitle?: boolean;
 
   // Style overrides
   style?: ViewStyle;
@@ -57,6 +59,7 @@ export function MediaGallerySection({
   tileScale = 1.5,
   emptyStateMessage,
   pickerLabel,
+  hideTitle = false,
   style,
 }: MediaGallerySectionProps) {
   const uiKitTheme = useUIKitTheme();
@@ -246,9 +249,14 @@ export function MediaGallerySection({
   const showEmptyState = attachments.length === 0;
   const canAddMore = attachments.length < maxAttachments;
 
+  const CardComponent = hideTitle ? Card : TitledCard;
+  const cardProps = hideTitle
+    ? { style: [styles.cardWithButton, style] }
+    : { title, containerStyle: style, cardStyle: styles.cardWithButton };
+
   return (
     <>
-      <TitledCard title={title} containerStyle={style} cardStyle={styles.cardWithButton}>
+      <CardComponent {...cardProps}>
         {/* Add button in top-right corner */}
         {canAddMore && onAddAttachment && (
           <Pressable
@@ -328,7 +336,7 @@ export function MediaGallerySection({
             )}
           </View>
         )}
-      </TitledCard>
+      </CardComponent>
 
       {/* Add menu */}
       <BottomSheetMenuList
