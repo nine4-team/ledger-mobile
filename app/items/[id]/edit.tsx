@@ -125,6 +125,19 @@ export default function EditItemScreen() {
   // Initialize and update display strings from item data (only when accepting subscription data)
   useEffect(() => {
     if (item && form.shouldAcceptSubscriptionData) {
+      // Update form values from subscription
+      form.setFields({
+        name: item.name || '',
+        source: item.source ?? null,
+        sku: item.sku ?? null,
+        status: item.status ?? null,
+        purchasePriceCents: item.purchasePriceCents ?? null,
+        projectPriceCents: item.projectPriceCents ?? null,
+        marketValueCents: item.marketValueCents ?? null,
+        notes: item.notes ?? null,
+        spaceId: item.spaceId ?? null,
+      });
+
       // Update display strings from cents values
       setPurchasePriceDisplay(
         item.purchasePriceCents !== null && item.purchasePriceCents !== undefined
