@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Settings Budget Category Edit
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 0d298151592022fcdcc5596d7fe115049199aaa8
@@ -16,8 +16,8 @@ phase: Phase 2B - Edit Screen Migrations
 assignee: ''
 agent: "claude-reviewer-3"
 shell_pid: "12578"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-09T08:45:00Z'
   lane: planned
@@ -41,11 +41,82 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** - Reviewers add detailed feedback here when work needs changes.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-09
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review.]*
+## Review Feedback for WP02
+
+**Status**: ❌ Changes Requested
+
+**Reviewer**: claude-reviewer-3
 
 ---
+
+### Issue 1: Incorrect Error Handling Pattern
+
+**Location**: `app/(tabs)/settings.tsx:561-565`
+
+**Problem**: The code uses `try-catch` to wrap the `updateBudgetCategory` call:
+
+```typescript
+// Fire-and-forget Firestore write (updateBudgetCategory returns void)
+try {
+  updateBudgetCategory(accountId, editingCategoryId, changedFields);
+} catch (err) {
+  console.error('Failed to update budget category:', err);
+}
+```
+
+**Why This Is Wrong**:
+
+1. **Inconsistent with existing pattern**: The original code (pre-WP02) called `updateBudgetCategory` with NO error handling. Other calls in the same file (line 1350) also have no error handling.
+
+2. **Doesn't actually catch async errors**: The `updateBudgetCategory` function returns `void` immediately (fire-and-forget pattern). The `try-catch` only catches synchronous errors (like "Firebase is not configured"), NOT the actual Firestore write errors. Those are already handled inside the service function with `.catch()`.
+
+3. **Violates offline-first principles**: The comment says "Fire-and-forget" but then adds error handling that suggests we're waiting for the result.
+
+**How to Fix**:
+
+Remove the `try-catch` block entirely. Call `updateBudgetCategory` directly, matching the existing pattern:
+
+```typescript
+// Fire-and-forget Firestore write (offline-first)
+updateBudgetCategory(accountId, editingCategoryId, changedFields);
+```
+
+The service function already handles errors internally with `.catch()` on line 175 of `budgetCategoriesService.ts`.
+
+---
+
+### What's Good ✅
+
+The core change tracking logic is **excellent**:
+
+- ✅ Correctly builds `changedFields` object with only modified fields
+- ✅ Proper deep comparison for metadata using `JSON.stringify`
+- ✅ Early return when no changes detected (skips write)
+- ✅ Modal closes immediately (offline-first UX)
+- ✅ Preserves existing validation logic
+- ✅ Type-safe with `Partial<BudgetCategory>`
+- ✅ No new TypeScript errors introduced (line 1373 error is pre-existing)
+
+---
+
+### Verification After Fix
+
+After removing the `try-catch` block:
+
+1. Run `npx tsc --noEmit` → should have same errors as before (no new errors)
+2. Test that category edits still work correctly
+3. Verify modal closes immediately on both change and no-change saves
+
+---
+
+### Summary
+
+One simple fix needed: Remove the unnecessary `try-catch` wrapper to match the existing codebase pattern and offline-first principles. The change tracking logic itself is well-implemented.
+
 
 ## Markdown Formatting
 Wrap HTML/XML tags in backticks: `` `<div>` ``, `` `<script>` ``
@@ -391,3 +462,4 @@ Manual testing (T010) provides sufficient verification for modal behavior.
 - 2026-02-09T21:00:19Z – claude-wp02 – shell_pid=97222 – lane=doing – Assigned agent via workflow command
 - 2026-02-09T22:53:45Z – claude-wp02 – shell_pid=97222 – lane=for_review – Ready for review: Added field-level change tracking to budget category edit. Only changed fields sent to updateBudgetCategory. No-change saves skip Firestore write. TypeScript passes with no new errors. Manual testing documented in prompt (T010).
 - 2026-02-09T22:56:12Z – claude-reviewer-3 – shell_pid=12578 – lane=doing – Started review via workflow command
+- 2026-02-09T23:02:07Z – claude-reviewer-3 – shell_pid=12578 – lane=planned – Moved to planned
