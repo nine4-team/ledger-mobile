@@ -34,34 +34,35 @@ export function subscribeToProjectBudgetCategories(
   }
   const collectionRef = collection(db, `accounts/${accountId}/projects/${projectId}/budgetCategories`);
 
-  // Try cache first for immediate response
+  // Cache-first: getDocsFromCache gives an instant response so the UI doesn't
+  // hang waiting for the server. onSnapshot in React Native Firebase waits for
+  // a server round-trip on its first callback, causing a 5-7s delay without this.
   getDocsFromCache(collectionRef)
     .then(snapshot => {
-      // Always call onChange, even if cache is empty (returns [])
       const next = snapshot.docs.map(
-        (doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
+        (d) => ({ ...(d.data() as object), id: d.id } as ProjectBudgetCategory)
       );
       onChange(next);
     })
     .catch(() => {
-      // Cache miss, call onChange with empty array so UI can render
+      // Cache miss — onChange with empty so loading state can clear
       onChange([]);
     });
 
-  // Then set up real-time listener for updates
+  // Real-time listener for subsequent updates
   return onSnapshot(
     collectionRef,
-      (snapshot) => {
-        const next = snapshot.docs.map(
-          (doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
-        );
-        onChange(next);
-      },
-      (error) => {
-        console.warn('[projectBudgetCategoriesService] subscription failed', error);
-        onChange([]);
-      }
-    );
+    (snapshot) => {
+      const next = snapshot.docs.map(
+        (d) => ({ ...(d.data() as object), id: d.id } as ProjectBudgetCategory)
+      );
+      onChange(next);
+    },
+    (error) => {
+      console.warn('[projectBudgetCategoriesService] subscription failed', error);
+      onChange([]);
+    }
+  );
 }
 
 export async function refreshProjectBudgetCategories(

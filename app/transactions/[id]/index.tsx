@@ -15,6 +15,7 @@ import { showItemConflictDialog } from '../../../src/components/ItemConflictDial
 import { ItemCard } from '../../../src/components/ItemCard';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
+import { StickyHeader } from '../../../src/components/StickyHeader';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -1221,17 +1222,17 @@ export default function TransactionDetailScreen() {
             ) : null}
 
             {/* Transaction Items Section */}
-            <View style={styles.itemsSection}>
-              <AppText variant="caption" style={styles.sectionHeader}>
-                TRANSACTION ITEMS
+            <AppText variant="caption" style={styles.sectionHeader}>
+              TRANSACTION ITEMS
+            </AppText>
+
+            {!itemizationEnabled && linkedItems.length > 0 ? (
+              <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
+                Itemization is off, but this transaction already has items.
               </AppText>
+            ) : null}
 
-              {!itemizationEnabled && linkedItems.length > 0 ? (
-                <AppText variant="caption" style={[styles.warningText, getTextSecondaryStyle(uiKitTheme)]}>
-                  Itemization is off, but this transaction already has items.
-                </AppText>
-              ) : null}
-
+            <StickyHeader>
               <ItemsListControlBar
                 search={searchQuery}
                 onChangeSearch={setSearchQuery}
@@ -1262,40 +1263,40 @@ export default function TransactionDetailScreen() {
                   </TouchableOpacity>
                 }
               />
+            </StickyHeader>
 
-              {filteredAndSortedItems.length > 0 ? (
-                <View style={styles.list}>
-                  {filteredAndSortedItems.map((item) => {
-                    const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
-                    const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
-                    const priceLabel = typeof item.purchasePriceCents === 'number'
-                      ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
-                      : undefined;
+            {filteredAndSortedItems.length > 0 ? (
+              <View style={styles.list}>
+                {filteredAndSortedItems.map((item) => {
+                  const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
+                  const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
+                  const priceLabel = typeof item.purchasePriceCents === 'number'
+                    ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
+                    : undefined;
 
-                    return (
-                      <ItemCard
-                        key={item.id}
-                        name={item.name?.trim() || 'Untitled item'}
-                        sku={item.sku ?? undefined}
-                        priceLabel={priceLabel}
-                        thumbnailUri={thumbnailUri}
-                        bookmarked={item.bookmark ?? undefined}
-                        selected={selectedItemIds.has(item.id)}
-                        onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
-                        onPress={() => router.push(`/items/${item.id}`)}
-                        menuItems={getItemMenuItems(item)}
-                      />
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    No items linked yet.
-                  </AppText>
-                </View>
-              )}
-            </View>
+                  return (
+                    <ItemCard
+                      key={item.id}
+                      name={item.name?.trim() || 'Untitled item'}
+                      sku={item.sku ?? undefined}
+                      priceLabel={priceLabel}
+                      thumbnailUri={thumbnailUri}
+                      bookmarked={item.bookmark ?? undefined}
+                      selected={selectedItemIds.has(item.id)}
+                      onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
+                      onPress={() => router.push(`/items/${item.id}`)}
+                      menuItems={getItemMenuItems(item)}
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  No items linked yet.
+                </AppText>
+              </View>
+            )}
 
             {/* Transaction Audit Section - Placeholder */}
             <TitledCard title="Transaction Audit">
@@ -1670,13 +1671,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
   },
-  itemsSection: {
-    gap: 12,
-    marginTop: 24,
-  },
   sectionHeader: {
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     fontWeight: '600',
+    marginTop: 24,
   },
 });

@@ -17,7 +17,7 @@ import { Project, subscribeToProject, updateProject } from '../../../src/data/pr
 import { subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
 import { subscribeToProjectBudgetCategories, setProjectBudgetCategory } from '../../../src/data/projectBudgetCategoriesService';
 import { saveLocalMedia, enqueueUpload, processUploadQueue, deleteLocalMediaByUrl, resolveAttachmentState } from '../../../src/offline/media';
-import type { AttachmentRef, AttachmentKind, BudgetCategory, ProjectBudgetCategory } from '../../../src/data/types';
+import type { AttachmentRef, AttachmentKind, BudgetCategory } from '../../../src/data/types';
 
 type EditParams = {
   projectId?: string;
@@ -41,9 +41,8 @@ export default function EditProjectScreen() {
 
   // Budget state
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
-  const [projectBudgetCategories, setProjectBudgetCategories] = useState<Record<string, ProjectBudgetCategory>>({});
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | null>>({});
-  const initialBudgets = useRef<Record<string, number | null>>({});
+  const userHasEditedBudgets = useRef(false);
 
   // Loading state
   const [isLoadingProject, setIsLoadingProject] = useState(true);
@@ -68,22 +67,21 @@ export default function EditProjectScreen() {
     return unsubscribe;
   }, [accountId, projectId]);
 
-  // Project budget categories subscription
+  // Project budget categories — accept subscription updates until the user
+  // starts editing, then let user edits own localBudgets. This allows both
+  // the cache callback and the later onSnapshot callback to populate the form
+  // (important when cache is empty on first visit).
   useEffect(() => {
     if (!accountId || !projectId) return;
     setIsLoadingProjectBudgets(true);
+    userHasEditedBudgets.current = false;
     const unsubscribe = subscribeToProjectBudgetCategories(accountId, projectId, (categories) => {
-      const budgetsMap: Record<string, ProjectBudgetCategory> = {};
-      const budgets: Record<string, number | null> = {};
-      categories.forEach(pbc => {
-        budgetsMap[pbc.id] = pbc;
-        budgets[pbc.id] = pbc.budgetCents;
-      });
-      setProjectBudgetCategories(budgetsMap);
-      setLocalBudgets(budgets);
-      // Store initial budgets on first load only
-      if (Object.keys(initialBudgets.current).length === 0) {
-        initialBudgets.current = { ...budgets };
+      if (!userHasEditedBudgets.current) {
+        const budgets: Record<string, number | null> = {};
+        categories.forEach(pbc => {
+          budgets[pbc.id] = pbc.budgetCents;
+        });
+        setLocalBudgets(budgets);
       }
       setIsLoadingProjectBudgets(false);
     });
@@ -131,6 +129,7 @@ export default function EditProjectScreen() {
 
   // Budget handler
   const handleBudgetChange = (categoryId: string, cents: number | null) => {
+    userHasEditedBudgets.current = true;
     setLocalBudgets(prev => ({ ...prev, [categoryId]: cents }));
   };
 
@@ -153,8 +152,7 @@ export default function EditProjectScreen() {
         updates.description = description.trim() || null;
       }
       if (Object.keys(updates).length > 0) {
-        updateProject(accountId, projectId, updates)
-          .catch(err => console.error('[projects] update failed:', err));
+        updateProject(accountId, projectId, updates);
       }
 
       // 2. Handle image changes (keep await on Storage upload)
@@ -173,28 +171,20 @@ export default function EditProjectScreen() {
           await processUploadQueue();
           const mediaState = resolveAttachmentState(selectedImage!);
           if (mediaState.status === 'uploaded' && mediaState.record?.remoteUrl) {
-            updateProject(accountId, projectId, { mainImageUrl: mediaState.record.remoteUrl })
-;
+            updateProject(accountId, projectId, { mainImageUrl: mediaState.record.remoteUrl });
           }
         } catch (err) {
           console.error('[projects] image upload failed:', err);
         }
       } else if (imageRemoved) {
-        updateProject(accountId, projectId, { mainImageUrl: null })
-;
+        updateProject(accountId, projectId, { mainImageUrl: null });
       }
 
-      // 3. Save changed budget categories (fire-and-forget)
-      const changedBudgets = Object.entries(localBudgets).filter(([categoryId, cents]) => {
-        const existing = projectBudgetCategories[categoryId]?.budgetCents;
-        return cents !== existing;
+      // 3. Save all budget categories (fire-and-forget, merge:true is idempotent)
+      budgetCategories.forEach(category => {
+        const cents = localBudgets[category.id] ?? null;
+        setProjectBudgetCategory(accountId, projectId, category.id, { budgetCents: cents });
       });
-      const budgetPromises = changedBudgets.map(([categoryId, cents]) =>
-        setProjectBudgetCategory(accountId, projectId, categoryId, { budgetCents: cents })
-      );
-      Promise.allSettled(budgetPromises).catch(err =>
-        console.error('[projects] budget category writes failed:', err)
-      );
 
       // 4. Navigate immediately
       router.replace(`/project/${projectId}?tab=items`);

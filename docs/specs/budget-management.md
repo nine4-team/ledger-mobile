@@ -314,36 +314,20 @@ Fee categories use "received" language but same underlying calculation.
 
 ### 1. Budget Progress Display (Full Mode)
 
-**Location**: Project detail screen, above tabs (always visible)
+**Location**: Project detail screen, Budget tab
 
-**Purpose**: Show budget progress at-a-glance for active project
+**Purpose**: Show budget progress for all enabled categories in the active project
 
-**Display Modes**:
-- **Collapsed**: Shows pinned budget categories only (or Overall Budget if no pins)
-- **Expanded**: Shows all enabled categories + Overall Budget
+**Display**: Always shows all enabled categories (no collapse/expand toggle)
 
 **Component Structure**:
 ```
 ┌─────────────────────────────────────────┐
-│  [Pinned Category 1]                    │
+│  [Pinned Category 1] 📌                 │
 │  ▓▓▓▓▓▓▓▓░░░░ 65%                      │
 │  $6,500 spent • $3,500 remaining        │
 │                                         │
-│  [Pinned Category 2]                    │
-│  ▓▓▓▓▓▓▓░░░░░ 45%                      │
-│  $2,250 spent • $2,750 remaining        │
-│                                         │
-│  [▼ Show All Budget Categories]         │  ← Toggle button (if categories exist beyond pins)
-└─────────────────────────────────────────┘
-
---- When Expanded ---
-
-┌─────────────────────────────────────────┐
-│  [Pinned Category 1]                    │
-│  ▓▓▓▓▓▓▓▓░░░░ 65%                      │
-│  $6,500 spent • $3,500 remaining        │
-│                                         │
-│  [Pinned Category 2]                    │
+│  [Pinned Category 2] 📌                 │
 │  ▓▓▓▓▓▓▓░░░░░ 45%                      │
 │  $2,250 spent • $2,750 remaining        │
 │                                         │
@@ -358,15 +342,13 @@ Fee categories use "received" language but same underlying calculation.
 │  [Design Fee]                           │
 │  ▓▓▓▓▓▓▓▓▓▓▓░ 85%                      │
 │  $4,250 received • $750 remaining       │
-│                                         │
-│  [▲ Show Less]                          │  ← Toggle button
 └─────────────────────────────────────────┘
 ```
 
 **Category Display Order**:
-1. Pinned categories (in user-defined order)
+1. Pinned categories (in user-defined order, with pin icon)
 2. Non-pinned enabled categories (in account custom order or alphabetical)
-3. Overall Budget (always shown in expanded view, at end before fees)
+3. Overall Budget (always shown at end before fees)
 4. Fee categories (always last)
 
 ---
@@ -378,10 +360,12 @@ Fee categories use "received" language but same underlying calculation.
 **Purpose**: Compact budget preview without interaction
 
 **Behavior**:
-- Shows same pinned categories as collapsed full mode
-- Fallback: Overall Budget if no pins
+- Shows pinned categories if any exist
+- Fallback: Shows top 1-2 categories with highest spend percentage if no pins
+- Fallback: Overall Budget if no categories have budget activity
 - No toggle button (static display)
 - Single line per category (condensed layout)
+- No percentage display (amounts only)
 
 **Layout**:
 ```
@@ -389,8 +373,8 @@ Fee categories use "received" language but same underlying calculation.
 │  Project Name                       │
 │  Client Name                        │
 │                                     │
-│  Furnishings: $6.5k / $10k (65%) ▓▓▓▓░│
-│  Overall: $23.2k / $40k (58%)    ▓▓▓░░│
+│  Furnishings: $6.5k / $10k      ▓▓▓▓░│
+│  Overall: $23.2k / $40k         ▓▓▓░░│
 └─────────────────────────────────────┘
 ```
 
@@ -489,6 +473,9 @@ $6,500 spent • $3,500 remaining         ← Amounts
 - Gap: `8px` between elements
 - Vertical Alignment: Center
 
+**Project Card Budget Preview Spacing**:
+- Margin Top: `16px` (separation from client name above)
+
 ---
 
 ### Mobile Spacing Adjustments
@@ -501,53 +488,34 @@ $6,500 spent • $3,500 remaining         ← Amounts
 
 ## Interaction Patterns
 
-### Toggle Button (Show All / Show Less)
+### Pin Indicator
 
-**Appearance**:
-- Button Type: Text button with icon
-- Position: Below last visible category tracker, centered or left-aligned
-- Padding: `8px 12px`
-- Font: `14px`, `font-medium`
-- Color: Primary color (`text-primary-600`)
-
-**States**:
-- **Collapsed**: Shows `ChevronDown` icon + "Show All Budget Categories"
-- **Expanded**: Shows `ChevronUp` icon + "Show Less"
-
-**Visibility Rules**:
-```typescript
-showToggleButton = (
-  hasUnpinnedEnabledCategories ||
-  hasOverallBudget ||
-  hasFeeCategories
-);
-```
-
-Only show toggle if there's additional content beyond pinned categories.
-
-**Behavior**:
-- Tap: Toggle between collapsed/expanded state
-- No animation on initial load (renders in collapsed state)
-- Smooth height transition (300ms ease) on toggle
-- Scroll position: maintain scroll (don't jump to top)
+**Visual Indicator**:
+- Small pin icon (13px Ionicons `pin` / `pin-outline`) positioned to the right of the progress bar
+- Pinned: Filled pin icon in primary color
+- Unpinned: Outline pin icon in border color
+- Always visible (not conditional on any state)
+- Tappable to toggle pin state
 
 ---
 
 ### Pinning Affordance
 
-**Location**: Long-press menu or swipe actions on category tracker (implementation-defined)
+**Interaction Methods**:
+1. **Pin Icon Tap**: Tap the small pin icon on the right side of any category tracker to toggle pin state
+2. **Long-Press Menu**: Long-press on category tracker row opens native action sheet/alert with pin/unpin option
 
 **Actions**:
 - **Pin**: Add category to user's `pinnedBudgetCategoryIds` (if not already pinned)
 - **Unpin**: Remove category from user's `pinnedBudgetCategoryIds`
-- **Reorder Pins**: Drag-and-drop or up/down buttons (see Budget Category Management)
 
-**Visual Indicator**:
-- Pinned categories: optional pin icon (`📌` or `PinIcon`) in category title
-- No indicator: also acceptable (pinning is implicit by position)
+**Visual Feedback**:
+- Pinned categories show filled pin icon in primary color
+- Unpinned categories show outline pin icon in muted border color
+- Icon always visible on all category trackers
 
 **Constraints**:
-- Overall Budget cannot be pinned (always in expanded view)
+- Overall Budget cannot be pinned (always shown at end before fees)
 - Can pin any enabled category (standard, itemized, or fee)
 - Maximum pins: unlimited (but recommend max 5 for UX)
 
@@ -677,46 +645,37 @@ function getFeeColor(percentage: number): string {
 
 ---
 
-## Pinning & Collapsed/Expanded Behavior
+## Pinning & Display Behavior
 
-### Default Collapsed View
-
-**Behavior**:
-```typescript
-function getCollapsedCategories(
-  projectId: string,
-  userId: string,
-  enabledCategories: BudgetCategory[]
-): BudgetCategory[] {
-  const preferences = getProjectPreferences(userId, projectId);
-
-  if (preferences.pinnedBudgetCategoryIds.length > 0) {
-    // Show pinned categories in user-defined order
-    return preferences.pinnedBudgetCategoryIds
-      .map(id => enabledCategories.find(c => c.id === id))
-      .filter(c => c !== undefined);
-  } else {
-    // Fallback: show Overall Budget only
-    return []; // Empty array = show Overall Budget tracker only
-  }
-}
-```
-
----
-
-### Default Expanded View
+### Display Rules
 
 **Behavior**:
+- All enabled categories always shown (no collapsed/expanded states)
+- Pinned categories sorted to top of list
+- Pin indicator always visible on all category trackers
+- Overall Budget always shown at end (before fee categories)
+
 ```typescript
-function getExpandedCategories(
-  enabledCategories: BudgetCategory[]
+function getDisplayCategories(
+  enabledCategories: BudgetCategory[],
+  pinnedCategoryIds: string[]
 ): BudgetCategory[] {
-  // Show all enabled categories + Overall Budget
-  return [
-    ...enabledCategories.filter(c => c.metadata?.categoryType !== "fee"),
-    // Overall Budget inserted here (synthetic entry)
-    ...enabledCategories.filter(c => c.metadata?.categoryType === "fee")
-  ];
+  // Pinned categories first (in user-defined order)
+  const pinned = pinnedCategoryIds
+    .map(id => enabledCategories.find(c => c.id === id))
+    .filter(c => c !== undefined && c.metadata?.categoryType !== 'fee');
+
+  // Non-pinned standard/itemized categories
+  const unpinned = enabledCategories
+    .filter(c => !pinnedCategoryIds.includes(c.id))
+    .filter(c => c.metadata?.categoryType !== 'fee')
+    .sort(byCategoryOrder);
+
+  // Fee categories always last
+  const fees = enabledCategories
+    .filter(c => c.metadata?.categoryType === 'fee');
+
+  return [...pinned, ...unpinned, fees];
 }
 ```
 
@@ -724,9 +683,9 @@ function getExpandedCategories(
 
 ### Enabled Categories Determination
 
-**Rule**: Category appears in expanded list if:
-1. Project budget doc exists (`projectBudgetCategories/{categoryId}`), OR
-2. Has non-zero attributed spend (even without budget doc)
+**Rule**: Category appears in display if:
+1. Has non-zero budget (`budgetCents > 0`), OR
+2. Has non-zero attributed spend (even without budget set)
 
 ```typescript
 function getEnabledCategories(
@@ -737,12 +696,16 @@ function getEnabledCategories(
   const spendByCategory = calculateSpendByCategory(projectId);
 
   return budgetCategories.filter(category => {
-    const hasProjectBudget = projectBudgets[category.id] !== undefined;
-    const hasSpend = spendByCategory[category.id] !== 0;
-    return hasProjectBudget || hasSpend;
+    const budgetCents = projectBudgets[category.id]?.budgetCents ?? 0;
+    const hasNonZeroBudget = budgetCents > 0;
+    const hasSpend = (spendByCategory[category.id] ?? 0) !== 0;
+    const isArchived = category.isArchived === true;
+    return (hasNonZeroBudget || hasSpend) && !isArchived;
   });
 }
 ```
+
+**Key Change from Legacy**: Categories with `budgetCents: 0` do not display unless they have spend. This prevents clutter from explicitly zero-budgeted categories.
 
 ---
 
@@ -750,8 +713,8 @@ function getEnabledCategories(
 
 **Seed Behavior**:
 - When user first views project, check if `ProjectPreferences` doc exists
-- If not: seed with Furnishings pinned by default (if enabled)
-- If Furnishings not enabled: no pins (fallback to Overall Budget)
+- If not: seed with Furnishings pinned by default (if enabled and has non-zero budget)
+- If Furnishings not enabled or has zero budget: no pins
 
 **Implementation**:
 ```typescript
@@ -761,7 +724,8 @@ async function ensureProjectPreferences(userId: string, projectId: string) {
     const furnishingsCategory = await findCategoryByName("Furnishings");
     const projectBudget = await getProjectBudgetCategory(projectId, furnishingsCategory.id);
 
-    const pinnedIds = projectBudget ? [furnishingsCategory.id] : [];
+    // Only pin Furnishings if it has a non-zero budget
+    const pinnedIds = (projectBudget?.budgetCents ?? 0) > 0 ? [furnishingsCategory.id] : [];
 
     await createProjectPreferences({
       userId,
@@ -1109,6 +1073,31 @@ for (const disabledCategoryId of disabledCategoryIds) {
 - Show toast: "Budget saved"
 - Navigate back to project detail
 - Budget display updates immediately (Firestore listener)
+
+---
+
+### Budget Edit Change Detection
+
+**Implementation Note**: The edit form uses a `useRef` to track initial budget values loaded from Firestore. This prevents false-positive "no changes detected" scenarios when the subscription state is stale.
+
+```typescript
+const initialBudgets = useRef<Record<string, number | null>>({});
+
+// On subscription data load
+useEffect(() => {
+  if (Object.keys(initialBudgets.current).length === 0) {
+    initialBudgets.current = { ...budgets };
+  }
+}, [budgets]);
+
+// On save
+const changedBudgets = Object.entries(localBudgets).filter(([categoryId, cents]) => {
+  const existing = initialBudgets.current[categoryId];
+  return cents !== existing;
+});
+```
+
+This ensures budget edits persist correctly even when the real-time subscription hasn't yet updated with previous saves.
 
 ---
 
@@ -1460,21 +1449,20 @@ function getAmountLabels(category: BudgetCategory, spent: number, budget: number
 ### Budget Progress Display
 
 - [ ] Budget module renders from local Firestore cache (no network required)
-- [ ] Collapsed view shows pinned categories only
-- [ ] Collapsed view falls back to Overall Budget if no pins
-- [ ] Expanded view shows all enabled categories + Overall Budget
-- [ ] Toggle button shows "Show All" / "Show Less" with icons
-- [ ] Toggle button hidden if no additional categories beyond pins
+- [ ] All enabled categories always shown (no collapsed/expanded states)
+- [ ] Pin indicator always visible on all category trackers
+- [ ] Pin icon toggles pin state on tap
+- [ ] Long-press opens pin/unpin action sheet
 - [ ] Progress bars use correct colors (green/yellow/red thresholds)
 - [ ] Progress bars show overflow indicator (dark red) if >100%
 - [ ] Fee categories use reversed color logic (green = high %)
 - [ ] Fee categories show "received" language instead of "spent"
 - [ ] Fee categories positioned last in list
-- [ ] Overall Budget excluded from collapsed view
-- [ ] Overall Budget shown in expanded view only
-- [ ] Categories sorted: pinned → custom order → alphabetical → fees
+- [ ] Overall Budget shown at end before fee categories
+- [ ] Categories sorted: pinned (with icon) → custom order → alphabetical → fees
 - [ ] Canceled transactions excluded from all calculations
 - [ ] Transactions in `excludeFromOverallBudget` categories excluded from overall totals
+- [ ] Categories with `budgetCents: 0` and no spend are hidden
 
 ### Budget Category Management
 

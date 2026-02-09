@@ -31,7 +31,7 @@ export function ListControlBar({ search, onChangeSearch, actions, leftElement, s
     () =>
       StyleSheet.create({
         container: {
-          backgroundColor: uiKitTheme.background.chrome,
+          backgroundColor: 'transparent',
           borderColor: uiKitTheme.border.secondary,
         },
       }),
