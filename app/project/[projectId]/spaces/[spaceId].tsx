@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Screen } from '../../../../src/components/Screen';
-import { useScreenTabs } from '../../../../src/components/ScreenTabs';
 import { AppText } from '../../../../src/components/AppText';
 import { AppButton } from '../../../../src/components/AppButton';
 import { ItemsListControlBar } from '../../../../src/components/ItemsListControlBar';
@@ -90,13 +89,6 @@ export default function SpaceDetailScreen() {
   return (
     <Screen
       title={spaceName}
-      tabs={[
-        { key: 'info', label: 'Info', accessibilityLabel: 'Info tab' },
-        { key: 'items', label: 'Items', accessibilityLabel: 'Items tab' },
-        { key: 'images', label: 'Images', accessibilityLabel: 'Images tab' },
-        { key: 'checklists', label: 'Checklists', accessibilityLabel: 'Checklists tab' },
-      ]}
-      initialTabKey="info"
       backTarget={`/project/${projectId}?tab=spaces`}
       onPressMenu={() => setSpaceMenuVisible(true)}
     >
@@ -131,8 +123,6 @@ function SpaceDetailContent({
   const userId = useAuthStore((store) => store.user?.uid ?? null);
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
-  const screenTabs = useScreenTabs();
-  const selectedKey = screenTabs?.selectedKey ?? 'info';
 
   const [space, setSpace] = useState<Space | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
@@ -553,165 +543,10 @@ function SpaceDetailContent({
 
   return (
     <View style={styles.container}>
-      {/* Info Tab */}
-      {selectedKey === 'info' ? (
-        <View style={styles.infoContainer}>
-          <NotesSection notes={space.notes} expandable={true} />
-        </View>
-      ) : selectedKey === 'items' ? (
-        /* Items Tab */
-        <>
-          <ItemsListControlBar
-            search={searchQuery}
-            onChangeSearch={setSearchQuery}
-            showSearch={showSearch}
-            onToggleSearch={() => setShowSearch((prev) => !prev)}
-            onSort={() => setSortMenuVisible(true)}
-            isSortActive={sortMode !== 'created-desc'}
-            onFilter={() => setFilterMenuVisible(true)}
-            isFilterActive={isFilterActive}
-            onAdd={() => setAddMenuVisible(true)}
-          />
-
-          {bulkMode ? (
-                <View style={styles.bulkPanel}>
-                  <View style={styles.bulkHeader}>
-                    <AppText variant="caption">{bulkSelectedIds.length} selected</AppText>
-                    <AppButton
-                      title="Done"
-                      variant="secondary"
-                      onPress={() => {
-                        setBulkMode(false);
-                        setBulkSelectedIds([]);
-                      }}
-                    />
-                  </View>
-                  <SpaceSelector
-                    projectId={projectId}
-                    value={bulkTargetSpaceId}
-                    onChange={setBulkTargetSpaceId}
-                    allowCreate={false}
-                    placeholder="Move to space…"
-                  />
-                  <View style={styles.bulkActions}>
-                    <AppButton
-                      title="Move"
-                      variant="secondary"
-                      onPress={handleBulkMove}
-                      disabled={!bulkTargetSpaceId || bulkSelectedIds.length === 0}
-                    />
-                    <AppButton
-                      title="Remove from space"
-                      variant="secondary"
-                      onPress={handleBulkRemove}
-                      disabled={bulkSelectedIds.length === 0}
-                    />
-                  </View>
-                </View>
-              ) : null}
-
-              {filteredSpaceItems.length === 0 ? (
-                <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                  {searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-                </AppText>
-              ) : (
-                <View style={styles.list}>
-                  {filteredSpaceItems.map((item) => {
-                    const itemMenuItems: AnchoredMenuItem[] = [
-                      {
-                        key: 'open',
-                        label: 'Open',
-                        onPress: () =>
-                          router.push({
-                            pathname: '/items/[id]',
-                            params: {
-                              id: item.id,
-                              scope: 'project',
-                              projectId,
-                              backTarget: `/project/${projectId}/spaces/${spaceId}`,
-                            },
-                          }),
-                      },
-                      {
-                        key: 'remove-from-space',
-                        label: 'Remove from Space',
-                        onPress: () => {
-                          if (!accountId) return;
-                          updateItem(accountId, item.id, { spaceId: null }).catch((err) => {
-                            console.warn(`[spaces] remove item from space failed:`, err);
-                          });
-                        },
-                      },
-                    ];
-
-                    return (
-                      <ItemCard
-                        key={item.id}
-                        name={item.name?.trim() || 'Untitled item'}
-                        sku={(item as any).sku ?? undefined}
-                        sourceLabel={(item as any).source ?? undefined}
-                        priceLabel={getDisplayPrice(item)}
-                        statusLabel={(item as any).status ?? undefined}
-                        thumbnailUri={getPrimaryImageUri(item)}
-                        selected={bulkMode ? bulkSelectedIds.includes(item.id) : undefined}
-                        onSelectedChange={
-                          bulkMode
-                            ? (next) =>
-                                setBulkSelectedIds((prev) =>
-                                  next ? [...prev, item.id] : prev.filter((id) => id !== item.id)
-                                )
-                            : undefined
-                        }
-                        menuItems={bulkMode ? undefined : itemMenuItems}
-                        bookmarked={Boolean((item as any).bookmark)}
-                        onBookmarkPress={() => {
-                          if (!accountId) return;
-                          updateItem(accountId, item.id, { bookmark: !(item as any).bookmark }).catch((err) => {
-                            console.warn(`[spaces] bookmark toggle failed:`, err);
-                          });
-                        }}
-                        onPress={() => {
-                          if (bulkMode) {
-                            setBulkSelectedIds((prev) =>
-                              prev.includes(item.id)
-                                ? prev.filter((id) => id !== item.id)
-                                : [...prev, item.id]
-                            );
-                            return;
-                          }
-                          router.push({
-                            pathname: '/items/[id]',
-                            params: {
-                              id: item.id,
-                              scope: 'project',
-                              projectId,
-                              backTarget: `/project/${projectId}/spaces/${spaceId}`,
-                            },
-                          });
-                        }}
-                      />
-                    );
-                  })}
-                </View>
-              )}
-
-              {!bulkMode && spaceItems.length > 0 ? (
-                <Pressable
-                  onPress={() => {
-                    setBulkMode(true);
-                    setBulkSelectedIds([]);
-                  }}
-                  style={styles.bulkModeToggle}
-                >
-                  <AppText variant="caption" style={{ color: theme.colors.primary }}>
-                    Select multiple items…
-                  </AppText>
-                </Pressable>
-          ) : null}
-        </>
-      ) : selectedKey === 'images' ? (
-        /* Images Tab */
-        <View style={styles.imagesContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Images */}
+        <View style={styles.section}>
+          <AppText variant="h2">Images</AppText>
           {space.images && space.images.length > 0 ? (
             <>
               <ThumbnailGrid
@@ -735,22 +570,177 @@ function SpaceDetailContent({
               )}
             </>
           ) : (
-            <View style={styles.emptyImagesState}>
-              <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                No images yet.
-              </AppText>
-              <ImagePickerButton
-                onFilePicked={handleAddImage}
-                maxFiles={50}
-                currentFileCount={0}
-                style={styles.imagePickerButton}
-              />
-            </View>
+            <ImagePickerButton
+              onFilePicked={handleAddImage}
+              maxFiles={50}
+              currentFileCount={0}
+              style={styles.imagePickerButton}
+            />
           )}
         </View>
-      ) : (
-        /* Checklists Tab */
-        <View style={styles.checklists}>
+
+        {/* Info / Notes */}
+        <NotesSection notes={space.notes} expandable={true} />
+
+        {/* Items */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <AppText variant="h2">Items</AppText>
+          </View>
+          <ItemsListControlBar
+            search={searchQuery}
+            onChangeSearch={setSearchQuery}
+            showSearch={showSearch}
+            onToggleSearch={() => setShowSearch((prev) => !prev)}
+            onSort={() => setSortMenuVisible(true)}
+            isSortActive={sortMode !== 'created-desc'}
+            onFilter={() => setFilterMenuVisible(true)}
+            isFilterActive={isFilterActive}
+            onAdd={() => setAddMenuVisible(true)}
+          />
+
+          {bulkMode ? (
+            <View style={styles.bulkPanel}>
+              <View style={styles.bulkHeader}>
+                <AppText variant="caption">{bulkSelectedIds.length} selected</AppText>
+                <AppButton
+                  title="Done"
+                  variant="secondary"
+                  onPress={() => {
+                    setBulkMode(false);
+                    setBulkSelectedIds([]);
+                  }}
+                />
+              </View>
+              <SpaceSelector
+                projectId={projectId}
+                value={bulkTargetSpaceId}
+                onChange={setBulkTargetSpaceId}
+                allowCreate={false}
+                placeholder="Move to space…"
+              />
+              <View style={styles.bulkActions}>
+                <AppButton
+                  title="Move"
+                  variant="secondary"
+                  onPress={handleBulkMove}
+                  disabled={!bulkTargetSpaceId || bulkSelectedIds.length === 0}
+                />
+                <AppButton
+                  title="Remove from space"
+                  variant="secondary"
+                  onPress={handleBulkRemove}
+                  disabled={bulkSelectedIds.length === 0}
+                />
+              </View>
+            </View>
+          ) : null}
+
+          {filteredSpaceItems.length === 0 ? (
+            <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+              {searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+            </AppText>
+          ) : (
+            <View style={styles.list}>
+              {filteredSpaceItems.map((item) => {
+                const itemMenuItems: AnchoredMenuItem[] = [
+                  {
+                    key: 'open',
+                    label: 'Open',
+                    onPress: () =>
+                      router.push({
+                        pathname: '/items/[id]',
+                        params: {
+                          id: item.id,
+                          scope: 'project',
+                          projectId,
+                          backTarget: `/project/${projectId}/spaces/${spaceId}`,
+                        },
+                      }),
+                  },
+                  {
+                    key: 'remove-from-space',
+                    label: 'Remove from Space',
+                    onPress: () => {
+                      if (!accountId) return;
+                      updateItem(accountId, item.id, { spaceId: null }).catch((err) => {
+                        console.warn(`[spaces] remove item from space failed:`, err);
+                      });
+                    },
+                  },
+                ];
+
+                return (
+                  <ItemCard
+                    key={item.id}
+                    name={item.name?.trim() || 'Untitled item'}
+                    sku={(item as any).sku ?? undefined}
+                    sourceLabel={(item as any).source ?? undefined}
+                    priceLabel={getDisplayPrice(item)}
+                    statusLabel={(item as any).status ?? undefined}
+                    thumbnailUri={getPrimaryImageUri(item)}
+                    selected={bulkMode ? bulkSelectedIds.includes(item.id) : undefined}
+                    onSelectedChange={
+                      bulkMode
+                        ? (next) =>
+                            setBulkSelectedIds((prev) =>
+                              next ? [...prev, item.id] : prev.filter((id) => id !== item.id)
+                            )
+                        : undefined
+                    }
+                    menuItems={bulkMode ? undefined : itemMenuItems}
+                    bookmarked={Boolean((item as any).bookmark)}
+                    onBookmarkPress={() => {
+                      if (!accountId) return;
+                      updateItem(accountId, item.id, { bookmark: !(item as any).bookmark }).catch((err) => {
+                        console.warn(`[spaces] bookmark toggle failed:`, err);
+                      });
+                    }}
+                    onPress={() => {
+                      if (bulkMode) {
+                        setBulkSelectedIds((prev) =>
+                          prev.includes(item.id)
+                            ? prev.filter((id) => id !== item.id)
+                            : [...prev, item.id]
+                        );
+                        return;
+                      }
+                      router.push({
+                        pathname: '/items/[id]',
+                        params: {
+                          id: item.id,
+                          scope: 'project',
+                          projectId,
+                          backTarget: `/project/${projectId}/spaces/${spaceId}`,
+                        },
+                      });
+                    }}
+                  />
+                );
+              })}
+            </View>
+          )}
+
+          {!bulkMode && spaceItems.length > 0 ? (
+            <Pressable
+              onPress={() => {
+                setBulkMode(true);
+                setBulkSelectedIds([]);
+              }}
+              style={styles.bulkModeToggle}
+            >
+              <AppText variant="caption" style={{ color: theme.colors.primary }}>
+                Select multiple items…
+              </AppText>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* Checklists */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <AppText variant="h2">Checklists</AppText>
+          </View>
           <AppButton
             title="Add checklist"
             onPress={() =>
@@ -888,7 +878,7 @@ function SpaceDetailContent({
             </View>
           )}
         </View>
-      )}
+      </ScrollView>
 
       {/* Image gallery lightbox */}
       {space.images && space.images.length > 0 && (
@@ -979,11 +969,19 @@ function SpaceDetailContent({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    flex: 1,
+  },
+  scrollContent: {
+    gap: 20,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
-  infoContainer: {
+  section: {
     gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   list: {
     gap: 10,
@@ -1003,13 +1001,6 @@ const styles = StyleSheet.create({
   },
   bulkModeToggle: {
     paddingVertical: 8,
-    alignItems: 'center',
-  },
-  imagesContainer: {
-    gap: 12,
-  },
-  emptyImagesState: {
-    gap: 16,
     alignItems: 'center',
   },
   imagePickerButton: {
