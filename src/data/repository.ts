@@ -7,13 +7,13 @@ export interface Repository<T> {
   get(id: string): Promise<T | null>;
   upsert(id: string, data: Partial<T>): void;
   delete(id: string): void;
-  
+
   /**
    * Subscribe to real-time updates for a single document.
    * Returns an unsubscribe function.
    */
   subscribe(id: string, onChange: (item: T | null) => void): () => void;
-  
+
   /**
    * Subscribe to real-time updates for the collection (list).
    * Returns an unsubscribe function.
@@ -138,6 +138,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
   /**
    * Subscribe to real-time updates for a single document.
    * Uses native Firestore onSnapshot for offline-ready behavior.
+   * Cache-first: tries to read from cache immediately, then sets up real-time listener.
    */
   subscribe(id: string, onChange: (item: T | null) => void): () => void {
     if (!isFirebaseConfigured || !db) {
@@ -146,9 +147,23 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     }
 
     const docRef = doc(db, `${this.collectionPath}/${id}`);
-    
-    // onSnapshot works offline with native Firestore persistence
-    // It will fire immediately with cached data if available, then with server updates
+
+    // Try cache first for immediate response
+    getDocFromCache(docRef)
+      .then(snapshot => {
+        // Always call onChange, even if cache is empty (returns null)
+        if (snapshot.exists) {
+          onChange({ ...(snapshot.data() as object), id: snapshot.id } as T);
+        } else {
+          onChange(null);
+        }
+      })
+      .catch(() => {
+        // Cache miss, call onChange with null so UI can render
+        onChange(null);
+      });
+
+    // Then set up real-time listener for updates
     return onSnapshot(
       docRef,
       (snapshot) => {
@@ -168,6 +183,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
   /**
    * Subscribe to real-time updates for the collection (list).
    * Uses native Firestore onSnapshot for offline-ready behavior.
+   * Cache-first: tries to read from cache immediately, then sets up real-time listener.
    */
   subscribeList(onChange: (items: T[]) => void): () => void {
     if (!isFirebaseConfigured || !db) {
@@ -176,9 +192,20 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     }
 
     const collectionRef = collection(db, this.collectionPath);
-    
-    // onSnapshot works offline with native Firestore persistence
-    // It will fire immediately with cached data if available, then with server updates
+
+    // Try cache first for immediate response
+    getDocsFromCache(collectionRef)
+      .then(snapshot => {
+        // Always call onChange, even if cache is empty (returns [])
+        const items = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
+        onChange(items);
+      })
+      .catch(() => {
+        // Cache miss, call onChange with empty array so UI can render
+        onChange([]);
+      });
+
+    // Then set up real-time listener for updates
     return onSnapshot(
       collectionRef,
       (snapshot) => {
@@ -195,14 +222,14 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
 
 /**
  * Factory function to create a repository
- * 
+ *
  * Both 'online' and 'offline' modes use the native Firestore SDK.
  * - 'online': server-first reads, fallback to cache
  * - 'offline': cache-first reads, fallback to server
- * 
+ *
  * Both modes support real-time listeners via subscribe/subscribeList methods.
  * Native Firestore offline persistence enables offline-ready behavior automatically.
- * 
+ *
  * @param collectionPath - Firestore collection path (e.g., 'users/{uid}/items')
  * @param mode - 'online' (default) or 'offline' (cache-first preference)
  * @returns Repository instance (never throws, even if Firebase is not configured)

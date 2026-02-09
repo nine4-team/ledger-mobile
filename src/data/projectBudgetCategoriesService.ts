@@ -33,6 +33,22 @@ export function subscribeToProjectBudgetCategories(
     return () => {};
   }
   const collectionRef = collection(db, `accounts/${accountId}/projects/${projectId}/budgetCategories`);
+
+  // Try cache first for immediate response
+  getDocsFromCache(collectionRef)
+    .then(snapshot => {
+      // Always call onChange, even if cache is empty (returns [])
+      const next = snapshot.docs.map(
+        (doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
+      );
+      onChange(next);
+    })
+    .catch(() => {
+      // Cache miss, call onChange with empty array so UI can render
+      onChange([]);
+    });
+
+  // Then set up real-time listener for updates
   return onSnapshot(
     collectionRef,
       (snapshot) => {
@@ -97,15 +113,15 @@ export function setProjectBudgetCategory(
   const payload: any = {
     ...data,
     updatedAt: now,
-    createdAt: now,
   };
 
   if (uid) {
     payload.updatedBy = uid;
-    payload.createdBy = uid;
   }
 
   // Fire-and-forget write — merge:true preserves existing fields on updates
+  // Note: createdAt/createdBy are NOT included here; they should be set only
+  // on first document creation (if needed), not on every update
   setDoc(ref, payload, { merge: true }).catch(err =>
     console.error('[projectBudgetCategories] set failed:', err)
   );

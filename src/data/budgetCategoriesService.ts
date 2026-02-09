@@ -45,6 +45,22 @@ export function subscribeToBudgetCategories(
     return () => {};
   }
   const collectionRef = collection(db, `accounts/${accountId}/presets/default/budgetCategories`);
+
+  // Try cache first for immediate response
+  getDocsFromCache(collectionRef)
+    .then(snapshot => {
+      // Always call onChange, even if cache is empty (returns [])
+      const next = snapshot.docs.map(
+        (doc) => ({ ...(doc.data() as object), id: doc.id } as BudgetCategory)
+      );
+      onChange(next);
+    })
+    .catch(() => {
+      // Cache miss, call onChange with empty array so UI can render
+      onChange([]);
+    });
+
+  // Then set up real-time listener for updates
   return onSnapshot(
     collectionRef,
       (snapshot) => {
