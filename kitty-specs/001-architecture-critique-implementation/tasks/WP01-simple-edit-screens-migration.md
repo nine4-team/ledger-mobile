@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Simple Edit Screens Migration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: c969f7b10576fed880f5ff39d28a5fa35e7f016f
@@ -44,6 +44,79 @@ history:
 **Reviewed by**: nine4-team
 **Status**: ❌ Changes Requested
 **Date**: 2026-02-09
+
+## Review Feedback (Round 2)
+
+**Reviewed by**: claude-reviewer
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-09
+
+### Issue 1: Infinite Render Loop - Unmemoized initialData (CRITICAL)
+
+**Location:** `app/project/[projectId]/edit.tsx:42-48`
+
+**Problem:** The `useEditForm` hook is called with an inline object literal that creates a new reference every render:
+
+```typescript
+const form = useEditForm<ProjectBasicFields>(
+  project ? {
+    name: project.name || '',
+    clientName: project.clientName || '',
+    description: project.description || ''
+  } : null
+);
+```
+
+The hook's internal `useEffect` depends on `[initialData, hasEdited]` (see `src/hooks/useEditForm.ts:35-52`). When `project` is non-null, the inline object creates a new reference every render, causing the effect to fire every render, which calls `setValues()` with a new reference, which triggers another render, creating an infinite loop:
+
+1. Render → `initialData` = new obj ref A
+2. Effect fires → `setValues(ref A)` → re-render
+3. Render → `initialData` = new obj ref B (≠ A, because inline literal)
+4. Effect fires → `setValues(ref B)` → re-render
+5. ... repeat until React throws "Maximum update depth exceeded"
+
+React uses `Object.is()` for both useState bailouts and useEffect dependency checks. New object references are never `Object.is`-equal.
+
+**Required Fix:** Wrap the `initialData` computation in `useMemo`:
+
+```typescript
+import { useMemo } from 'react';
+
+// ...
+
+const initialData = useMemo(() => project ? {
+  name: project.name || '',
+  clientName: project.clientName || '',
+  description: project.description || ''
+} : null, [project]);
+
+const form = useEditForm<ProjectBasicFields>(initialData);
+```
+
+With `useMemo([project])`, the object reference only changes when `project` changes (i.e., on subscription callbacks), not on every render. Between subscription callbacks, the memo value is stable and the effect won't re-fire.
+
+**Why this matters:**
+- The project edit screen will crash immediately on load when project data arrives
+- This is a regression from the working pre-migration code (which used separate useState strings — strings are value-compared by React)
+
+### Everything Else Passes
+
+- ✅ Space edit screens (both): Correct inline change detection, whitespace normalization, fire-and-forget writes
+- ✅ Budget handling: Completely untouched, good isolation
+- ✅ SpaceForm component: Not modified
+- ✅ TypeScript: No new errors (all 4 in edit.tsx are pre-existing on main)
+- ✅ Save handler: Correctly uses `form.hasChanges` + `getChangedFields()` with trimming
+- ✅ Validation: Name/clientName required check uses `form.values`
+- ✅ Subscription protection: Removed manual subscription effect, relies on hook's `hasEdited` gate
+
+### Verification Checklist After Fix
+
+- [ ] Add `useMemo` import to the import line
+- [ ] Wrap initialData in `useMemo` with `[project]` dependency
+- [ ] Verify project edit screen loads without crashing (no "Maximum update depth exceeded" error)
+- [ ] Verify subscription updates still work (open project, wait for data)
+- [ ] Verify editing still works (type in name field, save)
+
 
 ## Issue 1: Project Edit - Broken Subscription Updates (CRITICAL)
 
@@ -600,3 +673,4 @@ Manual testing (T005) provides sufficient verification for form behavior changes
 - 2026-02-09T21:21:00Z – claude-fixer – shell_pid=19771 – lane=doing – Started implementation via workflow command
 - 2026-02-09T21:23:27Z – claude-fixer – shell_pid=19771 – lane=for_review – Review feedback addressed: Fixed subscription update mechanism and whitespace handling
 - 2026-02-09T21:26:19Z – claude-reviewer – shell_pid=26790 – lane=doing – Started review via workflow command
+- 2026-02-09T21:32:25Z – claude-reviewer – shell_pid=26790 – lane=planned – Moved to planned
