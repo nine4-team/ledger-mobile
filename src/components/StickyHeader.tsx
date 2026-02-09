@@ -17,7 +17,7 @@ export function StickyHeader({ children, style, ...props }: ViewProps) {
       style={[
         {
           backgroundColor: theme.colors.background,
-          zIndex: 1, // Ensure sticky header renders above content on Android
+          zIndex: 1,
         },
         style,
       ]}

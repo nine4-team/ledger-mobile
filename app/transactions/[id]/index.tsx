@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
@@ -15,7 +15,6 @@ import { showItemConflictDialog } from '../../../src/components/ItemConflictDial
 import { ItemCard } from '../../../src/components/ItemCard';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
-import { StickyHeader } from '../../../src/components/StickyHeader';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -26,7 +25,7 @@ import {
 } from '../../../src/ui';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
-import { useUIKitTheme } from '../../../src/theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../src/data/scopeConfig';
 import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedListData';
 import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
@@ -92,6 +91,7 @@ export default function TransactionDetailScreen() {
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
   const uiKitTheme = useUIKitTheme();
+  const theme = useTheme();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,6 +109,11 @@ export default function TransactionDetailScreen() {
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Manual sticky control bar state
+  const [controlBarSticky, setControlBarSticky] = useState(false);
+  const controlBarYRef = useRef(Infinity);
+  const controlBarStickyRef = useRef(false);
 
   // Bulk selection state
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -1043,6 +1048,52 @@ export default function TransactionDetailScreen() {
     return items;
   }, [handleDelete, id, projectId, router, scope]);
 
+  const handleScrollEvent = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const shouldBeSticky = offsetY >= controlBarYRef.current;
+    if (shouldBeSticky !== controlBarStickyRef.current) {
+      controlBarStickyRef.current = shouldBeSticky;
+      setControlBarSticky(shouldBeSticky);
+    }
+  }, []);
+
+  const handleControlBarLayout = useCallback((event: LayoutChangeEvent) => {
+    controlBarYRef.current = event.nativeEvent.layout.y;
+  }, []);
+
+  const renderControlBar = () => (
+    <ItemsListControlBar
+      search={searchQuery}
+      onChangeSearch={setSearchQuery}
+      showSearch={showSearch}
+      onToggleSearch={() => setShowSearch(!showSearch)}
+      onSort={() => setSortMenuVisible(true)}
+      isSortActive={sortMode !== 'created-desc'}
+      onFilter={() => setFilterMenuVisible(true)}
+      isFilterActive={filterMode !== 'all'}
+      onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+      leftElement={
+        <TouchableOpacity
+          onPress={handleSelectAll}
+          style={[
+            styles.selectButton,
+            {
+              backgroundColor: uiKitTheme.button.secondary.background,
+              borderColor: uiKitTheme.border.primary,
+            },
+          ]}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+        >
+          <SelectorCircle
+            selected={selectedItemIds.size === filteredAndSortedItems.length}
+            indicator="check"
+          />
+        </TouchableOpacity>
+      }
+    />
+  );
+
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
       <View style={[styles.statusPill, { backgroundColor: `${uiKitTheme.primary.main}1A` }]}>
@@ -1061,7 +1112,13 @@ export default function TransactionDetailScreen() {
       onPressMenu={() => setMenuVisible(true)}
       contentStyle={styles.screenContent}
     >
-      <AppScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <View style={styles.scrollContainer}>
+        {controlBarSticky && !isLoading && transaction ? (
+          <View style={[styles.floatingControlBar, { backgroundColor: theme.colors.background }]}>
+            {renderControlBar()}
+          </View>
+        ) : null}
+        <AppScrollView style={styles.scroll} contentContainerStyle={styles.content} onScroll={handleScrollEvent} scrollEventThrottle={16}>
         {isLoading ? (
           <AppText variant="body">Loading transaction…</AppText>
         ) : transaction ? (
@@ -1232,45 +1289,13 @@ export default function TransactionDetailScreen() {
               </AppText>
             ) : null}
 
-            <StickyHeader>
-              <ItemsListControlBar
-                search={searchQuery}
-                onChangeSearch={setSearchQuery}
-                showSearch={showSearch}
-                onToggleSearch={() => setShowSearch(!showSearch)}
-                onSort={() => setSortMenuVisible(true)}
-                isSortActive={sortMode !== 'created-desc'}
-                onFilter={() => setFilterMenuVisible(true)}
-                isFilterActive={filterMode !== 'all'}
-                onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
-                leftElement={
-                  <TouchableOpacity
-                    onPress={handleSelectAll}
-                    style={[
-                      styles.selectButton,
-                      {
-                        backgroundColor: uiKitTheme.button.secondary.background,
-                        borderColor: uiKitTheme.border.primary,
-                      },
-                    ]}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
-                  >
-                    <SelectorCircle
-                      selected={selectedItemIds.size === filteredAndSortedItems.length}
-                      indicator="check"
-                    />
-                  </TouchableOpacity>
-                }
-              />
-            </StickyHeader>
+            <View onLayout={handleControlBarLayout}>
+              {renderControlBar()}
+            </View>
 
             {filteredAndSortedItems.length > 0 ? (
-              <FlatList
-                data={filteredAndSortedItems}
-                contentContainerStyle={styles.list}
-                scrollEnabled={false}
-                renderItem={({ item }) => {
+              <View style={styles.list}>
+                {filteredAndSortedItems.map((item) => {
                   const primaryImage = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
                   const thumbnailUri = primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
                   const priceLabel = typeof item.purchasePriceCents === 'number'
@@ -1279,6 +1304,7 @@ export default function TransactionDetailScreen() {
 
                   return (
                     <ItemCard
+                      key={item.id}
                       name={item.name?.trim() || 'Untitled item'}
                       sku={item.sku ?? undefined}
                       priceLabel={priceLabel}
@@ -1290,9 +1316,8 @@ export default function TransactionDetailScreen() {
                       menuItems={getItemMenuItems(item)}
                     />
                   );
-                }}
-                keyExtractor={(item) => item.id}
-              />
+                })}
+              </View>
             ) : (
               <View style={styles.emptyState}>
                 <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
@@ -1543,7 +1568,8 @@ export default function TransactionDetailScreen() {
         ) : (
           <AppText variant="body">Transaction not found.</AppText>
         )}
-      </AppScrollView>
+        </AppScrollView>
+      </View>
     </Screen>
   );
 }
@@ -1559,6 +1585,16 @@ const styles = StyleSheet.create({
   },
   screenContent: {
     paddingTop: 0,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  floatingControlBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   card: {},
   heroHeader: {
@@ -1622,7 +1658,6 @@ const styles = StyleSheet.create({
   list: {
     gap: 10,
     marginTop: 12,
-    flexDirection: 'column',
   },
   itemRow: {
     flexDirection: 'row',
