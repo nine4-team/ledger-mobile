@@ -12,7 +12,7 @@ subtasks:
 - T003
 phase: Phase 1 - MVP
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "75313"
 review_status: ''
 reviewed_by: ''
@@ -299,3 +299,4 @@ export type Item = {
 ## Activity Log
 
 - 2026-02-09T15:00:00Z – system – lane=planned – Prompt created.
+- 2026-02-10T01:13:26Z – claude-opus – shell_pid=75313 – lane=doing – Assigned agent via workflow command
