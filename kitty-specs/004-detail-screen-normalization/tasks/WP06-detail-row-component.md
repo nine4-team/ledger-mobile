@@ -1,25 +1,28 @@
 ---
-work_package_id: "WP06"
-subtasks:
-  - "T026"
-  - "T027"
-  - "T028"
-  - "T029"
-title: "Create DetailRow Component"
-phase: "Phase 3 - Detail Row Extraction"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP06
+title: Create DetailRow Component
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 1a15fd7b3fb801a7c4650f0e390183fed6dda4bb
+created_at: '2026-02-10T03:45:43.914971+00:00'
+subtasks:
+- T026
+- T027
+- T028
+- T029
+phase: Phase 3 - Detail Row Extraction
+assignee: ''
+agent: "claude-sonnet"
+shell_pid: "45302"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-10T02:25:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T02:25:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP06 – Create DetailRow Component
@@ -353,3 +356,4 @@ divider: {
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:45:44Z – claude-sonnet – shell_pid=45302 – lane=doing – Assigned agent via workflow command

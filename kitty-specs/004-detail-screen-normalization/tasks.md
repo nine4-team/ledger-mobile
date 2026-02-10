@@ -61,11 +61,11 @@
 **Estimated Size**: ~400 lines
 
 ### Included Subtasks
-- [ ] T007 Define section structure for SpaceDetailContent (media, notes, items, checklists)
-- [ ] T008 Add collapsed state management with per-section defaults
-- [ ] T009 Replace AppScrollView + StickyHeader with SectionList
-- [ ] T010 Implement `renderSectionHeader` for items section (sticky control bar)
-- [ ] T011 Implement `renderItem` for all sections with SECTION_HEADER_MARKER pattern
+- [x] T007 Define section structure for SpaceDetailContent (media, notes, items, checklists)
+- [x] T008 Add collapsed state management with per-section defaults
+- [x] T009 Replace AppScrollView + StickyHeader with SectionList
+- [x] T010 Implement `renderSectionHeader` for items section (sticky control bar)
+- [x] T011 Implement `renderItem` for all sections with SECTION_HEADER_MARKER pattern
 
 ### Implementation Notes
 - Follow the transaction detail reference pattern: SECTION_HEADER_MARKER as first data item for non-sticky sections
@@ -93,11 +93,11 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T012 [P] Define section structure for item detail (hero, media, notes, details)
-- [ ] T013 [P] Add collapsed state management with item-specific defaults
-- [ ] T014 Replace AppScrollView with SectionList
-- [ ] T015 Implement `renderItem` for item detail sections
-- [ ] T016 Preserve existing functionality (error banner, Move section, menus) and clean up
+- [x] T012 [P] Define section structure for item detail (hero, media, notes, details)
+- [x] T013 [P] Add collapsed state management with item-specific defaults
+- [x] T014 Replace AppScrollView with SectionList
+- [x] T015 Implement `renderItem` for item detail sections
+- [x] T016 Preserve existing functionality (error banner, Move section, menus) and clean up
 
 ### Implementation Notes
 - Hero section is non-collapsible (always visible, no header)
@@ -128,10 +128,10 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T017 [P] Define types and create hook skeleton in `src/hooks/useItemsManager.ts`
-- [ ] T018 Implement search, sort, and filter state with menu visibility
-- [ ] T019 Implement filtered and sorted items computation (3-step pipeline)
-- [ ] T020 Implement selection state and handlers (toggle, selectAll, clear)
+- [x] T017 [P] Define types and create hook skeleton in `src/hooks/useItemsManager.ts`
+- [x] T018 Implement search, sort, and filter state with menu visibility
+- [x] T019 Implement filtered and sorted items computation (3-step pipeline)
+- [x] T020 Implement selection state and handlers (toggle, selectAll, clear)
 
 ### Implementation Notes
 - Type definitions from data-model.md: `UseItemsManagerConfig`, `UseItemsManagerReturn`

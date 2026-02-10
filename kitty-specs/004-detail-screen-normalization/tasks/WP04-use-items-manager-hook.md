@@ -1,25 +1,28 @@
 ---
-work_package_id: "WP04"
-subtasks:
-  - "T017"
-  - "T018"
-  - "T019"
-  - "T020"
-title: "Extract useItemsManager Hook"
-phase: "Phase 2 - Shared Items Management"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP04
+title: Extract useItemsManager Hook
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 2f7c959f279431af650f173f031787246dfcfb38
+created_at: '2026-02-10T03:41:28.658645+00:00'
+subtasks:
+- T017
+- T018
+- T019
+- T020
+phase: Phase 2 - Shared Items Management
+assignee: ''
+agent: "claude-sonnet"
+shell_pid: "50505"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-10T02:25:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T02:25:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP04 – Extract useItemsManager Hook
@@ -373,3 +376,6 @@ No dependencies — this creates a standalone new hook. Can run in parallel with
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:41:28Z – claude-sonnet – shell_pid=39956 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T03:43:54Z – claude-sonnet – shell_pid=39956 – lane=for_review – Ready for review: Extracted useItemsManager hook with search, sort, filter, and selection state. Hook uses generic types for flexibility, provides built-in filters and sorts, and supports custom functions via config.
+- 2026-02-10T03:48:19Z – claude-sonnet – shell_pid=50505 – lane=doing – Started review via workflow command
