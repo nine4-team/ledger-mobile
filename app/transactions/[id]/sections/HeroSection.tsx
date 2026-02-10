@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '../../../../src/components/AppText';
-import { CARD_PADDING, getCardStyle } from '../../../../src/ui';
+import { CARD_PADDING, getCardStyle, textEmphasis } from '../../../../src/ui';
 import { useUIKitTheme } from '../../../../src/theme/ThemeProvider';
 import { getTextSecondaryStyle } from '../../../../src/ui/styles/typography';
 import type { Transaction } from '../../../../src/data/transactionsService';
@@ -14,6 +14,17 @@ function formatMoney(cents: number | null | undefined): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export function HeroSection({ transaction }: HeroSectionProps) {
   const uiKitTheme = useUIKitTheme();
 
@@ -23,9 +34,23 @@ export function HeroSection({ transaction }: HeroSectionProps) {
         <AppText variant="h2" style={styles.heroTitle}>
           {transaction.source?.trim() || 'Untitled transaction'}
         </AppText>
-        <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-          {formatMoney(transaction.amountCents)}
-        </AppText>
+        <View style={styles.infoRow}>
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+            Amount:
+          </AppText>
+          <AppText variant="body" style={textEmphasis.value}>
+            {formatMoney(transaction.amountCents)}
+          </AppText>
+          <AppText variant="caption" style={[getTextSecondaryStyle(uiKitTheme), styles.separator]}>
+            |
+          </AppText>
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+            Date:
+          </AppText>
+          <AppText variant="body" style={textEmphasis.value}>
+            {formatDate(transaction.transactionDate)}
+          </AppText>
+        </View>
       </View>
     </View>
   );
@@ -34,9 +59,17 @@ export function HeroSection({ transaction }: HeroSectionProps) {
 const styles = StyleSheet.create({
   card: {},
   heroHeader: {
-    gap: 6,
+    gap: 8,
   },
   heroTitle: {
     lineHeight: 26,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  separator: {
+    marginHorizontal: 4,
   },
 });
