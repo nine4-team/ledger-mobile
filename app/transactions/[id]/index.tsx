@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
@@ -68,6 +68,8 @@ type TransactionItemFilterMode =
   | 'no-image';
 
 type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'taxes' | 'items' | 'audit';
+
+const SECTION_HEADER_MARKER = '__sectionHeader__';
 
 type TransactionSection = {
   key: SectionKey;
@@ -244,10 +246,10 @@ export default function TransactionDetailScreen() {
 
     const result: TransactionSection[] = [
       { key: 'hero', data: [transaction] },
-      { key: 'receipts', title: 'RECEIPTS', data: collapsedSections.receipts ? [] : [transaction] },
-      { key: 'otherImages', title: 'OTHER IMAGES', data: collapsedSections.otherImages ? [] : [transaction] },
-      { key: 'notes', title: 'NOTES', data: collapsedSections.notes ? [] : [transaction] },
-      { key: 'details', title: 'DETAILS', data: collapsedSections.details ? [] : [transaction] },
+      { key: 'receipts', title: 'RECEIPTS', data: [SECTION_HEADER_MARKER, ...(collapsedSections.receipts ? [] : [transaction])] },
+      { key: 'otherImages', title: 'OTHER IMAGES', data: [SECTION_HEADER_MARKER, ...(collapsedSections.otherImages ? [] : [transaction])] },
+      { key: 'notes', title: 'NOTES', data: [SECTION_HEADER_MARKER, ...(collapsedSections.notes ? [] : [transaction])] },
+      { key: 'details', title: 'DETAILS', data: [SECTION_HEADER_MARKER, ...(collapsedSections.details ? [] : [transaction])] },
     ];
 
     // Taxes section only if itemization enabled
@@ -255,7 +257,7 @@ export default function TransactionDetailScreen() {
       result.push({
         key: 'taxes',
         title: 'TAX & ITEMIZATION',
-        data: collapsedSections.taxes ? [] : [transaction]
+        data: [SECTION_HEADER_MARKER, ...(collapsedSections.taxes ? [] : [transaction])],
       });
     }
 
@@ -269,7 +271,7 @@ export default function TransactionDetailScreen() {
       {
         key: 'audit',
         title: 'TRANSACTION AUDIT',
-        data: collapsedSections.audit ? [] : [transaction]
+        data: [SECTION_HEADER_MARKER, ...(collapsedSections.audit ? [] : [transaction])],
       }
     );
 
@@ -1091,106 +1093,62 @@ export default function TransactionDetailScreen() {
 
 
   // Section renderers for SectionList
+  // Only items gets a real section header (so it sticks). All other sections
+  // render their headers as the first data item via SECTION_HEADER_MARKER.
   const renderSectionHeader = useCallback(({ section }: { section: TransactionSection }) => {
-    if (section.key === 'hero') return null;
+    if (section.key !== 'items') return null;
 
-    if (section.key === 'items') {
-      const collapsed = collapsedSections.items ?? true;
+    const collapsed = collapsedSections.items ?? true;
 
-      return (
-        <View style={{ backgroundColor: theme.colors.background }}>
-          <CollapsibleSectionHeader
-            title={section.title!}
-            collapsed={collapsed}
-            onToggle={() => handleToggleSection('items')}
-            badge={section.badge}
-          />
-          {!collapsed && (
-            <View
-              style={{
-                paddingBottom: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: uiKitTheme.border.secondary,
-              }}
-            >
-              <ItemsListControlBar
-                search={searchQuery}
-                onChangeSearch={setSearchQuery}
-                showSearch={showSearch}
-                onToggleSearch={() => setShowSearch(!showSearch)}
-                onSort={() => setSortMenuVisible(true)}
-                isSortActive={sortMode !== 'created-desc'}
-                onFilter={() => setFilterMenuVisible(true)}
-                isFilterActive={filterMode !== 'all'}
-                onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
-                leftElement={
-                  <TouchableOpacity
-                    onPress={handleSelectAll}
-                    style={[
-                      styles.selectButton,
-                      {
-                        backgroundColor: uiKitTheme.button.secondary.background,
-                        borderColor: uiKitTheme.border.primary,
-                      },
-                    ]}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
-                  >
-                    <SelectorCircle
-                      selected={selectedItemIds.size === filteredAndSortedItems.length}
-                      indicator="check"
-                    />
-                  </TouchableOpacity>
-                }
-              />
-            </View>
-          )}
-        </View>
-      );
-    }
-
-    // Audit section with warning indicator
-    if (section.key === 'audit') {
-      const showWarning = transaction?.needsReview === true;
-      const collapsed = collapsedSections[section.key] ?? false;
-
-      return (
-        <TouchableOpacity
-          onPress={() => handleToggleSection(section.key)}
-          style={styles.sectionHeader}
-          accessibilityRole="button"
-          accessibilityLabel={`${section.title} section, ${collapsed ? 'collapsed' : 'expanded'}`}
-        >
-          <View style={styles.sectionHeaderContent}>
-            <MaterialIcons
-              name={collapsed ? 'chevron-right' : 'expand-more'}
-              size={24}
-              color={uiKitTheme.text.secondary}
-            />
-            <AppText variant="caption" style={[styles.sectionHeaderTitle, { color: uiKitTheme.text.secondary }]}>
-              {section.title}
-            </AppText>
-            {showWarning && (
-              <MaterialIcons
-                name="warning"
-                size={20}
-                color="#FF3B30"
-                style={styles.warningIcon}
-              />
-            )}
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
-    // Other collapsible sections
     return (
-      <CollapsibleSectionHeader
-        title={section.title!}
-        collapsed={collapsedSections[section.key] ?? false}
-        onToggle={() => handleToggleSection(section.key)}
-        badge={section.badge}
-      />
+      <View style={{ backgroundColor: theme.colors.background }}>
+        <CollapsibleSectionHeader
+          title={section.title!}
+          collapsed={collapsed}
+          onToggle={() => handleToggleSection('items')}
+          badge={section.badge}
+        />
+        {!collapsed && (
+          <View
+            style={{
+              paddingBottom: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: uiKitTheme.border.secondary,
+            }}
+          >
+            <ItemsListControlBar
+              search={searchQuery}
+              onChangeSearch={setSearchQuery}
+              showSearch={showSearch}
+              onToggleSearch={() => setShowSearch(!showSearch)}
+              onSort={() => setSortMenuVisible(true)}
+              isSortActive={sortMode !== 'created-desc'}
+              onFilter={() => setFilterMenuVisible(true)}
+              isFilterActive={filterMode !== 'all'}
+              onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+              leftElement={
+                <TouchableOpacity
+                  onPress={handleSelectAll}
+                  style={[
+                    styles.selectButton,
+                    {
+                      backgroundColor: uiKitTheme.button.secondary.background,
+                      borderColor: uiKitTheme.border.primary,
+                    },
+                  ]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+                >
+                  <SelectorCircle
+                    selected={selectedItemIds.size === filteredAndSortedItems.length}
+                    indicator="check"
+                  />
+                </TouchableOpacity>
+              }
+            />
+          </View>
+        )}
+      </View>
     );
   }, [collapsedSections, handleToggleSection, searchQuery, showSearch, sortMode, filterMode, selectedItemIds, filteredAndSortedItems, theme.colors.background, uiKitTheme, handleSelectAll]);
 
@@ -1213,6 +1171,50 @@ export default function TransactionDetailScreen() {
 
   const renderItem = useCallback(({ item, section }: { item: any; section: TransactionSection }) => {
     if (!transaction) return null;
+
+    // Render section headers that were moved into data (so they don't stick)
+    if (item === SECTION_HEADER_MARKER) {
+      if (section.key === 'audit') {
+        const showWarning = transaction.needsReview === true;
+        const collapsed = collapsedSections[section.key] ?? false;
+
+        return (
+          <TouchableOpacity
+            onPress={() => handleToggleSection(section.key)}
+            style={styles.sectionHeader}
+            accessibilityRole="button"
+            accessibilityLabel={`${section.title} section, ${collapsed ? 'collapsed' : 'expanded'}`}
+          >
+            <View style={styles.sectionHeaderContent}>
+              <MaterialIcons
+                name={collapsed ? 'chevron-right' : 'expand-more'}
+                size={24}
+                color={uiKitTheme.text.secondary}
+              />
+              <AppText variant="caption" style={[styles.sectionHeaderTitle, { color: uiKitTheme.text.secondary }]}>
+                {section.title}
+              </AppText>
+              {showWarning && (
+                <View style={styles.reviewBadge}>
+                  <Text style={styles.reviewBadgeText} numberOfLines={1}>
+                    Needs Review
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        );
+      }
+
+      return (
+        <CollapsibleSectionHeader
+          title={section.title!}
+          collapsed={collapsedSections[section.key] ?? false}
+          onToggle={() => handleToggleSection(section.key)}
+          badge={section.badge}
+        />
+      );
+    }
 
     switch (section.key) {
       case 'hero':
@@ -1257,7 +1259,7 @@ export default function TransactionDetailScreen() {
       default:
         return null;
     }
-  }, [transaction, budgetCategories, mediaHandlers, selectedItemIds, router, getItemMenuItems, handleItemSelectionChange, getPrimaryImageUri]);
+  }, [transaction, budgetCategories, mediaHandlers, selectedItemIds, router, getItemMenuItems, handleItemSelectionChange, getPrimaryImageUri, collapsedSections, handleToggleSection, uiKitTheme]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -1517,7 +1519,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
-    gap: 18,
+    gap: 10,
   },
   screenContent: {
     paddingTop: 0,
@@ -1601,7 +1603,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontWeight: '600',
   },
-  warningIcon: {
+  reviewBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    maxWidth: 160,
     marginLeft: 'auto',
+    backgroundColor: '#b9452014',
+    borderColor: '#b9452033',
+  },
+  reviewBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+    color: '#b94520',
   },
 });
