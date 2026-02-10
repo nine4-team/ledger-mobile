@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Consolidate Space Detail Screens
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: f7f8bf37cc020e9ee65899fd42429328da2b8e90
@@ -424,3 +424,4 @@ Everything else — state, hooks, handlers, JSX structure, modals — is identic
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
 - 2026-02-10T02:52:26Z – claude-opus – shell_pid=85660 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T03:01:32Z – claude-opus – shell_pid=85660 – lane=for_review – Ready for review: Consolidated two ~1,040-line space detail screens into shared SpaceDetailContent component. Route files reduced to thin wrappers. Space images normalized to MediaGallerySection. Zero new TSC errors.
