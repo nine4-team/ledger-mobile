@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Audit Section UI Component
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 8108d9ed73c948313f6a88efe2e36b109680862c
@@ -14,8 +14,8 @@ phase: Phase 1 - MVP
 assignee: ''
 agent: "claude-sonnet"
 shell_pid: "3044"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-09T15:00:00Z'
   lane: planned
@@ -38,9 +38,37 @@ history:
 
 ## Review Feedback
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-10
 
----
+**Issue 1: Hardcoded warning color violates theme system**
+
+**Location**: `app/transactions/[id]/sections/AuditSection.tsx` line 113
+
+**Problem**: The warning color `#E5A500` is hardcoded, which:
+- Violates the codebase convention "Never hardcode text/background colors - always use theme tokens"
+- Won't adapt to dark mode (will show the same color regardless of theme)
+- Doesn't match the established budget color palette
+
+**Fix**: Use the yellow color from `BUDGET_COLORS` (already imported):
+
+```typescript
+// Add this near the top with other color calculations (after line 51):
+const warningColor = (isDark ? BUDGET_COLORS.dark : BUDGET_COLORS.light).standard.yellow.text;
+```
+
+Then update line 113:
+```typescript
+<AppText variant="caption" style={{ color: warningColor, marginTop: 8 }}>
+```
+
+This will give:
+- Light mode: `#CA8A04`
+- Dark mode: `#FACC15`
+
+**All other aspects of the implementation are correct and follow the spec requirements.**
+
 
 ## Objectives & Success Criteria
 
@@ -326,3 +354,4 @@ Currently shows placeholder text in a Card. Replace entirely.
 - 2026-02-10T01:34:15Z – claude-sonnet – shell_pid=98440 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T01:36:53Z – claude-sonnet – shell_pid=98440 – lane=for_review – Ready for review: Implemented audit section UI with completeness progress bar, totals comparison, status messages, and missing price warnings. Gated behind itemizationEnabled flag.
 - 2026-02-10T01:37:48Z – claude-sonnet – shell_pid=3044 – lane=doing – Started review via workflow command
+- 2026-02-10T01:59:13Z – claude-sonnet – shell_pid=3044 – lane=planned – Moved to planned
