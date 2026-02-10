@@ -25,7 +25,7 @@ describe('computeTransactionCompleteness', () => {
         makeItems([8000]),
       );
       expect(result).not.toBeNull();
-      expect(result!.transactionSubtotal).toBe(8000);
+      expect(result!.transactionSubtotalCents).toBe(8000);
       expect(result!.missingTaxData).toBe(false);
       expect(result!.inferredTax).toBeUndefined();
     });
@@ -37,7 +37,7 @@ describe('computeTransactionCompleteness', () => {
         makeItems([10000]),
       );
       expect(result).not.toBeNull();
-      expect(result!.transactionSubtotal).toBe(10000);
+      expect(result!.transactionSubtotalCents).toBe(10000);
       expect(result!.inferredTax).toBe(825);
       expect(result!.missingTaxData).toBe(false);
     });
@@ -48,7 +48,7 @@ describe('computeTransactionCompleteness', () => {
         makeItems([5000]),
       );
       expect(result).not.toBeNull();
-      expect(result!.transactionSubtotal).toBe(5000);
+      expect(result!.transactionSubtotalCents).toBe(5000);
       expect(result!.missingTaxData).toBe(true);
       expect(result!.inferredTax).toBeUndefined();
     });
@@ -59,7 +59,7 @@ describe('computeTransactionCompleteness', () => {
         makeItems([5000]),
       );
       expect(result).not.toBeNull();
-      expect(result!.transactionSubtotal).toBe(5000);
+      expect(result!.transactionSubtotalCents).toBe(5000);
       expect(result!.missingTaxData).toBe(true);
     });
 
@@ -70,7 +70,7 @@ describe('computeTransactionCompleteness', () => {
         makeItems([9302]),
       );
       expect(result).not.toBeNull();
-      expect(Number.isInteger(result!.transactionSubtotal)).toBe(true);
+      expect(Number.isInteger(result!.transactionSubtotalCents)).toBe(true);
     });
   });
 
@@ -82,7 +82,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([10000]),
       );
-      expect(result!.completenessStatus).toBe('complete');
+      expect(result!.status).toBe('complete');
     });
 
     it('returns "complete" when variance is exactly 1%', () => {
@@ -91,7 +91,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([9900]),
       );
-      expect(result!.completenessStatus).toBe('complete');
+      expect(result!.status).toBe('complete');
     });
 
     it('returns "near" when variance is just over 1%', () => {
@@ -100,7 +100,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([9899]),
       );
-      expect(result!.completenessStatus).toBe('near');
+      expect(result!.status).toBe('near');
     });
 
     it('returns "near" when variance is exactly 20%', () => {
@@ -109,7 +109,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([8000]),
       );
-      expect(result!.completenessStatus).toBe('near');
+      expect(result!.status).toBe('near');
     });
 
     it('returns "incomplete" when variance exceeds 20%', () => {
@@ -118,7 +118,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([7999]),
       );
-      expect(result!.completenessStatus).toBe('incomplete');
+      expect(result!.status).toBe('incomplete');
     });
 
     it('returns "near" at exactly 120% ratio (not over)', () => {
@@ -127,7 +127,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([12000]),
       );
-      expect(result!.completenessStatus).toBe('near');
+      expect(result!.status).toBe('near');
     });
 
     it('returns "over" when ratio exceeds 1.20', () => {
@@ -136,7 +136,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([12001]),
       );
-      expect(result!.completenessStatus).toBe('over');
+      expect(result!.status).toBe('over');
     });
 
     it('returns "incomplete" when items total is 0 (with items)', () => {
@@ -144,7 +144,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([null, null, 0]),
       );
-      expect(result!.completenessStatus).toBe('incomplete');
+      expect(result!.status).toBe('incomplete');
       expect(result!.completenessRatio).toBe(0);
     });
   });
@@ -182,11 +182,11 @@ describe('computeTransactionCompleteness', () => {
         [],
       );
       expect(result).not.toBeNull();
-      expect(result!.itemsNetTotal).toBe(0);
+      expect(result!.itemsNetTotalCents).toBe(0);
       expect(result!.itemsCount).toBe(0);
       expect(result!.itemsMissingPriceCount).toBe(0);
       expect(result!.completenessRatio).toBe(0);
-      expect(result!.completenessStatus).toBe('incomplete');
+      expect(result!.status).toBe('incomplete');
     });
 
     it('handles all items with null prices', () => {
@@ -195,10 +195,10 @@ describe('computeTransactionCompleteness', () => {
         makeItems([null, null, null]),
       );
       expect(result).not.toBeNull();
-      expect(result!.itemsNetTotal).toBe(0);
+      expect(result!.itemsNetTotalCents).toBe(0);
       expect(result!.itemsCount).toBe(3);
       expect(result!.itemsMissingPriceCount).toBe(3);
-      expect(result!.completenessStatus).toBe('incomplete');
+      expect(result!.status).toBe('incomplete');
     });
   });
 
@@ -210,7 +210,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([2500, 3500, 4000]),
       );
-      expect(result!.itemsNetTotal).toBe(10000);
+      expect(result!.itemsNetTotalCents).toBe(10000);
       expect(result!.itemsCount).toBe(3);
     });
 
@@ -219,7 +219,7 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems([5000, null, 0, 3000]),
       );
-      expect(result!.itemsNetTotal).toBe(8000);
+      expect(result!.itemsNetTotalCents).toBe(8000);
       expect(result!.itemsMissingPriceCount).toBe(2);
       expect(result!.itemsCount).toBe(4);
     });
@@ -230,9 +230,9 @@ describe('computeTransactionCompleteness', () => {
         makeTransaction({ subtotalCents: 10000 }),
         makeItems(prices),
       );
-      expect(result!.itemsNetTotal).toBe(10000);
+      expect(result!.itemsNetTotalCents).toBe(10000);
       expect(result!.itemsCount).toBe(100);
-      expect(result!.completenessStatus).toBe('complete');
+      expect(result!.status).toBe('complete');
     });
   });
 

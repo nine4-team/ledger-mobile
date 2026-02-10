@@ -261,19 +261,20 @@ export default function TransactionDetailScreen() {
       });
     }
 
-    result.push(
-      {
-        key: 'items',
-        title: 'TRANSACTION ITEMS',
-        data: collapsedSections.items ? [] : filteredAndSortedItems,
-        badge: `${filteredAndSortedItems.length}`,
-      },
-      {
+    result.push({
+      key: 'items',
+      title: 'TRANSACTION ITEMS',
+      data: collapsedSections.items ? [] : filteredAndSortedItems,
+      badge: `${filteredAndSortedItems.length}`,
+    });
+
+    if (itemizationEnabled) {
+      result.push({
         key: 'audit',
         title: 'TRANSACTION AUDIT',
         data: [SECTION_HEADER_MARKER, ...(collapsedSections.audit ? [] : [transaction])],
-      }
-    );
+      });
+    }
 
     return result;
   }, [transaction, filteredAndSortedItems, itemizationEnabled, collapsedSections]);
@@ -1254,7 +1255,7 @@ export default function TransactionDetailScreen() {
         );
 
       case 'audit':
-        return <AuditSection transaction={item} />;
+        return <AuditSection transaction={item} items={linkedItems} />;
 
       default:
         return null;
