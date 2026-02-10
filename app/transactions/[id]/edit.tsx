@@ -68,7 +68,7 @@ export default function EditTransactionScreen() {
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string; metadata?: any }>>({});
 
   // Form state using useEditForm hook
-  const form = useEditForm<TransactionFormValues>(
+  const formInitialData = useMemo(() =>
     transaction ? {
       source: transaction.source ?? '',
       transactionDate: transaction.transactionDate ?? '',
@@ -83,8 +83,11 @@ export default function EditTransactionScreen() {
       taxRatePct: typeof transaction.taxRatePct === 'number' ? transaction.taxRatePct.toFixed(2) : '',
       subtotal: typeof transaction.subtotalCents === 'number' ? (transaction.subtotalCents / 100).toFixed(2) : '',
       taxAmount: '',
-    } : null
+    } : null,
+    [transaction]
   );
+
+  const form = useEditForm<TransactionFormValues>(formInitialData);
 
   const selectedCategory = budgetCategories[form.values.budgetCategoryId];
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';

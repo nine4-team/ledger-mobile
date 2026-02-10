@@ -1,8 +1,8 @@
 # Issue: Transaction Item List Cards Using Incorrect Spacing
 
-**Status:** Active
+**Status:** Resolved
 **Opened:** 2026-02-08
-**Resolved:** _pending_
+**Resolved:** 2026-02-09
 
 ## Context
 - **Symptom:** Cards in transaction item list view have inconsistent spacing compared to other card lists in the app
@@ -59,7 +59,7 @@ Transaction items list used a plain `View` component with `.map()` at line 1269-
   - `app/transactions/[id]/index.tsx:1268-1293` - Converted View to FlatList with data/renderItem/keyExtractor props
   - `app/transactions/[id]/index.tsx:1619-1622` - Updated list style with gap: 10, flexDirection: 'column'
 - **Commit:** _pending_ (uncommitted)
-- **Verified:** Pending user verification (may need app reload)
+- **Verified by user:** Yes
 
 ## Lessons Learned
 - **Plain View vs FlatList:** In React Native, FlatList's `contentContainerStyle` reliably applies `gap` spacing, but plain View does not - even with `flexDirection` set

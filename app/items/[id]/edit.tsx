@@ -62,7 +62,7 @@ export default function EditItemScreen() {
   const [error, setError] = useState<string | null>(null);
 
   // Form state - using useEditForm hook for data model values
-  const form = useEditForm<ItemFormValues>(
+  const formInitialData = useMemo(() =>
     item ? {
       name: item.name || '',
       source: item.source ?? null,
@@ -73,8 +73,11 @@ export default function EditItemScreen() {
       marketValueCents: item.marketValueCents ?? null,
       notes: item.notes ?? null,
       spaceId: item.spaceId ?? null,
-    } : null
+    } : null,
+    [item]
   );
+
+  const form = useEditForm<ItemFormValues>(formInitialData);
 
   // Display strings for price fields (UI-only state)
   const [purchasePriceDisplay, setPurchasePriceDisplay] = useState('');

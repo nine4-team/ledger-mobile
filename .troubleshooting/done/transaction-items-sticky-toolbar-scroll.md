@@ -1,8 +1,8 @@
 # Issue: Transaction Items Sticky Toolbar Scroll Behavior
 
-**Status:** Active
+**Status:** Resolved
 **Opened:** 2026-02-08
-**Resolved:** _pending_
+**Resolved:** 2026-02-09
 
 ## Context
 - **Symptom:** When scrolling down in a transaction view to the transaction items section, the toolbar (which should stick just below the header) scrolls past the header and disappears behind it. Scroll sometimes stops before reaching the bottom of the page, with inconsistent behavior - sometimes can continue scrolling, sometimes gets stuck. User can still interact with menus and items.
@@ -117,7 +117,7 @@ The FlatList (introduced in commit `33063da` for card spacing) creates an intern
 - **Fix:** _in progress - trying collapsable={false} and removed flexDirection_
 - **Files changed:** `app/transactions/[id]/index.tsx` (line 1269, lines 1619-1622)
 - **Commit:** _pending_
-- **Verified:** _pending user testing_
+- **Verified by user:** Yes
 
 ## Handoff Notes
 
