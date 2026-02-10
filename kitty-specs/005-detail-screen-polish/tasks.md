@@ -148,11 +148,11 @@ T009-T011 (hero card changes) can proceed independently from T012 (move to kebab
 **Estimated Size**: ~340 lines
 
 ### Included Subtasks
-- [ ] T015 Replace ItemsSection with SharedItemsList in space detail (`src/components/SpaceDetailContent.tsx` or `app/project/[projectId]/spaces/[spaceId].tsx`)
-- [ ] T016 Update space detail default expanded sections (only images)
-- [ ] T017 Normalize section spacing (gap: 4px with section wrappers)
-- [ ] T018 Fix duplicate section titles (use Card not TitledCard)
-- [ ] T019 Mark ItemsSection as deprecated (`src/components/ItemsSection.tsx`)
+- [x] T015 Replace ItemsSection with SharedItemsList in space detail (`src/components/SpaceDetailContent.tsx` or `app/project/[projectId]/spaces/[spaceId].tsx`)
+- [x] T016 Update space detail default expanded sections (only images)
+- [x] T017 Normalize section spacing (gap: 4px with section wrappers)
+- [x] T018 Fix duplicate section titles (use Card not TitledCard)
+- [x] T019 Mark ItemsSection as deprecated (`src/components/ItemsSection.tsx`)
 
 ### Implementation Notes
 This WP completes the detail screen refactoring by applying SharedItemsList to the final screen (space detail) and formally deprecating the old ItemsSection component.
