@@ -107,12 +107,12 @@ None - subtasks are sequential within this screen.
 **Estimated Size**: ~420 lines
 
 ### Included Subtasks
-- [ ] T009 Update item detail hero card with linked transaction display (`app/items/[id]/index.tsx`)
-- [ ] T010 Add space info row to item detail hero card
-- [ ] T011 Handle edge cases in hero card (deleted transaction, no data, no name)
-- [ ] T012 Move "Move Item" to kebab menu with bottom sheet
-- [ ] T013 Normalize section spacing (gap: 4px with section wrappers)
-- [ ] T014 Fix duplicate section titles (use Card not TitledCard)
+- [x] T009 Update item detail hero card with linked transaction display (`app/items/[id]/index.tsx`)
+- [x] T010 Add space info row to item detail hero card
+- [x] T011 Handle edge cases in hero card (deleted transaction, no data, no name)
+- [x] T012 Move "Move Item" to kebab menu with bottom sheet
+- [x] T013 Normalize section spacing (gap: 4px with section wrappers)
+- [x] T014 Fix duplicate section titles (use Card not TitledCard)
 
 ### Implementation Notes
 This WP has the most individual fixes (6 subtasks) but they're all related to the same screen and can be completed together.
