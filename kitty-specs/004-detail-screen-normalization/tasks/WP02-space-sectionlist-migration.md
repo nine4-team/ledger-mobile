@@ -14,7 +14,7 @@ subtasks:
 - T011
 phase: Phase 1 - Space Consolidation + SectionList Migration
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "28470"
 review_status: ''
 reviewed_by: ''
@@ -429,3 +429,4 @@ const SECTION_HEADER_MARKER = '__sectionHeader__';
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:32:01Z – claude-sonnet – shell_pid=28470 – lane=doing – Assigned agent via workflow command
