@@ -16,6 +16,8 @@ import { SelectorCircle } from '../../../src/components/SelectorCircle';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
 import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
+import { useItemsManager } from '../../../src/hooks/useItemsManager';
+import type { BulkAction } from '../../../src/components/ItemsSection';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
@@ -98,17 +100,6 @@ export default function TransactionDetailScreen() {
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
-
-  // Sort/filter/search state
-  const [sortMode, setSortMode] = useState<TransactionItemSortMode>('created-desc');
-  const [sortMenuVisible, setSortMenuVisible] = useState(false);
-  const [filterMode, setFilterMode] = useState<TransactionItemFilterMode>('all');
-  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Bulk selection state
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [bulkMenuVisible, setBulkMenuVisible] = useState(false);
 
   // Collapsible sections state (Phase 2)
@@ -196,44 +187,34 @@ export default function TransactionDetailScreen() {
     return primaryImage ? resolveAttachmentUri(primaryImage) ?? primaryImage.url : undefined;
   };
 
-  // Filtered and sorted transaction items
-  const filteredAndSortedItems = useMemo(() => {
-    let result = linkedItems;
-
-    // Apply filter
-    result = result.filter((item) => {
-      if (filterMode === 'bookmarked') return Boolean(item.bookmark);
-      if (filterMode === 'no-sku') return !item.sku?.trim();
-      if (filterMode === 'no-name') return !item.name?.trim();
-      if (filterMode === 'no-price') return !item.purchasePriceCents || item.purchasePriceCents === 0;
-      if (filterMode === 'no-image') return !item.images || item.images.length === 0;
-      return true; // 'all'
-    });
-
-    // Apply search
-    const needle = searchQuery.trim().toLowerCase();
-    if (needle) {
-      result = result.filter((item) => {
-        const haystack = [
-          item.name ?? '',
-          item.sku ?? '',
-          item.source ?? '',
-          item.notes ?? '',
-        ].join(' ').toLowerCase();
-        return haystack.includes(needle);
-      });
-    }
-
-    // Apply sort
-    return [...result].sort((a, b) => {
-      if (sortMode === 'alphabetical-asc') return (a.name ?? '').localeCompare(b.name ?? '');
-      if (sortMode === 'alphabetical-desc') return (b.name ?? '').localeCompare(a.name ?? '');
-      if (sortMode === 'price-desc') return (b.purchasePriceCents ?? 0) - (a.purchasePriceCents ?? 0);
-      if (sortMode === 'price-asc') return (a.purchasePriceCents ?? 0) - (b.purchasePriceCents ?? 0);
-      if (sortMode === 'created-asc') return String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? ''));
-      return String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')); // 'created-desc'
-    });
-  }, [linkedItems, searchQuery, sortMode, filterMode]);
+  // Initialize items manager with transaction-specific configuration
+  const itemsManager = useItemsManager({
+    items: linkedItems,
+    defaultSort: 'created-desc',
+    defaultFilter: 'all',
+    sortModes: ['created-desc', 'created-asc', 'alphabetical-asc', 'alphabetical-desc', 'price-asc', 'price-desc'],
+    filterModes: ['all', 'bookmarked', 'no-sku', 'no-name', 'no-price', 'no-image'],
+    filterFn: (item, mode) => {
+      switch (mode) {
+        case 'bookmarked': return Boolean(item.bookmark);
+        case 'no-sku': return !item.sku?.trim();
+        case 'no-name': return !item.name?.trim();
+        case 'no-price': return item.purchasePriceCents == null || item.purchasePriceCents === 0;
+        case 'no-image': return !item.images || item.images.length === 0;
+        default: return true;
+      }
+    },
+    sortFn: (a, b, mode) => {
+      switch (mode) {
+        case 'price-asc':
+          return (a.purchasePriceCents ?? 0) - (b.purchasePriceCents ?? 0);
+        case 'price-desc':
+          return (b.purchasePriceCents ?? 0) - (a.purchasePriceCents ?? 0);
+        default:
+          return 0;
+      }
+    },
+  });
 
   const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
@@ -264,8 +245,8 @@ export default function TransactionDetailScreen() {
     result.push({
       key: 'items',
       title: 'TRANSACTION ITEMS',
-      data: collapsedSections.items ? [] : filteredAndSortedItems,
-      badge: `${filteredAndSortedItems.length}`,
+      data: collapsedSections.items ? [] : itemsManager.filteredAndSortedItems,
+      badge: `${itemsManager.filteredAndSortedItems.length}`,
     });
 
     if (itemizationEnabled) {
@@ -277,7 +258,7 @@ export default function TransactionDetailScreen() {
     }
 
     return result;
-  }, [transaction, filteredAndSortedItems, itemizationEnabled, collapsedSections]);
+  }, [transaction, itemsManager.filteredAndSortedItems, itemizationEnabled, collapsedSections]);
 
   const suggestedItems = useMemo(() => {
     if (!normalizedSource) return [];
@@ -480,26 +461,6 @@ export default function TransactionDetailScreen() {
     updateItem(accountId, itemId, { transactionId: null });
   };
 
-  // Bulk selection handlers
-  const handleItemSelectionChange = (itemId: string, selected: boolean) => {
-    setSelectedItemIds(prev => {
-      const next = new Set(prev);
-      if (selected) next.add(itemId);
-      else next.delete(itemId);
-      return next;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedItemIds.size === filteredAndSortedItems.length) {
-      // Deselect all
-      setSelectedItemIds(new Set());
-    } else {
-      // Select all filtered items
-      setSelectedItemIds(new Set(filteredAndSortedItems.map(item => item.id)));
-    }
-  };
-
   // Bulk operation state
   const [bulkSpacePickerVisible, setBulkSpacePickerVisible] = useState(false);
   const [bulkStatusPickerVisible, setBulkStatusPickerVisible] = useState(false);
@@ -527,23 +488,23 @@ export default function TransactionDetailScreen() {
   };
 
   const handleBulkRemove = () => {
-    if (!accountId || selectedItemIds.size === 0) return;
+    if (!accountId || itemsManager.selectionCount === 0) return;
 
     setBulkMenuVisible(false);
 
     Alert.alert(
       'Remove from transaction',
-      `Remove ${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'} from this transaction?`,
+      `Remove ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'} from this transaction?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
           onPress: () => {
-            selectedItemIds.forEach((itemId) => {
+            itemsManager.selectedIds.forEach((itemId) => {
               updateItem(accountId, itemId, { transactionId: null });
             });
-            setSelectedItemIds(new Set());
+            itemsManager.clearSelection();
           },
         },
       ]
@@ -551,23 +512,23 @@ export default function TransactionDetailScreen() {
   };
 
   const handleBulkDelete = () => {
-    if (!accountId || selectedItemIds.size === 0) return;
+    if (!accountId || itemsManager.selectionCount === 0) return;
 
     setBulkMenuVisible(false);
 
     Alert.alert(
       'Delete items',
-      `Permanently delete ${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'}? This cannot be undone.`,
+      `Permanently delete ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'}? This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            selectedItemIds.forEach((itemId) => {
+            itemsManager.selectedIds.forEach((itemId) => {
               deleteItem(accountId, itemId);
             });
-            setSelectedItemIds(new Set());
+            itemsManager.clearSelection();
           },
         },
       ]
@@ -575,38 +536,38 @@ export default function TransactionDetailScreen() {
   };
 
   const handleBulkSpaceConfirm = (spaceId: string | null) => {
-    if (!accountId || selectedItemIds.size === 0) return;
+    if (!accountId || itemsManager.selectionCount === 0) return;
 
-    selectedItemIds.forEach((itemId) => {
+    itemsManager.selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { spaceId });
     });
 
     setBulkSpacePickerVisible(false);
-    setSelectedItemIds(new Set());
+    itemsManager.clearSelection();
   };
 
   const handleBulkStatusConfirm = (status: string) => {
-    if (!accountId || selectedItemIds.size === 0) return;
+    if (!accountId || itemsManager.selectionCount === 0) return;
 
-    selectedItemIds.forEach((itemId) => {
+    itemsManager.selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { status });
     });
 
     setBulkStatusPickerVisible(false);
-    setSelectedItemIds(new Set());
+    itemsManager.clearSelection();
   };
 
   const handleBulkSKUConfirm = () => {
-    if (!accountId || selectedItemIds.size === 0) return;
+    if (!accountId || itemsManager.selectionCount === 0) return;
 
     const sku = bulkSKUValue.trim();
-    selectedItemIds.forEach((itemId) => {
+    itemsManager.selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { sku });
     });
 
     setBulkSKUInputVisible(false);
     setBulkSKUValue('');
-    setSelectedItemIds(new Set());
+    itemsManager.clearSelection();
   };
 
   // Single item operation state
@@ -617,7 +578,7 @@ export default function TransactionDetailScreen() {
   const handleDuplicateItem = (itemId: string) => {
     if (!accountId) return;
 
-    const item = filteredAndSortedItems.find((i) => i.id === itemId);
+    const item = linkedItems.find((i) => i.id === itemId);
     if (!item) return;
 
     Alert.alert(
@@ -901,57 +862,57 @@ export default function TransactionDetailScreen() {
       key: 'alphabetical-asc',
       label: 'Name A → Z',
       onPress: () => {
-        setSortMode('alphabetical-asc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('alphabetical-asc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'alphabetical-asc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'alphabetical-asc' ? 'check' : undefined,
     },
     {
       key: 'alphabetical-desc',
       label: 'Name Z → A',
       onPress: () => {
-        setSortMode('alphabetical-desc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('alphabetical-desc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'alphabetical-desc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'alphabetical-desc' ? 'check' : undefined,
     },
     {
       key: 'price-desc',
       label: 'Price high → low',
       onPress: () => {
-        setSortMode('price-desc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('price-desc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'price-desc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'price-desc' ? 'check' : undefined,
     },
     {
       key: 'price-asc',
       label: 'Price low → high',
       onPress: () => {
-        setSortMode('price-asc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('price-asc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'price-asc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'price-asc' ? 'check' : undefined,
     },
     {
       key: 'created-desc',
       label: 'Newest first',
       onPress: () => {
-        setSortMode('created-desc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('created-desc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'created-desc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'created-desc' ? 'check' : undefined,
     },
     {
       key: 'created-asc',
       label: 'Oldest first',
       onPress: () => {
-        setSortMode('created-asc');
-        setSortMenuVisible(false);
+        itemsManager.setSortMode('created-asc');
+        itemsManager.setSortMenuVisible(false);
       },
-      icon: sortMode === 'created-asc' ? 'check' : undefined,
+      icon: itemsManager.sortMode === 'created-asc' ? 'check' : undefined,
     },
-  ], [sortMode]);
+  ], [itemsManager]);
 
   // Filter menu items
   const filterMenuItems = useMemo<AnchoredMenuItem[]>(() => [
@@ -959,57 +920,57 @@ export default function TransactionDetailScreen() {
       key: 'all',
       label: 'All items',
       onPress: () => {
-        setFilterMode('all');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('all');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'all' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'all' ? 'check' : undefined,
     },
     {
       key: 'bookmarked',
       label: 'Bookmarked',
       onPress: () => {
-        setFilterMode('bookmarked');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('bookmarked');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'bookmarked' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'bookmarked' ? 'check' : undefined,
     },
     {
       key: 'no-sku',
       label: 'No SKU',
       onPress: () => {
-        setFilterMode('no-sku');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('no-sku');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'no-sku' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'no-sku' ? 'check' : undefined,
     },
     {
       key: 'no-name',
       label: 'No name',
       onPress: () => {
-        setFilterMode('no-name');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('no-name');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'no-name' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'no-name' ? 'check' : undefined,
     },
     {
       key: 'no-price',
       label: 'No project price',
       onPress: () => {
-        setFilterMode('no-price');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('no-price');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'no-price' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'no-price' ? 'check' : undefined,
     },
     {
       key: 'no-image',
       label: 'No image',
       onPress: () => {
-        setFilterMode('no-image');
-        setFilterMenuVisible(false);
+        itemsManager.setFilterMode('no-image');
+        itemsManager.setFilterMenuVisible(false);
       },
-      icon: filterMode === 'no-image' ? 'check' : undefined,
+      icon: itemsManager.filterMode === 'no-image' ? 'check' : undefined,
     },
-  ], [filterMode]);
+  ], [itemsManager]);
 
   // Bulk menu items
   const bulkMenuItems = useMemo<AnchoredMenuItem[]>(() => [
@@ -1044,11 +1005,11 @@ export default function TransactionDetailScreen() {
       key: 'clear-selection',
       label: 'Clear selection',
       onPress: () => {
-        setSelectedItemIds(new Set());
+        itemsManager.clearSelection();
         setBulkMenuVisible(false);
       },
     },
-  ], [selectedItemIds.size]);
+  ], [itemsManager, handleBulkSetSpace, handleBulkSetStatus, handleBulkSetSKU, handleBulkRemove, handleBulkDelete]);
 
   const handleDelete = () => {
     if (!accountId || !id) return;
@@ -1118,18 +1079,18 @@ export default function TransactionDetailScreen() {
             }}
           >
             <ItemsListControlBar
-              search={searchQuery}
-              onChangeSearch={setSearchQuery}
-              showSearch={showSearch}
-              onToggleSearch={() => setShowSearch(!showSearch)}
-              onSort={() => setSortMenuVisible(true)}
-              isSortActive={sortMode !== 'created-desc'}
-              onFilter={() => setFilterMenuVisible(true)}
-              isFilterActive={filterMode !== 'all'}
-              onAdd={selectedItemIds.size > 0 ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+              search={itemsManager.searchQuery}
+              onChangeSearch={itemsManager.setSearchQuery}
+              showSearch={itemsManager.showSearch}
+              onToggleSearch={itemsManager.toggleSearch}
+              onSort={() => itemsManager.setSortMenuVisible(true)}
+              isSortActive={itemsManager.isSortActive}
+              onFilter={() => itemsManager.setFilterMenuVisible(true)}
+              isFilterActive={itemsManager.isFilterActive}
+              onAdd={itemsManager.hasSelection ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
               leftElement={
                 <TouchableOpacity
-                  onPress={handleSelectAll}
+                  onPress={itemsManager.selectAll}
                   style={[
                     styles.selectButton,
                     {
@@ -1138,10 +1099,10 @@ export default function TransactionDetailScreen() {
                     },
                   ]}
                   accessibilityRole="checkbox"
-                  accessibilityState={{ checked: selectedItemIds.size === filteredAndSortedItems.length }}
+                  accessibilityState={{ checked: itemsManager.allSelected }}
                 >
                   <SelectorCircle
-                    selected={selectedItemIds.size === filteredAndSortedItems.length}
+                    selected={itemsManager.allSelected}
                     indicator="check"
                   />
                 </TouchableOpacity>
@@ -1151,7 +1112,7 @@ export default function TransactionDetailScreen() {
         )}
       </View>
     );
-  }, [collapsedSections, handleToggleSection, searchQuery, showSearch, sortMode, filterMode, selectedItemIds, filteredAndSortedItems, theme.colors.background, uiKitTheme, handleSelectAll]);
+  }, [collapsedSections, handleToggleSection, itemsManager, theme.colors.background, uiKitTheme]);
 
   // Prepare media handlers object for MediaSection
   const mediaHandlers: MediaHandlers = useMemo(() => ({
@@ -1247,8 +1208,10 @@ export default function TransactionDetailScreen() {
               : undefined}
             thumbnailUri={getPrimaryImageUri(item)}
             bookmarked={item.bookmark ?? undefined}
-            selected={selectedItemIds.has(item.id)}
-            onSelectedChange={(selected) => handleItemSelectionChange(item.id, selected)}
+            selected={itemsManager.hasSelection ? itemsManager.selectedIds.has(item.id) : undefined}
+            onSelectedChange={itemsManager.hasSelection
+              ? () => itemsManager.toggleSelection(item.id)
+              : undefined}
             onPress={() => router.push(`/items/${item.id}`)}
             menuItems={getItemMenuItems(item)}
           />
@@ -1260,7 +1223,7 @@ export default function TransactionDetailScreen() {
       default:
         return null;
     }
-  }, [transaction, budgetCategories, mediaHandlers, selectedItemIds, router, getItemMenuItems, handleItemSelectionChange, getPrimaryImageUri, collapsedSections, handleToggleSection, uiKitTheme]);
+  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, getPrimaryImageUri, collapsedSections, handleToggleSection, uiKitTheme, linkedItems]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -1318,8 +1281,8 @@ export default function TransactionDetailScreen() {
 
             {/* Sort menu */}
             <BottomSheetMenuList
-              visible={sortMenuVisible}
-              onRequestClose={() => setSortMenuVisible(false)}
+              visible={itemsManager.sortMenuVisible}
+              onRequestClose={() => itemsManager.setSortMenuVisible(false)}
               items={sortMenuItems}
               title="Sort by"
               showLeadingIcons={false}
@@ -1327,8 +1290,8 @@ export default function TransactionDetailScreen() {
 
             {/* Filter menu */}
             <BottomSheetMenuList
-              visible={filterMenuVisible}
-              onRequestClose={() => setFilterMenuVisible(false)}
+              visible={itemsManager.filterMenuVisible}
+              onRequestClose={() => itemsManager.setFilterMenuVisible(false)}
               items={filterMenuItems}
               title="Filter items"
               showLeadingIcons={false}
@@ -1392,7 +1355,7 @@ export default function TransactionDetailScreen() {
               <View style={styles.pickerContent}>
                 <AppText variant="h2" style={styles.pickerTitle}>Set Space</AppText>
                 <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  {selectedItemIds.size} item{selectedItemIds.size === 1 ? '' : 's'} selected
+                  {itemsManager.selectionCount} item{itemsManager.selectionCount === 1 ? '' : 's'} selected
                 </AppText>
                 <SpaceSelector
                   projectId={projectId ?? null}
@@ -1430,7 +1393,7 @@ export default function TransactionDetailScreen() {
                   onPress: () => handleBulkStatusConfirm('returned'),
                 },
               ]}
-              title={`Set Status (${selectedItemIds.size} item${selectedItemIds.size === 1 ? '' : 's'})`}
+              title={`Set Status (${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'})`}
               showLeadingIcons={false}
             />
 
@@ -1445,7 +1408,7 @@ export default function TransactionDetailScreen() {
               <View style={styles.pickerContent}>
                 <AppText variant="h2" style={styles.pickerTitle}>Set SKU</AppText>
                 <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  {selectedItemIds.size} item{selectedItemIds.size === 1 ? '' : 's'} selected
+                  {itemsManager.selectionCount} item{itemsManager.selectionCount === 1 ? '' : 's'} selected
                 </AppText>
                 <View style={styles.inputContainer}>
                   <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
