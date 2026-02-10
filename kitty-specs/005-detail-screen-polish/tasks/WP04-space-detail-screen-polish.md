@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Space Detail Screen Polish & Cleanup
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01]
 base_branch: 005-detail-screen-polish-WP01
 base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
@@ -699,3 +699,4 @@ After WP02, WP03, WP04 complete, verify consistency:
 - 2026-02-10T21:23:09Z – claude-sonnet-4.5 – shell_pid=37857 – lane=doing – Started review via workflow command
 - 2026-02-10T21:24:57Z – claude-sonnet-4.5 – shell_pid=37857 – lane=planned – Moved to planned
 - 2026-02-10T22:04:23Z – claude-sonnet-4.5 – shell_pid=82100 – lane=doing – Started implementation via workflow command
+- 2026-02-10T22:08:19Z – claude-sonnet-4.5 – shell_pid=82100 – lane=for_review – Ready for review: Added missing Delete Items bulk action, completed cross-screen section normalization (shared NotesSection uses Card, deleted dead transaction sections, fixed item detail). All subtasks complete.
