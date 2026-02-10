@@ -1,20 +1,24 @@
 ---
-work_package_id: "WP01"
-subtasks:
-  - "T001"
-  - "T002"
-  - "T003"
-  - "T004"
-title: "SharedItemsList Refactoring"
-phase: "Phase 1 - Foundation"
-lane: "planned"
+work_package_id: WP01
+title: SharedItemsList Refactoring
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: b730a204c881407cf6c7f9771857319074ad1bc3
+created_at: '2026-02-10T20:27:14.617855+00:00'
+subtasks:
+- T001
+- T002
+- T003
+- T004
+phase: Phase 1 - Foundation
+shell_pid: "74879"
 history:
-  - timestamp: "2026-02-10T19:00:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T19:00:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP01 – SharedItemsList Refactoring
