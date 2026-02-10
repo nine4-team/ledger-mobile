@@ -295,7 +295,7 @@ export default function ItemDetailScreen() {
       : trimmedTransactionId
     : 'None';
   const spaceLabel = item?.spaceId
-    ? spaces[item.spaceId]?.name?.trim() || item.spaceId
+    ? spaces[item.spaceId]?.name?.trim() || 'Unknown space'
     : 'None';
   const budgetCategoryLabel = item?.budgetCategoryId
     ? budgetCategories[item.budgetCategoryId]?.name?.trim() || item.budgetCategoryId

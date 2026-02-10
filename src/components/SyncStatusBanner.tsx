@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { getTrackedRequestsSnapshot } from '../sync/requestDocTracker';
 import { dismissAllSyncErrors, triggerManualSync } from '../sync/syncActions';
 import { useSyncStatusStore } from '../sync/syncStatusStore';
 import { AppText } from './AppText';
@@ -46,6 +47,19 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
 
   const message = useMemo(() => {
     if (statusVariant === 'error') {
+      if (failedRequestDocs > 0) {
+        const snapshot = getTrackedRequestsSnapshot();
+        const failedRequests = snapshot.filter(
+          (r) => r.status === 'failed' || r.status === 'denied',
+        );
+
+        if (failedRequests.length === 1) {
+          return failedRequests[0].errorMessage?.trim() || 'An operation failed to sync.';
+        }
+        if (failedRequests.length > 1) {
+          return `${failedRequests.length} operations failed. Tap Retry or Dismiss.`;
+        }
+      }
       return lastError ?? 'Some changes could not sync.';
     }
     if (statusVariant === 'syncing') return 'Syncing changes…';
@@ -54,7 +68,7 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
       return totalPending === 1 ? '1 change pending' : `${totalPending} changes pending`;
     }
     return '';
-  }, [lastError, statusVariant, totalPending]);
+  }, [failedRequestDocs, lastError, statusVariant, totalPending]);
 
   const isError = statusVariant === 'error';
 
