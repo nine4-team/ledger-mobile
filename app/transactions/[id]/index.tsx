@@ -17,8 +17,7 @@ import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSec
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
 import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
 import { useItemsManager } from '../../../src/hooks/useItemsManager';
-import { ItemsSection } from '../../../src/components/ItemsSection';
-import type { BulkAction } from '../../../src/components/ItemsSection';
+import { SharedItemsList } from '../../../src/components/SharedItemsList';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
@@ -39,7 +38,6 @@ import {
   OtherImagesSection,
   NotesSection,
   DetailsSection,
-  TaxesSection,
   AuditSection,
   type MediaHandlers,
 } from './sections';
@@ -50,6 +48,13 @@ type TransactionDetailParams = {
   projectId?: string;
   backTarget?: string;
   listStateKey?: string;
+};
+
+type BulkAction = {
+  id: string;
+  label: string;
+  onPress: (selectedIds: string[]) => void;
+  destructive?: boolean;
 };
 
 type ItemPickerTab = 'suggested' | 'project' | 'outside';
@@ -70,7 +75,7 @@ type TransactionItemFilterMode =
   | 'no-price'
   | 'no-image';
 
-type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'taxes' | 'items' | 'audit';
+type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'items' | 'audit';
 
 const SECTION_HEADER_MARKER = '__sectionHeader__';
 
@@ -108,7 +113,6 @@ export default function TransactionDetailScreen() {
     otherImages: true,  // Default collapsed
     notes: true,        // Default collapsed
     details: true,      // Default collapsed
-    taxes: true,        // Default collapsed
     items: true,        // Default collapsed
     audit: true,        // Default collapsed
   });
@@ -227,20 +231,12 @@ export default function TransactionDetailScreen() {
 
     const result: TransactionSection[] = [
       { key: 'hero', data: [transaction] },
-      { key: 'receipts', title: 'RECEIPTS', data: [SECTION_HEADER_MARKER, ...(collapsedSections.receipts ? [] : [transaction])] },
-      { key: 'otherImages', title: 'OTHER IMAGES', data: [SECTION_HEADER_MARKER, ...(collapsedSections.otherImages ? [] : [transaction])] },
-      { key: 'notes', title: 'NOTES', data: [SECTION_HEADER_MARKER, ...(collapsedSections.notes ? [] : [transaction])] },
-      { key: 'details', title: 'DETAILS', data: [SECTION_HEADER_MARKER, ...(collapsedSections.details ? [] : [transaction])] },
+      // All collapsible sections now render header + content together via SECTION_HEADER_MARKER
+      { key: 'receipts', title: 'RECEIPTS', data: [SECTION_HEADER_MARKER] },
+      { key: 'otherImages', title: 'OTHER IMAGES', data: [SECTION_HEADER_MARKER] },
+      { key: 'notes', title: 'NOTES', data: [SECTION_HEADER_MARKER] },
+      { key: 'details', title: 'DETAILS', data: [SECTION_HEADER_MARKER] },
     ];
-
-    // Taxes section only if itemization enabled
-    if (itemizationEnabled) {
-      result.push({
-        key: 'taxes',
-        title: 'TAX & ITEMIZATION',
-        data: [SECTION_HEADER_MARKER, ...(collapsedSections.taxes ? [] : [transaction])],
-      });
-    }
 
     result.push({
       key: 'items',
@@ -253,7 +249,7 @@ export default function TransactionDetailScreen() {
       result.push({
         key: 'audit',
         title: 'TRANSACTION AUDIT',
-        data: [SECTION_HEADER_MARKER, ...(collapsedSections.audit ? [] : [transaction])],
+        data: [SECTION_HEADER_MARKER],
       });
     }
 
@@ -1084,102 +1080,129 @@ export default function TransactionDetailScreen() {
     if (!transaction) return null;
 
     // Render section headers that were moved into data (so they don't stick)
+    // Wrap header + content in View with gap: 12 for proper spacing
     if (item === SECTION_HEADER_MARKER) {
+      const collapsed = collapsedSections[section.key] ?? false;
+
       if (section.key === 'audit') {
         const showWarning = transaction.needsReview === true;
-        const collapsed = collapsedSections[section.key] ?? false;
 
         return (
-          <TouchableOpacity
-            onPress={() => handleToggleSection(section.key)}
-            style={styles.sectionHeader}
-            accessibilityRole="button"
-            accessibilityLabel={`${section.title} section, ${collapsed ? 'collapsed' : 'expanded'}`}
-          >
-            <View style={styles.sectionHeaderContent}>
-              <MaterialIcons
-                name={collapsed ? 'chevron-right' : 'expand-more'}
-                size={24}
-                color={uiKitTheme.text.secondary}
-              />
-              <AppText variant="caption" style={[styles.sectionHeaderTitle, { color: uiKitTheme.text.secondary }]}>
-                {section.title}
-              </AppText>
-              {showWarning && (
-                <View style={styles.reviewBadge}>
-                  <Text style={styles.reviewBadgeText} numberOfLines={1}>
-                    Needs Review
-                  </Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
+          <View style={{ gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => handleToggleSection(section.key)}
+              style={styles.sectionHeader}
+              accessibilityRole="button"
+              accessibilityLabel={`${section.title} section, ${collapsed ? 'collapsed' : 'expanded'}`}
+            >
+              <View style={styles.sectionHeaderContent}>
+                <MaterialIcons
+                  name={collapsed ? 'chevron-right' : 'expand-more'}
+                  size={24}
+                  color={uiKitTheme.text.secondary}
+                />
+                <AppText variant="caption" style={[styles.sectionHeaderTitle, { color: uiKitTheme.text.secondary }]}>
+                  {section.title}
+                </AppText>
+                {showWarning && (
+                  <View style={styles.reviewBadge}>
+                    <Text style={styles.reviewBadgeText} numberOfLines={1}>
+                      Needs Review
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            {!collapsed && <AuditSection transaction={transaction} items={linkedItems} />}
+          </View>
         );
       }
 
+      // For other sections, wrap header + content together
+      const renderSectionContent = () => {
+        switch (section.key) {
+          case 'receipts':
+            return <ReceiptsSection transaction={transaction} handlers={mediaHandlers} />;
+          case 'otherImages':
+            return <OtherImagesSection transaction={transaction} handlers={mediaHandlers} />;
+          case 'notes':
+            return <NotesSection transaction={transaction} />;
+          case 'details':
+            return <DetailsSection transaction={transaction} budgetCategories={budgetCategories} itemizationEnabled={itemizationEnabled} />;
+          default:
+            return null;
+        }
+      };
+
       return (
-        <CollapsibleSectionHeader
-          title={section.title!}
-          collapsed={collapsedSections[section.key] ?? false}
-          onToggle={() => handleToggleSection(section.key)}
-          badge={section.badge}
-        />
+        <View style={{ gap: 12 }}>
+          <CollapsibleSectionHeader
+            title={section.title!}
+            collapsed={collapsed}
+            onToggle={() => handleToggleSection(section.key)}
+            badge={section.badge}
+          />
+          {!collapsed && renderSectionContent()}
+        </View>
       );
     }
 
+    // Non-header items (hero, items sections that don't use SECTION_HEADER_MARKER pattern)
     switch (section.key) {
       case 'hero':
         return <HeroSection transaction={item} />;
 
-      case 'receipts':
-        return <ReceiptsSection transaction={item} handlers={mediaHandlers} />;
-
-      case 'otherImages':
-        return <OtherImagesSection transaction={item} handlers={mediaHandlers} />;
-
-      case 'notes':
-        return <NotesSection transaction={item} />;
-
-      case 'details':
-        return <DetailsSection transaction={item} budgetCategories={budgetCategories} />;
-
-      case 'taxes':
-        return <TaxesSection transaction={item} />;
-
       case 'items': {
         // Define bulk actions for transaction detail
         const bulkActions: BulkAction[] = [
-          { id: 'set-space', label: 'Set Space', variant: 'secondary', icon: 'place' },
-          { id: 'set-status', label: 'Set Status', variant: 'secondary', icon: 'swap-horiz' },
-          { id: 'set-sku', label: 'Set SKU', variant: 'secondary', icon: 'label' },
-          { id: 'remove', label: 'Remove', variant: 'destructive', icon: 'remove-circle-outline' },
-          { id: 'delete', label: 'Delete', variant: 'destructive', icon: 'delete' },
+          { id: 'set-space', label: 'Set Space', onPress: (ids) => handleBulkAction('set-space', ids) },
+          { id: 'set-status', label: 'Set Status', onPress: (ids) => handleBulkAction('set-status', ids) },
+          { id: 'set-sku', label: 'Set SKU', onPress: (ids) => handleBulkAction('set-sku', ids) },
+          { id: 'remove', label: 'Remove from Transaction', onPress: (ids) => handleBulkAction('remove', ids) },
+          { id: 'delete', label: 'Delete Items', onPress: (ids) => handleBulkAction('delete', ids), destructive: true },
         ];
 
+        // Create adapter for SharedItemsList embedded mode
+        // Convert Set<string> to string[] and adapt methods
+        const manager = {
+          selectedIds: Array.from(itemsManager.selectedIds),
+          selectAll: itemsManager.selectAll,
+          clearSelection: itemsManager.clearSelection,
+          setItemSelected: (id: string, selected: boolean) => {
+            const isCurrentlySelected = itemsManager.selectedIds.has(id);
+            if (selected !== isCurrentlySelected) {
+              itemsManager.toggleSelection(id);
+            }
+          },
+          setGroupSelection: (ids: string[], selected: boolean) => {
+            ids.forEach(id => {
+              const isCurrentlySelected = itemsManager.selectedIds.has(id);
+              if (selected !== isCurrentlySelected) {
+                itemsManager.toggleSelection(id);
+              }
+            });
+          },
+        };
+
         return (
-          <ItemsSection
-            manager={itemsManager}
-            items={itemsManager.filteredAndSortedItems}
-            onItemPress={(id) => router.push(`/items/${id}`)}
-            getItemMenuItems={getItemMenuItems}
-            onBookmarkPress={(item) => {
-              if (!accountId) return;
-              updateItem(accountId, item.id, { bookmark: !item.bookmark });
-            }}
-            bulkActions={bulkActions}
-            onBulkAction={handleBulkAction}
-            emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items in this transaction.'}
-          />
+          <View style={{ flex: 1 }}>
+            <SharedItemsList
+              embedded={true}
+              manager={manager}
+              items={itemsManager.filteredAndSortedItems}
+              bulkActions={bulkActions}
+              onItemPress={(id) => router.push(`/items/${id}`)}
+              getItemMenuItems={getItemMenuItems}
+              emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items in this transaction.'}
+            />
+          </View>
         );
       }
-
-      case 'audit':
-        return <AuditSection transaction={item} items={linkedItems} />;
 
       default:
         return null;
     }
-  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems]);
+  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems, itemizationEnabled]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -1430,7 +1453,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
-    gap: 10,
+    gap: 4,  // Section-to-section spacing (tight)
   },
   screenContent: {
     paddingTop: 0,

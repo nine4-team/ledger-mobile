@@ -7,6 +7,7 @@ import type { BudgetCategories } from './types';
 type DetailsSectionProps = {
   transaction: Transaction;
   budgetCategories: BudgetCategories;
+  itemizationEnabled: boolean;
 };
 
 function formatMoney(cents: number | null | undefined): string {
@@ -19,7 +20,12 @@ function formatDate(dateStr: string | null | undefined): string {
   return dateStr;
 }
 
-export function DetailsSection({ transaction, budgetCategories }: DetailsSectionProps) {
+function formatPercent(pct: number | null | undefined): string {
+  if (typeof pct !== 'number') return '—';
+  return `${pct.toFixed(2)}%`;
+}
+
+export function DetailsSection({ transaction, budgetCategories, itemizationEnabled }: DetailsSectionProps) {
   const budgetCategoryLabel = (() => {
     if (!transaction.budgetCategoryId) return 'None';
     const category = budgetCategories[transaction.budgetCategoryId];
@@ -28,17 +34,40 @@ export function DetailsSection({ transaction, budgetCategories }: DetailsSection
 
   const hasReceiptLabel = transaction.hasEmailReceipt ? 'Yes' : 'No';
 
+  // Calculate tax amount for display
+  const taxAmount = typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
+    ? formatMoney(transaction.amountCents - transaction.subtotalCents)
+    : '—';
+
+  // Build detail rows array with conditional tax rows
+  const detailRows = [
+    { label: 'Source', value: transaction.source?.trim() || '—' },
+    { label: 'Date', value: formatDate(transaction.transactionDate) },
+    { label: 'Amount', value: formatMoney(transaction.amountCents) },
+    { label: 'Status', value: transaction.status?.trim() || '—' },
+    { label: 'Purchased by', value: transaction.purchasedBy?.trim() || '—' },
+    { label: 'Reimbursement type', value: transaction.reimbursementType?.trim() || '—' },
+    { label: 'Budget category', value: budgetCategoryLabel },
+    { label: 'Email receipt', value: hasReceiptLabel },
+    // Conditionally include tax rows when itemization is enabled
+    ...(itemizationEnabled ? [
+      { label: 'Subtotal', value: formatMoney(transaction.subtotalCents) },
+      { label: 'Tax rate', value: formatPercent(transaction.taxRatePct) },
+      { label: 'Tax amount', value: taxAmount },
+    ] : []),
+  ];
+
   return (
     <Card>
       <View style={styles.detailRows}>
-        <DetailRow label="Source" value={transaction.source?.trim() || '—'} />
-        <DetailRow label="Date" value={formatDate(transaction.transactionDate)} />
-        <DetailRow label="Amount" value={formatMoney(transaction.amountCents)} />
-        <DetailRow label="Status" value={transaction.status?.trim() || '—'} />
-        <DetailRow label="Purchased by" value={transaction.purchasedBy?.trim() || '—'} />
-        <DetailRow label="Reimbursement type" value={transaction.reimbursementType?.trim() || '—'} />
-        <DetailRow label="Budget category" value={budgetCategoryLabel} />
-        <DetailRow label="Email receipt" value={hasReceiptLabel} showDivider={false} />
+        {detailRows.map((row, index) => (
+          <DetailRow
+            key={row.label}
+            label={row.label}
+            value={row.value}
+            showDivider={index < detailRows.length - 1}
+          />
+        ))}
       </View>
     </Card>
   );
