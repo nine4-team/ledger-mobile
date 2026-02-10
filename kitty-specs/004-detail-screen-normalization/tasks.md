@@ -93,11 +93,11 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T012 [P] Define section structure for item detail (hero, media, notes, details)
-- [ ] T013 [P] Add collapsed state management with item-specific defaults
-- [ ] T014 Replace AppScrollView with SectionList
-- [ ] T015 Implement `renderItem` for item detail sections
-- [ ] T016 Preserve existing functionality (error banner, Move section, menus) and clean up
+- [x] T012 [P] Define section structure for item detail (hero, media, notes, details)
+- [x] T013 [P] Add collapsed state management with item-specific defaults
+- [x] T014 Replace AppScrollView with SectionList
+- [x] T015 Implement `renderItem` for item detail sections
+- [x] T016 Preserve existing functionality (error banner, Move section, menus) and clean up
 
 ### Implementation Notes
 - Hero section is non-collapsible (always visible, no header)
