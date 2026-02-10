@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Transaction Edit Screen Migration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 44138a3773cb9b0c00e927dd9b6b6f6540b01521
@@ -18,8 +18,8 @@ phase: Phase 2D - Edit Screen Migrations
 assignee: ''
 agent: "claude-reviewer"
 shell_pid: "97486"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-09T08:45:00Z'
   lane: planned
@@ -43,11 +43,80 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** - Reviewers add detailed feedback here when work needs changes. Implementation must address every item listed below before returning for re-review.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-10
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review. If you see feedback here, treat each item as a must-do before completion.]*
+## Review Feedback — WP04
+
+### Issue 1 (Critical): Tax/subtotal computed values not included in Firestore update
+
+**Location**: `app/transactions/[id]/edit.tsx` lines 245-262 (save handler)
+
+`form.setFields()` calls React's `setValues` state setter, which is asynchronous — the state update doesn't take effect until the next render. However, the save handler immediately reads `form.getChangedFields()` and `form.values.*` in the same synchronous block:
+
+```typescript
+// Line 247-251: sets computed values (async state update, doesn't take effect yet)
+form.setFields({
+  subtotal: (subtotalCents / 100).toFixed(2),
+  taxRatePct: taxRateValue !== null ? taxRateValue.toFixed(2) : '',
+});
+
+// Line 255: reads STALE hasChanges (won't see the setFields above)
+if (!form.hasChanges) { ... }
+
+// Line 262: reads STALE changedFields (won't include subtotal/taxRatePct from setFields)
+const changedFields = form.getChangedFields();
+
+// Lines 297-304: reads STALE form.values.taxRatePct / form.values.subtotal
+if ('taxRatePct' in changedFields) {
+  const parsedRate = Number.parseFloat(form.values.taxRatePct); // OLD value
+}
+```
+
+**Impact**: When the user changes the amount on an itemized category, the computed `subtotalCents` and `taxRatePct` values will NOT be included in the Firestore update. This is a functional regression from the original code, which used local variables directly:
+
+```typescript
+// ORIGINAL CODE (correct):
+updateTransaction(accountId, id, {
+  ...
+  taxRatePct: taxRateValue,   // local variable, immediately available
+  subtotalCents,              // local variable, immediately available
+});
+```
+
+**Fix**: Do not use `form.setFields()` for computed values in the save handler. Instead, use the locally-computed `subtotalCents` and `taxRateValue` variables directly when building the update payload, similar to the original code:
+
+```typescript
+// After computing subtotalCents and taxRateValue...
+if (subtotalCents !== null) {
+  updates.subtotalCents = subtotalCents;
+  updates.taxRatePct = taxRateValue;
+}
+```
+
+Move `subtotalCents`/`taxRateValue` declarations outside the `if (itemizationEnabled && ...)` block so they're accessible when building the update payload.
 
 ---
+
+### Issue 2 (Out of Scope): HeroSection.tsx changes must be removed
+
+**Location**: `app/transactions/[id]/sections/HeroSection.tsx`
+
+This file is part of the transaction **view/detail** screen, not the edit screen. The WP04 spec is specifically scoped to the edit screen migration. The diff removes the amount+date display from the hero section, reverting the intentional enhancement from commit `a112580` ("feat: enhance transaction hero section with amount and date display").
+
+**Fix**: Revert all changes to `HeroSection.tsx`. This file should not be touched by WP04.
+
+---
+
+### Issue 3 (Out of Scope): .gitignore change must be removed
+
+**Location**: `.gitignore`
+
+Adding `kitty-specs/` to `.gitignore` is a worktree artifact. This line should not be committed — sparse-checkout handles exclusion in worktrees, and adding it to `.gitignore` could mask tracking issues in the main repo.
+
+**Fix**: Revert the `.gitignore` changes.
+
 
 ## Markdown Formatting
 Wrap HTML/XML tags in backticks: `` `<div>` ``, `` `<script>` ``
@@ -839,3 +908,4 @@ Manual testing (T023) provides comprehensive verification for form behavior, com
 - 2026-02-09T23:56:48Z – claude-implementer – shell_pid=85892 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T00:01:52Z – claude-implementer – shell_pid=85892 – lane=for_review – Ready for review: Transaction edit screen migrated to useEditForm with full change tracking, tax/subtotal computation, budgetCategoryId propagation, and subscription protection. TypeScript compilation passes with no new errors.
 - 2026-02-10T00:06:34Z – claude-reviewer – shell_pid=97486 – lane=doing – Started review via workflow command
+- 2026-02-10T00:09:34Z – claude-reviewer – shell_pid=97486 – lane=planned – Moved to planned
