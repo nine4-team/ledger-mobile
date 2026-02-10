@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "for_review"
+lane: "doing"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 2 - Shared Items Management
 assignee: ''
 agent: "claude-opus"
-shell_pid: "78255"
+shell_pid: "84785"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -722,3 +722,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 - 2026-02-10T04:48:47Z – claude-sonnet – shell_pid=68958 – lane=planned – Moved to planned
 - 2026-02-10T04:49:50Z – claude-opus – shell_pid=78255 – lane=doing – Started implementation via workflow command
 - 2026-02-10T04:51:50Z – claude-opus – shell_pid=78255 – lane=for_review – Fixed both review issues: (1) removed duplicate ListFooterComponent empty state, (2) added search-aware emptyMessage to ItemsSection in SpaceDetailContent
+- 2026-02-10T04:52:55Z – claude-opus – shell_pid=84785 – lane=doing – Started review via workflow command
