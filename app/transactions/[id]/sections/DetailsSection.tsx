@@ -1,9 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Card } from '../../../../src/components/Card';
-import { AppText } from '../../../../src/components/AppText';
-import { useUIKitTheme } from '../../../../src/theme/ThemeProvider';
-import { getTextSecondaryStyle } from '../../../../src/ui/styles/typography';
-import { textEmphasis } from '../../../../src/ui';
+import { DetailRow } from '../../../../src/components/DetailRow';
 import type { Transaction } from '../../../../src/data/transactionsService';
 import type { BudgetCategories } from './types';
 
@@ -23,8 +20,6 @@ function formatDate(dateStr: string | null | undefined): string {
 }
 
 export function DetailsSection({ transaction, budgetCategories }: DetailsSectionProps) {
-  const uiKitTheme = useUIKitTheme();
-
   const budgetCategoryLabel = (() => {
     if (!transaction.budgetCategoryId) return 'None';
     const category = budgetCategories[transaction.budgetCategoryId];
@@ -36,77 +31,14 @@ export function DetailsSection({ transaction, budgetCategories }: DetailsSection
   return (
     <Card>
       <View style={styles.detailRows}>
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Source
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {transaction.source?.trim() || '—'}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Date
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {formatDate(transaction.transactionDate)}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Amount
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {formatMoney(transaction.amountCents)}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Status
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {transaction.status?.trim() || '—'}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Purchased by
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {transaction.purchasedBy?.trim() || '—'}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Reimbursement type
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {transaction.reimbursementType?.trim() || '—'}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Budget category
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {budgetCategoryLabel}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Email receipt
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {hasReceiptLabel}
-          </AppText>
-        </View>
+        <DetailRow label="Source" value={transaction.source?.trim() || '—'} />
+        <DetailRow label="Date" value={formatDate(transaction.transactionDate)} />
+        <DetailRow label="Amount" value={formatMoney(transaction.amountCents)} />
+        <DetailRow label="Status" value={transaction.status?.trim() || '—'} />
+        <DetailRow label="Purchased by" value={transaction.purchasedBy?.trim() || '—'} />
+        <DetailRow label="Reimbursement type" value={transaction.reimbursementType?.trim() || '—'} />
+        <DetailRow label="Budget category" value={budgetCategoryLabel} />
+        <DetailRow label="Email receipt" value={hasReceiptLabel} showDivider={false} />
       </View>
     </Card>
   );
@@ -115,18 +47,5 @@ export function DetailsSection({ transaction, budgetCategories }: DetailsSection
 const styles = StyleSheet.create({
   detailRows: {
     gap: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  valueText: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  divider: {
-    borderTopWidth: 1,
   },
 });

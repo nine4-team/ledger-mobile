@@ -1,9 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Card } from '../../../../src/components/Card';
-import { AppText } from '../../../../src/components/AppText';
-import { useUIKitTheme } from '../../../../src/theme/ThemeProvider';
-import { getTextSecondaryStyle } from '../../../../src/ui/styles/typography';
-import { textEmphasis } from '../../../../src/ui';
+import { DetailRow } from '../../../../src/components/DetailRow';
 import type { Transaction } from '../../../../src/data/transactionsService';
 
 type TaxesSectionProps = {
@@ -21,39 +18,16 @@ function formatPercent(pct: number | null | undefined): string {
 }
 
 export function TaxesSection({ transaction }: TaxesSectionProps) {
-  const uiKitTheme = useUIKitTheme();
+  const taxAmount = typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
+    ? formatMoney(transaction.amountCents - transaction.subtotalCents)
+    : '—';
 
   return (
     <Card>
       <View style={styles.detailRows}>
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Subtotal
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {formatMoney(transaction.subtotalCents)}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Tax rate
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {formatPercent(transaction.taxRatePct)}
-          </AppText>
-        </View>
-        <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-        <View style={styles.detailRow}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Tax amount
-          </AppText>
-          <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-            {typeof transaction.amountCents === 'number' && typeof transaction.subtotalCents === 'number'
-              ? formatMoney(transaction.amountCents - transaction.subtotalCents)
-              : '—'}
-          </AppText>
-        </View>
+        <DetailRow label="Subtotal" value={formatMoney(transaction.subtotalCents)} />
+        <DetailRow label="Tax rate" value={formatPercent(transaction.taxRatePct)} />
+        <DetailRow label="Tax amount" value={taxAmount} showDivider={false} />
       </View>
     </Card>
   );
@@ -62,18 +36,5 @@ export function TaxesSection({ transaction }: TaxesSectionProps) {
 const styles = StyleSheet.create({
   detailRows: {
     gap: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  valueText: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  divider: {
-    borderTopWidth: 1,
   },
 });
