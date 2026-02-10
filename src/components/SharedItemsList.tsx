@@ -13,6 +13,7 @@ import { ItemCard } from './ItemCard';
 import type { ItemCardProps } from './ItemCard';
 import { FilterMenu } from './FilterMenu';
 import { SortMenu } from './SortMenu';
+import { BulkSelectionBar } from './BulkSelectionBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
@@ -28,10 +29,35 @@ import { resolveAttachmentUri } from '../offline/media';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 
+type BulkAction = {
+  id: string;
+  label: string;
+  onPress: (selectedIds: string[]) => void;
+  destructive?: boolean;
+};
+
+type UseItemsManagerReturn = {
+  selectedIds: string[];
+  selectAll: () => void;
+  clearSelection: () => void;
+  setItemSelected: (id: string, selected: boolean) => void;
+  setGroupSelection: (ids: string[], selected: boolean) => void;
+};
+
 type SharedItemsListProps = {
-  scopeConfig: ScopeConfig;
-  listStateKey: string;
+  // Standalone mode props (optional when embedded=true)
+  scopeConfig?: ScopeConfig;
+  listStateKey?: string;
   refreshToken?: number;
+
+  // Embedded mode props
+  embedded?: boolean;
+  manager?: UseItemsManagerReturn;
+  items?: ScopedItem[];
+  bulkActions?: BulkAction[];
+  onItemPress?: (id: string) => void;
+  getItemMenuItems?: (item: ScopedItem) => AnchoredMenuItem[];
+  emptyMessage?: string;
 };
 
 type ItemRow = {
@@ -120,17 +146,53 @@ function getPrimaryImage(item: ScopedItem) {
   return resolveAttachmentUri(primary) ?? primary.url;
 }
 
-export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: SharedItemsListProps) {
+export function SharedItemsList({
+  // Standalone props
+  scopeConfig,
+  listStateKey,
+  refreshToken,
+
+  // Embedded props
+  embedded = false,
+  manager: externalManager,
+  items: externalItems,
+  bulkActions: externalBulkActions,
+  onItemPress: externalOnItemPress,
+  getItemMenuItems: externalGetItemMenuItems,
+  emptyMessage = "No items found",
+}: SharedItemsListProps) {
+  // Prop validation in development mode
+  if (__DEV__ && embedded) {
+    if (!externalManager) {
+      console.warn('SharedItemsList: embedded mode requires manager prop');
+    }
+    if (!externalItems) {
+      console.warn('SharedItemsList: embedded mode requires items prop');
+    }
+    if (!externalBulkActions) {
+      console.warn('SharedItemsList: embedded mode requires bulkActions prop');
+    }
+  }
+
+  if (__DEV__ && !embedded) {
+    if (!scopeConfig) {
+      console.warn('SharedItemsList: standalone mode requires scopeConfig prop');
+    }
+    if (!listStateKey) {
+      console.warn('SharedItemsList: standalone mode requires listStateKey prop');
+    }
+  }
+
   const listRef = useRef<FlatList<ListRow>>(null);
-  const { state, setSearch, setSort, setFilters, setRestoreHint, clearRestoreHint } = useListState(listStateKey);
+  const { state, setSearch, setSort, setFilters, setRestoreHint, clearRestoreHint } = useListState(listStateKey ?? 'default');
   const [query, setQuery] = useState(state.search ?? '');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [items, setItems] = useState<ScopedItem[]>([]);
+  const [internalItems, setInternalItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
   const [bulkSpaceId, setBulkSpaceId] = useState('');
   const [bulkProjectId, setBulkProjectId] = useState('');
   const [bulkCategoryId, setBulkCategoryId] = useState('');
@@ -159,9 +221,54 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   );
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
-  const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
+  const scopeId = useMemo(() => scopeConfig ? getScopeId(scopeConfig) : null, [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
   const screenRefresh = useScreenRefresh();
+
+  // Choose data and state sources based on embedded mode
+  const items = embedded ? (externalItems ?? []) : internalItems;
+  const selectedIds = embedded ? (externalManager?.selectedIds ?? []) : internalSelectedIds;
+
+  const setItemSelected = useCallback((id: string, next: boolean) => {
+    if (embedded && externalManager) {
+      externalManager.setItemSelected(id, next);
+    } else {
+      setInternalSelectedIds((prev) => {
+        const has = prev.includes(id);
+        if (next) return has ? prev : [...prev, id];
+        return has ? prev.filter((itemId) => itemId !== id) : prev;
+      });
+    }
+  }, [embedded, externalManager]);
+
+  const setGroupSelection = useCallback((ids: string[], next: boolean) => {
+    if (embedded && externalManager) {
+      externalManager.setGroupSelection(ids, next);
+    } else {
+      setInternalSelectedIds((prev) => {
+        if (next) return Array.from(new Set([...prev, ...ids]));
+        const remove = new Set(ids);
+        return prev.filter((itemId) => !remove.has(itemId));
+      });
+    }
+  }, [embedded, externalManager]);
+
+  const clearSelection = useCallback(() => {
+    if (embedded && externalManager) {
+      externalManager.clearSelection();
+    } else {
+      setInternalSelectedIds([]);
+    }
+    setBulkError(null);
+  }, [embedded, externalManager]);
+
+  const selectAll = useCallback(() => {
+    if (embedded && externalManager) {
+      externalManager.selectAll();
+    } else {
+      setInternalSelectedIds(items.map(item => item.id));
+    }
+  }, [embedded, externalManager, items]);
 
   useEffect(() => {
     setQuery(state.search ?? '');
@@ -175,13 +282,15 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, [query, setSearch]);
 
   useEffect(() => {
+    if (embedded) return; // Skip in embedded mode
     if (!accountId || !scopeId) {
-      setItems([]);
+      setInternalItems([]);
       setIsLoading(false);
     }
-  }, [accountId, scopeId]);
+  }, [accountId, scopeId, embedded]);
 
   useEffect(() => {
+    if (embedded) return; // Skip in embedded mode
     if (!accountId) {
       setBudgetCategories({});
       return;
@@ -189,42 +298,36 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     return subscribeToBudgetCategories(accountId, (next) => {
       setBudgetCategories(mapBudgetCategories(next));
     });
-  }, [accountId]);
+  }, [accountId, embedded]);
 
   useEffect(() => {
-    if (!accountId || !scopeId || refreshToken == null) {
+    if (embedded) return; // Skip in embedded mode
+    if (!accountId || !scopeId || refreshToken == null || !scopeConfig) {
       return;
     }
     void refreshScopedItems(accountId, scopeConfig, 'online').then((next) => {
       if (next.length) {
-        setItems(next);
+        setInternalItems(next);
       }
     });
-  }, [accountId, refreshToken, scopeConfig, scopeId]);
+  }, [accountId, refreshToken, scopeConfig, scopeId, embedded]);
 
   const handleSubscribe = useCallback(() => {
-    if (!accountId || !scopeId) {
-      setItems([]);
+    if (embedded) return () => {}; // Skip in embedded mode
+    if (!accountId || !scopeId || !scopeConfig) {
+      setInternalItems([]);
       setIsLoading(false);
       return () => {};
     }
 
     setIsLoading(true);
     return subscribeToScopedItems(accountId, scopeConfig, (next) => {
-      setItems(next);
+      setInternalItems(next);
       setIsLoading(false);
     });
-  }, [accountId, scopeConfig, scopeId]);
+  }, [accountId, scopeConfig, scopeId, embedded]);
 
   useScopedListeners(scopeId, handleSubscribe);
-
-  const setItemSelected = useCallback((id: string, next: boolean) => {
-    setSelectedIds((prev) => {
-      const has = prev.includes(id);
-      if (next) return has ? prev : [...prev, id];
-      return has ? prev.filter((itemId) => itemId !== id) : prev;
-    });
-  }, []);
 
   const rows = useMemo(() => {
     return items.map((item) => {
@@ -237,7 +340,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const sortMode = (state.sort as SortMode | undefined) ?? DEFAULT_SORT;
 
   const activeFilters = (state.filters ?? {}) as ItemFilters;
-  const filterModes = scopeConfig.scope === 'inventory' ? INVENTORY_FILTER_MODES : PROJECT_FILTER_MODES;
+  const filterModes = scopeConfig?.scope === 'inventory' ? INVENTORY_FILTER_MODES : PROJECT_FILTER_MODES;
 
   const selectedModes = useMemo<ItemFilterMode[]>(() => {
     const modeValue = activeFilters.mode;
@@ -372,14 +475,6 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     }
   }, [bulkSheetOpen, selectedIds.length]);
 
-  const setGroupSelection = useCallback((ids: string[], next: boolean) => {
-    setSelectedIds((prev) => {
-      if (next) return Array.from(new Set([...prev, ...ids]));
-      const remove = new Set(ids);
-      return prev.filter((itemId) => !remove.has(itemId));
-    });
-  }, []);
-
   const setGroupExpanded = useCallback(
     (groupId: string, expanded: boolean) => {
       const nextFilters = {
@@ -396,25 +491,25 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
     selectedIds.forEach((id) => {
       deleteItem(accountId, id);
     });
-    setSelectedIds([]);
-  }, [accountId, selectedIds]);
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
 
   const handleBulkMoveToSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || !bulkSpaceId.trim()) return;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { spaceId: bulkSpaceId.trim() });
     });
-    setSelectedIds([]);
+    clearSelection();
     setBulkSpaceId('');
-  }, [accountId, bulkSpaceId, selectedIds]);
+  }, [accountId, bulkSpaceId, selectedIds, clearSelection]);
 
   const handleBulkRemoveFromSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { spaceId: null });
     });
-    setSelectedIds([]);
-  }, [accountId, selectedIds]);
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
 
   const handleBulkAllocateToProject = useCallback(() => {
     if (!accountId || selectedIds.length === 0 || !bulkProjectId.trim()) return;
@@ -429,13 +524,13 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       budgetCategoryId: bulkCategoryId.trim(),
       items: items.filter((item) => selectedIds.includes(item.id)),
     });
-    setSelectedIds([]);
+    clearSelection();
     setBulkProjectId('');
     setBulkCategoryId('');
-  }, [accountId, bulkCategoryId, bulkProjectId, items, selectedIds]);
+  }, [accountId, bulkCategoryId, bulkProjectId, items, selectedIds, clearSelection]);
 
   const handleBulkSellToBusiness = useCallback(() => {
-    if (!accountId || selectedIds.length === 0 || scopeConfig.scope !== 'project') return;
+    if (!accountId || selectedIds.length === 0 || !scopeConfig || scopeConfig.scope !== 'project') return;
     const selected = items.filter((item) => selectedIds.includes(item.id));
     const missingCategory = selected.find((item) => !item.budgetCategoryId);
     if (missingCategory && !bulkSourceCategoryId.trim()) {
@@ -449,9 +544,9 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
       budgetCategoryId: bulkSourceCategoryId.trim() || undefined,
       items: selected,
     });
-    setSelectedIds([]);
+    clearSelection();
     setBulkSourceCategoryId('');
-  }, [accountId, bulkSourceCategoryId, items, scopeConfig.projectId, scopeConfig.scope, selectedIds]);
+  }, [accountId, bulkSourceCategoryId, items, scopeConfig, selectedIds, clearSelection]);
 
   const bulkSourceCategoryLabel = useMemo(() => {
     if (!bulkSourceCategoryId.trim()) return 'No source category';
@@ -573,6 +668,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   }, [activeFilters, filterModes, selectedModes, setFilters]);
 
   const handleCreateItem = useCallback(() => {
+    if (!scopeConfig || !listStateKey) return;
     router.push({
       pathname: '/items/new',
       params: {
@@ -581,10 +677,18 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         listStateKey,
       },
     });
-  }, [listStateKey, router, scopeConfig.projectId, scopeConfig.scope]);
+  }, [listStateKey, router, scopeConfig]);
 
   const handleOpenItem = useCallback(
     (id: string) => {
+      // Use external handler in embedded mode
+      if (embedded && externalOnItemPress) {
+        externalOnItemPress(id);
+        return;
+      }
+
+      // Default standalone behavior
+      if (!scopeConfig || !listStateKey) return;
       setRestoreHint({ anchorId: id, scrollOffset: lastScrollOffsetRef.current });
       const backTarget =
         scopeConfig.scope === 'inventory'
@@ -603,37 +707,46 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         },
       });
     },
-    [listStateKey, router, scopeConfig.projectId, scopeConfig.scope, setRestoreHint]
+    [embedded, externalOnItemPress, listStateKey, router, scopeConfig, setRestoreHint]
   );
 
   const handleDeleteItem = useCallback(
     (id: string, label: string) => {
       if (!accountId) return;
-      Alert.alert('Delete item', `Delete “${label}”? This can’t be undone.`, [
+      Alert.alert('Delete item', `Delete "${label}"? This can't be undone.`, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
             deleteItem(accountId, id);
-            setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+            if (embedded && externalManager) {
+              externalManager.setItemSelected(id, false);
+            } else {
+              setInternalSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+            }
           },
         },
       ]);
     },
-    [accountId]
+    [accountId, embedded, externalManager]
   );
 
   const handleSelectAll = useCallback(() => {
-    if (selectedIds.length === filtered.length) {
-      setSelectedIds([]);
+    const allItemIds = filtered.map((row) => row.id);
+    const allSelected = allItemIds.length > 0 &&
+      allItemIds.every(id => selectedIds.includes(id));
+
+    if (allSelected) {
+      clearSelection();
     } else {
-      setSelectedIds(filtered.map((row) => row.id));
+      selectAll();
     }
-  }, [filtered, selectedIds.length]);
+  }, [filtered, selectedIds, clearSelection, selectAll]);
 
   const hasFiltered = filtered.length > 0;
-  const allSelected = selectedIds.length === filtered.length && hasFiltered;
+  const allItemIds = filtered.map((row) => row.id);
+  const allSelected = allItemIds.length > 0 && allItemIds.every(id => selectedIds.includes(id));
 
   const getSortLabel = useCallback(() => {
     if (sortMode === 'alphabetical-asc') return 'Alphabetical (A-Z)';
@@ -647,51 +760,65 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
   const isFilterActive =
     !selectedModes.includes('all') || selectedModes.length > 1 || activeFilters.showDuplicates === false;
 
-  const clearSelection = useCallback(() => {
-    setSelectedIds([]);
-    setBulkError(null);
-  }, []);
+  const getMenuItems = useCallback((item: ScopedItem, label: string): AnchoredMenuItem[] => {
+    // Use external menu items in embedded mode
+    if (embedded && externalGetItemMenuItems) {
+      return externalGetItemMenuItems(item);
+    }
+
+    // Default standalone menu items
+    return [
+      { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
+      { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, label) },
+    ];
+  }, [embedded, externalGetItemMenuItems, handleOpenItem, handleDeleteItem]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.controlSection}>
-        <ItemsListControlBar
-          search={query}
-          onChangeSearch={setQuery}
-          showSearch={showSearch}
-          onToggleSearch={() => setShowSearch(!showSearch)}
-          onSort={handleToggleSort}
-          isSortActive={isSortActive}
-          onFilter={() => setFiltersOpen(true)}
-          isFilterActive={isFilterActive}
-          onAdd={handleCreateItem}
-          leftElement={
-            <TouchableOpacity
-              disabled={!hasFiltered}
-              onPress={() => {
-                if (!hasFiltered) return;
-                handleSelectAll();
-              }}
-              style={[
-                styles.selectButton,
-                selectButtonThemeStyle,
-                !hasFiltered && styles.selectButtonDisabled,
-              ]}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: allSelected }}
-            >
-              <SelectorCircle selected={allSelected} indicator="check" />
-            </TouchableOpacity>
-          }
-        />
-      </View>
-      <SortMenu
-        visible={sortOpen}
-        onRequestClose={() => setSortOpen(false)}
-        items={sortMenuItems}
-        activeSubactionKey={sortMode}
-      />
-      <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
+      {!embedded && (
+        <View style={styles.controlSection}>
+          <ItemsListControlBar
+            search={query}
+            onChangeSearch={setQuery}
+            showSearch={showSearch}
+            onToggleSearch={() => setShowSearch(!showSearch)}
+            onSort={handleToggleSort}
+            isSortActive={isSortActive}
+            onFilter={() => setFiltersOpen(true)}
+            isFilterActive={isFilterActive}
+            onAdd={handleCreateItem}
+            leftElement={
+              <TouchableOpacity
+                disabled={!hasFiltered}
+                onPress={() => {
+                  if (!hasFiltered) return;
+                  handleSelectAll();
+                }}
+                style={[
+                  styles.selectButton,
+                  selectButtonThemeStyle,
+                  !hasFiltered && styles.selectButtonDisabled,
+                ]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: allSelected }}
+              >
+                <SelectorCircle selected={allSelected} indicator="check" />
+              </TouchableOpacity>
+            }
+          />
+        </View>
+      )}
+      {!embedded && (
+        <>
+          <SortMenu
+            visible={sortOpen}
+            onRequestClose={() => setSortOpen(false)}
+            items={sortMenuItems}
+            activeSubactionKey={sortMode}
+          />
+          <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
+        </>
+      )}
       <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
         <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
           <AppText variant="body" style={styles.bulkSheetTitle}>
@@ -715,6 +842,26 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
             </AppText>
           ) : null}
           <View style={styles.bulkActions}>
+            {embedded && externalBulkActions ? (
+              // Render custom bulk actions in embedded mode
+              externalBulkActions.map((action) => (
+                <AppButton
+                  key={action.id}
+                  title={action.label}
+                  variant={action.destructive ? 'secondary' : 'secondary'}
+                  onPress={() => {
+                    action.onPress(selectedIds);
+                    setBulkSheetOpen(false);
+                  }}
+                  style={[
+                    styles.bulkActionButton,
+                    action.destructive ? { backgroundColor: theme.colors.error } : undefined,
+                  ]}
+                />
+              ))
+            ) : (
+              // Render default standalone bulk actions
+              <>
             <View style={styles.bulkActionGroup}>
               <TextInput
                 value={bulkSpaceId}
@@ -736,7 +883,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                 style={styles.bulkActionButton}
               />
             </View>
-            {scopeConfig.scope === 'inventory' ? (
+            {scopeConfig?.scope === 'inventory' ? (
               <View style={styles.bulkActionGroup}>
                 <TextInput
                   value={bulkProjectId}
@@ -760,7 +907,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                 />
               </View>
             ) : null}
-            {scopeConfig.scope === 'project' ? (
+            {scopeConfig?.scope === 'project' ? (
               <View style={styles.bulkActionGroup}>
                 <Pressable
                   accessibilityRole="button"
@@ -781,12 +928,14 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                 />
               </View>
             ) : null}
-            <AppButton
-              title="Delete"
-              variant="secondary"
-              onPress={handleBulkDelete}
-              style={styles.bulkActionButton}
-            />
+                <AppButton
+                  title="Delete"
+                  variant="secondary"
+                  onPress={handleBulkDelete}
+                  style={styles.bulkActionButton}
+                />
+              </>
+            )}
           </View>
         </View>
       </BottomSheet>
@@ -812,7 +961,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <AppText variant="body">
-              {isLoading ? 'Loading items…' : 'No items yet.'}
+              {isLoading ? 'Loading items…' : emptyMessage}
             </AppText>
           </View>
         }
@@ -837,7 +986,7 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                   name: row.label,
                   sku: summaryItem?.item.sku ?? undefined,
                   sourceLabel: summaryItem?.item.source ?? undefined,
-                  locationLabel: scopeConfig.fields?.showBusinessInventoryLocation
+                  locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation
                     ? summaryItem?.item.spaceId ?? undefined
                     : undefined,
                   notes: summaryItem?.item.notes ?? undefined,
@@ -847,16 +996,13 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
                 totalLabel={totalLabel ?? undefined}
                 items={row.items.map((item) => {
                   const isSelected = selectedIds.includes(item.id);
-                  const menuItems: AnchoredMenuItem[] = [
-                    { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
-                    { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, item.label) },
-                  ];
+                  const menuItems = getMenuItems(item.item, item.label);
 
                   const cardProps: ItemCardProps = {
                     name: item.label,
                     sku: item.item.sku ?? undefined,
                     sourceLabel: item.item.source ?? undefined,
-                    locationLabel: scopeConfig.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
+                    locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
                     priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
                     statusLabel: item.item.status ?? undefined,
                     thumbnailUri: getPrimaryImage(item.item) ?? undefined,
@@ -890,16 +1036,13 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
 
           const item = row.item;
           const isSelected = selectedIds.includes(item.id);
-          const menuItems: AnchoredMenuItem[] = [
-            { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
-            { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, item.label) },
-          ];
+          const menuItems = getMenuItems(item.item, item.label);
           return (
             <ItemCard
               name={item.label}
               sku={item.item.sku ?? undefined}
               sourceLabel={item.item.source ?? undefined}
-              locationLabel={scopeConfig.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
+              locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
               priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
               statusLabel={item.item.status ?? undefined}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
@@ -919,22 +1062,11 @@ export function SharedItemsList({ scopeConfig, listStateKey, refreshToken }: Sha
           );
         }}
       />
-      {selectedIds.length > 0 ? (
-        <View style={styles.bulkBar}>
-          <AppText variant="caption" style={styles.semiboldText}>
-            {selectedIds.length} selected
-          </AppText>
-          <View style={styles.bulkBarSpacer} />
-          <View style={styles.bulkBarActions}>
-            <AppButton title="Clear" variant="secondary" onPress={clearSelection} />
-            <AppButton
-              title="Bulk actions"
-              variant="primary"
-              onPress={() => setBulkSheetOpen(true)}
-            />
-          </View>
-        </View>
-      ) : null}
+      <BulkSelectionBar
+        selectedCount={selectedIds.length}
+        onBulkActionsPress={() => setBulkSheetOpen(true)}
+        onClearSelection={clearSelection}
+      />
     </View>
   );
 }
@@ -1033,19 +1165,5 @@ const styles = StyleSheet.create({
   },
   categoryPickerLabel: {
     fontWeight: '600',
-  },
-  bulkBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-  },
-  bulkBarSpacer: {
-    flex: 1,
-  },
-  bulkBarActions: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
   },
 });
