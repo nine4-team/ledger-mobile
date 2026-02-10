@@ -1,0 +1,10 @@
+{
+  "feature_number": "005",
+  "slug": "005-detail-screen-polish",
+  "friendly_name": "Detail Screen Polish",
+  "mission": "software-dev",
+  "source_description": "Fix regressions and omissions from 004-detail-screen-normalization: merge tax into details, replace ItemsSection with SharedItemsList, fix item detail top card, remove duplicate titles, normalize section spacing, fix bulk selection.",
+  "created_at": "2026-02-10T19:40:00Z",
+  "target_branch": "main",
+  "vcs": "git"
+}
