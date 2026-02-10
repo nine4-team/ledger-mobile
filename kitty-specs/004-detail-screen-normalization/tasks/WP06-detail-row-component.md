@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Create DetailRow Component
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: 1a15fd7b3fb801a7c4650f0e390183fed6dda4bb
@@ -14,7 +14,7 @@ subtasks:
 phase: Phase 3 - Detail Row Extraction
 assignee: ''
 agent: "claude-sonnet"
-shell_pid: "45302"
+shell_pid: "99589"
 review_status: ''
 reviewed_by: ''
 history:
@@ -359,3 +359,4 @@ divider: {
 - 2026-02-10T03:45:44Z – claude-sonnet – shell_pid=45302 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T03:55:36Z – claude-sonnet – shell_pid=45302 – lane=doing – T030 appears incorrectly assigned to WP06. Original prompt only includes T026-T029 (all complete). T030 is about MediaGallerySection on space detail, unrelated to DetailRow. Space detail screens don't use MediaGallerySection. Proceeding with --force.
 - 2026-02-10T03:55:43Z – claude-sonnet – shell_pid=45302 – lane=for_review – Ready for review: Created shared DetailRow component and adopted it in transaction detail (DetailsSection + TaxesSection) and item detail screens. All duplicate styles removed. 4 files changed: 1 new component, 3 refactored screens. Note: T030 is misassigned (unrelated to DetailRow).
+- 2026-02-10T04:11:50Z – claude-sonnet – shell_pid=99589 – lane=doing – Started review via workflow command
