@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Card } from '../../../../src/components/Card';
 import { AppText } from '../../../../src/components/AppText';
 import { ProgressBar } from '../../../../src/components/ProgressBar';
@@ -55,27 +56,50 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
   const formatCents = (cents: number): string =>
     `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  // Status message (FR-006)
-  const pct = Math.round(completeness.completenessRatio * 100);
-  let statusMessage: string;
+  // Status label and icon (FR-006)
+  let statusLabel: string;
+  let iconName: 'check-circle' | 'error-outline' | 'cancel';
   switch (completeness.status) {
     case 'complete':
-      statusMessage = '100% — Complete';
+      statusLabel = 'Complete';
+      iconName = 'check-circle';
       break;
     case 'near':
-      statusMessage = `${pct}% — Nearly Complete`;
+      statusLabel = 'Nearly Complete';
+      iconName = 'check-circle';
       break;
     case 'incomplete':
-      statusMessage = `${pct}% — Incomplete`;
+      statusLabel = 'Incomplete';
+      iconName = 'error-outline';
       break;
     case 'over':
-      statusMessage = `${pct}% — Over-itemized`;
+      statusLabel = 'Over';
+      iconName = 'cancel';
       break;
   }
+
+  // Calculate remaining amount
+  const remainingCents = completeness.transactionSubtotalCents - completeness.itemsNetTotalCents;
+  const remainingLabel = remainingCents >= 0
+    ? `${formatCents(remainingCents)} remaining`
+    : `Over by ${formatCents(Math.abs(remainingCents))}`;
 
   return (
     <Card>
       <View style={styles.container}>
+        {/* Status line with icon + label on left, $x/$y on right */}
+        <View style={styles.statusRow}>
+          <View style={styles.statusLeft}>
+            <MaterialIcons name={iconName} size={20} color={progressColors.text} />
+            <AppText variant="title" style={{ color: progressColors.text }}>
+              {statusLabel}
+            </AppText>
+          </View>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {formatCents(completeness.itemsNetTotalCents)} / {formatCents(completeness.transactionSubtotalCents)}
+          </AppText>
+        </View>
+
         {/* ProgressBar (FR-005) */}
         <ProgressBar
           percentage={percentage}
@@ -84,30 +108,15 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
           overflowColor={overflowColors?.bar}
         />
 
-        {/* Totals comparison row (FR-008) */}
-        <View style={styles.totalsRow}>
-          <View style={styles.totalColumn}>
-            <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-              Items Total
-            </AppText>
-            <AppText variant="body">
-              {formatCents(completeness.itemsNetTotalCents)}
-            </AppText>
-          </View>
-          <View style={styles.totalColumn}>
-            <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-              Transaction Subtotal
-            </AppText>
-            <AppText variant="body">
-              {formatCents(completeness.transactionSubtotalCents)}
-            </AppText>
-          </View>
+        {/* Info below bar: "N items" on left, "$x remaining" on right */}
+        <View style={styles.belowBarRow}>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {completeness.itemsCount} items
+          </AppText>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {remainingLabel}
+          </AppText>
         </View>
-
-        {/* Status message (FR-006) */}
-        <AppText variant="body" style={{ color: progressColors.text, marginTop: 12 }}>
-          {statusMessage}
-        </AppText>
 
         {/* Missing price count (FR-007) */}
         {completeness.itemsMissingPriceCount > 0 && (
@@ -127,12 +136,19 @@ const styles = StyleSheet.create({
   naContainer: {
     paddingVertical: 8,
   },
-  totalsRow: {
+  statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 12,
+    alignItems: 'center',
   },
-  totalColumn: {
-    gap: 4,
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  belowBarRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });
