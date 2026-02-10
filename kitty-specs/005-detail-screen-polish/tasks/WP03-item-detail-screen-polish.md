@@ -1,9 +1,12 @@
 ---
 work_package_id: WP03
 title: Item Detail Screen Polish
-lane: planned
+lane: "doing"
 dependencies:
 - WP01
+base_branch: 005-detail-screen-polish-WP01
+base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
+created_at: '2026-02-10T21:13:37.604531+00:00'
 subtasks:
 - T009
 - T010
@@ -12,6 +15,7 @@ subtasks:
 - T013
 - T014
 phase: Phase 3 - Item Detail
+shell_pid: "25589"
 history:
 - timestamp: '2026-02-10T19:00:00Z'
   lane: planned
