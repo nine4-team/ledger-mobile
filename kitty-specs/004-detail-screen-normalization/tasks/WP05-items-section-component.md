@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "doing"
+lane: "planned"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -39,6 +39,81 @@ history:
 **Reviewed by**: nine4-team
 **Status**: ❌ Changes Requested
 **Date**: 2026-02-10
+
+**Reviewed by**: claude-opus
+**Status**: Changes Requested
+**Date**: 2026-02-10
+
+## Critical Issues
+
+### Issue 1: Space Detail — Items section data causes N copies of ItemsSection
+
+**Location**: `src/components/SpaceDetailContent.tsx:277`
+
+```typescript
+data: itemsCollapsed ? [] : itemsManager.filteredAndSortedItems,
+```
+
+The items section passes the full `filteredAndSortedItems` array as section data. SectionList calls `renderItem` once **per element** in this array. Each `renderItem` call renders the **entire** `ItemsSection` component (which internally maps over all items). With 10 items, this produces 10 copies of the full 10-item list (100 ItemCards visible on screen).
+
+**Fix**: Use a single content marker instead of the full items array:
+
+```typescript
+data: itemsCollapsed ? [] : ['items-content'],
+```
+
+The string `'items-content'` is not equal to `SECTION_HEADER_MARKER`, so it falls through to the switch and renders `ItemsSection` exactly once. Also remove the `ListFooterComponent` empty state handler (lines 882-890) since `ItemsSection` handles its own empty state via the `emptyMessage` prop — just pass a custom `emptyMessage` to ItemsSection.
+
+---
+
+### Issue 2: Transaction Detail — ItemsSection is dead code (never renders)
+
+**Location**: `app/transactions/[id]/index.tsx:248`
+
+```typescript
+data: collapsedSections.items ? [] : [SECTION_HEADER_MARKER],
+```
+
+When the items section is expanded, data contains `[SECTION_HEADER_MARKER]`. In `renderItem`, the guard at the top intercepts `SECTION_HEADER_MARKER` and returns a `CollapsibleSectionHeader` (line 1120-1127) **before** reaching the `case 'items':` switch branch. The `ItemsSection` at line 1160 is dead code that never executes.
+
+This also means the items section currently renders a **second** `CollapsibleSectionHeader` as content (on top of the one already rendered by `renderSectionHeader` for the sticky header), and no actual items are displayed.
+
+**Fix**: Use a non-marker string for items section data:
+
+```typescript
+data: collapsedSections.items ? [] : ['items-content'],
+```
+
+This bypasses the `SECTION_HEADER_MARKER` guard and reaches `case 'items':` where `ItemsSection` renders.
+
+---
+
+## Minor Issues
+
+### Issue 3: Missing `icon` prop on AppButton in ItemsSection (carried over)
+
+**Location**: `src/components/ItemsSection.tsx:87-92`
+
+This was Issue 4 from the previous review and was not addressed. Both screens pass `icon` values in their `bulkActions` configs (e.g., `'swap-horiz'`, `'place'`, `'delete'`), but the `AppButton` never receives them:
+
+```typescript
+<AppButton
+  key={action.id}
+  title={action.label}
+  variant={action.variant === 'destructive' ? 'secondary' : action.variant}
+  onPress={() => onBulkAction(action.id, [...manager.selectedIds])}
+  // Missing: icon={action.icon}
+/>
+```
+
+**Fix**: Add `icon={action.icon}` to the AppButton props.
+
+---
+
+## Summary
+
+The `ItemsSection` component itself is well-structured and the `useItemsManager` integrations look correct. However, the SectionList wiring has critical bugs in both screens that would cause either duplicated rendering (space detail) or no rendering at all (transaction detail). Both are straightforward fixes to the section `data` arrays — switch from the full items array / `SECTION_HEADER_MARKER` to a single non-marker content string like `'items-content'`.
+
 
 ## Critical Issues
 
@@ -578,3 +653,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 - 2026-02-10T04:23:22Z – claude-sonnet – shell_pid=23507 – lane=doing – Started implementation via workflow command
 - 2026-02-10T04:32:58Z – claude-sonnet – shell_pid=23507 – lane=for_review – Ready for review: Fixed all review feedback issues - removed duplicate bulk panel in SpaceDetailContent, integrated ItemsSection into transaction detail, removed TODO in control bar, made onAdd prop optional
 - 2026-02-10T04:33:40Z – claude-opus – shell_pid=44485 – lane=doing – Started review via workflow command
+- 2026-02-10T04:39:36Z – claude-opus – shell_pid=44485 – lane=planned – Moved to planned
