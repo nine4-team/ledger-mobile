@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Transaction Detail Screen Polish
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01]
 base_branch: 005-detail-screen-polish-WP01
 base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
@@ -532,3 +532,4 @@ DETAILS                    ← CollapsibleSectionHeader
 **Initial entry**:
 - 2026-02-10T19:00:00Z – system – lane=planned – Prompt generated via /spec-kitty.tasks
 - 2026-02-10T21:13:24Z – claude-sonnet-4.5 – shell_pid=24895 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T21:25:04Z – claude-sonnet-4.5 – shell_pid=24895 – lane=for_review – Ready for review: Transaction detail screen polish complete - integrated SharedItemsList, merged tax into details, normalized spacing to 4px, verified no duplicate titles
