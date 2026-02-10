@@ -33,8 +33,7 @@ import { useOutsideItems } from '../hooks/useOutsideItems';
 import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveItemMove } from '../data/resolveItemMove';
 import { useItemsManager } from '../hooks/useItemsManager';
-import { ItemsSection } from './ItemsSection';
-import type { BulkAction } from './ItemsSection';
+import { SharedItemsList } from './SharedItemsList';
 
 // --- Types ---
 
@@ -166,7 +165,7 @@ export function SpaceDetailContent({
   const [collapsedSections, setCollapsedSections] = useState<Record<SpaceSectionKey, boolean>>({
     media: false,       // Default EXPANDED — users want to see images
     notes: true,        // Default collapsed
-    items: false,       // Default EXPANDED — items are primary content
+    items: true,        // Default collapsed (per FR-011)
     checklists: true,   // Default collapsed
   });
 
@@ -423,35 +422,6 @@ export function SpaceDetailContent({
     setBulkTargetSpaceId(null);
   }, [accountId, itemsManager, bulkTargetSpaceId]);
 
-  const handleBulkAction = useCallback((actionId: string, ids: string[]) => {
-    switch (actionId) {
-      case 'move':
-        setBulkTargetSpaceId(null);
-        setBulkMoveSheetVisible(true);
-        break;
-      case 'remove':
-        if (!accountId) return;
-        Alert.alert(
-          'Remove Items',
-          `Remove ${ids.length} item${ids.length === 1 ? '' : 's'} from this space?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Remove',
-              style: 'destructive',
-              onPress: () => {
-                ids.forEach(id => {
-                  updateItem(accountId, id, { spaceId: null });
-                });
-                itemsManager.clearSelection();
-              },
-            },
-          ]
-        );
-        break;
-    }
-  }, [accountId, itemsManager]);
-
   const handleDelete = useCallback(() => {
     if (!accountId || !spaceId) return;
     const itemCount = spaceItems.length;
@@ -623,30 +593,67 @@ export function SpaceDetailContent({
     switch (section.key) {
       case 'media':
         return (
-          <MediaGallerySection
-            title="Images"
-            hideTitle={true}
-            attachments={space?.images ?? []}
-            maxAttachments={100}
-            allowedKinds={['image']}
-            onAddAttachment={handleAddImage}
-            onRemoveAttachment={handleRemoveImage}
-            onSetPrimary={handleSetPrimaryImage}
-            emptyStateMessage="No images yet."
-            pickerLabel="Add image"
-            size="md"
-            tileScale={1.5}
-          />
+          <View style={{ paddingTop: 12 }}>
+            <MediaGallerySection
+              title="Images"
+              hideTitle={true}
+              attachments={space?.images ?? []}
+              maxAttachments={100}
+              allowedKinds={['image']}
+              onAddAttachment={handleAddImage}
+              onRemoveAttachment={handleRemoveImage}
+              onSetPrimary={handleSetPrimaryImage}
+              emptyStateMessage="No images yet."
+              pickerLabel="Add image"
+              size="md"
+              tileScale={1.5}
+            />
+          </View>
         );
 
       case 'notes':
-        return <NotesSection notes={space?.notes} expandable={true} />;
+        return (
+          <View style={{ paddingTop: 12 }}>
+            <NotesSection notes={space?.notes} expandable={true} />
+          </View>
+        );
 
       case 'items': {
         // Define bulk actions for space detail
-        const bulkActions: BulkAction[] = [
-          { id: 'move', label: 'Move', variant: 'secondary', icon: 'swap-horiz' },
-          { id: 'remove', label: 'Remove', variant: 'destructive', icon: 'remove-circle-outline' },
+        const bulkActions = [
+          {
+            id: 'move',
+            label: 'Move to Another Space',
+            onPress: (selectedIds: string[]) => {
+              setBulkTargetSpaceId(null);
+              setBulkMoveSheetVisible(true);
+            },
+          },
+          {
+            id: 'remove',
+            label: 'Remove from Space',
+            onPress: (selectedIds: string[]) => {
+              if (!accountId) return;
+              Alert.alert(
+                'Remove Items',
+                `Remove ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} from this space?`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () => {
+                      selectedIds.forEach(id => {
+                        updateItem(accountId, id, { spaceId: null });
+                      });
+                      itemsManager.clearSelection();
+                    },
+                  },
+                ]
+              );
+            },
+            destructive: true,
+          },
         ];
 
         // Get menu items for individual item
@@ -669,29 +676,51 @@ export function SpaceDetailContent({
           ];
         };
 
+        // Create adapter for SharedItemsList manager interface
+        const managerAdapter = {
+          selectedIds: Array.from(itemsManager.selectedIds),
+          selectAll: itemsManager.selectAll,
+          clearSelection: itemsManager.clearSelection,
+          setItemSelected: (id: string, selected: boolean) => {
+            if (selected && !itemsManager.selectedIds.has(id)) {
+              itemsManager.toggleSelection(id);
+            } else if (!selected && itemsManager.selectedIds.has(id)) {
+              itemsManager.toggleSelection(id);
+            }
+          },
+          setGroupSelection: (ids: string[], selected: boolean) => {
+            ids.forEach(id => {
+              const isSelected = itemsManager.selectedIds.has(id);
+              if (selected && !isSelected) {
+                itemsManager.toggleSelection(id);
+              } else if (!selected && isSelected) {
+                itemsManager.toggleSelection(id);
+              }
+            });
+          },
+        };
+
         return (
-          <ItemsSection
-            manager={itemsManager}
-            items={itemsManager.filteredAndSortedItems}
-            onItemPress={(id) => {
-              const itemDetailParams = getItemDetailParams(projectId, spaceId, id);
-              router.push(itemDetailParams);
-            }}
-            getItemMenuItems={getItemMenuItems}
-            onBookmarkPress={(item) => {
-              if (!accountId) return;
-              updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
-            }}
-            bulkActions={bulkActions}
-            onBulkAction={handleBulkAction}
-            emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-          />
+          <View style={{ paddingTop: 12 }}>
+            <SharedItemsList
+              embedded={true}
+              manager={managerAdapter}
+              items={itemsManager.filteredAndSortedItems}
+              bulkActions={bulkActions}
+              onItemPress={(id) => {
+                const itemDetailParams = getItemDetailParams(projectId, spaceId, id);
+                router.push(itemDetailParams);
+              }}
+              getItemMenuItems={getItemMenuItems}
+              emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+            />
+          </View>
         );
       }
 
       case 'checklists':
         return (
-          <View style={styles.section}>
+          <View style={[styles.section, { paddingTop: 12 }]}>
             <AppButton
               title="Add checklist"
               onPress={() =>
@@ -838,8 +867,7 @@ export function SpaceDetailContent({
       accountId, projectId, spaceId, router,
       theme.colors.textSecondary, theme.colors.background, uiKitTheme.border.primary,
       uiKitTheme.border.secondary, uiKitTheme.primary.main, checklists,
-      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage,
-      handleBulkAction]);
+      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage]);
 
   // --- Render ---
 
@@ -1005,7 +1033,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    gap: 20,
+    gap: 4,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
   section: {
