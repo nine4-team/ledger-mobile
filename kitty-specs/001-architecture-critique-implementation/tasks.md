@@ -168,13 +168,13 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP05-defensive-rendering-sync-errors.md`
 
 ### Included Subtasks
-- [ ] T024 [P] Update item detail space label fallback in `app/items/[id]/index.tsx` (line 298: change from `item.spaceId` to `'Unknown space'`)
-- [ ] T025 [P] Verify `resolveSpaceName` in `src/data/reportDataService.ts` handles missing spaces gracefully (returns null)
-- [ ] T026 [P] Update `SyncStatusBanner` in `src/components/SyncStatusBanner.tsx` to show specific error messages
-- [ ] T027 [P] Implement logic: single failure shows specific error, multiple failures show count
-- [ ] T028 [P] Use `getTrackedRequestsSnapshot()` from `src/sync/requestDocTracker.ts` to read error messages
-- [ ] T029 Verify TypeScript compilation passes
-- [ ] T030 Manual verification: archive space test, sync failure test
+- [x] T024 [P] Update item detail space label fallback in `app/items/[id]/index.tsx` (line 298: change from `item.spaceId` to `'Unknown space'`)
+- [x] T025 [P] Verify `resolveSpaceName` in `src/data/reportDataService.ts` handles missing spaces gracefully (returns null)
+- [x] T026 [P] Update `SyncStatusBanner` in `src/components/SyncStatusBanner.tsx` to show specific error messages
+- [x] T027 [P] Implement logic: single failure shows specific error, multiple failures show count
+- [x] T028 [P] Use `getTrackedRequestsSnapshot()` from `src/sync/requestDocTracker.ts` to read error messages
+- [x] T029 Verify TypeScript compilation passes
+- [x] T030 Manual verification: archive space test, sync failure test
 
 ### Implementation Notes
 - **Phase 3 (Defensive Rendering)**:
