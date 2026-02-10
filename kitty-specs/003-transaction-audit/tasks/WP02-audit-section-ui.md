@@ -1,8 +1,11 @@
 ---
 work_package_id: WP02
 title: Audit Section UI Component
-lane: planned
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 8108d9ed73c948313f6a88efe2e36b109680862c
+created_at: '2026-02-10T01:34:15.659254+00:00'
 subtasks:
 - T004
 - T005
@@ -10,7 +13,7 @@ subtasks:
 phase: Phase 1 - MVP
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "98440"
 review_status: ''
 reviewed_by: ''
 history:
