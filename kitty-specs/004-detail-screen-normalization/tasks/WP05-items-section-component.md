@@ -14,7 +14,7 @@ subtasks:
 - T025
 phase: Phase 2 - Shared Items Management
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "54610"
 review_status: ''
 reviewed_by: ''
@@ -494,3 +494,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:50:42Z – claude-sonnet – shell_pid=54610 – lane=doing – Assigned agent via workflow command
