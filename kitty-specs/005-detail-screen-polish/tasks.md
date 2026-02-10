@@ -69,10 +69,10 @@ None (starting package).
 **Estimated Size**: ~320 lines
 
 ### Included Subtasks
-- [ ] T005 Replace ItemsSection with SharedItemsList in transaction detail (`app/transactions/[id]/index.tsx`)
-- [ ] T006 Merge tax/itemization rows into Details section
-- [ ] T007 Normalize section spacing (gap: 4px with section wrappers)
-- [ ] T008 Fix duplicate section titles (use Card not TitledCard)
+- [x] T005 Replace ItemsSection with SharedItemsList in transaction detail (`app/transactions/[id]/index.tsx`)
+- [x] T006 Merge tax/itemization rows into Details section
+- [x] T007 Normalize section spacing (gap: 4px with section wrappers)
+- [x] T008 Fix duplicate section titles (use Card not TitledCard)
 
 ### Implementation Notes
 This WP applies the refactored SharedItemsList to transaction detail and fixes structural issues.
