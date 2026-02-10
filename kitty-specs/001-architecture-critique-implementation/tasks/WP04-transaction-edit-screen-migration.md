@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Transaction Edit Screen Migration
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 44138a3773cb9b0c00e927dd9b6b6f6540b01521
@@ -837,3 +837,4 @@ Manual testing (T023) provides comprehensive verification for form behavior, com
 **Initial entry**:
 - 2026-02-09T08:45:00Z - system - lane=planned - Prompt created via /spec-kitty.tasks
 - 2026-02-09T23:56:48Z – claude-implementer – shell_pid=85892 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T00:01:52Z – claude-implementer – shell_pid=85892 – lane=for_review – Ready for review: Transaction edit screen migrated to useEditForm with full change tracking, tax/subtotal computation, budgetCategoryId propagation, and subscription protection. TypeScript compilation passes with no new errors.
