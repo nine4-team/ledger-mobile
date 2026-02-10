@@ -66,17 +66,47 @@ return (
 
 ### 2. Consistent Section Spacing
 
-**Rule**: All detail screens must use **4px gap** between collapsible sections.
+**Rule**: All detail screens must use **4px gap** between collapsible sections (header-to-header), with **12px gap** between a section header and its content.
 
-**Implementation**:
+**Problem**: The `gap` property on `SectionList` `contentContainerStyle` applies to **all direct children**, including both:
+- Section-to-section spacing (what we want to be 4px)
+- Header-to-content spacing (should be larger, ~12px)
+
+**Solution**: Wrap each section's header + content in a single View with internal spacing.
+
+**Implementation Pattern**:
 
 ```typescript
+// For sections using SECTION_HEADER_MARKER pattern:
+function renderItem({ item, section }: { item: string; section: Section }) {
+  if (item === SECTION_HEADER_MARKER) {
+    const collapsed = collapsedSections[section.key];
+
+    return (
+      <View style={{ gap: 12 }}>  {/* ← Header-to-content gap */}
+        <CollapsibleSectionHeader
+          title={section.title}
+          collapsed={collapsed}
+          onToggle={() => toggleSection(section.key)}
+        />
+        {!collapsed && (
+          <Card>
+            {/* Section content */}
+          </Card>
+        )}
+      </View>
+    );
+  }
+
+  // Other item types...
+}
+
+// Then set contentContainerStyle gap to 4:
 <SectionList
   sections={sections}
   renderItem={renderItem}
-  renderSectionHeader={renderSectionHeader}
   contentContainerStyle={{
-    gap: 4,  // ← Target spacing
+    gap: 4,  // ← Section-to-section spacing
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
   }}
@@ -85,15 +115,18 @@ return (
 
 **Current Values to Change**:
 
-| Screen | Current | Target |
-|--------|---------|--------|
-| Transaction Detail | 10 | 4 |
-| Item Detail | 18 | 4 |
-| Space Detail | 20 | 4 |
+| Screen | Current `gap` | Target `gap` | Internal wrapper gap |
+|--------|---------------|--------------|---------------------|
+| Transaction Detail | 10 | 4 | 12 (new) |
+| Item Detail | 18 | 4 | 12 (new) |
+| Space Detail | 20 | 4 | 12 (new) |
 
-**Within-section spacing** (unchanged):
-- Item list gap: 10px
-- Card padding: 16px (`CARD_PADDING`)
+**Key Points**:
+- Wrapper View combines header + content into single SectionList child
+- `contentContainerStyle.gap: 4` controls section-to-section spacing
+- Wrapper's internal `gap: 12` controls header-to-content spacing
+- When collapsed, only header renders inside wrapper (content conditionally rendered)
+- This keeps Card component clean (no added margins)
 
 ---
 

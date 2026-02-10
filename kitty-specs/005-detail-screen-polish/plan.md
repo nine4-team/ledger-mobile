@@ -79,6 +79,23 @@ Fix 8 regressions and omissions from feature 004-detail-screen-normalization acr
 - Support both standalone (full-page) and embedded (section) modes
 - Detail screens will import and configure SharedItemsList for their specific context
 
+### Section Spacing Strategy
+
+**Decision**: Wrap header + content in a single View per section (Option A)
+
+**Problem Identified**: The `gap` property on `SectionList` `contentContainerStyle` applies to all direct children, meaning it controls both section-to-section spacing AND header-to-content spacing. Setting `gap: 4` would make header-to-content spacing too tight.
+
+**Solution**: Wrap each section's `CollapsibleSectionHeader` + `Card` content in a View with `gap: 12` (internal), then set `contentContainerStyle.gap: 4` for section-to-section spacing.
+
+**Rationale**:
+- Minimal changes to existing JSX structure
+- Semantically correct (section as single entity)
+- No component pollution (doesn't add margins to Card/CollapsibleSectionHeader)
+- Works with existing collapse logic (content still unmounts when collapsed)
+- Keeps Card component clean for use in other contexts
+
+**Implementation**: See quickstart.md §2 for code pattern
+
 ### Work Package Structure
 
 **Decision**: Single integrated work package covering all 5 user stories (Option A)
@@ -238,11 +255,17 @@ app/
    - Merge tax/itemization rows into Details section
    - Remove separate "TAX & ITEMIZATION" section header
    - Update section gap from 10 to 4
+   - Wrap header + content in View with `gap: 12` for internal spacing
    - Replace ItemsSection usage with SharedItemsList (embedded mode)
 
-5. **Space Detail** (SpaceDetailContent.tsx or app/project/[projectId]/spaces/[spaceId].tsx)
+5. **Item Detail** (app/items/[id]/index.tsx)
+   - Update section gap from 18 to 4
+   - Wrap header + content in View with `gap: 12` for internal spacing
+
+6. **Space Detail** (SpaceDetailContent.tsx or app/project/[projectId]/spaces/[spaceId].tsx)
    - Update default expanded sections (only images expanded)
    - Update section gap from 20 to 4
+   - Wrap header + content in View with `gap: 12` for internal spacing
    - Replace ItemsSection usage with SharedItemsList (embedded mode)
 
 ### Developer Quickstart
