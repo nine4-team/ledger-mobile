@@ -29,9 +29,9 @@
 **Goal**: Create a pure TypeScript utility that computes transaction completeness metrics from Transaction + Item data. This is the core logic layer — no React, no UI, fully testable in isolation.
 
 **Included subtasks**:
-- [ ] T001: Define `CompletenessStatus` type and `TransactionCompleteness` interface in `src/utils/transactionCompleteness.ts`
-- [ ] T002: Implement `computeTransactionCompleteness(transaction, items)` pure function with subtotal resolution (D5), threshold classification (D6), variance calculation, missing price detection (D12)
-- [ ] T003: Unit tests covering all threshold boundaries, edge cases (zero subtotal, no items, missing prices, over-itemization), and subtotal resolution priority
+- [x] T001: Define `CompletenessStatus` type and `TransactionCompleteness` interface in `src/utils/transactionCompleteness.ts`
+- [x] T002: Implement `computeTransactionCompleteness(transaction, items)` pure function with subtotal resolution (D5), threshold classification (D6), variance calculation, missing price detection (D12)
+- [x] T003: Unit tests covering all threshold boundaries, edge cases (zero subtotal, no items, missing prices, over-itemization), and subtotal resolution priority
 
 **Implementation sequence**:
 1. Types first (T001)
