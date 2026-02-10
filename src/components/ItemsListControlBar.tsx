@@ -10,7 +10,7 @@ type ItemsListControlBarProps = {
   isSortActive: boolean;
   onFilter: () => void;
   isFilterActive: boolean;
-  onAdd: () => void;
+  onAdd?: () => void;
   leftElement?: React.ReactNode;
 };
 
@@ -57,13 +57,13 @@ export function ItemsListControlBar({
           active: isFilterActive,
           accessibilityLabel: 'Filter items',
         },
-        {
+        ...(onAdd ? [{
           title: 'Add',
-          variant: 'primary',
+          variant: 'primary' as const,
           onPress: onAdd,
-          iconName: 'add',
+          iconName: 'add' as const,
           accessibilityLabel: 'Add item',
-        },
+        }] : []),
       ]}
     />
   );

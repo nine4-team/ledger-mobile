@@ -32,6 +32,9 @@ import type { AttachmentRef } from '../offline/media';
 import { useOutsideItems } from '../hooks/useOutsideItems';
 import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveItemMove } from '../data/resolveItemMove';
+import { useItemsManager } from '../hooks/useItemsManager';
+import { ItemsSection } from './ItemsSection';
+import type { BulkAction } from './ItemsSection';
 
 // --- Types ---
 
@@ -48,8 +51,6 @@ export type SpaceDetailContentProps = {
 };
 
 type ItemPickerTab = 'current' | 'outside';
-
-type SortMode = 'created-desc' | 'created-asc' | 'alphabetical-asc' | 'alphabetical-desc';
 
 type SpaceSectionKey = 'media' | 'notes' | 'items' | 'checklists';
 
@@ -149,13 +150,6 @@ export function SpaceDetailContent({
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('current');
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
 
-  // Items tab controls
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortMode, setSortMode] = useState<SortMode>('created-desc');
-  const [sortMenuVisible, setSortMenuVisible] = useState(false);
-  const [filterMode, setFilterMode] = useState<'all' | 'bookmarked' | 'no-sku' | 'no-image'>('all');
-  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
 
   const outsideItemsHook = useOutsideItems({
@@ -164,9 +158,8 @@ export function SpaceDetailContent({
     scope: projectId ? 'project' : 'inventory',
     includeInventory: projectId ? true : false,
   });
-  const [bulkMode, setBulkMode] = useState(false);
-  const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
   const [bulkTargetSpaceId, setBulkTargetSpaceId] = useState<string | null>(null);
+  const [bulkMoveSheetVisible, setBulkMoveSheetVisible] = useState(false);
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
 
   // Collapsible sections state
@@ -237,41 +230,23 @@ export function SpaceDetailContent({
   const spaceItems = useMemo(() => items.filter((item) => item.spaceId === spaceId), [items, spaceId]);
   const availableItems = useMemo(() => items.filter((item) => item.spaceId !== spaceId), [items, spaceId]);
 
-  // Search, filter, and sort items
-  const isFilterActive = filterMode !== 'all';
-  const filteredSpaceItems = useMemo(() => {
-    let result = spaceItems;
+  // Initialize items manager
+  const itemsManager = useItemsManager({
+    items: spaceItems,
+    defaultSort: 'created-desc',
+    defaultFilter: 'all',
+    sortModes: ['created-desc', 'created-asc', 'alphabetical-asc', 'alphabetical-desc'],
+    filterModes: ['all', 'bookmarked', 'no-sku', 'no-image'],
+    filterFn: (item, mode) => {
+      switch (mode) {
+        case 'bookmarked': return Boolean((item as any).bookmark);
+        case 'no-sku': return !(item as any).sku?.trim();
+        case 'no-image': return !((item as any).images?.length > 0);
+        default: return true;
+      }
+    },
+  });
 
-    // Apply filter
-    if (filterMode === 'bookmarked') {
-      result = result.filter((item) => Boolean((item as any).bookmark));
-    } else if (filterMode === 'no-sku') {
-      result = result.filter((item) => !(item as any).sku?.trim());
-    } else if (filterMode === 'no-image') {
-      result = result.filter((item) => !((item as any).images?.length > 0));
-    }
-
-    // Apply search
-    const needle = searchQuery.trim().toLowerCase();
-    if (needle) {
-      result = result.filter((item) => {
-        const haystack = [
-          item.name ?? '',
-          (item as any).sku ?? '',
-          (item as any).source ?? '',
-          (item as any).notes ?? '',
-        ].join(' ').toLowerCase();
-        return haystack.includes(needle);
-      });
-    }
-
-    return [...result].sort((a, b) => {
-      if (sortMode === 'alphabetical-asc') return (a.name ?? '').localeCompare(b.name ?? '');
-      if (sortMode === 'alphabetical-desc') return (b.name ?? '').localeCompare(a.name ?? '');
-      if (sortMode === 'created-asc') return String((a as any).createdAt ?? '').localeCompare(String((b as any).createdAt ?? ''));
-      return String((b as any).createdAt ?? '').localeCompare(String((a as any).createdAt ?? ''));
-    });
-  }, [spaceItems, searchQuery, sortMode, filterMode]);
 
   // Compute sections array for SectionList
   const sections: SpaceSection[] = useMemo(() => {
@@ -295,11 +270,11 @@ export function SpaceDetailContent({
 
     // Items section (STICKY header — uses renderSectionHeader)
     const itemsCollapsed = collapsedSections.items;
-    const itemCount = filteredSpaceItems.length;
+    const itemCount = itemsManager.filteredAndSortedItems.length;
     result.push({
       key: 'items',
       title: 'ITEMS',
-      data: itemsCollapsed ? [] : filteredSpaceItems,
+      data: itemsCollapsed ? [] : ['items-content'],
       badge: itemCount > 0 ? String(itemCount) : undefined,
     });
 
@@ -312,7 +287,7 @@ export function SpaceDetailContent({
     });
 
     return result;
-  }, [collapsedSections, filteredSpaceItems]);
+  }, [collapsedSections, itemsManager.filteredAndSortedItems]);
 
   const activePickerItems = pickerTab === 'outside' ? outsideItemsHook.items : availableItems;
 
@@ -439,22 +414,43 @@ export function SpaceDetailContent({
 
   const spaceItemIds = useMemo(() => new Set(spaceItems.map((item) => item.id)), [spaceItems]);
 
-  const handleBulkRemove = useCallback(() => {
-    if (!accountId || bulkSelectedIds.length === 0) return;
-    bulkSelectedIds.forEach((itemId) => {
-      updateItem(accountId, itemId, { spaceId: null });
-    });
-    setBulkSelectedIds([]);
-  }, [accountId, bulkSelectedIds]);
-
   const handleBulkMove = useCallback(() => {
-    if (!accountId || bulkSelectedIds.length === 0 || !bulkTargetSpaceId) return;
-    bulkSelectedIds.forEach((itemId) => {
+    if (!accountId || !itemsManager.selectedIds.size || !bulkTargetSpaceId) return;
+    itemsManager.selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { spaceId: bulkTargetSpaceId });
     });
-    setBulkSelectedIds([]);
+    itemsManager.clearSelection();
     setBulkTargetSpaceId(null);
-  }, [accountId, bulkSelectedIds, bulkTargetSpaceId]);
+  }, [accountId, itemsManager, bulkTargetSpaceId]);
+
+  const handleBulkAction = useCallback((actionId: string, ids: string[]) => {
+    switch (actionId) {
+      case 'move':
+        setBulkTargetSpaceId(null);
+        setBulkMoveSheetVisible(true);
+        break;
+      case 'remove':
+        if (!accountId) return;
+        Alert.alert(
+          'Remove Items',
+          `Remove ${ids.length} item${ids.length === 1 ? '' : 's'} from this space?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Remove',
+              style: 'destructive',
+              onPress: () => {
+                ids.forEach(id => {
+                  updateItem(accountId, id, { spaceId: null });
+                });
+                itemsManager.clearSelection();
+              },
+            },
+          ]
+        );
+        break;
+    }
+  }, [accountId, itemsManager]);
 
   const handleDelete = useCallback(() => {
     if (!accountId || !spaceId) return;
@@ -532,21 +528,21 @@ export function SpaceDetailContent({
     {
       label: 'Sort by',
       subactions: [
-        { key: 'created-desc', label: 'Newest first', onPress: () => setSortMode('created-desc') },
-        { key: 'created-asc', label: 'Oldest first', onPress: () => setSortMode('created-asc') },
-        { key: 'alphabetical-asc', label: 'A \u2192 Z', onPress: () => setSortMode('alphabetical-asc') },
-        { key: 'alphabetical-desc', label: 'Z \u2192 A', onPress: () => setSortMode('alphabetical-desc') },
+        { key: 'created-desc', label: 'Newest first', onPress: () => { itemsManager.setSortMode('created-desc'); itemsManager.setSortMenuVisible(false); } },
+        { key: 'created-asc', label: 'Oldest first', onPress: () => { itemsManager.setSortMode('created-asc'); itemsManager.setSortMenuVisible(false); } },
+        { key: 'alphabetical-asc', label: 'A \u2192 Z', onPress: () => { itemsManager.setSortMode('alphabetical-asc'); itemsManager.setSortMenuVisible(false); } },
+        { key: 'alphabetical-desc', label: 'Z \u2192 A', onPress: () => { itemsManager.setSortMode('alphabetical-desc'); itemsManager.setSortMenuVisible(false); } },
       ],
-      selectedSubactionKey: sortMode,
+      selectedSubactionKey: itemsManager.sortMode,
     },
-  ], [sortMode]);
+  ], [itemsManager]);
 
   const filterMenuItems: AnchoredMenuItem[] = useMemo(() => [
-    { key: 'all', label: 'All', onPress: () => setFilterMode('all'), icon: filterMode === 'all' ? 'check' as const : undefined },
-    { key: 'bookmarked', label: 'Bookmarked', onPress: () => setFilterMode('bookmarked'), icon: filterMode === 'bookmarked' ? 'check' as const : undefined },
-    { key: 'no-sku', label: 'No SKU', onPress: () => setFilterMode('no-sku'), icon: filterMode === 'no-sku' ? 'check' as const : undefined },
-    { key: 'no-image', label: 'No image', onPress: () => setFilterMode('no-image'), icon: filterMode === 'no-image' ? 'check' as const : undefined },
-  ], [filterMode]);
+    { key: 'all', label: 'All', onPress: () => { itemsManager.setFilterMode('all'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'all' ? 'check' as const : undefined },
+    { key: 'bookmarked', label: 'Bookmarked', onPress: () => { itemsManager.setFilterMode('bookmarked'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'bookmarked' ? 'check' as const : undefined },
+    { key: 'no-sku', label: 'No SKU', onPress: () => { itemsManager.setFilterMode('no-sku'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'no-sku' ? 'check' as const : undefined },
+    { key: 'no-image', label: 'No image', onPress: () => { itemsManager.setFilterMode('no-image'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'no-image' ? 'check' as const : undefined },
+  ], [itemsManager]);
 
   const addMenuItems: AnchoredMenuItem[] = useMemo(() => [
     {
@@ -594,25 +590,22 @@ export function SpaceDetailContent({
             borderBottomColor: uiKitTheme.border.secondary,
           }}>
             <ItemsListControlBar
-              search={searchQuery}
-              onChangeSearch={setSearchQuery}
-              showSearch={showSearch}
-              onToggleSearch={() => setShowSearch(!showSearch)}
-              onSort={() => setSortMenuVisible(true)}
-              isSortActive={sortMode !== 'created-desc'}
-              onFilter={() => setFilterMenuVisible(true)}
-              isFilterActive={filterMode !== 'all'}
-              onAdd={bulkSelectedIds.length > 0
-                ? () => { /* TODO: open bulk menu */ }
-                : () => setAddMenuVisible(true)}
+              search={itemsManager.searchQuery}
+              onChangeSearch={itemsManager.setSearchQuery}
+              showSearch={itemsManager.showSearch}
+              onToggleSearch={itemsManager.toggleSearch}
+              onSort={() => itemsManager.setSortMenuVisible(true)}
+              isSortActive={itemsManager.isSortActive}
+              onFilter={() => itemsManager.setFilterMenuVisible(true)}
+              isFilterActive={itemsManager.isFilterActive}
+              onAdd={!itemsManager.hasSelection ? () => setAddMenuVisible(true) : undefined}
             />
           </View>
         )}
       </View>
     );
-  }, [collapsedSections, handleToggleSection, searchQuery, showSearch,
-      sortMode, filterMode, bulkSelectedIds, theme.colors.background,
-      uiKitTheme.border.secondary]);
+  }, [collapsedSections, handleToggleSection, itemsManager,
+      theme.colors.background, uiKitTheme.border.secondary]);
 
   const renderItem = useCallback(({ item, section }: { item: any; section: SpaceSection }) => {
     // Handle section header markers (non-sticky sections)
@@ -650,59 +643,48 @@ export function SpaceDetailContent({
         return <NotesSection notes={space?.notes} expandable={true} />;
 
       case 'items': {
-        // Render individual ItemCard
-        const itemDetailParams = getItemDetailParams(projectId, spaceId, item.id);
-        const itemMenuItems: AnchoredMenuItem[] = [
-          {
-            key: 'open',
-            label: 'Open',
-            onPress: () => router.push(itemDetailParams),
-          },
-          {
-            key: 'remove-from-space',
-            label: 'Remove from Space',
-            onPress: () => {
-              if (!accountId) return;
-              updateItem(accountId, item.id, { spaceId: null });
-            },
-          },
+        // Define bulk actions for space detail
+        const bulkActions: BulkAction[] = [
+          { id: 'move', label: 'Move', variant: 'secondary', icon: 'swap-horiz' },
+          { id: 'remove', label: 'Remove', variant: 'destructive', icon: 'remove-circle-outline' },
         ];
 
+        // Get menu items for individual item
+        const getItemMenuItems = (item: ScopedItem): AnchoredMenuItem[] => {
+          const itemDetailParams = getItemDetailParams(projectId, spaceId, item.id);
+          return [
+            {
+              key: 'open',
+              label: 'Open',
+              onPress: () => router.push(itemDetailParams),
+            },
+            {
+              key: 'remove-from-space',
+              label: 'Remove from Space',
+              onPress: () => {
+                if (!accountId) return;
+                updateItem(accountId, item.id, { spaceId: null });
+              },
+            },
+          ];
+        };
+
         return (
-          <ItemCard
-            key={item.id}
-            name={item.name?.trim() || 'Untitled item'}
-            sku={(item as any).sku ?? undefined}
-            sourceLabel={(item as any).source ?? undefined}
-            priceLabel={getDisplayPrice(item)}
-            statusLabel={(item as any).status ?? undefined}
-            thumbnailUri={getPrimaryImageUri(item)}
-            selected={bulkMode ? bulkSelectedIds.includes(item.id) : undefined}
-            onSelectedChange={
-              bulkMode
-                ? (next) =>
-                    setBulkSelectedIds((prev) =>
-                      next ? [...prev, item.id] : prev.filter((id) => id !== item.id),
-                    )
-                : undefined
-            }
-            menuItems={bulkMode ? undefined : itemMenuItems}
-            bookmarked={Boolean((item as any).bookmark)}
-            onBookmarkPress={() => {
+          <ItemsSection
+            manager={itemsManager}
+            items={itemsManager.filteredAndSortedItems}
+            onItemPress={(id) => {
+              const itemDetailParams = getItemDetailParams(projectId, spaceId, id);
+              router.push(itemDetailParams);
+            }}
+            getItemMenuItems={getItemMenuItems}
+            onBookmarkPress={(item) => {
               if (!accountId) return;
               updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
             }}
-            onPress={() => {
-              if (bulkMode) {
-                setBulkSelectedIds((prev) =>
-                  prev.includes(item.id)
-                    ? prev.filter((id) => id !== item.id)
-                    : [...prev, item.id],
-                );
-                return;
-              }
-              router.push(itemDetailParams);
-            }}
+            bulkActions={bulkActions}
+            onBulkAction={handleBulkAction}
+            emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
           />
         );
       }
@@ -852,11 +834,12 @@ export function SpaceDetailContent({
       default:
         return null;
     }
-  }, [space, collapsedSections, handleToggleSection, filteredSpaceItems,
-      bulkMode, bulkSelectedIds, accountId, projectId, spaceId, router,
+  }, [space, collapsedSections, handleToggleSection, itemsManager,
+      accountId, projectId, spaceId, router,
       theme.colors.textSecondary, theme.colors.background, uiKitTheme.border.primary,
       uiKitTheme.border.secondary, uiKitTheme.primary.main, checklists,
-      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage]);
+      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage,
+      handleBulkAction]);
 
   // --- Render ---
 
@@ -897,71 +880,6 @@ export function SpaceDetailContent({
         ItemSeparatorComponent={({ section }) =>
           section.key === 'items' ? <View style={styles.itemSeparator} /> : null
         }
-        ListFooterComponent={
-          <>
-            {/* Bulk mode panel */}
-            {bulkMode ? (
-              <View style={styles.bulkPanel}>
-                <View style={styles.bulkHeader}>
-                  <AppText variant="caption">{bulkSelectedIds.length} selected</AppText>
-                  <AppButton
-                    title="Done"
-                    variant="secondary"
-                    onPress={() => {
-                      setBulkMode(false);
-                      setBulkSelectedIds([]);
-                    }}
-                  />
-                </View>
-                <SpaceSelector
-                  projectId={projectId}
-                  value={bulkTargetSpaceId}
-                  onChange={setBulkTargetSpaceId}
-                  allowCreate={false}
-                  placeholder="Move to space…"
-                />
-                <View style={styles.bulkActions}>
-                  <AppButton
-                    title="Move"
-                    variant="secondary"
-                    onPress={handleBulkMove}
-                    disabled={!bulkTargetSpaceId || bulkSelectedIds.length === 0}
-                  />
-                  <AppButton
-                    title="Remove from space"
-                    variant="secondary"
-                    onPress={handleBulkRemove}
-                    disabled={bulkSelectedIds.length === 0}
-                  />
-                </View>
-              </View>
-            ) : null}
-
-            {/* Bulk mode toggle */}
-            {!bulkMode && spaceItems.length > 0 && filteredSpaceItems.length > 0 && !collapsedSections.items ? (
-              <Pressable
-                onPress={() => {
-                  setBulkMode(true);
-                  setBulkSelectedIds([]);
-                }}
-                style={styles.bulkModeToggle}
-              >
-                <AppText variant="caption" style={{ color: theme.colors.primary }}>
-                  Select multiple items…
-                </AppText>
-              </Pressable>
-            ) : null}
-
-            {/* Empty state for items */}
-            {!collapsedSections.items && filteredSpaceItems.length === 0 ? (
-              <View style={styles.emptyState}>
-                <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                  {searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-                </AppText>
-              </View>
-            ) : null}
-          </>
-        }
       />
 
       {/* Kebab menu */}
@@ -974,16 +892,16 @@ export function SpaceDetailContent({
 
       {/* Sort menu */}
       <BottomSheetMenuList
-        visible={sortMenuVisible}
-        onRequestClose={() => setSortMenuVisible(false)}
+        visible={itemsManager.sortMenuVisible}
+        onRequestClose={() => itemsManager.setSortMenuVisible(false)}
         items={sortMenuItems}
         title="Sort"
       />
 
       {/* Filter menu */}
       <BottomSheetMenuList
-        visible={filterMenuVisible}
-        onRequestClose={() => setFilterMenuVisible(false)}
+        visible={itemsManager.filterMenuVisible}
+        onRequestClose={() => itemsManager.setFilterMenuVisible(false)}
         items={filterMenuItems}
         title="Filter"
       />
@@ -995,6 +913,47 @@ export function SpaceDetailContent({
         items={addMenuItems}
         title="Add item"
       />
+
+      {/* Bulk move bottom sheet */}
+      <BottomSheet
+        visible={bulkMoveSheetVisible}
+        onRequestClose={() => {
+          setBulkMoveSheetVisible(false);
+          setBulkTargetSpaceId(null);
+        }}
+      >
+        <View style={styles.bulkMoveContent}>
+          <AppText variant="h2" style={{ marginBottom: 16 }}>
+            Move {itemsManager.selectedIds.size} item{itemsManager.selectedIds.size === 1 ? '' : 's'}
+          </AppText>
+          <SpaceSelector
+            projectId={projectId}
+            value={bulkTargetSpaceId}
+            onChange={setBulkTargetSpaceId}
+            allowCreate={false}
+            placeholder="Select destination space…"
+          />
+          <View style={styles.bulkMoveActions}>
+            <AppButton
+              title="Cancel"
+              variant="secondary"
+              onPress={() => {
+                setBulkMoveSheetVisible(false);
+                setBulkTargetSpaceId(null);
+              }}
+            />
+            <AppButton
+              title="Move"
+              variant="primary"
+              onPress={() => {
+                handleBulkMove();
+                setBulkMoveSheetVisible(false);
+              }}
+              disabled={!bulkTargetSpaceId}
+            />
+          </View>
+        </View>
+      </BottomSheet>
 
       {/* Add existing items picker modal */}
       <BottomSheet
@@ -1062,26 +1021,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
-  bulkPanel: {
-    gap: 10,
-    marginBottom: 12,
-    paddingHorizontal: 20,
+  bulkMoveContent: {
+    padding: 20,
+    gap: 16,
   },
-  bulkHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  bulkActions: {
+  bulkMoveActions: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
-  },
-  bulkModeToggle: {
-    paddingVertical: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingHorizontal: 20,
+    marginTop: 8,
   },
   checklistCard: {
     borderWidth: 1,
