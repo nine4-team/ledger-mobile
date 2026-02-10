@@ -4,7 +4,7 @@ import { Card } from '../../../../src/components/Card';
 import { AppText } from '../../../../src/components/AppText';
 import { ProgressBar } from '../../../../src/components/ProgressBar';
 import { useTheme, useThemeContext } from '../../../../src/theme/ThemeProvider';
-import { getBudgetProgressColor, getOverflowColor } from '../../../../src/utils/budgetColors';
+import { BUDGET_COLORS, getBudgetProgressColor, getOverflowColor } from '../../../../src/utils/budgetColors';
 import { computeTransactionCompleteness } from '../../../../src/utils/transactionCompleteness';
 import type { Transaction } from '../../../../src/data/transactionsService';
 import type { Item } from '../../../../src/data/itemsService';
@@ -49,6 +49,7 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
     isDark,
   );
   const overflowColors = overflowPercentage ? getOverflowColor(isDark) : undefined;
+  const warningColor = (isDark ? BUDGET_COLORS.dark : BUDGET_COLORS.light).standard.yellow.text;
 
   // Format currency
   const formatCents = (cents: number): string =>
@@ -110,7 +111,7 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
 
         {/* Missing price count (FR-007) */}
         {completeness.itemsMissingPriceCount > 0 && (
-          <AppText variant="caption" style={{ color: '#E5A500', marginTop: 8 }}>
+          <AppText variant="caption" style={{ color: warningColor, marginTop: 8 }}>
             ⚠ {completeness.itemsMissingPriceCount} item(s) missing purchase price
           </AppText>
         )}
