@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Item Detail Screen Polish
-lane: "doing"
+lane: "done"
 dependencies:
 - WP01
 base_branch: 005-detail-screen-polish-WP01
@@ -17,6 +17,8 @@ subtasks:
 phase: Phase 3 - Item Detail
 shell_pid: "37479"
 agent: "claude-sonnet-4.5"
+reviewed_by: "nine4-team"
+review_status: "approved"
 history:
 - timestamp: '2026-02-10T19:00:00Z'
   lane: planned
@@ -694,3 +696,4 @@ function renderSection(section: Section) {
 - 2026-02-10T21:13:37Z – claude-sonnet-4.5 – shell_pid=25589 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T21:20:50Z – claude-sonnet-4.5 – shell_pid=25589 – lane=for_review – Ready for review: Item detail hero card now shows transaction as 'Source - Amount' with space info, Move Item in kebab menu with bottom sheet, 4px section spacing, no duplicate titles. All edge cases handled.
 - 2026-02-10T21:22:59Z – claude-sonnet-4.5 – shell_pid=37479 – lane=doing – Started review via workflow command
+- 2026-02-10T21:26:55Z – claude-sonnet-4.5 – shell_pid=37479 – lane=done – Review passed: All 6 subtasks implemented correctly. Hero card shows transaction as 'Source - Amount' with space info, Move Item in kebab menu with bottom sheet, 4px section spacing, no duplicate titles. All edge cases handled. No new TypeScript errors. Follows offline-first patterns and theme conventions.
