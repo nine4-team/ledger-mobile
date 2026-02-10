@@ -1,0 +1,10 @@
+{
+  "feature_number": "003",
+  "slug": "003-transaction-audit",
+  "friendly_name": "Transaction Audit",
+  "mission": "software-dev",
+  "source_description": "Rewrite the spec at docs/specs/transaction_audit_spec.md using findings from kitty-specs/002-transaction-audit/research.md and kitty-specs/002-transaction-audit/data-model.md. Key corrections: completeness tiers should be ±1%/20%/120% (not 95%/80%), itemization uses categoryType === 'itemized' (not itemizationEnabled boolean), all monetary fields are cents-based integers.",
+  "created_at": "2026-02-09T14:56:00Z",
+  "target_branch": "main",
+  "vcs": "git"
+}

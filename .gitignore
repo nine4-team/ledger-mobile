@@ -78,3 +78,5 @@ ui-debug.log
 .kittify/workspaces/
 __pycache__/
 *.pyc
+# Excluded via sparse-checkout
+# kitty-specs/
