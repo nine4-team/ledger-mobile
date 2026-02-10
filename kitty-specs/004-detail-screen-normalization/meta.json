@@ -1,0 +1,10 @@
+{
+  "feature_number": "004",
+  "slug": "004-detail-screen-normalization",
+  "friendly_name": "Detail Screen Normalization",
+  "mission": "software-dev",
+  "source_description": "Extract shared patterns from the transaction detail SectionList refactor and apply them across all detail screens. Normalize media handling, items management, collapsible sections, and detail row rendering into reusable components. Consolidate the two near-identical space detail screens.",
+  "created_at": "2026-02-09T12:00:00Z",
+  "target_branch": "main",
+  "vcs": "git"
+}
