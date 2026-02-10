@@ -1,26 +1,29 @@
 ---
-work_package_id: "WP02"
+work_package_id: WP02
+title: Migrate Space Detail to SectionList
+lane: "doing"
+dependencies: [WP01]
+base_branch: 004-detail-screen-normalization-WP01
+base_commit: be6447c068f602cfaa250b6646665d352df13237
+created_at: '2026-02-10T03:32:01.457437+00:00'
 subtasks:
-  - "T007"
-  - "T008"
-  - "T009"
-  - "T010"
-  - "T011"
-title: "Migrate Space Detail to SectionList"
-phase: "Phase 1 - Space Consolidation + SectionList Migration"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T007
+- T008
+- T009
+- T010
+- T011
+phase: Phase 1 - Space Consolidation + SectionList Migration
+assignee: ''
+agent: ''
+shell_pid: "28470"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-10T02:25:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T02:25:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP02 – Migrate Space Detail to SectionList
