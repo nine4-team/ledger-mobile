@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "doing"
+lane: "for_review"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -655,3 +655,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 - 2026-02-10T04:33:40Z – claude-opus – shell_pid=44485 – lane=doing – Started review via workflow command
 - 2026-02-10T04:39:36Z – claude-opus – shell_pid=44485 – lane=planned – Moved to planned
 - 2026-02-10T04:41:26Z – claude-sonnet – shell_pid=60482 – lane=doing – Started implementation via workflow command
+- 2026-02-10T04:44:08Z – claude-sonnet – shell_pid=60482 – lane=for_review – Fixed all critical review feedback issues: (1) SpaceDetail now uses single 'items-content' marker instead of full items array to prevent N duplicate ItemsSection renders, (2) TransactionDetail now uses 'items-content' instead of SECTION_HEADER_MARKER to properly render ItemsSection, (3) Added missing icon prop to bulk action buttons
