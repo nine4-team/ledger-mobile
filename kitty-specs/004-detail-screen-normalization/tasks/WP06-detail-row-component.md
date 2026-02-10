@@ -13,7 +13,7 @@ subtasks:
 - T029
 phase: Phase 3 - Detail Row Extraction
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "45302"
 review_status: ''
 reviewed_by: ''
@@ -356,3 +356,4 @@ divider: {
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:45:44Z – claude-sonnet – shell_pid=45302 – lane=doing – Assigned agent via workflow command
