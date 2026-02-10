@@ -1,0 +1,171 @@
+================================================================================
+VENDOR RENAME EXECUTION FLOW WITH LOGGING POINTS
+================================================================================
+
+USER ACTION SEQUENCE:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  USER TAPS VENDOR MENU                                                       │
+│         │                                                                     │
+│         ▼                                                                     │
+│  [VENDOR_RENAME] getMenuItems called with item: {...}                       │
+│  [VENDOR_RENAME] Found index: 2                                              │
+│  [VENDOR_RENAME] Vendor data at index 2: { id, value: "Old Name" }          │
+│  [VENDOR_RENAME] hasValue: true                                              │
+│         │                                                                     │
+│         ▼                                                                     │
+│  MENU SHEET APPEARS                                                          │
+│         │                                                                     │
+│         ▼                                                                     │
+│  USER TAPS "RENAME" MENU ITEM                                                │
+│         │                                                                     │
+│         ▼                                                                     │
+│  [VENDOR_RENAME] BottomSheetMenuList.onPress fired                           │
+│  [VENDOR_RENAME] Before calling item.onPress?.()                            │
+│  [VENDOR_RENAME] handleOpenVendorEdit called with index: 2                  │
+│  [VENDOR_RENAME] Current vendorSlots: [...]                                 │
+│  [VENDOR_RENAME] Vendor at index: { id, value: "Old Name" }                │
+│  [VENDOR_RENAME] After state setters - editingVendorIndex: 2                │
+│  [VENDOR_RENAME] After calling item.onPress?.()                             │
+│  [VENDOR_RENAME] Closing sheet (closeOnItemPress=true)                       │
+│         │                                                                     │
+│         ▼                                                                     │
+│  EDIT DIALOG OPENS                                                           │
+│  (TextInput shows "Old Name")                                                │
+│         │                                                                     │
+│         ▼                                                                     │
+│  USER EDITS TEXT & TAPS "SAVE"                                               │
+│         │                                                                     │
+│         ▼                                                                     │
+│  [VENDOR_RENAME] handleSaveVendorEdit called                                │
+│  [VENDOR_RENAME] editingVendorIndex: 2                                      │
+│  [VENDOR_RENAME] editingVendorName: New Name                                │
+│  [VENDOR_RENAME] Original vendorSlots: [...]                                │
+│  [VENDOR_RENAME] Updated vendor at index 2 to: { id, value: "New Name" }   │
+│  [VENDOR_RENAME] New vendorSlots array: [...]                               │
+│  [VENDOR_RENAME] Called setVendorSlots                                      │
+│  [VENDOR_RENAME] Called handleCloseVendorEdit                               │
+│  [VENDOR_RENAME] Called handleSaveVendorSlot                                │
+│         │                                                                     │
+│         ▼                                                                     │
+│  [VENDOR_RENAME] handleSaveVendorSlot called with index: 2                  │
+│  [VENDOR_RENAME] Calling replaceVendorSlots with: [...]                     │
+│  [VENDOR_RENAME] replaceVendorSlots called with accountId                   │
+│  [VENDOR_RENAME] After normalization: [...]                                 │
+│  [VENDOR_RENAME] saveVendorDefaults called                                  │
+│  [VENDOR_RENAME] Calling setDoc with normalized vendors                     │
+│  [VENDOR_RENAME] setDoc initiated, calling trackPendingWrite                │
+│  [VENDOR_RENAME] saveVendorDefaults complete                                │
+│  [VENDOR_RENAME] replaceVendorSlots call completed                          │
+│         │                                                                     │
+│         ▼                                                                     │
+│  DIALOG CLOSES                                                               │
+│  VENDOR LIST UPDATES WITH "New Name"                                         │
+│  FIREBASE SYNC QUEUED (offline-first)                                        │
+│                                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+LAYER BREAKDOWN
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ UI LAYER (settings.tsx)                                                      │
+│                                                                               │
+│  - handleOpenVendorEdit()     ← User opens edit dialog                       │
+│    └─ Logs current state      ✓ 4 logs                                       │
+│                                                                               │
+│  - handleSaveVendorEdit()     ← User saves new name                          │
+│    └─ Logs save operation     ✓ 15 logs                                      │
+│    └─ Calls handleSaveVendorSlot()                                           │
+│                                                                               │
+│  - getMenuItems()             ← Menu generation                              │
+│    └─ Logs menu items         ✓ 9 logs                                       │
+│    └─ Returns [Edit] and [Clear] items                                       │
+│                                                                               │
+│  - handleSaveVendorSlot()     ← Persist changes                              │
+│    └─ Logs persistence        ✓ 4 logs                                       │
+│    └─ Calls replaceVendorSlots()                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ COMPONENT LAYER (BottomSheetMenuList.tsx)                                   │
+│                                                                               │
+│  - onPress handler            ← User taps menu item                          │
+│    └─ Logs menu interaction   ✓ 4 logs                                       │
+│    └─ Calls item.onPress()                                                   │
+│    └─ Closes sheet                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SERVICE LAYER (vendorDefaultsService.ts)                                    │
+│                                                                               │
+│  - replaceVendorSlots()       ← Public API entry                             │
+│    └─ Logs operation          ✓ 4 logs                                       │
+│    └─ Normalizes array (pad to 10)                                           │
+│    └─ Calls saveVendorDefaults()                                             │
+│                                                                               │
+│  - saveVendorDefaults()       ← Firebase write                               │
+│    └─ Logs operation          ✓ 6 logs                                       │
+│    └─ Calls setDoc() (fire-and-forget)                                       │
+│    └─ Calls trackPendingWrite()                                              │
+│    └─ Catches errors                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     │
+                                     ▼
+                            FIREBASE FIRESTORE
+                         (Offline-first sync)
+
+================================================================================
+ERROR PATHS
+================================================================================
+
+POTENTIAL ERROR POINTS & THEIR LOGS:
+
+1. Menu not generating
+   ❌ No "getMenuItems called" log
+   → Check vendor data structure
+   → Check vendorSlots subscription
+
+2. Dialog not opening
+   ❌ No "handleOpenVendorEdit called" log
+   → Check if menu item onPress fired
+   → Check if "After calling item.onPress" appears
+
+3. Save not executing
+   ❌ No "handleSaveVendorEdit called" log
+   → Check if Save button is clickable
+   → Check dialog state
+
+4. Firebase write failing
+   ✓ Look for "saveVendorDefaults failed" log
+   → Check error.message and error.code
+   → Check network connectivity
+   → Check Firebase permissions
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+Before running test:
+  □ Open DevTools (Cmd+I or F12)
+  □ Filter console: [VENDOR_RENAME]
+  □ Clear previous logs
+
+During test:
+  □ Tap menu on vendor with name → Check getMenuItems logs
+  □ Tap "Rename" → Check BottomSheetMenuList.onPress log
+  □ Dialog opens → Check handleOpenVendorEdit logs
+  □ Edit name & tap Save → Check handleSaveVendorEdit logs
+  □ Watch for Firebase sync → Check saveVendorDefaults logs
+
+After test:
+  □ No red error logs should appear
+  □ All expected logs should be in sequence
+  □ UI should update with new name
+  □ List should show updated vendor
+
+================================================================================

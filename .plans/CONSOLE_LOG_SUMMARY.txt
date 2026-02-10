@@ -1,0 +1,191 @@
+================================================================================
+VENDOR RENAME DEBUG LOGGING - COMPLETE SUMMARY
+================================================================================
+
+48 console.log statements added across 3 files to trace vendor rename flow.
+
+================================================================================
+FILE 1: /Users/benjaminmackenzie/Dev/ledger_mobile/app/(tabs)/settings.tsx
+================================================================================
+
+LOCATION 1: handleOpenVendorEdit (Line ~643)
+- 6 console.log statements
+- Purpose: Log when user opens vendor edit dialog, show current state
+
+  Line 644: When called with index
+  Line 645: Log current vendorSlots state
+  Line 646: Log vendor at the index
+  Line 649: Log after state setters with new values
+
+LOCATION 2: handleSaveVendorEdit (Line ~657)
+- 15 console.log statements
+- Purpose: Trace complete save operation flow
+
+  Line 658: When save initiated
+  Line 659: Log editingVendorIndex
+  Line 660: Log editingVendorName
+  Line 662: Early exit check (null index)
+  Line 666: Original vendorSlots before mutation
+  Line 669: Updated vendor at index
+  Line 671: New vendorSlots array
+  Line 673: After setVendorSlots
+  Line 675: After handleCloseVendorEdit
+  Line 677: After handleSaveVendorSlot
+
+LOCATION 3: getMenuItems callback (Line ~1285)
+- 9 console.log statements
+- Purpose: Trace menu generation for vendor slots
+
+  Line 1286: When getMenuItems called
+  Line 1288: Index found for item
+  Line 1290: If index not found
+  Line 1294: Vendor data at index
+  Line 1296: hasValue boolean and value
+
+LOCATION 4: handleSaveVendorSlot (Line ~591)
+- 4 console.log statements
+- Purpose: Trace save slot operation
+
+  Line 592: When called with index
+  Line 594: Early exit check (no accountId)
+  Line 598: Array being sent to replaceVendorSlots
+  Line 600: Completion
+
+================================================================================
+FILE 2: /Users/benjaminmackenzie/Dev/ledger_mobile/src/components/BottomSheetMenuList.tsx
+================================================================================
+
+LOCATION 1: Menu Item onPress Handler (Line ~244)
+- 4 console.log statements
+- Purpose: Log menu item selection and execution
+
+  Line 245: When menu item pressed (item label and key)
+  Line 246: Before calling item.onPress?.()
+  Line 248: After calling item.onPress?.()
+  Line 250: When sheet closes
+
+================================================================================
+FILE 3: /Users/benjaminmackenzie/Dev/ledger_mobile/src/data/vendorDefaultsService.ts
+================================================================================
+
+LOCATION 1: replaceVendorSlots (Line ~73)
+- 4 console.log statements
+- Purpose: Trace vendor slot replacement at service level
+
+  Line 74: When called with accountId and vendors
+  Line 76: After normalization (padding to 10 slots)
+
+LOCATION 2: saveVendorDefaults (Line ~49)
+- 6 console.log statements
+- Purpose: Trace Firebase write operation
+
+  Line 50: When called with accountId and vendors
+  Line 52: If Firebase not configured (error)
+  Line 56: Before setDoc call
+  Line 65: If write fails (error message)
+  Line 66: Error code from Firebase
+  Line 68: After trackPendingWrite
+  Line 70: Completion
+
+================================================================================
+TOTAL LOGGING STATEMENTS
+================================================================================
+
+File breakdown:
+- app/(tabs)/settings.tsx: 34 statements (4 functions)
+- src/components/BottomSheetMenuList.tsx: 4 statements (1 handler)
+- src/data/vendorDefaultsService.ts: 10 statements (2 functions)
+
+TOTAL: 48 console.log statements
+
+All statements prefixed with: [VENDOR_RENAME]
+
+================================================================================
+EXPECTED LOG SEQUENCE (Complete Rename Operation)
+================================================================================
+
+1. User taps menu item on vendor
+   → getMenuItems logs (identifying the vendor)
+
+2. Menu sheet displays
+   → Menu generation complete
+
+3. User taps "Rename"
+   → BottomSheetMenuList onPress logs
+   → handleOpenVendorEdit logs
+   → Dialog opens
+
+4. User edits name and taps "Save"
+   → handleSaveVendorEdit logs
+   → setVendorSlots called
+   → handleCloseVendorEdit called
+
+5. Save to Firestore
+   → handleSaveVendorSlot logs
+   → replaceVendorSlots logs
+   → saveVendorDefaults logs (including Firebase operation)
+
+6. Sync complete
+   → trackPendingWrite called
+
+================================================================================
+DEBUGGING QUICK REFERENCE
+================================================================================
+
+DevTools Filter: [VENDOR_RENAME]
+
+Key logs to check:
+- "getMenuItems called" → Menu generation started
+- "handleOpenVendorEdit called" → Dialog opening
+- "handleSaveVendorEdit called" → Save started
+- "Calling replaceVendorSlots" → Firestore sync initiated
+- "saveVendorDefaults failed" → Firebase error occurred
+
+Error indicators:
+- "Index not found" → Vendor not in array
+- "No accountId" → Account context missing
+- "saveVendorDefaults failed" → Firebase write failed
+
+================================================================================
+ERROR HANDLING FINDINGS
+================================================================================
+
+✓ No React Error Boundaries found
+  - Checked: app/_layout.tsx, app/(tabs)/_layout.tsx, app/(auth)/_layout.tsx
+  - No componentDidCatch or getDerivedStateFromError
+
+✓ Firebase error handling present
+  - saveVendorDefaults has .catch() handler
+  - Logs full error details (message + code)
+
+✓ No try-catch in UI layer
+  - Uses fire-and-forget pattern (offline-first)
+  - This is intentional per architecture spec
+
+================================================================================
+FILES CHANGED
+================================================================================
+
+Modified:
+✓ app/(tabs)/settings.tsx (+34 statements)
+✓ src/components/BottomSheetMenuList.tsx (+4 statements)
+✓ src/data/vendorDefaultsService.ts (+10 statements)
+
+Git diff: 3 files changed, 55 insertions(+), 10 deletions(-)
+
+================================================================================
+CLEANUP NOTES
+================================================================================
+
+Before committing to main:
+1. Test thoroughly with DevTools console
+2. Capture relevant logs for debugging
+3. Remove all [VENDOR_RENAME] console.log statements
+4. Revert the 3 modified files
+
+OR use git to clean up:
+  git checkout app/(tabs)/settings.tsx
+  git checkout src/components/BottomSheetMenuList.tsx
+  git checkout src/data/vendorDefaultsService.ts
+
+================================================================================

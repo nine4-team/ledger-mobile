@@ -1,0 +1,196 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           VENDOR RENAME DEBUG LOGGING - QUICK REFERENCE CARD               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+START HERE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Reload app (npm start)
+2. Open DevTools (Cmd+I or F12)
+3. Filter console: [VENDOR_RENAME]
+4. Try to rename a vendor
+5. Check the logs
+
+
+FILES MODIFIED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ app/(tabs)/settings.tsx (34 logs)
+✓ src/components/BottomSheetMenuList.tsx (4 logs)
+✓ src/data/vendorDefaultsService.ts (10 logs)
+
+TOTAL: 48 console.log statements
+
+
+EXPECTED LOG SEQUENCE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Menu opens:
+  [VENDOR_RENAME] getMenuItems called with item
+
+User taps "Rename":
+  [VENDOR_RENAME] BottomSheetMenuList.onPress fired
+  [VENDOR_RENAME] handleOpenVendorEdit called
+
+Dialog opens, user saves:
+  [VENDOR_RENAME] handleSaveVendorEdit called
+  [VENDOR_RENAME] Called setVendorSlots
+  [VENDOR_RENAME] Called handleSaveVendorSlot
+
+Firebase sync:
+  [VENDOR_RENAME] replaceVendorSlots called
+  [VENDOR_RENAME] saveVendorDefaults called
+  [VENDOR_RENAME] saveVendorDefaults complete
+
+
+TROUBLESHOOTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Menu not appearing?
+  → Look for: [VENDOR_RENAME] getMenuItems called
+  → If missing: vendor data issue
+  → If present: menu generation issue
+
+Dialog not opening?
+  → Look for: [VENDOR_RENAME] handleOpenVendorEdit called
+  → If missing: menu item not responding
+  → Check: BottomSheetMenuList.onPress fired log
+
+Save not working?
+  → Look for: [VENDOR_RENAME] handleSaveVendorEdit called
+  → Must see: Called setVendorSlots
+  → Must see: Called handleSaveVendorSlot
+  → If missing: dialog Save button not triggering
+
+Name not updating?
+  → Look for: [VENDOR_RENAME] saveVendorDefaults complete
+  → Check: No error logs (red text)
+  → Verify: Network connectivity
+  → Check: Firebase permissions
+
+
+KEY LOG POINTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+File: settings.tsx
+
+  Line 643 - handleOpenVendorEdit
+    → Initial dialog open
+    → Shows current state
+
+  Line 657 - handleSaveVendorEdit
+    → Save operation begins
+    → Mutation of vendorSlots
+    → Calls to other handlers
+
+  Line 1285 - getMenuItems callback
+    → Menu generation
+    → Item lookup
+    → Value validation
+
+  Line 591 - handleSaveVendorSlot
+    → Persistence trigger
+    → Array preparation
+
+
+File: BottomSheetMenuList.tsx
+
+  Line 244 - onPress handler
+    → Menu item interaction
+    → Callback execution
+
+
+File: vendorDefaultsService.ts
+
+  Line 73 - replaceVendorSlots
+    → Public API entry
+    → Normalization
+
+  Line 49 - saveVendorDefaults
+    → Firebase write
+    → Error handling
+
+
+ERROR SIGNALS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Red console logs:
+  → Check: error.message and error.code
+  → Common issues: offline, permissions, quota
+
+Missing logs:
+  → Indicates break point in execution
+  → Missing sequence = where bug occurs
+
+Gaps in sequence:
+  → Function not being called
+  → State not updating
+  → Callback not firing
+
+
+DOCUMENTATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ 📄 VENDOR_RENAME_DEBUG_INDEX.md
+    Main entry point - start here
+
+ 📄 CONSOLE_LOG_SUMMARY.txt
+    Line numbers and details
+
+ 📄 vendor-rename-debug-logging.md
+    Expected flow and issue points
+
+ 📄 vendor-rename-test-steps.md
+    Step-by-step testing guide
+
+ 📄 LOG_FLOW_DIAGRAM.txt
+    Visual flow diagram
+
+ 📄 VERIFICATION_REPORT.txt
+    Implementation details
+
+
+CLEANUP WHEN DONE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option 1 - Revert files:
+  git checkout app/(tabs)/settings.tsx
+  git checkout src/components/BottomSheetMenuList.tsx
+  git checkout src/data/vendorDefaultsService.ts
+
+Option 2 - Manual cleanup:
+  Search for [VENDOR_RENAME] and delete lines
+
+
+QUICK FILTER COMMANDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Show all vendor logs:
+  Filter: [VENDOR_RENAME]
+
+Show only errors:
+  Filter: [VENDOR_RENAME] Error
+
+Show menu generation:
+  Filter: getMenuItems
+
+Show dialog opening:
+  Filter: handleOpenVendorEdit
+
+Show save operation:
+  Filter: handleSaveVendorEdit
+
+Show firebase operations:
+  Filter: saveVendorDefaults
+
+
+SUMMARY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ 48 console.log statements added
+✓ Complete execution flow traced
+✓ All tagged with [VENDOR_RENAME]
+✓ Ready for debugging
+✓ Comprehensive documentation provided
+
+═══════════════════════════════════════════════════════════════════════════════
