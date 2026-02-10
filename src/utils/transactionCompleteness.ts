@@ -5,24 +5,24 @@ export type CompletenessStatus = 'complete' | 'near' | 'incomplete' | 'over';
 
 export interface TransactionCompleteness {
   /** Sum of purchasePriceCents for all linked items (cents) */
-  itemsNetTotal: number;
+  itemsNetTotalCents: number;
   /** Total count of linked items */
   itemsCount: number;
   /** Count of items where purchasePriceCents is null/undefined/0 */
   itemsMissingPriceCount: number;
   /** Resolved pre-tax subtotal (cents) — explicit > inferred > fallback */
-  transactionSubtotal: number;
-  /** itemsNetTotal / transactionSubtotal (0-N, where 1.0 = 100%) */
+  transactionSubtotalCents: number;
+  /** itemsNetTotalCents / transactionSubtotalCents (0-N, where 1.0 = 100%) */
   completenessRatio: number;
   /** Classified status based on threshold rules */
-  completenessStatus: CompletenessStatus;
+  status: CompletenessStatus;
   /** True if no explicit subtotal and no valid taxRatePct */
   missingTaxData: boolean;
   /** Tax amount inferred from taxRatePct (cents), undefined if not inferred */
   inferredTax?: number;
-  /** itemsNetTotal - transactionSubtotal (positive = over, negative = under) */
+  /** itemsNetTotalCents - transactionSubtotalCents (positive = over, negative = under) */
   varianceCents: number;
-  /** (varianceCents / transactionSubtotal) * 100 */
+  /** (varianceCents / transactionSubtotalCents) * 100 */
   variancePercent: number;
 }
 
@@ -37,13 +37,13 @@ export function computeTransactionCompleteness(
   items: Pick<Item, 'purchasePriceCents'>[],
 ): TransactionCompleteness | null {
   // Resolve subtotal using priority: explicit > inferred from tax > fallback to amount
-  let transactionSubtotal: number;
+  let transactionSubtotalCents: number;
   let missingTaxData = false;
   let inferredTax: number | undefined;
 
   if (transaction.subtotalCents != null && transaction.subtotalCents > 0) {
     // Priority 1: explicit subtotal
-    transactionSubtotal = transaction.subtotalCents;
+    transactionSubtotalCents = transaction.subtotalCents;
   } else if (
     transaction.amountCents != null &&
     transaction.amountCents > 0 &&
@@ -51,13 +51,13 @@ export function computeTransactionCompleteness(
     transaction.taxRatePct > 0
   ) {
     // Priority 2: infer subtotal from amount and tax rate
-    transactionSubtotal = Math.round(
+    transactionSubtotalCents = Math.round(
       transaction.amountCents / (1 + transaction.taxRatePct / 100),
     );
-    inferredTax = transaction.amountCents - transactionSubtotal;
+    inferredTax = transaction.amountCents - transactionSubtotalCents;
   } else if (transaction.amountCents != null && transaction.amountCents > 0) {
     // Priority 3: fallback to full amount
-    transactionSubtotal = transaction.amountCents;
+    transactionSubtotalCents = transaction.amountCents;
     missingTaxData = true;
   } else {
     // No valid subtotal — N/A
@@ -65,7 +65,7 @@ export function computeTransactionCompleteness(
   }
 
   // Items total
-  const itemsNetTotal = items.reduce(
+  const itemsNetTotalCents = items.reduce(
     (sum, item) => sum + (item.purchasePriceCents ?? 0),
     0,
   );
@@ -78,29 +78,29 @@ export function computeTransactionCompleteness(
   ).length;
 
   // Completeness ratio and variance
-  const completenessRatio = itemsNetTotal / transactionSubtotal;
-  const varianceCents = itemsNetTotal - transactionSubtotal;
-  const variancePercent = (varianceCents / transactionSubtotal) * 100;
+  const completenessRatio = itemsNetTotalCents / transactionSubtotalCents;
+  const varianceCents = itemsNetTotalCents - transactionSubtotalCents;
+  const variancePercent = (varianceCents / transactionSubtotalCents) * 100;
 
   // Status classification — check order matters
-  let completenessStatus: CompletenessStatus;
+  let status: CompletenessStatus;
   if (completenessRatio > 1.2) {
-    completenessStatus = 'over';
+    status = 'over';
   } else if (Math.abs(variancePercent) <= 1) {
-    completenessStatus = 'complete';
+    status = 'complete';
   } else if (Math.abs(variancePercent) <= 20) {
-    completenessStatus = 'near';
+    status = 'near';
   } else {
-    completenessStatus = 'incomplete';
+    status = 'incomplete';
   }
 
   return {
-    itemsNetTotal,
+    itemsNetTotalCents,
     itemsCount,
     itemsMissingPriceCount,
-    transactionSubtotal,
+    transactionSubtotalCents,
     completenessRatio,
-    completenessStatus,
+    status,
     missingTaxData,
     inferredTax,
     varianceCents,
