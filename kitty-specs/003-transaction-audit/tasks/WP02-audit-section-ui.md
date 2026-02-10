@@ -12,7 +12,7 @@ subtasks:
 - T006
 phase: Phase 1 - MVP
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "98440"
 review_status: ''
 reviewed_by: ''
@@ -323,3 +323,4 @@ Currently shows placeholder text in a Card. Replace entirely.
 ## Activity Log
 
 - 2026-02-09T15:00:00Z – system – lane=planned – Prompt created.
+- 2026-02-10T01:34:15Z – claude-sonnet – shell_pid=98440 – lane=doing – Assigned agent via workflow command
