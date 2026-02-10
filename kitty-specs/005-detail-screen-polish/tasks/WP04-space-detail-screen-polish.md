@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Space Detail Screen Polish & Cleanup
-lane: "planned"
+lane: "doing"
 dependencies: [WP01]
 base_branch: 005-detail-screen-polish-WP01
 base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
@@ -12,8 +12,9 @@ subtasks:
 - T017
 - T018
 - T019
+- T020
 phase: Phase 4 - Space Detail & Cleanup
-shell_pid: "37857"
+shell_pid: "82100"
 agent: "claude-sonnet-4.5"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
@@ -515,6 +516,67 @@ export function ItemsSection<S extends string = string, F extends string = strin
 
 ---
 
+### Subtask T020 – Cross-screen section component normalization
+
+**Purpose**: Fix shared component architecture issues discovered during WP02/03/04 review. Shared `NotesSection` uses `TitledCard` (creating duplicate titles), transaction detail has a custom `NotesSection` that should use shared, item detail has inline `TitledCard` for Details section, and dead `MediaSection.tsx` needs cleanup.
+
+**Full plan**: `.plans/detail-screen-section-normalization.md`
+
+**Component hierarchy**:
+```
+MediaGallerySection (shared)  ← used by all screens, already correct
+NotesSection (shared)         ← BUG: uses TitledCard, should use Card
+CollapsibleSectionHeader      → provides section title
+Card                          → for content inside CollapsibleSectionHeader
+TitledCard                    → for standalone sections ONLY (not inside CollapsibleSectionHeader)
+```
+
+**Rule**: Content inside `CollapsibleSectionHeader` must use `Card`, never `TitledCard`.
+
+**Steps**:
+
+1. **Fix shared `NotesSection`** (`src/components/NotesSection.tsx`):
+   - Replace `TitledCard` with `Card` (NotesSection is only ever used inside CollapsibleSectionHeader)
+   - This automatically fixes item detail + space detail notes sections
+
+2. **Delete custom transaction `NotesSection`** (`app/transactions/[id]/sections/NotesSection.tsx`):
+   - Delete the file
+   - Remove export from `app/transactions/[id]/sections/index.ts`
+   - Update `app/transactions/[id]/index.tsx` to import shared NotesSection
+   - Change `<NotesSection transaction={item} />` → `<NotesSection notes={item.notes} expandable={true} />`
+
+3. **Fix item detail Details section** (`app/items/[id]/index.tsx`):
+   - Line 532: `<TitledCard title="Details">` → `<Card>`
+   - Keep `TitledCard` import (still used for footer "Move item")
+
+4. **Delete dead `MediaSection.tsx`** (`app/transactions/[id]/sections/MediaSection.tsx`):
+   - Old combined receipts+other-images component, replaced by separate `ReceiptsSection` + `OtherImagesSection`
+   - Remove export from `app/transactions/[id]/sections/index.ts`
+
+**Files**:
+
+| File | Action |
+|------|--------|
+| `src/components/NotesSection.tsx` | Edit: TitledCard → Card |
+| `app/transactions/[id]/sections/NotesSection.tsx` | Delete |
+| `app/transactions/[id]/sections/MediaSection.tsx` | Delete |
+| `app/transactions/[id]/sections/index.ts` | Edit: remove 2 exports |
+| `app/transactions/[id]/index.tsx` | Edit: import shared NotesSection |
+| `app/items/[id]/index.tsx` | Edit: TitledCard → Card for Details |
+
+**Validation**:
+- `npx tsc --noEmit` — no new type errors
+- Transaction detail: Notes section renders with single title (using shared component)
+- Item detail: Notes and Details sections render with single titles each
+- Space detail: Notes section renders with single title
+- No dead imports after deletions
+
+**Notes**:
+- This is a cross-WP fix: addresses issues from WP02 (transaction), WP03 (item), and WP04 (space)
+- Confirmed correct (no changes needed): ReceiptsSection, OtherImagesSection, HeroSection, DetailsSection, TaxesSection, AuditSection, edit forms, MediaGallerySection
+
+---
+
 ## Test Strategy
 
 **Visual QA** (manual verification):
@@ -636,3 +698,4 @@ After WP02, WP03, WP04 complete, verify consistency:
 - 2026-02-10T21:21:31Z – claude-sonnet-4.5 – shell_pid=25725 – lane=for_review – Ready for review: Space detail now uses SharedItemsList with grouped cards, images-only default expand, 4px section spacing, no duplicate titles, ItemsSection deprecated
 - 2026-02-10T21:23:09Z – claude-sonnet-4.5 – shell_pid=37857 – lane=doing – Started review via workflow command
 - 2026-02-10T21:24:57Z – claude-sonnet-4.5 – shell_pid=37857 – lane=planned – Moved to planned
+- 2026-02-10T22:04:23Z – claude-sonnet-4.5 – shell_pid=82100 – lane=doing – Started implementation via workflow command
