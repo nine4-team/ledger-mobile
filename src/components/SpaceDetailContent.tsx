@@ -159,6 +159,7 @@ export function SpaceDetailContent({
     includeInventory: projectId ? true : false,
   });
   const [bulkTargetSpaceId, setBulkTargetSpaceId] = useState<string | null>(null);
+  const [bulkMoveSheetVisible, setBulkMoveSheetVisible] = useState(false);
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
 
   // Collapsible sections state
@@ -426,7 +427,7 @@ export function SpaceDetailContent({
     switch (actionId) {
       case 'move':
         setBulkTargetSpaceId(null);
-        // Show space selector - existing bulk move UI will handle this
+        setBulkMoveSheetVisible(true);
         break;
       case 'remove':
         if (!accountId) return;
@@ -597,9 +598,7 @@ export function SpaceDetailContent({
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={itemsManager.hasSelection
-                ? () => { /* TODO: open bulk menu */ }
-                : () => setAddMenuVisible(true)}
+              onAdd={!itemsManager.hasSelection ? () => setAddMenuVisible(true) : undefined}
             />
           </View>
         )}
@@ -881,53 +880,13 @@ export function SpaceDetailContent({
           section.key === 'items' ? <View style={styles.itemSeparator} /> : null
         }
         ListFooterComponent={
-          <>
-            {/* Bulk mode panel */}
-            {itemsManager.hasSelection ? (
-              <View style={styles.bulkPanel}>
-                <View style={styles.bulkHeader}>
-                  <AppText variant="caption">{itemsManager.selectedIds.size} selected</AppText>
-                  <AppButton
-                    title="Done"
-                    variant="secondary"
-                    onPress={() => {
-                      itemsManager.clearSelection();
-                    }}
-                  />
-                </View>
-                <SpaceSelector
-                  projectId={projectId}
-                  value={bulkTargetSpaceId}
-                  onChange={setBulkTargetSpaceId}
-                  allowCreate={false}
-                  placeholder="Move to space…"
-                />
-                <View style={styles.bulkActions}>
-                  <AppButton
-                    title="Move"
-                    variant="secondary"
-                    onPress={handleBulkMove}
-                    disabled={!bulkTargetSpaceId || !itemsManager.selectedIds.size}
-                  />
-                  <AppButton
-                    title="Remove from space"
-                    variant="secondary"
-                    onPress={() => handleBulkAction('remove', Array.from(itemsManager.selectedIds))}
-                    disabled={!itemsManager.selectedIds.size}
-                  />
-                </View>
-              </View>
-            ) : null}
-
-            {/* Empty state for items */}
-            {!collapsedSections.items && itemsManager.filteredAndSortedItems.length === 0 ? (
-              <View style={styles.emptyState}>
-                <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                  {itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-                </AppText>
-              </View>
-            ) : null}
-          </>
+          !collapsedSections.items && itemsManager.filteredAndSortedItems.length === 0 ? (
+            <View style={styles.emptyState}>
+              <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                {itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+              </AppText>
+            </View>
+          ) : null
         }
       />
 
@@ -962,6 +921,47 @@ export function SpaceDetailContent({
         items={addMenuItems}
         title="Add item"
       />
+
+      {/* Bulk move bottom sheet */}
+      <BottomSheet
+        visible={bulkMoveSheetVisible}
+        onRequestClose={() => {
+          setBulkMoveSheetVisible(false);
+          setBulkTargetSpaceId(null);
+        }}
+      >
+        <View style={styles.bulkMoveContent}>
+          <AppText variant="h2" style={{ marginBottom: 16 }}>
+            Move {itemsManager.selectedIds.size} item{itemsManager.selectedIds.size === 1 ? '' : 's'}
+          </AppText>
+          <SpaceSelector
+            projectId={projectId}
+            value={bulkTargetSpaceId}
+            onChange={setBulkTargetSpaceId}
+            allowCreate={false}
+            placeholder="Select destination space…"
+          />
+          <View style={styles.bulkMoveActions}>
+            <AppButton
+              title="Cancel"
+              variant="secondary"
+              onPress={() => {
+                setBulkMoveSheetVisible(false);
+                setBulkTargetSpaceId(null);
+              }}
+            />
+            <AppButton
+              title="Move"
+              variant="primary"
+              onPress={() => {
+                handleBulkMove();
+                setBulkMoveSheetVisible(false);
+              }}
+              disabled={!bulkTargetSpaceId}
+            />
+          </View>
+        </View>
+      </BottomSheet>
 
       {/* Add existing items picker modal */}
       <BottomSheet
@@ -1029,26 +1029,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
-  bulkPanel: {
-    gap: 10,
-    marginBottom: 12,
-    paddingHorizontal: 20,
+  bulkMoveContent: {
+    padding: 20,
+    gap: 16,
   },
-  bulkHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  bulkActions: {
+  bulkMoveActions: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
-  },
-  bulkModeToggle: {
-    paddingVertical: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingHorizontal: 20,
+    marginTop: 8,
   },
   checklistCard: {
     borderWidth: 1,

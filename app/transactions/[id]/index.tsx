@@ -17,6 +17,7 @@ import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSec
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
 import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
 import { useItemsManager } from '../../../src/hooks/useItemsManager';
+import { ItemsSection } from '../../../src/components/ItemsSection';
 import type { BulkAction } from '../../../src/components/ItemsSection';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
@@ -100,7 +101,6 @@ export default function TransactionDetailScreen() {
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
-  const [bulkMenuVisible, setBulkMenuVisible] = useState(false);
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -245,7 +245,7 @@ export default function TransactionDetailScreen() {
     result.push({
       key: 'items',
       title: 'TRANSACTION ITEMS',
-      data: collapsedSections.items ? [] : itemsManager.filteredAndSortedItems,
+      data: collapsedSections.items ? [] : [SECTION_HEADER_MARKER],
       badge: `${itemsManager.filteredAndSortedItems.length}`,
     });
 
@@ -467,74 +467,6 @@ export default function TransactionDetailScreen() {
   const [bulkSKUInputVisible, setBulkSKUInputVisible] = useState(false);
   const [bulkSKUValue, setBulkSKUValue] = useState('');
 
-  // Bulk operation handlers
-  const handleBulkSetSpace = () => {
-    setBulkMenuVisible(false);
-    // Delay to allow menu to close
-    setTimeout(() => setBulkSpacePickerVisible(true), 300);
-  };
-
-  const handleBulkSetStatus = () => {
-    setBulkMenuVisible(false);
-    // Delay to allow menu to close
-    setTimeout(() => setBulkStatusPickerVisible(true), 300);
-  };
-
-  const handleBulkSetSKU = () => {
-    setBulkMenuVisible(false);
-    setBulkSKUValue('');
-    // Delay to allow menu to close
-    setTimeout(() => setBulkSKUInputVisible(true), 300);
-  };
-
-  const handleBulkRemove = () => {
-    if (!accountId || itemsManager.selectionCount === 0) return;
-
-    setBulkMenuVisible(false);
-
-    Alert.alert(
-      'Remove from transaction',
-      `Remove ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'} from this transaction?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            itemsManager.selectedIds.forEach((itemId) => {
-              updateItem(accountId, itemId, { transactionId: null });
-            });
-            itemsManager.clearSelection();
-          },
-        },
-      ]
-    );
-  };
-
-  const handleBulkDelete = () => {
-    if (!accountId || itemsManager.selectionCount === 0) return;
-
-    setBulkMenuVisible(false);
-
-    Alert.alert(
-      'Delete items',
-      `Permanently delete ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'}? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            itemsManager.selectedIds.forEach((itemId) => {
-              deleteItem(accountId, itemId);
-            });
-            itemsManager.clearSelection();
-          },
-        },
-      ]
-    );
-  };
-
   const handleBulkSpaceConfirm = (spaceId: string | null) => {
     if (!accountId || itemsManager.selectionCount === 0) return;
 
@@ -569,6 +501,62 @@ export default function TransactionDetailScreen() {
     setBulkSKUValue('');
     itemsManager.clearSelection();
   };
+
+  // Unified bulk action handler for ItemsSection
+  const handleBulkAction = useCallback((actionId: string, _ids: string[]) => {
+    switch (actionId) {
+      case 'set-space':
+        setBulkSpacePickerVisible(true);
+        break;
+      case 'set-status':
+        setBulkStatusPickerVisible(true);
+        break;
+      case 'set-sku':
+        setBulkSKUValue('');
+        setBulkSKUInputVisible(true);
+        break;
+      case 'remove':
+        if (!accountId || itemsManager.selectionCount === 0) return;
+        Alert.alert(
+          'Remove from transaction',
+          `Remove ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'} from this transaction?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Remove',
+              style: 'destructive',
+              onPress: () => {
+                itemsManager.selectedIds.forEach((itemId) => {
+                  updateItem(accountId, itemId, { transactionId: null });
+                });
+                itemsManager.clearSelection();
+              },
+            },
+          ]
+        );
+        break;
+      case 'delete':
+        if (!accountId || itemsManager.selectionCount === 0) return;
+        Alert.alert(
+          'Delete items',
+          `Permanently delete ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'}? This cannot be undone.`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: () => {
+                itemsManager.selectedIds.forEach((itemId) => {
+                  deleteItem(accountId, itemId);
+                });
+                itemsManager.clearSelection();
+              },
+            },
+          ]
+        );
+        break;
+    }
+  }, [accountId, itemsManager]);
 
   // Single item operation state
   const [singleItemSpacePickerVisible, setSingleItemSpacePickerVisible] = useState(false);
@@ -972,45 +960,6 @@ export default function TransactionDetailScreen() {
     },
   ], [itemsManager]);
 
-  // Bulk menu items
-  const bulkMenuItems = useMemo<AnchoredMenuItem[]>(() => [
-    {
-      key: 'set-space',
-      label: 'Set space',
-      onPress: handleBulkSetSpace,
-    },
-    {
-      key: 'set-status',
-      label: 'Set status',
-      onPress: handleBulkSetStatus,
-    },
-    {
-      key: 'set-sku',
-      label: 'Set SKU',
-      onPress: handleBulkSetSKU,
-    },
-    {
-      key: 'remove-from-transaction',
-      label: 'Remove from transaction',
-      onPress: handleBulkRemove,
-      destructive: true,
-    },
-    {
-      key: 'delete',
-      label: 'Delete',
-      onPress: handleBulkDelete,
-      destructive: true,
-    },
-    {
-      key: 'clear-selection',
-      label: 'Clear selection',
-      onPress: () => {
-        itemsManager.clearSelection();
-        setBulkMenuVisible(false);
-      },
-    },
-  ], [itemsManager, handleBulkSetSpace, handleBulkSetStatus, handleBulkSetSKU, handleBulkRemove, handleBulkDelete]);
-
   const handleDelete = () => {
     if (!accountId || !id) return;
     Alert.alert('Delete transaction', 'This will permanently delete this transaction.', [
@@ -1087,7 +1036,7 @@ export default function TransactionDetailScreen() {
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={itemsManager.hasSelection ? () => setBulkMenuVisible(true) : () => setAddMenuVisible(true)}
+              onAdd={!itemsManager.hasSelection ? () => setAddMenuVisible(true) : undefined}
               leftElement={
                 <TouchableOpacity
                   onPress={itemsManager.selectAll}
@@ -1197,25 +1146,32 @@ export default function TransactionDetailScreen() {
       case 'taxes':
         return <TaxesSection transaction={item} />;
 
-      case 'items':
+      case 'items': {
+        // Define bulk actions for transaction detail
+        const bulkActions: BulkAction[] = [
+          { id: 'set-space', label: 'Set Space', variant: 'secondary', icon: 'place' },
+          { id: 'set-status', label: 'Set Status', variant: 'secondary', icon: 'swap-horiz' },
+          { id: 'set-sku', label: 'Set SKU', variant: 'secondary', icon: 'label' },
+          { id: 'remove', label: 'Remove', variant: 'destructive', icon: 'remove-circle-outline' },
+          { id: 'delete', label: 'Delete', variant: 'destructive', icon: 'delete' },
+        ];
+
         return (
-          <ItemCard
-            key={item.id}
-            name={item.name?.trim() || 'Untitled item'}
-            sku={item.sku ?? undefined}
-            priceLabel={typeof item.purchasePriceCents === 'number'
-              ? `$${(item.purchasePriceCents / 100).toFixed(2)}`
-              : undefined}
-            thumbnailUri={getPrimaryImageUri(item)}
-            bookmarked={item.bookmark ?? undefined}
-            selected={itemsManager.hasSelection ? itemsManager.selectedIds.has(item.id) : undefined}
-            onSelectedChange={itemsManager.hasSelection
-              ? () => itemsManager.toggleSelection(item.id)
-              : undefined}
-            onPress={() => router.push(`/items/${item.id}`)}
-            menuItems={getItemMenuItems(item)}
+          <ItemsSection
+            manager={itemsManager}
+            items={itemsManager.filteredAndSortedItems}
+            onItemPress={(id) => router.push(`/items/${id}`)}
+            getItemMenuItems={getItemMenuItems}
+            onBookmarkPress={(item) => {
+              if (!accountId) return;
+              updateItem(accountId, item.id, { bookmark: !item.bookmark });
+            }}
+            bulkActions={bulkActions}
+            onBulkAction={handleBulkAction}
+            emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items in this transaction.'}
           />
         );
+      }
 
       case 'audit':
         return <AuditSection transaction={item} items={linkedItems} />;
@@ -1223,7 +1179,7 @@ export default function TransactionDetailScreen() {
       default:
         return null;
     }
-  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, getPrimaryImageUri, collapsedSections, handleToggleSection, uiKitTheme, linkedItems]);
+  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems]);
 
   const headerActions = statusLabel ? (
     <View style={styles.headerRight}>
@@ -1294,15 +1250,6 @@ export default function TransactionDetailScreen() {
               onRequestClose={() => itemsManager.setFilterMenuVisible(false)}
               items={filterMenuItems}
               title="Filter items"
-              showLeadingIcons={false}
-            />
-
-            {/* Bulk actions menu */}
-            <BottomSheetMenuList
-              visible={bulkMenuVisible}
-              onRequestClose={() => setBulkMenuVisible(false)}
-              items={bulkMenuItems}
-              title="Bulk actions"
               showLeadingIcons={false}
             />
 
