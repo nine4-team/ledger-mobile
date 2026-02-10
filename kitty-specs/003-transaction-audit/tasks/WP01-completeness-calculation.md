@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Completeness Calculation Utility
-lane: "for_review"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: 57be6e4ca03ba84f11d251ae8e4a15cf33f91270
@@ -13,7 +13,7 @@ subtasks:
 phase: Phase 1 - MVP
 assignee: ''
 agent: "claude-opus"
-shell_pid: "75313"
+shell_pid: "81114"
 review_status: ''
 reviewed_by: ''
 history:
@@ -301,3 +301,4 @@ export type Item = {
 - 2026-02-09T15:00:00Z – system – lane=planned – Prompt created.
 - 2026-02-10T01:13:26Z – claude-opus – shell_pid=75313 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T01:15:14Z – claude-opus – shell_pid=75313 – lane=for_review – Ready for review: Pure calculation utility + 24 passing tests
+- 2026-02-10T01:18:10Z – claude-opus – shell_pid=81114 – lane=doing – Started review via workflow command
