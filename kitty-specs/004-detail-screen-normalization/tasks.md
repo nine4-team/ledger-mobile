@@ -204,7 +204,7 @@
 - [x] T027 [P] Adopt DetailRow in transaction detail DetailsSection
 - [x] T028 [P] Adopt DetailRow in item detail Details card
 - [x] T029 Clean up duplicate detail row styles from adopting screens
-- [ ] T030 Verify MediaGallerySection integration on space detail (no image cap regressions, add/remove/set-primary work)
+- [x] T030 Verify MediaGallerySection integration on space detail (no image cap regressions, add/remove/set-primary work)
 
 ### Implementation Notes
 - DetailRow API from data-model.md: `{ label, value, showDivider?, onPress? }`
