@@ -13,7 +13,7 @@ subtasks:
 - T020
 phase: Phase 2 - Shared Items Management
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "39956"
 review_status: ''
 reviewed_by: ''
@@ -376,3 +376,4 @@ No dependencies — this creates a standalone new hook. Can run in parallel with
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:41:28Z – claude-sonnet – shell_pid=39956 – lane=doing – Assigned agent via workflow command
