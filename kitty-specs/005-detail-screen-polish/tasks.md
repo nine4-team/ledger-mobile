@@ -232,16 +232,16 @@ T015-T018 (space detail changes) are sequential. T019 (deprecation comment) can 
 5. Verify offline-first patterns preserved (no UI blocking on server)
 
 **Acceptance Checklist** (per spec.md success criteria):
-- [ ] SC-001: Item lists match project items tab (grouped cards, selector, badges, bottom bar)
-- [ ] SC-002: Bulk select toggle deselects when all selected
-- [ ] SC-003: Transaction detail has single "DETAILS" section
-- [ ] SC-004: Item detail shows "Source - $Amount" with proper styling
-- [ ] SC-005: Zero duplicate section titles across all screens
-- [ ] SC-006: Consistent 4px section spacing across all screens
-- [ ] SC-007: "Move Item" only in kebab menu
-- [ ] SC-008: Space detail defaults to only images expanded
-- [ ] SC-009: ItemsSection no longer imported/used (marked deprecated)
-- [ ] SC-010: All functionality preserved (navigation, offline-first, media, bulk ops)
+- [x] SC-001: Item lists match project items tab (grouped cards, selector, badges, bottom bar)
+- [x] SC-002: Bulk select toggle deselects when all selected
+- [x] SC-003: Transaction detail has single "DETAILS" section
+- [x] SC-004: Item detail shows "Source - $Amount" with proper styling
+- [x] SC-005: Zero duplicate section titles across all screens
+- [x] SC-006: Consistent 4px section spacing across all screens
+- [x] SC-007: "Move Item" only in kebab menu
+- [x] SC-008: Space detail defaults to only images expanded
+- [x] SC-009: ItemsSection no longer imported/used (marked deprecated)
+- [x] SC-010: All functionality preserved (navigation, offline-first, media, bulk ops)
 
 **Review Command**: `/spec-kitty.review WP##` after each work package completes
 
