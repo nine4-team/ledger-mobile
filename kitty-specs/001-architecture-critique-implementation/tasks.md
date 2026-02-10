@@ -128,13 +128,13 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP04-transaction-edit-screen-migration.md`
 
 ### Included Subtasks
-- [ ] T017 Replace 13 `useState` calls with `useEditForm<TransactionFormValues>` in `app/transactions/[id]/edit.tsx`
-- [ ] T018 Implement tax/subtotal computation in save handler - computed values go through `getChangedFields()`
-- [ ] T019 Add `budgetCategoryId` change propagation to linked items (preserve lines 248-252 logic)
-- [ ] T020 Add `shouldAcceptSubscriptionData` protection for subscription updates
-- [ ] T021 Update save handler to use `getChangedFields()` and skip write if no changes
-- [ ] T022 Verify TypeScript compilation passes
-- [ ] T023 Manual verification: test single-field edits, budgetCategoryId propagation, computed fields, no-change saves, subscription protection
+- [x] T017 Replace 13 `useState` calls with `useEditForm<TransactionFormValues>` in `app/transactions/[id]/edit.tsx`
+- [x] T018 Implement tax/subtotal computation in save handler - computed values go through `getChangedFields()`
+- [x] T019 Add `budgetCategoryId` change propagation to linked items (preserve lines 248-252 logic)
+- [x] T020 Add `shouldAcceptSubscriptionData` protection for subscription updates
+- [x] T021 Update save handler to use `getChangedFields()` and skip write if no changes
+- [x] T022 Verify TypeScript compilation passes
+- [x] T023 Manual verification: test single-field edits, budgetCategoryId propagation, computed fields, no-change saves, subscription protection
 
 ### Implementation Notes
 - 13 fields: date, description, amount, budgetCategoryId, accountId, payee, notes, tax, subtotal, attachments, tags, status, type
