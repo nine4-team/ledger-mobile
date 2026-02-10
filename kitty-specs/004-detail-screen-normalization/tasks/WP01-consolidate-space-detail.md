@@ -15,7 +15,7 @@ subtasks:
 - T006
 phase: Phase 1 - Space Consolidation + SectionList Migration
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "85660"
 review_status: ''
 reviewed_by: ''
@@ -423,3 +423,4 @@ Everything else — state, hooks, handlers, JSX structure, modals — is identic
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T02:52:26Z – claude-opus – shell_pid=85660 – lane=doing – Assigned agent via workflow command
