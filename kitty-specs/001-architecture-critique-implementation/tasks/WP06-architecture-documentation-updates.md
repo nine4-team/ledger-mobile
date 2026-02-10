@@ -1,8 +1,11 @@
 ---
 work_package_id: WP06
 title: Architecture Documentation Updates
-lane: planned
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: eb8976f6437f8368e8c71026fe75a02ca5e18262
+created_at: '2026-02-10T00:56:58.532489+00:00'
 subtasks:
 - T031
 - T032
@@ -13,7 +16,7 @@ subtasks:
 phase: Phase 5 - Documentation
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "54401"
 review_status: ''
 reviewed_by: ''
 history:
