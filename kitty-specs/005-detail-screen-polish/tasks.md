@@ -33,10 +33,10 @@ description: "Work package task list for detail screen polish fixes"
 **Estimated Size**: ~300 lines
 
 ### Included Subtasks
-- [ ] T001 Add embedded mode configuration props to SharedItemsList (`src/components/SharedItemsList.tsx`)
-- [ ] T002 Extract BulkSelectionBar into separate component (`src/components/BulkSelectionBar.tsx`)
-- [ ] T003 Fix bulk selection toggle logic to deselect when all selected
-- [ ] T004 Update SharedItemsList conditional rendering based on embedded mode
+- [x] T001 Add embedded mode configuration props to SharedItemsList (`src/components/SharedItemsList.tsx`)
+- [x] T002 Extract BulkSelectionBar into separate component (`src/components/BulkSelectionBar.tsx`)
+- [x] T003 Fix bulk selection toggle logic to deselect when all selected
+- [x] T004 Update SharedItemsList conditional rendering based on embedded mode
 
 ### Implementation Notes
 This is foundation work that enables all subsequent work packages. The refactoring must maintain backward compatibility for existing standalone usage in project/inventory tabs while adding new embedded mode for detail screens.
