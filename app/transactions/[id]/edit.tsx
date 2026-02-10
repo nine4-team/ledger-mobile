@@ -19,6 +19,7 @@ import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../s
 import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedListData';
 import { saveLocalMedia, enqueueUpload, deleteLocalMediaByUrl } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
+import { useEditForm } from '../../../src/hooks/useEditForm';
 
 type EditTransactionParams = {
   id?: string;
@@ -26,6 +27,22 @@ type EditTransactionParams = {
   projectId?: string;
   backTarget?: string;
 };
+
+interface TransactionFormValues {
+  source: string;
+  transactionDate: string;
+  amount: string;
+  status: string;
+  purchasedBy: string;
+  reimbursementType: string;
+  notes: string;
+  type: string;
+  budgetCategoryId: string;
+  hasEmailReceipt: boolean;
+  taxRatePct: string;
+  subtotal: string;
+  taxAmount: string;
+}
 
 function parseCurrency(value: string): number | null {
   const normalized = value.replace(/[^0-9.]/g, '');
@@ -48,24 +65,28 @@ export default function EditTransactionScreen() {
   const [items, setItems] = useState<ScopedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Form state
-  const [source, setSource] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
-  const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('');
-  const [purchasedBy, setPurchasedBy] = useState('');
-  const [reimbursementType, setReimbursementType] = useState('');
-  const [notes, setNotes] = useState('');
-  const [type, setType] = useState('');
-  const [budgetCategoryId, setBudgetCategoryId] = useState('');
-  const [hasEmailReceipt, setHasEmailReceipt] = useState(false);
-  const [taxRatePct, setTaxRatePct] = useState('');
-  const [subtotal, setSubtotal] = useState('');
-  const [taxAmount, setTaxAmount] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string; metadata?: any }>>({});
 
-  const selectedCategory = budgetCategories[budgetCategoryId];
+  // Form state using useEditForm hook
+  const form = useEditForm<TransactionFormValues>(
+    transaction ? {
+      source: transaction.source ?? '',
+      transactionDate: transaction.transactionDate ?? '',
+      amount: typeof transaction.amountCents === 'number' ? (transaction.amountCents / 100).toFixed(2) : '',
+      status: transaction.status ?? '',
+      purchasedBy: transaction.purchasedBy ?? '',
+      reimbursementType: transaction.reimbursementType ?? '',
+      notes: transaction.notes ?? '',
+      type: transaction.transactionType ?? '',
+      budgetCategoryId: transaction.budgetCategoryId ?? '',
+      hasEmailReceipt: !!transaction.hasEmailReceipt,
+      taxRatePct: typeof transaction.taxRatePct === 'number' ? transaction.taxRatePct.toFixed(2) : '',
+      subtotal: typeof transaction.subtotalCents === 'number' ? (transaction.subtotalCents / 100).toFixed(2) : '',
+      taxAmount: '',
+    } : null
+  );
+
+  const selectedCategory = budgetCategories[form.values.budgetCategoryId];
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const isCanonical = isCanonicalInventorySaleTransaction(transaction);
 
@@ -87,20 +108,6 @@ export default function EditTransactionScreen() {
     const unsubscribe = subscribeToTransaction(accountId, id, (next) => {
       setTransaction(next);
       setIsLoading(false);
-      if (next) {
-        setSource(next.source ?? '');
-        setTransactionDate(next.transactionDate ?? '');
-        setAmount(typeof next.amountCents === 'number' ? (next.amountCents / 100).toFixed(2) : '');
-        setStatus(next.status ?? '');
-        setPurchasedBy(next.purchasedBy ?? '');
-        setReimbursementType(next.reimbursementType ?? '');
-        setNotes(next.notes ?? '');
-        setType(next.transactionType ?? '');
-        setBudgetCategoryId(next.budgetCategoryId ?? '');
-        setHasEmailReceipt(!!next.hasEmailReceipt);
-        setTaxRatePct(typeof next.taxRatePct === 'number' ? next.taxRatePct.toFixed(2) : '');
-        setSubtotal(typeof next.subtotalCents === 'number' ? (next.subtotalCents / 100).toFixed(2) : '');
-      }
     });
     return () => unsubscribe();
   }, [accountId, id]);
@@ -197,9 +204,11 @@ export default function EditTransactionScreen() {
       setError('Canonical transactions cannot be edited.');
       return;
     }
-    const amountCents = parseCurrency(amount);
+
+    // Validation
+    const amountCents = parseCurrency(form.values.amount);
     const hasReceipt = (transaction?.receiptImages?.length ?? 0) > 0;
-    const hasSource = !!source.trim();
+    const hasSource = !!form.values.source.trim();
     const hasAmount = typeof amountCents === 'number' && amountCents > 0;
     if (!hasReceipt && (!hasSource || !hasAmount)) {
       setError('Add a receipt or provide source and amount.');
@@ -207,14 +216,17 @@ export default function EditTransactionScreen() {
     }
     setError(null);
 
+    // Compute tax and subtotal using local variables (not form.setFields,
+    // which is async and won't be visible to getChangedFields in same tick)
     let subtotalCents: number | null = null;
     let taxRateValue: number | null = null;
     if (itemizationEnabled) {
       const amountValue = typeof amountCents === 'number' ? amountCents : null;
       if (amountValue != null) {
-        const parsedSubtotal = parseCurrency(subtotal);
-        const parsedTaxAmount = parseCurrency(taxAmount);
-        const parsedTaxRate = Number.parseFloat(taxRatePct);
+        const parsedSubtotal = parseCurrency(form.values.subtotal);
+        const parsedTaxAmount = parseCurrency(form.values.taxAmount);
+        const parsedTaxRate = Number.parseFloat(form.values.taxRatePct);
+
         if (Number.isFinite(parsedTaxRate) && parsedTaxRate > 0) {
           const rate = parsedTaxRate / 100;
           subtotalCents = Math.round(amountValue / (1 + rate));
@@ -229,27 +241,82 @@ export default function EditTransactionScreen() {
         }
       }
     }
-    const nextCategoryId = budgetCategoryId.trim() || null;
-    const categoryChanged = nextCategoryId !== (transaction?.budgetCategoryId ?? null);
-    updateTransaction(accountId, id, {
-      source: source.trim() || null,
-      transactionDate: transactionDate.trim() || null,
-      amountCents: amountCents ?? null,
-      status: status.trim() || null,
-      purchasedBy: purchasedBy.trim() || null,
-      reimbursementType: reimbursementType.trim() || null,
-      notes: notes.trim() || null,
-      transactionType: type.trim() || null,
-      budgetCategoryId: nextCategoryId,
-      hasEmailReceipt,
-      taxRatePct: taxRateValue,
-      subtotalCents,
-    });
-    if (categoryChanged && nextCategoryId) {
-      Promise.all(
-        linkedItems.map((item) => updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId }))
-      );
+
+    // Check for changes
+    if (!form.hasChanges) {
+      // No changes - skip write, just navigate
+      router.replace(fallbackTarget);
+      return;
     }
+
+    // Get changed fields
+    const changedFields = form.getChangedFields();
+
+    // Build update payload with only changed fields
+    const updates: Record<string, any> = {};
+
+    if ('source' in changedFields) {
+      updates.source = form.values.source.trim() || null;
+    }
+    if ('transactionDate' in changedFields) {
+      updates.transactionDate = form.values.transactionDate.trim() || null;
+    }
+    if ('amount' in changedFields) {
+      updates.amountCents = amountCents ?? null;
+    }
+    if ('status' in changedFields) {
+      updates.status = form.values.status.trim() || null;
+    }
+    if ('purchasedBy' in changedFields) {
+      updates.purchasedBy = form.values.purchasedBy.trim() || null;
+    }
+    if ('reimbursementType' in changedFields) {
+      updates.reimbursementType = form.values.reimbursementType.trim() || null;
+    }
+    if ('notes' in changedFields) {
+      updates.notes = form.values.notes.trim() || null;
+    }
+    if ('type' in changedFields) {
+      updates.transactionType = form.values.type.trim() || null;
+    }
+    if ('budgetCategoryId' in changedFields) {
+      updates.budgetCategoryId = form.values.budgetCategoryId.trim() || null;
+    }
+    if ('hasEmailReceipt' in changedFields) {
+      updates.hasEmailReceipt = form.values.hasEmailReceipt;
+    }
+    // Use locally-computed tax/subtotal values when itemization is enabled
+    // and any tax-related field changed (avoids stale form.values from async setFields)
+    const taxFieldChanged = 'amount' in changedFields || 'taxRatePct' in changedFields
+      || 'subtotal' in changedFields || 'taxAmount' in changedFields;
+    if (itemizationEnabled && taxFieldChanged && subtotalCents !== null) {
+      updates.subtotalCents = subtotalCents;
+      updates.taxRatePct = taxRateValue;
+    } else {
+      if ('taxRatePct' in changedFields) {
+        const parsedRate = Number.parseFloat(form.values.taxRatePct);
+        updates.taxRatePct = Number.isFinite(parsedRate) ? parsedRate : null;
+      }
+      if ('subtotal' in changedFields) {
+        const parsedSubtotal = parseCurrency(form.values.subtotal);
+        updates.subtotalCents = parsedSubtotal ?? null;
+      }
+    }
+
+    // Propagate budgetCategoryId to linked items if changed
+    if ('budgetCategoryId' in changedFields) {
+      const nextCategoryId = form.values.budgetCategoryId.trim() || null;
+      if (nextCategoryId && linkedItems.length > 0) {
+        linkedItems.forEach((item) => {
+          updateItem(accountId, item.id, { budgetCategoryId: nextCategoryId });
+        });
+      }
+    }
+
+    // Fire-and-forget transaction update
+    updateTransaction(accountId, id, updates);
+
+    // Navigate immediately (offline-first)
     router.replace(fallbackTarget);
   };
 
@@ -278,12 +345,12 @@ export default function EditTransactionScreen() {
           <AppScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             <TitledCard title="Basic Information">
               <View style={styles.fieldGroup}>
-                <FormField label="Source" value={source} onChangeText={setSource} placeholder="Source" />
-                <FormField label="Date" value={transactionDate} onChangeText={setTransactionDate} placeholder="YYYY-MM-DD" />
+                <FormField label="Source" value={form.values.source} onChangeText={(val) => form.setField('source', val)} placeholder="Source" />
+                <FormField label="Date" value={form.values.transactionDate} onChangeText={(val) => form.setField('transactionDate', val)} placeholder="YYYY-MM-DD" />
                 <FormField
                   label="Amount"
-                  value={amount}
-                  onChangeText={setAmount}
+                  value={form.values.amount}
+                  onChangeText={(val) => form.setField('amount', val)}
                   placeholder="$0.00"
                   inputProps={{ keyboardType: 'decimal-pad' }}
                 />
@@ -292,21 +359,21 @@ export default function EditTransactionScreen() {
 
             <TitledCard title="Classification">
               <View style={styles.fieldGroup}>
-                <FormField label="Budget category" value={budgetCategoryId} onChangeText={setBudgetCategoryId} placeholder="Budget category id" />
-                <FormField label="Status" value={status} onChangeText={setStatus} placeholder="Status" />
-                <FormField label="Type" value={type} onChangeText={setType} placeholder="Transaction type" />
+                <FormField label="Budget category" value={form.values.budgetCategoryId} onChangeText={(val) => form.setField('budgetCategoryId', val)} placeholder="Budget category id" />
+                <FormField label="Status" value={form.values.status} onChangeText={(val) => form.setField('status', val)} placeholder="Status" />
+                <FormField label="Type" value={form.values.type} onChangeText={(val) => form.setField('type', val)} placeholder="Transaction type" />
                 <AppButton
-                  title={hasEmailReceipt ? 'Email Receipt: Yes' : 'Email Receipt: No'}
+                  title={form.values.hasEmailReceipt ? 'Email Receipt: Yes' : 'Email Receipt: No'}
                   variant="secondary"
-                  onPress={() => setHasEmailReceipt((prev) => !prev)}
+                  onPress={() => form.setField('hasEmailReceipt', !form.values.hasEmailReceipt)}
                 />
               </View>
             </TitledCard>
 
             <TitledCard title="Payer">
               <View style={styles.fieldGroup}>
-                <FormField label="Purchased by" value={purchasedBy} onChangeText={setPurchasedBy} placeholder="Purchased by" />
-                <FormField label="Reimbursement type" value={reimbursementType} onChangeText={setReimbursementType} placeholder="Reimbursement type" />
+                <FormField label="Purchased by" value={form.values.purchasedBy} onChangeText={(val) => form.setField('purchasedBy', val)} placeholder="Purchased by" />
+                <FormField label="Reimbursement type" value={form.values.reimbursementType} onChangeText={(val) => form.setField('reimbursementType', val)} placeholder="Reimbursement type" />
               </View>
             </TitledCard>
 
@@ -315,22 +382,22 @@ export default function EditTransactionScreen() {
                 <View style={styles.fieldGroup}>
                   <FormField
                     label="Tax rate (%)"
-                    value={taxRatePct}
-                    onChangeText={setTaxRatePct}
+                    value={form.values.taxRatePct}
+                    onChangeText={(val) => form.setField('taxRatePct', val)}
                     placeholder="0"
                     inputProps={{ keyboardType: 'numeric' }}
                   />
                   <FormField
                     label="Subtotal"
-                    value={subtotal}
-                    onChangeText={setSubtotal}
+                    value={form.values.subtotal}
+                    onChangeText={(val) => form.setField('subtotal', val)}
                     placeholder="$0.00"
                     inputProps={{ keyboardType: 'decimal-pad' }}
                   />
                   <FormField
                     label="Tax amount"
-                    value={taxAmount}
-                    onChangeText={setTaxAmount}
+                    value={form.values.taxAmount}
+                    onChangeText={(val) => form.setField('taxAmount', val)}
                     placeholder="$0.00"
                     inputProps={{ keyboardType: 'decimal-pad' }}
                   />
@@ -373,8 +440,8 @@ export default function EditTransactionScreen() {
             <TitledCard title="Notes">
               <FormField
                 label="Notes"
-                value={notes}
-                onChangeText={setNotes}
+                value={form.values.notes}
+                onChangeText={(val) => form.setField('notes', val)}
                 placeholder="Add notes about this transaction..."
                 inputProps={{ multiline: true, numberOfLines: 4, textAlignVertical: 'top' }}
               />
