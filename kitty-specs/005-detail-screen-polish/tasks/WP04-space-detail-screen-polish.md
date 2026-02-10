@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Space Detail Screen Polish & Cleanup
-lane: "doing"
+lane: "planned"
 dependencies: [WP01]
 base_branch: 005-detail-screen-polish-WP01
 base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
@@ -15,6 +15,8 @@ subtasks:
 phase: Phase 4 - Space Detail & Cleanup
 shell_pid: "37857"
 agent: "claude-sonnet-4.5"
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-10T19:00:00Z'
   lane: planned
@@ -38,11 +40,100 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** – Reviewers add detailed feedback here when work needs changes. Implementation must address every item listed below before returning for re-review.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-10
 
-*[This section is empty initially. Reviewers will populate it if the work is returned from review. If you see feedback here, treat each item as a must-do before completion.]*
+## Review Feedback for WP04
 
----
+### Issue 1: Missing "Delete Items" Bulk Action
+
+**Location**: `src/components/SpaceDetailContent.tsx` lines 623-657
+
+**Problem**: The bulk actions array only includes two actions ("Move to Another Space" and "Remove from Space"), but the specification (lines 254-259 of the prompt) requires three actions including "Delete Items" as a destructive option.
+
+**Current implementation**:
+```typescript
+const bulkActions = [
+  { id: 'move', label: 'Move to Another Space', ... },
+  { id: 'remove', label: 'Remove from Space', ... },
+  // Missing: Delete Items action
+];
+```
+
+**Required implementation**:
+```typescript
+const bulkActions = [
+  {
+    id: 'move',
+    label: 'Move to Another Space',
+    onPress: (selectedIds: string[]) => {
+      setBulkTargetSpaceId(null);
+      setBulkMoveSheetVisible(true);
+    },
+  },
+  {
+    id: 'remove',
+    label: 'Remove from Space',
+    onPress: (selectedIds: string[]) => {
+      if (!accountId) return;
+      Alert.alert(
+        'Remove Items',
+        `Remove ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} from this space?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: () => {
+              selectedIds.forEach(id => {
+                updateItem(accountId, id, { spaceId: null });
+              });
+              itemsManager.clearSelection();
+            },
+          },
+        ]
+      );
+    },
+    destructive: true,
+  },
+  {
+    id: 'delete',
+    label: 'Delete Items',
+    onPress: (selectedIds: string[]) => {
+      if (!accountId) return;
+      Alert.alert(
+        'Delete Items',
+        `Permanently delete ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              selectedIds.forEach(id => {
+                deleteItem(accountId, id);
+              });
+              itemsManager.clearSelection();
+            },
+          },
+        ]
+      );
+    },
+    destructive: true,
+  },
+];
+```
+
+**How to fix**:
+1. Import `deleteItem` service function if not already imported
+2. Add third bulk action object with id='delete' to the bulkActions array
+3. Include confirmation Alert with destructive styling
+4. Call `deleteItem(accountId, id)` for each selected item
+5. Clear selection after deletion
+
+**Impact**: Medium - Users cannot bulk delete items from space detail, must delete them one by one from item detail or project items tab.
+
 
 ## Markdown Formatting
 Wrap HTML/XML tags in backticks: `` `<div>` ``, `` `<script>` ``
@@ -544,3 +635,4 @@ After WP02, WP03, WP04 complete, verify consistency:
 - 2026-02-10T21:13:45Z – claude-sonnet-4.5 – shell_pid=25725 – lane=doing – Assigned agent via workflow command
 - 2026-02-10T21:21:31Z – claude-sonnet-4.5 – shell_pid=25725 – lane=for_review – Ready for review: Space detail now uses SharedItemsList with grouped cards, images-only default expand, 4px section spacing, no duplicate titles, ItemsSection deprecated
 - 2026-02-10T21:23:09Z – claude-sonnet-4.5 – shell_pid=37857 – lane=doing – Started review via workflow command
+- 2026-02-10T21:24:57Z – claude-sonnet-4.5 – shell_pid=37857 – lane=planned – Moved to planned
