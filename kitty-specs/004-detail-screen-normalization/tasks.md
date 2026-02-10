@@ -25,12 +25,12 @@
 **Estimated Size**: ~450 lines
 
 ### Included Subtasks
-- [ ] T001 Create `src/components/SpaceDetailContent.tsx` skeleton with `SpaceScope` type and all imports
-- [ ] T002 Extract shared state, hooks, and handlers from BI space detail reference
-- [ ] T003 Parameterize navigation routes, scope config, picker labels, and scope-dependent handler logic
-- [ ] T004 Replace space media (ThumbnailGrid/ImageGallery/ImagePickerButton) with `MediaGallerySection`
-- [ ] T005 Reduce both route files to thin wrappers (~20 lines each)
-- [ ] T006 Normalize styles and clean up accidental divergence between the two files
+- [x] T001 Create `src/components/SpaceDetailContent.tsx` skeleton with `SpaceScope` type and all imports
+- [x] T002 Extract shared state, hooks, and handlers from BI space detail reference
+- [x] T003 Parameterize navigation routes, scope config, picker labels, and scope-dependent handler logic
+- [x] T004 Replace space media (ThumbnailGrid/ImageGallery/ImagePickerButton) with `MediaGallerySection`
+- [x] T005 Reduce both route files to thin wrappers (~20 lines each)
+- [x] T006 Normalize styles and clean up accidental divergence between the two files
 
 ### Implementation Notes
 - Use BI space detail (`app/business-inventory/spaces/[spaceId].tsx`) as the reference copy
