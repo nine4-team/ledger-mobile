@@ -161,11 +161,11 @@
 **Estimated Size**: ~500 lines
 
 ### Included Subtasks
-- [ ] T021 Create `src/components/ItemsSection.tsx` skeleton with props interface
-- [ ] T022 Implement items list rendering with ItemCard integration
-- [ ] T023 Implement bulk action panel with screen-specific actions config
-- [ ] T024 Integrate ItemsSection into SpaceDetailContent
-- [ ] T025 Integrate ItemsSection into transaction detail
+- [x] T021 Create `src/components/ItemsSection.tsx` skeleton with props interface
+- [x] T022 Implement items list rendering with ItemCard integration
+- [x] T023 Implement bulk action panel with screen-specific actions config
+- [x] T024 Integrate ItemsSection into SpaceDetailContent
+- [x] T025 Integrate ItemsSection into transaction detail
 
 ### Implementation Notes
 - ItemsSection renders: item list (ItemCard per item), bulk panel (when hasSelection), empty state
