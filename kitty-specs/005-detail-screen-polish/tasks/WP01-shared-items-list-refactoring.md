@@ -13,6 +13,7 @@ subtasks:
 - T004
 phase: Phase 1 - Foundation
 shell_pid: "74879"
+agent: "claude-agent"
 history:
 - timestamp: '2026-02-10T19:00:00Z'
   lane: planned
@@ -516,3 +517,4 @@ export function SharedItemsList({
 
 **Initial entry**:
 - 2026-02-10T19:00:00Z – system – lane=planned – Prompt generated via /spec-kitty.tasks
+- 2026-02-10T20:27:14Z – claude-agent – shell_pid=74879 – lane=doing – Assigned agent via workflow command
