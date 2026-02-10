@@ -10,13 +10,13 @@ import { TitledCard } from '../../../src/components/TitledCard';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
+import { DetailRow } from '../../../src/components/DetailRow';
 import {
   CARD_PADDING,
   getCardStyle,
   getTextColorStyle,
   getTextSecondaryStyle,
   layout,
-  textEmphasis,
 } from '../../../src/ui';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
@@ -531,68 +531,13 @@ export default function ItemDetailScreen() {
         return (
           <TitledCard title="Details">
             <View style={styles.detailRows}>
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Source
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {item.source?.trim() || '—'}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  SKU
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {item.sku?.trim() || '—'}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Purchase price
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {formatMoney(item.purchasePriceCents)}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Project price
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {formatMoney(item.projectPriceCents)}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Market value
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {formatMoney(item.marketValueCents)}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Space
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {spaceLabel}
-                </AppText>
-              </View>
-              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-              <View style={styles.detailRow}>
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  Budget category
-                </AppText>
-                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                  {budgetCategoryLabel}
-                </AppText>
-              </View>
+              <DetailRow label="Source" value={item.source?.trim() || '—'} />
+              <DetailRow label="SKU" value={item.sku?.trim() || '—'} />
+              <DetailRow label="Purchase price" value={formatMoney(item.purchasePriceCents)} />
+              <DetailRow label="Project price" value={formatMoney(item.projectPriceCents)} />
+              <DetailRow label="Market value" value={formatMoney(item.marketValueCents)} />
+              <DetailRow label="Space" value={spaceLabel} />
+              <DetailRow label="Budget category" value={budgetCategoryLabel} showDivider={false} />
             </View>
           </TitledCard>
         );
@@ -763,18 +708,6 @@ const styles = StyleSheet.create({
   },
   detailRows: {
     gap: 12,
-  },
-  detailRow: {
-    ...layout.rowBetween,
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  valueText: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  divider: {
-    borderTopWidth: 1,
   },
   imageList: {
     gap: 8,
