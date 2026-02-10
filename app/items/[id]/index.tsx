@@ -7,6 +7,7 @@ import { AppText } from '../../../src/components/AppText';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../../src/components/TitledCard';
+import { Card } from '../../../src/components/Card';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
@@ -529,7 +530,7 @@ export default function ItemDetailScreen() {
 
       case 'details':
         return (
-          <TitledCard title="Details">
+          <Card>
             <View style={styles.detailRows}>
               <DetailRow label="Source" value={item.source?.trim() || '—'} />
               <DetailRow label="SKU" value={item.sku?.trim() || '—'} />
@@ -539,7 +540,7 @@ export default function ItemDetailScreen() {
               <DetailRow label="Space" value={spaceLabel} />
               <DetailRow label="Budget category" value={budgetCategoryLabel} showDivider={false} />
             </View>
-          </TitledCard>
+          </Card>
         );
 
       default:

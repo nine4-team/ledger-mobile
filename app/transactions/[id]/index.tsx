@@ -33,11 +33,11 @@ import { deleteTransaction, subscribeToTransaction, Transaction, updateTransacti
 import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
+import { NotesSection } from '../../../src/components/NotesSection';
 import {
   HeroSection,
   ReceiptsSection,
   OtherImagesSection,
-  NotesSection,
   DetailsSection,
   TaxesSection,
   AuditSection,
@@ -1138,7 +1138,7 @@ export default function TransactionDetailScreen() {
         return <OtherImagesSection transaction={item} handlers={mediaHandlers} />;
 
       case 'notes':
-        return <NotesSection transaction={item} />;
+        return <NotesSection notes={item.notes} expandable={true} />;
 
       case 'details':
         return <DetailsSection transaction={item} budgetCategories={budgetCategories} />;

@@ -24,7 +24,7 @@ import { createInventoryScopeConfig, createProjectScopeConfig, getScopeId } from
 import { useScopeSwitching } from '../data/useScopeSwitching';
 import { useScopedListeners } from '../data/useScopedListeners';
 import { subscribeToScopedItems, ScopedItem } from '../data/scopedListData';
-import { updateItem } from '../data/itemsService';
+import { updateItem, deleteItem } from '../data/itemsService';
 import { createRepository } from '../data/repository';
 import { getTextInputStyle } from '../ui/styles/forms';
 import { deleteLocalMediaByUrl, saveLocalMedia, resolveAttachmentUri } from '../offline/media';
@@ -645,6 +645,31 @@ export function SpaceDetailContent({
                     onPress: () => {
                       selectedIds.forEach(id => {
                         updateItem(accountId, id, { spaceId: null });
+                      });
+                      itemsManager.clearSelection();
+                    },
+                  },
+                ]
+              );
+            },
+            destructive: true,
+          },
+          {
+            id: 'delete',
+            label: 'Delete Items',
+            onPress: (selectedIds: string[]) => {
+              if (!accountId) return;
+              Alert.alert(
+                'Delete Items',
+                `Permanently delete ${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                      selectedIds.forEach(id => {
+                        deleteItem(accountId, id);
                       });
                       itemsManager.clearSelection();
                     },
