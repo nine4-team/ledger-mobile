@@ -41,10 +41,20 @@ export default function EditBusinessInventorySpaceScreen() {
       throw new Error('Space ID is missing.');
     }
 
-    updateSpace(accountId, spaceId, {
-      name: values.name,
-      notes: values.notes || null,
-    });
+    // Inline change detection - skip write if nothing changed
+    const updates: Partial<Space> = {};
+    const normalizedName = values.name.trim();
+    if (normalizedName !== space?.name) {
+      updates.name = normalizedName;
+    }
+    const normalizedNotes = values.notes?.trim() || null;
+    if (normalizedNotes !== (space?.notes ?? null)) {
+      updates.notes = normalizedNotes;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updateSpace(accountId, spaceId, updates);
+    }
 
     router.replace(backTarget);
   };

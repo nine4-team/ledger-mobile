@@ -18,9 +18,16 @@ import { subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesS
 import { subscribeToProjectBudgetCategories, setProjectBudgetCategory } from '../../../src/data/projectBudgetCategoriesService';
 import { saveLocalMedia, enqueueUpload, processUploadQueue, deleteLocalMediaByUrl, resolveAttachmentState } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind, BudgetCategory } from '../../../src/data/types';
+import { useEditForm } from '../../../src/hooks/useEditForm';
 
 type EditParams = {
   projectId?: string;
+};
+
+type ProjectBasicFields = {
+  name: string;
+  clientName: string;
+  description: string;
 };
 
 export default function EditProjectScreen() {
@@ -30,11 +37,14 @@ export default function EditProjectScreen() {
   const accountId = useAccountContextStore((store) => store.accountId);
   const theme = useTheme();
 
-  // Form state
+  // Form state - basic fields migrated to useEditForm
   const [project, setProject] = useState<Project | null>(null);
-  const [name, setName] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [description, setDescription] = useState('');
+  const initialData = useMemo(() => project ? {
+    name: project.name || '',
+    clientName: project.clientName || '',
+    description: project.description || ''
+  } : null, [project]);
+  const form = useEditForm<ProjectBasicFields>(initialData);
   const [selectedImage, setSelectedImage] = useState<AttachmentRef | null>(null);
   const [originalMainImageUrl, setOriginalMainImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +65,6 @@ export default function EditProjectScreen() {
     setIsLoadingProject(true);
     const unsubscribe = subscribeToProject(accountId, projectId, (next) => {
       setProject(next);
-      setName(next?.name ?? '');
-      setClientName(next?.clientName ?? '');
-      setDescription(next?.description ?? '');
       setOriginalMainImageUrl(next?.mainImageUrl ?? null);
       if (next?.mainImageUrl) {
         setSelectedImage({ url: next.mainImageUrl, kind: 'image', isPrimary: true });
@@ -136,7 +143,7 @@ export default function EditProjectScreen() {
   // Submit handler with change detection
   const handleSubmit = async () => {
     if (!accountId || !projectId) return;
-    if (!name.trim() || !clientName.trim()) {
+    if (!form.values.name.trim() || !form.values.clientName.trim()) {
       setError('Project name and client name are required.');
       return;
     }
@@ -145,14 +152,23 @@ export default function EditProjectScreen() {
 
     try {
       // 1. Update basic fields (fire-and-forget, only if changed)
-      const updates: Partial<Project> = {};
-      if (name.trim() !== project?.name) updates.name = name.trim();
-      if (clientName.trim() !== project?.clientName) updates.clientName = clientName.trim();
-      if (description.trim() !== (project?.description || '')) {
-        updates.description = description.trim() || null;
-      }
-      if (Object.keys(updates).length > 0) {
-        updateProject(accountId, projectId, updates);
+      if (form.hasChanges) {
+        const changedFields = form.getChangedFields();
+        const updates: Partial<Project> = {};
+
+        if ('name' in changedFields && changedFields.name) {
+          updates.name = changedFields.name.trim();
+        }
+        if ('clientName' in changedFields && changedFields.clientName) {
+          updates.clientName = changedFields.clientName.trim();
+        }
+        if ('description' in changedFields) {
+          updates.description = changedFields.description?.trim() || null;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          updateProject(accountId, projectId, updates);
+        }
       }
 
       // 2. Handle image changes (keep await on Storage upload)
@@ -223,22 +239,22 @@ export default function EditProjectScreen() {
           {/* Section 1: Basic Info */}
           <FormField
             label="Project name"
-            value={name}
-            onChangeText={setName}
+            value={form.values.name}
+            onChangeText={(text) => form.setField('name', text)}
             placeholder="Enter project name"
           />
           <FormField
             label="Client name"
-            value={clientName}
-            onChangeText={setClientName}
+            value={form.values.clientName}
+            onChangeText={(text) => form.setField('clientName', text)}
             placeholder="Enter client name"
           />
 
           {/* Section 2: Description */}
           <FormField
             label="Description (optional)"
-            value={description}
-            onChangeText={setDescription}
+            value={form.values.description}
+            onChangeText={(text) => form.setField('description', text)}
             placeholder="Brief project description"
             inputProps={{ multiline: true, numberOfLines: 3, textAlignVertical: 'top' }}
           />
