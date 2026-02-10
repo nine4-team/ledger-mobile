@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Migrate Item Detail to SectionList
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 72f192438270bcb412e923660c2f3bf573c6428e
@@ -429,3 +429,4 @@ No dependencies — item detail is independent of space detail work. Can run in 
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
 - 2026-02-10T03:41:08Z – claude-sonnet – shell_pid=39334 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T03:44:17Z – claude-sonnet – shell_pid=39334 – lane=for_review – Ready for review: Item detail screen migrated to SectionList with collapsible sections. Hero section always visible, media/notes/details collapsible with correct defaults. All functionality preserved including media gallery, notes, detail rows, and action menu.
