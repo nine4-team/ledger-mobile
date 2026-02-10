@@ -13,6 +13,7 @@ subtasks:
 - T008
 phase: Phase 2 - Transaction Detail
 shell_pid: "24895"
+agent: "claude-sonnet-4.5"
 history:
 - timestamp: '2026-02-10T19:00:00Z'
   lane: planned
@@ -530,3 +531,4 @@ DETAILS                    ← CollapsibleSectionHeader
 
 **Initial entry**:
 - 2026-02-10T19:00:00Z – system – lane=planned – Prompt generated via /spec-kitty.tasks
+- 2026-02-10T21:13:24Z – claude-sonnet-4.5 – shell_pid=24895 – lane=doing – Assigned agent via workflow command
