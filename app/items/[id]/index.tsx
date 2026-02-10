@@ -93,6 +93,7 @@ export default function ItemDetailScreen() {
     details: true,
   });
   const [moveSheetVisible, setMoveSheetVisible] = useState(false);
+  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
 
   // Load transaction data for hero card (cache-first for offline-first pattern)
   const transactionData = useTransactionById(accountId, item?.transactionId ?? null, { mode: 'offline' });
@@ -314,6 +315,21 @@ export default function ItemDetailScreen() {
     ]);
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    if (!accountId || !id) return;
+    updateItem(accountId, id, { status: newStatus });
+  };
+
+  // Status constants
+  const ITEM_STATUSES = [
+    { key: 'purchased', label: 'Purchased' },
+    { key: 'ordered', label: 'Ordered' },
+    { key: 'in-transit', label: 'In Transit' },
+    { key: 'delivered', label: 'Delivered' },
+    { key: 'installed', label: 'Installed' },
+    { key: 'returned', label: 'Returned' },
+  ];
+
   const statusLabel = item?.status?.trim() || '';
   const trimmedTransactionId = transactionId.trim();
   const transactionLabel = trimmedTransactionId
@@ -461,6 +477,27 @@ export default function ItemDetailScreen() {
     scope,
   ]);
 
+  const statusMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    return [
+      ...ITEM_STATUSES.map(s => ({
+        key: s.key,
+        label: s.label,
+        onPress: () => {
+          handleStatusChange(s.key);
+          setStatusMenuVisible(false);
+        },
+      })),
+      {
+        key: 'clear',
+        label: 'Clear status',
+        onPress: () => {
+          handleStatusChange('');
+          setStatusMenuVisible(false);
+        },
+      },
+    ];
+  }, [handleStatusChange]);
+
   const renderItem = useCallback(({ item: dataItem, section }: { item: any; section: ItemSection }) => {
     if (!item) return null;
 
@@ -488,9 +525,8 @@ export default function ItemDetailScreen() {
                   {item.name?.trim() || 'Untitled item'}
                 </AppText>
 
-                {/* Info row: Transaction and Space */}
+                {/* Transaction info (separate row) */}
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap' }}>
-                  {/* Transaction info */}
                   <AppText variant="caption">Transaction: </AppText>
                   {item.transactionId ? (
                     transactionData.data ? (
@@ -513,14 +549,33 @@ export default function ItemDetailScreen() {
                       None
                     </AppText>
                   )}
+                </View>
 
-                  {/* Space info (only if space exists and is loaded) */}
-                  {item.spaceId && spaceData.data && (
-                    <>
-                      <AppText variant="caption"> | </AppText>
-                      <AppText variant="caption">Space: </AppText>
+                {/* Budget category info (separate row) */}
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                  <AppText variant="caption">Budget Category: </AppText>
+                  <AppText variant="body">
+                    {item.budgetCategoryId
+                      ? budgetCategories[item.budgetCategoryId]?.name?.trim() || item.budgetCategoryId
+                      : 'None'}
+                  </AppText>
+                </View>
+
+                {/* Space info (separate row) */}
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                  <AppText variant="caption">Space: </AppText>
+                  {item.spaceId ? (
+                    spaceData.data ? (
                       <AppText variant="body">{spaceData.data.name}</AppText>
-                    </>
+                    ) : spaceData.loading ? (
+                      <AppText variant="body">Loading...</AppText>
+                    ) : (
+                      <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                        Unknown space
+                      </AppText>
+                    )
+                  ) : (
+                    <AppText variant="body">None</AppText>
                   )}
                 </View>
               </View>
@@ -565,9 +620,7 @@ export default function ItemDetailScreen() {
               <DetailRow label="SKU" value={item.sku?.trim() || '—'} />
               <DetailRow label="Purchase price" value={formatMoney(item.purchasePriceCents)} />
               <DetailRow label="Project price" value={formatMoney(item.projectPriceCents)} />
-              <DetailRow label="Market value" value={formatMoney(item.marketValueCents)} />
-              <DetailRow label="Space" value={spaceLabel} />
-              <DetailRow label="Budget category" value={budgetCategoryLabel} showDivider={false} />
+              <DetailRow label="Market value" value={formatMoney(item.marketValueCents)} showDivider={false} />
             </View>
           </Card>
         );
@@ -585,13 +638,25 @@ export default function ItemDetailScreen() {
 
   const headerActions = (
     <View style={styles.headerRight}>
-      {statusLabel ? (
-        <View style={[styles.statusPill, { backgroundColor: `${uiKitTheme.primary.main}1A` }]}>
+      {/* Status badge with chevron */}
+      {statusLabel && (
+        <Pressable
+          onPress={() => setStatusMenuVisible(true)}
+          style={[styles.statusPill, { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: `${uiKitTheme.primary.main}1A` }]}
+        >
           <AppText variant="caption" style={[styles.statusText, { color: uiKitTheme.primary.main }]}>
             {statusLabel}
           </AppText>
-        </View>
-      ) : null}
+          <MaterialIcons
+            name="arrow-drop-down"
+            size={16}
+            color={uiKitTheme.primary.main}
+            style={{ marginLeft: 2 }}
+          />
+        </Pressable>
+      )}
+
+      {/* Bookmark button */}
       <Pressable
         onPress={handleToggleBookmark}
         hitSlop={8}
@@ -684,6 +749,14 @@ export default function ItemDetailScreen() {
           />
         </View>
       </FormBottomSheet>
+
+      {/* Status Change Menu */}
+      <BottomSheetMenuList
+        visible={statusMenuVisible}
+        onRequestClose={() => setStatusMenuVisible(false)}
+        items={statusMenuItems}
+        title="Change Status"
+      />
     </Screen>
   );
 }

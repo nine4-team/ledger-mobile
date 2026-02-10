@@ -200,7 +200,7 @@ export function ItemCard({
                     e.stopPropagation();
                     onStatusPress?.();
                   }}
-                  disabled={!onStatusPress}
+                  hitSlop={8}
                   style={[styles.pill, themed.pill, { flexDirection: 'row', alignItems: 'center', gap: 2 }]}
                   accessibilityRole={onStatusPress ? "button" : "text"}
                   accessibilityLabel={`Status: ${statusLabel}`}
