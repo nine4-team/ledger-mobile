@@ -174,6 +174,7 @@
 - Space bulk actions: move between spaces, remove from space
 - Transaction bulk actions: set space, set status, set SKU, remove from transaction, delete
 - onBulkAction callback receives (actionId, selectedIds[])
+- Transaction-specific features to verify after integration: price sort mode, SKU bulk assign, status bulk assign, duplicate item, item conflict resolution UI
 
 ### Parallel Opportunities
 - T021-T023 (create component) can proceed once WP04 is complete
@@ -203,6 +204,7 @@
 - [ ] T027 [P] Adopt DetailRow in transaction detail DetailsSection
 - [ ] T028 [P] Adopt DetailRow in item detail Details card
 - [ ] T029 Clean up duplicate detail row styles from adopting screens
+- [ ] T030 Verify MediaGallerySection integration on space detail (no image cap regressions, add/remove/set-primary work)
 
 ### Implementation Notes
 - DetailRow API from data-model.md: `{ label, value, showDivider?, onPress? }`
@@ -212,7 +214,7 @@
 - Transaction DetailsSection has ~8 rows; item detail has ~7 rows
 
 ### Parallel Opportunities
-- T026 (create component), T027 (transaction adoption), T028 (item adoption) can all proceed in parallel once the component exists
+- T026 (create component), T027 (transaction adoption), T028 (item adoption), T030 (media verification) can all proceed in parallel once the component exists
 - WP06 can run in parallel with WP04/WP05 (touches different code: detail rows vs items management)
 
 ### Dependencies
@@ -275,3 +277,4 @@ Phase 3 (P3):
 | T027 | Adopt DetailRow in transaction DetailsSection | WP06 | P3 | Yes |
 | T028 | Adopt DetailRow in item detail Details card | WP06 | P3 | Yes |
 | T029 | Clean up duplicate detail row styles | WP06 | P3 | No |
+| T030 | Verify MediaGallerySection on space detail | WP06 | P3 | Yes |

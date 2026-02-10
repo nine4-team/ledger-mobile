@@ -96,13 +96,15 @@ app/
 7. Reduce both route files to thin wrappers (~20 lines each)
 8. Normalize style inconsistencies (margins, unused styles)
 
-#### WP-02: Migrate Screens to SectionList with Collapsible Sections
+#### WP-02: Migrate Space Detail to SectionList
 1. Migrate `SpaceDetailContent` from AppScrollView to SectionList
    - Define sections: media, notes, items, checklists
    - Add CollapsibleSectionHeader to each section
    - Items section uses `renderSectionHeader` (sticky), others use SECTION_HEADER_MARKER pattern
    - Replace StickyHeader with native SectionList sticky behavior
-2. Migrate `app/items/[id]/index.tsx` from AppScrollView to SectionList
+
+#### WP-03: Migrate Item Detail to SectionList
+1. Migrate `app/items/[id]/index.tsx` from AppScrollView to SectionList
    - Define sections: hero (non-collapsible), media, notes, details
    - Add CollapsibleSectionHeader to collapsible sections
    - Configure per-screen default collapsed states
@@ -111,13 +113,13 @@ app/
 
 **Goal**: Extract duplicated items management logic into reusable hook + component.
 
-#### WP-03: Extract useItemsManager Hook
+#### WP-04: Extract useItemsManager Hook
 1. Create `src/hooks/useItemsManager.ts`
 2. Move common state: search, sort, filter, selection
 3. Move common logic: filtered+sorted items computation, selection handlers
 4. Parameterize: sort modes, filter modes, search fields, custom filter function
 
-#### WP-04: Create ItemsSection Component
+#### WP-05: Create ItemsSection Component
 1. Create `src/components/ItemsSection.tsx`
 2. Render: CollapsibleSectionHeader, ItemsListControlBar, item list, bulk action panel
 3. Accept screen-specific bulk actions as config
@@ -126,7 +128,7 @@ app/
 
 ### Phase 3: Detail Row Extraction (P3)
 
-#### WP-05: Create DetailRow Component + Normalize Media
+#### WP-06: Create DetailRow Component + Normalize Media
 1. Create `src/components/DetailRow.tsx`
 2. Refactor transaction detail DetailsSection to use DetailRow
 3. Refactor item detail Details card to use DetailRow
