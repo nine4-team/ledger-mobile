@@ -11,9 +11,7 @@ import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar
 import { ItemCard } from '../../../src/components/ItemCard';
 import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
-import { ThumbnailGrid } from '../../../src/components/ThumbnailGrid';
-import { ImageGallery } from '../../../src/components/ImageGallery';
-import { ImagePickerButton } from '../../../src/components/ImagePickerButton';
+import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import { NotesSection } from '../../../src/components/NotesSection';
@@ -148,8 +146,6 @@ function BISpaceDetailContent({
   const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
   const [bulkTargetSpaceId, setBulkTargetSpaceId] = useState<string | null>(null);
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
-  const [galleryVisible, setGalleryVisible] = useState(false);
-  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(() => createInventoryScopeConfig(), []);
@@ -523,39 +519,19 @@ function BISpaceDetailContent({
     <View style={styles.container}>
       <AppScrollView contentContainerStyle={styles.scrollContent}>
         {/* Images */}
-        <View style={styles.section}>
-          <AppText variant="h2">Images</AppText>
-          {space.images && space.images.length > 0 ? (
-            <>
-              <ThumbnailGrid
-                images={space.images}
-                size="lg"
-                tileScale={1}
-                onImagePress={(_image, index) => {
-                  setGalleryIndex(index);
-                  setGalleryVisible(true);
-                }}
-                onSetPrimary={handleSetPrimaryImage}
-                onDelete={handleRemoveImage}
-              />
-              {space.images.length < 50 && (
-                <ImagePickerButton
-                  onFilePicked={handleAddImage}
-                  maxFiles={50}
-                  currentFileCount={space.images.length}
-                  style={styles.imagePickerButton}
-                />
-              )}
-            </>
-          ) : (
-            <ImagePickerButton
-              onFilePicked={handleAddImage}
-              maxFiles={50}
-              currentFileCount={0}
-              style={styles.imagePickerButton}
-            />
-          )}
-        </View>
+        <MediaGallerySection
+          title="Images"
+          attachments={space.images ?? []}
+          maxAttachments={100}
+          allowedKinds={['image']}
+          onAddAttachment={handleAddImage}
+          onRemoveAttachment={handleRemoveImage}
+          onSetPrimary={handleSetPrimaryImage}
+          emptyStateMessage="No images yet."
+          pickerLabel="Add image"
+          size="md"
+          tileScale={1.5}
+        />
 
         {/* Info / Notes */}
         <NotesSection notes={space.notes} expandable={true} />
@@ -854,16 +830,6 @@ function BISpaceDetailContent({
           )}
         </View>
       </AppScrollView>
-
-      {/* Image gallery lightbox */}
-      {space.images && space.images.length > 0 && (
-        <ImageGallery
-          images={space.images}
-          initialIndex={galleryIndex}
-          visible={galleryVisible}
-          onRequestClose={() => setGalleryVisible(false)}
-        />
-      )}
 
       {/* Kebab menu */}
       <BottomSheetMenuList
