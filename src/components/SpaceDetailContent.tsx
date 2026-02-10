@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
-import { AppScrollView } from './AppScrollView';
-import { StickyHeader } from './StickyHeader';
 import { ItemsListControlBar } from './ItemsListControlBar';
 import { ItemCard } from './ItemCard';
 import { SharedItemPicker } from './SharedItemPicker';
@@ -14,6 +12,7 @@ import { MediaGallerySection } from './MediaGallerySection';
 import { BottomSheet } from './BottomSheet';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { NotesSection } from './NotesSection';
+import { CollapsibleSectionHeader } from './CollapsibleSectionHeader';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
@@ -51,6 +50,17 @@ export type SpaceDetailContentProps = {
 type ItemPickerTab = 'current' | 'outside';
 
 type SortMode = 'created-desc' | 'created-asc' | 'alphabetical-asc' | 'alphabetical-desc';
+
+type SpaceSectionKey = 'media' | 'notes' | 'items' | 'checklists';
+
+type SpaceSection = {
+  key: SpaceSectionKey;
+  title: string;
+  data: any[];
+  badge?: string;
+};
+
+const SECTION_HEADER_MARKER = '__sectionHeader__';
 
 // --- Helpers ---
 
@@ -159,6 +169,18 @@ export function SpaceDetailContent({
   const [bulkTargetSpaceId, setBulkTargetSpaceId] = useState<string | null>(null);
   const [canSaveTemplate, setCanSaveTemplate] = useState(false);
 
+  // Collapsible sections state
+  const [collapsedSections, setCollapsedSections] = useState<Record<SpaceSectionKey, boolean>>({
+    media: false,       // Default EXPANDED — users want to see images
+    notes: true,        // Default collapsed
+    items: false,       // Default EXPANDED — items are primary content
+    checklists: true,   // Default collapsed
+  });
+
+  const handleToggleSection = useCallback((key: SpaceSectionKey) => {
+    setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
   const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(
     () => projectId
@@ -250,6 +272,47 @@ export function SpaceDetailContent({
       return String((b as any).createdAt ?? '').localeCompare(String((a as any).createdAt ?? ''));
     });
   }, [spaceItems, searchQuery, sortMode, filterMode]);
+
+  // Compute sections array for SectionList
+  const sections: SpaceSection[] = useMemo(() => {
+    const result: SpaceSection[] = [];
+
+    // Media section (non-sticky header)
+    const mediaCollapsed = collapsedSections.media;
+    result.push({
+      key: 'media',
+      title: 'IMAGES',
+      data: mediaCollapsed ? [SECTION_HEADER_MARKER] : [SECTION_HEADER_MARKER, 'media-content'],
+    });
+
+    // Notes section (non-sticky header)
+    const notesCollapsed = collapsedSections.notes;
+    result.push({
+      key: 'notes',
+      title: 'NOTES',
+      data: notesCollapsed ? [SECTION_HEADER_MARKER] : [SECTION_HEADER_MARKER, 'notes-content'],
+    });
+
+    // Items section (STICKY header — uses renderSectionHeader)
+    const itemsCollapsed = collapsedSections.items;
+    const itemCount = filteredSpaceItems.length;
+    result.push({
+      key: 'items',
+      title: 'ITEMS',
+      data: itemsCollapsed ? [] : filteredSpaceItems,
+      badge: itemCount > 0 ? String(itemCount) : undefined,
+    });
+
+    // Checklists section (non-sticky header)
+    const checklistsCollapsed = collapsedSections.checklists;
+    result.push({
+      key: 'checklists',
+      title: 'CHECKLISTS',
+      data: checklistsCollapsed ? [SECTION_HEADER_MARKER] : [SECTION_HEADER_MARKER, 'checklists-content'],
+    });
+
+    return result;
+  }, [collapsedSections, filteredSpaceItems]);
 
   const activePickerItems = pickerTab === 'outside' ? outsideItemsHook.items : availableItems;
 
@@ -508,6 +571,293 @@ export function SpaceDetailContent({
     },
   ], [handleCreateItemInSpace]);
 
+  // --- SectionList render callbacks ---
+
+  const renderSectionHeader = useCallback(({ section }: { section: SpaceSection }) => {
+    // Only items section gets a real (sticky) section header
+    if (section.key !== 'items') return null;
+
+    const collapsed = collapsedSections.items;
+
+    return (
+      <View style={{ backgroundColor: theme.colors.background }}>
+        <CollapsibleSectionHeader
+          title={section.title}
+          collapsed={collapsed}
+          onToggle={() => handleToggleSection('items')}
+          badge={section.badge}
+        />
+        {!collapsed && (
+          <View style={{
+            paddingBottom: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: uiKitTheme.border.secondary,
+          }}>
+            <ItemsListControlBar
+              search={searchQuery}
+              onChangeSearch={setSearchQuery}
+              showSearch={showSearch}
+              onToggleSearch={() => setShowSearch(!showSearch)}
+              onSort={() => setSortMenuVisible(true)}
+              isSortActive={sortMode !== 'created-desc'}
+              onFilter={() => setFilterMenuVisible(true)}
+              isFilterActive={filterMode !== 'all'}
+              onAdd={bulkSelectedIds.length > 0
+                ? () => { /* TODO: open bulk menu */ }
+                : () => setAddMenuVisible(true)}
+            />
+          </View>
+        )}
+      </View>
+    );
+  }, [collapsedSections, handleToggleSection, searchQuery, showSearch,
+      sortMode, filterMode, bulkSelectedIds, theme.colors.background,
+      uiKitTheme.border.secondary]);
+
+  const renderItem = useCallback(({ item, section }: { item: any; section: SpaceSection }) => {
+    // Handle section header markers (non-sticky sections)
+    if (item === SECTION_HEADER_MARKER) {
+      return (
+        <CollapsibleSectionHeader
+          title={section.title}
+          collapsed={collapsedSections[section.key] ?? false}
+          onToggle={() => handleToggleSection(section.key)}
+          badge={section.badge}
+        />
+      );
+    }
+
+    switch (section.key) {
+      case 'media':
+        return (
+          <MediaGallerySection
+            title="Images"
+            hideTitle={true}
+            attachments={space?.images ?? []}
+            maxAttachments={100}
+            allowedKinds={['image']}
+            onAddAttachment={handleAddImage}
+            onRemoveAttachment={handleRemoveImage}
+            onSetPrimary={handleSetPrimaryImage}
+            emptyStateMessage="No images yet."
+            pickerLabel="Add image"
+            size="md"
+            tileScale={1.5}
+          />
+        );
+
+      case 'notes':
+        return <NotesSection notes={space?.notes} expandable={true} />;
+
+      case 'items': {
+        // Render individual ItemCard
+        const itemDetailParams = getItemDetailParams(projectId, spaceId, item.id);
+        const itemMenuItems: AnchoredMenuItem[] = [
+          {
+            key: 'open',
+            label: 'Open',
+            onPress: () => router.push(itemDetailParams),
+          },
+          {
+            key: 'remove-from-space',
+            label: 'Remove from Space',
+            onPress: () => {
+              if (!accountId) return;
+              updateItem(accountId, item.id, { spaceId: null });
+            },
+          },
+        ];
+
+        return (
+          <ItemCard
+            key={item.id}
+            name={item.name?.trim() || 'Untitled item'}
+            sku={(item as any).sku ?? undefined}
+            sourceLabel={(item as any).source ?? undefined}
+            priceLabel={getDisplayPrice(item)}
+            statusLabel={(item as any).status ?? undefined}
+            thumbnailUri={getPrimaryImageUri(item)}
+            selected={bulkMode ? bulkSelectedIds.includes(item.id) : undefined}
+            onSelectedChange={
+              bulkMode
+                ? (next) =>
+                    setBulkSelectedIds((prev) =>
+                      next ? [...prev, item.id] : prev.filter((id) => id !== item.id),
+                    )
+                : undefined
+            }
+            menuItems={bulkMode ? undefined : itemMenuItems}
+            bookmarked={Boolean((item as any).bookmark)}
+            onBookmarkPress={() => {
+              if (!accountId) return;
+              updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
+            }}
+            onPress={() => {
+              if (bulkMode) {
+                setBulkSelectedIds((prev) =>
+                  prev.includes(item.id)
+                    ? prev.filter((id) => id !== item.id)
+                    : [...prev, item.id],
+                );
+                return;
+              }
+              router.push(itemDetailParams);
+            }}
+          />
+        );
+      }
+
+      case 'checklists':
+        return (
+          <View style={styles.section}>
+            <AppButton
+              title="Add checklist"
+              onPress={() =>
+                handleSaveChecklists([
+                  ...checklists,
+                  { id: randomId('checklist'), name: 'Checklist', items: [] },
+                ])
+              }
+              accessibilityLabel="Add new checklist"
+              accessibilityHint="Create a new checklist for this space"
+            />
+            {checklists.length === 0 ? (
+              <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                No checklists yet.
+              </AppText>
+            ) : (
+              <View style={styles.list}>
+                {checklists.map((checklist, checklistIndex) => (
+                  <View
+                    key={checklist.id}
+                    style={[styles.checklistCard, { borderColor: uiKitTheme.border.primary }]}
+                  >
+                    <View style={styles.checklistHeader}>
+                      <TextInput
+                        value={checklist.name}
+                        onChangeText={(text) => {
+                          const next = [...checklists];
+                          next[checklistIndex] = { ...checklist, name: text };
+                          setChecklists(next);
+                        }}
+                        onBlur={() => handleSaveChecklists(checklists)}
+                        style={[getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 }), styles.checklistNameInput]}
+                      />
+                      <Pressable
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete checklist',
+                            `Delete "${checklist.name}"?`,
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              {
+                                text: 'Delete',
+                                style: 'destructive',
+                                onPress: () => {
+                                  const next = checklists.filter((_, i) => i !== checklistIndex);
+                                  handleSaveChecklists(next);
+                                },
+                              },
+                            ],
+                          );
+                        }}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Delete ${checklist.name} checklist`}
+                        style={styles.deleteButton}
+                      >
+                        <MaterialIcons name="delete-outline" size={20} color={theme.colors.textSecondary} />
+                      </Pressable>
+                    </View>
+                    <View style={styles.list}>
+                      {checklist.items.map((checklistItem, itemIndex) => (
+                        <View key={checklistItem.id} style={styles.checklistItem}>
+                          <Pressable
+                            onPress={() => {
+                              const next = [...checklists];
+                              const itemsNext = [...checklist.items];
+                              itemsNext[itemIndex] = {
+                                ...checklistItem,
+                                isChecked: !checklistItem.isChecked,
+                              };
+                              next[checklistIndex] = { ...checklist, items: itemsNext };
+                              handleSaveChecklists(next);
+                            }}
+                            style={[
+                              styles.checkbox,
+                              { borderColor: uiKitTheme.border.primary },
+                              checklistItem.isChecked && { backgroundColor: uiKitTheme.primary.main },
+                            ]}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{ checked: checklistItem.isChecked }}
+                            accessibilityLabel={checklistItem.text}
+                            accessibilityHint="Tap to toggle checklist item"
+                          >
+                            {checklistItem.isChecked ? (
+                              <MaterialIcons name="check" size={14} color="#fff" />
+                            ) : null}
+                          </Pressable>
+                          <TextInput
+                            value={checklistItem.text}
+                            onChangeText={(text) => {
+                              const next = [...checklists];
+                              const itemsNext = [...checklist.items];
+                              itemsNext[itemIndex] = { ...checklistItem, text };
+                              next[checklistIndex] = { ...checklist, items: itemsNext };
+                              setChecklists(next);
+                            }}
+                            onBlur={() => handleSaveChecklists(checklists)}
+                            style={[
+                              getTextInputStyle(uiKitTheme, { padding: 8, radius: 8 }),
+                              styles.checklistItemInput,
+                              checklistItem.isChecked && styles.checklistItemChecked,
+                            ]}
+                          />
+                          <Pressable
+                            onPress={() => {
+                              const next = [...checklists];
+                              const itemsNext = checklist.items.filter((_, i) => i !== itemIndex);
+                              next[checklistIndex] = { ...checklist, items: itemsNext };
+                              handleSaveChecklists(next);
+                            }}
+                            hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Delete ${checklistItem.text}`}
+                          >
+                            <MaterialIcons name="close" size={18} color={theme.colors.textSecondary} />
+                          </Pressable>
+                        </View>
+                      ))}
+                    </View>
+                    <AppButton
+                      title="Add item"
+                      variant="secondary"
+                      onPress={() => {
+                        const next = [...checklists];
+                        const itemsNext = [
+                          ...checklist.items,
+                          { id: randomId('item'), text: 'Item', isChecked: false },
+                        ];
+                        next[checklistIndex] = { ...checklist, items: itemsNext };
+                        handleSaveChecklists(next);
+                      }}
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  }, [space, collapsedSections, handleToggleSection, filteredSpaceItems,
+      bulkMode, bulkSelectedIds, accountId, projectId, spaceId, router,
+      theme.colors.textSecondary, theme.colors.background, uiKitTheme.border.primary,
+      uiKitTheme.border.secondary, uiKitTheme.primary.main, checklists,
+      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage]);
+
   // --- Render ---
 
   if (isLoading) {
@@ -531,305 +881,88 @@ export function SpaceDetailContent({
 
   return (
     <View style={styles.container}>
-      <AppScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Images */}
-        <MediaGallerySection
-          title="Images"
-          attachments={space.images ?? []}
-          maxAttachments={100}
-          allowedKinds={['image']}
-          onAddAttachment={handleAddImage}
-          onRemoveAttachment={handleRemoveImage}
-          onSetPrimary={handleSetPrimaryImage}
-          emptyStateMessage="No images yet."
-          pickerLabel="Add image"
-          size="md"
-          tileScale={1.5}
-        />
-
-        {/* Notes */}
-        <NotesSection notes={space.notes} expandable={true} />
-
-        {/* Items section header */}
-        <AppText variant="caption" style={styles.sectionHeader}>
-          ITEMS
-        </AppText>
-
-        {/* Items control bar - sticky */}
-        <StickyHeader>
-          <ItemsListControlBar
-            search={searchQuery}
-            onChangeSearch={setSearchQuery}
-            showSearch={showSearch}
-            onToggleSearch={() => setShowSearch((prev) => !prev)}
-            onSort={() => setSortMenuVisible(true)}
-            isSortActive={sortMode !== 'created-desc'}
-            onFilter={() => setFilterMenuVisible(true)}
-            isFilterActive={isFilterActive}
-            onAdd={() => setAddMenuVisible(true)}
-          />
-        </StickyHeader>
-
-        {/* Bulk mode panel */}
-        {bulkMode ? (
-          <View style={styles.bulkPanel}>
-            <View style={styles.bulkHeader}>
-              <AppText variant="caption">{bulkSelectedIds.length} selected</AppText>
-              <AppButton
-                title="Done"
-                variant="secondary"
-                onPress={() => {
-                  setBulkMode(false);
-                  setBulkSelectedIds([]);
-                }}
-              />
-            </View>
-            <SpaceSelector
-              projectId={projectId}
-              value={bulkTargetSpaceId}
-              onChange={setBulkTargetSpaceId}
-              allowCreate={false}
-              placeholder="Move to space…"
-            />
-            <View style={styles.bulkActions}>
-              <AppButton
-                title="Move"
-                variant="secondary"
-                onPress={handleBulkMove}
-                disabled={!bulkTargetSpaceId || bulkSelectedIds.length === 0}
-              />
-              <AppButton
-                title="Remove from space"
-                variant="secondary"
-                onPress={handleBulkRemove}
-                disabled={bulkSelectedIds.length === 0}
-              />
-            </View>
-          </View>
-        ) : null}
-
-        {/* Items list */}
-        {filteredSpaceItems.length === 0 ? (
-          <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-            {searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-          </AppText>
-        ) : (
-          <View style={styles.list}>
-            {filteredSpaceItems.map((item) => {
-              const itemDetailParams = getItemDetailParams(projectId, spaceId, item.id);
-              const itemMenuItems: AnchoredMenuItem[] = [
-                {
-                  key: 'open',
-                  label: 'Open',
-                  onPress: () => router.push(itemDetailParams),
-                },
-                {
-                  key: 'remove-from-space',
-                  label: 'Remove from Space',
-                  onPress: () => {
-                    if (!accountId) return;
-                    updateItem(accountId, item.id, { spaceId: null });
-                  },
-                },
-              ];
-
-              return (
-                <ItemCard
-                  key={item.id}
-                  name={item.name?.trim() || 'Untitled item'}
-                  sku={(item as any).sku ?? undefined}
-                  sourceLabel={(item as any).source ?? undefined}
-                  priceLabel={getDisplayPrice(item)}
-                  statusLabel={(item as any).status ?? undefined}
-                  thumbnailUri={getPrimaryImageUri(item)}
-                  selected={bulkMode ? bulkSelectedIds.includes(item.id) : undefined}
-                  onSelectedChange={
-                    bulkMode
-                      ? (next) =>
-                          setBulkSelectedIds((prev) =>
-                            next ? [...prev, item.id] : prev.filter((id) => id !== item.id),
-                          )
-                      : undefined
-                  }
-                  menuItems={bulkMode ? undefined : itemMenuItems}
-                  bookmarked={Boolean((item as any).bookmark)}
-                  onBookmarkPress={() => {
-                    if (!accountId) return;
-                    updateItem(accountId, item.id, { bookmark: !(item as any).bookmark });
-                  }}
-                  onPress={() => {
-                    if (bulkMode) {
-                      setBulkSelectedIds((prev) =>
-                        prev.includes(item.id)
-                          ? prev.filter((id) => id !== item.id)
-                          : [...prev, item.id],
-                      );
-                      return;
-                    }
-                    router.push(itemDetailParams);
-                  }}
-                />
-              );
-            })}
-          </View>
-        )}
-
-        {/* Bulk mode toggle */}
-        {!bulkMode && spaceItems.length > 0 ? (
-          <Pressable
-            onPress={() => {
-              setBulkMode(true);
-              setBulkSelectedIds([]);
-            }}
-            style={styles.bulkModeToggle}
-          >
-            <AppText variant="caption" style={{ color: theme.colors.primary }}>
-              Select multiple items…
-            </AppText>
-          </Pressable>
-        ) : null}
-
-        {/* Checklists */}
-        <View style={styles.section}>
-          <AppText variant="h2">Checklists</AppText>
-          <AppButton
-            title="Add checklist"
-            onPress={() =>
-              handleSaveChecklists([
-                ...checklists,
-                { id: randomId('checklist'), name: 'Checklist', items: [] },
-              ])
-            }
-            accessibilityLabel="Add new checklist"
-            accessibilityHint="Create a new checklist for this space"
-          />
-          {checklists.length === 0 ? (
-            <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-              No checklists yet.
-            </AppText>
-          ) : (
-            <View style={styles.list}>
-              {checklists.map((checklist, checklistIndex) => (
-                <View
-                  key={checklist.id}
-                  style={[styles.checklistCard, { borderColor: uiKitTheme.border.primary }]}
-                >
-                  <View style={styles.checklistHeader}>
-                    <TextInput
-                      value={checklist.name}
-                      onChangeText={(text) => {
-                        const next = [...checklists];
-                        next[checklistIndex] = { ...checklist, name: text };
-                        setChecklists(next);
-                      }}
-                      onBlur={() => handleSaveChecklists(checklists)}
-                      style={[getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 }), styles.checklistNameInput]}
-                    />
-                    <Pressable
-                      onPress={() => {
-                        Alert.alert(
-                          'Delete checklist',
-                          `Delete "${checklist.name}"?`,
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Delete',
-                              style: 'destructive',
-                              onPress: () => {
-                                const next = checklists.filter((_, i) => i !== checklistIndex);
-                                handleSaveChecklists(next);
-                              },
-                            },
-                          ],
-                        );
-                      }}
-                      hitSlop={8}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Delete ${checklist.name} checklist`}
-                      style={styles.deleteButton}
-                    >
-                      <MaterialIcons name="delete-outline" size={20} color={theme.colors.textSecondary} />
-                    </Pressable>
-                  </View>
-                  <View style={styles.list}>
-                    {checklist.items.map((item, itemIndex) => (
-                      <View key={item.id} style={styles.checklistItem}>
-                        <Pressable
-                          onPress={() => {
-                            const next = [...checklists];
-                            const itemsNext = [...checklist.items];
-                            itemsNext[itemIndex] = {
-                              ...item,
-                              isChecked: !item.isChecked,
-                            };
-                            next[checklistIndex] = { ...checklist, items: itemsNext };
-                            handleSaveChecklists(next);
-                          }}
-                          style={[
-                            styles.checkbox,
-                            { borderColor: uiKitTheme.border.primary },
-                            item.isChecked && { backgroundColor: uiKitTheme.primary.main },
-                          ]}
-                          accessibilityRole="checkbox"
-                          accessibilityState={{ checked: item.isChecked }}
-                          accessibilityLabel={item.text}
-                          accessibilityHint="Tap to toggle checklist item"
-                        >
-                          {item.isChecked ? (
-                            <MaterialIcons name="check" size={14} color="#fff" />
-                          ) : null}
-                        </Pressable>
-                        <TextInput
-                          value={item.text}
-                          onChangeText={(text) => {
-                            const next = [...checklists];
-                            const itemsNext = [...checklist.items];
-                            itemsNext[itemIndex] = { ...item, text };
-                            next[checklistIndex] = { ...checklist, items: itemsNext };
-                            setChecklists(next);
-                          }}
-                          onBlur={() => handleSaveChecklists(checklists)}
-                          style={[
-                            getTextInputStyle(uiKitTheme, { padding: 8, radius: 8 }),
-                            styles.checklistItemInput,
-                            item.isChecked && styles.checklistItemChecked,
-                          ]}
-                        />
-                        <Pressable
-                          onPress={() => {
-                            const next = [...checklists];
-                            const itemsNext = checklist.items.filter((_, i) => i !== itemIndex);
-                            next[checklistIndex] = { ...checklist, items: itemsNext };
-                            handleSaveChecklists(next);
-                          }}
-                          hitSlop={8}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Delete ${item.text}`}
-                        >
-                          <MaterialIcons name="close" size={18} color={theme.colors.textSecondary} />
-                        </Pressable>
-                      </View>
-                    ))}
-                  </View>
+      <SectionList
+        sections={sections}
+        renderSectionHeader={renderSectionHeader}
+        renderItem={renderItem}
+        stickySectionHeadersEnabled={true}
+        keyExtractor={(item, index) => {
+          if (item === SECTION_HEADER_MARKER) return `header-${index}`;
+          if (typeof item === 'string') return item;
+          return item.id ?? `item-${index}`;
+        }}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        ItemSeparatorComponent={({ section }) =>
+          section.key === 'items' ? <View style={styles.itemSeparator} /> : null
+        }
+        ListFooterComponent={
+          <>
+            {/* Bulk mode panel */}
+            {bulkMode ? (
+              <View style={styles.bulkPanel}>
+                <View style={styles.bulkHeader}>
+                  <AppText variant="caption">{bulkSelectedIds.length} selected</AppText>
                   <AppButton
-                    title="Add item"
+                    title="Done"
                     variant="secondary"
                     onPress={() => {
-                      const next = [...checklists];
-                      const itemsNext = [
-                        ...checklist.items,
-                        { id: randomId('item'), text: 'Item', isChecked: false },
-                      ];
-                      next[checklistIndex] = { ...checklist, items: itemsNext };
-                      handleSaveChecklists(next);
+                      setBulkMode(false);
+                      setBulkSelectedIds([]);
                     }}
                   />
                 </View>
-              ))}
-            </View>
-          )}
-        </View>
-      </AppScrollView>
+                <SpaceSelector
+                  projectId={projectId}
+                  value={bulkTargetSpaceId}
+                  onChange={setBulkTargetSpaceId}
+                  allowCreate={false}
+                  placeholder="Move to space…"
+                />
+                <View style={styles.bulkActions}>
+                  <AppButton
+                    title="Move"
+                    variant="secondary"
+                    onPress={handleBulkMove}
+                    disabled={!bulkTargetSpaceId || bulkSelectedIds.length === 0}
+                  />
+                  <AppButton
+                    title="Remove from space"
+                    variant="secondary"
+                    onPress={handleBulkRemove}
+                    disabled={bulkSelectedIds.length === 0}
+                  />
+                </View>
+              </View>
+            ) : null}
+
+            {/* Bulk mode toggle */}
+            {!bulkMode && spaceItems.length > 0 && filteredSpaceItems.length > 0 && !collapsedSections.items ? (
+              <Pressable
+                onPress={() => {
+                  setBulkMode(true);
+                  setBulkSelectedIds([]);
+                }}
+                style={styles.bulkModeToggle}
+              >
+                <AppText variant="caption" style={{ color: theme.colors.primary }}>
+                  Select multiple items…
+                </AppText>
+              </Pressable>
+            ) : null}
+
+            {/* Empty state for items */}
+            {!collapsedSections.items && filteredSpaceItems.length === 0 ? (
+              <View style={styles.emptyState}>
+                <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                  {searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+                </AppText>
+              </View>
+            ) : null}
+          </>
+        }
+      />
 
       {/* Kebab menu */}
       <BottomSheetMenuList
@@ -912,25 +1045,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
+  content: {
     gap: 20,
     paddingTop: layout.screenBodyTopMd.paddingTop,
   },
   section: {
     gap: 12,
   },
-  sectionHeader: {
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    fontWeight: '600',
-    marginTop: 8,
-  },
   list: {
     gap: 10,
+  },
+  itemSeparator: {
+    height: 10,
+  },
+  emptyState: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   bulkPanel: {
     gap: 10,
     marginBottom: 12,
+    paddingHorizontal: 20,
   },
   bulkHeader: {
     flexDirection: 'row',
@@ -946,6 +1081,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     marginBottom: 8,
+    paddingHorizontal: 20,
   },
   checklistCard: {
     borderWidth: 1,
