@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "doing"
+lane: "for_review"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -495,3 +495,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
 - 2026-02-10T03:50:42Z – claude-sonnet – shell_pid=54610 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T04:11:44Z – claude-sonnet – shell_pid=54610 – lane=for_review – Ready for review: ItemsSection component created and integrated into both space detail and transaction detail screens. All subtasks complete.
