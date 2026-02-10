@@ -128,10 +128,10 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T017 [P] Define types and create hook skeleton in `src/hooks/useItemsManager.ts`
-- [ ] T018 Implement search, sort, and filter state with menu visibility
-- [ ] T019 Implement filtered and sorted items computation (3-step pipeline)
-- [ ] T020 Implement selection state and handlers (toggle, selectAll, clear)
+- [x] T017 [P] Define types and create hook skeleton in `src/hooks/useItemsManager.ts`
+- [x] T018 Implement search, sort, and filter state with menu visibility
+- [x] T019 Implement filtered and sorted items computation (3-step pipeline)
+- [x] T020 Implement selection state and handlers (toggle, selectAll, clear)
 
 ### Implementation Notes
 - Type definitions from data-model.md: `UseItemsManagerConfig`, `UseItemsManagerReturn`
