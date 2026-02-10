@@ -684,6 +684,7 @@ export function SpaceDetailContent({
             }}
             bulkActions={bulkActions}
             onBulkAction={handleBulkAction}
+            emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
           />
         );
       }
@@ -878,15 +879,6 @@ export function SpaceDetailContent({
         keyboardShouldPersistTaps="handled"
         ItemSeparatorComponent={({ section }) =>
           section.key === 'items' ? <View style={styles.itemSeparator} /> : null
-        }
-        ListFooterComponent={
-          !collapsedSections.items && itemsManager.filteredAndSortedItems.length === 0 ? (
-            <View style={styles.emptyState}>
-              <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                {itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
-              </AppText>
-            </View>
-          ) : null
         }
       />
 
