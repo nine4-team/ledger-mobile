@@ -7,10 +7,12 @@ import { AppText } from '../../../src/components/AppText';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../../src/components/TitledCard';
+import { Card } from '../../../src/components/Card';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { DetailRow } from '../../../src/components/DetailRow';
+import { FormBottomSheet } from '../../../src/components/FormBottomSheet';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -38,6 +40,8 @@ import {
 } from '../../../src/data/inventoryOperations';
 import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
+import { useTransactionById } from '../../../src/hooks/useTransactionById';
+import { useSpaceById } from '../../../src/hooks/useSpaceById';
 
 type ItemDetailParams = {
   id?: string;
@@ -88,6 +92,13 @@ export default function ItemDetailScreen() {
     notes: true,
     details: true,
   });
+  const [moveSheetVisible, setMoveSheetVisible] = useState(false);
+
+  // Load transaction data for hero card (cache-first for offline-first pattern)
+  const transactionData = useTransactionById(accountId, item?.transactionId ?? null, { mode: 'offline' });
+
+  // Load space data for hero card (cache-first for offline-first pattern)
+  const spaceData = useSpaceById(accountId, item?.spaceId ?? null, { mode: 'offline' });
 
   useEffect(() => {
     if (scope === 'project' && projectId) {
@@ -404,8 +415,13 @@ export default function ItemDetailScreen() {
       });
     } else {
       items.push({
-        label: 'Move',
+        label: 'Move Item',
         icon: 'swap-horiz',
+        onPress: () => setMoveSheetVisible(true),
+      });
+      items.push({
+        label: 'Move (Advanced)',
+        icon: 'settings',
         subactions: [
           {
             key: 'move-to-business',
@@ -419,7 +435,7 @@ export default function ItemDetailScreen() {
             onPress: handleSellToInventory,
             icon: 'sell',
           },
-          { key: 'move-to-project', label: 'Move to project', onPress: handleMoveToProject, icon: 'assignment' },
+          { key: 'move-to-project', label: 'Move to project (deprecated)', onPress: handleMoveToProject, icon: 'assignment' },
         ],
       });
     }
@@ -465,32 +481,46 @@ export default function ItemDetailScreen() {
       case 'hero':
         return (
           <>
-            {/* Hero card — name + transaction link */}
+            {/* Hero card — name + transaction + space info */}
             <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
               <View style={styles.heroHeader}>
                 <AppText variant="h2" style={styles.heroTitle}>
                   {item.name?.trim() || 'Untitled item'}
                 </AppText>
-                <View style={styles.heroSubtitle}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Transaction:{' '}
-                  </AppText>
-                  {trimmedTransactionId ? (
-                    <Pressable accessibilityRole="link" onPress={handleOpenTransaction}>
+
+                {/* Info row: Transaction and Space */}
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                  {/* Transaction info */}
+                  <AppText variant="caption">Transaction: </AppText>
+                  {item.transactionId ? (
+                    transactionData.data ? (
                       <AppText
-                        variant="caption"
-                        style={[
-                          styles.linkText,
-                          getTextColorStyle(uiKitTheme.link),
-                        ]}
+                        variant="body"
+                        style={{ color: theme.colors.primary }}
+                        onPress={() => router.push(`/transactions/${item.transactionId}`)}
                       >
-                        {transactionLabel}
+                        {transactionData.data.source || 'Untitled'} - {formatMoney(transactionData.data.amountCents)}
                       </AppText>
-                    </Pressable>
+                    ) : transactionData.loading ? (
+                      <AppText variant="body">Loading...</AppText>
+                    ) : (
+                      <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+                        [Deleted]
+                      </AppText>
+                    )
                   ) : (
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
                       None
                     </AppText>
+                  )}
+
+                  {/* Space info (only if space exists and is loaded) */}
+                  {item.spaceId && spaceData.data && (
+                    <>
+                      <AppText variant="caption"> | </AppText>
+                      <AppText variant="caption">Space: </AppText>
+                      <AppText variant="body">{spaceData.data.name}</AppText>
+                    </>
                   )}
                 </View>
               </View>
@@ -529,7 +559,7 @@ export default function ItemDetailScreen() {
 
       case 'details':
         return (
-          <TitledCard title="Details">
+          <Card>
             <View style={styles.detailRows}>
               <DetailRow label="Source" value={item.source?.trim() || '—'} />
               <DetailRow label="SKU" value={item.sku?.trim() || '—'} />
@@ -539,7 +569,7 @@ export default function ItemDetailScreen() {
               <DetailRow label="Space" value={spaceLabel} />
               <DetailRow label="Budget category" value={budgetCategoryLabel} showDivider={false} />
             </View>
-          </TitledCard>
+          </Card>
         );
 
       default:
@@ -550,32 +580,8 @@ export default function ItemDetailScreen() {
       trimmedTransactionId, transactionLabel, handleOpenTransaction,
       spaceLabel, budgetCategoryLabel]);
 
-  const listFooter = useMemo(() => {
-    if (scope === 'inventory') return null;
-    return (
-      <TitledCard title="Move item">
-        <View style={styles.moveForm}>
-          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-            Move to another project
-          </AppText>
-          <TextInput
-            value={targetProjectId}
-            onChangeText={setTargetProjectId}
-            placeholder="Target project id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-          />
-          <TextInput
-            value={targetCategoryId}
-            onChangeText={setTargetCategoryId}
-            placeholder="Destination category id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-          />
-        </View>
-      </TitledCard>
-    );
-  }, [scope, targetProjectId, targetCategoryId, theme.colors.textSecondary, uiKitTheme]);
+  // Removed inline move form - now accessed via kebab menu
+  const listFooter = null;
 
   const headerActions = (
     <View style={styles.headerRight}>
@@ -643,6 +649,41 @@ export default function ItemDetailScreen() {
         title="Item actions"
         showLeadingIcons={true}
       />
+
+      {/* Move Item Bottom Sheet */}
+      <FormBottomSheet
+        visible={moveSheetVisible}
+        onRequestClose={() => setMoveSheetVisible(false)}
+        title="Move Item"
+        primaryAction={{
+          title: 'Move',
+          onPress: () => {
+            handleMoveToProject();
+            setMoveSheetVisible(false);
+          },
+          disabled: !targetProjectId.trim() || !targetCategoryId.trim(),
+        }}
+      >
+        <View style={styles.moveForm}>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            Move to another project
+          </AppText>
+          <TextInput
+            value={targetProjectId}
+            onChangeText={setTargetProjectId}
+            placeholder="Target project id"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          />
+          <TextInput
+            value={targetCategoryId}
+            onChangeText={setTargetCategoryId}
+            placeholder="Destination category id"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          />
+        </View>
+      </FormBottomSheet>
     </Screen>
   );
 }
@@ -651,7 +692,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
-    gap: 18,
+    gap: 4,
   },
   screenContent: {
     paddingTop: 0,
