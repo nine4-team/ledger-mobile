@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import { AppText } from './AppText';
 import { useTheme } from '../theme/ThemeProvider';
-import { TitledCard } from './TitledCard';
+import { Card } from './Card';
 
 type NotesSectionProps = {
   notes: string | null | undefined;
@@ -17,7 +17,7 @@ export function NotesSection({ notes, expandable = false }: NotesSectionProps) {
   const shouldShowToggle = expandable && trimmedNotes && trimmedNotes.length > 120;
 
   return (
-    <TitledCard title="Notes">
+    <Card>
       {!trimmedNotes ? (
         <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
           No notes.
@@ -37,7 +37,7 @@ export function NotesSection({ notes, expandable = false }: NotesSectionProps) {
           )}
         </Pressable>
       )}
-    </TitledCard>
+    </Card>
   );
 }
 

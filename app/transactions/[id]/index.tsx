@@ -32,11 +32,11 @@ import { deleteTransaction, subscribeToTransaction, Transaction, updateTransacti
 import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
+import { NotesSection } from '../../../src/components/NotesSection';
 import {
   HeroSection,
   ReceiptsSection,
   OtherImagesSection,
-  NotesSection,
   DetailsSection,
   AuditSection,
   type MediaHandlers,

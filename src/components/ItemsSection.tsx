@@ -32,6 +32,27 @@ export type ItemsSectionProps<S extends string = string, F extends string = stri
   emptyMessage?: string;
 };
 
+/**
+ * @deprecated Use SharedItemsList with embedded={true} instead.
+ *
+ * This component was created in feature 004-detail-screen-normalization but lacks
+ * key features present in SharedItemsList:
+ * - No grouped cards (uses plain ItemCard instead of GroupedItemCard)
+ * - No selector circles on item cards
+ * - No status badges
+ * - Broken bulk selection toggle (doesn't deselect when all selected)
+ * - Inline bulk panel instead of bottom bar + bottom sheet pattern
+ *
+ * Migration guide: See kitty-specs/005-detail-screen-polish/quickstart.md §1
+ * for how to use SharedItemsList in embedded mode.
+ *
+ * Replaced by SharedItemsList in:
+ * - Transaction detail (WP02)
+ * - Space detail (WP04)
+ *
+ * This component will be removed in a future cleanup feature once all usages
+ * are migrated and verified stable.
+ */
 export function ItemsSection<S extends string = string, F extends string = string>({
   manager,
   items,
