@@ -58,7 +58,7 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
   // Status message (FR-006)
   const pct = Math.round(completeness.completenessRatio * 100);
   let statusMessage: string;
-  switch (completeness.status) {
+  switch (completeness.completenessStatus) {
     case 'complete':
       statusMessage = '100% — Complete';
       break;
@@ -91,7 +91,7 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
               Items Total
             </AppText>
             <AppText variant="body">
-              {formatCents(completeness.itemsTotalCents)}
+              {formatCents(completeness.itemsNetTotal)}
             </AppText>
           </View>
           <View style={styles.totalColumn}>
@@ -99,7 +99,7 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
               Transaction Subtotal
             </AppText>
             <AppText variant="body">
-              {formatCents(completeness.transactionSubtotalCents)}
+              {formatCents(completeness.transactionSubtotal)}
             </AppText>
           </View>
         </View>
