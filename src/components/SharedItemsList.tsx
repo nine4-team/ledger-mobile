@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
@@ -17,7 +18,7 @@ import { BulkSelectionBar } from './BulkSelectionBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { getTextColorStyle, layout } from '../ui';
+import { getTextColorStyle, layout, getBulkSelectionBarContentPadding } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
@@ -146,6 +147,13 @@ function getPrimaryImage(item: ScopedItem) {
   return resolveAttachmentUri(primary) ?? primary.url;
 }
 
+const ITEM_STATUSES = [
+  { key: 'to purchase', label: 'To Purchase' },
+  { key: 'purchased', label: 'Purchased' },
+  { key: 'to return', label: 'To Return' },
+  { key: 'returned', label: 'Returned' },
+];
+
 export function SharedItemsList({
   // Standalone props
   scopeConfig,
@@ -200,6 +208,7 @@ export function SharedItemsList({
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [sourceCategoryMenuOpen, setSourceCategoryMenuOpen] = useState(false);
+  const [statusMenuItemId, setStatusMenuItemId] = useState<string | null>(null);
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const bulkSheetDividerStyle = useMemo(
@@ -220,6 +229,7 @@ export function SharedItemsList({
     [uiKitTheme]
   );
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => scopeConfig ? getScopeId(scopeConfig) : null, [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
@@ -732,6 +742,33 @@ export function SharedItemsList({
     [accountId, embedded, externalManager]
   );
 
+  const handleStatusPress = useCallback((itemId: string) => {
+    setStatusMenuItemId(itemId);
+  }, []);
+
+  const handleStatusChange = useCallback((itemId: string, newStatus: string) => {
+    if (!accountId) return;
+    updateItem(accountId, itemId, { status: newStatus }).catch((error) => {
+      console.error('Failed to update item status:', error);
+    });
+    setStatusMenuItemId(null);
+  }, [accountId]);
+
+  const statusMenuItems = useMemo<AnchoredMenuItem[]>(() => {
+    return [
+      ...ITEM_STATUSES.map(s => ({
+        key: s.key,
+        label: s.label,
+        onPress: () => statusMenuItemId && handleStatusChange(statusMenuItemId, s.key),
+      })),
+      {
+        key: 'clear',
+        label: 'Clear status',
+        onPress: () => statusMenuItemId && handleStatusChange(statusMenuItemId, ''),
+      },
+    ];
+  }, [statusMenuItemId, handleStatusChange]);
+
   const handleSelectAll = useCallback(() => {
     const allItemIds = filtered.map((row) => row.id);
     const allSelected = allItemIds.length > 0 &&
@@ -945,27 +982,24 @@ export function SharedItemsList({
         items={sourceCategoryMenuItems}
         title="Source category"
       />
-      <FlatList
-        ref={listRef}
-        data={groupedRows}
-        keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
-        contentContainerStyle={[styles.list, selectedIds.length > 0 ? styles.listWithBulkBar : null]}
-        refreshControl={
-          screenRefresh ? (
-            <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
-          ) : undefined
-        }
-        onScroll={(event) => {
-          lastScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
-        }}
-        ListEmptyComponent={
+      <BottomSheetMenuList
+        visible={!!statusMenuItemId}
+        onRequestClose={() => setStatusMenuItemId(null)}
+        items={statusMenuItems}
+        title="Change Status"
+      />
+      {embedded ? (
+        // Embedded mode: Use View + map (no scroll, parent handles it)
+        groupedRows.length === 0 ? (
           <View style={styles.emptyState}>
             <AppText variant="body">
               {isLoading ? 'Loading items…' : emptyMessage}
             </AppText>
           </View>
-        }
-        renderItem={({ item: row }) => {
+        ) : (
+          <View style={styles.list}>
+            {groupedRows.map((row) => {
+              const renderContent = () => {
           if (row.type === 'group') {
             const groupIds = row.items.map((item) => item.id);
             const groupSelected = groupIds.every((id) => selectedIds.includes(id));
@@ -997,6 +1031,9 @@ export function SharedItemsList({
                 items={row.items.map((item) => {
                   const isSelected = selectedIds.includes(item.id);
                   const menuItems = getMenuItems(item.item, item.label);
+                  const budgetCategoryName = item.item.budgetCategoryId
+                    ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
+                    : undefined;
 
                   const cardProps: ItemCardProps = {
                     name: item.label,
@@ -1005,6 +1042,7 @@ export function SharedItemsList({
                     locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
                     priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
                     statusLabel: item.item.status ?? undefined,
+                    budgetCategoryName: budgetCategoryName,
                     thumbnailUri: getPrimaryImage(item.item) ?? undefined,
                     selected: isSelected,
                     onSelectedChange: (next) => {
@@ -1017,6 +1055,7 @@ export function SharedItemsList({
                       const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
                       updateItem(accountId, item.id, { bookmark: next });
                     },
+                    onStatusPress: () => handleStatusPress(item.id),
                     onPress: () => {
                       handleOpenItem(item.id);
                     },
@@ -1037,6 +1076,9 @@ export function SharedItemsList({
           const item = row.item;
           const isSelected = selectedIds.includes(item.id);
           const menuItems = getMenuItems(item.item, item.label);
+          const budgetCategoryName = item.item.budgetCategoryId
+            ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
+            : undefined;
           return (
             <ItemCard
               name={item.label}
@@ -1045,6 +1087,7 @@ export function SharedItemsList({
               locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
               priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
               statusLabel={item.item.status ?? undefined}
+              budgetCategoryName={budgetCategoryName}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
               selected={isSelected}
               onSelectedChange={(next) => setItemSelected(item.id, next)}
@@ -1055,18 +1098,157 @@ export function SharedItemsList({
                 const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
                 updateItem(accountId, item.id, { bookmark: next });
               }}
+              onStatusPress={() => handleStatusPress(item.id)}
               onPress={() => {
                 handleOpenItem(item.id);
               }}
             />
           );
-        }}
-      />
-      <BulkSelectionBar
-        selectedCount={selectedIds.length}
-        onBulkActionsPress={() => setBulkSheetOpen(true)}
-        onClearSelection={clearSelection}
-      />
+              };
+
+              return (
+                <View key={row.type === 'group' ? row.groupId : row.item.id}>
+                  {renderContent()}
+                </View>
+              );
+            })}
+          </View>
+        )
+      ) : (
+        // Standalone mode: Use FlatList with scroll
+        <FlatList
+          ref={listRef}
+          data={groupedRows}
+          keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
+          contentContainerStyle={[
+            styles.list,
+            selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : null
+          ]}
+          refreshControl={
+            screenRefresh ? (
+              <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
+            ) : undefined
+          }
+          onScroll={(event) => {
+            lastScrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <AppText variant="body">
+                {isLoading ? 'Loading items…' : emptyMessage}
+              </AppText>
+            </View>
+          }
+          renderItem={({ item: row }) => {
+            if (row.type === 'group') {
+              const groupIds = row.items.map((item) => item.id);
+              const groupSelected = groupIds.every((id) => selectedIds.includes(id));
+              const summaryItem = row.items.find((item) => getPrimaryImage(item.item)) ?? row.items[0];
+              const summaryThumbnailUri = summaryItem ? (getPrimaryImage(summaryItem.item) ?? undefined) : undefined;
+              const isCollapsed = ((state.filters as any)?.[`collapsed:${row.groupId}`] ?? true) as boolean;
+              const groupPriceCents = row.items
+                .map((item) => getDisplayPriceCents(item.item))
+                .filter((value): value is number => typeof value === 'number');
+              const totalLabel =
+                groupPriceCents.length === row.items.length
+                  ? formatCents(groupPriceCents.reduce((sum, value) => sum + value, 0))
+                  : null;
+
+              return (
+                <GroupedItemCard
+                  summary={{
+                    name: row.label,
+                    sku: summaryItem?.item.sku ?? undefined,
+                    sourceLabel: summaryItem?.item.source ?? undefined,
+                    locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation
+                      ? summaryItem?.item.spaceId ?? undefined
+                      : undefined,
+                    notes: summaryItem?.item.notes ?? undefined,
+                    thumbnailUri: summaryThumbnailUri,
+                  }}
+                  countLabel={`×${row.count}`}
+                  totalLabel={totalLabel ?? undefined}
+                  items={row.items.map((item) => {
+                    const isSelected = selectedIds.includes(item.id);
+                    const menuItems = getMenuItems(item.item, item.label);
+
+                    const cardProps: ItemCardProps = {
+                      name: item.label,
+                      sku: item.item.sku ?? undefined,
+                      sourceLabel: item.item.source ?? undefined,
+                      locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
+                      priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
+                      statusLabel: item.item.status ?? undefined,
+                      thumbnailUri: getPrimaryImage(item.item) ?? undefined,
+                      selected: isSelected,
+                      onSelectedChange: (next) => {
+                        setItemSelected(item.id, next);
+                      },
+                      menuItems,
+                      bookmarked: Boolean(item.item.bookmark ?? (item.item as any).isBookmarked),
+                      onBookmarkPress: () => {
+                        if (!accountId) return;
+                        const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                        updateItem(accountId, item.id, { bookmark: next });
+                      },
+                      onPress: () => {
+                        handleOpenItem(item.id);
+                      },
+                    };
+
+                    return cardProps;
+                  })}
+                  expanded={!isCollapsed}
+                  onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
+                  selected={groupSelected}
+                  onSelectedChange={(next) => {
+                    setGroupSelection(groupIds, next);
+                  }}
+                />
+              );
+            }
+
+            const item = row.item;
+            const isSelected = selectedIds.includes(item.id);
+            const menuItems = getMenuItems(item.item, item.label);
+            const budgetCategoryName = item.item.budgetCategoryId
+              ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
+              : undefined;
+            return (
+              <ItemCard
+                name={item.label}
+                sku={item.item.sku ?? undefined}
+                sourceLabel={item.item.source ?? undefined}
+                locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
+                priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
+                statusLabel={item.item.status ?? undefined}
+                budgetCategoryName={budgetCategoryName}
+                thumbnailUri={getPrimaryImage(item.item) ?? undefined}
+                selected={isSelected}
+                onSelectedChange={(next) => setItemSelected(item.id, next)}
+                menuItems={menuItems}
+                bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
+                onBookmarkPress={() => {
+                  if (!accountId) return;
+                  const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                  updateItem(accountId, item.id, { bookmark: next });
+                }}
+                onStatusPress={() => handleStatusPress(item.id)}
+                onPress={() => {
+                  handleOpenItem(item.id);
+                }}
+              />
+            );
+          }}
+        />
+      )}
+      {!embedded && (
+        <BulkSelectionBar
+          selectedCount={selectedIds.length}
+          onBulkActionsPress={() => setBulkSheetOpen(true)}
+          onClearSelection={clearSelection}
+        />
+      )}
     </View>
   );
 }
@@ -1104,9 +1286,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
-  },
-  listWithBulkBar: {
-    paddingBottom: layout.screenBodyTopMd.paddingTop + 56,
   },
   emptyState: {
     alignItems: 'center',

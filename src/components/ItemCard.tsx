@@ -19,6 +19,7 @@ export type ItemCardProps = {
   priceLabel?: string;
   indexLabel?: string; // e.g. "1/2" (used for grouped item cards)
   statusLabel?: string;
+  budgetCategoryName?: string;
   thumbnailUri?: string;
 
   // Layout options
@@ -36,6 +37,7 @@ export type ItemCardProps = {
   onMenuPress?: () => void;
   menuItems?: AnchoredMenuItem[];
   onPress?: () => void;
+  onStatusPress?: () => void;
 
   /**
    * Custom action element rendered in the card header (e.g., an "Add" button in item pickers).
@@ -54,6 +56,7 @@ export function ItemCard({
   priceLabel,
   indexLabel,
   statusLabel,
+  budgetCategoryName,
   thumbnailUri,
   stackSkuAndSource,
   selected,
@@ -65,6 +68,7 @@ export function ItemCard({
   onMenuPress,
   menuItems,
   onPress,
+  onStatusPress,
   headerAction,
   style,
 }: ItemCardProps) {
@@ -179,16 +183,37 @@ export function ItemCard({
                   </Text>
                 </View>
               ) : null}
-              {statusLabel ? (
+              {budgetCategoryName ? (
                 <View
                   style={[styles.pill, themed.pill]}
                   accessibilityRole="text"
+                  accessibilityLabel={`Category: ${budgetCategoryName}`}
+                >
+                  <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
+                    {budgetCategoryName}
+                  </Text>
+                </View>
+              ) : null}
+              {statusLabel ? (
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onStatusPress?.();
+                  }}
+                  disabled={!onStatusPress}
+                  style={[styles.pill, themed.pill, { flexDirection: 'row', alignItems: 'center', gap: 2 }]}
+                  accessibilityRole={onStatusPress ? "button" : "text"}
                   accessibilityLabel={`Status: ${statusLabel}`}
                 >
                   <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
                     {statusLabel}
                   </Text>
-                </View>
+                  <MaterialIcons
+                    name="arrow-drop-down"
+                    size={16}
+                    color={uiKitTheme.primary.main}
+                  />
+                </Pressable>
               ) : null}
             </View>
             {headerAction ?? null}

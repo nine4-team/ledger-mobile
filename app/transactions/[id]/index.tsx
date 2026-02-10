@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
@@ -11,11 +12,12 @@ import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList'
 import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
+import { BulkSelectionBar } from '../../../src/components/BulkSelectionBar';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
-import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
+import { getTextColorStyle, getTextSecondaryStyle, layout, getBulkSelectionBarContentPadding } from '../../../src/ui';
 import { useItemsManager } from '../../../src/hooks/useItemsManager';
 import { SharedItemsList } from '../../../src/components/SharedItemsList';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
@@ -95,6 +97,7 @@ export default function TransactionDetailScreen() {
   const scope = Array.isArray(params.scope) ? params.scope[0] : params.scope;
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
+  const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
@@ -106,6 +109,7 @@ export default function TransactionDetailScreen() {
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -1032,10 +1036,16 @@ export default function TransactionDetailScreen() {
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={!itemsManager.hasSelection ? () => setAddMenuVisible(true) : undefined}
+              onAdd={() => itemsManager.hasSelection ? setBulkActionsSheetVisible(true) : setAddMenuVisible(true)}
               leftElement={
                 <TouchableOpacity
-                  onPress={itemsManager.selectAll}
+                  onPress={() => {
+                    if (itemsManager.allSelected) {
+                      itemsManager.clearSelection();
+                    } else {
+                      itemsManager.selectAll();
+                    }
+                  }}
                   style={[
                     styles.selectButton,
                     {
@@ -1166,7 +1176,17 @@ export default function TransactionDetailScreen() {
         // Convert Set<string> to string[] and adapt methods
         const manager = {
           selectedIds: Array.from(itemsManager.selectedIds),
-          selectAll: itemsManager.selectAll,
+          selectAll: () => {
+            const allItemIds = itemsManager.filteredAndSortedItems.map(item => item.id);
+            const allSelected = allItemIds.length > 0 &&
+              allItemIds.every(id => itemsManager.selectedIds.has(id));
+
+            if (allSelected) {
+              itemsManager.clearSelection();
+            } else {
+              itemsManager.selectAll();
+            }
+          },
           clearSelection: itemsManager.clearSelection,
           setItemSelected: (id: string, selected: boolean) => {
             const isCurrentlySelected = itemsManager.selectedIds.has(id);
@@ -1221,6 +1241,7 @@ export default function TransactionDetailScreen() {
       headerRight={headerActions}
       onPressMenu={() => setMenuVisible(true)}
       contentStyle={styles.screenContent}
+      includeBottomInset={false}
     >
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -1234,11 +1255,70 @@ export default function TransactionDetailScreen() {
             renderItem={renderItem}
             stickySectionHeadersEnabled={true}
             keyExtractor={(item, index) => item.id ?? `section-${index}`}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+              styles.content,
+              itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : undefined
+            ]}
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={({ section }) =>
               section.key === 'items' ? <View style={styles.itemSeparator} /> : null
             }
+          />
+
+          <BulkSelectionBar
+            selectedCount={itemsManager.selectionCount}
+            onBulkActionsPress={() => setBulkActionsSheetVisible(true)}
+            onClearSelection={itemsManager.clearSelection}
+          />
+
+          {/* Bulk actions sheet for items section */}
+          <BottomSheetMenuList
+            visible={bulkActionsSheetVisible}
+            onRequestClose={() => setBulkActionsSheetVisible(false)}
+            items={[
+              {
+                key: 'set-space',
+                label: 'Set Space',
+                onPress: () => {
+                  setBulkActionsSheetVisible(false);
+                  handleBulkAction('set-space', []);
+                },
+              },
+              {
+                key: 'set-status',
+                label: 'Set Status',
+                onPress: () => {
+                  setBulkActionsSheetVisible(false);
+                  handleBulkAction('set-status', []);
+                },
+              },
+              {
+                key: 'set-sku',
+                label: 'Set SKU',
+                onPress: () => {
+                  setBulkActionsSheetVisible(false);
+                  handleBulkAction('set-sku', []);
+                },
+              },
+              {
+                key: 'remove',
+                label: 'Remove from Transaction',
+                onPress: () => {
+                  setBulkActionsSheetVisible(false);
+                  handleBulkAction('remove', []);
+                },
+              },
+              {
+                key: 'delete',
+                label: 'Delete Items',
+                onPress: () => {
+                  setBulkActionsSheetVisible(false);
+                  handleBulkAction('delete', []);
+                },
+              },
+            ]}
+            title={`Bulk Actions (${itemsManager.selectionCount})`}
+            showLeadingIcons={false}
           />
 
           <BottomSheetMenuList

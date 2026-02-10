@@ -1,8 +1,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { useTheme } from '../theme/ThemeProvider';
+import { BULK_SELECTION_BAR } from '../ui';
 
 type BulkSelectionBarProps = {
   selectedCount: number;
@@ -16,6 +18,7 @@ export function BulkSelectionBar({
   onClearSelection,
 }: BulkSelectionBarProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   if (selectedCount === 0) return null;
 
@@ -26,6 +29,7 @@ export function BulkSelectionBar({
         {
           backgroundColor: theme.colors.background,
           borderTopColor: theme.colors.border,
+          paddingBottom: Math.max(BULK_SELECTION_BAR.MIN_PADDING_BOTTOM, insets.bottom),
         },
       ]}
     >
@@ -58,7 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
     // Shadow for elevation
     shadowColor: '#000',

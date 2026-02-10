@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
@@ -12,7 +13,7 @@ import { TransactionCard } from './TransactionCard';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { BUTTON_BORDER_RADIUS, getTextColorStyle, layout } from '../ui';
+import { BUTTON_BORDER_RADIUS, getTextColorStyle, layout, getBulkSelectionBarContentPadding } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListenersMultiple } from '../data/useScopedListeners';
@@ -134,6 +135,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     [uiKitTheme]
   );
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
   const lastScrollOffsetRef = useRef(0);
@@ -1115,7 +1117,10 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         ref={listRef}
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.list, selectedIds.length > 0 ? styles.listWithBulkBar : null]}
+        contentContainerStyle={[
+          styles.list,
+          selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : null
+        ]}
         refreshControl={
           screenRefresh ? (
             <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
@@ -1246,9 +1251,6 @@ const styles = StyleSheet.create({
   list: {
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
-  },
-  listWithBulkBar: {
-    paddingBottom: layout.screenBodyTopMd.paddingTop + 56,
   },
   emptyState: {
     alignItems: 'center',
