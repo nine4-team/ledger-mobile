@@ -61,11 +61,11 @@
 **Estimated Size**: ~400 lines
 
 ### Included Subtasks
-- [ ] T007 Define section structure for SpaceDetailContent (media, notes, items, checklists)
-- [ ] T008 Add collapsed state management with per-section defaults
-- [ ] T009 Replace AppScrollView + StickyHeader with SectionList
-- [ ] T010 Implement `renderSectionHeader` for items section (sticky control bar)
-- [ ] T011 Implement `renderItem` for all sections with SECTION_HEADER_MARKER pattern
+- [x] T007 Define section structure for SpaceDetailContent (media, notes, items, checklists)
+- [x] T008 Add collapsed state management with per-section defaults
+- [x] T009 Replace AppScrollView + StickyHeader with SectionList
+- [x] T010 Implement `renderSectionHeader` for items section (sticky control bar)
+- [x] T011 Implement `renderItem` for all sections with SECTION_HEADER_MARKER pattern
 
 ### Implementation Notes
 - Follow the transaction detail reference pattern: SECTION_HEADER_MARKER as first data item for non-sticky sections
