@@ -274,7 +274,7 @@ export function SpaceDetailContent({
     result.push({
       key: 'items',
       title: 'ITEMS',
-      data: itemsCollapsed ? [] : itemsManager.filteredAndSortedItems,
+      data: itemsCollapsed ? [] : ['items-content'],
       badge: itemCount > 0 ? String(itemCount) : undefined,
     });
 

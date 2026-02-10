@@ -245,7 +245,7 @@ export default function TransactionDetailScreen() {
     result.push({
       key: 'items',
       title: 'TRANSACTION ITEMS',
-      data: collapsedSections.items ? [] : [SECTION_HEADER_MARKER],
+      data: collapsedSections.items ? [] : ['items-content'],
       badge: `${itemsManager.filteredAndSortedItems.length}`,
     });
 

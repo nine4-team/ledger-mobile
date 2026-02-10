@@ -89,6 +89,7 @@ export function ItemsSection<S extends string = string, F extends string = strin
                 title={action.label}
                 variant={action.variant === 'destructive' ? 'secondary' : action.variant}
                 onPress={() => onBulkAction(action.id, [...manager.selectedIds])}
+                icon={action.icon}
               />
             ))}
           </View>
