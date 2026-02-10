@@ -1,24 +1,27 @@
 ---
-work_package_id: "WP01"
-subtasks:
-  - "T001"
-  - "T002"
-  - "T003"
-title: "Completeness Calculation Utility"
-phase: "Phase 1 - MVP"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP01
+title: Completeness Calculation Utility
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 57be6e4ca03ba84f11d251ae8e4a15cf33f91270
+created_at: '2026-02-10T01:13:26.578262+00:00'
+subtasks:
+- T001
+- T002
+- T003
+phase: Phase 1 - MVP
+assignee: ''
+agent: ''
+shell_pid: "75313"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-09T15:00:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-09T15:00:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP01 – Completeness Calculation Utility
