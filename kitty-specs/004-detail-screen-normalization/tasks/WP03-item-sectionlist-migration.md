@@ -14,7 +14,7 @@ subtasks:
 - T016
 phase: Phase 1 - Space Consolidation + SectionList Migration
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "39334"
 review_status: ''
 reviewed_by: ''
@@ -428,3 +428,4 @@ No dependencies — item detail is independent of space detail work. Can run in 
 ## Activity Log
 
 - 2026-02-10T02:25:42Z – system – lane=planned – Prompt created.
+- 2026-02-10T03:41:08Z – claude-sonnet – shell_pid=39334 – lane=doing – Assigned agent via workflow command
