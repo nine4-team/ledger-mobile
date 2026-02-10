@@ -46,7 +46,7 @@ router.back(); // navigate immediately, don't await
 - Use `setDoc` with `{ merge: true }` for idempotency
 - Navigate immediately after writing
 
-**On "high-risk" fields** (budgetCents, amountCents, purchasePriceCents): these stay in Tier 1. Last-write-wins is acceptable because concurrent edits are rare in small teams, and the Firestore local cache ensures the writing user sees their value immediately. If this becomes a problem, add lightweight `updatedAt` checks in security rules — not request-docs.
+**On "high-risk" fields** (budgetCents, amountCents, purchasePriceCents): these stay in Tier 1. Last-write-wins is correct because these are source/planning data on single-owner documents — not derived totals. See [High-Risk Fields](#high-risk-fields-why-conflict-detection-is-not-required) for the full argument.
 
 ### Tier 2: Request-Doc (multi-doc atomic operations)
 
@@ -113,26 +113,21 @@ Don't build parallel state that drifts from the subscription. Edit screens are t
 
 ### 2. Edit screens: populate once, then user owns the state
 
+The `useEditForm<T>` hook (`src/hooks/useEditForm.ts`) encapsulates this pattern:
+
 ```ts
-const userHasEdited = useRef(false);
+const form = useEditForm<ItemFormValues>(item);
 
-useEffect(() => {
-  const unsub = subscribeToData(id, (data) => {
-    if (!userHasEdited.current) {
-      setFormState(data);
-    }
-    setIsLoading(false);
-  });
-  return unsub;
-}, [id]);
-
-const handleChange = (value) => {
-  userHasEdited.current = true;
-  setFormState(prev => ({ ...prev, field: value }));
-};
+// form.values           — current form state
+// form.setField(k, v)   — update one field, marks hasEdited
+// form.hasChanges       — true if any field differs from snapshot
+// form.getChangedFields() — only the fields that changed (for partial writes)
+// form.shouldAcceptSubscriptionData — true until first setField call
 ```
 
-Subscribe to the document. Populate form state from the first callback(s). Once the user starts editing, stop accepting subscription updates. On save, write form values back (fire-and-forget) and navigate away.
+**Behavior**: The hook captures a snapshot from the first non-null `initialData`. Subscription updates flow through until the user makes their first edit (`setField`), then the form freezes and only tracks user changes. On save, `getChangedFields()` returns only modified fields for a partial write.
+
+All edit screens (project, spaces, budget categories, items, transactions) use this hook. See [Edit Form Patterns](#edit-form-patterns) for details.
 
 ### 3. Client-side ID generation
 
@@ -198,6 +193,56 @@ Limits: 5–10 listeners per scope, 1–2 active scopes at a time. Don't create 
 
 ---
 
+## Edit Form Patterns
+
+All edit screens use the `useEditForm<T>` hook (`src/hooks/useEditForm.ts`) for state management and change tracking.
+
+### Basic Usage
+
+```ts
+// In an edit screen component
+const form = useEditForm<ProjectFormValues>(project);
+
+const handleSave = () => {
+  if (!form.hasChanges) {
+    router.back(); // No changes — skip the write entirely
+    return;
+  }
+  const changes = form.getChangedFields();
+  updateProject(accountId, projectId, changes).catch(console.error);
+  router.back(); // Navigate immediately (fire-and-forget)
+};
+```
+
+### How It Works
+
+1. **Snapshot capture**: First non-null `initialData` is stored as the comparison baseline
+2. **Subscription passthrough**: Until the user edits, subscription updates flow through to form state
+3. **Edit freeze**: After the first `setField()` call, subscription updates are ignored — the user owns the form
+4. **Change detection**: `getChangedFields()` does shallow per-key comparison against the snapshot, normalizing `null` ≈ `undefined` (Firestore doesn't store `undefined`)
+
+### Why Partial Writes Matter
+
+`getChangedFields()` ensures only modified fields are written to Firestore:
+
+- **Reduces write costs** — Firestore charges per field written
+- **Improves offline performance** — smaller payloads in the sync queue
+- **Prevents unintentional overwrites** — subscription-delivered fields aren't sent back
+- **Enables no-change detection** — skip writes entirely when `hasChanges` is false
+
+### Screens Using This Pattern
+
+| Screen | File | Fields |
+|--------|------|--------|
+| Project edit | `app/project/[projectId]/edit.tsx` | name, clientName, description |
+| Space edit (business) | `app/business-inventory/spaces/[spaceId]/edit.tsx` | name, notes |
+| Space edit (project) | `app/project/[projectId]/spaces/[spaceId]/edit.tsx` | name, notes |
+| Budget category edit | `app/(tabs)/settings.tsx` | name, slug, metadata |
+| Item edit | `app/items/[id]/edit.tsx` | 9 fields (name, prices, quantity, etc.) |
+| Transaction edit | `app/transactions/[id]/edit.tsx` | 13 fields (most complex) |
+
+---
+
 ## Module Boundaries
 
 ### Data layer (`src/data/`)
@@ -234,11 +279,283 @@ All server-side logic: request-doc handlers, callable functions, Firestore trigg
 
 ---
 
-## What We Explicitly Do NOT Build
+## High-Risk Fields: Why Conflict Detection Is Not Required
+
+Fields like `budgetCents`, `purchasePriceCents`, `estimatedPriceCents`, and `salePriceCents` are **source/planning data, not derived totals**. They represent direct user input on a single document, and the correct value is whatever the user last entered.
+
+### Key Distinctions
+
+**Source Data (no conflict detection needed)**:
+- `budgetCents`: User's planned budget allocation for a category (single source of truth per document)
+- `purchasePriceCents`: Actual price paid for an item (single transaction, single value)
+- `estimatedPriceCents`: User's estimate for an item (planning value, not aggregated)
+- `salePriceCents`: Actual sale price for an item (single transaction, single value)
+
+Each of these is:
+- **Direct user input** on a specific document (not computed from other sources)
+- **Single-owner data**: Only one user edits planning values for a project/item at a time
+- **Not aggregated**: These are not sums or totals that could accumulate incorrectly
+
+**Derived Totals (different story)**:
+- Actual spend totals are **computed at read time** from transaction documents (internal `buildBudgetProgress()` in `src/data/budgetProgressService.ts`)
+- Never stored as competing fields that could drift
+- Always reflect current transaction state (source of truth is the transactions collection)
+
+### Fallback: Security Rule Checks
+
+If concurrent edits become a concern (e.g., collaborative budget editing), Firestore security rules can enforce `updatedAt` timestamp checks:
+
+```javascript
+// Security rule: Reject writes if document was modified since last read
+allow update: if request.resource.data.updatedAt == resource.data.updatedAt;
+```
+
+This is a **one-line rule** that provides lightweight staleness detection without complex application logic or Cloud Functions.
+
+### Why `getChangedFields()` Is Still Important
+
+Even without conflict detection, partial writes via `getChangedFields()` are critical:
+- **Reduces Firestore write costs** (only send modified fields)
+- **Improves offline performance** (smaller payloads)
+- **Prevents unintentional overwrites** (e.g., subscription updates during editing)
+- **Provides user feedback** (e.g., skip save when `hasChanges` is false)
+
+The `useEditForm` hook (`src/hooks/useEditForm.ts`) provides this functionality across all edit screens.
+
+---
+
+## Schema Evolution Strategy
+
+This documents how the app handles schema changes over time as new fields are added or data structures change.
+
+### MVP Pattern: Optional Fields + Merge Writes
+
+**Pattern**: All new fields are optional, and writes use `{ merge: true }` to avoid overwriting existing data.
+
+**Example — Adding a new field**:
+
+```typescript
+// New field: `estimatedCompletionDate` added to Project type
+interface Project {
+  id: string;
+  name: string;
+  // ... existing fields
+  estimatedCompletionDate?: Timestamp; // New optional field
+}
+
+// Write with merge: true
+setDoc(projectRef, {
+  estimatedCompletionDate: newDate,
+  updatedAt: serverTimestamp(),
+}, { merge: true });
+
+// Read with undefined handling
+const project = projectSnap.data() as Project;
+const completionDate = project.estimatedCompletionDate ?? null;
+```
+
+**Key Principles**:
+1. **Always optional**: New fields use `?` in TypeScript types
+2. **Merge writes**: Use `{ merge: true }` or partial `setDoc` to preserve existing fields
+3. **Undefined handling**: Read code handles `undefined` gracefully (use `??` operator for defaults)
+4. **No schema version**: No `schemaVersion` field or formal migration framework for MVP
+
+**Benefits**:
+- Simple: No migration code to maintain
+- Offline-friendly: No need to run migrations before offline writes
+- Backward compatible: Old clients can read new documents (ignore unknown fields)
+
+**Limitations**:
+- Cannot rename fields (old field remains forever, or requires manual cleanup)
+- Cannot change field types (e.g., string → number) without read-time conversion
+- Cannot remove required fields (would break old clients)
+
+### Breaking Changes (When MVP Pattern Isn't Enough)
+
+If a breaking change is needed (e.g., rename field, change type, remove required field):
+
+**Option 1: Read-Time Normalization** (preferred for one-off conversions)
+
+```typescript
+// Normalize old schema to new schema at read time
+const normalizeProject = (raw: any): Project => {
+  return {
+    id: raw.id,
+    name: raw.name || raw.projectName, // Handle old field name
+    estimatedBudgetCents: typeof raw.estimatedBudget === 'string'
+      ? parseFloat(raw.estimatedBudget) * 100  // Convert old string format to cents
+      : raw.estimatedBudgetCents ?? 0,
+    // ... other fields
+  };
+};
+```
+
+**Option 2: Schema Version + Migration** (for complex multi-step migrations)
+
+```typescript
+interface Project {
+  schemaVersion: number; // 1, 2, 3...
+  // ... fields
+}
+
+const migrateProject = (raw: any): Project => {
+  const version = raw.schemaVersion ?? 1;
+  if (version === 1) {
+    // Migrate v1 → v2
+    return { ...raw, schemaVersion: 2, newField: defaultValue };
+  }
+  return raw;
+};
+```
+
+### Current Schema State
+
+As of MVP, no documents have `schemaVersion` fields. All types are at implicit "version 1." If breaking changes are introduced in the future, add `schemaVersion` to affected types and implement migrations at read time.
+
+---
+
+## Known Limitations (Accepted for MVP)
+
+These are architectural tradeoffs made consciously for the MVP. Future iterations may address them if they become pain points.
+
+### Silent Security Rule Failures
+
+**Behavior**: Firestore applies writes optimistically to the local cache even if the server later rejects them due to security rule violations. Users may see "phantom" values that never sync to the server.
+
+**Example**:
+- User edits a document they don't have permission to modify
+- Edit appears immediately in the app (offline-first, optimistic write)
+- Server rejects the write due to security rules
+- User sees the edited value locally, but other users never see it
+- No immediate error message to the user (only shows up in sync banner later)
+
+**Why This Happens**:
+- Firestore SDK applies writes to local cache before server validation (by design for offline support)
+- Security rules only run on the server (not in client SDK)
+- No synchronous feedback on security rule failures
+
+**Mitigation Strategies (Implemented)**:
+1. **Pending write tracking**: All writes call `trackPendingWrite()` (`src/sync/pendingWrites.ts`) for sync status visibility
+2. **Sync status banner**: `SyncStatusBanner` component shows failed operations with error messages
+3. **Defensive permissions**: Security rules designed to be permissive for authenticated account members (reduces failure scenarios)
+
+**Mitigation Strategies (Not Implemented for MVP)**:
+1. **Pre-write permission checks**: Client-side validation that mirrors security rules (complex, error-prone, duplicates logic)
+2. **Rollback on failure**: Revert local cache when server rejects write (requires custom logic, breaks offline-first guarantees)
+3. **Blocking writes**: Await server acknowledgment before showing success (defeats offline-first, poor UX)
+
+**Accepted Tradeoff**: For MVP, we accept that users may occasionally see phantom values. The sync banner provides visibility when failures occur, and defensive security rules minimize the risk.
+
+**Future Improvement**: If this becomes a frequent issue, consider pre-write permission validation (mirror rules in client) or more aggressive sync banner notifications (foreground alerts for failures).
+
+---
+
+## Do NOT Build (Anti-Patterns)
+
+These are patterns we explicitly reject for this architecture. If you're considering building one of these, review the rationale first.
+
+### Existing Rejections
 
 - **Custom sync engine or outbox** — Firestore's native SDK handles offline persistence and sync
 - **Cursor-based pulls** — `onSnapshot` provides real-time updates
 - **Client-side conflict resolution** — last-write-wins for single docs; server-side transactions for multi-doc
-- **Request-doc workflows for single-doc edits** — even for money fields. Last-write-wins is correct for small teams
-- **Compare-before-commit UX** — no "someone else edited this" dialogs. Too complex, too rare to justify
+- **Request-doc workflows for single-doc edits** — even for money fields. Last-write-wins is correct (see [High-Risk Fields](#high-risk-fields-why-conflict-detection-is-not-required))
 - **Fine-grained per-field permissions** — simple role-based access is sufficient for MVP
+
+### Full-Form Overwrites on Edit Screens
+
+**Anti-Pattern**: Sending all form fields to Firestore on save, even if only one field changed.
+
+```typescript
+// BAD: Overwrites all fields, even unchanged ones
+const handleSave = () => {
+  updateDoc(itemRef, {
+    name: name,
+    description: description,
+    spaceId: spaceId,
+    status: status,
+    estimatedPriceCents: estimatedPriceCents,
+    purchasePriceCents: purchasePriceCents,
+    salePriceCents: salePriceCents,
+    quantity: quantity,
+    tags: tags,
+  });
+};
+```
+
+**Why It's Bad**:
+- **Cost**: Firestore charges per field written (9 field writes vs 1 field write)
+- **Offline performance**: Larger payloads slow down sync queue
+- **Conflict risk**: Overwrites fields that may have changed via subscription
+- **No-change detection**: Can't skip write if user saved without edits
+
+**Correct Pattern**: Use `getChangedFields()` to send only modified fields:
+
+```typescript
+// GOOD: Only sends changed fields
+const handleSave = () => {
+  if (!form.hasChanges) {
+    router.back();
+    return;
+  }
+  const changedFields = form.getChangedFields();
+  updateItem(accountId, itemId, changedFields).catch(console.error);
+  router.back();
+};
+```
+
+**Implemented in**: `useEditForm` hook (`src/hooks/useEditForm.ts`), used by all edit screens.
+
+### Full Compare-Before-Commit UX
+
+**Anti-Pattern**: Blocking saves while fetching latest server data for comparison, showing diff UI, requiring user confirmation.
+
+```typescript
+// BAD: Blocks save, fetches server data, shows diff modal
+const handleSave = async () => {
+  setIsLoading(true);
+  const latestItem = await fetchLatestFromServer(itemId); // Blocks on network
+  const conflicts = compareFields(form.values, latestItem);
+  if (conflicts.length > 0) {
+    setShowConflictModal(true); // User must resolve conflicts
+  } else {
+    await updateDoc(itemRef, form.values);
+  }
+  setIsLoading(false);
+};
+```
+
+**Why It's Bad for MVP**:
+- **Offline-hostile**: Requires network call before save (breaks offline-first)
+- **Slow UX**: Users wait for server round-trip on every save
+- **Complex UI**: Requires conflict resolution modal, diff viewer
+- **Overkill**: Only needed for high-conflict scenarios (collaborative real-time editing)
+
+**What We Build Instead**: Lightweight staleness check via `useEditForm`.
+
+### Staleness Check Comparison
+
+| Feature | Lightweight Check (Implemented) | Full Compare-Before-Commit (Not Built) |
+|---------|--------------------------------|----------------------------------------|
+| Network call on save | No | Yes (fetch latest) |
+| Detects user edits | Yes | Yes |
+| Detects concurrent edits | No | Yes |
+| Shows diff UI | No | Yes |
+| Blocks save on conflict | No | Yes |
+| Offline-friendly | Yes | No |
+| User friction | Low | High |
+| Appropriate for | Single-user editing, low conflict | Real-time collaboration, high conflict |
+
+**Lightweight staleness check (what we built)**:
+- Tracks which fields user edited, prevents subscription overwrites during editing
+- `useEditForm` hook compares form state to initial snapshot (no network call)
+- Zero network overhead, zero latency
+- Does NOT detect concurrent edits from other users
+
+**Full compare-before-commit UX (what we don't build)**:
+- Fetches latest server data before save (network call)
+- Shows diff UI for conflicts (modal, side-by-side view)
+- Requires user to resolve conflicts (choose version, merge manually)
+- Appropriate for high-conflict scenarios (e.g., Google Docs-style collaboration)
+
+**When to Reconsider**: If usage patterns show frequent concurrent edits with data loss, revisit this decision. For MVP with small teams (2–5 users), the lightweight approach is sufficient.
