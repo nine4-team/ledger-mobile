@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
-import { AppScrollView } from '../../../src/components/AppScrollView';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { TitledCard } from '../../../src/components/TitledCard';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
+import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -47,6 +47,17 @@ type ItemDetailParams = {
   listStateKey?: string;
 };
 
+type ItemSectionKey = 'hero' | 'media' | 'notes' | 'details';
+
+type ItemSection = {
+  key: ItemSectionKey;
+  title?: string;
+  data: any[];
+  badge?: string;
+};
+
+const SECTION_HEADER_MARKER = '__sectionHeader__';
+
 function formatMoney(cents: number | null | undefined): string {
   if (typeof cents !== 'number') return '—';
   return `$${(cents / 100).toFixed(2)}`;
@@ -72,6 +83,11 @@ export default function ItemDetailScreen() {
   const [targetCategoryId, setTargetCategoryId] = useState('');
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    media: false,
+    notes: true,
+    details: true,
+  });
 
   useEffect(() => {
     if (scope === 'project' && projectId) {
@@ -305,6 +321,52 @@ export default function ItemDetailScreen() {
     if (scope === 'project') return projectId ? `Project ${projectId}` : 'Project';
     return projectId ? `Project ${projectId}` : '—';
   }, [projectId, scope]);
+
+  const handleToggleSection = useCallback((key: string) => {
+    setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const sections: ItemSection[] = useMemo(() => {
+    if (isLoading || !item) return [];
+
+    const result: ItemSection[] = [];
+
+    // Hero section — always visible, no header, no collapse
+    result.push({
+      key: 'hero',
+      data: ['hero-content'],
+    });
+
+    // Media section (non-sticky, collapsible)
+    result.push({
+      key: 'media',
+      title: 'IMAGES',
+      data: collapsedSections.media
+        ? [SECTION_HEADER_MARKER]
+        : [SECTION_HEADER_MARKER, 'media-content'],
+    });
+
+    // Notes section (non-sticky, collapsible)
+    result.push({
+      key: 'notes',
+      title: 'NOTES',
+      data: collapsedSections.notes
+        ? [SECTION_HEADER_MARKER]
+        : [SECTION_HEADER_MARKER, 'notes-content'],
+    });
+
+    // Details section (non-sticky, collapsible)
+    result.push({
+      key: 'details',
+      title: 'DETAILS',
+      data: collapsedSections.details
+        ? [SECTION_HEADER_MARKER]
+        : [SECTION_HEADER_MARKER, 'details-content'],
+    });
+
+    return result;
+  }, [isLoading, item, collapsedSections]);
+
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
     const items: AnchoredMenuItem[] = [
       {
@@ -383,6 +445,193 @@ export default function ItemDetailScreen() {
     scope,
   ]);
 
+  const renderItem = useCallback(({ item: dataItem, section }: { item: any; section: ItemSection }) => {
+    if (!item) return null;
+
+    // Non-sticky section headers
+    if (dataItem === SECTION_HEADER_MARKER) {
+      if (!section.title) return null; // hero has no header
+      return (
+        <CollapsibleSectionHeader
+          title={section.title}
+          collapsed={collapsedSections[section.key] ?? false}
+          onToggle={() => handleToggleSection(section.key)}
+          badge={section.badge}
+        />
+      );
+    }
+
+    switch (section.key) {
+      case 'hero':
+        return (
+          <>
+            {/* Hero card — name + transaction link */}
+            <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
+              <View style={styles.heroHeader}>
+                <AppText variant="h2" style={styles.heroTitle}>
+                  {item.name?.trim() || 'Untitled item'}
+                </AppText>
+                <View style={styles.heroSubtitle}>
+                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                    Transaction:{' '}
+                  </AppText>
+                  {trimmedTransactionId ? (
+                    <Pressable accessibilityRole="link" onPress={handleOpenTransaction}>
+                      <AppText
+                        variant="caption"
+                        style={[
+                          styles.linkText,
+                          getTextColorStyle(uiKitTheme.link),
+                        ]}
+                      >
+                        {transactionLabel}
+                      </AppText>
+                    </Pressable>
+                  ) : (
+                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                      None
+                    </AppText>
+                  )}
+                </View>
+              </View>
+            </View>
+            {/* Error banner (conditional) */}
+            {error ? (
+              <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
+                <AppText variant="caption" style={[styles.errorText, getTextSecondaryStyle(uiKitTheme)]}>
+                  {error}
+                </AppText>
+              </View>
+            ) : null}
+          </>
+        );
+
+      case 'media':
+        return (
+          <MediaGallerySection
+            title="Images"
+            hideTitle={true}
+            attachments={item.images ?? []}
+            maxAttachments={5}
+            allowedKinds={['image']}
+            onAddAttachment={handleAddImage}
+            onRemoveAttachment={handleRemoveImage}
+            onSetPrimary={handleSetPrimaryImage}
+            emptyStateMessage="No images yet."
+            pickerLabel="Add image"
+            size="md"
+            tileScale={1.5}
+          />
+        );
+
+      case 'notes':
+        return <NotesSection notes={item.notes} expandable={true} />;
+
+      case 'details':
+        return (
+          <TitledCard title="Details">
+            <View style={styles.detailRows}>
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Source
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {item.source?.trim() || '—'}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  SKU
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {item.sku?.trim() || '—'}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Purchase price
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {formatMoney(item.purchasePriceCents)}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Project price
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {formatMoney(item.projectPriceCents)}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Market value
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {formatMoney(item.marketValueCents)}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Space
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {spaceLabel}
+                </AppText>
+              </View>
+              <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
+              <View style={styles.detailRow}>
+                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+                  Budget category
+                </AppText>
+                <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
+                  {budgetCategoryLabel}
+                </AppText>
+              </View>
+            </View>
+          </TitledCard>
+        );
+
+      default:
+        return null;
+    }
+  }, [item, error, collapsedSections, handleToggleSection, uiKitTheme,
+      handleAddImage, handleRemoveImage, handleSetPrimaryImage,
+      trimmedTransactionId, transactionLabel, handleOpenTransaction,
+      spaceLabel, budgetCategoryLabel]);
+
+  const listFooter = useMemo(() => {
+    if (scope === 'inventory') return null;
+    return (
+      <TitledCard title="Move item">
+        <View style={styles.moveForm}>
+          <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+            Move to another project
+          </AppText>
+          <TextInput
+            value={targetProjectId}
+            onChangeText={setTargetProjectId}
+            placeholder="Target project id"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          />
+          <TextInput
+            value={targetCategoryId}
+            onChangeText={setTargetCategoryId}
+            placeholder="Destination category id"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          />
+        </View>
+      </TitledCard>
+    );
+  }, [scope, targetProjectId, targetCategoryId, theme.colors.textSecondary, uiKitTheme]);
+
   const headerActions = (
     <View style={styles.headerRight}>
       {statusLabel ? (
@@ -420,175 +669,40 @@ export default function ItemDetailScreen() {
       onPressMenu={() => setMenuVisible(true)}
       contentStyle={styles.screenContent}
     >
-      <AppScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {isLoading ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
           <AppText variant="body">Loading item…</AppText>
-        ) : item ? (
-          <>
-            <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
-              <View style={styles.heroHeader}>
-                <AppText variant="h2" style={styles.heroTitle}>
-                  {item.name?.trim() || 'Untitled item'}
-                </AppText>
-                <View style={styles.heroSubtitle}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Transaction:{' '}
-                  </AppText>
-                  {trimmedTransactionId ? (
-                    <Pressable accessibilityRole="link" onPress={handleOpenTransaction}>
-                      <AppText
-                        variant="caption"
-                        style={[
-                          styles.linkText,
-                          getTextColorStyle(uiKitTheme.link),
-                        ]}
-                      >
-                        {transactionLabel}
-                      </AppText>
-                    </Pressable>
-                  ) : (
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      None
-                    </AppText>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {error ? (
-              <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
-                <AppText variant="caption" style={[styles.errorText, getTextSecondaryStyle(uiKitTheme)]}>
-                  {error}
-                </AppText>
-              </View>
-            ) : null}
-
-            <MediaGallerySection
-              title="Images"
-              attachments={item.images ?? []}
-              maxAttachments={5}
-              allowedKinds={['image']}
-              onAddAttachment={handleAddImage}
-              onRemoveAttachment={handleRemoveImage}
-              onSetPrimary={handleSetPrimaryImage}
-              emptyStateMessage="No images yet."
-              pickerLabel="Add image"
-              size="md"
-              tileScale={1.5}
-            />
-
-            <NotesSection notes={item.notes} expandable={true} />
-
-            <TitledCard title="Details">
-              <View style={styles.detailRows}>
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Source
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {item.source?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    SKU
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {item.sku?.trim() || '—'}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Purchase price
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {formatMoney(item.purchasePriceCents)}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Project price
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {formatMoney(item.projectPriceCents)}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Market value
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {formatMoney(item.marketValueCents)}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Space
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {spaceLabel}
-                  </AppText>
-                </View>
-                <View style={[styles.divider, { borderTopColor: uiKitTheme.border.secondary }]} />
-                <View style={styles.detailRow}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    Budget category
-                  </AppText>
-                  <AppText variant="body" style={[styles.valueText, textEmphasis.value]}>
-                    {budgetCategoryLabel}
-                  </AppText>
-                </View>
-              </View>
-            </TitledCard>
-
-            {scope !== 'inventory' ? (
-              <TitledCard title="Move item">
-                  <View style={styles.moveForm}>
-                    <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                      Move to another project
-                    </AppText>
-                    <TextInput
-                      value={targetProjectId}
-                      onChangeText={setTargetProjectId}
-                      placeholder="Target project id"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                    <TextInput
-                      value={targetCategoryId}
-                      onChangeText={setTargetCategoryId}
-                      placeholder="Destination category id"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-                    />
-                  </View>
-              </TitledCard>
-            ) : null}
-            <BottomSheetMenuList
-              visible={menuVisible}
-              onRequestClose={() => setMenuVisible(false)}
-              items={menuItems}
-              title="Item actions"
-              showLeadingIcons={true}
-            />
-          </>
-        ) : (
+        </View>
+      ) : !item ? (
+        <View style={styles.loadingContainer}>
           <AppText variant="body">Item not found.</AppText>
-        )}
-      </AppScrollView>
+        </View>
+      ) : (
+        <SectionList
+          sections={sections}
+          renderItem={renderItem}
+          renderSectionHeader={() => null}
+          stickySectionHeadersEnabled={false}
+          keyExtractor={(dataItem, index) =>
+            dataItem === SECTION_HEADER_MARKER ? `header-${index}` : `item-${index}`
+          }
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={listFooter}
+        />
+      )}
+      <BottomSheetMenuList
+        visible={menuVisible}
+        onRequestClose={() => setMenuVisible(false)}
+        items={menuItems}
+        title="Item actions"
+        showLeadingIcons={true}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
   content: {
     paddingTop: layout.screenBodyTopMd.paddingTop,
     paddingBottom: 24,
@@ -596,6 +710,10 @@ const styles = StyleSheet.create({
   },
   screenContent: {
     paddingTop: 0,
+  },
+  loadingContainer: {
+    paddingTop: layout.screenBodyTopMd.paddingTop,
+    paddingHorizontal: 20,
   },
   card: {},
   heroHeader: {
