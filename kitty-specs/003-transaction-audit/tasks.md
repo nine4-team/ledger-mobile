@@ -57,9 +57,9 @@
 **Goal**: Replace the AuditSection placeholder with a real component that displays completeness progress, status, totals comparison, and missing price count. Gate visibility behind itemized categories.
 
 **Included subtasks**:
-- [ ] T004: Replace AuditSection.tsx placeholder — add `items` prop, call `computeTransactionCompleteness` via `useMemo`, render Card with ProgressBar, totals row, status message, missing price count, N/A state for zero subtotal
-- [ ] T005: Gate audit section in parent page `sections` memo — wrap with `if (itemizationEnabled)` like the taxes section
-- [ ] T006: Pass `linkedItems` to AuditSection in parent page render switch — update the `case 'audit'` branch
+- [x] T004: Replace AuditSection.tsx placeholder — add `items` prop, call `computeTransactionCompleteness` via `useMemo`, render Card with ProgressBar, totals row, status message, missing price count, N/A state for zero subtotal
+- [x] T005: Gate audit section in parent page `sections` memo — wrap with `if (itemizationEnabled)` like the taxes section
+- [x] T006: Pass `linkedItems` to AuditSection in parent page render switch — update the `case 'audit'` branch
 
 **Implementation sequence**:
 1. T005 + T006 can start in parallel (both modify `index.tsx` but different sections)
