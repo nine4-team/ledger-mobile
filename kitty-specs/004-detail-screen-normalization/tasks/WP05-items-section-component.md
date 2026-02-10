@@ -1,26 +1,29 @@
 ---
-work_package_id: "WP05"
+work_package_id: WP05
+title: Create ItemsSection Component + Integration
+lane: "doing"
+dependencies: [WP02, WP04]
+base_branch: 004-detail-screen-normalization-WP05-merge-base
+base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
+created_at: '2026-02-10T03:50:42.508435+00:00'
 subtasks:
-  - "T021"
-  - "T022"
-  - "T023"
-  - "T024"
-  - "T025"
-title: "Create ItemsSection Component + Integration"
-phase: "Phase 2 - Shared Items Management"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP02", "WP04"]
+- T021
+- T022
+- T023
+- T024
+- T025
+phase: Phase 2 - Shared Items Management
+assignee: ''
+agent: ''
+shell_pid: "54610"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-10T02:25:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T02:25:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP05 – Create ItemsSection Component + Integration
