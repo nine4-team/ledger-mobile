@@ -589,7 +589,9 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   };
 
   const handleSaveVendorSlot = (index: number) => {
-    if (!accountId) return;
+    if (!accountId) {
+      return;
+    }
     const next = vendorSlots.map((slot) => slot.value);
     replaceVendorSlots(accountId, next);
   };
@@ -645,7 +647,9 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
   };
 
   const handleSaveVendorEdit = () => {
-    if (editingVendorIndex === null) return;
+    if (editingVendorIndex === null) {
+      return;
+    }
     const next = [...vendorSlots];
     if (next[editingVendorIndex]) {
       next[editingVendorIndex] = { ...next[editingVendorIndex], value: editingVendorName.trim() };
@@ -1262,8 +1266,11 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
             normalizeOrder={(items) => items}
             getMenuItems={(it) => {
               const index = vendorSlots.findIndex((s) => s.id === it.id);
-              if (index === -1) return [];
-              const hasValue = !!vendorSlots[index]?.value.trim();
+              if (index === -1) {
+                return [];
+              }
+              const vendorData = vendorSlots[index];
+              const hasValue = !!vendorData?.value.trim();
               return [
                 {
                   key: 'edit',

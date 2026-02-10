@@ -48,6 +48,7 @@ export function subscribeToVendorDefaults(
 
 export function saveVendorDefaults(accountId: string, vendors: string[]): void {
   if (!isFirebaseConfigured || !db) {
+    console.error('[VENDOR_RENAME] Firebase not configured');
     throw new Error('Firebase is not configured.');
   }
   const now = serverTimestamp();
@@ -58,10 +59,14 @@ export function saveVendorDefaults(accountId: string, vendors: string[]): void {
       updatedAt: now,
     },
     { merge: true }
-  ).catch(err => console.error('[vendorDefaults] saveVendorDefaults failed:', err));
+  ).catch(err => {
+    console.error('[VENDOR_RENAME] saveVendorDefaults failed:', err);
+    console.error('[VENDOR_RENAME] Error details:', err.message, err.code);
+  });
   trackPendingWrite();
 }
 
 export function replaceVendorSlots(accountId: string, vendors: string[]): void {
-  saveVendorDefaults(accountId, normalizeSlots(vendors));
+  const normalized = normalizeSlots(vendors);
+  saveVendorDefaults(accountId, normalized);
 }

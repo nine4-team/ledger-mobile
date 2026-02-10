@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
@@ -57,6 +57,21 @@ export function BottomSheetMenuList({
   const theme = useTheme();
   const [expandedMenuKey, setExpandedMenuKey] = useState<string | null>(null);
   const [selectedSubactionByKey, setSelectedSubactionByKey] = useState<Record<string, string>>({});
+
+  // Store pending action to execute after modal dismisses
+  const pendingActionRef = useRef<(() => void) | null>(null);
+  const prevVisibleRef = useRef(visible);
+
+  // Execute pending action after modal unmounts (visible transitions true → false)
+  useEffect(() => {
+    if (prevVisibleRef.current && !visible && pendingActionRef.current) {
+      const action = pendingActionRef.current;
+      pendingActionRef.current = null;
+      // Wait one frame for native modal teardown to complete
+      requestAnimationFrame(action);
+    }
+    prevVisibleRef.current = visible;
+  }, [visible]);
 
   const menuItemIconColor = uiKitTheme.primary.main;
 
@@ -189,9 +204,13 @@ export function BottomSheetMenuList({
                                 }));
                               }
                               if (closeOnSubactionPress) {
+                                // Store action to execute after modal dismisses
+                                pendingActionRef.current = sub.onPress;
                                 onRequestClose();
+                              } else {
+                                // Execute immediately if not closing
+                                sub.onPress();
                               }
-                              sub.onPress();
                             }}
                             style={({ pressed }) => [styles.submenuItem, pressed && { opacity: 0.7 }]}
                           >
@@ -242,10 +261,14 @@ export function BottomSheetMenuList({
             <View key={itemKey}>
               <Pressable
                 onPress={() => {
-                if (closeOnItemPress) {
-                  onRequestClose();
-                }
-                  item.onPress?.();
+                  if (closeOnItemPress) {
+                    // Store action to execute after modal dismisses
+                    pendingActionRef.current = item.onPress ?? null;
+                    onRequestClose();
+                  } else {
+                    // Execute immediately if not closing
+                    item.onPress?.();
+                  }
                 }}
                 style={({ pressed }) => [styles.menuActionItem, pressed && { opacity: 0.7 }]}
                 accessibilityRole="button"
