@@ -216,13 +216,12 @@ export default function EditTransactionScreen() {
     }
     setError(null);
 
-    // Compute tax and subtotal if itemization is enabled and amount changed
-    const preliminaryChanges = form.getChangedFields();
-    if (itemizationEnabled && ('amount' in preliminaryChanges)) {
+    // Compute tax and subtotal using local variables (not form.setFields,
+    // which is async and won't be visible to getChangedFields in same tick)
+    let subtotalCents: number | null = null;
+    let taxRateValue: number | null = null;
+    if (itemizationEnabled) {
       const amountValue = typeof amountCents === 'number' ? amountCents : null;
-      let subtotalCents: number | null = null;
-      let taxRateValue: number | null = null;
-
       if (amountValue != null) {
         const parsedSubtotal = parseCurrency(form.values.subtotal);
         const parsedTaxAmount = parseCurrency(form.values.taxAmount);
@@ -241,24 +240,16 @@ export default function EditTransactionScreen() {
           taxRateValue = subtotalCents > 0 ? (parsedTaxAmount / subtotalCents) * 100 : 0;
         }
       }
-
-      // Update form with computed values before getting final changed fields
-      if (subtotalCents !== null) {
-        form.setFields({
-          subtotal: (subtotalCents / 100).toFixed(2),
-          taxRatePct: taxRateValue !== null ? taxRateValue.toFixed(2) : '',
-        });
-      }
     }
 
-    // Check for changes after computing tax/subtotal
+    // Check for changes
     if (!form.hasChanges) {
       // No changes - skip write, just navigate
       router.replace(fallbackTarget);
       return;
     }
 
-    // Get final changed fields
+    // Get changed fields
     const changedFields = form.getChangedFields();
 
     // Build update payload with only changed fields
@@ -294,13 +285,22 @@ export default function EditTransactionScreen() {
     if ('hasEmailReceipt' in changedFields) {
       updates.hasEmailReceipt = form.values.hasEmailReceipt;
     }
-    if ('taxRatePct' in changedFields) {
-      const parsedRate = Number.parseFloat(form.values.taxRatePct);
-      updates.taxRatePct = Number.isFinite(parsedRate) ? parsedRate : null;
-    }
-    if ('subtotal' in changedFields) {
-      const parsedSubtotal = parseCurrency(form.values.subtotal);
-      updates.subtotalCents = parsedSubtotal ?? null;
+    // Use locally-computed tax/subtotal values when itemization is enabled
+    // and any tax-related field changed (avoids stale form.values from async setFields)
+    const taxFieldChanged = 'amount' in changedFields || 'taxRatePct' in changedFields
+      || 'subtotal' in changedFields || 'taxAmount' in changedFields;
+    if (itemizationEnabled && taxFieldChanged && subtotalCents !== null) {
+      updates.subtotalCents = subtotalCents;
+      updates.taxRatePct = taxRateValue;
+    } else {
+      if ('taxRatePct' in changedFields) {
+        const parsedRate = Number.parseFloat(form.values.taxRatePct);
+        updates.taxRatePct = Number.isFinite(parsedRate) ? parsedRate : null;
+      }
+      if ('subtotal' in changedFields) {
+        const parsedSubtotal = parseCurrency(form.values.subtotal);
+        updates.subtotalCents = parsedSubtotal ?? null;
+      }
     }
 
     // Propagate budgetCategoryId to linked items if changed
