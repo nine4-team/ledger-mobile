@@ -73,7 +73,7 @@ async function main() {
 
   // Set emulator env vars
   process.env.FIREBASE_STORAGE_EMULATOR_HOST = `${storageHost}:${storagePort}`;
-  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8081';
 
   admin.initializeApp({
     projectId,

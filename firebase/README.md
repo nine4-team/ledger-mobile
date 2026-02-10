@@ -17,7 +17,7 @@ firebase emulators:start
 Ports (default):
 
 - Auth: `9099`
-- Firestore: `8080`
+- Firestore: `8081`
 - Functions: `5001`
 - Emulator UI: `4000`
 

@@ -67,7 +67,7 @@ async function main() {
 
   const envHost = parseHostAndPort(process.env.FIRESTORE_EMULATOR_HOST);
   const host = firestoreHost || envHost.host || 'localhost';
-  const port = firestorePort || envHost.port || '8080';
+  const port = firestorePort || envHost.port || '8081';
   process.env.FIRESTORE_EMULATOR_HOST = `${host}:${port}`;
 
   admin.initializeApp({ projectId });

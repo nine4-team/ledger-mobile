@@ -31,9 +31,9 @@ console.log(`Setting up health/ping document (${useEmulator ? 'emulator' : 'prod
 let app;
 if (useEmulator) {
   // Emulator mode
-  process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+  process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
   app = initializeApp({ projectId: 'demo-project' });
-  console.log('Connected to Firestore emulator at localhost:8080');
+  console.log('Connected to Firestore emulator at localhost:8081');
 } else {
   // Production mode
   const serviceAccountPath = join(__dirname, '..', 'service-account-key.json');
