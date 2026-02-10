@@ -1,20 +1,24 @@
 ---
-work_package_id: "WP02"
+work_package_id: WP02
+title: Transaction Detail Screen Polish
+lane: "doing"
+dependencies: [WP01]
+base_branch: 005-detail-screen-polish-WP01
+base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
+created_at: '2026-02-10T21:13:24.205964+00:00'
 subtasks:
-  - "T005"
-  - "T006"
-  - "T007"
-  - "T008"
-title: "Transaction Detail Screen Polish"
-phase: "Phase 2 - Transaction Detail"
-lane: "planned"
-dependencies: ["WP01"]
+- T005
+- T006
+- T007
+- T008
+phase: Phase 2 - Transaction Detail
+shell_pid: "24895"
 history:
-  - timestamp: "2026-02-10T19:00:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T19:00:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP02 – Transaction Detail Screen Polish
