@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "doing"
+lane: "planned"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -40,9 +40,71 @@ history:
 **Status**: ❌ Changes Requested
 **Date**: 2026-02-10
 
-**Reviewed by**: claude-opus
-**Status**: Changes Requested
+## Review Feedback - WP05
+
+**Reviewed by**: claude-sonnet  
+**Status**: ❌ Minor Issues - Changes Requested  
 **Date**: 2026-02-10
+
+### Issue 1: ListFooterComponent Empty State Should Be Removed
+
+**Location**: `src/components/SpaceDetailContent.tsx:882-890`
+
+The original review feedback (Issue 1) explicitly stated: "remove the ListFooterComponent empty state handler (lines 882-890) since ItemsSection handles its own empty state via the emptyMessage prop."
+
+Current code still has the ListFooterComponent:
+```typescript
+ListFooterComponent={
+  !collapsedSections.items && itemsManager.filteredAndSortedItems.length === 0 ? (
+    <View style={styles.emptyState}>
+      <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
+        {itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+      </AppText>
+    </View>
+  ) : null
+}
+```
+
+**Problem**: This creates duplicate empty state messages. When `itemsManager.filteredAndSortedItems.length === 0`, ItemsSection already renders its own empty state. The ListFooterComponent condition would also be true, causing both to render.
+
+**Fix**: Remove the ListFooterComponent entirely (or set it to `null`), as ItemsSection handles the empty state.
+
+---
+
+### Issue 2: Missing Search-Aware emptyMessage in SpaceDetailContent
+
+**Location**: `src/components/SpaceDetailContent.tsx` (ItemsSection usage in renderItem, around line 746)
+
+The transaction detail correctly passes a search-aware `emptyMessage`:
+```typescript
+emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items in this transaction.'}
+```
+
+But SpaceDetailContent doesn't pass any `emptyMessage` prop, so it uses the default "No items." which doesn't account for search/filter context.
+
+**Fix**: Add the `emptyMessage` prop to ItemsSection in SpaceDetailContent:
+```typescript
+<ItemsSection
+  manager={itemsManager}
+  items={itemsManager.filteredAndSortedItems}
+  // ... other props ...
+  emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items assigned.'}
+/>
+```
+
+This provides consistent UX with transaction detail and better user feedback.
+
+---
+
+## Summary
+
+The critical bugs from the previous review (N duplicate ItemsSections and dead code in transaction detail) are fully fixed. The icon prop is correctly added. However, two minor issues remain:
+
+1. Redundant ListFooterComponent empty state that should be removed
+2. Missing search-aware emptyMessage in SpaceDetailContent
+
+These are straightforward fixes that will improve UX consistency between the two screens.
+
 
 ## Critical Issues
 
@@ -657,3 +719,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 - 2026-02-10T04:41:26Z – claude-sonnet – shell_pid=60482 – lane=doing – Started implementation via workflow command
 - 2026-02-10T04:44:08Z – claude-sonnet – shell_pid=60482 – lane=for_review – Fixed all critical review feedback issues: (1) SpaceDetail now uses single 'items-content' marker instead of full items array to prevent N duplicate ItemsSection renders, (2) TransactionDetail now uses 'items-content' instead of SECTION_HEADER_MARKER to properly render ItemsSection, (3) Added missing icon prop to bulk action buttons
 - 2026-02-10T04:45:29Z – claude-sonnet – shell_pid=68958 – lane=doing – Started review via workflow command
+- 2026-02-10T04:48:47Z – claude-sonnet – shell_pid=68958 – lane=planned – Moved to planned
