@@ -1,21 +1,25 @@
 ---
-work_package_id: "WP04"
+work_package_id: WP04
+title: Space Detail Screen Polish & Cleanup
+lane: "doing"
+dependencies: [WP01]
+base_branch: 005-detail-screen-polish-WP01
+base_commit: 0383efd917ab7731b7d3828f153ef7e5ba2585ce
+created_at: '2026-02-10T21:13:45.655560+00:00'
 subtasks:
-  - "T015"
-  - "T016"
-  - "T017"
-  - "T018"
-  - "T019"
-title: "Space Detail Screen Polish & Cleanup"
-phase: "Phase 4 - Space Detail & Cleanup"
-lane: "planned"
-dependencies: ["WP01"]
+- T015
+- T016
+- T017
+- T018
+- T019
+phase: Phase 4 - Space Detail & Cleanup
+shell_pid: "25725"
 history:
-  - timestamp: "2026-02-10T19:00:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-10T19:00:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP04 – Space Detail Screen Polish & Cleanup
