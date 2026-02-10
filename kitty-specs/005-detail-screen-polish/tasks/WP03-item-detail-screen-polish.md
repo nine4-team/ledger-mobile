@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Item Detail Screen Polish
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP01
 base_branch: 005-detail-screen-polish-WP01
@@ -692,3 +692,4 @@ function renderSection(section: Section) {
 **Initial entry**:
 - 2026-02-10T19:00:00Z – system – lane=planned – Prompt generated via /spec-kitty.tasks
 - 2026-02-10T21:13:37Z – claude-sonnet-4.5 – shell_pid=25589 – lane=doing – Assigned agent via workflow command
+- 2026-02-10T21:20:50Z – claude-sonnet-4.5 – shell_pid=25589 – lane=for_review – Ready for review: Item detail hero card now shows transaction as 'Source - Amount' with space info, Move Item in kebab menu with bottom sheet, 4px section spacing, no duplicate titles. All edge cases handled.
