@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Create ItemsSection Component + Integration
-lane: "doing"
+lane: "for_review"
 dependencies: [WP02, WP04]
 base_branch: 004-detail-screen-normalization-WP05-merge-base
 base_commit: 1db3b5e391290e0c28dad0729b19f3a2baa82c14
@@ -576,3 +576,4 @@ Both screens show the bulk panel inline when items are selected. The panel inclu
 - 2026-02-10T04:16:04Z – claude-sonnet – shell_pid=8818 – lane=doing – Started review via workflow command
 - 2026-02-10T04:21:40Z – claude-sonnet – shell_pid=8818 – lane=planned – Moved to planned
 - 2026-02-10T04:23:22Z – claude-sonnet – shell_pid=23507 – lane=doing – Started implementation via workflow command
+- 2026-02-10T04:32:58Z – claude-sonnet – shell_pid=23507 – lane=for_review – Ready for review: Fixed all review feedback issues - removed duplicate bulk panel in SpaceDetailContent, integrated ItemsSection into transaction detail, removed TODO in control bar, made onAdd prop optional
