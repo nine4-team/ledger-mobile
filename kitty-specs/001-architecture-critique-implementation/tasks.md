@@ -208,12 +208,12 @@ description: "Work package task list for Architecture Critique Implementation"
 **Prompt**: `/tasks/WP06-architecture-documentation-updates.md`
 
 ### Included Subtasks
-- [ ] T031 Rewrite "high-risk fields" justification (Finding 3) - replace probability argument with data model argument
-- [ ] T032 Add "Known Limitations" section (Finding 2) - document silent security rule failures
-- [ ] T033 Add schema evolution stance (Finding 9) - document pattern for optional fields
-- [ ] T034 Update "Do NOT Build" list (Finding 10) - add full-form overwrite guidance
-- [ ] T035 Add distinction between lightweight staleness check vs full compare-before-commit UX
-- [ ] T036 Verify all sections flow logically and provide clear guidance for future developers
+- [x] T031 Rewrite "high-risk fields" justification (Finding 3) - replace probability argument with data model argument
+- [x] T032 Add "Known Limitations" section (Finding 2) - document silent security rule failures
+- [x] T033 Add schema evolution stance (Finding 9) - document pattern for optional fields
+- [x] T034 Update "Do NOT Build" list (Finding 10) - add full-form overwrite guidance
+- [x] T035 Add distinction between lightweight staleness check vs full compare-before-commit UX
+- [x] T036 Verify all sections flow logically and provide clear guidance for future developers
 
 ### Implementation Notes
 - Modify: `docs/specs/ARCHITECTURE.md` (moved from `.cursor/plans/firebase-mobile-migration/10_architecture/`)
