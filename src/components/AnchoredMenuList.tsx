@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
@@ -109,6 +109,21 @@ export function AnchoredMenuList({
   const [expandedMenuKey, setExpandedMenuKey] = useState<string | null>(null);
   const [selectedSubactionByKey, setSelectedSubactionByKey] = useState<Record<string, string>>({});
 
+  // Store pending action to execute after modal dismisses
+  const pendingActionRef = useRef<(() => void) | null>(null);
+  const prevVisibleRef = useRef(visible);
+
+  // Execute pending action after modal unmounts (visible transitions true → false)
+  useEffect(() => {
+    if (prevVisibleRef.current && !visible && pendingActionRef.current) {
+      const action = pendingActionRef.current;
+      pendingActionRef.current = null;
+      // Wait one frame for native modal teardown to complete
+      requestAnimationFrame(action);
+    }
+    prevVisibleRef.current = visible;
+  }, [visible]);
+
   const menuItemIconColor = uiKitTheme.primary.main;
 
   const computedItems = useMemo(() => {
@@ -215,8 +230,9 @@ export function AnchoredMenuList({
                               ...prev,
                               [itemKey]: sub.key,
                             }));
+                            // Store action to execute after modal dismisses
+                            pendingActionRef.current = sub.onPress;
                             onRequestClose();
-                            sub.onPress();
                           }}
                           style={({ pressed }) => [styles.submenuItem, pressed && { opacity: 0.7 }]}
                         >
@@ -267,8 +283,9 @@ export function AnchoredMenuList({
           <View key={itemKey}>
             <Pressable
               onPress={() => {
+                // Store action to execute after modal dismisses
+                pendingActionRef.current = item.onPress ?? null;
                 onRequestClose();
-                item.onPress?.();
               }}
               style={({ pressed }) => [styles.menuActionItem, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"

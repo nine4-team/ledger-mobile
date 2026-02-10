@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
@@ -14,7 +15,7 @@ import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { NotesSection } from './NotesSection';
 import { CollapsibleSectionHeader } from './CollapsibleSectionHeader';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
-import { layout } from '../ui';
+import { layout, getBulkSelectionBarContentPadding } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useAuthStore } from '../auth/authStore';
@@ -34,6 +35,8 @@ import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveItemMove } from '../data/resolveItemMove';
 import { useItemsManager } from '../hooks/useItemsManager';
 import { SharedItemsList } from './SharedItemsList';
+import { BulkSelectionBar } from './BulkSelectionBar';
+import { SelectorCircle } from './SelectorCircle';
 
 // --- Types ---
 
@@ -136,6 +139,7 @@ export function SpaceDetailContent({
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
   const userId = useAuthStore((store) => store.user?.uid ?? null);
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
 
@@ -150,6 +154,7 @@ export function SpaceDetailContent({
   const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
 
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -526,13 +531,9 @@ export function SpaceDetailContent({
       label: 'Add existing item',
       icon: 'playlist-add' as const,
       onPress: () => {
-        setAddMenuVisible(false);
-        // Delay opening picker until the add-menu modal has fully dismissed
-        setTimeout(() => {
-          setIsPickingItems(true);
-          setPickerTab('current');
-          setPickerSelectedIds([]);
-        }, 300);
+        setIsPickingItems(true);
+        setPickerTab('current');
+        setPickerSelectedIds([]);
       },
     },
   ], [handleCreateItemInSpace]);
@@ -568,14 +569,40 @@ export function SpaceDetailContent({
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={!itemsManager.hasSelection ? () => setAddMenuVisible(true) : undefined}
+              onAdd={() => itemsManager.hasSelection ? setBulkActionsSheetVisible(true) : setAddMenuVisible(true)}
+              leftElement={
+                <TouchableOpacity
+                  onPress={() => {
+                    if (itemsManager.allSelected) {
+                      itemsManager.clearSelection();
+                    } else {
+                      itemsManager.selectAll();
+                    }
+                  }}
+                  style={[
+                    styles.selectButton,
+                    {
+                      backgroundColor: uiKitTheme.button.secondary.background,
+                      borderColor: uiKitTheme.border.primary,
+                    },
+                  ]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: itemsManager.allSelected }}
+                >
+                  <SelectorCircle
+                    selected={itemsManager.allSelected}
+                    indicator="check"
+                  />
+                </TouchableOpacity>
+              }
             />
           </View>
         )}
       </View>
     );
   }, [collapsedSections, handleToggleSection, itemsManager,
-      theme.colors.background, uiKitTheme.border.secondary]);
+      theme.colors.background, uiKitTheme.border.secondary, uiKitTheme.button.secondary.background,
+      uiKitTheme.border.primary, setBulkActionsSheetVisible, setAddMenuVisible]);
 
   const renderItem = useCallback(({ item, section }: { item: any; section: SpaceSection }) => {
     // Handle section header markers (non-sticky sections)
@@ -927,12 +954,90 @@ export function SpaceDetailContent({
           if (typeof item === 'string') return item;
           return item.id ?? `item-${index}`;
         }}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : undefined
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         ItemSeparatorComponent={({ section }) =>
           section.key === 'items' ? <View style={styles.itemSeparator} /> : null
         }
+      />
+
+      <BulkSelectionBar
+        selectedCount={itemsManager.selectionCount}
+        onBulkActionsPress={() => setBulkActionsSheetVisible(true)}
+        onClearSelection={itemsManager.clearSelection}
+      />
+
+      {/* Bulk actions sheet for items section */}
+      <BottomSheetMenuList
+        visible={bulkActionsSheetVisible}
+        onRequestClose={() => setBulkActionsSheetVisible(false)}
+        items={[
+          {
+            key: 'move',
+            label: 'Move to Another Space',
+            onPress: () => {
+              setBulkActionsSheetVisible(false);
+              setBulkTargetSpaceId(null);
+              setBulkMoveSheetVisible(true);
+            },
+          },
+          {
+            key: 'remove',
+            label: 'Remove from Space',
+            onPress: () => {
+              setBulkActionsSheetVisible(false);
+              if (!accountId) return;
+              Alert.alert(
+                'Remove Items',
+                `Remove ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'} from this space?`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () => {
+                      Array.from(itemsManager.selectedIds).forEach(id => {
+                        updateItem(accountId, id, { spaceId: null });
+                      });
+                      itemsManager.clearSelection();
+                    },
+                  },
+                ]
+              );
+            },
+          },
+          {
+            key: 'delete',
+            label: 'Delete Items',
+            onPress: () => {
+              setBulkActionsSheetVisible(false);
+              if (!accountId) return;
+              Alert.alert(
+                'Delete Items',
+                `Permanently delete ${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'}? This cannot be undone.`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                      Array.from(itemsManager.selectedIds).forEach(id => {
+                        deleteItem(accountId, id);
+                      });
+                      itemsManager.clearSelection();
+                    },
+                  },
+                ]
+              );
+            },
+          },
+        ]}
+        title={`Bulk Actions (${itemsManager.selectionCount})`}
+        showLeadingIcons={false}
       />
 
       {/* Kebab menu */}
@@ -1060,6 +1165,16 @@ const styles = StyleSheet.create({
   content: {
     gap: 4,
     paddingTop: layout.screenBodyTopMd.paddingTop,
+  },
+  selectButton: {
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
+    minWidth: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
   },
   section: {
     gap: 12,
