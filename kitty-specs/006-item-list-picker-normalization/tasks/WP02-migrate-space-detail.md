@@ -13,7 +13,7 @@ subtasks:
 - T010
 phase: Phase 2 - Consumer Migration
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "19978"
 review_status: ''
 reviewed_by: ''
@@ -338,3 +338,4 @@ spec-kitty implement WP02 --base WP01
 ## Activity Log
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
+- 2026-02-11T06:34:54Z – claude-sonnet – shell_pid=19978 – lane=doing – Assigned agent via workflow command
