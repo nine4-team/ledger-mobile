@@ -153,7 +153,7 @@
 ```typescript
 type UsePickerModeConfig = {
   enabled: boolean;                          // false when picker={false}
-  items: ScopedItem[];                       // current visible items
+  items: Array<ScopedItem | Item>;            // current visible items
   eligibilityCheck?: ItemEligibilityCheck;
   onAddSingle?: (item: ScopedItem | Item) => void | Promise<void>;
   addedIds?: Set<string>;
@@ -177,7 +177,7 @@ type UsePickerModeReturn = {
   handleSelectAll: () => void;
 
   /** Build ItemCardProps overrides for a single item in picker mode */
-  getPickerItemProps: (item: ScopedItem | Item, baseOnPress?: () => void) => Partial<ItemCardProps>;
+  getPickerItemProps: (item: ScopedItem | Item, isSelected: boolean) => Partial<ItemCardProps>;
 
   /** Build GroupedItemCard overrides for a group in picker mode */
   getPickerGroupProps: (groupItems: ScopedItem[], groupIds: string[]) => {

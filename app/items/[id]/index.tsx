@@ -38,6 +38,7 @@ import {
   requestProjectToBusinessSale,
   requestProjectToProjectMove,
 } from '../../../src/data/inventoryOperations';
+import { ITEM_STATUSES, getItemStatusLabel } from '../../../src/constants/itemStatuses';
 import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 import { useTransactionById } from '../../../src/hooks/useTransactionById';
@@ -66,16 +67,6 @@ function formatMoney(cents: number | null | undefined): string {
   if (typeof cents !== 'number') return '—';
   return `$${(cents / 100).toFixed(2)}`;
 }
-
-// Status constants
-const ITEM_STATUSES = [
-  { key: 'purchased', label: 'Purchased' },
-  { key: 'ordered', label: 'Ordered' },
-  { key: 'in-transit', label: 'In Transit' },
-  { key: 'delivered', label: 'Delivered' },
-  { key: 'installed', label: 'Installed' },
-  { key: 'returned', label: 'Returned' },
-];
 
 export default function ItemDetailScreen() {
   const router = useRouter();
@@ -330,19 +321,7 @@ export default function ItemDetailScreen() {
     updateItem(accountId, id, { status: newStatus });
   };
 
-  // Status constants
-  const ITEM_STATUSES = [
-    { key: 'purchased', label: 'Purchased' },
-    { key: 'ordered', label: 'Ordered' },
-    { key: 'in-transit', label: 'In Transit' },
-    { key: 'delivered', label: 'Delivered' },
-    { key: 'installed', label: 'Installed' },
-    { key: 'returned', label: 'Returned' },
-  ];
-
-  const statusLabel = item?.status?.trim()
-    ? ITEM_STATUSES.find(s => s.key === item.status)?.label || item.status
-    : '';
+  const statusLabel = getItemStatusLabel(item?.status);
   const trimmedTransactionId = transactionId.trim();
   const transactionLabel = trimmedTransactionId
     ? trimmedTransactionId.length > 8

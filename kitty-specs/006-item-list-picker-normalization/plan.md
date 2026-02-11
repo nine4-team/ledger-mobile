@@ -1,6 +1,6 @@
 # Implementation Plan: Item List Picker Normalization
 
-**Branch**: `main` | **Date**: 2026-02-11 | **Spec**: [spec.md](spec.md)
+**Branch**: `main` | **Date**: 2026-02-10 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `kitty-specs/006-item-list-picker-normalization/spec.md`
 
 ## Summary
@@ -113,6 +113,8 @@ type UsePickerModeReturn = {
 
 ### How SharedItemsList Consumes It
 
+**Note:** The `setGroupSelection` parameter comes from SharedItemsList's existing internal adapter (line 248), which loops over IDs calling the manager's `toggleSelection`. It is _not_ a method on `useItemsManager` itself.
+
 ```typescript
 // In SharedItemsList component body:
 const pickerMode = usePickerMode({
@@ -123,7 +125,7 @@ const pickerMode = usePickerMode({
   addedIds,
   selectedIds,
   setItemSelected,
-  setGroupSelection,
+  setGroupSelection,  // from SharedItemsList's internal adapter, not useItemsManager
 });
 
 // In control bar rendering:

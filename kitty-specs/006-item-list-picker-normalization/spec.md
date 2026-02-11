@@ -6,6 +6,13 @@
 
 **Motivation:** The app currently has two separate components that render item lists with grouping and selection — `SharedItemsList` and `SharedItemPicker` — with divergent behavior, duplicated logic, and inconsistent UX. Maintaining both components is a maintenance burden and the source of bugs (e.g., grouped items in the picker cannot be quick-added individually, and collapsed group body tap expands instead of selecting).
 
+## Clarifications
+
+### Session 2026-02-10
+
+- Q: When every item in a group is ineligible or already-added (zero eligible children), what should a collapsed body tap do? → A: No-op — consistent with individual ineligible item behavior (onPress: undefined).
+- Q: Keep "Added" badge behavior for already-added items, or filter them out of the picker entirely? → A: Keep "Added" badges — preserves visual confirmation when quick-adding and avoids "where did my item go?" confusion.
+
 ## Actors
 
 - **App user:** Interacts with item lists in standalone screens (business inventory, project items) and in embedded/picker contexts (space detail "Add Existing Items," transaction detail "Add Existing Items").
@@ -72,8 +79,6 @@ type ItemEligibilityCheck = {
   isEligible: (item: ScopedItem | Item) => boolean;
   /** Returns a status label for ineligible items (e.g., "Already here", "Linked") */
   getStatusLabel?: (item: ScopedItem | Item) => string | undefined;
-  /** Returns true if item was already added to the target (shows "Added" badge, not the same as ineligible) */
-  isAlreadyInTarget?: (item: ScopedItem | Item) => boolean;
 };
 
 type SharedItemsListProps = {
@@ -115,7 +120,7 @@ When `picker={true}`:
 1. **Body tap** on both individual and grouped items toggles selection (not navigation). `onPress` wired to toggle selection, not `handleOpenItem`.
 2. **Grouped items (collapsed)**: Body tap toggles group selection for all eligible items. The `onPress` prop on `GroupedItemCard` calls `setGroupSelection` on eligible items.
 3. **`headerAction`** with Add button renders on ALL items — both ungrouped items and grouped item children. This is wired via the `items` array passed to `GroupedItemCard` (which spreads props to child `ItemCard`s).
-4. **Ineligible items**: `onSelectedChange: undefined`, `onPress: undefined`, reduced opacity (`0.5`). The eligibility check via `eligibilityCheck.isEligible(item)` controls this.
+4. **Ineligible items**: `onSelectedChange: undefined`, `onPress: undefined`, reduced opacity (`0.6`, matching existing SharedItemPicker). The eligibility check via `eligibilityCheck.isEligible(item)` controls this.
 5. **Already-added items**: Show "Added" badge (via `headerAction` rendering the badge instead of an "Add" button) when `addedIds?.has(item.id)`.
 6. **No bookmark/status/menu** actions rendered in picker mode.
 7. **Select-all** only toggles eligible, non-already-added items (respects eligibility check).
@@ -158,11 +163,11 @@ const statusLabel = eligibilityCheck?.getStatusLabel?.(item);
 {
   onSelectedChange: eligible && !alreadyAdded ? (next) => setItemSelected(id, next) : undefined,
   onPress: eligible && !alreadyAdded ? () => setItemSelected(id, !isSelected) : undefined,
-  style: [!eligible ? { opacity: 0.5 } : null],
+  style: [!eligible ? { opacity: 0.6 } : null],
   headerAction: alreadyAdded
-    ? <AddedBadge />          // "Added" chip/badge
+    ? renderAddButton(item, true)   // "Added" badge (inline TouchableOpacity + check icon)
     : onAddSingle && eligible
-      ? <AddButton onPress={() => onAddSingle(item)} />
+      ? renderAddButton(item, false) // "Add" button (inline TouchableOpacity + add icon)
       : undefined,
 }
 ```
@@ -180,9 +185,14 @@ const eligibleGroupIds = groupIds.filter(id => {
   onSelectedChange={eligibleGroupIds.length > 0
     ? (next) => setGroupSelection(eligibleGroupIds, next)
     : undefined}
+  onPress={eligibleGroupIds.length > 0
+    ? () => setGroupSelection(eligibleGroupIds, !allEligibleSelected)
+    : undefined}  // no-op when all children are ineligible/already-added
   selected={eligibleGroupIds.length > 0 && eligibleGroupIds.every(id => selectedIds.includes(id))}
 />
 ```
+
+**Edge case — fully ineligible/added group:** When every item in a group is ineligible or already-added (`eligibleGroupIds.length === 0`), the group's `onPress` and `onSelectedChange` are both `undefined`. A collapsed body tap is a no-op (consistent with individual ineligible item behavior). The group selector circle is also hidden.
 
 ### FR-5: headerAction Wired to Grouped Item Children
 
@@ -218,7 +228,7 @@ Since `GroupedItemCard` uses `{...item}` spread when rendering child `ItemCard`s
 
 ### FR-7: Loading / Error States in Picker Mode
 
-When `picker={true}` and `outsideLoading` is true, show a loading indicator. When `outsideError` is set, show an error message. These replace the empty state message when applicable.
+When `picker={true}` and `outsideLoading` is true, render an `ActivityIndicator` centered in the list area. When `outsideError` is set, render an inline error message using `AppText variant="body"` with `theme.colors.error` styling. These replace the empty state message when applicable. This matches the existing SharedItemPicker's loading/error pattern.
 
 ### FR-8: Select-All Respects Eligibility
 
@@ -293,7 +303,7 @@ When `picker={true}`, `handleSelectAll` must:
 />
 ```
 
-**Note:** `pickerManager` is a `useItemsManager()` instance. The parent owns selection state via the manager, replacing the previous `pickerSelectedIds` / `setPickerSelectedIds` pattern. The `TabBar` component can be extracted from `SharedItemPicker`'s existing tab rendering or built as a simple inline component.
+**Note:** `pickerManager` is a `useItemsManager({ items: activePickerItems })` instance. The parent owns selection state via the manager, replacing the previous `pickerSelectedIds` / `setPickerSelectedIds` pattern. The `TabBar` component can be extracted from `SharedItemPicker`'s existing tab rendering or built as a simple inline component. The `searchPlaceholder` and `addButtonLabel` props are not passed here — they use defaults ("Search items..." and "Add" respectively), which match existing behavior.
 
 ### Consumer 2: TransactionDetailScreen
 

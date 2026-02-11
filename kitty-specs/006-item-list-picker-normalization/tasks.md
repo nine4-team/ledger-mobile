@@ -32,6 +32,7 @@
 
 ### Implementation Notes
 - Hook must short-circuit when `enabled === false` (zero overhead in non-picker mode).
+- The hook's `setGroupSelection` param comes from SharedItemsList's existing internal adapter (line 248), not from `useItemsManager` directly. No changes to `useItemsManager` needed.
 - Both embedded (View + map, ~lines 985-1110) and standalone (FlatList, ~lines 1111-1244) paths need picker prop spreading.
 - `getPickerItemProps` returns overrides: `onPress` (toggle selection), `onSelectedChange`, `headerAction` (Add/Added badge), `style` (opacity for ineligible), and suppresses bookmark/status/menu.
 - `getPickerGroupProps` filters eligible items per group, computes group selection state, returns `onPress`/`onSelectedChange`/`selected`.
