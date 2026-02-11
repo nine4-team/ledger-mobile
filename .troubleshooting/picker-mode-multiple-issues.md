@@ -1,6 +1,6 @@
 # Issue: SharedItemsList picker mode — multiple issues after 006 consolidation
 
-**Status:** Active
+**Status:** Active (Issues 1-3, 5 verified fixed; Issue 4 unresolved)
 **Opened:** 2026-02-11
 **Resolved:** _pending_
 
@@ -101,7 +101,7 @@ Two contributing factors:
 - **Result:** `useOutsideItems.ts:78-84` returns `{ items, loading, error, reload: loadItems }` — a new object literal on every render, NOT memoized. Effect at `SpaceDetailContent.tsx:324-327` depends on this object reference. When `isPickingItems` is true, every re-render re-triggers `reload()`.
 - **Verdict:** Confirmed
 
-## Resolution (partial)
+## Resolution
 
 ### Issue 1: Group selection — FIXED (`usePickerMode.tsx`)
 - `getPickerGroupProps` now returns `onPress` handler that toggles group selection (was `undefined`)
@@ -117,12 +117,35 @@ Two contributing factors:
 - Non-picker embedded mode still uses `View` (parent handles scroll)
 - Added `pickerScroll` style (`flex: 1`) for the ScrollView
 
-### Issue 4: Tab switch delay — UNRESOLVED (`useItemsManager.ts`, `SpaceDetailContent.tsx:324-328`)
-- Changed useEffect dependency from `outsideItemsHook` (new object every render) to `outsideItemsHook.reload` (stable `useCallback` ref) ✓
-- Wrapped `useItemsManager` return value in `useMemo` to stabilize object reference ✓
-- **Delay still persists per user testing.** The `useMemo` fix prevents unnecessary re-renders from unrelated state updates, but does not help the legitimate recomputation when `activePickerItems` changes on tab switch (sort + filter + grouping chain runs synchronously). Root cause may be deeper — needs further diagnosis.
+### Issue 4: Tab switch delay — UNRESOLVED
+- Previous fixes applied (all confirmed insufficient):
+  1. Stabilized `outsideItemsHook.reload` dependency (was causing reload loop) ✓
+  2. Wrapped `useItemsManager` return in `useMemo` (stabilizes object reference) ✓
+  3. Memoized `activePickerItems` ternary (prevents spurious reprocessing from unrelated re-renders) ✓
+- **User-verified:** Delay still persists. Proportional to number of items in the target tab — more items = longer delay.
+- **Root cause (revised):** NOT `useItemsManager` in SpaceDetailContent. SharedItemsList has its own internal sort/filter/group chain (`rows` → `filtered` → `groupedRows` at `SharedItemsList.tsx:372-470`) that re-runs whenever the `items` prop changes. On top of that, all items render via `ScrollView + .map()` (no virtualization) at `SharedItemsList.tsx:1054-1195`. Both the computation and the rendering block the UI on tab switch.
+- **Ruled out:**
+  - Unstable references, reload loops, spurious recomputation (fixed in prior passes)
+  - Pre-computing `useItemsManager` in SpaceDetailContent with dual instances — **irrelevant**, SharedItemsList re-processes the raw `items` prop internally regardless
+  - Deferring items swap via `InteractionManager.runAfterInteractions` — **made it worse**. Moved the lag from the tab animation to the items display, creating a visible flash/loading state that felt slower. User-rejected.
+- **Key discovery:** `useItemsManager` in SpaceDetailContent provides selection state only; SharedItemsList does its own sort/filter/group on the raw `items` prop. Any fix must target SharedItemsList's internal processing chain or the rendering path, not the consumer.
+- **Next steps to explore:**
+  - Profile with Hermes to determine whether the bottleneck is computation (sort/filter/group in SharedItemsList) or rendering (creating N ItemCard components)
+  - If rendering: virtualize picker items with FlatList instead of `ScrollView + .map()` (SharedItemsList already uses FlatList in standalone mode — might be able to use it in embedded+picker mode too)
+  - If computation: pre-compute both tabs' `groupedRows` inside SharedItemsList itself (would require SharedItemsList to accept a second items array or a pre-computed rows prop)
+  - `useDeferredValue` on the items prop inside SharedItemsList (less intrusive than InteractionManager, lets React schedule the update without a loading flash)
 
-### Issue 5: Expand/collapse broken on grouped items — NEW
-- **Symptom:** Tapping GroupedItemCard body selects the group instead of expanding/collapsing it
-- **Likely cause:** The Issue 1 fix made `getPickerGroupProps` return an `onPress` handler that toggles selection. `GroupedItemCard.handlePress` checks `if (onPress) { onPress(); return; }` before falling through to expand/collapse (`setExpanded(!isExpanded)`). Since `onPress` is now defined (for selection), the expand/collapse path is never reached.
-- **Conflict:** Issue 1 wanted body-tap to select; but users also need a way to expand/collapse groups. The selection-on-body-tap behavior from the Issue 1 fix conflicts with expand/collapse. Needs a UX decision — e.g., use selector circle for selection and body tap for expand/collapse, or provide a separate expand affordance.
+### Issue 5: Expand/collapse broken on grouped items — FIXED, VERIFIED (`usePickerMode.tsx`)
+- Root cause: Issue 1 fix added `onPress` to `getPickerGroupProps` that toggled selection. `GroupedItemCard.handlePress` checks `if (onPress) { onPress(); return; }` before falling through to `setExpanded(!isExpanded)`. With `onPress` defined, expand/collapse was unreachable.
+- Fix: Removed `onPress` from `getPickerGroupProps` entirely. Selection is already handled by the selector circle's dedicated `Pressable` (with `stopPropagation`). Body tap now correctly falls through to expand/collapse.
+- UX model: selector circle = toggle selection; body tap = expand/collapse group
+- Also cleaned up: removed `onPress` from the `UsePickerModeReturn` type signature
+
+### Files changed
+- `src/hooks/usePickerMode.tsx` — removed `onPress` from `getPickerGroupProps` return and type signature
+- `src/components/SpaceDetailContent.tsx` — memoized `activePickerItems`
+
+### Lessons
+- When a single prop (`onPress`) controls two competing behaviors (selection vs expand/collapse), prefer dedicated affordances (selector circle for selection, body for expand). Overloading body tap creates conflicts.
+- Non-memoized ternaries assigned to local variables look harmless but create new references every render, causing downstream `useMemo` invalidation in hooks that depend on them.
+- When delay scales linearly with item count, the bottleneck is legitimate computation volume, not wasted re-renders. Fix with deferral (`startTransition`, `InteractionManager`) or pre-computation, not memoization.

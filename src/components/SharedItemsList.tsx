@@ -1033,7 +1033,7 @@ export function SharedItemsList({
         title="Change Status"
       />
       {embedded ? (
-        // Embedded mode: picker uses ScrollView for its own scroll; non-picker uses View (parent handles scroll)
+        // Embedded mode: picker uses FlatList (virtualized); non-picker uses View (parent handles scroll)
         groupedRows.length === 0 ? (
           <View style={styles.emptyState}>
             {picker && outsideLoading ? (
@@ -1051,9 +1051,27 @@ export function SharedItemsList({
             )}
           </View>
         ) : picker ? (
-          <ScrollView style={styles.pickerScroll} contentContainerStyle={styles.list}>
-            {groupedRows.map((row) => {
-              const renderContent = () => {
+          <FlatList
+            style={styles.pickerScroll}
+            data={groupedRows}
+            keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                {outsideLoading ? (
+                  <AppText variant="body">Loading items…</AppText>
+                ) : outsideError ? (
+                  <AppText variant="body" style={{ color: theme.colors.error ?? 'red' }}>
+                    {outsideError}
+                  </AppText>
+                ) : (
+                  <AppText variant="body">
+                    {isLoading ? 'Loading items…' : emptyMessage}
+                  </AppText>
+                )}
+              </View>
+            }
+            renderItem={({ item: row }) => {
           if (row.type === 'group') {
             const groupIds = row.items.map((item) => item.id);
             const groupSelected = groupIds.every((id) => selectedIds.includes(id));
@@ -1115,34 +1133,22 @@ export function SharedItemsList({
                     },
                   };
 
-                  // Apply picker mode overrides if enabled
-                  if (picker) {
-                    const pickerProps = pickerMode.getPickerItemProps(item.item, isSelected);
-                    return {
-                      ...baseCardProps,
-                      onPress: pickerProps.onPress,
-                      onSelectedChange: pickerProps.onSelectedChange,
-                      onBookmarkPress: undefined,
-                      onStatusPress: undefined,
-                      menuItems: undefined,
-                      headerAction: pickerProps.headerAction,
-                      statusLabel: pickerProps.statusLabel ?? baseCardProps.statusLabel,
-                      style: pickerProps.style,
-                    };
-                  }
-
-                  return baseCardProps;
+                  const pickerProps = pickerMode.getPickerItemProps(item.item, isSelected);
+                  return {
+                    ...baseCardProps,
+                    onPress: pickerProps.onPress,
+                    onSelectedChange: pickerProps.onSelectedChange,
+                    onBookmarkPress: undefined,
+                    onStatusPress: undefined,
+                    menuItems: undefined,
+                    headerAction: pickerProps.headerAction,
+                    statusLabel: pickerProps.statusLabel ?? baseCardProps.statusLabel,
+                    style: pickerProps.style,
+                  };
                 })}
                 expanded={!isCollapsed}
                 onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
-                {...(picker
-                  ? pickerMode.getPickerGroupProps(row.items.map(i => i.item), groupIds)
-                  : {
-                      selected: groupSelected,
-                      onSelectedChange: (next) => {
-                        setGroupSelection(groupIds, next);
-                      },
-                    })}
+                {...pickerMode.getPickerGroupProps(row.items.map(i => i.item), groupIds)}
               />
             );
           }
@@ -1154,8 +1160,7 @@ export function SharedItemsList({
             ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
             : undefined;
 
-          // Apply picker mode overrides if enabled
-          const pickerProps = picker ? pickerMode.getPickerItemProps(item.item, isSelected) : {};
+          const pickerProps = pickerMode.getPickerItemProps(item.item, isSelected);
 
           return (
             <ItemCard
@@ -1164,35 +1169,22 @@ export function SharedItemsList({
               sourceLabel={item.item.source ?? undefined}
               locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
               priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
-              statusLabel={picker ? pickerProps.statusLabel : getItemStatusLabel(item.item.status) || undefined}
+              statusLabel={pickerProps.statusLabel ?? (getItemStatusLabel(item.item.status) || undefined)}
               budgetCategoryName={budgetCategoryName}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
               selected={isSelected}
-              onSelectedChange={picker ? pickerProps.onSelectedChange : (next) => setItemSelected(item.id, next)}
-              menuItems={picker ? undefined : menuItems}
-              bookmarked={picker ? undefined : Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
-              onBookmarkPress={picker ? undefined : () => {
-                if (!accountId) return;
-                const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
-                updateItem(accountId, item.id, { bookmark: next });
-              }}
-              onStatusPress={picker ? undefined : () => handleStatusPress(item.id)}
-              onPress={picker ? pickerProps.onPress : () => {
-                handleOpenItem(item.id);
-              }}
-              headerAction={picker ? pickerProps.headerAction : undefined}
-              style={picker ? pickerProps.style : undefined}
+              onSelectedChange={pickerProps.onSelectedChange}
+              menuItems={undefined}
+              bookmarked={undefined}
+              onBookmarkPress={undefined}
+              onStatusPress={undefined}
+              onPress={pickerProps.onPress}
+              headerAction={pickerProps.headerAction}
+              style={pickerProps.style}
             />
           );
-              };
-
-              return (
-                <View key={row.type === 'group' ? row.groupId : row.item.id}>
-                  {renderContent()}
-                </View>
-              );
-            })}
-          </ScrollView>
+            }}
+          />
         ) : (
           <View style={styles.list}>
             {groupedRows.map((row) => {
