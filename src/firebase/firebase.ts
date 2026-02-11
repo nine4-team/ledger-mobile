@@ -43,7 +43,7 @@ if (!bypassFirebase) {
     db = firestore();
     if (useEmulators && db) {
       const firestoreHost = process.env.EXPO_PUBLIC_FIRESTORE_EMULATOR_HOST || 'localhost';
-      const firestorePort = process.env.EXPO_PUBLIC_FIRESTORE_EMULATOR_PORT || '8081';
+      const firestorePort = process.env.EXPO_PUBLIC_FIRESTORE_EMULATOR_PORT || '8181';
       db.useEmulator(firestoreHost, parseInt(firestorePort, 10));
     }
 

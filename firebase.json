@@ -16,7 +16,7 @@
       "port": 9099
     },
     "firestore": {
-      "port": 8081
+      "port": 8181
     },
     "functions": {
       "port": 5001
