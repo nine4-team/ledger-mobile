@@ -280,6 +280,8 @@ export default function TransactionDetailScreen() {
 
   const pickerManager = useItemsManager({
     items: activePickerItems,
+    sortModes: ['created-desc'],
+    filterModes: ['all'],
   });
 
   const pickerManagerAdapter = useMemo(() => ({
