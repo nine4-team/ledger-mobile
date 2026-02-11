@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: usePickerMode Hook + SharedItemsList Integration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 7cf6e72530bb76c8fce906b1fae60f897a40c0dc
@@ -34,6 +34,114 @@ history:
 **Reviewed by**: nine4-team
 **Status**: ❌ Changes Requested
 **Date**: 2026-02-11
+
+## Review Feedback for WP01
+
+**Reviewed by**: claude-sonnet
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-11
+
+### ✅ Previous Issues Fixed
+
+The two issues from the previous review have been correctly addressed:
+1. ✅ `eligibleIds` now correctly filters out items in `addedIds` (lines 130-138)
+2. ✅ `handleSelectAll` logic has been simplified per spec (lines 147-156)
+
+### ❌ New Issues Found
+
+### Issue 1: `getPickerItemProps` doesn't check `addedIds` for card interaction
+
+**Location**: `src/hooks/usePickerMode.tsx`, lines 159-187
+
+**Problem**: Items that are already added (`addedIds.has(item.id)`) should NOT be interactable (no `onPress`, no `onSelectedChange`). Currently, the function only checks `locked` (which is `!isEligible`), not whether the item is already added.
+
+**Current code** (lines 163-176):
+```typescript
+const locked = !actualEligibilityCheck.isEligible(item);
+// ...
+onSelectedChange: locked
+  ? undefined
+  : (next) => {
+      setItemSelected(item.id, next);
+    },
+onPress: locked
+  ? undefined
+  : () => {
+      setItemSelected(item.id, !isSelected);
+    },
+```
+
+**Expected behavior** (from spec lines 332-336):
+```typescript
+const eligible = !eligibilityCheck || eligibilityCheck.isEligible(item);
+const alreadyAdded = addedIds?.has(item.id) ?? false;
+const canInteract = eligible && !alreadyAdded;
+
+return {
+  onPress: canInteract ? () => setItemSelected(item.id, !isSelected) : undefined,
+  onSelectedChange: canInteract ? (next: boolean) => setItemSelected(item.id, next) : undefined,
+  // ... rest
+};
+```
+
+**Fix required**:
+1. Add `const alreadyAdded = addedIds?.has(item.id) ?? false;` after line 163
+2. Change `locked` checks to `canInteract = eligible && !alreadyAdded` for `onPress` and `onSelectedChange`
+3. Keep using `locked` (not `alreadyAdded`) for the opacity style - only ineligible items should be dimmed
+4. Pass `!eligible || alreadyAdded` to `renderAddButton` (not just `locked`)
+5. Add `addedIds` to the dependency array (line 186)
+
+**Impact**: Without this fix, users can select/deselect items that are already added (showing "Added" badge), which is confusing and violates the spec.
+
+---
+
+### Issue 2: `getPickerGroupProps` doesn't filter out `addedIds`
+
+**Location**: `src/hooks/usePickerMode.tsx`, lines 190-218
+
+**Problem**: When computing eligible group IDs for group selection, the function should exclude items that are in `addedIds`. Currently it only filters by eligibility.
+
+**Current code** (lines 200-202):
+```typescript
+const groupEligibleIds = groupItems
+  .filter((item) => actualEligibilityCheck.isEligible(item))
+  .map((item) => item.id);
+```
+
+**Expected behavior** (from spec lines 357-361):
+```typescript
+const eligibleGroupIds = groupIds.filter(id => {
+  const item = groupItems.find(i => /* id match */);
+  return item && (!eligibilityCheck || eligibilityCheck.isEligible(item))
+    && !addedIds?.has(id);
+});
+```
+
+**Fix required**:
+1. Add check for `!addedIds?.has(item.id)` in the filter condition (line 201)
+2. Add `addedIds` to the dependency array (line 217)
+
+**Impact**: Without this fix, group "select all" will include already-added items, causing them to be selected when they should be locked out.
+
+---
+
+### Positive Findings
+
+✅ Previous review issues correctly fixed
+✅ All type definitions are correct and well-documented
+✅ Hook integration in SharedItemsList is correct
+✅ Both embedded and standalone rendering paths updated correctly
+✅ ItemPickerControlBar renders correctly in picker mode
+✅ Loading/error states implemented correctly
+✅ All memoization patterns correct (except for missing `addedIds` dependencies noted above)
+✅ No TypeScript errors
+
+---
+
+### Action Required
+
+Please fix the two issues above related to `addedIds` handling and re-submit for review.
+
 
 ## Review Feedback for WP01
 
@@ -609,3 +717,4 @@ The rendering logic is duplicated between embedded and standalone — both must 
 - 2026-02-11T06:17:19Z – claude-sonnet – shell_pid=99683 – lane=doing – Started implementation via workflow command
 - 2026-02-11T06:19:00Z – claude-sonnet – shell_pid=99683 – lane=for_review – Ready for review: Fixed both review issues - eligibleIds now excludes addedIds, handleSelectAll simplified per spec
 - 2026-02-11T06:20:13Z – claude-sonnet – shell_pid=3516 – lane=doing – Started review via workflow command
+- 2026-02-11T06:24:32Z – claude-sonnet – shell_pid=3516 – lane=planned – Moved to planned
