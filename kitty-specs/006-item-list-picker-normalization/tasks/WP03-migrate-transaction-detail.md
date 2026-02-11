@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Migrate TransactionDetailScreen
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01]
 base_branch: 006-item-list-picker-normalization-WP01
 base_commit: f32cc4587085bbc59992dddae249895453dbfc9f
@@ -305,3 +305,4 @@ spec-kitty implement WP03 --base WP01
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
 - 2026-02-11T06:34:57Z – claude-sonnet – shell_pid=20094 – lane=doing – Assigned agent via workflow command
+- 2026-02-11T06:38:18Z – claude-sonnet – shell_pid=20094 – lane=for_review – Ready for review: Migrated TransactionDetailScreen to SharedItemsList picker mode with dynamic tab bar
