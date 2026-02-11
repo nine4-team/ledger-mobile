@@ -14,7 +14,7 @@ subtasks:
 - T016
 phase: Phase 3 - Polish
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "86001"
 review_status: ''
 reviewed_by: ''
@@ -187,3 +187,4 @@ spec-kitty implement WP04 --base WP03
 ## Activity Log
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
+- 2026-02-11T18:44:08Z – claude-sonnet – shell_pid=86001 – lane=doing – Assigned agent via workflow command
