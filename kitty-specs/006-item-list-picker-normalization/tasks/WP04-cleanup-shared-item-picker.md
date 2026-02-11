@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Cleanup & Dead Code Removal
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP02
 - WP03
@@ -16,8 +16,8 @@ phase: Phase 3 - Polish
 assignee: ''
 agent: "claude-sonnet"
 shell_pid: "90586"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-11T05:38:00Z'
   lane: planned
@@ -30,11 +30,44 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** – Reviewers add detailed feedback here when work needs changes.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-11
 
-*[This section is empty initially.]*
+## Review Feedback for WP04
 
----
+### Summary
+Overall excellent work! All core objectives were met:
+- ✅ SharedItemPicker.tsx deleted (500 lines removed)
+- ✅ Barrel export removed from src/components/index.ts
+- ✅ ItemPickerControlBar export preserved
+- ✅ ItemEligibilityCheck properly exported from usePickerMode.tsx
+- ✅ No new TypeScript errors introduced
+
+### Issue to Fix
+
+**Stale Comment Reference in GroupedItemCard.tsx**
+
+**Location**: src/components/GroupedItemCard.tsx (around line with "external selection handler")
+
+**Current Code**:
+```typescript
+// If there's an external selection handler (e.g., SharedItemPicker, SharedItemsList),
+```
+
+**Required Change**:
+```typescript
+// If there's an external selection handler (e.g., SharedItemsList),
+```
+
+**Reason**: SharedItemPicker no longer exists - the comment should only reference SharedItemsList.
+
+### Verification Completed
+- ✅ Dependencies satisfied (WP02 and WP03 both in "done" lane)
+- ✅ No stale imports found
+- ✅ TypeScript build clean (no new errors)
+- ✅ No dependent work packages affected
+
 
 ## Objectives & Success Criteria
 
@@ -190,3 +223,4 @@ spec-kitty implement WP04 --base WP03
 - 2026-02-11T18:44:08Z – claude-sonnet – shell_pid=86001 – lane=doing – Assigned agent via workflow command
 - 2026-02-11T18:46:09Z – claude-sonnet – shell_pid=86001 – lane=for_review – Ready for review: Deleted SharedItemPicker.tsx, cleaned up barrel exports, verified no stale imports
 - 2026-02-11T18:47:35Z – claude-sonnet – shell_pid=90586 – lane=doing – Started review via workflow command
+- 2026-02-11T18:49:23Z – claude-sonnet – shell_pid=90586 – lane=planned – Moved to planned
