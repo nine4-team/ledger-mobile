@@ -121,9 +121,9 @@
 **Estimated Prompt Size**: ~200 lines
 
 ### Included Subtasks
-- [ ] T014 Delete `src/components/SharedItemPicker.tsx`
-- [ ] T015 [P] Update barrel exports in `src/components/index.ts` — remove `SharedItemPicker` export (line 35), keep `ItemPickerControlBar` export (line 36)
-- [ ] T016 Verify no remaining imports of `SharedItemPicker` across codebase + ensure `ItemEligibilityCheck` type is exported from `src/hooks/usePickerMode.ts`
+- [x] T014 Delete `src/components/SharedItemPicker.tsx`
+- [x] T015 [P] Update barrel exports in `src/components/index.ts` — remove `SharedItemPicker` export (line 35), keep `ItemPickerControlBar` export (line 36)
+- [x] T016 Verify no remaining imports of `SharedItemPicker` across codebase + ensure `ItemEligibilityCheck` type is exported from `src/hooks/usePickerMode.ts`
 
 ### Implementation Notes
 - `ItemPickerControlBar` is **kept** — now consumed by SharedItemsList directly.
