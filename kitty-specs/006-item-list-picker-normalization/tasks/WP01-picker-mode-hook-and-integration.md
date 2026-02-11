@@ -1,27 +1,30 @@
 ---
-work_package_id: "WP01"
-subtasks:
-  - "T001"
-  - "T002"
-  - "T003"
-  - "T004"
-  - "T005"
-  - "T006"
-title: "usePickerMode Hook + SharedItemsList Integration"
-phase: "Phase 1 - Foundation"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+work_package_id: WP01
+title: usePickerMode Hook + SharedItemsList Integration
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 7cf6e72530bb76c8fce906b1fae60f897a40c0dc
+created_at: '2026-02-11T06:00:16.141388+00:00'
+subtasks:
+- T001
+- T002
+- T003
+- T004
+- T005
+- T006
+phase: Phase 1 - Foundation
+assignee: ''
+agent: ''
+shell_pid: "79999"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-11T05:38:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-11T05:38:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP01 – usePickerMode Hook + SharedItemsList Integration
