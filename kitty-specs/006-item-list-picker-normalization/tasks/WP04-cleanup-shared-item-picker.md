@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Cleanup & Dead Code Removal
-lane: "planned"
+lane: "doing"
 dependencies:
 - WP02
 - WP03
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 3 - Polish
 assignee: ''
 agent: "claude-sonnet"
-shell_pid: "90586"
+shell_pid: "93823"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -224,3 +224,4 @@ spec-kitty implement WP04 --base WP03
 - 2026-02-11T18:46:09Z – claude-sonnet – shell_pid=86001 – lane=for_review – Ready for review: Deleted SharedItemPicker.tsx, cleaned up barrel exports, verified no stale imports
 - 2026-02-11T18:47:35Z – claude-sonnet – shell_pid=90586 – lane=doing – Started review via workflow command
 - 2026-02-11T18:49:23Z – claude-sonnet – shell_pid=90586 – lane=planned – Moved to planned
+- 2026-02-11T18:50:01Z – claude-sonnet – shell_pid=93823 – lane=doing – Started implementation via workflow command
