@@ -32,7 +32,6 @@ export { StatusBanner, STATUS_BANNER_HEIGHT } from './StatusBanner';
 export { NetworkStatusBanner } from './NetworkStatusBanner';
 export { SyncStatusBanner, SYNC_BANNER_HEIGHT } from './SyncStatusBanner';
 export { getSortFilterText, ListSelectionInfo, ListSelectAllRow } from './ListSelectionControls';
-export { SharedItemPicker } from './SharedItemPicker';
 export { ItemPickerControlBar } from './ItemPickerControlBar';
 export { showItemConflictDialog } from './ItemConflictDialog';
 export { InfoCard } from './InfoCard';
