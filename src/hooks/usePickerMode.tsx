@@ -126,11 +126,16 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
   const actualEligibilityCheck = eligibilityCheck ?? defaultEligibilityCheck;
   const uiKitTheme = useUIKitTheme();
 
-  // Compute eligible item IDs
+  // Compute eligible item IDs (excluding already-added items)
   const eligibleIds = useMemo(() => {
     if (!enabled) return [];
-    return items.filter((item) => actualEligibilityCheck.isEligible(item)).map((item) => item.id);
-  }, [enabled, items, actualEligibilityCheck]);
+    return items
+      .filter((item) => {
+        if (!actualEligibilityCheck.isEligible(item)) return false;
+        return !addedIds?.has(item.id);
+      })
+      .map((item) => item.id);
+  }, [enabled, items, actualEligibilityCheck, addedIds]);
 
   // Check if all eligible items are selected
   const allEligibleSelected = useMemo(() => {
@@ -142,20 +147,13 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
   const handleSelectAll = useCallback(() => {
     if (!enabled) return;
     if (allEligibleSelected) {
-      // Deselect all eligible items
-      const eligibleSet = new Set(eligibleIds);
-      const remaining = selectedIds.filter((id) => !eligibleSet.has(id));
-      remaining.forEach((id) => setItemSelected(id, true));
+      // Deselect all eligible
       eligibleIds.forEach((id) => setItemSelected(id, false));
     } else {
-      // Select all eligible items
-      eligibleIds.forEach((id) => {
-        if (!selectedIds.includes(id)) {
-          setItemSelected(id, true);
-        }
-      });
+      // Select all eligible (additive, don't clear other selections)
+      eligibleIds.forEach((id) => setItemSelected(id, true));
     }
-  }, [enabled, allEligibleSelected, eligibleIds, selectedIds, setItemSelected]);
+  }, [enabled, allEligibleSelected, eligibleIds, setItemSelected]);
 
   // Factory function: get picker-specific props for an item card
   const getPickerItemProps = useCallback(
