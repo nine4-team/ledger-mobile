@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: usePickerMode Hook + SharedItemsList Integration
-lane: "planned"
+lane: "doing"
 dependencies: []
 base_branch: main
 base_commit: 7cf6e72530bb76c8fce906b1fae60f897a40c0dc
@@ -16,7 +16,7 @@ subtasks:
 phase: Phase 1 - Foundation
 assignee: ''
 agent: "claude-sonnet"
-shell_pid: "3516"
+shell_pid: "11558"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -718,3 +718,4 @@ The rendering logic is duplicated between embedded and standalone — both must 
 - 2026-02-11T06:19:00Z – claude-sonnet – shell_pid=99683 – lane=for_review – Ready for review: Fixed both review issues - eligibleIds now excludes addedIds, handleSelectAll simplified per spec
 - 2026-02-11T06:20:13Z – claude-sonnet – shell_pid=3516 – lane=doing – Started review via workflow command
 - 2026-02-11T06:24:32Z – claude-sonnet – shell_pid=3516 – lane=planned – Moved to planned
+- 2026-02-11T06:27:44Z – claude-sonnet – shell_pid=11558 – lane=doing – Started implementation via workflow command
