@@ -7,7 +7,6 @@ import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { ItemsListControlBar } from './ItemsListControlBar';
 import { ItemCard } from './ItemCard';
-import { SharedItemPicker } from './SharedItemPicker';
 import { SpaceSelector } from './SpaceSelector';
 import { MediaGallerySection } from './MediaGallerySection';
 import { BottomSheet } from './BottomSheet';
@@ -151,7 +150,6 @@ export function SpaceDetailContent({
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('current');
-  const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
 
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
@@ -251,7 +249,6 @@ export function SpaceDetailContent({
     },
   });
 
-
   // Compute sections array for SectionList
   const sections: SpaceSection[] = useMemo(() => {
     const result: SpaceSection[] = [];
@@ -294,6 +291,35 @@ export function SpaceDetailContent({
   }, [collapsedSections, itemsManager.filteredAndSortedItems]);
 
   const activePickerItems = pickerTab === 'outside' ? outsideItemsHook.items : availableItems;
+
+  // Initialize picker manager
+  const pickerManager = useItemsManager({
+    items: activePickerItems,
+    defaultSort: 'created-desc',
+    defaultFilter: 'all',
+    sortModes: ['created-desc'],
+    filterModes: ['all'],
+  });
+
+  // Create adapter for picker manager to match SharedItemsList's expected interface
+  const pickerManagerAdapter = useMemo(() => ({
+    ...pickerManager,
+    selectedIds: Array.from(pickerManager.selectedIds), // Convert Set to Array for usePickerMode
+    setItemSelected: (id: string, selected: boolean) => {
+      const isCurrentlySelected = pickerManager.selectedIds.has(id);
+      if (selected !== isCurrentlySelected) {
+        pickerManager.toggleSelection(id);
+      }
+    },
+    setGroupSelection: (ids: string[], selected: boolean) => {
+      ids.forEach((id) => {
+        const isCurrentlySelected = pickerManager.selectedIds.has(id);
+        if (selected !== isCurrentlySelected) {
+          pickerManager.toggleSelection(id);
+        }
+      });
+    },
+  }), [pickerManager]);
 
   useEffect(() => {
     if (!isPickingItems) return;
@@ -358,14 +384,14 @@ export function SpaceDetailContent({
   );
 
   const handleAddSelectedItems = useCallback(() => {
-    if (!accountId || pickerSelectedIds.length === 0) return;
-    const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
+    if (!accountId || pickerManager.selectedIds.size === 0) return;
+    const selectedItems = activePickerItems.filter((item) => pickerManager.selectedIds.has(item.id));
 
     if (pickerTab !== 'outside') {
       selectedItems.forEach((item) => {
         updateItem(accountId, item.id, { spaceId });
       });
-      setPickerSelectedIds([]);
+      pickerManager.clearSelection();
       setIsPickingItems(false);
       return;
     }
@@ -392,9 +418,9 @@ export function SpaceDetailContent({
         console.warn(`[items] move failed for ${item.id}: ${result.error}`);
       }
     });
-    setPickerSelectedIds([]);
+    pickerManager.clearSelection();
     setIsPickingItems(false);
-  }, [accountId, activePickerItems, pickerSelectedIds, pickerTab, projectId, spaceId]);
+  }, [accountId, activePickerItems, pickerManager, pickerTab, projectId, spaceId]);
 
   const handleAddSingleItem = useCallback((item: ScopedItem | { id: string; transactionId?: string | null; budgetCategoryId?: string | null; [key: string]: any }) => {
     if (!accountId) return;
@@ -533,10 +559,10 @@ export function SpaceDetailContent({
       onPress: () => {
         setIsPickingItems(true);
         setPickerTab('current');
-        setPickerSelectedIds([]);
+        pickerManager.clearSelection();
       },
     },
-  ], [handleCreateItemInSpace]);
+  ], [handleCreateItemInSpace, pickerManager]);
 
   // --- SectionList render callbacks ---
 
@@ -1116,26 +1142,83 @@ export function SpaceDetailContent({
         visible={isPickingItems}
         onRequestClose={() => {
           setIsPickingItems(false);
-          setPickerSelectedIds([]);
+          pickerManager.clearSelection();
         }}
         containerStyle={styles.pickerSheet}
       >
         <View style={styles.pickerContent}>
           <AppText variant="h2" style={styles.pickerTitle}>Add Existing Items</AppText>
-          <SharedItemPicker
-            tabs={[
-              { value: 'current', label: pickerTabLabel, accessibilityLabel: projectId ? 'Project items tab' : 'In Business Inventory tab' },
-              { value: 'outside', label: 'Outside', accessibilityLabel: 'Outside items tab' },
-            ]}
-            tabCounts={{ current: availableItems.length, outside: outsideItemsHook.items.length }}
-            selectedTab={pickerTab}
-            onTabChange={(next) => {
-              setPickerTab(next as ItemPickerTab);
-              setPickerSelectedIds([]);
-            }}
+
+          {/* Tab bar */}
+          <View
+            style={[styles.pickerTabBar, { borderBottomColor: uiKitTheme.border.secondary }]}
+            accessibilityRole="tablist"
+            accessibilityLabel="Item picker tabs"
+          >
+            {[
+              { value: 'current' as const, label: pickerTabLabel, accessibilityLabel: projectId ? 'Project items tab' : 'In Business Inventory tab' },
+              { value: 'outside' as const, label: 'Outside', accessibilityLabel: 'Outside items tab' },
+            ].map((tab) => {
+              const isSelected = pickerTab === tab.value;
+              const count = tab.value === 'current' ? availableItems.length : outsideItemsHook.items.length;
+
+              return (
+                <TouchableOpacity
+                  key={tab.value}
+                  style={[
+                    styles.pickerTab,
+                    isSelected && { borderBottomColor: theme.colors.primary, borderBottomWidth: 2 },
+                  ]}
+                  onPress={() => {
+                    setPickerTab(tab.value);
+                    pickerManager.clearSelection();
+                  }}
+                  activeOpacity={0.7}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={tab.accessibilityLabel}
+                >
+                  <AppText
+                    variant="body"
+                    style={[
+                      isSelected && { color: theme.colors.primary, fontWeight: '700' },
+                      !isSelected && { color: theme.colors.textSecondary },
+                    ]}
+                  >
+                    {tab.label}
+                  </AppText>
+                  <View
+                    style={[
+                      styles.pickerTabCount,
+                      {
+                        backgroundColor: isSelected
+                          ? theme.colors.primary + '1A'
+                          : uiKitTheme.background.tertiary,
+                      },
+                    ]}
+                  >
+                    <AppText
+                      variant="caption"
+                      style={{
+                        color: isSelected
+                          ? theme.colors.primary
+                          : theme.colors.textSecondary,
+                        fontSize: 12,
+                      }}
+                    >
+                      {count}
+                    </AppText>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <SharedItemsList
+            embedded={true}
+            picker={true}
             items={activePickerItems}
-            selectedIds={pickerSelectedIds}
-            onSelectionChange={setPickerSelectedIds}
+            manager={pickerManagerAdapter}
             eligibilityCheck={{
               isEligible: (item) => item.spaceId !== spaceId && !item.transactionId,
               getStatusLabel: (item) => {
@@ -1250,5 +1333,25 @@ const styles = StyleSheet.create({
   },
   pickerTitle: {
     textAlign: 'center',
+  },
+  pickerTabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    gap: 16,
+  },
+  pickerTab: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pickerTabCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
