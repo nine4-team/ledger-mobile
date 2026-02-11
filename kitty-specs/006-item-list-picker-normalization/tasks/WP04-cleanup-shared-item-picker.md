@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Cleanup & Dead Code Removal
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP02
 - WP03
@@ -188,3 +188,4 @@ spec-kitty implement WP04 --base WP03
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
 - 2026-02-11T18:44:08Z – claude-sonnet – shell_pid=86001 – lane=doing – Assigned agent via workflow command
+- 2026-02-11T18:46:09Z – claude-sonnet – shell_pid=86001 – lane=for_review – Ready for review: Deleted SharedItemPicker.tsx, cleaned up barrel exports, verified no stale imports
