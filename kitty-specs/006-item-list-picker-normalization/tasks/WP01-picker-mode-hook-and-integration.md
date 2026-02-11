@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: usePickerMode Hook + SharedItemsList Integration
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 7cf6e72530bb76c8fce906b1fae60f897a40c0dc
@@ -17,8 +17,8 @@ phase: Phase 1 - Foundation
 assignee: ''
 agent: "claude-sonnet"
 shell_pid: "95662"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-11T05:38:00Z'
   lane: planned
@@ -31,11 +31,104 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`** – Reviewers add detailed feedback here when work needs changes.
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-11
 
-*[This section is empty initially.]*
+## Review Feedback for WP01
+
+### Issue 1: `eligibleIds` computation doesn't filter out `addedIds`
+
+**Location**: `src/hooks/usePickerMode.tsx`, lines 130-133
+
+**Problem**: The current implementation only filters by `isEligible` but doesn't exclude items that are already in `addedIds`. Per the spec (T002, step 1), eligible IDs should exclude both ineligible items AND already-added items.
+
+**Current code**:
+```typescript
+const eligibleIds = useMemo(() => {
+  if (!enabled) return [];
+  return items.filter((item) => actualEligibilityCheck.isEligible(item)).map((item) => item.id);
+}, [enabled, items, actualEligibilityCheck]);
+```
+
+**Expected code** (from spec lines 195-206):
+```typescript
+const eligibleIds = useMemo(() => {
+  if (!enabled) return [];
+  return items
+    .filter(item => {
+      if (!actualEligibilityCheck.isEligible(item)) return false;
+      return !addedIds?.has(item.id);
+    })
+    .map(item => item.id);
+}, [enabled, items, actualEligibilityCheck, addedIds]);
+```
+
+**Impact**: Without this fix, "select all" will include already-added items, and the eligible count will be incorrect.
 
 ---
+
+### Issue 2: `handleSelectAll` deselect logic is unnecessarily complex
+
+**Location**: `src/hooks/usePickerMode.tsx`, lines 142-158
+
+**Problem**: The deselect branch has unnecessary complexity. It filters remaining items and sets them to `true` (which they already are), and the select branch has an unnecessary check for already-selected items.
+
+**Current code**:
+```typescript
+const handleSelectAll = useCallback(() => {
+  if (!enabled) return;
+  if (allEligibleSelected) {
+    const eligibleSet = new Set(eligibleIds);
+    const remaining = selectedIds.filter((id) => !eligibleSet.has(id));
+    remaining.forEach((id) => setItemSelected(id, true));  // Pointless
+    eligibleIds.forEach((id) => setItemSelected(id, false));
+  } else {
+    eligibleIds.forEach((id) => {
+      if (!selectedIds.includes(id)) {  // Unnecessary check
+        setItemSelected(id, true);
+      }
+    });
+  }
+}, [enabled, allEligibleSelected, eligibleIds, selectedIds, setItemSelected]);
+```
+
+**Expected code** (from spec lines 217-228):
+```typescript
+const handleSelectAll = useCallback(() => {
+  if (!enabled) return;
+  if (allEligibleSelected) {
+    // Deselect all eligible
+    eligibleIds.forEach(id => setItemSelected(id, false));
+  } else {
+    // Select all eligible (additive, don't clear other selections)
+    eligibleIds.forEach(id => setItemSelected(id, true));
+  }
+}, [enabled, allEligibleSelected, eligibleIds, setItemSelected]);
+```
+
+**Impact**: Minor - the current code works but is harder to understand and unnecessarily complex. The `setItemSelected` handler should be idempotent anyway.
+
+---
+
+### Positive Findings
+
+✅ All type definitions are correct and complete (T001)
+✅ Props added to SharedItemsList correctly with all fields optional (T003)
+✅ Hook integration in SharedItemsList is correct (T004)
+✅ ItemPickerControlBar renders correctly in picker mode (T004)
+✅ Both embedded (View+map) and standalone (FlatList) rendering paths updated (T005)
+✅ Loading/error states implemented correctly (T006)
+✅ No TypeScript errors introduced
+✅ All memoization is correct (except for missing `addedIds` dependency)
+✅ No expected regressions to existing modes
+
+---
+
+### Action Required
+
+Please fix the two issues above and re-submit for review. Once fixed, the implementation will be complete and ready to merge.
+
 
 ## Objectives & Success Criteria
 
@@ -512,3 +605,4 @@ The rendering logic is duplicated between embedded and standalone — both must 
 - 2026-02-11T06:00:16Z – claude-sonnet – shell_pid=79999 – lane=doing – Assigned agent via workflow command
 - 2026-02-11T06:13:30Z – claude-sonnet – shell_pid=79999 – lane=for_review – Ready for review: usePickerMode hook created and integrated into SharedItemsList with picker mode props. All picker props optional - no regressions to existing modes.
 - 2026-02-11T06:13:52Z – claude-sonnet – shell_pid=95662 – lane=doing – Started review via workflow command
+- 2026-02-11T06:16:21Z – claude-sonnet – shell_pid=95662 – lane=planned – Moved to planned
