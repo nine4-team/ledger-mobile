@@ -91,9 +91,9 @@
 **Estimated Prompt Size**: ~300 lines
 
 ### Included Subtasks
-- [ ] T011 Add `useItemsManager` instance + manager adapter for picker selection state in `app/transactions/[id]/index.tsx`
-- [ ] T012 Build tab bar in TransactionDetailScreen (dynamic 2-3 tabs: suggested + optional project + outside)
-- [ ] T013 Replace `<SharedItemPicker>` with `<SharedItemsList embedded={true} picker={true}>` and wire all props
+- [x] T011 Add `useItemsManager` instance + manager adapter for picker selection state in `app/transactions/[id]/index.tsx`
+- [x] T012 Build tab bar in TransactionDetailScreen (dynamic 2-3 tabs: suggested + optional project + outside)
+- [x] T013 Replace `<SharedItemPicker>` with `<SharedItemsList embedded={true} picker={true}>` and wire all props
 
 ### Implementation Notes
 - This consumer does NOT use `onAddSingle` or `addedIds` — bulk selection only.
