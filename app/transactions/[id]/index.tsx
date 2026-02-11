@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
@@ -17,7 +16,7 @@ import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { SpaceSelector } from '../../../src/components/SpaceSelector';
-import { getTextColorStyle, getTextSecondaryStyle, layout, getBulkSelectionBarContentPadding } from '../../../src/ui';
+import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
 import { useItemsManager } from '../../../src/hooks/useItemsManager';
 import { SharedItemsList } from '../../../src/components/SharedItemsList';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
@@ -97,7 +96,6 @@ export default function TransactionDetailScreen() {
   const scope = Array.isArray(params.scope) ? params.scope[0] : params.scope;
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
-  const insets = useSafeAreaInsets();
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
@@ -1241,7 +1239,6 @@ export default function TransactionDetailScreen() {
       headerRight={headerActions}
       onPressMenu={() => setMenuVisible(true)}
       contentStyle={styles.screenContent}
-      includeBottomInset={false}
     >
       {isLoading ? (
         <View style={styles.loadingContainer}>
@@ -1250,15 +1247,13 @@ export default function TransactionDetailScreen() {
       ) : transaction ? (
         <>
           <SectionList
+            style={{ flex: 1 }}
             sections={sections}
             renderSectionHeader={renderSectionHeader}
             renderItem={renderItem}
             stickySectionHeadersEnabled={true}
             keyExtractor={(item, index) => item.id ?? `section-${index}`}
-            contentContainerStyle={[
-              styles.content,
-              itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : undefined
-            ]}
+            contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={({ section }) =>
               section.key === 'items' ? <View style={styles.itemSeparator} /> : null

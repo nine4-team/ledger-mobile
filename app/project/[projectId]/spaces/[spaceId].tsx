@@ -32,7 +32,6 @@ export default function ProjectSpaceDetailScreen() {
       title={spaceName}
       backTarget={`/project/${projectId}?tab=spaces`}
       onPressMenu={() => setMenuVisible(true)}
-      includeBottomInset={false}
     >
       <SpaceDetailContent
         scope={{ projectId, spaceId }}

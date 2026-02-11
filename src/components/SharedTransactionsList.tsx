@@ -13,7 +13,7 @@ import { TransactionCard } from './TransactionCard';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { BUTTON_BORDER_RADIUS, getTextColorStyle, layout, getBulkSelectionBarContentPadding } from '../ui';
+import { BUTTON_BORDER_RADIUS, getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListenersMultiple } from '../data/useScopedListeners';
@@ -1114,13 +1114,11 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         </View>
       </BottomSheet>
       <FlatList
+        style={{ flex: 1 }}
         ref={listRef}
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.list,
-          selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : null
-        ]}
+        contentContainerStyle={styles.list}
         refreshControl={
           screenRefresh ? (
             <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />

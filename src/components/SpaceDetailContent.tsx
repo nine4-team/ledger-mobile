@@ -15,7 +15,7 @@ import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { NotesSection } from './NotesSection';
 import { CollapsibleSectionHeader } from './CollapsibleSectionHeader';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
-import { layout, getBulkSelectionBarContentPadding } from '../ui';
+import { layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useAuthStore } from '../auth/authStore';
@@ -945,6 +945,7 @@ export function SpaceDetailContent({
   return (
     <View style={styles.container}>
       <SectionList
+        style={{ flex: 1 }}
         sections={sections}
         renderSectionHeader={renderSectionHeader}
         renderItem={renderItem}
@@ -954,10 +955,7 @@ export function SpaceDetailContent({
           if (typeof item === 'string') return item;
           return item.id ?? `item-${index}`;
         }}
-        contentContainerStyle={[
-          styles.content,
-          itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : undefined
-        ]}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         ItemSeparatorComponent={({ section }) =>

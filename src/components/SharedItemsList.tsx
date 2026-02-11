@@ -18,7 +18,7 @@ import { BulkSelectionBar } from './BulkSelectionBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { getTextColorStyle, layout, getBulkSelectionBarContentPadding } from '../ui';
+import { getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
@@ -29,6 +29,7 @@ import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budget
 import { resolveAttachmentUri } from '../offline/media';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
+import { ITEM_STATUSES, getItemStatusLabel } from '../constants/itemStatuses';
 
 type BulkAction = {
   id: string;
@@ -146,13 +147,6 @@ function getPrimaryImage(item: ScopedItem) {
   if (!primary) return null;
   return resolveAttachmentUri(primary) ?? primary.url;
 }
-
-const ITEM_STATUSES = [
-  { key: 'to purchase', label: 'To Purchase' },
-  { key: 'purchased', label: 'Purchased' },
-  { key: 'to return', label: 'To Return' },
-  { key: 'returned', label: 'Returned' },
-];
 
 export function SharedItemsList({
   // Standalone props
@@ -1041,7 +1035,7 @@ export function SharedItemsList({
                     sourceLabel: item.item.source ?? undefined,
                     locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
                     priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
-                    statusLabel: item.item.status ?? undefined,
+                    statusLabel: getItemStatusLabel(item.item.status) || undefined,
                     budgetCategoryName: budgetCategoryName,
                     thumbnailUri: getPrimaryImage(item.item) ?? undefined,
                     selected: isSelected,
@@ -1086,7 +1080,7 @@ export function SharedItemsList({
               sourceLabel={item.item.source ?? undefined}
               locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
               priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
-              statusLabel={item.item.status ?? undefined}
+              statusLabel={getItemStatusLabel(item.item.status) || undefined}
               budgetCategoryName={budgetCategoryName}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
               selected={isSelected}
@@ -1117,13 +1111,11 @@ export function SharedItemsList({
       ) : (
         // Standalone mode: Use FlatList with scroll
         <FlatList
+          style={{ flex: 1 }}
           ref={listRef}
           data={groupedRows}
           keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
-          contentContainerStyle={[
-            styles.list,
-            selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : null
-          ]}
+          contentContainerStyle={styles.list}
           refreshControl={
             screenRefresh ? (
               <RefreshControl refreshing={screenRefresh.refreshing} onRefresh={screenRefresh.onRefresh} />
@@ -1178,7 +1170,7 @@ export function SharedItemsList({
                       sourceLabel: item.item.source ?? undefined,
                       locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
                       priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
-                      statusLabel: item.item.status ?? undefined,
+                      statusLabel: getItemStatusLabel(item.item.status) || undefined,
                       thumbnailUri: getPrimaryImage(item.item) ?? undefined,
                       selected: isSelected,
                       onSelectedChange: (next) => {
@@ -1222,7 +1214,7 @@ export function SharedItemsList({
                 sourceLabel={item.item.source ?? undefined}
                 locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
                 priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
-                statusLabel={item.item.status ?? undefined}
+                statusLabel={getItemStatusLabel(item.item.status) || undefined}
                 budgetCategoryName={budgetCategoryName}
                 thumbnailUri={getPrimaryImage(item.item) ?? undefined}
                 selected={isSelected}

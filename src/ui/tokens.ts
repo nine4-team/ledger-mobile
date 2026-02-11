@@ -93,24 +93,3 @@ export const CARD_PADDING = 20;
 // TODO(ui-kit): Promote when kit supports border width tokens.
 export const CARD_BORDER_WIDTH = 1;
 
-/**
- * BulkSelectionBar height constants.
- * The bar height is dynamic based on safe area insets.
- */
-export const BULK_SELECTION_BAR = {
-  /** Base content height: border (1) + paddingTop (6) + content (~42-44) */
-  BASE_HEIGHT: 50,
-  /** Minimum padding bottom */
-  MIN_PADDING_BOTTOM: 6,
-} as const;
-
-/**
- * Calculate the content padding needed to make room for BulkSelectionBar.
- * Use this when BulkSelectionBar is positioned absolutely at screen bottom.
- *
- * @returns Padding to add to scrollable content's paddingBottom
- */
-export function getBulkSelectionBarContentPadding(): number {
-  return BULK_SELECTION_BAR.BASE_HEIGHT;
-}
-

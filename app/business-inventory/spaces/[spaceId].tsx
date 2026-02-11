@@ -30,7 +30,6 @@ export default function BusinessInventorySpaceDetailScreen() {
       title={spaceName}
       backTarget="/business-inventory/spaces"
       onPressMenu={() => setMenuVisible(true)}
-      includeBottomInset={false}
     >
       <SpaceDetailContent
         scope={{ projectId: null, spaceId }}
