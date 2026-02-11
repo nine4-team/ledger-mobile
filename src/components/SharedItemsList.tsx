@@ -23,13 +23,15 @@ import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
 import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
-import { deleteItem, updateItem } from '../data/itemsService';
+import { deleteItem, updateItem, type Item } from '../data/itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale } from '../data/inventoryOperations';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
 import { resolveAttachmentUri } from '../offline/media';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { ITEM_STATUSES, getItemStatusLabel } from '../constants/itemStatuses';
+import { usePickerMode, type ItemEligibilityCheck } from '../hooks/usePickerMode';
+import { ItemPickerControlBar } from './ItemPickerControlBar';
 
 type BulkAction = {
   id: string;
@@ -60,6 +62,17 @@ type SharedItemsListProps = {
   onItemPress?: (id: string) => void;
   getItemMenuItems?: (item: ScopedItem) => AnchoredMenuItem[];
   emptyMessage?: string;
+
+  // Picker mode props
+  picker?: boolean;
+  eligibilityCheck?: ItemEligibilityCheck;
+  onAddSingle?: (item: ScopedItem | Item) => void | Promise<void>;
+  addedIds?: Set<string>;
+  onAddSelected?: () => void | Promise<void>;
+  addButtonLabel?: string;
+  outsideLoading?: boolean;
+  outsideError?: string | null;
+  searchPlaceholder?: string;
 };
 
 type ItemRow = {
@@ -162,6 +175,17 @@ export function SharedItemsList({
   onItemPress: externalOnItemPress,
   getItemMenuItems: externalGetItemMenuItems,
   emptyMessage = "No items found",
+
+  // Picker props
+  picker = false,
+  eligibilityCheck,
+  onAddSingle,
+  addedIds,
+  onAddSelected,
+  addButtonLabel,
+  outsideLoading,
+  outsideError,
+  searchPlaceholder,
 }: SharedItemsListProps) {
   // Prop validation in development mode
   if (__DEV__ && embedded) {
@@ -256,6 +280,18 @@ export function SharedItemsList({
       });
     }
   }, [embedded, externalManager]);
+
+  // Picker mode hook
+  const pickerMode = usePickerMode({
+    enabled: picker,
+    items,
+    eligibilityCheck,
+    onAddSingle,
+    addedIds,
+    selectedIds,
+    setItemSelected,
+    setGroupSelection,
+  });
 
   const clearSelection = useCallback(() => {
     if (embedded && externalManager) {
@@ -806,7 +842,21 @@ export function SharedItemsList({
 
   return (
     <View style={styles.container}>
-      {!embedded && (
+      {picker ? (
+        <View style={styles.controlSection}>
+          <ItemPickerControlBar
+            search={query}
+            onChangeSearch={setQuery}
+            searchPlaceholder={searchPlaceholder}
+            onSelectAll={pickerMode.handleSelectAll}
+            allSelected={pickerMode.allEligibleSelected}
+            hasItems={pickerMode.eligibleIds.length > 0}
+            onAddSelected={onAddSelected!}
+            selectedCount={selectedIds.length}
+            addButtonLabel={addButtonLabel}
+          />
+        </View>
+      ) : !embedded ? (
         <View style={styles.controlSection}>
           <ItemsListControlBar
             search={query}
@@ -838,7 +888,7 @@ export function SharedItemsList({
             }
           />
         </View>
-      )}
+      ) : null}
       {!embedded && (
         <>
           <SortMenu
@@ -986,9 +1036,19 @@ export function SharedItemsList({
         // Embedded mode: Use View + map (no scroll, parent handles it)
         groupedRows.length === 0 ? (
           <View style={styles.emptyState}>
-            <AppText variant="body">
-              {isLoading ? 'Loading items…' : emptyMessage}
-            </AppText>
+            {picker && outsideLoading ? (
+              <>
+                <AppText variant="body">Loading items…</AppText>
+              </>
+            ) : picker && outsideError ? (
+              <AppText variant="body" style={{ color: theme.colors.error ?? 'red' }}>
+                {outsideError}
+              </AppText>
+            ) : (
+              <AppText variant="body">
+                {isLoading ? 'Loading items…' : emptyMessage}
+              </AppText>
+            )}
           </View>
         ) : (
           <View style={styles.list}>
@@ -1029,7 +1089,7 @@ export function SharedItemsList({
                     ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
                     : undefined;
 
-                  const cardProps: ItemCardProps = {
+                  const baseCardProps: ItemCardProps = {
                     name: item.label,
                     sku: item.item.sku ?? undefined,
                     sourceLabel: item.item.source ?? undefined,
@@ -1055,14 +1115,34 @@ export function SharedItemsList({
                     },
                   };
 
-                  return cardProps;
+                  // Apply picker mode overrides if enabled
+                  if (picker) {
+                    const pickerProps = pickerMode.getPickerItemProps(item.item, isSelected);
+                    return {
+                      ...baseCardProps,
+                      onPress: pickerProps.onPress,
+                      onSelectedChange: pickerProps.onSelectedChange,
+                      onBookmarkPress: undefined,
+                      onStatusPress: undefined,
+                      menuItems: undefined,
+                      headerAction: pickerProps.headerAction,
+                      statusLabel: pickerProps.statusLabel ?? baseCardProps.statusLabel,
+                      style: pickerProps.style,
+                    };
+                  }
+
+                  return baseCardProps;
                 })}
                 expanded={!isCollapsed}
                 onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
-                selected={groupSelected}
-                onSelectedChange={(next) => {
-                  setGroupSelection(groupIds, next);
-                }}
+                {...(picker
+                  ? pickerMode.getPickerGroupProps(row.items.map(i => i.item), groupIds)
+                  : {
+                      selected: groupSelected,
+                      onSelectedChange: (next) => {
+                        setGroupSelection(groupIds, next);
+                      },
+                    })}
               />
             );
           }
@@ -1073,6 +1153,10 @@ export function SharedItemsList({
           const budgetCategoryName = item.item.budgetCategoryId
             ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
             : undefined;
+
+          // Apply picker mode overrides if enabled
+          const pickerProps = picker ? pickerMode.getPickerItemProps(item.item, isSelected) : {};
+
           return (
             <ItemCard
               name={item.label}
@@ -1080,22 +1164,24 @@ export function SharedItemsList({
               sourceLabel={item.item.source ?? undefined}
               locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
               priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
-              statusLabel={getItemStatusLabel(item.item.status) || undefined}
+              statusLabel={picker ? pickerProps.statusLabel : getItemStatusLabel(item.item.status) || undefined}
               budgetCategoryName={budgetCategoryName}
               thumbnailUri={getPrimaryImage(item.item) ?? undefined}
               selected={isSelected}
-              onSelectedChange={(next) => setItemSelected(item.id, next)}
-              menuItems={menuItems}
-              bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
-              onBookmarkPress={() => {
+              onSelectedChange={picker ? pickerProps.onSelectedChange : (next) => setItemSelected(item.id, next)}
+              menuItems={picker ? undefined : menuItems}
+              bookmarked={picker ? undefined : Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
+              onBookmarkPress={picker ? undefined : () => {
                 if (!accountId) return;
                 const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
                 updateItem(accountId, item.id, { bookmark: next });
               }}
-              onStatusPress={() => handleStatusPress(item.id)}
-              onPress={() => {
+              onStatusPress={picker ? undefined : () => handleStatusPress(item.id)}
+              onPress={picker ? pickerProps.onPress : () => {
                 handleOpenItem(item.id);
               }}
+              headerAction={picker ? pickerProps.headerAction : undefined}
+              style={picker ? pickerProps.style : undefined}
             />
           );
               };
@@ -1126,9 +1212,19 @@ export function SharedItemsList({
           }}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <AppText variant="body">
-                {isLoading ? 'Loading items…' : emptyMessage}
-              </AppText>
+              {picker && outsideLoading ? (
+                <>
+                  <AppText variant="body">Loading items…</AppText>
+                </>
+              ) : picker && outsideError ? (
+                <AppText variant="body" style={{ color: theme.colors.error ?? 'red' }}>
+                  {outsideError}
+                </AppText>
+              ) : (
+                <AppText variant="body">
+                  {isLoading ? 'Loading items…' : emptyMessage}
+                </AppText>
+              )}
             </View>
           }
           renderItem={({ item: row }) => {
@@ -1164,7 +1260,7 @@ export function SharedItemsList({
                     const isSelected = selectedIds.includes(item.id);
                     const menuItems = getMenuItems(item.item, item.label);
 
-                    const cardProps: ItemCardProps = {
+                    const baseCardProps: ItemCardProps = {
                       name: item.label,
                       sku: item.item.sku ?? undefined,
                       sourceLabel: item.item.source ?? undefined,
@@ -1189,14 +1285,34 @@ export function SharedItemsList({
                       },
                     };
 
-                    return cardProps;
+                    // Apply picker mode overrides if enabled
+                    if (picker) {
+                      const pickerProps = pickerMode.getPickerItemProps(item.item, isSelected);
+                      return {
+                        ...baseCardProps,
+                        onPress: pickerProps.onPress,
+                        onSelectedChange: pickerProps.onSelectedChange,
+                        onBookmarkPress: undefined,
+                        onStatusPress: undefined,
+                        menuItems: undefined,
+                        headerAction: pickerProps.headerAction,
+                        statusLabel: pickerProps.statusLabel ?? baseCardProps.statusLabel,
+                        style: pickerProps.style,
+                      };
+                    }
+
+                    return baseCardProps;
                   })}
                   expanded={!isCollapsed}
                   onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
-                  selected={groupSelected}
-                  onSelectedChange={(next) => {
-                    setGroupSelection(groupIds, next);
-                  }}
+                  {...(picker
+                    ? pickerMode.getPickerGroupProps(row.items.map(i => i.item), groupIds)
+                    : {
+                        selected: groupSelected,
+                        onSelectedChange: (next) => {
+                          setGroupSelection(groupIds, next);
+                        },
+                      })}
                 />
               );
             }
@@ -1207,6 +1323,10 @@ export function SharedItemsList({
             const budgetCategoryName = item.item.budgetCategoryId
               ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
               : undefined;
+
+            // Apply picker mode overrides if enabled
+            const pickerProps = picker ? pickerMode.getPickerItemProps(item.item, isSelected) : {};
+
             return (
               <ItemCard
                 name={item.label}
@@ -1214,22 +1334,24 @@ export function SharedItemsList({
                 sourceLabel={item.item.source ?? undefined}
                 locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
                 priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
-                statusLabel={getItemStatusLabel(item.item.status) || undefined}
+                statusLabel={picker ? pickerProps.statusLabel : getItemStatusLabel(item.item.status) || undefined}
                 budgetCategoryName={budgetCategoryName}
                 thumbnailUri={getPrimaryImage(item.item) ?? undefined}
                 selected={isSelected}
-                onSelectedChange={(next) => setItemSelected(item.id, next)}
-                menuItems={menuItems}
-                bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
-                onBookmarkPress={() => {
+                onSelectedChange={picker ? pickerProps.onSelectedChange : (next) => setItemSelected(item.id, next)}
+                menuItems={picker ? undefined : menuItems}
+                bookmarked={picker ? undefined : Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
+                onBookmarkPress={picker ? undefined : () => {
                   if (!accountId) return;
                   const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
                   updateItem(accountId, item.id, { bookmark: next });
                 }}
-                onStatusPress={() => handleStatusPress(item.id)}
-                onPress={() => {
+                onStatusPress={picker ? undefined : () => handleStatusPress(item.id)}
+                onPress={picker ? pickerProps.onPress : () => {
                   handleOpenItem(item.id);
                 }}
+                headerAction={picker ? pickerProps.headerAction : undefined}
+                style={picker ? pickerProps.style : undefined}
               />
             );
           }}
