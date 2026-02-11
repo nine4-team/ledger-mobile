@@ -225,7 +225,13 @@ export default function TransactionDetailScreen() {
   const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
-  const statusLabel = transaction?.status?.trim() || '';
+
+  // Compute badge info for header (mirrors TransactionCard badges)
+  const transactionType = transaction?.transactionType;
+  const needsReview = transaction?.needsReview;
+  const reimbursementType = transaction?.reimbursementType;
+  const hasEmailReceipt = transaction?.hasEmailReceipt;
+  const budgetCategoryName = selectedCategory?.name?.trim();
 
   // Compute sections array for SectionList
   const sections = useMemo<TransactionSection[]>(() => {
@@ -1222,13 +1228,164 @@ export default function TransactionDetailScreen() {
     }
   }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems, itemizationEnabled]);
 
-  const headerActions = statusLabel ? (
-    <View style={styles.headerRight}>
-      <View style={[styles.statusPill, { backgroundColor: `${uiKitTheme.primary.main}1A` }]}>
-        <AppText variant="caption" style={[styles.statusText, { color: uiKitTheme.primary.main }]}>
-          {statusLabel}
-        </AppText>
-      </View>
+  // Helper to get type label
+  const getTypeLabel = () => {
+    if (!transactionType) return null;
+    switch (transactionType) {
+      case 'purchase':
+        return 'Purchase';
+      case 'sale':
+        return 'Sale';
+      case 'return':
+        return 'Return';
+      case 'to-inventory':
+        return 'To Inventory';
+      default:
+        return null;
+    }
+  };
+
+  // Badge style helpers (mirrors TransactionCard)
+  const getTypeBadgeStyle = () => {
+    switch (transactionType) {
+      case 'purchase':
+        return {
+          backgroundColor: '#10b98133',
+          borderColor: '#10b98166',
+          textColor: '#059669',
+        };
+      case 'sale':
+        return {
+          backgroundColor: '#3b82f633',
+          borderColor: '#3b82f666',
+          textColor: '#2563eb',
+        };
+      case 'return':
+        return {
+          backgroundColor: '#ef444433',
+          borderColor: '#ef444466',
+          textColor: '#dc2626',
+        };
+      case 'to-inventory':
+        return {
+          backgroundColor: uiKitTheme.primary.main + '1A',
+          borderColor: uiKitTheme.primary.main + '33',
+          textColor: uiKitTheme.primary.main,
+        };
+      default:
+        return null;
+    }
+  };
+
+  const categoryBadgeStyle = {
+    backgroundColor: uiKitTheme.primary.main + '1A',
+    borderColor: uiKitTheme.primary.main + '33',
+    textColor: uiKitTheme.primary.main,
+  };
+
+  const typeLabel = getTypeLabel();
+  const typeBadgeStyle = getTypeBadgeStyle();
+
+  // Render header badges (mirrors TransactionCard headerBadgesRow)
+  const hasBadges = typeLabel || needsReview || reimbursementType || hasEmailReceipt || budgetCategoryName;
+
+  const headerActions = hasBadges ? (
+    <View style={styles.headerBadgesRow}>
+      {typeLabel && typeBadgeStyle ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: typeBadgeStyle.backgroundColor,
+              borderColor: typeBadgeStyle.borderColor,
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: typeBadgeStyle.textColor }]} numberOfLines={1}>
+            {typeLabel}
+          </Text>
+        </View>
+      ) : null}
+
+      {reimbursementType === 'owed-to-client' ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: '#f59e0b33',
+              borderColor: '#f59e0b66',
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
+            Owed to Client
+          </Text>
+        </View>
+      ) : null}
+
+      {reimbursementType === 'owed-to-company' ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: '#f59e0b33',
+              borderColor: '#f59e0b66',
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: '#d97706' }]} numberOfLines={1}>
+            Owed to Business
+          </Text>
+        </View>
+      ) : null}
+
+      {hasEmailReceipt ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: uiKitTheme.primary.main + '1A',
+              borderColor: uiKitTheme.primary.main + '33',
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: uiKitTheme.primary.main }]} numberOfLines={1}>
+            Receipt
+          </Text>
+        </View>
+      ) : null}
+
+      {needsReview ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: '#b9452014',
+              borderColor: '#b9452033',
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: '#b94520' }]} numberOfLines={1}>
+            Needs Review
+          </Text>
+        </View>
+      ) : null}
+
+      {budgetCategoryName ? (
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: categoryBadgeStyle.backgroundColor,
+              borderColor: categoryBadgeStyle.borderColor,
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: categoryBadgeStyle.textColor }]} numberOfLines={1}>
+            {budgetCategoryName}
+          </Text>
+        </View>
+      ) : null}
     </View>
   ) : undefined;
 
@@ -1547,14 +1704,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  statusPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+  headerBadgesRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
   },
-  statusText: {
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    maxWidth: 160,
+  },
+  badgeText: {
+    fontSize: 12,
     fontWeight: '600',
-    textTransform: 'capitalize',
+    includeFontPadding: false,
   },
   pickerSheet: {
     height: '85%',
