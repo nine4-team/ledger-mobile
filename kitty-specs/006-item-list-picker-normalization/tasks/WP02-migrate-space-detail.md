@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Migrate SpaceDetailContent
-lane: "for_review"
+lane: "doing"
 dependencies: [WP01]
 base_branch: 006-item-list-picker-normalization-WP01
 base_commit: f32cc4587085bbc59992dddae249895453dbfc9f
@@ -14,7 +14,7 @@ subtasks:
 phase: Phase 2 - Consumer Migration
 assignee: ''
 agent: "claude-sonnet"
-shell_pid: "19978"
+shell_pid: "50255"
 review_status: ''
 reviewed_by: ''
 history:
@@ -340,3 +340,4 @@ spec-kitty implement WP02 --base WP01
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
 - 2026-02-11T06:34:54Z – claude-sonnet – shell_pid=19978 – lane=doing – Assigned agent via workflow command
 - 2026-02-11T06:40:33Z – claude-sonnet – shell_pid=19978 – lane=for_review – Ready for review: SpaceDetailContent successfully migrated from SharedItemPicker to SharedItemsList in picker mode. All picker functionality maintained: tabs with counts, search, single add, bulk add, eligibility checks, and Added badges. Tab switching clears selection. Loading/error states working correctly.
+- 2026-02-11T07:03:39Z – claude-sonnet – shell_pid=50255 – lane=doing – Started review via workflow command
