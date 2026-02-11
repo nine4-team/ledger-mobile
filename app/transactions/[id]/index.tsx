@@ -8,7 +8,6 @@ import { AppButton } from '../../../src/components/AppButton';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
-import { SharedItemPicker } from '../../../src/components/SharedItemPicker';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
 import { BulkSelectionBar } from '../../../src/components/BulkSelectionBar';
@@ -104,7 +103,6 @@ export default function TransactionDetailScreen() {
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string; metadata?: any }>>({});
   const [isPickingItems, setIsPickingItems] = useState(false);
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
-  const [pickerSelectedIds, setPickerSelectedIds] = useState<string[]>([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
@@ -280,6 +278,28 @@ export default function TransactionDetailScreen() {
     return outsideItemsHook.items;
   }, [pickerTab, suggestedItems, projectItems, outsideItemsHook.items]);
 
+  const pickerManager = useItemsManager({
+    items: activePickerItems,
+  });
+
+  const pickerManagerAdapter = useMemo(() => ({
+    ...pickerManager,
+    setGroupSelection: (ids: string[], selected: boolean) => {
+      ids.forEach(id => {
+        const isCurrentlySelected = pickerManager.selectedIds.has(id);
+        if (selected !== isCurrentlySelected) {
+          pickerManager.toggleSelection(id);
+        }
+      });
+    },
+    setItemSelected: (id: string, selected: boolean) => {
+      const isCurrentlySelected = pickerManager.selectedIds.has(id);
+      if (selected !== isCurrentlySelected) {
+        pickerManager.toggleSelection(id);
+      }
+    },
+  }), [pickerManager]);
+
   const pickerTabOptions = useMemo(() => {
     const options: Array<{ value: ItemPickerTab; label: string; accessibilityLabel?: string }> = [
       { value: 'suggested', label: 'Suggested', accessibilityLabel: 'Suggested items tab' },
@@ -409,8 +429,8 @@ export default function TransactionDetailScreen() {
   };
 
   const handleAddSelectedItems = useCallback(() => {
-    if (!accountId || !id || pickerSelectedIds.length === 0) return;
-    const selectedItems = activePickerItems.filter((item) => pickerSelectedIds.includes(item.id));
+    if (!accountId || !id || pickerManager.selectionCount === 0) return;
+    const selectedItems = activePickerItems.filter((item) => pickerManager.selectedIds.has(item.id));
     const conflicts = selectedItems.filter((item) => item.transactionId && item.transactionId !== id);
 
     const performAdd = () => {
@@ -436,7 +456,7 @@ export default function TransactionDetailScreen() {
           console.warn(`[items] move failed for ${item.id}: ${result.error}`);
         }
       });
-      setPickerSelectedIds([]);
+      pickerManager.clearSelection();
       setIsPickingItems(false);
     };
 
@@ -454,7 +474,7 @@ export default function TransactionDetailScreen() {
     activePickerItems,
     id,
     isCanonical,
-    pickerSelectedIds,
+    pickerManager,
     projectId,
     scope,
     transaction?.budgetCategoryId,
@@ -842,7 +862,7 @@ export default function TransactionDetailScreen() {
         setTimeout(() => {
           setIsPickingItems(true);
           setPickerTab('suggested');
-          setPickerSelectedIds([]);
+          pickerManager.clearSelection();
         }, 300);
       },
     },
@@ -1513,27 +1533,53 @@ export default function TransactionDetailScreen() {
               visible={isPickingItems}
               onRequestClose={() => {
                 setIsPickingItems(false);
-                setPickerSelectedIds([]);
+                pickerManager.clearSelection();
               }}
               containerStyle={styles.pickerSheet}
             >
               <View style={styles.pickerContent}>
                 <AppText variant="h2" style={styles.pickerTitle}>Add Existing Items</AppText>
-                <SharedItemPicker
-                  tabs={pickerTabOptions}
-                  tabCounts={{
-                    suggested: suggestedItems.length,
-                    ...(projectId ? { project: projectItems.length } : {}),
-                    outside: outsideItemsHook.items.length,
-                  }}
-                  selectedTab={pickerTab}
-                  onTabChange={(next) => {
-                    setPickerTab(next as ItemPickerTab);
-                    setPickerSelectedIds([]);
-                  }}
+                <View style={styles.pickerTabBar}>
+                  {pickerTabOptions.map((tab) => {
+                    const count = tab.value === 'suggested'
+                      ? suggestedItems.length
+                      : tab.value === 'project'
+                        ? projectItems.length
+                        : outsideItemsHook.items.length;
+                    const isActive = pickerTab === tab.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={tab.value}
+                        onPress={() => {
+                          setPickerTab(tab.value as ItemPickerTab);
+                          pickerManager.clearSelection();
+                        }}
+                        style={[
+                          styles.pickerTab,
+                          isActive && { backgroundColor: theme.colors.primary + '20' },
+                        ]}
+                        accessibilityRole="tab"
+                        accessibilityState={{ selected: isActive }}
+                      >
+                        <AppText
+                          variant="body"
+                          style={[
+                            styles.pickerTabText,
+                            isActive && { color: theme.colors.primary },
+                          ]}
+                        >
+                          {tab.label} ({count})
+                        </AppText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <SharedItemsList
+                  embedded={true}
+                  picker={true}
                   items={activePickerItems}
-                  selectedIds={pickerSelectedIds}
-                  onSelectionChange={setPickerSelectedIds}
+                  manager={pickerManagerAdapter}
                   eligibilityCheck={{
                     isEligible: (item) => item.transactionId !== id,
                     getStatusLabel: (item) => {
@@ -1732,6 +1778,23 @@ const styles = StyleSheet.create({
   },
   pickerTitle: {
     textAlign: 'center',
+  },
+  pickerTabBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 12,
+  },
+  pickerTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  pickerTabActive: {
+    // Will be computed with theme.colors.primary + '20'
+  },
+  pickerTabText: {
+    // Color will be set inline based on active state
   },
   pickerSubtitle: {
     textAlign: 'center',
