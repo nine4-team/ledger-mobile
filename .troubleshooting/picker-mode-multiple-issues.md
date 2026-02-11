@@ -1,8 +1,8 @@
 # Issue: SharedItemsList picker mode — multiple issues after 006 consolidation
 
-**Status:** Active (Issues 1-3, 5 verified fixed; Issue 4 unresolved)
+**Status:** Resolved
 **Opened:** 2026-02-11
-**Resolved:** _pending_
+**Resolved:** 2026-02-11
 
 ## Info
 - **Symptom:** Five issues in the space detail "Add Existing Items" picker (SharedItemsList in picker mode):
@@ -117,23 +117,19 @@ Two contributing factors:
 - Non-picker embedded mode still uses `View` (parent handles scroll)
 - Added `pickerScroll` style (`flex: 1`) for the ScrollView
 
-### Issue 4: Tab switch delay — UNRESOLVED
+### Issue 4: Tab switch delay — FIXED, VERIFIED (`SharedItemsList.tsx`)
 - Previous fixes applied (all confirmed insufficient):
   1. Stabilized `outsideItemsHook.reload` dependency (was causing reload loop) ✓
   2. Wrapped `useItemsManager` return in `useMemo` (stabilizes object reference) ✓
   3. Memoized `activePickerItems` ternary (prevents spurious reprocessing from unrelated re-renders) ✓
-- **User-verified:** Delay still persists. Proportional to number of items in the target tab — more items = longer delay.
-- **Root cause (revised):** NOT `useItemsManager` in SpaceDetailContent. SharedItemsList has its own internal sort/filter/group chain (`rows` → `filtered` → `groupedRows` at `SharedItemsList.tsx:372-470`) that re-runs whenever the `items` prop changes. On top of that, all items render via `ScrollView + .map()` (no virtualization) at `SharedItemsList.tsx:1054-1195`. Both the computation and the rendering block the UI on tab switch.
+- **Root cause:** SharedItemsList's embedded+picker path used `ScrollView + .map()` (no virtualization), instantiating every ItemCard/GroupedItemCard upfront on tab switch. Delay scaled linearly with item count.
 - **Ruled out:**
   - Unstable references, reload loops, spurious recomputation (fixed in prior passes)
-  - Pre-computing `useItemsManager` in SpaceDetailContent with dual instances — **irrelevant**, SharedItemsList re-processes the raw `items` prop internally regardless
-  - Deferring items swap via `InteractionManager.runAfterInteractions` — **made it worse**. Moved the lag from the tab animation to the items display, creating a visible flash/loading state that felt slower. User-rejected.
-- **Key discovery:** `useItemsManager` in SpaceDetailContent provides selection state only; SharedItemsList does its own sort/filter/group on the raw `items` prop. Any fix must target SharedItemsList's internal processing chain or the rendering path, not the consumer.
-- **Next steps to explore:**
-  - Profile with Hermes to determine whether the bottleneck is computation (sort/filter/group in SharedItemsList) or rendering (creating N ItemCard components)
-  - If rendering: virtualize picker items with FlatList instead of `ScrollView + .map()` (SharedItemsList already uses FlatList in standalone mode — might be able to use it in embedded+picker mode too)
-  - If computation: pre-compute both tabs' `groupedRows` inside SharedItemsList itself (would require SharedItemsList to accept a second items array or a pre-computed rows prop)
-  - `useDeferredValue` on the items prop inside SharedItemsList (less intrusive than InteractionManager, lets React schedule the update without a loading flash)
+  - Pre-computing `useItemsManager` in SpaceDetailContent with dual instances — irrelevant, SharedItemsList re-processes internally
+  - `InteractionManager.runAfterInteractions` — caused visible flash, user-rejected
+  - `startTransition` / `useDeferredValue` — defers but doesn't eliminate the work
+- **Fix:** Replaced `ScrollView + .map()` with `FlatList` in the embedded+picker rendering path (`SharedItemsList.tsx:1053-1180`). FlatList virtualizes rendering — only visible items are instantiated. Same `groupedRows` data, `keyExtractor`, and rendering logic as standalone mode.
+- **User-verified:** Tab switch is now fast.
 
 ### Issue 5: Expand/collapse broken on grouped items — FIXED, VERIFIED (`usePickerMode.tsx`)
 - Root cause: Issue 1 fix added `onPress` to `getPickerGroupProps` that toggled selection. `GroupedItemCard.handlePress` checks `if (onPress) { onPress(); return; }` before falling through to `setExpanded(!isExpanded)`. With `onPress` defined, expand/collapse was unreachable.
@@ -144,8 +140,10 @@ Two contributing factors:
 ### Files changed
 - `src/hooks/usePickerMode.tsx` — removed `onPress` from `getPickerGroupProps` return and type signature
 - `src/components/SpaceDetailContent.tsx` — memoized `activePickerItems`
+- `src/components/SharedItemsList.tsx` — replaced `ScrollView + .map()` with `FlatList` in embedded+picker path
 
 ### Lessons
 - When a single prop (`onPress`) controls two competing behaviors (selection vs expand/collapse), prefer dedicated affordances (selector circle for selection, body for expand). Overloading body tap creates conflicts.
 - Non-memoized ternaries assigned to local variables look harmless but create new references every render, causing downstream `useMemo` invalidation in hooks that depend on them.
-- When delay scales linearly with item count, the bottleneck is legitimate computation volume, not wasted re-renders. Fix with deferral (`startTransition`, `InteractionManager`) or pre-computation, not memoization.
+- When delay scales linearly with item count, the bottleneck is likely rendering (component instantiation), not computation. Virtualization (FlatList) is the correct fix — not memoization, deferral, or pre-computation.
+- FlatList works fine inside a custom Modal-based BottomSheet (no gesture conflicts) as long as it's the sole scrollable element. The prior FlatList-in-ScrollView issue (transaction detail screen) was about nested scrollables, not FlatList in modals.
