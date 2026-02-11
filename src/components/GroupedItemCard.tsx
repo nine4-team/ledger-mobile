@@ -124,7 +124,7 @@ export function GroupedItemCard({
   };
 
   const setSelected = (next: boolean) => {
-    // If there's an external selection handler (e.g., SharedItemPicker, SharedItemsList),
+    // If there's an external selection handler (e.g., SharedItemsList),
     // let it handle the update. The parent will update its state and re-render children
     // with new `selected` props, avoiding duplicate/conflicting updates.
     if (onSelectedChange) {
