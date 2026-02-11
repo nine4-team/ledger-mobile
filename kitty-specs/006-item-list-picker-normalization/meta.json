@@ -1,0 +1,10 @@
+{
+  "feature_number": "006",
+  "slug": "006-item-list-picker-normalization",
+  "friendly_name": "Item List Picker Normalization",
+  "mission": "software-dev",
+  "source_description": "Normalize SharedItemsList to be the single component for all item list rendering with selection, replacing SharedItemPicker entirely. No functionality from either component may be dropped.",
+  "created_at": "2026-02-11T04:50:00.000Z",
+  "target_branch": "main",
+  "vcs": "git"
+}
