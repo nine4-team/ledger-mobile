@@ -161,16 +161,19 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
       if (!enabled) return {};
 
       const locked = !actualEligibilityCheck.isEligible(item);
+      const alreadyAdded = addedIds?.has(item.id) ?? false;
+      const eligible = !locked;
+      const canInteract = eligible && !alreadyAdded;
       const statusLabel = actualEligibilityCheck.getStatusLabel?.(item);
 
       return {
         selected: isSelected,
-        onSelectedChange: locked
+        onSelectedChange: !canInteract
           ? undefined
           : (next) => {
               setItemSelected(item.id, next);
             },
-        onPress: locked
+        onPress: !canInteract
           ? undefined
           : () => {
               setItemSelected(item.id, !isSelected);
@@ -179,11 +182,11 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
         onStatusPress: undefined,
         menuItems: undefined,
         statusLabel: statusLabel || undefined,
-        headerAction: renderAddButton(item, locked),
+        headerAction: renderAddButton(item, !eligible || alreadyAdded),
         style: locked ? { opacity: 0.6 } : undefined,
       };
     },
-    [enabled, actualEligibilityCheck, setItemSelected]
+    [enabled, actualEligibilityCheck, setItemSelected, addedIds]
   );
 
   // Factory function: get picker-specific props for a group card
@@ -198,7 +201,7 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
       }
 
       const groupEligibleIds = groupItems
-        .filter((item) => actualEligibilityCheck.isEligible(item))
+        .filter((item) => actualEligibilityCheck.isEligible(item) && !addedIds?.has(item.id))
         .map((item) => item.id);
       const groupAllSelected =
         groupEligibleIds.length > 0 && groupEligibleIds.every((id) => selectedIds.includes(id));
@@ -214,7 +217,7 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
         onPress: undefined,
       };
     },
-    [enabled, actualEligibilityCheck, selectedIds, setGroupSelection]
+    [enabled, actualEligibilityCheck, selectedIds, setGroupSelection, addedIds]
   );
 
   // Render function for "Add" button on individual items
