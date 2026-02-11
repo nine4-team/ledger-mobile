@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: usePickerMode Hook + SharedItemsList Integration
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 7cf6e72530bb76c8fce906b1fae60f897a40c0dc
@@ -510,3 +510,4 @@ The rendering logic is duplicated between embedded and standalone — both must 
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
 - 2026-02-11T06:00:16Z – claude-sonnet – shell_pid=79999 – lane=doing – Assigned agent via workflow command
+- 2026-02-11T06:13:30Z – claude-sonnet – shell_pid=79999 – lane=for_review – Ready for review: usePickerMode hook created and integrated into SharedItemsList with picker mode props. All picker props optional - no regressions to existing modes.
