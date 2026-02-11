@@ -1,24 +1,27 @@
 ---
-work_package_id: "WP03"
+work_package_id: WP03
+title: Migrate TransactionDetailScreen
+lane: "doing"
+dependencies: [WP01]
+base_branch: 006-item-list-picker-normalization-WP01
+base_commit: f32cc4587085bbc59992dddae249895453dbfc9f
+created_at: '2026-02-11T06:34:56.978085+00:00'
 subtasks:
-  - "T011"
-  - "T012"
-  - "T013"
-title: "Migrate TransactionDetailScreen"
-phase: "Phase 2 - Consumer Migration"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T011
+- T012
+- T013
+phase: Phase 2 - Consumer Migration
+assignee: ''
+agent: ''
+shell_pid: "20094"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-11T05:38:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-11T05:38:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP03 – Migrate TransactionDetailScreen
