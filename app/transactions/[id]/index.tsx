@@ -1257,7 +1257,7 @@ export default function TransactionDetailScreen() {
             keyExtractor={(item, index) => item.id ?? `section-${index}`}
             contentContainerStyle={[
               styles.content,
-              itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : undefined
+              itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : undefined
             ]}
             showsVerticalScrollIndicator={false}
             ItemSeparatorComponent={({ section }) =>

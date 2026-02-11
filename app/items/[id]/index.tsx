@@ -67,6 +67,16 @@ function formatMoney(cents: number | null | undefined): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+// Status constants
+const ITEM_STATUSES = [
+  { key: 'purchased', label: 'Purchased' },
+  { key: 'ordered', label: 'Ordered' },
+  { key: 'in-transit', label: 'In Transit' },
+  { key: 'delivered', label: 'Delivered' },
+  { key: 'installed', label: 'Installed' },
+  { key: 'returned', label: 'Returned' },
+];
+
 export default function ItemDetailScreen() {
   const router = useRouter();
   const { setProjectId } = useProjectContextStore();
@@ -330,7 +340,9 @@ export default function ItemDetailScreen() {
     { key: 'returned', label: 'Returned' },
   ];
 
-  const statusLabel = item?.status?.trim() || '';
+  const statusLabel = item?.status?.trim()
+    ? ITEM_STATUSES.find(s => s.key === item.status)?.label || item.status
+    : '';
   const trimmedTransactionId = transactionId.trim();
   const transactionLabel = trimmedTransactionId
     ? trimmedTransactionId.length > 8
@@ -533,7 +545,15 @@ export default function ItemDetailScreen() {
                       <AppText
                         variant="body"
                         style={{ color: theme.colors.primary }}
-                        onPress={() => router.push(`/transactions/${item.transactionId}`)}
+                        onPress={() => router.push({
+                          pathname: '/transactions/[id]',
+                          params: {
+                            id: item.transactionId!,
+                            scope: scope ?? '',
+                            projectId: projectId ?? '',
+                            backTarget: id ? `/items/${id}` : '',
+                          },
+                        })}
                       >
                         {transactionData.data.source || 'Untitled'} - {formatMoney(transactionData.data.amountCents)}
                       </AppText>

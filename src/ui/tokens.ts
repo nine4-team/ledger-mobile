@@ -108,10 +108,9 @@ export const BULK_SELECTION_BAR = {
  * Calculate the content padding needed to make room for BulkSelectionBar.
  * Use this when BulkSelectionBar is positioned absolutely at screen bottom.
  *
- * @param bottomInset - Safe area bottom inset from useSafeAreaInsets()
  * @returns Padding to add to scrollable content's paddingBottom
  */
-export function getBulkSelectionBarContentPadding(bottomInset: number): number {
-  return BULK_SELECTION_BAR.BASE_HEIGHT + Math.max(BULK_SELECTION_BAR.MIN_PADDING_BOTTOM, bottomInset);
+export function getBulkSelectionBarContentPadding(): number {
+  return BULK_SELECTION_BAR.BASE_HEIGHT;
 }
 

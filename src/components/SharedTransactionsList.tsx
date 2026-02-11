@@ -1119,7 +1119,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         keyExtractor={(item) => item.id}
         contentContainerStyle={[
           styles.list,
-          selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : null
+          selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : null
         ]}
         refreshControl={
           screenRefresh ? (

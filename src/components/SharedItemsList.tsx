@@ -1122,7 +1122,7 @@ export function SharedItemsList({
           keyExtractor={(row) => (row.type === 'group' ? row.groupId : row.item.id)}
           contentContainerStyle={[
             styles.list,
-            selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : null
+            selectedIds.length > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : null
           ]}
           refreshControl={
             screenRefresh ? (
@@ -1191,6 +1191,7 @@ export function SharedItemsList({
                         const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
                         updateItem(accountId, item.id, { bookmark: next });
                       },
+                      onStatusPress: () => handleStatusPress(item.id),
                       onPress: () => {
                         handleOpenItem(item.id);
                       },

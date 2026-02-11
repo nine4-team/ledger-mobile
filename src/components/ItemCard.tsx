@@ -205,7 +205,7 @@ export function ItemCard({
                   accessibilityRole={onStatusPress ? "button" : "text"}
                   accessibilityLabel={`Status: ${statusLabel}`}
                 >
-                  <Text style={[styles.pillText, themed.pillText]} numberOfLines={1}>
+                  <Text style={[styles.pillText, themed.pillText, { textTransform: 'capitalize' }]} numberOfLines={1}>
                     {statusLabel}
                   </Text>
                   <MaterialIcons

@@ -956,7 +956,7 @@ export function SpaceDetailContent({
         }}
         contentContainerStyle={[
           styles.content,
-          itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding(insets.bottom) } : undefined
+          itemsManager.selectionCount > 0 ? { paddingBottom: getBulkSelectionBarContentPadding() } : undefined
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
