@@ -1,25 +1,28 @@
 ---
-work_package_id: "WP02"
+work_package_id: WP02
+title: Migrate SpaceDetailContent
+lane: "doing"
+dependencies: [WP01]
+base_branch: 006-item-list-picker-normalization-WP01
+base_commit: f32cc4587085bbc59992dddae249895453dbfc9f
+created_at: '2026-02-11T06:34:54.588194+00:00'
 subtasks:
-  - "T007"
-  - "T008"
-  - "T009"
-  - "T010"
-title: "Migrate SpaceDetailContent"
-phase: "Phase 2 - Consumer Migration"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T007
+- T008
+- T009
+- T010
+phase: Phase 2 - Consumer Migration
+assignee: ''
+agent: ''
+shell_pid: "19978"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-11T05:38:00Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-11T05:38:00Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP02 – Migrate SpaceDetailContent
