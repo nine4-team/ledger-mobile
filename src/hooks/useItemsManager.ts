@@ -257,7 +257,7 @@ export function useItemsManager<S extends string = BaseSortMode, F extends strin
   // Return
   // ============================================================================
 
-  return {
+  return useMemo(() => ({
     // Derived data
     filteredAndSortedItems,
 
@@ -289,5 +289,22 @@ export function useItemsManager<S extends string = BaseSortMode, F extends strin
     hasSelection,
     allSelected,
     selectionCount,
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- state setters (setSortMode etc.) are stable; only include values that actually change
+  }), [
+    filteredAndSortedItems,
+    searchQuery,
+    showSearch,
+    sortMode,
+    sortMenuVisible,
+    isSortActive,
+    filterMode,
+    filterMenuVisible,
+    isFilterActive,
+    selectedIds,
+    toggleSelection,
+    selectAll,
+    hasSelection,
+    allSelected,
+    selectionCount,
+  ]);
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
@@ -1033,7 +1033,7 @@ export function SharedItemsList({
         title="Change Status"
       />
       {embedded ? (
-        // Embedded mode: Use View + map (no scroll, parent handles it)
+        // Embedded mode: picker uses ScrollView for its own scroll; non-picker uses View (parent handles scroll)
         groupedRows.length === 0 ? (
           <View style={styles.emptyState}>
             {picker && outsideLoading ? (
@@ -1050,8 +1050,8 @@ export function SharedItemsList({
               </AppText>
             )}
           </View>
-        ) : (
-          <View style={styles.list}>
+        ) : picker ? (
+          <ScrollView style={styles.pickerScroll} contentContainerStyle={styles.list}>
             {groupedRows.map((row) => {
               const renderContent = () => {
           if (row.type === 'group') {
@@ -1182,6 +1182,122 @@ export function SharedItemsList({
               }}
               headerAction={picker ? pickerProps.headerAction : undefined}
               style={picker ? pickerProps.style : undefined}
+            />
+          );
+              };
+
+              return (
+                <View key={row.type === 'group' ? row.groupId : row.item.id}>
+                  {renderContent()}
+                </View>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <View style={styles.list}>
+            {groupedRows.map((row) => {
+              const renderContent = () => {
+          if (row.type === 'group') {
+            const groupIds = row.items.map((item) => item.id);
+            const groupSelected = groupIds.every((id) => selectedIds.includes(id));
+            const summaryItem = row.items.find((item) => getPrimaryImage(item.item)) ?? row.items[0];
+            const summaryThumbnailUri = summaryItem ? (getPrimaryImage(summaryItem.item) ?? undefined) : undefined;
+            const isCollapsed = ((state.filters as any)?.[`collapsed:${row.groupId}`] ?? true) as boolean;
+            const groupPriceCents = row.items
+              .map((item) => getDisplayPriceCents(item.item))
+              .filter((value): value is number => typeof value === 'number');
+            const totalLabel =
+              groupPriceCents.length === row.items.length
+                ? formatCents(groupPriceCents.reduce((sum, value) => sum + value, 0))
+                : null;
+
+            return (
+              <GroupedItemCard
+                summary={{
+                  name: row.label,
+                  sku: summaryItem?.item.sku ?? undefined,
+                  sourceLabel: summaryItem?.item.source ?? undefined,
+                  locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation
+                    ? summaryItem?.item.spaceId ?? undefined
+                    : undefined,
+                  notes: summaryItem?.item.notes ?? undefined,
+                  thumbnailUri: summaryThumbnailUri,
+                }}
+                countLabel={`×${row.count}`}
+                totalLabel={totalLabel ?? undefined}
+                items={row.items.map((item) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  const menuItems = getMenuItems(item.item, item.label);
+                  const budgetCategoryName = item.item.budgetCategoryId
+                    ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
+                    : undefined;
+
+                  return {
+                    name: item.label,
+                    sku: item.item.sku ?? undefined,
+                    sourceLabel: item.item.source ?? undefined,
+                    locationLabel: scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined,
+                    priceLabel: formatCents(getDisplayPriceCents(item.item)) ?? undefined,
+                    statusLabel: getItemStatusLabel(item.item.status) || undefined,
+                    budgetCategoryName: budgetCategoryName,
+                    thumbnailUri: getPrimaryImage(item.item) ?? undefined,
+                    selected: isSelected,
+                    onSelectedChange: (next: boolean) => {
+                      setItemSelected(item.id, next);
+                    },
+                    menuItems,
+                    bookmarked: Boolean(item.item.bookmark ?? (item.item as any).isBookmarked),
+                    onBookmarkPress: () => {
+                      if (!accountId) return;
+                      const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                      updateItem(accountId, item.id, { bookmark: next });
+                    },
+                    onStatusPress: () => handleStatusPress(item.id),
+                    onPress: () => {
+                      handleOpenItem(item.id);
+                    },
+                  };
+                })}
+                expanded={!isCollapsed}
+                onExpandedChange={(next) => setGroupExpanded(row.groupId, next)}
+                selected={groupSelected}
+                onSelectedChange={(next) => {
+                  setGroupSelection(groupIds, next);
+                }}
+              />
+            );
+          }
+
+          const item = row.item;
+          const isSelected = selectedIds.includes(item.id);
+          const menuItems = getMenuItems(item.item, item.label);
+          const budgetCategoryName = item.item.budgetCategoryId
+            ? budgetCategories[item.item.budgetCategoryId]?.name ?? undefined
+            : undefined;
+
+          return (
+            <ItemCard
+              name={item.label}
+              sku={item.item.sku ?? undefined}
+              sourceLabel={item.item.source ?? undefined}
+              locationLabel={scopeConfig?.fields?.showBusinessInventoryLocation ? item.item.spaceId ?? undefined : undefined}
+              priceLabel={formatCents(getDisplayPriceCents(item.item)) ?? undefined}
+              statusLabel={getItemStatusLabel(item.item.status) || undefined}
+              budgetCategoryName={budgetCategoryName}
+              thumbnailUri={getPrimaryImage(item.item) ?? undefined}
+              selected={isSelected}
+              onSelectedChange={(next) => setItemSelected(item.id, next)}
+              menuItems={menuItems}
+              bookmarked={Boolean(item.item.bookmark ?? (item.item as any).isBookmarked)}
+              onBookmarkPress={() => {
+                if (!accountId) return;
+                const next = !(item.item.bookmark ?? (item.item as any).isBookmarked);
+                updateItem(accountId, item.id, { bookmark: next });
+              }}
+              onStatusPress={() => handleStatusPress(item.id)}
+              onPress={() => {
+                handleOpenItem(item.id);
+              }}
             />
           );
               };
@@ -1401,6 +1517,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: layout.screenBodyTopMd.paddingTop,
     gap: 10,
+  },
+  pickerScroll: {
+    flex: 1,
   },
   emptyState: {
     alignItems: 'center',

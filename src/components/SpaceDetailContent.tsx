@@ -324,7 +324,8 @@ export function SpaceDetailContent({
   useEffect(() => {
     if (!isPickingItems) return;
     void outsideItemsHook.reload();
-  }, [isPickingItems, outsideItemsHook]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload is a stable useCallback ref; depending on the full hook object causes a reload loop
+  }, [isPickingItems, outsideItemsHook.reload]);
 
   // --- Handlers ---
 
@@ -1220,10 +1221,9 @@ export function SpaceDetailContent({
             items={activePickerItems}
             manager={pickerManagerAdapter}
             eligibilityCheck={{
-              isEligible: (item) => item.spaceId !== spaceId && !item.transactionId,
+              isEligible: (item) => item.spaceId !== spaceId,
               getStatusLabel: (item) => {
                 if (item.spaceId === spaceId) return 'Already here';
-                if (item.transactionId) return 'Linked';
                 return undefined;
               },
             }}

@@ -89,9 +89,9 @@ export type UsePickerModeReturn = {
     groupItems: Array<ScopedItem | Item>,
     groupIds: string[]
   ) => {
-    selected: boolean;
+    selected?: boolean;
     onSelectedChange?: (selected: boolean) => void;
-    onPress?: undefined;
+    onPress?: () => void;
   };
   /**
    * Render function for the "Add" button on individual items.
@@ -203,18 +203,27 @@ export function usePickerMode(config: UsePickerModeConfig): UsePickerModeReturn 
       const groupEligibleIds = groupItems
         .filter((item) => actualEligibilityCheck.isEligible(item) && !addedIds?.has(item.id))
         .map((item) => item.id);
-      const groupAllSelected =
-        groupEligibleIds.length > 0 && groupEligibleIds.every((id) => selectedIds.includes(id));
+
+      // No eligible items → hide selector entirely
+      if (groupEligibleIds.length === 0) {
+        return {
+          selected: undefined,
+          onSelectedChange: undefined,
+          onPress: undefined,
+        };
+      }
+
+      const groupAllSelected = groupEligibleIds.every((id) => selectedIds.includes(id));
 
       return {
         selected: groupAllSelected,
-        onSelectedChange:
-          groupEligibleIds.length === 0
-            ? undefined
-            : (next: boolean) => {
-                setGroupSelection(groupEligibleIds, next);
-              },
-        onPress: undefined,
+        onSelectedChange: (next: boolean) => {
+          setGroupSelection(groupEligibleIds, next);
+        },
+        // Body tap toggles group selection (FR-2.2)
+        onPress: () => {
+          setGroupSelection(groupEligibleIds, !groupAllSelected);
+        },
       };
     },
     [enabled, actualEligibilityCheck, selectedIds, setGroupSelection, addedIds]
