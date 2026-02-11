@@ -60,10 +60,10 @@
 **Estimated Prompt Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T007 Add `useItemsManager` instance + manager adapter for picker selection state in `src/components/SpaceDetailContent.tsx`
-- [ ] T008 Build tab bar in SpaceDetailContent (extract pattern from SharedItemPicker's existing tab rendering)
-- [ ] T009 Replace `<SharedItemPicker>` with `<SharedItemsList embedded={true} picker={true}>` and wire all props
-- [ ] T010 Handle tab change (`clearSelection`), loading/error states, and remove SharedItemPicker import
+- [x] T007 Add `useItemsManager` instance + manager adapter for picker selection state in `src/components/SpaceDetailContent.tsx`
+- [x] T008 Build tab bar in SpaceDetailContent (extract pattern from SharedItemPicker's existing tab rendering)
+- [x] T009 Replace `<SharedItemPicker>` with `<SharedItemsList embedded={true} picker={true}>` and wire all props
+- [x] T010 Handle tab change (`clearSelection`), loading/error states, and remove SharedItemPicker import
 
 ### Implementation Notes
 - Replace `useState<string[]>` for picker selection (lines 152-154) with `useItemsManager` instance.
