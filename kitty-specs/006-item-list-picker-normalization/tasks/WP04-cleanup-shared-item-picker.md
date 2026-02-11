@@ -1,10 +1,13 @@
 ---
 work_package_id: WP04
 title: Cleanup & Dead Code Removal
-lane: planned
+lane: "doing"
 dependencies:
 - WP02
 - WP03
+base_branch: 006-item-list-picker-normalization-WP04-merge-base
+base_commit: 1a3376f7a43803cb8900ba054cf580ce45b740b3
+created_at: '2026-02-11T18:44:07.918000+00:00'
 subtasks:
 - T014
 - T015
@@ -12,7 +15,7 @@ subtasks:
 phase: Phase 3 - Polish
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "86001"
 review_status: ''
 reviewed_by: ''
 history:
