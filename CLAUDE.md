@@ -15,6 +15,39 @@ These rules are non-negotiable. Violating them causes the app to hang when conne
 5. **Only actual byte uploads (Firebase Storage) and Firebase Auth operations may require connectivity.** All Firestore writes (including request-doc creation) must work offline.
 6. **All Firestore write service functions must call `trackPendingWrite()`** after the write for sync status visibility.
 
+### Firestore Data Normalization Rules
+
+**All `snapshot.data()` calls must go through entity-specific normalizer functions** — never spread `snapshot.data()` directly.
+
+**Why:** Normalizers provide a single place per entity to handle data transformations (legacy field migrations, default values, type coercions, array validation). Without them, migration logic scatters across every callsite.
+
+Secondary benefit: for single-document snapshots (`DocumentSnapshot`), the normalizer guards against a React Native Firebase edge case where `data()` can return `undefined` even when `exists=true` during race conditions. This doesn't apply to collection queries (`QueryDocumentSnapshot.data()` is always defined), but using normalizers everywhere means you don't have to think about which snapshot type you're dealing with.
+
+**Required Pattern:**
+
+Every service file must define entity-specific normalizer functions:
+
+```typescript
+function normalizeEntityFromFirestore(raw: unknown, id: string): EntityType {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  // Entity-specific transformations: legacy field migrations, defaults, type coercions
+  return { ...(data as object), id } as EntityType;
+}
+```
+
+**Use normalizers at all callsites** (both single-doc and collection queries):
+```typescript
+// Single-doc subscription:
+normalizeEntityFromFirestore(snapshot.data(), snapshot.id)
+
+// Collection query:
+snapshot.docs.map(d => normalizeEntityFromFirestore(d.data(), d.id))
+```
+
+**Reference:** `src/data/itemsService.ts` (includes legacy field migration example)
+
+**Generic repository:** Use parameterized normalizer in `createRepository<T>(path, mode, normalizer)` third argument.
+
 ## Detail Screen Patterns
 
 Guide: `kitty-specs/005-detail-screen-polish/quickstart.md`

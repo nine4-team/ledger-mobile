@@ -26,6 +26,11 @@ export type SpaceTemplate = {
 
 type Unsubscribe = () => void;
 
+function normalizeSpaceTemplateFromFirestore(raw: unknown, id: string): SpaceTemplate {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as SpaceTemplate;
+}
+
 export function subscribeToSpaceTemplates(
   accountId: string,
   onChange: (templates: SpaceTemplate[]) => void
@@ -39,7 +44,7 @@ export function subscribeToSpaceTemplates(
     collectionRef,
       (snapshot) => {
         const next = snapshot.docs.map(
-          (doc) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
+          (doc) => normalizeSpaceTemplateFromFirestore(doc.data(), doc.id)
         );
         onChange(next);
       },
@@ -64,7 +69,7 @@ export async function refreshSpaceTemplates(
       const snapshot =
         source === 'cache' ? await getDocsFromCache(ref) : await getDocsFromServer(ref);
       return snapshot.docs.map(
-        (doc: any) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
+        (doc: any) => normalizeSpaceTemplateFromFirestore(doc.data(), doc.id)
       );
     } catch {
       // try next
@@ -72,7 +77,7 @@ export async function refreshSpaceTemplates(
   }
   const snapshot = await getDocs(ref);
   return snapshot.docs.map(
-    (doc: any) => ({ ...(doc.data() as object), id: doc.id } as SpaceTemplate)
+    (doc: any) => normalizeSpaceTemplateFromFirestore(doc.data(), doc.id)
   );
 }
 

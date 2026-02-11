@@ -31,6 +31,14 @@ export type ProjectPreferences = {
 
 type Unsubscribe = () => void;
 
+function normalizeProjectPreferencesFromFirestore(raw: unknown, id: string): ProjectPreferences {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const pinnedIds = Array.isArray(data.pinnedBudgetCategoryIds)
+    ? data.pinnedBudgetCategoryIds
+    : [];
+  return { ...(data as object), id, pinnedBudgetCategoryIds: pinnedIds } as ProjectPreferences;
+}
+
 export function subscribeToProjectPreferences(
   accountId: string,
   userId: string,
@@ -49,7 +57,7 @@ export function subscribeToProjectPreferences(
           onChange(null);
           return;
         }
-        onChange({ ...(snapshot.data() as object), id: snapshot.id } as ProjectPreferences);
+        onChange(normalizeProjectPreferencesFromFirestore(snapshot.data(), snapshot.id));
       },
       (error) => {
         console.warn('[projectPreferencesService] subscription failed', error);
@@ -167,7 +175,7 @@ export async function fetchProjectPreferencesMap(params: {
     }
 
     snapshot.docs.forEach((doc) => {
-      output[doc.id] = { ...(doc.data() as object), id: doc.id } as ProjectPreferences;
+      output[doc.id] = normalizeProjectPreferencesFromFirestore(doc.data(), doc.id);
     });
   }
   return output;

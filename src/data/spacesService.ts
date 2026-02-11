@@ -39,6 +39,11 @@ export type Space = {
   updatedAt?: unknown;
 };
 
+function normalizeSpaceFromFirestore(raw: unknown, id: string): Space {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as Space;
+}
+
 type Unsubscribe = () => void;
 
 export function subscribeToSpaces(
@@ -59,7 +64,7 @@ export function subscribeToSpaces(
   return onSnapshot(
     queryRef,
     (snapshot) => {
-      const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as Space));
+      const next = snapshot.docs.map((doc) => normalizeSpaceFromFirestore(doc.data(), doc.id));
       onChange(next);
     },
     (error) => {
@@ -88,13 +93,13 @@ export async function refreshSpaces(
     try {
       const snapshot =
         source === 'cache' ? await getDocsFromCache(queryRef) : await getDocsFromServer(queryRef);
-      return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Space));
+      return snapshot.docs.map((doc: any) => normalizeSpaceFromFirestore(doc.data(), doc.id));
     } catch {
       // try next
     }
   }
   const snapshot = await getDocs(queryRef);
-  return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as Space));
+  return snapshot.docs.map((doc: any) => normalizeSpaceFromFirestore(doc.data(), doc.id));
 }
 
 export function createSpace(
@@ -175,7 +180,7 @@ export function subscribeToSpace(
           onChange(null);
           return;
         }
-        onChange({ ...(snapshot.data() as object), id: snapshot.id } as Space);
+        onChange(normalizeSpaceFromFirestore(snapshot.data(), snapshot.id));
       },
       (error) => {
         console.warn('[spacesService] space subscription failed', error);

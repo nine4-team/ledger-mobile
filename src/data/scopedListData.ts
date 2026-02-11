@@ -84,6 +84,16 @@ function normalizeScopedItemFromFirestore(raw: unknown, id: string): ScopedItem 
   return { ...(rest as object), id, name: name ?? null } as ScopedItem;
 }
 
+function normalizeScopedTransactionFromFirestore(raw: unknown, id: string): ScopedTransaction {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as ScopedTransaction;
+}
+
+function normalizeProjectSummaryFromFirestore(raw: unknown, id: string): ProjectSummary {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as ProjectSummary;
+}
+
 function getScopeProjectId(scopeConfig: ScopeConfig): string | null {
   if (scopeConfig.scope !== 'project') {
     return null;
@@ -174,7 +184,7 @@ export function subscribeToScopedTransactions(
   return onSnapshot(
     query,
     (snapshot) => {
-      const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ScopedTransaction));
+      const next = snapshot.docs.map((doc) => normalizeScopedTransactionFromFirestore(doc.data(), doc.id));
       onChange(toSafeArray(next));
     },
     (error) => {
@@ -215,7 +225,7 @@ export async function refreshScopedTransactions(
   }
   const query = getScopedTransactionsQuery(accountId, scopeConfig);
   const snapshot = await getQuerySnapshotWithPreference(query, mode);
-  return snapshot.docs.map((doc: any) => ({ ...(doc.data() as object), id: doc.id } as ScopedTransaction));
+  return snapshot.docs.map((doc: any) => normalizeScopedTransactionFromFirestore(doc.data(), doc.id));
 }
 
 export function subscribeToProjects(
@@ -231,7 +241,7 @@ export function subscribeToProjects(
   return onSnapshot(
     collectionRef,
     (snapshot) => {
-      const next = snapshot.docs.map((doc) => ({ ...(doc.data() as object), id: doc.id } as ProjectSummary));
+      const next = snapshot.docs.map((doc) => normalizeProjectSummaryFromFirestore(doc.data(), doc.id));
       onChange(toSafeArray(next));
     },
     (error) => {

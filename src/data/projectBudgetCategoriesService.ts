@@ -23,6 +23,11 @@ export type ProjectBudgetCategory = {
 
 type Unsubscribe = () => void;
 
+function normalizeProjectBudgetCategoryFromFirestore(raw: unknown, id: string): ProjectBudgetCategory {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as ProjectBudgetCategory;
+}
+
 export function subscribeToProjectBudgetCategories(
   accountId: string,
   projectId: string,
@@ -40,7 +45,7 @@ export function subscribeToProjectBudgetCategories(
   getDocsFromCache(collectionRef)
     .then(snapshot => {
       const next = snapshot.docs.map(
-        (d) => ({ ...(d.data() as object), id: d.id } as ProjectBudgetCategory)
+        (d) => normalizeProjectBudgetCategoryFromFirestore(d.data(), d.id)
       );
       onChange(next);
     })
@@ -54,7 +59,7 @@ export function subscribeToProjectBudgetCategories(
     collectionRef,
     (snapshot) => {
       const next = snapshot.docs.map(
-        (d) => ({ ...(d.data() as object), id: d.id } as ProjectBudgetCategory)
+        (d) => normalizeProjectBudgetCategoryFromFirestore(d.data(), d.id)
       );
       onChange(next);
     },
@@ -80,7 +85,7 @@ export async function refreshProjectBudgetCategories(
       const snapshot =
         source === 'cache' ? await getDocsFromCache(ref) : await getDocsFromServer(ref);
       return snapshot.docs.map(
-        (doc: any) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
+        (doc: any) => normalizeProjectBudgetCategoryFromFirestore(doc.data(), doc.id)
       );
     } catch {
       // try next
@@ -88,7 +93,7 @@ export async function refreshProjectBudgetCategories(
   }
   const snapshot = await getDocs(ref);
   return snapshot.docs.map(
-    (doc: any) => ({ ...(doc.data() as object), id: doc.id } as ProjectBudgetCategory)
+    (doc: any) => normalizeProjectBudgetCategoryFromFirestore(doc.data(), doc.id)
   );
 }
 

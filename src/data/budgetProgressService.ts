@@ -19,6 +19,11 @@ export type BudgetProgress = {
 
 type Unsubscribe = () => void;
 
+function normalizeTransactionFromFirestore(raw: unknown, id: string): Transaction {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as Transaction;
+}
+
 async function getQuerySnapshotWithPreference(queryRef: unknown, mode: 'online' | 'offline') {
   const preference = mode === 'offline' ? (['cache', 'server'] as const) : (['server', 'cache'] as const);
   for (const source of preference) {
@@ -107,7 +112,7 @@ export function subscribeToProjectBudgetProgress(
     projectQuery,
     (snapshot) => {
       const transactions = snapshot.docs.map(
-        (doc) => ({ ...(doc.data() as object), id: doc.id } as Transaction)
+        (doc) => normalizeTransactionFromFirestore(doc.data(), doc.id)
       );
       onChange(buildBudgetProgress(transactions, budgetCategoriesMap));
     },
@@ -135,7 +140,7 @@ export async function refreshProjectBudgetProgress(
   const projectQuery = query(collectionRef, where('projectId', '==', projectId));
   const snapshot = await getQuerySnapshotWithPreference(projectQuery, mode);
   const transactions = snapshot.docs.map(
-    (doc: any) => ({ ...(doc.data() as object), id: doc.id } as Transaction)
+    (doc: any) => normalizeTransactionFromFirestore(doc.data(), doc.id)
   );
   return buildBudgetProgress(transactions, budgetCategoriesMap);
 }

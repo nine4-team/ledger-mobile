@@ -47,8 +47,18 @@ import { trackPendingWrite } from '../sync/pendingWrites';
 export class FirestoreRepository<T extends { id: string }> implements Repository<T> {
   constructor(
     private collectionPath: string,
-    private mode: RepositoryMode = 'online'
+    private mode: RepositoryMode = 'online',
+    private normalizer?: (raw: unknown, id: string) => T
   ) {}
+
+  private normalizeDoc(raw: unknown, id: string): T {
+    if (this.normalizer) {
+      return this.normalizer(raw, id);
+    }
+    // Default: safe defensive spreading
+    const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    return { ...(data as object), id } as T;
+  }
 
   private async getDocWithPreference(docPath: string) {
     if (!db) return null;
@@ -96,7 +106,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     }
     const q = collection(db, this.collectionPath);
     const snapshot = await this.getQueryWithPreference(q);
-    return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
+    return snapshot.docs.map((d) => this.normalizeDoc(d.data(), d.id));
   }
 
   async get(id: string): Promise<T | null> {
@@ -107,7 +117,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     if (!snapshot.exists) {
       return null;
     }
-    return { ...(snapshot.data() as object), id: snapshot.id } as T;
+    return this.normalizeDoc(snapshot.data(), snapshot.id);
   }
 
   upsert(id: string, data: Partial<T>): void {
@@ -132,7 +142,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     }
     const q = query(collection(db, this.collectionPath), where('uid', '==', uid));
     const snapshot = await this.getQueryWithPreference(q);
-    return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
+    return snapshot.docs.map((d) => this.normalizeDoc(d.data(), d.id));
   }
 
   /**
@@ -153,7 +163,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
       .then(snapshot => {
         // Always call onChange, even if cache is empty (returns null)
         if (snapshot.exists) {
-          onChange({ ...(snapshot.data() as object), id: snapshot.id } as T);
+          onChange(this.normalizeDoc(snapshot.data(), snapshot.id));
         } else {
           onChange(null);
         }
@@ -171,7 +181,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
           onChange(null);
           return;
         }
-        onChange({ ...(snapshot.data() as object), id: snapshot.id } as T);
+        onChange(this.normalizeDoc(snapshot.data(), snapshot.id));
       },
       (error) => {
         console.error(`[FirestoreRepository] Error subscribing to ${this.collectionPath}/${id}:`, error);
@@ -197,7 +207,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     getDocsFromCache(collectionRef)
       .then(snapshot => {
         // Always call onChange, even if cache is empty (returns [])
-        const items = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
+        const items = snapshot.docs.map((d) => this.normalizeDoc(d.data(), d.id));
         onChange(items);
       })
       .catch(() => {
@@ -209,7 +219,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
     return onSnapshot(
       collectionRef,
       (snapshot) => {
-        const items = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id } as T));
+        const items = snapshot.docs.map((d) => this.normalizeDoc(d.data(), d.id));
         onChange(items);
       },
       (error) => {
@@ -232,14 +242,16 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
  *
  * @param collectionPath - Firestore collection path (e.g., 'users/{uid}/items')
  * @param mode - 'online' (default) or 'offline' (cache-first preference)
+ * @param normalizer - Optional function to normalize document data. If not provided, uses safe default spreading.
  * @returns Repository instance (never throws, even if Firebase is not configured)
  */
 export function createRepository<T extends { id: string }>(
   collectionPath: string,
-  mode: RepositoryMode = 'online'
+  mode: RepositoryMode = 'online',
+  normalizer?: (raw: unknown, id: string) => T
 ): Repository<T> {
   // Native-only: both modes use @react-native-firebase/firestore.
   // Mode controls read preference and listener behavior, not SDK choice.
   // This never throws - if Firebase is not configured, repository methods will return empty/null gracefully.
-  return new FirestoreRepository<T>(collectionPath, mode);
+  return new FirestoreRepository<T>(collectionPath, mode, normalizer);
 }

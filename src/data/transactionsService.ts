@@ -42,6 +42,11 @@ export type Transaction = {
   updatedAt?: unknown;
 };
 
+function normalizeTransactionFromFirestore(raw: unknown, id: string): Transaction {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id } as Transaction;
+}
+
 export function createTransaction(
   accountId: string,
   data: Partial<Transaction>
@@ -106,7 +111,7 @@ export async function getTransaction(
       if (!snapshot.exists) {
         return null;
       }
-      return { ...(snapshot.data() as object), id: snapshot.id } as Transaction;
+      return normalizeTransactionFromFirestore(snapshot.data(), snapshot.id);
     } catch {
       // try next
     }
@@ -115,7 +120,7 @@ export async function getTransaction(
   if (!snapshot.exists) {
     return null;
   }
-  return { ...(snapshot.data() as object), id: snapshot.id } as Transaction;
+  return normalizeTransactionFromFirestore(snapshot.data(), snapshot.id);
 }
 
 export function subscribeToTransaction(
@@ -135,7 +140,7 @@ export function subscribeToTransaction(
           onChange(null);
           return;
         }
-        onChange({ ...(snapshot.data() as object), id: snapshot.id } as Transaction);
+        onChange(normalizeTransactionFromFirestore(snapshot.data(), snapshot.id));
       },
       (error) => {
         console.warn('[transactionsService] transaction subscription failed', error);

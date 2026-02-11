@@ -25,6 +25,11 @@ export type Invite = {
 
 type Unsubscribe = () => void;
 
+function normalizeInviteFromFirestore(raw: unknown, id: string, accountId: string): Invite {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id, accountId } as Invite;
+}
+
 function generateToken(): string {
   return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
 }
@@ -40,7 +45,7 @@ export function subscribeToInvites(accountId: string, onChange: (invites: Invite
     queryRef,
       (snapshot) => {
         const invites = snapshot.docs.map(
-          (doc) => ({ ...(doc.data() as object), id: doc.id, accountId } as Invite)
+          (doc) => normalizeInviteFromFirestore(doc.data(), doc.id, accountId)
         );
         onChange(invites);
       },
@@ -97,7 +102,7 @@ export async function fetchPendingInvites(
       const snapshot =
         source === 'cache' ? await getDocsFromCache(ref) : await getDocsFromServer(ref);
       return snapshot.docs.map(
-        (doc: any) => ({ ...(doc.data() as object), id: doc.id, accountId } as Invite)
+        (doc: any) => normalizeInviteFromFirestore(doc.data(), doc.id, accountId)
       );
     } catch {
       // try next
@@ -105,6 +110,6 @@ export async function fetchPendingInvites(
   }
   const snapshot = await getDocs(ref);
   return snapshot.docs.map(
-    (doc: any) => ({ ...(doc.data() as object), id: doc.id, accountId } as Invite)
+    (doc: any) => normalizeInviteFromFirestore(doc.data(), doc.id, accountId)
   );
 }

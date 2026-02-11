@@ -14,6 +14,11 @@ export type AccountMember = {
 
 type Unsubscribe = () => void;
 
+function normalizeAccountMemberFromFirestore(raw: unknown, id: string, uid: string, accountId: string): AccountMember {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return { ...(data as object), id, uid, accountId } as AccountMember;
+}
+
 export function subscribeToAccountMember(
   accountId: string,
   uid: string,
@@ -31,8 +36,7 @@ export function subscribeToAccountMember(
         onChange(null);
         return;
       }
-      const data = snapshot.data() as AccountMember;
-      onChange({ ...data, id: uid, uid, accountId });
+      onChange(normalizeAccountMemberFromFirestore(snapshot.data(), uid, uid, accountId));
     },
     (error) => {
       console.warn('[accountMembersService] member subscription failed', error);
@@ -54,7 +58,7 @@ export function subscribeToAccountMembers(
     collectionRef,
     (snapshot) => {
       const members = snapshot.docs.map(
-        (doc) => ({ ...(doc.data() as object), id: doc.id, uid: doc.id, accountId } as AccountMember)
+        (doc) => normalizeAccountMemberFromFirestore(doc.data(), doc.id, doc.id, accountId)
       );
       onChange(members);
     },

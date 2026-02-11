@@ -21,6 +21,14 @@ export type AccountPresets = {
 
 type Unsubscribe = () => void;
 
+function normalizeAccountPresetsFromFirestore(raw: unknown, id: string): AccountPresets {
+  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const order = Array.isArray(data.budgetCategoryOrder)
+    ? data.budgetCategoryOrder
+    : (data.budgetCategoryOrder === null ? null : []);
+  return { ...(data as object), id, budgetCategoryOrder: order } as AccountPresets;
+}
+
 export function subscribeToAccountPresets(
   accountId: string,
   onChange: (presets: AccountPresets | null) => void
@@ -37,7 +45,7 @@ export function subscribeToAccountPresets(
         onChange(null);
         return;
       }
-      onChange({ ...(snapshot.data() as object), id: snapshot.id } as AccountPresets);
+      onChange(normalizeAccountPresetsFromFirestore(snapshot.data(), snapshot.id));
     },
     (error) => {
       console.warn('[accountPresetsService] subscription failed', error);
@@ -62,7 +70,7 @@ export async function refreshAccountPresets(
       if (!snapshot.exists) {
         return null;
       }
-      return { ...(snapshot.data() as object), id: snapshot.id } as AccountPresets;
+      return normalizeAccountPresetsFromFirestore(snapshot.data(), snapshot.id);
     } catch {
       // try next
     }
@@ -71,7 +79,7 @@ export async function refreshAccountPresets(
   if (!snapshot.exists) {
     return null;
   }
-  return { ...(snapshot.data() as object), id: snapshot.id } as AccountPresets;
+  return normalizeAccountPresetsFromFirestore(snapshot.data(), snapshot.id);
 }
 
 export function updateAccountPresets(
