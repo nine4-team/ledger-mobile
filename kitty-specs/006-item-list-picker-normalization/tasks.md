@@ -23,12 +23,12 @@
 **Estimated Prompt Size**: ~450 lines
 
 ### Included Subtasks
-- [ ] T001 Create `src/hooks/usePickerMode.ts` — type definitions (`ItemEligibilityCheck`, `UsePickerModeConfig`, `UsePickerModeReturn`)
-- [ ] T002 Implement `usePickerMode` hook logic — `eligibleIds`, `allEligibleSelected`, `handleSelectAll`, `getPickerItemProps`, `getPickerGroupProps`, `renderAddButton`
-- [ ] T003 Add picker mode props to `SharedItemsListProps` in `src/components/SharedItemsList.tsx`
-- [ ] T004 Integrate `usePickerMode` hook call + conditional `ItemPickerControlBar` rendering in SharedItemsList
-- [ ] T005 Modify item card + group card rendering for picker mode (both embedded map + standalone FlatList paths)
-- [ ] T006 Add loading/error state rendering for picker mode (`outsideLoading`, `outsideError`)
+- [x] T001 Create `src/hooks/usePickerMode.ts` — type definitions (`ItemEligibilityCheck`, `UsePickerModeConfig`, `UsePickerModeReturn`)
+- [x] T002 Implement `usePickerMode` hook logic — `eligibleIds`, `allEligibleSelected`, `handleSelectAll`, `getPickerItemProps`, `getPickerGroupProps`, `renderAddButton`
+- [x] T003 Add picker mode props to `SharedItemsListProps` in `src/components/SharedItemsList.tsx`
+- [x] T004 Integrate `usePickerMode` hook call + conditional `ItemPickerControlBar` rendering in SharedItemsList
+- [x] T005 Modify item card + group card rendering for picker mode (both embedded map + standalone FlatList paths)
+- [x] T006 Add loading/error state rendering for picker mode (`outsideLoading`, `outsideError`)
 
 ### Implementation Notes
 - Hook must short-circuit when `enabled === false` (zero overhead in non-picker mode).
