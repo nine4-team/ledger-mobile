@@ -15,7 +15,7 @@ subtasks:
 - T006
 phase: Phase 1 - Foundation
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "79999"
 review_status: ''
 reviewed_by: ''
@@ -509,3 +509,4 @@ The rendering logic is duplicated between embedded and standalone — both must 
 ## Activity Log
 
 - 2026-02-11T05:38:00Z – system – lane=planned – Prompt created.
+- 2026-02-11T06:00:16Z – claude-sonnet – shell_pid=79999 – lane=doing – Assigned agent via workflow command
