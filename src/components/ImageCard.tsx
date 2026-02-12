@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
-    padding: 12,
-    gap: 4,
+    padding: 16,
+    gap: 6,
   },
 });
