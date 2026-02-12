@@ -57,7 +57,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Account presets (budget categories, vendor defaults, space templates).
+    // Per-user project preferences (pinned categories, etc.).
+    match /accounts/{accountId}/users/{uid}/projectPreferences/{projectId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Account presets document (e.g. default budget category, category order).
+    match /accounts/{accountId}/presets/{presetId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Account presets subcollections (budget categories, vendor defaults, space templates).
     match /accounts/{accountId}/presets/{presetId}/budgetCategories/{categoryId} {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
@@ -116,6 +126,10 @@ service cloud.firestore {
     }
 
     match /accounts/{accountId}/projects/{projectId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/projects/{projectId}/budgetCategories/{categoryId} {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
