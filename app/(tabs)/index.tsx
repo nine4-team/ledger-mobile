@@ -1,6 +1,6 @@
 import { RefreshControl, StyleSheet, View } from 'react-native';
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
@@ -160,56 +160,62 @@ function ProjectsList() {
       });
   }, [accountId, projects, userId]);
 
-  useEffect(() => {
-    if (!accountId || projects.length === 0) {
-      setProjectBudgetCategoriesMap({});
-      return;
-    }
-    let cancelled = false;
-    const loadProjectCategories = async () => {
-      const categoriesMap: Record<string, Record<string, ProjectBudgetCategory>> = {};
-      await Promise.all(
-        projects.map(async (project) => {
-          const categories = await refreshProjectBudgetCategories(accountId, project.id, 'offline');
-          categoriesMap[project.id] = categories.reduce((acc, cat) => {
-            acc[cat.id] = cat;
-            return acc;
-          }, {} as Record<string, ProjectBudgetCategory>);
-        })
-      );
-      if (!cancelled) {
-        setProjectBudgetCategoriesMap(categoriesMap);
+  // Re-fetch project budget data on every focus (including initial mount)
+  // so cards reflect edits made in the project edit screen.
+  useFocusEffect(
+    useCallback(() => {
+      if (!accountId || projects.length === 0) {
+        setProjectBudgetCategoriesMap({});
+        return;
       }
-    };
-    void loadProjectCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId, projects]);
+      let cancelled = false;
+      const loadProjectCategories = async () => {
+        const categoriesMap: Record<string, Record<string, ProjectBudgetCategory>> = {};
+        await Promise.all(
+          projects.map(async (project) => {
+            const categories = await refreshProjectBudgetCategories(accountId, project.id, 'offline');
+            categoriesMap[project.id] = categories.reduce((acc, cat) => {
+              acc[cat.id] = cat;
+              return acc;
+            }, {} as Record<string, ProjectBudgetCategory>);
+          })
+        );
+        if (!cancelled) {
+          setProjectBudgetCategoriesMap(categoriesMap);
+        }
+      };
+      void loadProjectCategories();
+      return () => {
+        cancelled = true;
+      };
+    }, [accountId, projects])
+  );
 
-  useEffect(() => {
-    if (!accountId || projects.length === 0) {
-      setBudgetProgressMap({});
-      return;
-    }
-    let cancelled = false;
-    const loadProgress = async () => {
-      const progressMap: Record<string, BudgetProgress> = {};
-      await Promise.all(
-        projects.map(async (project) => {
-          const progress = await refreshProjectBudgetProgress(accountId, project.id, 'offline');
-          progressMap[project.id] = progress;
-        })
-      );
-      if (!cancelled) {
-        setBudgetProgressMap(progressMap);
+  useFocusEffect(
+    useCallback(() => {
+      if (!accountId || projects.length === 0) {
+        setBudgetProgressMap({});
+        return;
       }
-    };
-    void loadProgress();
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId, projects]);
+      let cancelled = false;
+      const loadProgress = async () => {
+        const progressMap: Record<string, BudgetProgress> = {};
+        await Promise.all(
+          projects.map(async (project) => {
+            const progress = await refreshProjectBudgetProgress(accountId, project.id, 'offline');
+            progressMap[project.id] = progress;
+          })
+        );
+        if (!cancelled) {
+          setBudgetProgressMap(progressMap);
+        }
+      };
+      void loadProgress();
+      return () => {
+        cancelled = true;
+      };
+    }, [accountId, projects])
+  );
 
   const sortedProjects = useMemo(() => {
     const filtered =

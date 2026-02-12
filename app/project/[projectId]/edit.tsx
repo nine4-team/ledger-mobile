@@ -52,6 +52,7 @@ export default function EditProjectScreen() {
   // Budget state
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | null>>({});
+  const localBudgetsRef = useRef<Record<string, number | null>>({});
   const userHasEditedBudgets = useRef(false);
 
   // Loading state
@@ -88,6 +89,7 @@ export default function EditProjectScreen() {
         categories.forEach(pbc => {
           budgets[pbc.id] = pbc.budgetCents;
         });
+        localBudgetsRef.current = budgets;
         setLocalBudgets(budgets);
       }
       setIsLoadingProjectBudgets(false);
@@ -137,6 +139,7 @@ export default function EditProjectScreen() {
   // Budget handler
   const handleBudgetChange = (categoryId: string, cents: number | null) => {
     userHasEditedBudgets.current = true;
+    localBudgetsRef.current = { ...localBudgetsRef.current, [categoryId]: cents };
     setLocalBudgets(prev => ({ ...prev, [categoryId]: cents }));
   };
 
@@ -198,7 +201,7 @@ export default function EditProjectScreen() {
 
       // 3. Save all budget categories (fire-and-forget, merge:true is idempotent)
       budgetCategories.forEach(category => {
-        const cents = localBudgets[category.id] ?? null;
+        const cents = localBudgetsRef.current[category.id] ?? null;
         setProjectBudgetCategory(accountId, projectId, category.id, { budgetCents: cents });
       });
 

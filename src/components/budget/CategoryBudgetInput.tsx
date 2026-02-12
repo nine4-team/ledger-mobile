@@ -158,6 +158,13 @@ export function CategoryBudgetInput({
 
   const handleChangeText = (text: string) => {
     setInputValue(text);
+    // Eagerly report valid values so the parent ref is current before
+    // a potential Save press (blur/press ordering is non-deterministic
+    // in React Native when the button is outside the ScrollView).
+    const parsed = parseCurrency(text);
+    if (parsed !== null) {
+      onChange(parsed);
+    }
   };
 
   const inputStyle = getTextInputStyle(uiKitTheme, {
