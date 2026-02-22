@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
+exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -1118,5 +1118,207 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
     // Ensure required presets exist for newly joined members (idempotent).
     await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
     return result;
+});
+/**
+ * Full, idempotent recalculation of a project's budget summary.
+ * Queries all source data and writes the computed summary to the project doc.
+ */
+async function recalculateProjectBudgetSummary(accountId, projectId) {
+    const db = (0, firestore_1.getFirestore)();
+    // 1. Fetch account-level budget categories (names, metadata)
+    const budgetCatsSnapshot = await db
+        .collection(`accounts/${accountId}/presets/default/budgetCategories`)
+        .get();
+    const budgetCategories = {};
+    for (const doc of budgetCatsSnapshot.docs) {
+        const data = doc.data() ?? {};
+        const metadata = data.metadata && typeof data.metadata === 'object'
+            ? data.metadata
+            : {};
+        budgetCategories[doc.id] = {
+            name: typeof data.name === 'string' ? data.name : '',
+            categoryType: typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+            excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
+            isArchived: data.isArchived === true,
+        };
+    }
+    // 2. Fetch project budget categories (budgetCents per category)
+    const projectBudgetCatsSnapshot = await db
+        .collection(`accounts/${accountId}/projects/${projectId}/budgetCategories`)
+        .get();
+    const projectBudgetCents = {};
+    for (const doc of projectBudgetCatsSnapshot.docs) {
+        const data = doc.data() ?? {};
+        projectBudgetCents[doc.id] =
+            typeof data.budgetCents === 'number' ? data.budgetCents : 0;
+    }
+    // 3. Fetch all transactions for this project
+    const txSnapshot = await db
+        .collection(`accounts/${accountId}/transactions`)
+        .where('projectId', '==', projectId)
+        .get();
+    // 4. Compute spend per category (mirrors normalizeSpendAmount in budgetProgressService.ts)
+    const spentByCategory = {};
+    for (const doc of txSnapshot.docs) {
+        const tx = doc.data() ?? {};
+        if (tx.isCanceled === true)
+            continue;
+        if (typeof tx.amountCents !== 'number')
+            continue;
+        const categoryId = typeof tx.budgetCategoryId === 'string'
+            ? tx.budgetCategoryId.trim()
+            : null;
+        if (!categoryId)
+            continue;
+        let amount = tx.amountCents;
+        const txType = typeof tx.transactionType === 'string'
+            ? tx.transactionType.trim().toLowerCase()
+            : null;
+        if (txType === 'return') {
+            amount = -Math.abs(amount);
+        }
+        else if (tx.isCanonicalInventorySale && tx.inventorySaleDirection) {
+            amount =
+                tx.inventorySaleDirection === 'project_to_business'
+                    ? -Math.abs(amount)
+                    : Math.abs(amount);
+        }
+        spentByCategory[categoryId] = (spentByCategory[categoryId] ?? 0) + amount;
+    }
+    // 5. Build the summary — only include categories with non-zero budget or spend
+    const categories = {};
+    let overallSpentCents = 0;
+    let overallBudgetCents = 0;
+    const allCategoryIds = new Set([
+        ...Object.keys(budgetCategories),
+        ...Object.keys(projectBudgetCents),
+        ...Object.keys(spentByCategory),
+    ]);
+    for (const catId of allCategoryIds) {
+        const catMeta = budgetCategories[catId];
+        const budgetCents = projectBudgetCents[catId] ?? 0;
+        const spentCents = spentByCategory[catId] ?? 0;
+        if (budgetCents === 0 && spentCents === 0)
+            continue;
+        categories[catId] = {
+            budgetCents,
+            spentCents,
+            name: catMeta?.name ?? '',
+            categoryType: catMeta?.categoryType ?? null,
+            excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
+            isArchived: catMeta?.isArchived ?? false,
+        };
+        if (!(catMeta?.excludeFromOverallBudget)) {
+            overallSpentCents += spentCents;
+            overallBudgetCents += budgetCents;
+        }
+    }
+    // 6. Write to project document (merge to preserve other fields)
+    const projectRef = db.doc(`accounts/${accountId}/projects/${projectId}`);
+    await projectRef.set({
+        budgetSummary: {
+            spentCents: overallSpentCents,
+            totalBudgetCents: overallBudgetCents,
+            categories,
+            updatedAt: firestore_1.FieldValue.serverTimestamp(),
+        },
+    }, { merge: true });
+}
+/**
+ * Recalculate budget summary when any transaction is created, updated, or deleted.
+ * Handles transactions moving between projects by recalculating both.
+ */
+exports.onTransactionWritten = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/transactions/{transactionId}', async (event) => {
+    const accountId = event.params.accountId;
+    const beforeData = event.data?.before?.data();
+    const afterData = event.data?.after?.data();
+    const beforeProjectId = typeof beforeData?.projectId === 'string' ? beforeData.projectId : null;
+    const afterProjectId = typeof afterData?.projectId === 'string' ? afterData.projectId : null;
+    if (!beforeProjectId && !afterProjectId)
+        return;
+    const projectIds = new Set();
+    if (beforeProjectId)
+        projectIds.add(beforeProjectId);
+    if (afterProjectId)
+        projectIds.add(afterProjectId);
+    await Promise.all(Array.from(projectIds).map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+        console.error(`[onTransactionWritten] recalculate failed for project ${pid}:`, err);
+    })));
+});
+/**
+ * Recalculate budget summary when a project-level budget category is written.
+ */
+exports.onProjectBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/projects/{projectId}/budgetCategories/{categoryId}', async (event) => {
+    const { accountId, projectId } = event.params;
+    await recalculateProjectBudgetSummary(accountId, projectId).catch((err) => {
+        console.error(`[onProjectBudgetCategoryWritten] recalculate failed for project ${projectId}:`, err);
+    });
+});
+/**
+ * Recalculate budget summaries for ALL projects when an account-level budget
+ * category changes (name, categoryType, excludeFromOverallBudget, isArchived).
+ * Short-circuits when only irrelevant fields changed (order, slug, timestamps).
+ */
+exports.onAccountBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/presets/default/budgetCategories/{categoryId}', async (event) => {
+    const accountId = event.params.accountId;
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    // On update, skip if only irrelevant fields changed
+    if (before && after) {
+        const beforeMeta = before.metadata && typeof before.metadata === 'object'
+            ? before.metadata
+            : {};
+        const afterMeta = after.metadata && typeof after.metadata === 'object'
+            ? after.metadata
+            : {};
+        const relevantFieldsChanged = before.name !== after.name ||
+            before.isArchived !== after.isArchived ||
+            beforeMeta.categoryType !== afterMeta.categoryType ||
+            beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget;
+        if (!relevantFieldsChanged)
+            return;
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const projectsSnapshot = await db
+        .collection(`accounts/${accountId}/projects`)
+        .select()
+        .get();
+    if (projectsSnapshot.empty)
+        return;
+    console.log(`[onAccountBudgetCategoryWritten] Recalculating ${projectsSnapshot.size} projects for account ${accountId}`);
+    const projectIds = projectsSnapshot.docs.map((d) => d.id);
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+        const batch = projectIds.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+            console.error(`[onAccountBudgetCategoryWritten] recalculate failed for project ${pid}:`, err);
+        })));
+    }
+});
+exports.backfillBudgetSummaries = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+    const { accountId } = request.data ?? {};
+    if (!accountId) {
+        throw new https_1.HttpsError('invalid-argument', 'Missing accountId.');
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const projectsSnapshot = await db
+        .collection(`accounts/${accountId}/projects`)
+        .select()
+        .get();
+    let processed = 0;
+    const projectIds = projectsSnapshot.docs.map((d) => d.id);
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+        const batch = projectIds.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+            console.error(`[backfillBudgetSummaries] failed for project ${pid}:`, err);
+        })));
+        processed += batch.length;
+    }
+    return { processed, total: projectIds.length };
 });
 //# sourceMappingURL=index.js.map
