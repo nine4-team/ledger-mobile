@@ -143,7 +143,7 @@ export function AnchoredMenuList({
       offsetY={offsetY}
     >
       {computedItems.map((item, idx) => {
-        const showDivider = idx < computedItems.length - 1;
+        const showDivider = true;
         const subactions = item.subactions ?? [];
         const isSubmenuItem = subactions.length > 0;
         const itemKey = item.key ?? `${item.label}-${idx}`;
@@ -202,14 +202,7 @@ export function AnchoredMenuList({
               <View style={[styles.menuDivider, { backgroundColor: uiKitTheme.border.secondary }]} />
 
               {isExpanded ? (
-                <View
-                  style={[
-                    styles.menuSectionBody,
-                    {
-                      backgroundColor: uiKitTheme.background.tertiary ?? uiKitTheme.background.surface,
-                    },
-                  ]}
-                >
+                <View style={styles.menuSectionBody}>
                   {subactions.map((sub, subIdx) => {
                     const showSubDivider = subIdx < subactions.length - 1;
                     const selectedSub = currentKey === sub.key;

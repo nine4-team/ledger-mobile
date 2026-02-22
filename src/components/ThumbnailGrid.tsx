@@ -114,7 +114,7 @@ export function ThumbnailGrid({
 
     if (onSetPrimary && !menuImage.isPrimary) {
       items.push({
-        label: 'Set primary',
+        label: 'Set Primary',
         onPress: () => {
           if (menuImage) {
             onSetPrimary(menuImage);
@@ -231,7 +231,7 @@ export function ThumbnailGrid({
           visible={menuVisible}
           onRequestClose={closeMenu}
           items={menuItems}
-          title="Image options"
+          title="Image Options"
           showLeadingIcons={true}
         />
       )}

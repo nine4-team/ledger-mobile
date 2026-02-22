@@ -745,7 +745,7 @@ export default function TransactionDetailScreen() {
   // Enhanced item context menu (Phase C)
   const getItemMenuItems = useCallback((item: ScopedItem): AnchoredMenuItem[] => [
     {
-      label: 'View item',
+      label: 'View Item',
       onPress: () => router.push(`/items/${item.id}`),
       icon: 'open-in-new',
     },
@@ -755,17 +755,17 @@ export default function TransactionDetailScreen() {
       icon: 'edit',
     },
     {
-      label: 'Make copies',
+      label: 'Make Copies',
       onPress: () => handleDuplicateItem(item.id),
       icon: 'content-copy',
     },
     {
-      label: 'Set space',
+      label: 'Set Space',
       onPress: () => handleSetSpace(item.id),
       icon: 'place',
     },
     {
-      label: 'Remove from transaction',
+      label: 'Remove from Transaction',
       onPress: () => handleRemoveLinkedItem(item.id),
       icon: 'remove-circle-outline',
       destructive: true,
@@ -892,7 +892,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'price-desc',
-      label: 'Price high → low',
+      label: 'Price High → Low',
       onPress: () => {
         itemsManager.setSortMode('price-desc');
         itemsManager.setSortMenuVisible(false);
@@ -901,7 +901,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'price-asc',
-      label: 'Price low → high',
+      label: 'Price Low → High',
       onPress: () => {
         itemsManager.setSortMode('price-asc');
         itemsManager.setSortMenuVisible(false);
@@ -910,7 +910,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'created-desc',
-      label: 'Newest first',
+      label: 'Newest First',
       onPress: () => {
         itemsManager.setSortMode('created-desc');
         itemsManager.setSortMenuVisible(false);
@@ -919,7 +919,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'created-asc',
-      label: 'Oldest first',
+      label: 'Oldest First',
       onPress: () => {
         itemsManager.setSortMode('created-asc');
         itemsManager.setSortMenuVisible(false);
@@ -932,7 +932,7 @@ export default function TransactionDetailScreen() {
   const filterMenuItems = useMemo<AnchoredMenuItem[]>(() => [
     {
       key: 'all',
-      label: 'All items',
+      label: 'All Items',
       onPress: () => {
         itemsManager.setFilterMode('all');
         itemsManager.setFilterMenuVisible(false);
@@ -959,7 +959,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'no-name',
-      label: 'No name',
+      label: 'No Name',
       onPress: () => {
         itemsManager.setFilterMode('no-name');
         itemsManager.setFilterMenuVisible(false);
@@ -968,7 +968,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'no-price',
-      label: 'No project price',
+      label: 'No Project Price',
       onPress: () => {
         itemsManager.setFilterMode('no-price');
         itemsManager.setFilterMenuVisible(false);
@@ -977,7 +977,7 @@ export default function TransactionDetailScreen() {
     },
     {
       key: 'no-image',
-      label: 'No image',
+      label: 'No Image',
       onPress: () => {
         itemsManager.setFilterMode('no-image');
         itemsManager.setFilterMenuVisible(false);
@@ -1004,7 +1004,7 @@ export default function TransactionDetailScreen() {
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
     const items: AnchoredMenuItem[] = [
       {
-        label: 'Edit details',
+        label: 'Edit Details',
         onPress: () => {
           router.push({
             pathname: '/transactions/[id]/edit',
@@ -1020,7 +1020,7 @@ export default function TransactionDetailScreen() {
     ];
 
     items.push({
-      label: 'Delete transaction',
+      label: 'Delete Transaction',
       onPress: handleDelete,
       icon: 'delete',
     });
@@ -1499,7 +1499,7 @@ export default function TransactionDetailScreen() {
               visible={menuVisible}
               onRequestClose={() => setMenuVisible(false)}
               items={menuItems}
-              title="Transaction actions"
+              title="Transaction Actions"
               showLeadingIcons={true}
             />
 
@@ -1526,7 +1526,7 @@ export default function TransactionDetailScreen() {
               visible={itemsManager.filterMenuVisible}
               onRequestClose={() => itemsManager.setFilterMenuVisible(false)}
               items={filterMenuItems}
-              title="Filter items"
+              title="Filter Items"
               showLeadingIcons={false}
             />
 

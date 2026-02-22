@@ -530,8 +530,8 @@ export function SpaceDetailContent({
     {
       label: 'Sort by',
       subactions: [
-        { key: 'created-desc', label: 'Newest first', onPress: () => { itemsManager.setSortMode('created-desc'); itemsManager.setSortMenuVisible(false); } },
-        { key: 'created-asc', label: 'Oldest first', onPress: () => { itemsManager.setSortMode('created-asc'); itemsManager.setSortMenuVisible(false); } },
+        { key: 'created-desc', label: 'Newest First', onPress: () => { itemsManager.setSortMode('created-desc'); itemsManager.setSortMenuVisible(false); } },
+        { key: 'created-asc', label: 'Oldest First', onPress: () => { itemsManager.setSortMode('created-asc'); itemsManager.setSortMenuVisible(false); } },
         { key: 'alphabetical-asc', label: 'A \u2192 Z', onPress: () => { itemsManager.setSortMode('alphabetical-asc'); itemsManager.setSortMenuVisible(false); } },
         { key: 'alphabetical-desc', label: 'Z \u2192 A', onPress: () => { itemsManager.setSortMode('alphabetical-desc'); itemsManager.setSortMenuVisible(false); } },
       ],
@@ -543,19 +543,19 @@ export function SpaceDetailContent({
     { key: 'all', label: 'All', onPress: () => { itemsManager.setFilterMode('all'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'all' ? 'check' as const : undefined },
     { key: 'bookmarked', label: 'Bookmarked', onPress: () => { itemsManager.setFilterMode('bookmarked'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'bookmarked' ? 'check' as const : undefined },
     { key: 'no-sku', label: 'No SKU', onPress: () => { itemsManager.setFilterMode('no-sku'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'no-sku' ? 'check' as const : undefined },
-    { key: 'no-image', label: 'No image', onPress: () => { itemsManager.setFilterMode('no-image'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'no-image' ? 'check' as const : undefined },
+    { key: 'no-image', label: 'No Image', onPress: () => { itemsManager.setFilterMode('no-image'); itemsManager.setFilterMenuVisible(false); }, icon: itemsManager.filterMode === 'no-image' ? 'check' as const : undefined },
   ], [itemsManager]);
 
   const addMenuItems: AnchoredMenuItem[] = useMemo(() => [
     {
       key: 'create',
-      label: 'Create item',
+      label: 'Create Item',
       icon: 'add' as const,
       onPress: handleCreateItemInSpace,
     },
     {
       key: 'add-existing',
-      label: 'Add existing item',
+      label: 'Add Existing Item',
       icon: 'playlist-add' as const,
       onPress: () => {
         setIsPickingItems(true);
@@ -1094,7 +1094,7 @@ export function SpaceDetailContent({
         visible={addMenuVisible}
         onRequestClose={() => setAddMenuVisible(false)}
         items={addMenuItems}
-        title="Add item"
+        title="Add Item"
       />
 
       {/* Bulk move bottom sheet */}

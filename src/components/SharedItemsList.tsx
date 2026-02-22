@@ -602,7 +602,7 @@ export function SharedItemsList({
       return [
         {
           key: 'empty',
-          label: 'No categories yet',
+          label: 'No Categories Yet',
           onPress: () => {},
         },
       ];
@@ -611,7 +611,7 @@ export function SharedItemsList({
     return [
       {
         key: 'none',
-        label: 'No source category',
+        label: 'No Source Category',
         icon: !bulkSourceCategoryId.trim() ? 'check' : undefined,
         onPress: () => setBulkSourceCategoryId(''),
       },
@@ -793,7 +793,7 @@ export function SharedItemsList({
       })),
       {
         key: 'clear',
-        label: 'Clear status',
+        label: 'Clear Status',
         onPress: () => statusMenuItemId && handleStatusChange(statusMenuItemId, ''),
       },
     ];
@@ -952,13 +952,13 @@ export function SharedItemsList({
                 style={[styles.filterInput, filterInputThemeStyle]}
               />
               <AppButton
-                title="Move to space"
+                title="Move to Space"
                 variant="secondary"
                 onPress={handleBulkMoveToSpace}
                 style={styles.bulkActionButton}
               />
               <AppButton
-                title="Remove from space"
+                title="Remove from Space"
                 variant="secondary"
                 onPress={handleBulkRemoveFromSpace}
                 style={styles.bulkActionButton}
@@ -981,7 +981,7 @@ export function SharedItemsList({
                   style={[styles.filterInput, filterInputThemeStyle]}
                 />
                 <AppButton
-                  title="Allocate to project"
+                  title="Allocate to Project"
                   variant="secondary"
                   onPress={handleBulkAllocateToProject}
                   style={styles.bulkActionButton}
@@ -1002,7 +1002,7 @@ export function SharedItemsList({
                   <AppText variant="body">{bulkSourceCategoryLabel}</AppText>
                 </Pressable>
                 <AppButton
-                  title="Sell to business"
+                  title="Sell to Business"
                   variant="secondary"
                   onPress={handleBulkSellToBusiness}
                   style={styles.bulkActionButton}
@@ -1024,7 +1024,7 @@ export function SharedItemsList({
         visible={sourceCategoryMenuOpen}
         onRequestClose={() => setSourceCategoryMenuOpen(false)}
         items={sourceCategoryMenuItems}
-        title="Source category"
+        title="Source Category"
       />
       <BottomSheetMenuList
         visible={!!statusMenuItemId}

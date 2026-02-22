@@ -129,7 +129,7 @@ export function TransactionAttachmentPreview({
       });
     } else {
       items.push({
-        label: 'Open file',
+        label: 'Open File',
         onPress: () => {
           if (menuAttachment) {
             handleFilePress(menuAttachment);
@@ -240,7 +240,7 @@ export function TransactionAttachmentPreview({
           visible={menuVisible}
           onRequestClose={closeMenu}
           items={menuItems}
-          title="Attachment options"
+          title="Attachment Options"
           showLeadingIcons={true}
         />
       )}

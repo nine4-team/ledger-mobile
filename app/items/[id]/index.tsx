@@ -388,7 +388,7 @@ export default function ItemDetailScreen() {
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
     const items: AnchoredMenuItem[] = [
       {
-        label: 'Edit details',
+        label: 'Edit Details',
         onPress: () => {
           router.push({
             pathname: '/items/[id]/edit',
@@ -406,9 +406,10 @@ export default function ItemDetailScreen() {
     items.push({
       label: 'Transaction',
       icon: 'link',
+      actionOnly: true,
       subactions: [
-        { key: 'link', label: 'Link transaction', onPress: handleLinkTransaction, icon: 'link' },
-        { key: 'unlink', label: 'Unlink transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
+        { key: 'link', label: 'Link Transaction', onPress: handleLinkTransaction, icon: 'link' },
+        { key: 'unlink', label: 'Unlink Transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
       ],
     });
 
@@ -416,8 +417,9 @@ export default function ItemDetailScreen() {
       items.push({
         label: 'Move',
         icon: 'swap-horiz',
+        actionOnly: true,
         subactions: [
-          { key: 'allocate', label: 'Allocate to project', onPress: handleAllocateToProject, icon: 'assignment' },
+          { key: 'allocate', label: 'Allocate to Project', onPress: handleAllocateToProject, icon: 'assignment' },
         ],
       });
     } else {
@@ -429,6 +431,7 @@ export default function ItemDetailScreen() {
       items.push({
         label: 'Move (Advanced)',
         icon: 'settings',
+        actionOnly: true,
         subactions: [
           {
             key: 'move-to-business',
@@ -442,13 +445,13 @@ export default function ItemDetailScreen() {
             onPress: handleSellToInventory,
             icon: 'sell',
           },
-          { key: 'move-to-project', label: 'Move to project (deprecated)', onPress: handleMoveToProject, icon: 'assignment' },
+          { key: 'move-to-project', label: 'Move to Project (Deprecated)', onPress: handleMoveToProject, icon: 'assignment' },
         ],
       });
     }
 
     items.push({
-      label: 'Delete item',
+      label: 'Delete Item',
       onPress: handleDelete,
       icon: 'delete',
     });
@@ -480,7 +483,7 @@ export default function ItemDetailScreen() {
       })),
       {
         key: 'clear',
-        label: 'Clear status',
+        label: 'Clear Status',
         onPress: () => {
           handleStatusChange('');
           setStatusMenuVisible(false);
@@ -710,7 +713,7 @@ export default function ItemDetailScreen() {
         visible={menuVisible}
         onRequestClose={() => setMenuVisible(false)}
         items={menuItems}
-        title="Item actions"
+        title="Item Actions"
         showLeadingIcons={true}
       />
 

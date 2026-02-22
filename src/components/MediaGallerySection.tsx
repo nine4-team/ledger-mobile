@@ -200,7 +200,7 @@ export function MediaGallerySection({
     if (!selectedPdf) return [];
     const items: AnchoredMenuItem[] = [
       {
-        label: 'Open file',
+        label: 'Open File',
         onPress: () => {
           if (selectedPdf) {
             handlePdfPress(selectedPdf);
@@ -213,7 +213,7 @@ export function MediaGallerySection({
 
     if (onSetPrimary) {
       items.push({
-        label: 'Set primary',
+        label: 'Set Primary',
         onPress: () => {
           if (selectedPdf && onSetPrimary) {
             onSetPrimary(selectedPdf);
@@ -363,7 +363,7 @@ export function MediaGallerySection({
           visible={pdfMenuVisible}
           onRequestClose={closePdfMenu}
           items={pdfMenuItems}
-          title="Attachment options"
+          title="Attachment Options"
           showLeadingIcons={true}
         />
       )}
