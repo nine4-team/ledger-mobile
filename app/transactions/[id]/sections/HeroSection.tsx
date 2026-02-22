@@ -41,9 +41,8 @@ export function HeroSection({ transaction }: HeroSectionProps) {
           <AppText variant="body" style={textEmphasis.value}>
             {formatMoney(transaction.amountCents)}
           </AppText>
-          <AppText variant="caption" style={[getTextSecondaryStyle(uiKitTheme), styles.separator]}>
-            |
-          </AppText>
+        </View>
+        <View style={styles.infoRow}>
           <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
             Date:
           </AppText>
@@ -68,8 +67,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
-  },
-  separator: {
-    marginHorizontal: 4,
   },
 });

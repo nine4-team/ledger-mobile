@@ -195,7 +195,9 @@ export default function SignInScreen() {
         },
         googleSignUpText: {
           color: theme.colors.primary,
-          fontWeight: '400',
+          fontWeight: '600',
+          fontSize: 14,
+          lineHeight: 18,
         },
         primaryButton: {
           marginTop: theme.spacing.md,
@@ -207,6 +209,8 @@ export default function SignInScreen() {
         signUpText: {
           color: theme.colors.primary,
           fontWeight: '600',
+          fontSize: 14,
+          lineHeight: 18,
         },
       }),
     [resolvedColorScheme, theme, uiKitTheme]
@@ -450,7 +454,7 @@ export default function SignInScreen() {
 
                 <Pressable onPress={() => router.push('/(auth)/sign-up')} style={styles.signUpLink}>
                   <AppText variant="body" style={styles.signUpText}>
-                    Create an account
+                    Sign Up
                   </AppText>
                 </Pressable>
               </View>

@@ -50,6 +50,7 @@ web-build/
 
 # Firebase
 .firebase/
+firebase-export/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
