@@ -2047,47 +2047,47 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
         >
           Appearance
         </AppText>
-        <View style={[surface.overflowHidden, getCardStyle(uiKitTheme, { radius: 12, padding: theme.spacing.lg })]}>
-          <SegmentedControl
-            accessibilityLabel="Appearance"
-            value={appearanceMode}
-            onChange={setAppearanceMode}
-            options={[
-              {
-                value: 'system',
-                label: 'Auto',
-                icon: (
-                  <MaterialIcons
-                    name="brightness-auto"
-                    size={18}
-                    color={appearanceMode === 'system' ? theme.colors.primary : theme.colors.textSecondary}
-                  />
-                ),
-              },
-              {
-                value: 'light',
-                label: 'Light',
-                icon: (
-                  <MaterialIcons
-                    name="light-mode"
-                    size={18}
-                    color={appearanceMode === 'light' ? theme.colors.primary : theme.colors.textSecondary}
-                  />
-                ),
-              },
-              {
-                value: 'dark',
-                label: 'Dark',
-                icon: (
-                  <MaterialIcons
-                    name="dark-mode"
-                    size={18}
-                    color={appearanceMode === 'dark' ? theme.colors.primary : theme.colors.textSecondary}
-                  />
-                ),
-              },
-            ]}
-          />
+        <View style={[surface.overflowHidden, getCardStyle(uiKitTheme, { radius: 12 })]}>
+          {([
+            { value: 'system' as const, label: 'Auto', icon: 'brightness-auto' as const },
+            { value: 'light' as const, label: 'Light', icon: 'light-mode' as const },
+            { value: 'dark' as const, label: 'Dark', icon: 'dark-mode' as const },
+          ]).map((opt, idx, arr) => {
+            const selected = appearanceMode === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                onPress={() => setAppearanceMode(opt.value)}
+                style={({ pressed }) => [
+                  styles.radioRow,
+                  pressed && { opacity: 0.7 },
+                  idx < arr.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: uiKitTheme.border.secondary },
+                ]}
+              >
+                <MaterialIcons
+                  name={opt.icon}
+                  size={20}
+                  color={selected ? theme.colors.primary : theme.colors.textSecondary}
+                  style={{ marginRight: 12 }}
+                />
+                <AppText variant="body" style={{ flex: 1, color: uiKitTheme.text.primary }}>
+                  {opt.label}
+                </AppText>
+                <View
+                  style={[
+                    styles.radioOuter,
+                    { borderColor: selected ? theme.colors.primary : uiKitTheme.border.primary },
+                  ]}
+                >
+                  {selected && (
+                    <View style={[styles.radioInner, { backgroundColor: theme.colors.primary }]} />
+                  )}
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
@@ -2396,5 +2396,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 44,
     minHeight: 44,
+  },
+  radioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });
