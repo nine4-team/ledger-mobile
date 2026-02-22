@@ -15,7 +15,8 @@
     "check:native-only": "node scripts/check-native-only.mjs",
     "lint": "eslint \"{app,src,scripts}/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint \"{app,src,scripts}/**/*.{js,jsx,ts,tsx}\" --fix",
-    "lint:styles": "eslint --config eslint.styles.config.mjs \"{app,src}/**/*.{js,jsx,ts,tsx}\""
+    "lint:styles": "eslint --config eslint.styles.config.mjs \"{app,src}/**/*.{js,jsx,ts,tsx}\"",
+    "test": "jest"
   },
   "dependencies": {
     "@nine4/ui-kit": "^0.2.1",
@@ -55,6 +56,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.0",
     "@eslint/js": "^9.39.2",
+    "@types/jest": "^30.0.0",
     "@types/react": "~18.3.12",
     "eslint": "^9.39.2",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -62,6 +64,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-native": "^5.0.0",
+    "jest-expo": "^54.0.17",
+    "ts-jest": "^29.4.6",
     "typescript": "~5.3.3",
     "typescript-eslint": "^8.54.0"
   },

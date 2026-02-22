@@ -12,7 +12,7 @@ export type ScopeConfig = {
     supportsInventoryOnlyStatusFilter?: boolean;
 
     // Items
-    canAllocateToProject?: boolean;
+    canSellToProject?: boolean;
   };
   fields?: {
     showBusinessInventoryLocation?: boolean;
@@ -28,7 +28,7 @@ export function createProjectScopeConfig(projectId: string): ScopeConfig {
     capabilities: {
       canExportCsv: true,
       supportsInventoryOnlyStatusFilter: false,
-      canAllocateToProject: false,
+      canSellToProject: false,
     },
   };
 }
@@ -38,7 +38,7 @@ export function createInventoryScopeConfig(): ScopeConfig {
     scope: 'inventory',
     capabilities: {
       canExportCsv: false,
-      canAllocateToProject: true,
+      canSellToProject: true,
     },
     fields: {
       showBusinessInventoryLocation: true,

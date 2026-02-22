@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
@@ -12,7 +12,9 @@ import { MediaGallerySection } from '../../../src/components/MediaGallerySection
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { DetailRow } from '../../../src/components/DetailRow';
-import { FormBottomSheet } from '../../../src/components/FormBottomSheet';
+import { BottomSheet } from '../../../src/components/BottomSheet';
+import { AppButton } from '../../../src/components/AppButton';
+import { ProjectSelector } from '../../../src/components/ProjectSelector';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -23,7 +25,6 @@ import {
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
-import { getTextInputStyle } from '../../../src/ui/styles/forms';
 import { deleteItem, Item, subscribeToItem, updateItem } from '../../../src/data/itemsService';
 import {
   mapBudgetCategories,
@@ -84,8 +85,10 @@ export default function ItemDetailScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState('');
-  const [targetProjectId, setTargetProjectId] = useState('');
-  const [targetCategoryId, setTargetCategoryId] = useState('');
+  const [sellToProjectVisible, setSellToProjectVisible] = useState(false);
+  const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
+  const [sellDestCategoryId, setSellDestCategoryId] = useState<string | null>(null);
+  const [sellSourceCategoryId, setSellSourceCategoryId] = useState<string | null>(null);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -93,7 +96,6 @@ export default function ItemDetailScreen() {
     notes: true,
     details: true,
   });
-  const [moveSheetVisible, setMoveSheetVisible] = useState(false);
   const [statusMenuVisible, setStatusMenuVisible] = useState(false);
 
   // Load transaction data for hero card (cache-first for offline-first pattern)
@@ -251,15 +253,15 @@ export default function ItemDetailScreen() {
     updateItem(accountId, id, { bookmark: next });
   };
 
-  const handleSellToInventory = async () => {
+  const handleSellToInventory = () => {
     if (!accountId || !id || !projectId) return;
     if (!item?.budgetCategoryId) {
       setError(
-        "Can’t move to Design Business Inventory yet. Link this item to a categorized transaction first."
+        "Can’t sell to Business Inventory yet. Link this item to a categorized transaction first."
       );
       return;
     }
-    await requestProjectToBusinessSale({
+    requestProjectToBusinessSale({
       accountId,
       projectId,
       items: [item],
@@ -276,30 +278,6 @@ export default function ItemDetailScreen() {
     updateItem(accountId, id, { projectId: null, transactionId: null, spaceId: null });
   };
 
-  const handleAllocateToProject = async () => {
-    if (!accountId || !id || !targetProjectId.trim() || !targetCategoryId.trim() || !item) return;
-    await requestBusinessToProjectPurchase({
-      accountId,
-      targetProjectId: targetProjectId.trim(),
-      budgetCategoryId: targetCategoryId.trim(),
-      items: [item],
-    });
-    setTargetProjectId('');
-    setTargetCategoryId('');
-  };
-
-  const handleMoveToProject = async () => {
-    if (!accountId || !id || !projectId || !targetProjectId.trim() || !targetCategoryId.trim() || !item) return;
-    await requestProjectToProjectMove({
-      accountId,
-      sourceProjectId: projectId,
-      targetProjectId: targetProjectId.trim(),
-      budgetCategoryId: targetCategoryId.trim(),
-      items: [item],
-    });
-    setTargetProjectId('');
-    setTargetCategoryId('');
-  };
 
   const handleDelete = () => {
     if (!accountId || !id) return;
@@ -415,37 +393,29 @@ export default function ItemDetailScreen() {
 
     if (scope === 'inventory') {
       items.push({
-        label: 'Move',
-        icon: 'swap-horiz',
+        label: 'Sell',
+        icon: 'sell',
         actionOnly: true,
         subactions: [
-          { key: 'allocate', label: 'Allocate to Project', onPress: handleAllocateToProject, icon: 'assignment' },
+          { key: 'sell-to-project', label: 'Sell to Project', onPress: () => setSellToProjectVisible(true), icon: 'assignment' },
         ],
       });
     } else {
       items.push({
-        label: 'Move Item',
-        icon: 'swap-horiz',
-        onPress: () => setMoveSheetVisible(true),
-      });
-      items.push({
-        label: 'Move (Advanced)',
-        icon: 'settings',
+        label: 'Sell',
+        icon: 'sell',
         actionOnly: true,
         subactions: [
-          {
-            key: 'move-to-business',
-            label: 'Move to Business Inventory',
-            onPress: handleMoveToInventoryCorrection,
-            icon: 'inventory',
-          },
-          {
-            key: 'sell-to-business',
-            label: 'Sell to Design Business',
-            onPress: handleSellToInventory,
-            icon: 'sell',
-          },
-          { key: 'move-to-project', label: 'Move to Project (Deprecated)', onPress: handleMoveToProject, icon: 'assignment' },
+          { key: 'sell-to-business', label: 'Sell to Business', onPress: handleSellToInventory, icon: 'inventory' },
+          { key: 'sell-to-project', label: 'Sell to Project', onPress: () => setSellToProjectVisible(true), icon: 'assignment' },
+        ],
+      });
+      items.push({
+        label: 'Move',
+        icon: 'swap-horiz',
+        actionOnly: true,
+        subactions: [
+          { key: 'move-to-inventory', label: 'Move to Inventory', onPress: handleMoveToInventoryCorrection, icon: 'inventory' },
         ],
       });
     }
@@ -458,11 +428,9 @@ export default function ItemDetailScreen() {
 
     return items;
   }, [
-    handleAllocateToProject,
     handleDelete,
     handleLinkTransaction,
     handleMoveToInventoryCorrection,
-    handleMoveToProject,
     handleSellToInventory,
     handleUnlinkTransaction,
     id,
@@ -717,40 +685,130 @@ export default function ItemDetailScreen() {
         showLeadingIcons={true}
       />
 
-      {/* Move Item Bottom Sheet */}
-      <FormBottomSheet
-        visible={moveSheetVisible}
-        onRequestClose={() => setMoveSheetVisible(false)}
-        title="Move Item"
-        primaryAction={{
-          title: 'Move',
-          onPress: () => {
-            handleMoveToProject();
-            setMoveSheetVisible(false);
-          },
-          disabled: !targetProjectId.trim() || !targetCategoryId.trim(),
-        }}
-      >
-        <View style={styles.moveForm}>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-            Move to another project
+      {/* Sell to Project modal */}
+      <BottomSheet visible={sellToProjectVisible} onRequestClose={() => setSellToProjectVisible(false)}>
+        <View style={[styles.moveForm, { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }]}>
+          <AppText variant="body" style={{ fontWeight: '700' }}>
+            Sell to Project
           </AppText>
-          <TextInput
-            value={targetProjectId}
-            onChangeText={setTargetProjectId}
-            placeholder="Target project id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
-          />
-          <TextInput
-            value={targetCategoryId}
-            onChangeText={setTargetCategoryId}
-            placeholder="Destination category id"
-            placeholderTextColor={theme.colors.textSecondary}
-            style={getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 })}
+          {accountId && (
+            <View style={{ gap: 8 }}>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                Target project
+              </AppText>
+              <ProjectSelector
+                accountId={accountId}
+                value={sellTargetProjectId}
+                onChange={setSellTargetProjectId}
+                excludeProjectId={projectId}
+              />
+            </View>
+          )}
+          {sellTargetProjectId && (
+            <View style={{ gap: 8 }}>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                Destination category
+              </AppText>
+              {Object.entries(budgetCategories).length === 0 ? (
+                <AppText variant="caption">Loading categories...</AppText>
+              ) : (
+                <ScrollView style={{ maxHeight: 200 }}>
+                  {Object.entries(budgetCategories)
+                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                    .map(([catId, cat]) => (
+                      <Pressable
+                        key={catId}
+                        onPress={() => setSellDestCategoryId(catId)}
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          paddingVertical: 10,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          backgroundColor: sellDestCategoryId === catId ? uiKitTheme.background.surface : undefined,
+                        }}
+                      >
+                        <AppText variant="body">{cat.name}</AppText>
+                        {sellDestCategoryId === catId && (
+                          <AppText variant="body" style={{ color: theme.colors.primary }}>✓</AppText>
+                        )}
+                      </Pressable>
+                    ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+          {sellTargetProjectId && scope === 'project' && item && !item.budgetCategoryId && (
+            <View style={{ gap: 8 }}>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                Source category (item is uncategorized)
+              </AppText>
+              {Object.entries(budgetCategories).length === 0 ? (
+                <AppText variant="caption">Loading categories...</AppText>
+              ) : (
+                <ScrollView style={{ maxHeight: 150 }}>
+                  {Object.entries(budgetCategories)
+                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                    .map(([catId, cat]) => (
+                      <Pressable
+                        key={catId}
+                        onPress={() => setSellSourceCategoryId(catId)}
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          paddingVertical: 10,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          backgroundColor: sellSourceCategoryId === catId ? uiKitTheme.background.surface : undefined,
+                        }}
+                      >
+                        <AppText variant="body">{cat.name}</AppText>
+                        {sellSourceCategoryId === catId && (
+                          <AppText variant="body" style={{ color: theme.colors.primary }}>✓</AppText>
+                        )}
+                      </Pressable>
+                    ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+          <AppButton
+            title="Confirm Sale"
+            variant="primary"
+            disabled={!sellTargetProjectId || !sellDestCategoryId}
+            onPress={() => {
+              if (!accountId || !sellTargetProjectId || !sellDestCategoryId || !item) return;
+              if (scope === 'project' && projectId) {
+                // Flow C: Project → Project
+                const sourceCatId = item.budgetCategoryId ?? sellSourceCategoryId;
+                if (!sourceCatId) return;
+                requestProjectToProjectMove({
+                  accountId,
+                  sourceProjectId: projectId,
+                  targetProjectId: sellTargetProjectId,
+                  destinationBudgetCategoryId: sellDestCategoryId,
+                  items: [{ ...item, budgetCategoryId: sourceCatId }],
+                });
+              } else {
+                // Flow B: Inventory → Project
+                requestBusinessToProjectPurchase({
+                  accountId,
+                  targetProjectId: sellTargetProjectId,
+                  budgetCategoryId: sellDestCategoryId,
+                  items: [item],
+                });
+              }
+              setSellToProjectVisible(false);
+              setSellTargetProjectId(null);
+              setSellDestCategoryId(null);
+              setSellSourceCategoryId(null);
+            }}
+            style={{ minHeight: 44 }}
           />
         </View>
-      </FormBottomSheet>
+      </BottomSheet>
 
       {/* Status Change Menu */}
       <BottomSheetMenuList

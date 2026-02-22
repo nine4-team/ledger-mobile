@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
@@ -24,8 +24,10 @@ import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
 import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
 import { deleteItem, updateItem, type Item } from '../data/itemsService';
-import { requestBusinessToProjectPurchase, requestProjectToBusinessSale } from '../data/inventoryOperations';
+import { requestBusinessToProjectPurchase, requestProjectToBusinessSale, requestProjectToProjectMove } from '../data/inventoryOperations';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
+import { ProjectSelector } from './ProjectSelector';
+import { resolveSourceCategories, resolveDestinationCategories, needsSourceCategoryPicker, needsDestinationCategoryPicker, type ItemForCategoryResolution } from '../utils/bulkSaleUtils';
 import { resolveAttachmentUri } from '../offline/media';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
@@ -219,13 +221,14 @@ export function SharedItemsList({
   const [isLoading, setIsLoading] = useState(true);
   const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
-  const [bulkSpaceId, setBulkSpaceId] = useState('');
-  const [bulkProjectId, setBulkProjectId] = useState('');
-  const [bulkCategoryId, setBulkCategoryId] = useState('');
-  const [bulkSourceCategoryId, setBulkSourceCategoryId] = useState('');
-  const [bulkError, setBulkError] = useState<string | null>(null);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
-  const [sourceCategoryMenuOpen, setSourceCategoryMenuOpen] = useState(false);
+  const [sellToBusinessVisible, setSellToBusinessVisible] = useState(false);
+  const [sellToProjectVisible, setSellToProjectVisible] = useState(false);
+  const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
+  const [sellSourceCategoryId, setSellSourceCategoryId] = useState<string | null>(null);
+  const [sellDestCategoryId, setSellDestCategoryId] = useState<string | null>(null);
+  const [sellBudgetCategories, setSellBudgetCategories] = useState<Record<string, { name: string }>>({});
+  const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [statusMenuItemId, setStatusMenuItemId] = useState<string | null>(null);
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
@@ -234,11 +237,6 @@ export function SharedItemsList({
     [uiKitTheme]
   );
   const primaryTextStyle = useMemo(() => getTextColorStyle(theme.colors.primary), [theme]);
-  const errorTextStyle = useMemo(() => getTextColorStyle(theme.colors.error), [theme]);
-  const filterInputThemeStyle = useMemo(
-    () => ({ borderColor: uiKitTheme.border.primary, color: theme.colors.text }),
-    [uiKitTheme, theme]
-  );
   const selectButtonThemeStyle = useMemo(
     () => ({
       backgroundColor: uiKitTheme.button.secondary.background,
@@ -299,7 +297,6 @@ export function SharedItemsList({
     } else {
       setInternalSelectedIds([]);
     }
-    setBulkError(null);
   }, [embedded, externalManager]);
 
   const selectAll = useCallback(() => {
@@ -339,6 +336,30 @@ export function SharedItemsList({
       setBudgetCategories(mapBudgetCategories(next));
     });
   }, [accountId, embedded]);
+
+  // Subscribe to source project budget categories when sell-to-business modal is open
+  useEffect(() => {
+    if (!sellToBusinessVisible || embedded) return;
+    if (!accountId || scopeConfig?.scope !== 'project' || !scopeConfig.projectId) {
+      setSellBudgetCategories({});
+      return;
+    }
+    return subscribeToBudgetCategories(accountId, (next) => {
+      setSellBudgetCategories(mapBudgetCategories(next));
+    });
+  }, [sellToBusinessVisible, accountId, scopeConfig, embedded]);
+
+  // Subscribe to target project budget categories when sell-to-project modal is open
+  useEffect(() => {
+    if (!sellToProjectVisible || embedded || !sellTargetProjectId) {
+      setSellDestBudgetCategories({});
+      return;
+    }
+    if (!accountId) return;
+    return subscribeToBudgetCategories(accountId, (next) => {
+      setSellDestBudgetCategories(mapBudgetCategories(next));
+    });
+  }, [sellToProjectVisible, sellTargetProjectId, accountId, embedded]);
 
   useEffect(() => {
     if (embedded) return; // Skip in embedded mode
@@ -534,15 +555,6 @@ export function SharedItemsList({
     clearSelection();
   }, [accountId, selectedIds, clearSelection]);
 
-  const handleBulkMoveToSpace = useCallback(() => {
-    if (!accountId || selectedIds.length === 0 || !bulkSpaceId.trim()) return;
-    selectedIds.forEach((id) => {
-      updateItem(accountId, id, { spaceId: bulkSpaceId.trim() });
-    });
-    clearSelection();
-    setBulkSpaceId('');
-  }, [accountId, bulkSpaceId, selectedIds, clearSelection]);
-
   const handleBulkRemoveFromSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
@@ -550,79 +562,6 @@ export function SharedItemsList({
     });
     clearSelection();
   }, [accountId, selectedIds, clearSelection]);
-
-  const handleBulkAllocateToProject = useCallback(() => {
-    if (!accountId || selectedIds.length === 0 || !bulkProjectId.trim()) return;
-    if (!bulkCategoryId.trim()) {
-      setBulkError('Select a destination category before allocating.');
-      return;
-    }
-    setBulkError(null);
-    requestBusinessToProjectPurchase({
-      accountId,
-      targetProjectId: bulkProjectId.trim(),
-      budgetCategoryId: bulkCategoryId.trim(),
-      items: items.filter((item) => selectedIds.includes(item.id)),
-    });
-    clearSelection();
-    setBulkProjectId('');
-    setBulkCategoryId('');
-  }, [accountId, bulkCategoryId, bulkProjectId, items, selectedIds, clearSelection]);
-
-  const handleBulkSellToBusiness = useCallback(() => {
-    if (!accountId || selectedIds.length === 0 || !scopeConfig || scopeConfig.scope !== 'project') return;
-    const selected = items.filter((item) => selectedIds.includes(item.id));
-    const missingCategory = selected.find((item) => !item.budgetCategoryId);
-    if (missingCategory && !bulkSourceCategoryId.trim()) {
-      setBulkError('Select a source category for uncategorized items before selling.');
-      return;
-    }
-    setBulkError(null);
-    requestProjectToBusinessSale({
-      accountId,
-      projectId: scopeConfig.projectId ?? '',
-      budgetCategoryId: bulkSourceCategoryId.trim() || undefined,
-      items: selected,
-    });
-    clearSelection();
-    setBulkSourceCategoryId('');
-  }, [accountId, bulkSourceCategoryId, items, scopeConfig, selectedIds, clearSelection]);
-
-  const bulkSourceCategoryLabel = useMemo(() => {
-    if (!bulkSourceCategoryId.trim()) return 'No source category';
-    return budgetCategories[bulkSourceCategoryId]?.name ?? bulkSourceCategoryId;
-  }, [budgetCategories, bulkSourceCategoryId]);
-
-  const sourceCategoryMenuItems: AnchoredMenuItem[] = useMemo(() => {
-    const options = Object.entries(budgetCategories)
-      .map(([id, cat]) => ({ id, label: cat.name }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-    if (options.length === 0) {
-      return [
-        {
-          key: 'empty',
-          label: 'No Categories Yet',
-          onPress: () => {},
-        },
-      ];
-    }
-
-    return [
-      {
-        key: 'none',
-        label: 'No Source Category',
-        icon: !bulkSourceCategoryId.trim() ? 'check' : undefined,
-        onPress: () => setBulkSourceCategoryId(''),
-      },
-      ...options.map((option) => ({
-        key: option.id,
-        label: option.label,
-        icon: bulkSourceCategoryId === option.id ? 'check' : undefined,
-        onPress: () => setBulkSourceCategoryId(option.id),
-      })),
-    ];
-  }, [budgetCategories, bulkSourceCategoryId]);
 
   const handleToggleSort = useCallback(() => {
     setSortOpen(true);
@@ -840,6 +779,72 @@ export function SharedItemsList({
     ];
   }, [embedded, externalGetItemMenuItems, handleOpenItem, handleDeleteItem]);
 
+  const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
+    if (embedded || !scopeConfig) return [];
+    const items: AnchoredMenuItem[] = [];
+
+    if (scopeConfig.scope === 'project') {
+      items.push({
+        key: 'sell',
+        label: 'Sell',
+        icon: 'sell',
+        actionOnly: true,
+        subactions: [
+          {
+            key: 'sell-to-business',
+            label: 'Sell to Business',
+            icon: 'inventory',
+            onPress: () => {
+              setSellSourceCategoryId(null);
+              setSellToBusinessVisible(true);
+            },
+          },
+          {
+            key: 'sell-to-project',
+            label: 'Sell to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setSellTargetProjectId(null);
+              setSellSourceCategoryId(null);
+              setSellDestCategoryId(null);
+              setSellToProjectVisible(true);
+            },
+          },
+        ],
+      });
+    }
+
+    if (scopeConfig.scope === 'inventory' && scopeConfig.capabilities?.canSellToProject) {
+      items.push({
+        key: 'sell',
+        label: 'Sell',
+        icon: 'sell',
+        actionOnly: true,
+        subactions: [
+          {
+            key: 'sell-to-project',
+            label: 'Sell to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setSellTargetProjectId(null);
+              setSellDestCategoryId(null);
+              setSellToProjectVisible(true);
+            },
+          },
+        ],
+      });
+    }
+
+    items.push({
+      key: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      onPress: handleBulkDelete,
+    });
+
+    return items;
+  }, [embedded, scopeConfig, handleBulkDelete]);
+
   return (
     <View style={styles.container}>
       {picker ? (
@@ -900,36 +905,30 @@ export function SharedItemsList({
           <FilterMenu visible={filtersOpen} onRequestClose={() => setFiltersOpen(false)} items={filterMenuItems} />
         </>
       )}
-      <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
-        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Bulk actions
-          </AppText>
-        </View>
-        <View style={styles.bulkSheetContent}>
-          <View style={styles.bulkHeader}>
-            <AppText variant="caption" style={styles.semiboldText}>
-              {selectedIds.length} selected
+      {embedded && externalBulkActions ? (
+        <BottomSheet visible={bulkSheetOpen} onRequestClose={() => setBulkSheetOpen(false)}>
+          <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+            <AppText variant="body" style={styles.bulkSheetTitle}>
+              Bulk Actions
             </AppText>
-            <Pressable onPress={clearSelection}>
-              <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
-                Done
-              </AppText>
-            </Pressable>
           </View>
-          {bulkError ? (
-            <AppText variant="caption" style={errorTextStyle}>
-              {bulkError}
-            </AppText>
-          ) : null}
-          <View style={styles.bulkActions}>
-            {embedded && externalBulkActions ? (
-              // Render custom bulk actions in embedded mode
-              externalBulkActions.map((action) => (
+          <View style={styles.bulkSheetContent}>
+            <View style={styles.bulkHeader}>
+              <AppText variant="caption" style={styles.semiboldText}>
+                {selectedIds.length} selected
+              </AppText>
+              <Pressable onPress={clearSelection}>
+                <AppText variant="caption" style={[styles.semiboldText, primaryTextStyle]}>
+                  Done
+                </AppText>
+              </Pressable>
+            </View>
+            <View style={styles.bulkActions}>
+              {externalBulkActions.map((action) => (
                 <AppButton
                   key={action.id}
                   title={action.label}
-                  variant={action.destructive ? 'secondary' : 'secondary'}
+                  variant="secondary"
                   onPress={() => {
                     action.onPress(selectedIds);
                     setBulkSheetOpen(false);
@@ -939,93 +938,222 @@ export function SharedItemsList({
                     action.destructive ? { backgroundColor: theme.colors.error } : undefined,
                   ]}
                 />
-              ))
-            ) : (
-              // Render default standalone bulk actions
-              <>
-            <View style={styles.bulkActionGroup}>
-              <TextInput
-                value={bulkSpaceId}
-                onChangeText={setBulkSpaceId}
-                placeholder="Target space id"
-                placeholderTextColor={theme.colors.textSecondary}
-                style={[styles.filterInput, filterInputThemeStyle]}
-              />
-              <AppButton
-                title="Move to Space"
-                variant="secondary"
-                onPress={handleBulkMoveToSpace}
-                style={styles.bulkActionButton}
-              />
-              <AppButton
-                title="Remove from Space"
-                variant="secondary"
-                onPress={handleBulkRemoveFromSpace}
-                style={styles.bulkActionButton}
-              />
+              ))}
             </View>
-            {scopeConfig?.scope === 'inventory' ? (
-              <View style={styles.bulkActionGroup}>
-                <TextInput
-                  value={bulkProjectId}
-                  onChangeText={setBulkProjectId}
-                  placeholder="Target project id"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={[styles.filterInput, filterInputThemeStyle]}
-                />
-                <TextInput
-                  value={bulkCategoryId}
-                  onChangeText={setBulkCategoryId}
-                  placeholder="Destination category id"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  style={[styles.filterInput, filterInputThemeStyle]}
-                />
-                <AppButton
-                  title="Allocate to Project"
-                  variant="secondary"
-                  onPress={handleBulkAllocateToProject}
-                  style={styles.bulkActionButton}
-                />
-              </View>
-            ) : null}
-            {scopeConfig?.scope === 'project' ? (
-              <View style={styles.bulkActionGroup}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Select source category"
-                  onPress={() => setSourceCategoryMenuOpen(true)}
-                  style={[styles.filterInput, filterInputThemeStyle, styles.categoryPicker]}
-                >
-                  <AppText variant="caption" style={styles.categoryPickerLabel}>
-                    Source category (for uncategorized)
-                  </AppText>
-                  <AppText variant="body">{bulkSourceCategoryLabel}</AppText>
-                </Pressable>
-                <AppButton
-                  title="Sell to Business"
-                  variant="secondary"
-                  onPress={handleBulkSellToBusiness}
-                  style={styles.bulkActionButton}
-                />
-              </View>
-            ) : null}
-                <AppButton
-                  title="Delete"
-                  variant="secondary"
-                  onPress={handleBulkDelete}
-                  style={styles.bulkActionButton}
-                />
-              </>
-            )}
           </View>
+        </BottomSheet>
+      ) : (
+        <BottomSheetMenuList
+          visible={bulkSheetOpen}
+          onRequestClose={() => setBulkSheetOpen(false)}
+          items={standaloneBulkMenuItems}
+          title={`Bulk Actions (${selectedIds.length})`}
+          showLeadingIcons={true}
+        />
+      )}
+      {/* Sell to Business modal (Flow A: Project -> Business) */}
+      <BottomSheet visible={sellToBusinessVisible} onRequestClose={() => setSellToBusinessVisible(false)}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Sell {selectedIds.length} Item(s) to Business
+          </AppText>
+        </View>
+        <View style={styles.bulkSheetContent}>
+          {needsSourceCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[]) && (
+            <View style={styles.bulkActionGroup}>
+              <AppText variant="caption" style={styles.semiboldText}>
+                Source category (for uncategorized items)
+              </AppText>
+              {Object.entries(sellBudgetCategories).length === 0 ? (
+                <AppText variant="caption">No categories available</AppText>
+              ) : (
+                <ScrollView horizontal={false} style={{ maxHeight: 200 }}>
+                  {Object.entries(sellBudgetCategories)
+                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                    .map(([id, cat]) => (
+                      <Pressable
+                        key={id}
+                        onPress={() => setSellSourceCategoryId(id)}
+                        style={[styles.categoryOption, sellSourceCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
+                      >
+                        <AppText variant="body">{cat.name}</AppText>
+                        {sellSourceCategoryId === id && (
+                          <AppText variant="body" style={primaryTextStyle}>✓</AppText>
+                        )}
+                      </Pressable>
+                    ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+          <AppButton
+            title="Confirm Sale"
+            variant="primary"
+            onPress={() => {
+              if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId) return;
+              const selected = items.filter(i => selectedIds.includes(i.id));
+              const resolved = resolveSourceCategories(
+                selected as ItemForCategoryResolution[],
+                sellSourceCategoryId,
+              );
+              if (resolved.length === 0) return;
+              const itemsWithCategories = resolved.map(r => {
+                const original = selected.find(s => s.id === r.id)!;
+                return { ...original, budgetCategoryId: r.resolvedCategoryId };
+              });
+              requestProjectToBusinessSale({
+                accountId,
+                projectId: scopeConfig.projectId,
+                items: itemsWithCategories,
+              });
+              setSellToBusinessVisible(false);
+              clearSelection();
+            }}
+            style={styles.bulkActionButton}
+          />
         </View>
       </BottomSheet>
-      <BottomSheetMenuList
-        visible={sourceCategoryMenuOpen}
-        onRequestClose={() => setSourceCategoryMenuOpen(false)}
-        items={sourceCategoryMenuItems}
-        title="Source Category"
-      />
+      {/* Sell to Project modal (Flow B: Inventory->Project, Flow C: Project->Project) */}
+      <BottomSheet visible={sellToProjectVisible} onRequestClose={() => setSellToProjectVisible(false)}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Sell {selectedIds.length} Item(s) to Project
+          </AppText>
+        </View>
+        <View style={styles.bulkSheetContent}>
+          {accountId && (
+            <View style={styles.bulkActionGroup}>
+              <AppText variant="caption" style={styles.semiboldText}>
+                Target project
+              </AppText>
+              <ProjectSelector
+                accountId={accountId}
+                value={sellTargetProjectId}
+                onChange={setSellTargetProjectId}
+                excludeProjectId={scopeConfig?.projectId}
+              />
+            </View>
+          )}
+          {sellTargetProjectId && (() => {
+            const selected = items.filter(i => selectedIds.includes(i.id));
+            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+            const needsDest = needsDestinationCategoryPicker(selected as ItemForCategoryResolution[], validDestIds);
+            const needsSource = scopeConfig?.scope === 'project' && needsSourceCategoryPicker(selected as ItemForCategoryResolution[]);
+            return (
+              <>
+                {needsDest && (
+                  <View style={styles.bulkActionGroup}>
+                    <AppText variant="caption" style={styles.semiboldText}>
+                      Destination category
+                    </AppText>
+                    {Object.entries(sellDestBudgetCategories).length === 0 ? (
+                      <AppText variant="caption">Loading categories...</AppText>
+                    ) : (
+                      <ScrollView horizontal={false} style={{ maxHeight: 150 }}>
+                        {Object.entries(sellDestBudgetCategories)
+                          .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                          .map(([id, cat]) => (
+                            <Pressable
+                              key={id}
+                              onPress={() => setSellDestCategoryId(id)}
+                              style={[styles.categoryOption, sellDestCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
+                            >
+                              <AppText variant="body">{cat.name}</AppText>
+                              {sellDestCategoryId === id && (
+                                <AppText variant="body" style={primaryTextStyle}>✓</AppText>
+                              )}
+                            </Pressable>
+                          ))}
+                      </ScrollView>
+                    )}
+                  </View>
+                )}
+                {needsSource && (
+                  <View style={styles.bulkActionGroup}>
+                    <AppText variant="caption" style={styles.semiboldText}>
+                      Source category (for uncategorized items)
+                    </AppText>
+                    {Object.entries(sellBudgetCategories).length === 0 ? (
+                      <AppText variant="caption">Loading categories...</AppText>
+                    ) : (
+                      <ScrollView horizontal={false} style={{ maxHeight: 150 }}>
+                        {Object.entries(sellBudgetCategories)
+                          .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+                          .map(([id, cat]) => (
+                            <Pressable
+                              key={id}
+                              onPress={() => setSellSourceCategoryId(id)}
+                              style={[styles.categoryOption, sellSourceCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
+                            >
+                              <AppText variant="body">{cat.name}</AppText>
+                              {sellSourceCategoryId === id && (
+                                <AppText variant="body" style={primaryTextStyle}>✓</AppText>
+                              )}
+                            </Pressable>
+                          ))}
+                      </ScrollView>
+                    )}
+                  </View>
+                )}
+              </>
+            );
+          })()}
+          <AppButton
+            title="Confirm Sale"
+            variant="primary"
+            disabled={!sellTargetProjectId}
+            onPress={() => {
+              if (!accountId || !sellTargetProjectId) return;
+              const selected = items.filter(i => selectedIds.includes(i.id));
+
+              if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
+                // Flow C: Project -> Project (two-hop)
+                const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+                const resolvedDest = resolveDestinationCategories(
+                  selected as ItemForCategoryResolution[],
+                  validDestIds,
+                  sellDestCategoryId,
+                );
+                const resolvedSource = resolveSourceCategories(
+                  selected as ItemForCategoryResolution[],
+                  sellSourceCategoryId,
+                );
+                if (resolvedDest.length === 0) return;
+                const destCategoryId = resolvedDest[0].resolvedCategoryId;
+                requestProjectToProjectMove({
+                  accountId,
+                  sourceProjectId: scopeConfig.projectId,
+                  targetProjectId: sellTargetProjectId,
+                  destinationBudgetCategoryId: destCategoryId,
+                  items: resolvedSource.map(r => {
+                    const original = selected.find(s => s.id === r.id)!;
+                    return { ...original, budgetCategoryId: r.resolvedCategoryId };
+                  }),
+                });
+              } else {
+                // Flow B: Business -> Project
+                const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+                const resolvedDest = resolveDestinationCategories(
+                  selected as ItemForCategoryResolution[],
+                  validDestIds,
+                  sellDestCategoryId,
+                );
+                if (resolvedDest.length === 0) return;
+                const destCategoryId = resolvedDest[0].resolvedCategoryId;
+                requestBusinessToProjectPurchase({
+                  accountId,
+                  targetProjectId: sellTargetProjectId,
+                  budgetCategoryId: destCategoryId,
+                  items: selected,
+                });
+              }
+              setSellToProjectVisible(false);
+              clearSelection();
+            }}
+            style={styles.bulkActionButton}
+          />
+        </View>
+      </BottomSheet>
       <BottomSheetMenuList
         visible={!!statusMenuItemId}
         onRequestClose={() => setStatusMenuItemId(null)}
@@ -1525,12 +1653,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  filterInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
   bulkSheetTitleRow: {
     paddingHorizontal: 16,
     paddingBottom: 10,
@@ -1565,10 +1687,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
-  categoryPicker: {
-    gap: 4,
-  },
-  categoryPickerLabel: {
-    fontWeight: '600',
+  categoryOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
 });
