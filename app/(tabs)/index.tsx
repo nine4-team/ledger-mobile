@@ -1,6 +1,6 @@
 import { RefreshControl, StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
@@ -12,11 +12,9 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { createRepository } from '../../src/data/repository';
 import { useAuthStore } from '../../src/auth/authStore';
-import { subscribeToBudgetCategories, type BudgetCategory } from '../../src/data/budgetCategoriesService';
 import { fetchProjectPreferencesMap, ensureProjectPreferences, type ProjectPreferences } from '../../src/data/projectPreferencesService';
-import { refreshProjectBudgetCategories, type ProjectBudgetCategory } from '../../src/data/projectBudgetCategoriesService';
-import { refreshProjectBudgetProgress, type BudgetProgress } from '../../src/data/budgetProgressService';
 import { ProjectCard } from '../../src/components/ProjectCard';
+import type { ProjectBudgetSummary } from '../../src/data/projectService';
 
 export default function ProjectsScreen() {
   const router = useRouter();
@@ -49,10 +47,7 @@ type ProjectSummary = {
   clientName?: string | null;
   isArchived?: boolean | null;
   mainImageUrl?: string | null;
-  budgetSummary?: {
-    totalCents?: number | null;
-    pinnedCategories?: { id: string; name?: string | null; spentCents?: number | null }[];
-  } | null;
+  budgetSummary?: ProjectBudgetSummary | null;
 };
 
 function ProjectsList() {
@@ -63,10 +58,7 @@ function ProjectsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [projectPreferences, setProjectPreferences] = useState<Record<string, { pinnedBudgetCategoryIds: string[] }>>({});
-  const [projectBudgetCategoriesMap, setProjectBudgetCategoriesMap] = useState<Record<string, Record<string, ProjectBudgetCategory>>>({});
-  const [budgetProgressMap, setBudgetProgressMap] = useState<Record<string, BudgetProgress>>({});
   const screenTabs = useScreenTabs();
   const tabKey = screenTabs?.selectedKey === 'archived' ? 'archived' : 'active';
   const theme = useTheme();
@@ -76,16 +68,6 @@ function ProjectsList() {
       setProjects([]);
       setIsLoading(false);
     }
-  }, [accountId]);
-
-  useEffect(() => {
-    if (!accountId) {
-      setBudgetCategories([]);
-      return;
-    }
-    return subscribeToBudgetCategories(accountId, (next) => {
-      setBudgetCategories(next);
-    });
   }, [accountId]);
 
   useEffect(() => {
@@ -160,63 +142,6 @@ function ProjectsList() {
       });
   }, [accountId, projects, userId]);
 
-  // Re-fetch project budget data on every focus (including initial mount)
-  // so cards reflect edits made in the project edit screen.
-  useFocusEffect(
-    useCallback(() => {
-      if (!accountId || projects.length === 0) {
-        setProjectBudgetCategoriesMap({});
-        return;
-      }
-      let cancelled = false;
-      const loadProjectCategories = async () => {
-        const categoriesMap: Record<string, Record<string, ProjectBudgetCategory>> = {};
-        await Promise.all(
-          projects.map(async (project) => {
-            const categories = await refreshProjectBudgetCategories(accountId, project.id, 'offline');
-            categoriesMap[project.id] = categories.reduce((acc, cat) => {
-              acc[cat.id] = cat;
-              return acc;
-            }, {} as Record<string, ProjectBudgetCategory>);
-          })
-        );
-        if (!cancelled) {
-          setProjectBudgetCategoriesMap(categoriesMap);
-        }
-      };
-      void loadProjectCategories();
-      return () => {
-        cancelled = true;
-      };
-    }, [accountId, projects])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!accountId || projects.length === 0) {
-        setBudgetProgressMap({});
-        return;
-      }
-      let cancelled = false;
-      const loadProgress = async () => {
-        const progressMap: Record<string, BudgetProgress> = {};
-        await Promise.all(
-          projects.map(async (project) => {
-            const progress = await refreshProjectBudgetProgress(accountId, project.id, 'offline');
-            progressMap[project.id] = progress;
-          })
-        );
-        if (!cancelled) {
-          setBudgetProgressMap(progressMap);
-        }
-      };
-      void loadProgress();
-      return () => {
-        cancelled = true;
-      };
-    }, [accountId, projects])
-  );
-
   const sortedProjects = useMemo(() => {
     const filtered =
       tabKey === 'archived'
@@ -278,9 +203,7 @@ function ProjectsList() {
                   name={project.name}
                   clientName={project.clientName}
                   mainImageUrl={project.mainImageUrl}
-                  budgetCategories={budgetCategories}
-                  projectBudgetCategories={projectBudgetCategoriesMap[project.id] ?? {}}
-                  budgetProgress={budgetProgressMap[project.id] ?? { spentCents: 0, spentByCategory: {} }}
+                  budgetSummary={project.budgetSummary ?? null}
                   pinnedCategoryIds={projectPreferences[project.id]?.pinnedBudgetCategoryIds ?? []}
                   onPress={() => router.push(`/project/${project.id}?tab=items`)}
                 />

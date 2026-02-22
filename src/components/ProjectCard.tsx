@@ -7,15 +7,14 @@ import { resolveAttachmentUri } from '../offline/media';
 import type { BudgetCategory } from '../data/budgetCategoriesService';
 import type { ProjectBudgetCategory } from '../data/projectBudgetCategoriesService';
 import type { BudgetProgress } from '../data/budgetProgressService';
+import type { ProjectBudgetSummary } from '../data/projectService';
 
 export type ProjectCardProps = {
   projectId: string;
   name?: string | null;
   clientName?: string | null;
   mainImageUrl?: string | null;
-  budgetCategories: BudgetCategory[];
-  projectBudgetCategories: Record<string, ProjectBudgetCategory>;
-  budgetProgress: BudgetProgress;
+  budgetSummary: ProjectBudgetSummary | null;
   pinnedCategoryIds: string[];
   onPress: () => void;
 };
@@ -24,9 +23,7 @@ export function ProjectCard({
   name,
   clientName,
   mainImageUrl,
-  budgetCategories,
-  projectBudgetCategories,
-  budgetProgress,
+  budgetSummary,
   pinnedCategoryIds,
   onPress,
 }: ProjectCardProps) {
@@ -37,6 +34,47 @@ export function ProjectCard({
     const resolved = resolveAttachmentUri({ url: mainImageUrl, kind: 'image' });
     return resolved ?? (mainImageUrl.startsWith('offline://') ? null : mainImageUrl);
   }, [mainImageUrl]);
+
+  // Adapt denormalized budgetSummary into the shapes BudgetProgressPreview expects
+  const { budgetCategories, projectBudgetCategories, budgetProgress } = useMemo(() => {
+    if (!budgetSummary) {
+      return {
+        budgetCategories: [] as BudgetCategory[],
+        projectBudgetCategories: {} as Record<string, ProjectBudgetCategory>,
+        budgetProgress: { spentCents: 0, spentByCategory: {} } as BudgetProgress,
+      };
+    }
+
+    const cats: BudgetCategory[] = [];
+    const projBudgetCats: Record<string, ProjectBudgetCategory> = {};
+    const spentByCategory: Record<string, number> = {};
+
+    for (const [catId, catData] of Object.entries(budgetSummary.categories)) {
+      cats.push({
+        id: catId,
+        name: catData.name,
+        isArchived: catData.isArchived,
+        metadata: {
+          categoryType: catData.categoryType as 'general' | 'itemized' | 'fee' | undefined,
+          excludeFromOverallBudget: catData.excludeFromOverallBudget,
+        },
+      });
+      projBudgetCats[catId] = {
+        id: catId,
+        budgetCents: catData.budgetCents,
+      };
+      spentByCategory[catId] = catData.spentCents;
+    }
+
+    return {
+      budgetCategories: cats,
+      projectBudgetCategories: projBudgetCats,
+      budgetProgress: {
+        spentCents: budgetSummary.spentCents,
+        spentByCategory,
+      },
+    };
+  }, [budgetSummary]);
 
   return (
     <ImageCard

@@ -3,6 +3,22 @@ import { db, isFirebaseConfigured } from '../firebase/firebase';
 import { trackPendingWrite } from '../sync/pendingWrites';
 import { createRepository } from './repository';
 
+export type BudgetSummaryCategory = {
+  budgetCents: number;
+  spentCents: number;
+  name: string;
+  categoryType: string | null;
+  excludeFromOverallBudget: boolean;
+  isArchived: boolean;
+};
+
+export type ProjectBudgetSummary = {
+  spentCents: number;
+  totalBudgetCents: number;
+  categories: Record<string, BudgetSummaryCategory>;
+  updatedAt?: unknown;
+};
+
 export type Project = {
   id: string;
   accountId: string;
@@ -11,6 +27,7 @@ export type Project = {
   description?: string | null;
   mainImageUrl?: string | null;
   isArchived?: boolean | null;
+  budgetSummary?: ProjectBudgetSummary | null;
   createdAt?: unknown;
   updatedAt?: unknown;
 };

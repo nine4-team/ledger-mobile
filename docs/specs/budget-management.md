@@ -213,6 +213,41 @@ type Item = {
 
 ---
 
+### Project Budget Summary (Denormalized)
+
+**Firestore Path**: `accounts/{accountId}/projects/{projectId}` (field on project document)
+
+```typescript
+type BudgetSummaryCategory = {
+  budgetCents: number;                     // From ProjectBudgetCategory.budgetCents
+  spentCents: number;                      // Computed from matching transactions
+  name: string;                            // From BudgetCategory.name
+  categoryType: string | null;             // From BudgetCategory.metadata.categoryType
+  excludeFromOverallBudget: boolean;       // From BudgetCategory.metadata.excludeFromOverallBudget
+  isArchived: boolean;                     // From BudgetCategory.isArchived
+};
+
+type ProjectBudgetSummary = {
+  spentCents: number;                      // Overall spent (excluding excludeFromOverallBudget categories)
+  totalBudgetCents: number;                // Overall budget (excluding excludeFromOverallBudget categories)
+  categories: Record<string, BudgetSummaryCategory>; // Only categories with non-zero budget or spend
+  updatedAt: Timestamp;                    // Server timestamp of last recalculation
+};
+```
+
+**Purpose**: Enables the projects list to display budget progress bars without extra queries. The summary is denormalized from three data sources (transactions, project budget categories, account-level budget categories) onto the project document.
+
+**Maintained by**: Cloud Function triggers (`onTransactionWritten`, `onProjectBudgetCategoryWritten`, `onAccountBudgetCategoryWritten`) that perform full, idempotent recalculation on every relevant write.
+
+**Triggers**:
+- Transaction created, updated, or deleted → recalculate affected project(s)
+- Project budget category created, updated, or deleted → recalculate the project
+- Account-level budget category created, updated, or deleted → recalculate all projects in account (when relevant fields change: name, isArchived, categoryType, excludeFromOverallBudget)
+
+**Not included**: `pinnedBudgetCategoryIds` — this is per-user and remains in `ProjectPreferences`
+
+---
+
 ## Budget Progress Calculation
 
 ### Overall Budget Spent
