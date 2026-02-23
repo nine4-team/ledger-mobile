@@ -1050,6 +1050,7 @@ export function SharedItemsList({
                     executeBulkReassignToInventory({ accountId, items: selected });
                     setReassignToInventoryVisible(false);
                     clearSelection();
+                    showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} reassigned to inventory`);
                   }}
                   style={styles.bulkActionButton}
                 />
@@ -1077,6 +1078,7 @@ export function SharedItemsList({
           executeBulkReassignToProject({ accountId, items: selected, targetProjectId: tpId });
           setReassignToProjectVisible(false);
           clearSelection();
+          showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} reassigned to project`);
         }}
       />
       {/* Bulk Set Space */}
@@ -1215,6 +1217,7 @@ export function SharedItemsList({
           reassignItemToProject(accountId, singleItemId, tpId);
           setSingleItemReassignToProjectVisible(false);
           setSingleItemId(null);
+          showToast('Item reassigned to project');
         }}
       />
       <BottomSheetMenuList

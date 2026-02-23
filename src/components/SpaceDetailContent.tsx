@@ -44,6 +44,7 @@ import { useItemsManager } from '../hooks/useItemsManager';
 import { SharedItemsList } from './SharedItemsList';
 import { BulkSelectionBar } from './BulkSelectionBar';
 import { SelectorCircle } from './SelectorCircle';
+import { showToast } from './toastStore';
 
 // --- Types ---
 
@@ -738,6 +739,7 @@ export function SpaceDetailContent({
                 reassignItemToInventory(accountId, item.id);
               });
               itemsManager.clearSelection();
+              showToast(`${eligible.length} item${eligible.length === 1 ? '' : 's'} reassigned to inventory`);
             },
           },
         ]);
@@ -930,7 +932,7 @@ export function SpaceDetailContent({
                 }
                 Alert.alert('Reassign to Inventory', 'Reassign this item to business inventory? No sale or purchase records will be created.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Reassign', onPress: () => { reassignItemToInventory(accountId, item.id); } },
+                  { text: 'Reassign', onPress: () => { reassignItemToInventory(accountId, item.id); showToast('Item reassigned to inventory'); } },
                 ]);
               } : undefined,
               onReassignToProject: scopeConfig.scope === 'project' ? () => {
@@ -1276,6 +1278,7 @@ export function SpaceDetailContent({
             });
             setSellToBusinessVisible(false);
             itemsManager.clearSelection();
+            showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} sold to business`);
           }}
         />
       )}
@@ -1313,6 +1316,7 @@ export function SpaceDetailContent({
           });
           setSellToProjectVisible(false);
           itemsManager.clearSelection();
+          showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} sold to project`);
         }}
       />
 
@@ -1336,6 +1340,7 @@ export function SpaceDetailContent({
           executeBulkReassignToProject({ accountId, items: selected, targetProjectId: tpId });
           setReassignToProjectVisible(false);
           itemsManager.clearSelection();
+          showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} reassigned to project`);
         }}
       />
 
@@ -1419,6 +1424,7 @@ export function SpaceDetailContent({
             });
             setSingleItemSellToBusinessVisible(false);
             setSingleItemId(null);
+            showToast('Item sold to business');
           }}
         />
       )}
@@ -1453,6 +1459,7 @@ export function SpaceDetailContent({
           });
           setSingleItemSellToProjectVisible(false);
           setSingleItemId(null);
+          showToast('Item sold to project');
         }}
       />
 
@@ -1467,6 +1474,7 @@ export function SpaceDetailContent({
           reassignItemToProject(accountId, singleItemId, tpId);
           setSingleItemReassignToProjectVisible(false);
           setSingleItemId(null);
+          showToast('Item reassigned to project');
         }}
       />
 

@@ -14,10 +14,12 @@ import { ITEM_STATUSES } from '../constants/itemStatuses';
 // Types
 // ---------------------------------------------------------------------------
 
-export type MenuContext = 'list' | 'detail' | 'space';
+export type MenuContext = 'list' | 'detail' | 'space' | 'transaction';
 
 export type SingleItemCallbacks = {
+  onViewItem?: () => void;
   onEditOrOpen: () => void;
+  onMakeCopies?: () => void;
   onStatusChange: (status: string) => void;
   onSetTransaction: () => void;
   onClearTransaction: () => void;
@@ -68,12 +70,36 @@ export function buildSingleItemMenu(params: {
   context: MenuContext;
   scopeConfig: ScopeConfig;
   callbacks: SingleItemCallbacks;
+  selectedStatus?: string | null;
 }): AnchoredMenuItem[] {
-  const { context, scopeConfig, callbacks } = params;
+  const { context, scopeConfig, callbacks, selectedStatus } = params;
   const items: AnchoredMenuItem[] = [];
 
-  // First item: Edit Details or Open
-  if (context === 'space') {
+  // First items: View, Edit/Open, Make Copies
+  if (context === 'transaction') {
+    if (callbacks.onViewItem) {
+      items.push({
+        key: 'view',
+        label: 'View Item',
+        icon: 'open-in-new',
+        onPress: callbacks.onViewItem,
+      });
+    }
+    items.push({
+      key: 'edit',
+      label: 'Edit Details',
+      icon: 'edit',
+      onPress: callbacks.onEditOrOpen,
+    });
+    if (callbacks.onMakeCopies) {
+      items.push({
+        key: 'make-copies',
+        label: 'Make Copies',
+        icon: 'content-copy',
+        onPress: callbacks.onMakeCopies,
+      });
+    }
+  } else if (context === 'space') {
     items.push({
       key: 'open',
       label: 'Open',
@@ -95,7 +121,7 @@ export function buildSingleItemMenu(params: {
     label: s.label,
     onPress: () => callbacks.onStatusChange(s.key),
   }));
-  if (context === 'detail') {
+  if (context === 'detail' || context === 'transaction') {
     statusSubactions.push({
       key: 'clear-status',
       label: 'Clear Status',
@@ -107,20 +133,34 @@ export function buildSingleItemMenu(params: {
     label: 'Status',
     icon: 'flag',
     actionOnly: true,
+    selectedSubactionKey: selectedStatus ?? undefined,
     subactions: statusSubactions,
   });
 
   // Transaction submenu
-  items.push({
-    key: 'transaction',
-    label: 'Transaction',
-    icon: 'link',
-    actionOnly: true,
-    subactions: [
-      { key: 'set-transaction', label: 'Set Transaction', icon: 'link', onPress: callbacks.onSetTransaction },
-      { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
-    ],
-  });
+  if (context === 'transaction') {
+    // Already linked — only offer to clear
+    items.push({
+      key: 'transaction',
+      label: 'Transaction',
+      icon: 'link',
+      actionOnly: true,
+      subactions: [
+        { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
+      ],
+    });
+  } else {
+    items.push({
+      key: 'transaction',
+      label: 'Transaction',
+      icon: 'link',
+      actionOnly: true,
+      subactions: [
+        { key: 'set-transaction', label: 'Set Transaction', icon: 'link', onPress: callbacks.onSetTransaction },
+        { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
+      ],
+    });
+  }
 
   // Space submenu
   items.push({

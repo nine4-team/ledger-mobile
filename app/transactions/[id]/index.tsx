@@ -55,6 +55,8 @@ import {
   AuditSection,
   type MediaHandlers,
 } from './sections';
+import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
+import { showToast } from '../../../src/components/toastStore';
 
 type TransactionDetailParams = {
   id?: string;
@@ -146,6 +148,11 @@ export default function TransactionDetailScreen() {
   const handleToggleSection = useCallback((key: string) => {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  const scopeConfig = useMemo(
+    () => scope === 'inventory' ? createInventoryScopeConfig() : projectId ? createProjectScopeConfig(projectId) : null,
+    [scope, projectId],
+  );
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -745,6 +752,7 @@ export default function TransactionDetailScreen() {
           text: "Reassign",
           onPress: () => {
             reassignItemToInventory(accountId, itemId);
+            showToast('Item reassigned to inventory');
           },
         },
       ]
@@ -828,107 +836,32 @@ export default function TransactionDetailScreen() {
     updateItem(accountId, itemId, { spaceId: null });
   };
 
-  // Enhanced item context menu (Phase C)
-  const getItemMenuItems = useCallback((item: ScopedItem): AnchoredMenuItem[] => [
-    {
-      label: 'View Item',
-      onPress: () => router.push(`/items/${item.id}`),
-      icon: 'open-in-new',
-    },
-    {
-      label: 'Edit',
-      onPress: () => router.push(`/items/${item.id}/edit`),
-      icon: 'edit',
-    },
-    {
-      label: 'Make Copies',
-      onPress: () => handleDuplicateItem(item.id),
-      icon: 'content-copy',
-    },
-    {
-      label: 'Transaction',
-      icon: 'link',
-      actionOnly: true,
-      subactions: [
-        { key: 'clear-transaction', label: 'Clear Transaction', onPress: () => handleRemoveLinkedItem(item.id), icon: 'link-off' },
-      ],
-    },
-    {
-      label: 'Space',
-      icon: 'place',
-      actionOnly: true,
-      subactions: [
-        { key: 'set-space', label: 'Set Space', onPress: () => handleSetSpace(item.id), icon: 'place' },
-        { key: 'clear-space', label: 'Clear Space', onPress: () => handleClearSpace(item.id), icon: 'close' },
-      ],
-    },
-    {
-      label: 'Status',
-      subactions: [
-        {
-          key: 'to-purchase',
-          label: 'To Purchase',
-          onPress: () => handleSetStatus(item.id, 'to-purchase'),
-        },
-        {
-          key: 'purchased',
-          label: 'Purchased',
-          onPress: () => handleSetStatus(item.id, 'purchased'),
-        },
-        {
-          key: 'to-return',
-          label: 'To Return',
-          onPress: () => handleSetStatus(item.id, 'to-return'),
-        },
-        {
-          key: 'returned',
-          label: 'Returned',
-          onPress: () => handleSetStatus(item.id, 'returned'),
-        },
-      ],
-      selectedSubactionKey: item.status ?? undefined,
-    },
-    {
-      label: 'Sell',
-      actionOnly: true,
-      info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
-      subactions: [
-        {
-          key: 'sell-to-design',
-          label: 'Sell to Design Business',
-          onPress: () => handleSellToDesign(item.id),
-        },
-        {
-          key: 'sell-to-project',
-          label: 'Sell to Project',
-          onPress: () => handleSellToProject(item.id),
-        },
-      ],
-    },
-    {
-      label: 'Reassign',
-      actionOnly: true,
-      info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
-      subactions: [
-        {
-          key: 'reassign-to-inventory',
-          label: 'Reassign to Inventory',
-          onPress: () => handleReassignItemToInventory(item.id),
-        },
-        {
-          key: 'reassign-to-project',
-          label: 'Reassign to Project',
-          onPress: () => handleReassignItemToProject(item.id),
-        },
-      ],
-    },
-    {
-      label: 'Delete',
-      onPress: () => handleDeleteItem(item.id),
-      icon: 'delete',
-      destructive: true,
-    },
-  ], [router]);
+  // Item context menu — uses canonical builder for consistency across all contexts
+  const getItemMenuItems = useCallback((item: ScopedItem): AnchoredMenuItem[] => {
+    if (!scopeConfig) return [];
+    return buildSingleItemMenu({
+      context: 'transaction',
+      scopeConfig,
+      selectedStatus: item.status ?? null,
+      callbacks: {
+        onViewItem: () => router.push(`/items/${item.id}`),
+        onEditOrOpen: () => router.push(`/items/${item.id}/edit`),
+        onMakeCopies: () => handleDuplicateItem(item.id),
+        onStatusChange: (status) => handleSetStatus(item.id, status),
+        onSetTransaction: () => {},
+        onClearTransaction: () => handleRemoveLinkedItem(item.id),
+        onSetSpace: () => handleSetSpace(item.id),
+        onClearSpace: () => handleClearSpace(item.id),
+        onSellToBusiness: scopeConfig.scope === 'project' ? () => handleSellToDesign(item.id) : undefined,
+        onSellToProject: () => handleSellToProject(item.id),
+        onReassignToInventory: scopeConfig.scope === 'project' ? () => handleReassignItemToInventory(item.id) : undefined,
+        onReassignToProject: () => handleReassignItemToProject(item.id),
+        onDelete: () => handleDeleteItem(item.id),
+      },
+    });
+  }, [scopeConfig, router, handleDuplicateItem, handleSetStatus, handleRemoveLinkedItem,
+      handleSetSpace, handleClearSpace, handleSellToDesign, handleSellToProject,
+      handleReassignItemToInventory, handleReassignItemToProject, handleDeleteItem]);
 
   const handleCreateItem = () => {
     router.push({
@@ -1831,6 +1764,7 @@ export default function TransactionDetailScreen() {
                         reassignItemToProject(accountId, singleItemReassignId, tpId);
                         setSingleItemReassignProjectVisible(false);
                         setSingleItemReassignId(null);
+                        showToast('Item reassigned to project');
                       },
                     },
                   ]
@@ -1863,6 +1797,7 @@ export default function TransactionDetailScreen() {
                 });
                 setSingleItemSellToBusinessVisible(false);
                 setSingleItemSellId(null);
+                showToast('Item sold to business');
               }}
             />
 
@@ -1907,6 +1842,7 @@ export default function TransactionDetailScreen() {
                 }
                 setSingleItemSellToProjectVisible(false);
                 setSingleItemSellId(null);
+                showToast('Item sold to project');
               }}
             />
           </>
