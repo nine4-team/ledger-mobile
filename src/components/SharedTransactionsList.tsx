@@ -1029,7 +1029,10 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             {
               title: '',
               variant: 'secondary',
-              onPress: () => setShowSearch(!showSearch),
+              onPress: () => {
+                if (showSearch) setQuery('');
+                setShowSearch(!showSearch);
+              },
               iconName: 'search',
               active: showSearch,
             },
