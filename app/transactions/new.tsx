@@ -13,11 +13,15 @@ import { layout } from '../../src/ui';
 import { createTransaction } from '../../src/data/transactionsService';
 import { saveLocalMedia } from '../../src/offline/media';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../src/data/budgetCategoriesService';
+import { moveItemToReturnTransaction } from '../../src/data/returnFlowService';
 
 type NewTransactionParams = {
   scope?: string;
   projectId?: string;
   backTarget?: string;
+  transactionType?: string;
+  linkItemIds?: string;
+  linkItemFromTransactionId?: string;
 };
 
 function parseCurrency(value: string): number | null {
@@ -34,6 +38,9 @@ export default function NewTransactionScreen() {
   const scope = Array.isArray(params.scope) ? params.scope[0] : params.scope;
   const projectId = Array.isArray(params.projectId) ? params.projectId[0] : params.projectId;
   const backTarget = Array.isArray(params.backTarget) ? params.backTarget[0] : params.backTarget;
+  const transactionType = Array.isArray(params.transactionType) ? params.transactionType[0] : params.transactionType;
+  const linkItemIds = Array.isArray(params.linkItemIds) ? params.linkItemIds[0] : params.linkItemIds;
+  const linkItemFromTransactionId = Array.isArray(params.linkItemFromTransactionId) ? params.linkItemFromTransactionId[0] : params.linkItemFromTransactionId;
   const accountId = useAccountContextStore((store) => store.accountId);
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
@@ -44,7 +51,7 @@ export default function NewTransactionScreen() {
   const [purchasedBy, setPurchasedBy] = useState('');
   const [reimbursementType, setReimbursementType] = useState('');
   const [notes, setNotes] = useState('');
-  const [type, setType] = useState('');
+  const [type, setType] = useState(transactionType ?? '');
   const [budgetCategoryId, setBudgetCategoryId] = useState('');
   const [hasEmailReceipt, setHasEmailReceipt] = useState(false);
   const [receipts, setReceipts] = useState<string[]>([]);
@@ -151,7 +158,7 @@ export default function NewTransactionScreen() {
       }
     }
     setError(null);
-    createTransaction(accountId, {
+    const newTxId = createTransaction(accountId, {
       source: source.trim(),
       transactionDate: transactionDate.trim() || null,
       amountCents,
@@ -159,7 +166,7 @@ export default function NewTransactionScreen() {
       purchasedBy: purchasedBy.trim() || null,
       reimbursementType: reimbursementType.trim() || null,
       notes: notes.trim() || null,
-      type: type.trim() || null,
+      transactionType: type.trim() || null,
       budgetCategoryId: budgetCategoryId.trim(),
       hasEmailReceipt,
       taxRatePct: taxRateValue,
@@ -168,6 +175,22 @@ export default function NewTransactionScreen() {
       otherImages: images.map((url) => ({ url, kind: 'image' })),
       projectId: scope === 'project' ? projectId ?? null : null,
     });
+
+    // Link items from the return flow (fire-and-forget per offline-first rules)
+    if (linkItemIds) {
+      const itemIds = linkItemIds.split(',').filter(Boolean);
+      for (const itemId of itemIds) {
+        moveItemToReturnTransaction({
+          accountId,
+          itemId,
+          fromTransactionId: linkItemFromTransactionId || null,
+          returnTransactionId: newTxId,
+          fromProjectId: projectId ?? null,
+          toProjectId: projectId ?? null,
+        });
+      }
+    }
+
     router.replace(fallbackTarget);
   };
 
