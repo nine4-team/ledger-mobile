@@ -40,6 +40,10 @@ export interface FormFieldProps {
    * Additional TextInput props.
    */
   inputProps?: Omit<TextInputProps, 'value' | 'onChangeText' | 'editable' | 'placeholder' | 'style'>;
+  /**
+   * Additional style applied to the TextInput (merged with themed style).
+   */
+  inputStyle?: TextInputProps['style'];
 }
 
 /**
@@ -66,6 +70,7 @@ export function FormField({
   errorText,
   helperText,
   inputProps,
+  inputStyle: inputStyleProp,
 }: FormFieldProps) {
   const uiKitTheme = useUIKitTheme();
 
@@ -93,6 +98,7 @@ export function FormField({
           inputStyle,
           disabled ? styles.disabledInput : null,
           errorText ? { borderColor: uiKitTheme.status.missed.text } : null,
+          inputStyleProp,
         ]}
         placeholderTextColor={uiKitTheme.input.placeholder}
         autoCorrect={false}

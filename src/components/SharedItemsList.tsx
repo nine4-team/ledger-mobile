@@ -40,7 +40,9 @@ import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
 import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
 import { showToast } from './toastStore';
 import { usePickerMode, type ItemEligibilityCheck } from '../hooks/usePickerMode';
+import { useReturnTransactionPicker } from '../hooks/useReturnTransactionPicker';
 import { ItemPickerControlBar } from './ItemPickerControlBar';
+import { ReturnTransactionPickerModal } from './modals/ReturnTransactionPickerModal';
 
 type BulkAction = {
   id: string;
@@ -316,6 +318,14 @@ export function SharedItemsList({
       setInternalSelectedIds([]);
     }
   }, [embedded, externalManager]);
+
+  const returnPicker = useReturnTransactionPicker({
+    accountId,
+    scopeConfig: scopeConfig ?? null,
+    getItemTransactionId: (itemId) => items.find(i => i.id === itemId)?.transactionId ?? null,
+    projectId: scopeConfig?.projectId ?? null,
+    onComplete: clearSelection,
+  });
 
   const selectAll = useCallback(() => {
     if (embedded && externalManager) {
@@ -753,12 +763,12 @@ export function SharedItemsList({
 
   const handleStatusChange = useCallback((itemId: string, newStatus: string) => {
     if (!accountId) return;
-    updateItem(accountId, itemId, { status: newStatus }).catch((error) => {
-      console.error('Failed to update item status:', error);
-    });
+    updateItem(accountId, itemId, { status: newStatus });
     setStatusMenuItemId(null);
-    showToast('Status updated');
-  }, [accountId]);
+    if (newStatus === 'returned') {
+      returnPicker.openForItem(itemId);
+    }
+  }, [accountId, returnPicker]);
 
   const statusMenuItems = useMemo<AnchoredMenuItem[]>(() => {
     return [
@@ -823,7 +833,7 @@ export function SharedItemsList({
       context: 'list',
       scopeConfig,
       callbacks: {
-        onEditOrOpen: () => router.push({ pathname: '/items/[id]/edit', params: { id: item.id, scope: scopeConfig.scope ?? '', projectId: scopeConfig.projectId ?? '' } }),
+        onEditOrOpen: () => router.push({ pathname: '/items/[id]', params: { id: item.id, scope: scopeConfig.scope ?? '', projectId: scopeConfig.projectId ?? '' } }),
         onStatusChange: (status) => handleStatusChange(item.id, status),
         onSetTransaction: () => { setSingleItemId(item.id); setSingleItemTransactionPickerVisible(true); },
         onClearTransaction: () => { if (accountId) { updateItem(accountId, item.id, { transactionId: null }); showToast('Transaction unlinked'); } },
@@ -854,9 +864,13 @@ export function SharedItemsList({
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { status });
     });
-    clearSelection();
     showToast(`Status updated for ${count} item${count === 1 ? '' : 's'}`);
-  }, [accountId, selectedIds, clearSelection]);
+    if (status === 'returned') {
+      returnPicker.openForItems([...selectedIds]);
+    } else {
+      clearSelection();
+    }
+  }, [accountId, selectedIds, clearSelection, returnPicker]);
 
   const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
     if (embedded || !scopeConfig) return [];
@@ -873,10 +887,11 @@ export function SharedItemsList({
         onSellToProject: () => { setSellTargetProjectId(null); setSellToProjectVisible(true); },
         onReassignToInventory: scopeConfig.scope === 'project' ? () => setReassignToInventoryVisible(true) : undefined,
         onReassignToProject: () => setReassignToProjectVisible(true),
+        onMoveToReturnTransaction: () => returnPicker.openForItems([...selectedIds]),
         onDelete: () => handleBulkDelete(),
       },
     });
-  }, [embedded, scopeConfig, handleBulkStatusChange, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete]);
+  }, [embedded, scopeConfig, handleBulkStatusChange, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete, returnPicker, selectedIds]);
 
   return (
     <View style={styles.container}>
@@ -1244,6 +1259,17 @@ export function SharedItemsList({
         items={statusMenuItems}
         title="Change Status"
       />
+      {!embedded && scopeConfig && (
+        <ReturnTransactionPickerModal
+          visible={returnPicker.visible}
+          onRequestClose={returnPicker.close}
+          accountId={accountId!}
+          scopeConfig={scopeConfig}
+          onConfirm={returnPicker.handleConfirm}
+          onCreateNew={returnPicker.handleCreateNew}
+          subtitle={returnPicker.subtitle}
+        />
+      )}
       {embedded ? (
         // Embedded mode: picker uses FlatList (virtualized); non-picker uses View (parent handles scroll)
         groupedRows.length === 0 ? (

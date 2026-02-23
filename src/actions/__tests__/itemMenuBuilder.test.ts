@@ -57,10 +57,10 @@ describe('buildSingleItemMenu', () => {
     });
 
     const keys = items.map((i) => i.key);
-    expect(keys).toEqual(['edit', 'status', 'transaction', 'space', 'sell', 'reassign', 'delete']);
+    expect(keys).toEqual(['open', 'status', 'transaction', 'space', 'sell', 'reassign', 'delete']);
 
-    expect(items[0].label).toBe('Edit Details');
-    expect(items[0].icon).toBe('edit');
+    expect(items[0].label).toBe('Open');
+    expect(items[0].icon).toBe('open-in-new');
 
     expect(items[items.length - 1].label).toBe('Delete');
     expect(items[items.length - 1].icon).toBe('delete');
@@ -187,10 +187,9 @@ describe('buildSingleItemMenu', () => {
       callbacks,
     });
 
-    // Edit calls onEditOrOpen
-    const edit = items.find((i) => i.key === 'edit');
-    edit!.onPress!();
-    expect(callbacks.onEditOrOpen).toHaveBeenCalledTimes(1);
+    // Detail context no longer has an edit/open item (editing is inline)
+    const edit = items.find((i) => i.key === 'edit' || i.key === 'open');
+    expect(edit).toBeUndefined();
 
     // Status subaction calls onStatusChange with key
     const status = items.find((i) => i.key === 'status');
@@ -324,5 +323,77 @@ describe('buildBulkMenu', () => {
     const secondStatus = status!.subactions![1];
     secondStatus.onPress();
     expect(callbacks.onStatusChange).toHaveBeenCalledWith(ITEM_STATUSES[1].key);
+  });
+
+  it('with onMoveToReturnTransaction — Transaction submenu includes return subaction', () => {
+    const callbacks = mockBulkCallbacks();
+    callbacks.onMoveToReturnTransaction = jest.fn();
+    const items = buildBulkMenu({
+      context: 'list',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeDefined();
+    expect(returnAction!.label).toBe('Move to Return Transaction');
+    expect(returnAction!.icon).toBe('assignment-return');
+  });
+
+  it('with onMoveToReturnTransaction — pressing subaction calls the callback', () => {
+    const callbacks = mockBulkCallbacks();
+    callbacks.onMoveToReturnTransaction = jest.fn();
+    const items = buildBulkMenu({
+      context: 'list',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    returnAction!.onPress();
+    expect(callbacks.onMoveToReturnTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('without onMoveToReturnTransaction — Transaction submenu has no return subaction', () => {
+    const callbacks = mockBulkCallbacks();
+    const items = buildBulkMenu({
+      context: 'list',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeUndefined();
+  });
+
+  it('Transaction submenu always has Set and Clear Transaction alongside return', () => {
+    const callbacks = mockBulkCallbacks();
+    callbacks.onMoveToReturnTransaction = jest.fn();
+    const items = buildBulkMenu({
+      context: 'list',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const keys = txn!.subactions!.map((s) => s.key);
+    expect(keys).toEqual(['set-transaction', 'clear-transaction', 'move-to-return-transaction']);
+  });
+
+  it('space context with onMoveToReturnTransaction — return subaction is present', () => {
+    const callbacks = mockBulkCallbacks();
+    callbacks.onMoveToReturnTransaction = jest.fn();
+    const items = buildBulkMenu({
+      context: 'space',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeDefined();
   });
 });

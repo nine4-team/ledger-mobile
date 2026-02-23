@@ -18,7 +18,7 @@ export type MenuContext = 'list' | 'detail' | 'space' | 'transaction';
 
 export type SingleItemCallbacks = {
   onViewItem?: () => void;
-  onEditOrOpen: () => void;
+  onEditOrOpen?: () => void;
   onMakeCopies?: () => void;
   onStatusChange: (status: string) => void;
   onSetTransaction: () => void;
@@ -37,6 +37,7 @@ export type BulkCallbacks = {
   onStatusChange: (status: string) => void;
   onSetTransaction: () => void;
   onClearTransaction: () => void;
+  onMoveToReturnTransaction?: () => void;
   onSetSpace: () => void;
   onClearSpace: () => void;
   onSellToBusiness?: () => void;
@@ -76,22 +77,16 @@ export function buildSingleItemMenu(params: {
   const { context, scopeConfig, callbacks, selectedStatus } = params;
   const items: AnchoredMenuItem[] = [];
 
-  // First items: View, Edit/Open, Make Copies
+  // First items: Open/View, Make Copies
   if (context === 'transaction') {
-    if (callbacks.onViewItem) {
+    if (callbacks.onEditOrOpen) {
       items.push({
-        key: 'view',
-        label: 'View Item',
+        key: 'open',
+        label: 'Open Item',
         icon: 'open-in-new',
-        onPress: callbacks.onViewItem,
+        onPress: callbacks.onEditOrOpen,
       });
     }
-    items.push({
-      key: 'edit',
-      label: 'Edit Details',
-      icon: 'edit',
-      onPress: callbacks.onEditOrOpen,
-    });
     if (callbacks.onMakeCopies) {
       items.push({
         key: 'make-copies',
@@ -101,19 +96,23 @@ export function buildSingleItemMenu(params: {
       });
     }
   } else if (context === 'space') {
-    items.push({
-      key: 'open',
-      label: 'Open',
-      icon: 'open-in-new',
-      onPress: callbacks.onEditOrOpen,
-    });
-  } else {
-    items.push({
-      key: 'edit',
-      label: 'Edit Details',
-      icon: 'edit',
-      onPress: callbacks.onEditOrOpen,
-    });
+    if (callbacks.onEditOrOpen) {
+      items.push({
+        key: 'open',
+        label: 'Open',
+        icon: 'open-in-new',
+        onPress: callbacks.onEditOrOpen,
+      });
+    }
+  } else if (context === 'list') {
+    if (callbacks.onEditOrOpen) {
+      items.push({
+        key: 'open',
+        label: 'Open',
+        icon: 'open-in-new',
+        onPress: callbacks.onEditOrOpen,
+      });
+    }
   }
 
   // Status submenu
@@ -255,15 +254,24 @@ export function buildBulkMenu(params: {
   });
 
   // Transaction submenu
+  const txnSubactions: AnchoredMenuSubaction[] = [
+    { key: 'set-transaction', label: 'Set Transaction', icon: 'link', onPress: callbacks.onSetTransaction },
+    { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
+  ];
+  if (callbacks.onMoveToReturnTransaction) {
+    txnSubactions.push({
+      key: 'move-to-return-transaction',
+      label: 'Move to Return Transaction',
+      icon: 'assignment-return',
+      onPress: callbacks.onMoveToReturnTransaction,
+    });
+  }
   items.push({
     key: 'transaction',
     label: 'Transaction',
     icon: 'link',
     actionOnly: true,
-    subactions: [
-      { key: 'set-transaction', label: 'Set Transaction', icon: 'link', onPress: callbacks.onSetTransaction },
-      { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
-    ],
+    subactions: txnSubactions,
   });
 
   // Space submenu
