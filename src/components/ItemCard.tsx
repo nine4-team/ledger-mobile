@@ -342,7 +342,7 @@ export function ItemCard({
           onRequestClose={closeMenu}
           items={menuItems}
           title={name}
-          showLeadingIcons={false}
+          showLeadingIcons={true}
         />
       ) : null}
     </>

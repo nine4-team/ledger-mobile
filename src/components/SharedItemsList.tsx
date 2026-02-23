@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
@@ -18,9 +18,7 @@ import { BulkSelectionBar } from './BulkSelectionBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { getTextColorStyle, getTextSecondaryStyle, layout } from '../ui';
-import { getTextInputStyle } from '../ui/styles/forms';
-import { getTransaction } from '../data/transactionsService';
+import { getTextColorStyle, layout } from '../ui';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
@@ -28,8 +26,11 @@ import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/
 import { deleteItem, updateItem, type Item } from '../data/itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale, requestProjectToProjectMove } from '../data/inventoryOperations';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
-import { ProjectSelector } from './ProjectSelector';
-import { SpaceSelector } from './SpaceSelector';
+import { SetSpaceModal } from './modals/SetSpaceModal';
+import { ReassignToProjectModal } from './modals/ReassignToProjectModal';
+import { SellToProjectModal } from './modals/SellToProjectModal';
+import { SellToBusinessModal } from './modals/SellToBusinessModal';
+import { TransactionPickerModal } from './modals/TransactionPickerModal';
 import { resolveSourceCategories, resolveDestinationCategories, needsSourceCategoryPicker, needsDestinationCategoryPicker, type ItemForCategoryResolution } from '../utils/bulkSaleUtils';
 import { resolveAttachmentUri } from '../offline/media';
 import { filterItemsForBulkReassign, reassignItemToInventory, reassignItemToProject } from '../data/reassignService';
@@ -229,17 +230,20 @@ export function SharedItemsList({
   const [sellToBusinessVisible, setSellToBusinessVisible] = useState(false);
   const [sellToProjectVisible, setSellToProjectVisible] = useState(false);
   const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
-  const [sellSourceCategoryId, setSellSourceCategoryId] = useState<string | null>(null);
-  const [sellDestCategoryId, setSellDestCategoryId] = useState<string | null>(null);
   const [sellBudgetCategories, setSellBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [statusMenuItemId, setStatusMenuItemId] = useState<string | null>(null);
   const [reassignToInventoryVisible, setReassignToInventoryVisible] = useState(false);
   const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
-  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
   const [bulkSpacePickerVisible, setBulkSpacePickerVisible] = useState(false);
   const [bulkTransactionPickerVisible, setBulkTransactionPickerVisible] = useState(false);
-  const [bulkTransactionIdValue, setBulkTransactionIdValue] = useState('');
+  // Single-item modal state (for standalone per-item menus)
+  const [singleItemId, setSingleItemId] = useState<string | null>(null);
+  const [singleItemSpacePickerVisible, setSingleItemSpacePickerVisible] = useState(false);
+  const [singleItemTransactionPickerVisible, setSingleItemTransactionPickerVisible] = useState(false);
+  const [singleItemSellToBusinessVisible, setSingleItemSellToBusinessVisible] = useState(false);
+  const [singleItemSellToProjectVisible, setSingleItemSellToProjectVisible] = useState(false);
+  const [singleItemReassignToProjectVisible, setSingleItemReassignToProjectVisible] = useState(false);
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const bulkSheetDividerStyle = useMemo(
@@ -791,44 +795,42 @@ export function SharedItemsList({
       return externalGetItemMenuItems(item);
     }
 
-    // Default standalone menu items
-    return [
-      { key: 'open', label: 'Open', onPress: () => handleOpenItem(item.id) },
-      { key: 'delete', label: 'Delete', onPress: () => handleDeleteItem(item.id, label) },
-    ];
-  }, [embedded, externalGetItemMenuItems, handleOpenItem, handleDeleteItem]);
+    if (!scopeConfig) return [];
 
-  const handleBulkClearTransaction = useCallback(() => {
-    if (!accountId || selectedIds.length === 0) return;
-    selectedIds.forEach((id) => {
-      updateItem(accountId, id, { transactionId: null });
-    });
-    clearSelection();
-  }, [accountId, selectedIds, clearSelection]);
-
-  const handleBulkSetTransaction = useCallback(async () => {
-    const trimmed = bulkTransactionIdValue.trim();
-    if (!accountId || selectedIds.length === 0 || !trimmed) return;
-    const transaction = await getTransaction(accountId, trimmed, 'offline');
-    if (!transaction) {
-      Alert.alert('Not Found', 'Transaction not found.');
-      return;
-    }
-    selectedIds.forEach((itemId) => {
-      const update: Partial<Item> = { transactionId: transaction.id };
-      if (transaction.budgetCategoryId) {
-        update.budgetCategoryId = transaction.budgetCategoryId;
-      }
-      updateItem(accountId, itemId, update);
-    });
-    setBulkTransactionPickerVisible(false);
-    setBulkTransactionIdValue('');
-    clearSelection();
-  }, [accountId, selectedIds, bulkTransactionIdValue, clearSelection]);
-
-  const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
-    if (embedded || !scopeConfig) return [];
     const items: AnchoredMenuItem[] = [];
+
+    // Edit Details
+    items.push({
+      key: 'edit',
+      label: 'Edit Details',
+      icon: 'edit',
+      onPress: () => {
+        router.push({
+          pathname: '/items/[id]/edit',
+          params: {
+            id: item.id,
+            scope: scopeConfig.scope ?? '',
+            projectId: scopeConfig.projectId ?? '',
+          },
+        });
+      },
+    });
+
+    // Status submenu
+    items.push({
+      key: 'status',
+      label: 'Status',
+      icon: 'flag',
+      actionOnly: true,
+      subactions: [
+        ...ITEM_STATUSES.map(s => ({
+          key: s.key,
+          label: s.label,
+          onPress: () => handleStatusChange(item.id, s.key),
+        })),
+        { key: 'clear-status', label: 'Clear Status', onPress: () => handleStatusChange(item.id, '') },
+      ],
+    });
 
     // Transaction submenu
     items.push({
@@ -842,7 +844,181 @@ export function SharedItemsList({
           label: 'Set Transaction',
           icon: 'link',
           onPress: () => {
-            setBulkTransactionIdValue('');
+            setSingleItemId(item.id);
+            setSingleItemTransactionPickerVisible(true);
+          },
+        },
+        {
+          key: 'clear-transaction',
+          label: 'Clear Transaction',
+          icon: 'link-off',
+          onPress: () => { if (accountId) updateItem(accountId, item.id, { transactionId: null }); },
+        },
+      ],
+    });
+
+    // Space submenu
+    items.push({
+      key: 'space',
+      label: 'Space',
+      icon: 'place',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'set-space',
+          label: 'Set Space',
+          icon: 'place',
+          onPress: () => {
+            setSingleItemId(item.id);
+            setSingleItemSpacePickerVisible(true);
+          },
+        },
+        {
+          key: 'clear-space',
+          label: 'Clear Space',
+          icon: 'close',
+          onPress: () => { if (accountId) updateItem(accountId, item.id, { spaceId: null }); },
+        },
+      ],
+    });
+
+    // Sell submenu (scope-dependent)
+    if (scopeConfig.scope === 'project') {
+      items.push({
+        key: 'sell',
+        label: 'Sell',
+        icon: 'sell',
+        actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
+        subactions: [
+          {
+            key: 'sell-to-business',
+            label: 'Sell to Business',
+            icon: 'inventory',
+            onPress: () => {
+              setSingleItemId(item.id);
+              setSingleItemSellToBusinessVisible(true);
+            },
+          },
+          {
+            key: 'sell-to-project',
+            label: 'Sell to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setSingleItemId(item.id);
+              setSingleItemSellToProjectVisible(true);
+            },
+          },
+        ],
+      });
+
+      // Reassign submenu (project scope only)
+      items.push({
+        key: 'reassign',
+        label: 'Reassign',
+        icon: 'swap-horiz',
+        actionOnly: true,
+        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
+        subactions: [
+          {
+            key: 'reassign-to-inventory',
+            label: 'Reassign to Inventory',
+            icon: 'inventory',
+            onPress: () => {
+              if (!accountId) return;
+              reassignItemToInventory(accountId, item.id);
+            },
+          },
+          {
+            key: 'reassign-to-project',
+            label: 'Reassign to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setSingleItemId(item.id);
+              setSingleItemReassignToProjectVisible(true);
+            },
+          },
+        ],
+      });
+    } else if (scopeConfig.scope === 'inventory') {
+      items.push({
+        key: 'sell',
+        label: 'Sell',
+        icon: 'sell',
+        actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
+        subactions: [
+          {
+            key: 'sell-to-project',
+            label: 'Sell to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setSingleItemId(item.id);
+              setSingleItemSellToProjectVisible(true);
+            },
+          },
+        ],
+      });
+    }
+
+    // Delete
+    items.push({
+      key: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      onPress: () => handleDeleteItem(item.id, label),
+    });
+
+    return items;
+  }, [embedded, externalGetItemMenuItems, scopeConfig, accountId, router, handleStatusChange, handleDeleteItem]);
+
+  const handleBulkClearTransaction = useCallback(() => {
+    if (!accountId || selectedIds.length === 0) return;
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { transactionId: null });
+    });
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
+
+  const handleBulkStatusChange = useCallback((status: string) => {
+    if (!accountId || selectedIds.length === 0) return;
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { status });
+    });
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
+
+  const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
+    if (embedded || !scopeConfig) return [];
+    const items: AnchoredMenuItem[] = [];
+
+    // Status submenu
+    items.push({
+      key: 'status',
+      label: 'Status',
+      icon: 'flag',
+      actionOnly: true,
+      subactions: [
+        ...ITEM_STATUSES.map(s => ({
+          key: s.key,
+          label: s.label,
+          onPress: () => handleBulkStatusChange(s.key),
+        })),
+      ],
+    });
+
+    // Transaction submenu
+    items.push({
+      key: 'transaction',
+      label: 'Transaction',
+      icon: 'link',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'set-transaction',
+          label: 'Set Transaction',
+          icon: 'link',
+          onPress: () => {
             setBulkTransactionPickerVisible(true);
           },
         },
@@ -893,7 +1069,6 @@ export function SharedItemsList({
             label: 'Sell to Business',
             icon: 'inventory',
             onPress: () => {
-              setSellSourceCategoryId(null);
               setSellToBusinessVisible(true);
             },
           },
@@ -903,8 +1078,6 @@ export function SharedItemsList({
             icon: 'assignment',
             onPress: () => {
               setSellTargetProjectId(null);
-              setSellSourceCategoryId(null);
-              setSellDestCategoryId(null);
               setSellToProjectVisible(true);
             },
           },
@@ -924,7 +1097,6 @@ export function SharedItemsList({
             icon: 'assignment',
             onPress: () => {
               setSellTargetProjectId(null);
-              setSellDestCategoryId(null);
               setSellToProjectVisible(true);
             },
           },
@@ -954,7 +1126,6 @@ export function SharedItemsList({
             label: 'Reassign to Project',
             icon: 'assignment',
             onPress: () => {
-              setReassignTargetProjectId(null);
               setReassignToProjectVisible(true);
             },
           },
@@ -971,7 +1142,7 @@ export function SharedItemsList({
     });
 
     return items;
-  }, [embedded, scopeConfig, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete]);
+  }, [embedded, scopeConfig, handleBulkStatusChange, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete]);
 
   return (
     <View style={styles.container}>
@@ -1080,216 +1251,79 @@ export function SharedItemsList({
         />
       )}
       {/* Sell to Business modal (Flow A: Project -> Business) */}
-      <BottomSheet visible={sellToBusinessVisible} onRequestClose={() => setSellToBusinessVisible(false)}>
-        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Sell {selectedIds.length} Item(s) to Business
-          </AppText>
-        </View>
-        <View style={styles.bulkSheetContent}>
-          <AppText variant="caption">
-            A sale record will be created for financial tracking.
-            If you're just fixing a misallocation, use Reassign instead.
-          </AppText>
-          {needsSourceCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[]) && (
-            <View style={styles.bulkActionGroup}>
-              <AppText variant="caption" style={styles.semiboldText}>
-                Source category (for uncategorized items)
-              </AppText>
-              {Object.entries(sellBudgetCategories).length === 0 ? (
-                <AppText variant="caption">No categories available</AppText>
-              ) : (
-                <ScrollView horizontal={false} style={{ maxHeight: 200 }}>
-                  {Object.entries(sellBudgetCategories)
-                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-                    .map(([id, cat]) => (
-                      <Pressable
-                        key={id}
-                        onPress={() => setSellSourceCategoryId(id)}
-                        style={[styles.categoryOption, sellSourceCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
-                      >
-                        <AppText variant="body">{cat.name}</AppText>
-                        {sellSourceCategoryId === id && (
-                          <AppText variant="body" style={primaryTextStyle}>✓</AppText>
-                        )}
-                      </Pressable>
-                    ))}
-                </ScrollView>
-              )}
-            </View>
-          )}
-          <AppButton
-            title="Confirm Sale"
-            variant="primary"
-            onPress={() => {
-              if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId) return;
-              const selected = items.filter(i => selectedIds.includes(i.id));
-              const resolved = resolveSourceCategories(
-                selected as ItemForCategoryResolution[],
-                sellSourceCategoryId,
-              );
-              if (resolved.length === 0) return;
-              const itemsWithCategories = resolved.map(r => {
+      <SellToBusinessModal
+        visible={sellToBusinessVisible}
+        onRequestClose={() => setSellToBusinessVisible(false)}
+        sourceBudgetCategories={sellBudgetCategories}
+        showSourceCategoryPicker={needsSourceCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[])}
+        subtitle={`${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} selected`}
+        onConfirm={(scId) => {
+          if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId) return;
+          const selected = items.filter(i => selectedIds.includes(i.id));
+          const resolved = resolveSourceCategories(selected as ItemForCategoryResolution[], scId);
+          if (resolved.length === 0) return;
+          const itemsWithCategories = resolved.map(r => {
+            const original = selected.find(s => s.id === r.id)!;
+            return { ...original, budgetCategoryId: r.resolvedCategoryId };
+          });
+          requestProjectToBusinessSale({
+            accountId,
+            projectId: scopeConfig.projectId,
+            items: itemsWithCategories,
+          });
+          setSellToBusinessVisible(false);
+          clearSelection();
+        }}
+      />
+      {/* Sell to Project modal (Flow B: Inventory->Project, Flow C: Project->Project) */}
+      <SellToProjectModal
+        visible={sellToProjectVisible}
+        onRequestClose={() => setSellToProjectVisible(false)}
+        accountId={accountId!}
+        excludeProjectId={scopeConfig?.projectId}
+        destBudgetCategories={sellDestBudgetCategories}
+        sourceBudgetCategories={sellBudgetCategories}
+        showSourceCategoryPicker={scopeConfig?.scope === 'project' && needsSourceCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[])}
+        showDestCategoryPicker={needsDestinationCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[], new Set(Object.keys(sellDestBudgetCategories)))}
+        subtitle={`${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} selected`}
+        onTargetProjectChange={(pid) => {
+          setSellTargetProjectId(pid);
+        }}
+        onConfirm={({ targetProjectId: tpId, destCategoryId: dcId, sourceCategoryId: scId }) => {
+          if (!accountId || !tpId) return;
+          const selected = items.filter(i => selectedIds.includes(i.id));
+          if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
+            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+            const resolvedDest = resolveDestinationCategories(selected as ItemForCategoryResolution[], validDestIds, dcId);
+            const resolvedSource = resolveSourceCategories(selected as ItemForCategoryResolution[], scId);
+            if (resolvedDest.length === 0) return;
+            const destCategoryId = resolvedDest[0].resolvedCategoryId;
+            requestProjectToProjectMove({
+              accountId,
+              sourceProjectId: scopeConfig.projectId,
+              targetProjectId: tpId,
+              destinationBudgetCategoryId: destCategoryId,
+              items: resolvedSource.map(r => {
                 const original = selected.find(s => s.id === r.id)!;
                 return { ...original, budgetCategoryId: r.resolvedCategoryId };
-              });
-              requestProjectToBusinessSale({
-                accountId,
-                projectId: scopeConfig.projectId,
-                items: itemsWithCategories,
-              });
-              setSellToBusinessVisible(false);
-              clearSelection();
-            }}
-            style={styles.bulkActionButton}
-          />
-        </View>
-      </BottomSheet>
-      {/* Sell to Project modal (Flow B: Inventory->Project, Flow C: Project->Project) */}
-      <BottomSheet visible={sellToProjectVisible} onRequestClose={() => setSellToProjectVisible(false)}>
-        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Sell {selectedIds.length} Item(s) to Project
-          </AppText>
-        </View>
-        <View style={styles.bulkSheetContent}>
-          <AppText variant="caption">
-            Sale and purchase records will be created for financial tracking.
-            If you're just fixing a misallocation, use Reassign instead.
-          </AppText>
-          {accountId && (
-            <View style={styles.bulkActionGroup}>
-              <AppText variant="caption" style={styles.semiboldText}>
-                Target project
-              </AppText>
-              <ProjectSelector
-                accountId={accountId}
-                value={sellTargetProjectId}
-                onChange={setSellTargetProjectId}
-                excludeProjectId={scopeConfig?.projectId}
-              />
-            </View>
-          )}
-          {sellTargetProjectId && (() => {
-            const selected = items.filter(i => selectedIds.includes(i.id));
+              }),
+            });
+          } else {
             const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-            const needsDest = needsDestinationCategoryPicker(selected as ItemForCategoryResolution[], validDestIds);
-            const needsSource = scopeConfig?.scope === 'project' && needsSourceCategoryPicker(selected as ItemForCategoryResolution[]);
-            return (
-              <>
-                {needsDest && (
-                  <View style={styles.bulkActionGroup}>
-                    <AppText variant="caption" style={styles.semiboldText}>
-                      Destination category
-                    </AppText>
-                    {Object.entries(sellDestBudgetCategories).length === 0 ? (
-                      <AppText variant="caption">Loading categories...</AppText>
-                    ) : (
-                      <ScrollView horizontal={false} style={{ maxHeight: 150 }}>
-                        {Object.entries(sellDestBudgetCategories)
-                          .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-                          .map(([id, cat]) => (
-                            <Pressable
-                              key={id}
-                              onPress={() => setSellDestCategoryId(id)}
-                              style={[styles.categoryOption, sellDestCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
-                            >
-                              <AppText variant="body">{cat.name}</AppText>
-                              {sellDestCategoryId === id && (
-                                <AppText variant="body" style={primaryTextStyle}>✓</AppText>
-                              )}
-                            </Pressable>
-                          ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                )}
-                {needsSource && (
-                  <View style={styles.bulkActionGroup}>
-                    <AppText variant="caption" style={styles.semiboldText}>
-                      Source category (for uncategorized items)
-                    </AppText>
-                    {Object.entries(sellBudgetCategories).length === 0 ? (
-                      <AppText variant="caption">Loading categories...</AppText>
-                    ) : (
-                      <ScrollView horizontal={false} style={{ maxHeight: 150 }}>
-                        {Object.entries(sellBudgetCategories)
-                          .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-                          .map(([id, cat]) => (
-                            <Pressable
-                              key={id}
-                              onPress={() => setSellSourceCategoryId(id)}
-                              style={[styles.categoryOption, sellSourceCategoryId === id && { backgroundColor: uiKitTheme.background.surface }]}
-                            >
-                              <AppText variant="body">{cat.name}</AppText>
-                              {sellSourceCategoryId === id && (
-                                <AppText variant="body" style={primaryTextStyle}>✓</AppText>
-                              )}
-                            </Pressable>
-                          ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                )}
-              </>
-            );
-          })()}
-          <AppButton
-            title="Confirm Sale"
-            variant="primary"
-            disabled={!sellTargetProjectId}
-            onPress={() => {
-              if (!accountId || !sellTargetProjectId) return;
-              const selected = items.filter(i => selectedIds.includes(i.id));
-
-              if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
-                // Flow C: Project -> Project (two-hop)
-                const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-                const resolvedDest = resolveDestinationCategories(
-                  selected as ItemForCategoryResolution[],
-                  validDestIds,
-                  sellDestCategoryId,
-                );
-                const resolvedSource = resolveSourceCategories(
-                  selected as ItemForCategoryResolution[],
-                  sellSourceCategoryId,
-                );
-                if (resolvedDest.length === 0) return;
-                const destCategoryId = resolvedDest[0].resolvedCategoryId;
-                requestProjectToProjectMove({
-                  accountId,
-                  sourceProjectId: scopeConfig.projectId,
-                  targetProjectId: sellTargetProjectId,
-                  destinationBudgetCategoryId: destCategoryId,
-                  items: resolvedSource.map(r => {
-                    const original = selected.find(s => s.id === r.id)!;
-                    return { ...original, budgetCategoryId: r.resolvedCategoryId };
-                  }),
-                });
-              } else {
-                // Flow B: Business -> Project
-                const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-                const resolvedDest = resolveDestinationCategories(
-                  selected as ItemForCategoryResolution[],
-                  validDestIds,
-                  sellDestCategoryId,
-                );
-                if (resolvedDest.length === 0) return;
-                const destCategoryId = resolvedDest[0].resolvedCategoryId;
-                requestBusinessToProjectPurchase({
-                  accountId,
-                  targetProjectId: sellTargetProjectId,
-                  budgetCategoryId: destCategoryId,
-                  items: selected,
-                });
-              }
-              setSellToProjectVisible(false);
-              clearSelection();
-            }}
-            style={styles.bulkActionButton}
-          />
-        </View>
-      </BottomSheet>
+            const resolvedDest = resolveDestinationCategories(selected as ItemForCategoryResolution[], validDestIds, dcId);
+            if (resolvedDest.length === 0) return;
+            const destCategoryId = resolvedDest[0].resolvedCategoryId;
+            requestBusinessToProjectPurchase({
+              accountId,
+              targetProjectId: tpId,
+              budgetCategoryId: destCategoryId,
+              items: selected,
+            });
+          }
+          setSellToProjectVisible(false);
+          clearSelection();
+        }}
+      />
       {/* Reassign to Inventory confirmation */}
       <BottomSheet visible={reassignToInventoryVisible} onRequestClose={() => setReassignToInventoryVisible(false)}>
         <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
@@ -1332,127 +1366,184 @@ export function SharedItemsList({
         </View>
       </BottomSheet>
       {/* Reassign to Project picker */}
-      <BottomSheet visible={reassignToProjectVisible} onRequestClose={() => {
-        setReassignToProjectVisible(false);
-        setReassignTargetProjectId(null);
-      }}>
-        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Reassign to Project
-          </AppText>
-        </View>
-        <View style={styles.bulkSheetContent}>
-          {(() => {
-            const selected = items.filter(i => selectedIds.includes(i.id));
-            const { eligible, blockedCount } = filterItemsForBulkReassign(selected);
-            return (
-              <>
-                <AppText variant="caption">
-                  {eligible.length} item{eligible.length === 1 ? '' : 's'} will be moved directly.
-                  No sale or purchase records will be created.
-                </AppText>
-                {blockedCount > 0 && (
-                  <AppText variant="caption" style={{ color: theme.colors.error ?? 'red' }}>
-                    {blockedCount} item{blockedCount === 1 ? ' is' : 's are'} linked to transactions and cannot be reassigned.
-                  </AppText>
-                )}
-                {accountId && (
-                  <View style={styles.bulkActionGroup}>
-                    <AppText variant="caption" style={styles.semiboldText}>
-                      Target project
-                    </AppText>
-                    <ProjectSelector
-                      accountId={accountId}
-                      value={reassignTargetProjectId}
-                      onChange={setReassignTargetProjectId}
-                      excludeProjectId={scopeConfig?.projectId}
-                    />
-                  </View>
-                )}
-                <AppButton
-                  title="Reassign"
-                  variant="primary"
-                  disabled={eligible.length === 0 || !reassignTargetProjectId}
-                  onPress={() => {
-                    if (!accountId || !reassignTargetProjectId) return;
-                    for (const itemId of eligible) {
-                      reassignItemToProject(accountId, itemId, reassignTargetProjectId);
-                    }
-                    setReassignToProjectVisible(false);
-                    setReassignTargetProjectId(null);
-                    clearSelection();
-                  }}
-                  style={styles.bulkActionButton}
-                />
-              </>
-            );
-          })()}
-        </View>
-      </BottomSheet>
-      {/* Bulk Set Space */}
-      <BottomSheet visible={bulkSpacePickerVisible} onRequestClose={() => setBulkSpacePickerVisible(false)}>
-        <View style={styles.bulkSheetContent}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Set Space
-          </AppText>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-            {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
-          </AppText>
-          {accountId && (
-            <SpaceSelector
-              projectId={scopeConfig?.projectId ?? null}
-              value={null}
-              onChange={handleBulkSetSpace}
-              allowCreate={true}
-              placeholder="Select space"
-            />
-          )}
-        </View>
-      </BottomSheet>
-      {/* Bulk Set Transaction */}
-      <BottomSheet
-        visible={bulkTransactionPickerVisible}
+      <ReassignToProjectModal
+        visible={reassignToProjectVisible}
         onRequestClose={() => {
-          setBulkTransactionPickerVisible(false);
-          setBulkTransactionIdValue('');
+          setReassignToProjectVisible(false);
         }}
-      >
-        <View style={styles.bulkSheetContent}>
-          <AppText variant="body" style={styles.bulkSheetTitle}>
-            Set Transaction
-          </AppText>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-            {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
-          </AppText>
-          <View style={styles.bulkActionGroup}>
-            <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-              Transaction ID
-            </AppText>
-            <TextInput
-              value={bulkTransactionIdValue}
-              onChangeText={setBulkTransactionIdValue}
-              placeholder="Enter transaction ID"
-              placeholderTextColor={uiKitTheme.text.secondary}
-              style={[
-                { minHeight: 44 },
-                getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 }),
-                getTextColorStyle(uiKitTheme.text.primary),
-              ]}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="done"
-              onSubmitEditing={handleBulkSetTransaction}
-            />
-          </View>
-          <AppButton
-            title="Apply"
-            variant="primary"
-            disabled={!bulkTransactionIdValue.trim()}
-            onPress={handleBulkSetTransaction}
-            style={styles.bulkActionButton}
-          />
-        </View>
-      </BottomSheet>
+        accountId={accountId!}
+        excludeProjectId={scopeConfig?.projectId}
+        bulkInfo={(() => {
+          const selected = items.filter(i => selectedIds.includes(i.id));
+          const { eligible, blockedCount } = filterItemsForBulkReassign(selected);
+          return { eligibleCount: eligible.length, blockedCount };
+        })()}
+        onConfirm={(tpId) => {
+          if (!accountId) return;
+          const selected = items.filter(i => selectedIds.includes(i.id));
+          const { eligible } = filterItemsForBulkReassign(selected);
+          for (const itemId of eligible) {
+            reassignItemToProject(accountId, itemId, tpId);
+          }
+          setReassignToProjectVisible(false);
+          clearSelection();
+        }}
+      />
+      {/* Bulk Set Space */}
+      <SetSpaceModal
+        visible={bulkSpacePickerVisible}
+        onRequestClose={() => setBulkSpacePickerVisible(false)}
+        projectId={scopeConfig?.projectId ?? null}
+        subtitle={`${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} selected`}
+        onConfirm={(spaceId) => {
+          handleBulkSetSpace(spaceId);
+        }}
+      />
+      {/* Bulk Set Transaction */}
+      {scopeConfig && (
+        <TransactionPickerModal
+          visible={bulkTransactionPickerVisible}
+          onRequestClose={() => setBulkTransactionPickerVisible(false)}
+          accountId={accountId!}
+          scopeConfig={scopeConfig}
+          subtitle={`${selectedIds.length} item${selectedIds.length === 1 ? '' : 's'} selected`}
+          onConfirm={(transaction) => {
+            if (!accountId || selectedIds.length === 0) return;
+            selectedIds.forEach((itemId) => {
+              const update: Partial<{ transactionId: string | null; budgetCategoryId: string | null }> = { transactionId: transaction.id };
+              if (transaction.budgetCategoryId) {
+                update.budgetCategoryId = transaction.budgetCategoryId;
+              }
+              updateItem(accountId, itemId, update);
+            });
+            setBulkTransactionPickerVisible(false);
+            clearSelection();
+          }}
+        />
+      )}
+      {/* Single-item Set Space */}
+      <SetSpaceModal
+        visible={singleItemSpacePickerVisible}
+        onRequestClose={() => { setSingleItemSpacePickerVisible(false); setSingleItemId(null); }}
+        projectId={scopeConfig?.projectId ?? null}
+        onConfirm={(spaceId) => {
+          if (accountId && singleItemId) {
+            updateItem(accountId, singleItemId, { spaceId });
+          }
+          setSingleItemSpacePickerVisible(false);
+          setSingleItemId(null);
+        }}
+      />
+      {/* Single-item Set Transaction */}
+      {scopeConfig && (
+        <TransactionPickerModal
+          visible={singleItemTransactionPickerVisible}
+          onRequestClose={() => { setSingleItemTransactionPickerVisible(false); setSingleItemId(null); }}
+          accountId={accountId!}
+          scopeConfig={scopeConfig}
+          onConfirm={(transaction) => {
+            if (accountId && singleItemId) {
+              const update: Partial<{ transactionId: string | null; budgetCategoryId: string | null }> = { transactionId: transaction.id };
+              if (transaction.budgetCategoryId) {
+                update.budgetCategoryId = transaction.budgetCategoryId;
+              }
+              updateItem(accountId, singleItemId, update);
+            }
+            setSingleItemTransactionPickerVisible(false);
+            setSingleItemId(null);
+          }}
+        />
+      )}
+      {/* Single-item Sell to Business */}
+      <SellToBusinessModal
+        visible={singleItemSellToBusinessVisible}
+        onRequestClose={() => { setSingleItemSellToBusinessVisible(false); setSingleItemId(null); }}
+        sourceBudgetCategories={sellBudgetCategories}
+        showSourceCategoryPicker={(() => {
+          if (!singleItemId) return false;
+          const item = items.find(i => i.id === singleItemId);
+          return item ? needsSourceCategoryPicker([item] as ItemForCategoryResolution[]) : false;
+        })()}
+        onConfirm={(scId) => {
+          if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId || !singleItemId) return;
+          const item = items.find(i => i.id === singleItemId);
+          if (!item) return;
+          const resolved = resolveSourceCategories([item] as ItemForCategoryResolution[], scId);
+          if (resolved.length === 0) return;
+          requestProjectToBusinessSale({
+            accountId,
+            projectId: scopeConfig.projectId,
+            items: resolved.map(r => ({ ...item, budgetCategoryId: r.resolvedCategoryId })),
+          });
+          setSingleItemSellToBusinessVisible(false);
+          setSingleItemId(null);
+        }}
+      />
+      {/* Single-item Sell to Project */}
+      <SellToProjectModal
+        visible={singleItemSellToProjectVisible}
+        onRequestClose={() => { setSingleItemSellToProjectVisible(false); setSingleItemId(null); }}
+        accountId={accountId!}
+        excludeProjectId={scopeConfig?.projectId}
+        destBudgetCategories={sellDestBudgetCategories}
+        sourceBudgetCategories={sellBudgetCategories}
+        showSourceCategoryPicker={(() => {
+          if (!singleItemId || scopeConfig?.scope !== 'project') return false;
+          const item = items.find(i => i.id === singleItemId);
+          return item ? needsSourceCategoryPicker([item] as ItemForCategoryResolution[]) : false;
+        })()}
+        showDestCategoryPicker={(() => {
+          if (!singleItemId) return false;
+          const item = items.find(i => i.id === singleItemId);
+          return item ? needsDestinationCategoryPicker([item] as ItemForCategoryResolution[], new Set(Object.keys(sellDestBudgetCategories))) : false;
+        })()}
+        onTargetProjectChange={(pid) => {
+          setSellTargetProjectId(pid);
+        }}
+        onConfirm={({ targetProjectId: tpId, destCategoryId: dcId, sourceCategoryId: scId }) => {
+          if (!accountId || !tpId || !singleItemId) return;
+          const item = items.find(i => i.id === singleItemId);
+          if (!item) return;
+          if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
+            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+            const resolvedDest = resolveDestinationCategories([item] as ItemForCategoryResolution[], validDestIds, dcId);
+            const resolvedSource = resolveSourceCategories([item] as ItemForCategoryResolution[], scId);
+            if (resolvedDest.length === 0) return;
+            requestProjectToProjectMove({
+              accountId,
+              sourceProjectId: scopeConfig.projectId,
+              targetProjectId: tpId,
+              destinationBudgetCategoryId: resolvedDest[0].resolvedCategoryId,
+              items: resolvedSource.map(r => ({ ...item, budgetCategoryId: r.resolvedCategoryId })),
+            });
+          } else {
+            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
+            const resolvedDest = resolveDestinationCategories([item] as ItemForCategoryResolution[], validDestIds, dcId);
+            if (resolvedDest.length === 0) return;
+            requestBusinessToProjectPurchase({
+              accountId,
+              targetProjectId: tpId,
+              budgetCategoryId: resolvedDest[0].resolvedCategoryId,
+              items: [item],
+            });
+          }
+          setSingleItemSellToProjectVisible(false);
+          setSingleItemId(null);
+        }}
+      />
+      {/* Single-item Reassign to Project */}
+      <ReassignToProjectModal
+        visible={singleItemReassignToProjectVisible}
+        onRequestClose={() => { setSingleItemReassignToProjectVisible(false); setSingleItemId(null); }}
+        accountId={accountId!}
+        excludeProjectId={scopeConfig?.projectId}
+        onConfirm={(tpId) => {
+          if (!accountId || !singleItemId) return;
+          reassignItemToProject(accountId, singleItemId, tpId);
+          setSingleItemReassignToProjectVisible(false);
+          setSingleItemId(null);
+        }}
+      />
       <BottomSheetMenuList
         visible={!!statusMenuItemId}
         onRequestClose={() => setStatusMenuItemId(null)}
@@ -1978,20 +2069,9 @@ const styles = StyleSheet.create({
   bulkActions: {
     gap: 12,
   },
-  bulkActionGroup: {
-    gap: 8,
-  },
   bulkActionButton: {
     minHeight: 36,
     paddingVertical: 8,
     paddingHorizontal: 12,
-  },
-  categoryOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
   },
 });

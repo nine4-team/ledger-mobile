@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
-import { AppButton } from '../../../src/components/AppButton';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem, AnchoredMenuSubaction } from '../../../src/components/AnchoredMenuList';
@@ -14,8 +13,7 @@ import { BulkSelectionBar } from '../../../src/components/BulkSelectionBar';
 import { ItemsListControlBar } from '../../../src/components/ItemsListControlBar';
 import { SelectorCircle } from '../../../src/components/SelectorCircle';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
-import { SpaceSelector } from '../../../src/components/SpaceSelector';
-import { getTextColorStyle, getTextSecondaryStyle, layout } from '../../../src/ui';
+import { layout } from '../../../src/ui';
 import { useItemsManager } from '../../../src/hooks/useItemsManager';
 import { SharedItemsList } from '../../../src/components/SharedItemsList';
 import { useProjectContextStore } from '../../../src/data/projectContextStore';
@@ -26,13 +24,16 @@ import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedList
 import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
 import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
-import { getTextInputStyle } from '../../../src/ui/styles/forms';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../../src/data/transactionsService';
-import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
+import {
+  isCanonicalInventorySaleTransaction,
+  requestProjectToBusinessSale,
+  requestProjectToProjectMove,
+  requestBusinessToProjectPurchase,
+} from '../../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
-import { ProjectSelector } from '../../../src/components/ProjectSelector';
 import {
   validateTransactionReassign,
   reassignTransactionToInventory,
@@ -42,6 +43,10 @@ import {
   reassignItemToProject,
 } from '../../../src/data/reassignService';
 import { NotesSection } from '../../../src/components/NotesSection';
+import { SetSpaceModal } from '../../../src/components/modals/SetSpaceModal';
+import { ReassignToProjectModal } from '../../../src/components/modals/ReassignToProjectModal';
+import { SellToProjectModal } from '../../../src/components/modals/SellToProjectModal';
+import { SellToBusinessModal } from '../../../src/components/modals/SellToBusinessModal';
 import {
   HeroSection,
   ReceiptsSection,
@@ -116,10 +121,17 @@ export default function TransactionDetailScreen() {
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
   const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
-  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
   const [singleItemReassignProjectVisible, setSingleItemReassignProjectVisible] = useState(false);
   const [singleItemReassignId, setSingleItemReassignId] = useState<string | null>(null);
-  const [singleItemReassignTargetProjectId, setSingleItemReassignTargetProjectId] = useState<string | null>(null);
+
+  // Sell-to-business modal state
+  const [singleItemSellToBusinessVisible, setSingleItemSellToBusinessVisible] = useState(false);
+  const [singleItemSellId, setSingleItemSellId] = useState<string | null>(null);
+
+  // Sell-to-project modal state
+  const [singleItemSellToProjectVisible, setSingleItemSellToProjectVisible] = useState(false);
+  const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
+  const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -171,6 +183,17 @@ export default function TransactionDetailScreen() {
     return subscribeToBudgetCategories(accountId, (next) => setBudgetCategories(mapBudgetCategories(next)));
   }, [accountId]);
 
+  // Subscribe to destination project budget categories for sell-to-project modal
+  useEffect(() => {
+    if (!accountId || !sellTargetProjectId) {
+      setSellDestBudgetCategories({});
+      return;
+    }
+    const unsub = subscribeToBudgetCategories(accountId, (raw) => {
+      setSellDestBudgetCategories(mapBudgetCategories(raw));
+    });
+    return unsub;
+  }, [accountId, sellTargetProjectId]);
 
   useEffect(() => {
     if (!accountId || !id || !scope) {
@@ -504,8 +527,6 @@ export default function TransactionDetailScreen() {
   // Bulk operation state
   const [bulkSpacePickerVisible, setBulkSpacePickerVisible] = useState(false);
   const [bulkStatusPickerVisible, setBulkStatusPickerVisible] = useState(false);
-  const [bulkSKUInputVisible, setBulkSKUInputVisible] = useState(false);
-  const [bulkSKUValue, setBulkSKUValue] = useState('');
 
   const handleBulkSpaceConfirm = (spaceId: string | null) => {
     if (!accountId || itemsManager.selectionCount === 0) return;
@@ -529,19 +550,6 @@ export default function TransactionDetailScreen() {
     itemsManager.clearSelection();
   };
 
-  const handleBulkSKUConfirm = () => {
-    if (!accountId || itemsManager.selectionCount === 0) return;
-
-    const sku = bulkSKUValue.trim();
-    itemsManager.selectedIds.forEach((itemId) => {
-      updateItem(accountId, itemId, { sku });
-    });
-
-    setBulkSKUInputVisible(false);
-    setBulkSKUValue('');
-    itemsManager.clearSelection();
-  };
-
   // Unified bulk action handler for ItemsSection
   const handleBulkAction = useCallback((actionId: string, _ids: string[]) => {
     switch (actionId) {
@@ -557,10 +565,6 @@ export default function TransactionDetailScreen() {
         break;
       case 'set-status':
         setBulkStatusPickerVisible(true);
-        break;
-      case 'set-sku':
-        setBulkSKUValue('');
-        setBulkSKUInputVisible(true);
         break;
       case 'remove':
         if (!accountId || itemsManager.selectionCount === 0) return;
@@ -701,22 +705,16 @@ export default function TransactionDetailScreen() {
     updateItem(accountId, itemId, { status });
   };
 
-  const handleSellToDesign = (_itemId: string) => {
+  const handleSellToDesign = (itemId: string) => {
     if (!accountId) return;
-    Alert.alert(
-      'Sell to Design Business',
-      'This feature will be available soon.',
-      [{ text: 'OK' }]
-    );
+    setSingleItemSellId(itemId);
+    setSingleItemSellToBusinessVisible(true);
   };
 
-  const handleSellToProject = (_itemId: string) => {
+  const handleSellToProject = (itemId: string) => {
     if (!accountId) return;
-    Alert.alert(
-      'Sell to Project',
-      'This feature will be available soon.',
-      [{ text: 'OK' }]
-    );
+    setSingleItemSellId(itemId);
+    setSingleItemSellToProjectVisible(true);
   };
 
   const handleReassignItemToInventory = (itemId: string) => {
@@ -749,33 +747,6 @@ export default function TransactionDetailScreen() {
     setSingleItemReassignProjectVisible(true);
   };
 
-  const handleSingleItemReassignConfirm = () => {
-    if (!accountId || !singleItemReassignId || !singleItemReassignTargetProjectId) return;
-    const item = linkedItems.find((i) => i.id === singleItemReassignId);
-    if (!item) return;
-    const result = validateItemReassign(item, singleItemReassignTargetProjectId);
-    if (!result.valid) {
-      Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
-      return;
-    }
-    Alert.alert(
-      "Reassign to Project?",
-      "This item will be moved directly to the selected project.\nNo sale or purchase records will be created.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reassign",
-          onPress: () => {
-            reassignItemToProject(accountId, singleItemReassignId, singleItemReassignTargetProjectId);
-            setSingleItemReassignProjectVisible(false);
-            setSingleItemReassignId(null);
-            setSingleItemReassignTargetProjectId(null);
-          },
-        },
-      ]
-    );
-  };
-
   const handleTransactionReassignToInventory = () => {
     if (!accountId || !id || !transaction) return;
     const result = validateTransactionReassign(transaction, null);
@@ -799,9 +770,9 @@ export default function TransactionDetailScreen() {
     );
   };
 
-  const handleTransactionReassignToProjectConfirm = () => {
-    if (!accountId || !id || !transaction || !reassignTargetProjectId) return;
-    const result = validateTransactionReassign(transaction, reassignTargetProjectId);
+  const handleTransactionReassignToProjectConfirm = (targetProjectId: string) => {
+    if (!accountId || !id || !transaction) return;
+    const result = validateTransactionReassign(transaction, targetProjectId);
     if (!result.valid) {
       Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
       return;
@@ -815,9 +786,8 @@ export default function TransactionDetailScreen() {
         {
           text: "Reassign",
           onPress: () => {
-            reassignTransactionToProject(accountId, id, reassignTargetProjectId, itemIds);
+            reassignTransactionToProject(accountId, id, targetProjectId, itemIds);
             setReassignToProjectVisible(false);
-            setReassignTargetProjectId(null);
           },
         },
       ]
@@ -841,13 +811,6 @@ export default function TransactionDetailScreen() {
         },
       ]
     );
-  };
-
-  const handleSingleItemSpaceConfirm = (spaceId: string | null) => {
-    if (!accountId || !singleItemOperationId) return;
-    updateItem(accountId, singleItemOperationId, { spaceId });
-    setSingleItemSpacePickerVisible(false);
-    setSingleItemOperationId(null);
   };
 
   const handleClearSpace = (itemId: string) => {
@@ -1341,7 +1304,6 @@ export default function TransactionDetailScreen() {
           { id: 'set-space', label: 'Set Space', onPress: (ids) => handleBulkAction('set-space', ids) },
           { id: 'clear-space', label: 'Clear Space', onPress: (ids) => handleBulkAction('clear-space', ids) },
           { id: 'set-status', label: 'Set Status', onPress: (ids) => handleBulkAction('set-status', ids) },
-          { id: 'set-sku', label: 'Set SKU', onPress: (ids) => handleBulkAction('set-sku', ids) },
           { id: 'delete', label: 'Delete Items', onPress: (ids) => handleBulkAction('delete', ids), destructive: true },
         ];
 
@@ -1649,14 +1611,6 @@ export default function TransactionDetailScreen() {
                 },
               },
               {
-                key: 'set-sku',
-                label: 'Set SKU',
-                onPress: () => {
-                  setBulkActionsSheetVisible(false);
-                  handleBulkAction('set-sku', []);
-                },
-              },
-              {
                 key: 'delete',
                 label: 'Delete Items',
                 icon: 'delete',
@@ -1773,24 +1727,15 @@ export default function TransactionDetailScreen() {
             </BottomSheet>
 
             {/* Bulk space picker */}
-            <BottomSheet
+            <SetSpaceModal
               visible={bulkSpacePickerVisible}
               onRequestClose={() => setBulkSpacePickerVisible(false)}
-            >
-              <View style={styles.pickerContent}>
-                <AppText variant="h2" style={styles.pickerTitle}>Set Space</AppText>
-                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  {itemsManager.selectionCount} item{itemsManager.selectionCount === 1 ? '' : 's'} selected
-                </AppText>
-                <SpaceSelector
-                  projectId={projectId ?? null}
-                  value={null}
-                  onChange={handleBulkSpaceConfirm}
-                  allowCreate={true}
-                  placeholder="Select space"
-                />
-              </View>
-            </BottomSheet>
+              projectId={projectId ?? null}
+              subtitle={`${itemsManager.selectionCount} item${itemsManager.selectionCount === 1 ? '' : 's'} selected`}
+              onConfirm={(spaceId) => {
+                handleBulkSpaceConfirm(spaceId);
+              }}
+            />
 
             {/* Bulk status picker */}
             <BottomSheetMenuList
@@ -1822,141 +1767,138 @@ export default function TransactionDetailScreen() {
               showLeadingIcons={false}
             />
 
-            {/* Bulk SKU input */}
-            <BottomSheet
-              visible={bulkSKUInputVisible}
-              onRequestClose={() => {
-                setBulkSKUInputVisible(false);
-                setBulkSKUValue('');
-              }}
-            >
-              <View style={styles.pickerContent}>
-                <AppText variant="h2" style={styles.pickerTitle}>Set SKU</AppText>
-                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  {itemsManager.selectionCount} item{itemsManager.selectionCount === 1 ? '' : 's'} selected
-                </AppText>
-                <View style={styles.inputContainer}>
-                  <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                    SKU
-                  </AppText>
-                  <TextInput
-                    value={bulkSKUValue}
-                    onChangeText={setBulkSKUValue}
-                    placeholder="Enter SKU"
-                    placeholderTextColor={uiKitTheme.text.secondary}
-                    style={[
-                      styles.textInput,
-                      getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 }),
-                      getTextColorStyle(uiKitTheme.text.primary),
-                    ]}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    returnKeyType="done"
-                    onSubmitEditing={handleBulkSKUConfirm}
-                  />
-                </View>
-                <View style={styles.buttonRow}>
-                  <AppButton
-                    title="Cancel"
-                    variant="secondary"
-                    onPress={() => {
-                      setBulkSKUInputVisible(false);
-                      setBulkSKUValue('');
-                    }}
-                    style={styles.button}
-                  />
-                  <AppButton
-                    title="Apply"
-                    variant="primary"
-                    onPress={handleBulkSKUConfirm}
-                    style={styles.button}
-                  />
-                </View>
-              </View>
-            </BottomSheet>
-
             {/* Single item space picker */}
-            <BottomSheet
+            <SetSpaceModal
               visible={singleItemSpacePickerVisible}
-              onRequestClose={() => {
+              onRequestClose={() => setSingleItemSpacePickerVisible(false)}
+              projectId={projectId ?? null}
+              onConfirm={(spaceId) => {
+                if (!accountId || !singleItemOperationId) return;
+                updateItem(accountId, singleItemOperationId, { spaceId });
                 setSingleItemSpacePickerVisible(false);
                 setSingleItemOperationId(null);
               }}
-            >
-              <View style={styles.pickerContent}>
-                <AppText variant="h2" style={styles.pickerTitle}>Set Space</AppText>
-                <SpaceSelector
-                  projectId={projectId ?? null}
-                  value={null}
-                  onChange={handleSingleItemSpaceConfirm}
-                  allowCreate={true}
-                  placeholder="Select space"
-                />
-              </View>
-            </BottomSheet>
+            />
 
             {/* Reassign transaction to project picker */}
-            <BottomSheet
+            <ReassignToProjectModal
               visible={reassignToProjectVisible}
-              onRequestClose={() => {
-                setReassignToProjectVisible(false);
-                setReassignTargetProjectId(null);
+              onRequestClose={() => setReassignToProjectVisible(false)}
+              accountId={accountId!}
+              excludeProjectId={projectId}
+              description={`All ${linkedItems.length} item${linkedItems.length === 1 ? '' : 's'} in this transaction will be moved to the selected project.`}
+              onConfirm={(tpId) => {
+                handleTransactionReassignToProjectConfirm(tpId);
               }}
-            >
-              <View style={styles.pickerContent}>
-                <AppText variant="h2" style={styles.pickerTitle}>Reassign to Project</AppText>
-                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  This transaction and all its items will be moved directly. No sale or purchase records will be created.
-                </AppText>
-                {accountId && (
-                  <ProjectSelector
-                    accountId={accountId}
-                    value={reassignTargetProjectId}
-                    onChange={setReassignTargetProjectId}
-                    excludeProjectId={projectId}
-                  />
-                )}
-                <AppButton
-                  title="Reassign"
-                  variant="primary"
-                  disabled={!reassignTargetProjectId}
-                  onPress={handleTransactionReassignToProjectConfirm}
-                  style={{ minHeight: 44 }}
-                />
-              </View>
-            </BottomSheet>
+            />
 
             {/* Reassign single item to project picker */}
-            <BottomSheet
+            <ReassignToProjectModal
               visible={singleItemReassignProjectVisible}
               onRequestClose={() => {
                 setSingleItemReassignProjectVisible(false);
                 setSingleItemReassignId(null);
-                setSingleItemReassignTargetProjectId(null);
               }}
-            >
-              <View style={styles.pickerContent}>
-                <AppText variant="h2" style={styles.pickerTitle}>Reassign Item to Project</AppText>
-                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
-                  This item will be moved directly. No sale or purchase records will be created.
-                </AppText>
-                {accountId && (
-                  <ProjectSelector
-                    accountId={accountId}
-                    value={singleItemReassignTargetProjectId}
-                    onChange={setSingleItemReassignTargetProjectId}
-                    excludeProjectId={projectId}
-                  />
-                )}
-                <AppButton
-                  title="Reassign"
-                  variant="primary"
-                  disabled={!singleItemReassignTargetProjectId}
-                  onPress={handleSingleItemReassignConfirm}
-                  style={{ minHeight: 44 }}
-                />
-              </View>
-            </BottomSheet>
+              accountId={accountId!}
+              excludeProjectId={projectId}
+              onConfirm={(tpId) => {
+                if (!accountId || !singleItemReassignId) return;
+                const item = linkedItems.find((i) => i.id === singleItemReassignId);
+                if (!item) return;
+                const result = validateItemReassign(item, tpId);
+                if (!result.valid) {
+                  Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
+                  return;
+                }
+                Alert.alert(
+                  "Reassign to Project?",
+                  "This item will be moved directly to the selected project.\nNo sale or purchase records will be created.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Reassign",
+                      onPress: () => {
+                        reassignItemToProject(accountId, singleItemReassignId, tpId);
+                        setSingleItemReassignProjectVisible(false);
+                        setSingleItemReassignId(null);
+                      },
+                    },
+                  ]
+                );
+              }}
+            />
+
+            {/* Sell to Business modal */}
+            <SellToBusinessModal
+              visible={singleItemSellToBusinessVisible}
+              onRequestClose={() => {
+                setSingleItemSellToBusinessVisible(false);
+                setSingleItemSellId(null);
+              }}
+              sourceBudgetCategories={budgetCategories}
+              showSourceCategoryPicker={(() => {
+                const item = linkedItems.find(i => i.id === singleItemSellId);
+                return !!item && !item.budgetCategoryId;
+              })()}
+              onConfirm={(scId) => {
+                if (!accountId || !singleItemSellId || !projectId) return;
+                const item = linkedItems.find(i => i.id === singleItemSellId);
+                if (!item) return;
+                const sourceCatId = item.budgetCategoryId ?? scId;
+                if (!sourceCatId) return;
+                requestProjectToBusinessSale({
+                  accountId,
+                  projectId,
+                  items: [{ ...item, budgetCategoryId: sourceCatId }],
+                });
+                setSingleItemSellToBusinessVisible(false);
+                setSingleItemSellId(null);
+              }}
+            />
+
+            {/* Sell to Project modal */}
+            <SellToProjectModal
+              visible={singleItemSellToProjectVisible}
+              onRequestClose={() => {
+                setSingleItemSellToProjectVisible(false);
+                setSingleItemSellId(null);
+              }}
+              accountId={accountId!}
+              excludeProjectId={projectId}
+              destBudgetCategories={sellDestBudgetCategories}
+              sourceBudgetCategories={budgetCategories}
+              showSourceCategoryPicker={(() => {
+                const item = linkedItems.find(i => i.id === singleItemSellId);
+                return scope === 'project' && !!item && !item.budgetCategoryId;
+              })()}
+              showDestCategoryPicker={true}
+              onTargetProjectChange={(pid) => setSellTargetProjectId(pid)}
+              onConfirm={({ targetProjectId: tpId, destCategoryId: dcId, sourceCategoryId: scId }) => {
+                if (!accountId || !tpId || !dcId || !singleItemSellId) return;
+                const item = linkedItems.find(i => i.id === singleItemSellId);
+                if (!item) return;
+                if (scope === 'project' && projectId) {
+                  const sourceCatId = item.budgetCategoryId ?? scId;
+                  if (!sourceCatId) return;
+                  requestProjectToProjectMove({
+                    accountId,
+                    sourceProjectId: projectId,
+                    targetProjectId: tpId,
+                    destinationBudgetCategoryId: dcId,
+                    items: [{ ...item, budgetCategoryId: sourceCatId }],
+                  });
+                } else {
+                  requestBusinessToProjectPurchase({
+                    accountId,
+                    targetProjectId: tpId,
+                    budgetCategoryId: dcId,
+                    items: [item],
+                  });
+                }
+                setSingleItemSellToProjectVisible(false);
+                setSingleItemSellId(null);
+              }}
+            />
           </>
         ) : (
           <View style={styles.loadingContainer}>
@@ -2035,25 +1977,6 @@ const styles = StyleSheet.create({
   },
   pickerTabText: {
     // Color will be set inline based on active state
-  },
-  pickerSubtitle: {
-    textAlign: 'center',
-    marginTop: -8,
-  },
-  inputContainer: {
-    gap: 8,
-    marginTop: 8,
-  },
-  textInput: {
-    minHeight: 44,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  button: {
-    flex: 1,
   },
   selectButton: {
     borderRadius: 8,

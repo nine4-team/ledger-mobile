@@ -1,25 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, SectionList, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen } from '../../../src/components/Screen';
 import { AppText } from '../../../src/components/AppText';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
-import { TitledCard } from '../../../src/components/TitledCard';
 import { Card } from '../../../src/components/Card';
 import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { DetailRow } from '../../../src/components/DetailRow';
-import { BottomSheet } from '../../../src/components/BottomSheet';
-import { AppButton } from '../../../src/components/AppButton';
-import { ProjectSelector } from '../../../src/components/ProjectSelector';
-import { SpaceSelector } from '../../../src/components/SpaceSelector';
+import { SellToProjectModal } from '../../../src/components/modals/SellToProjectModal';
+import { ReassignToProjectModal } from '../../../src/components/modals/ReassignToProjectModal';
+import { SetSpaceModal } from '../../../src/components/modals/SetSpaceModal';
 import {
   CARD_PADDING,
   getCardStyle,
-  getTextColorStyle,
   getTextSecondaryStyle,
   layout,
 } from '../../../src/ui';
@@ -33,9 +30,7 @@ import {
   type BudgetCategory,
 } from '../../../src/data/budgetCategoriesService';
 import { subscribeToSpaces, type Space } from '../../../src/data/spacesService';
-import { getTransaction } from '../../../src/data/transactionsService';
 import {
-  isCanonicalTransactionId,
   requestBusinessToProjectPurchase,
   requestProjectToBusinessSale,
   requestProjectToProjectMove,
@@ -46,7 +41,7 @@ import {
   reassignItemToProject,
 } from '../../../src/data/reassignService';
 import { ITEM_STATUSES, getItemStatusLabel } from '../../../src/constants/itemStatuses';
-import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
+import { deleteLocalMediaByUrl, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 import { useTransactionById } from '../../../src/hooks/useTransactionById';
 import { useSpaceById } from '../../../src/hooks/useSpaceById';
@@ -90,13 +85,8 @@ export default function ItemDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [transactionId, setTransactionId] = useState('');
   const [sellToProjectVisible, setSellToProjectVisible] = useState(false);
-  const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
-  const [sellDestCategoryId, setSellDestCategoryId] = useState<string | null>(null);
-  const [sellSourceCategoryId, setSellSourceCategoryId] = useState<string | null>(null);
   const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
-  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
   const [spacePickerVisible, setSpacePickerVisible] = useState(false);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
@@ -130,9 +120,6 @@ export default function ItemDetailScreen() {
     const unsubscribe = subscribeToItem(accountId, id, (next) => {
       setItem(next);
       setIsLoading(false);
-      if (next) {
-        setTransactionId(next.transactionId ?? '');
-      }
     });
     return () => unsubscribe();
   }, [accountId, id]);
@@ -176,39 +163,9 @@ export default function ItemDetailScreen() {
     router.replace(fallbackTarget);
   };
 
-  const handleLinkTransaction = async () => {
-    if (!accountId || !id || !transactionId.trim()) return;
-    const transaction = await getTransaction(accountId, transactionId.trim(), 'offline');
-    if (!transaction) {
-      setError('Transaction not found.');
-      return;
-    }
-    const isCanonical = isCanonicalTransactionId(transaction.id);
-    const update: Partial<Item> = { transactionId: transaction.id };
-    if (!isCanonical && transaction.budgetCategoryId) {
-      update.budgetCategoryId = transaction.budgetCategoryId;
-    }
-    updateItem(accountId, id, update);
-    setError(null);
-  };
-
   const handleUnlinkTransaction = () => {
     if (!accountId || !id) return;
     updateItem(accountId, id, { transactionId: null });
-  };
-
-  const handleOpenTransaction = () => {
-    const nextId = transactionId.trim();
-    if (!nextId) return;
-    router.push({
-      pathname: '/transactions/[id]',
-      params: {
-        id: nextId,
-        scope: scope ?? '',
-        projectId: projectId ?? '',
-        backTarget: id ? `/items/${id}` : '',
-      },
-    });
   };
 
   const handleAddImage = async (localUri: string, kind: AttachmentKind) => {
@@ -313,32 +270,6 @@ export default function ItemDetailScreen() {
     );
   };
 
-  const handleReassignToProjectConfirm = () => {
-    if (!accountId || !id || !item || !reassignTargetProjectId) return;
-    const result = validateItemReassign(item, reassignTargetProjectId);
-    if (!result.valid) {
-      setError(result.error);
-      return;
-    }
-    Alert.alert(
-      "Reassign to Project?",
-      "This item will be moved directly to the selected project.\nNo sale or purchase records will be created.\n\nUse this to fix items that were added to the wrong project.\nIf this is a real business transfer, use Sell instead.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reassign",
-          onPress: () => {
-            reassignItemToProject(accountId, id, reassignTargetProjectId);
-            setReassignToProjectVisible(false);
-            setReassignTargetProjectId(null);
-            setError(null);
-          },
-        },
-      ]
-    );
-  };
-
-
   const handleSetSpaceConfirm = (spaceId: string | null) => {
     if (!accountId || !id) return;
     updateItem(accountId, id, { spaceId });
@@ -371,12 +302,6 @@ export default function ItemDetailScreen() {
   };
 
   const statusLabel = getItemStatusLabel(item?.status);
-  const trimmedTransactionId = transactionId.trim();
-  const transactionLabel = trimmedTransactionId
-    ? trimmedTransactionId.length > 8
-      ? `${trimmedTransactionId.slice(0, 8)}…`
-      : trimmedTransactionId
-    : 'None';
   const spaceLabel = item?.spaceId
     ? spaces[item.spaceId]?.name?.trim() || 'Unknown space'
     : 'None';
@@ -453,11 +378,24 @@ export default function ItemDetailScreen() {
     ];
 
     items.push({
+      label: 'Status',
+      icon: 'flag',
+      actionOnly: true,
+      subactions: [
+        ...ITEM_STATUSES.map(s => ({
+          key: s.key,
+          label: s.label,
+          onPress: () => handleStatusChange(s.key),
+        })),
+        { key: 'clear-status', label: 'Clear Status', onPress: () => handleStatusChange('') },
+      ],
+    });
+
+    items.push({
       label: 'Transaction',
       icon: 'link',
       actionOnly: true,
       subactions: [
-        { key: 'set', label: 'Set Transaction', onPress: handleLinkTransaction, icon: 'link' },
         { key: 'clear', label: 'Clear Transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
       ],
     });
@@ -514,10 +452,10 @@ export default function ItemDetailScreen() {
     return items;
   }, [
     handleDelete,
-    handleLinkTransaction,
     handleReassignToInventory,
     handleRemoveSpace,
     handleSellToInventory,
+    handleStatusChange,
     handleUnlinkTransaction,
     id,
     projectId,
@@ -686,7 +624,6 @@ export default function ItemDetailScreen() {
     }
   }, [item, error, collapsedSections, handleToggleSection, uiKitTheme,
       handleAddImage, handleRemoveImage, handleSetPrimaryImage,
-      trimmedTransactionId, transactionLabel, handleOpenTransaction,
       spaceLabel, budgetCategoryLabel]);
 
   // Removed inline move form - now accessed via kebab menu
@@ -772,185 +709,64 @@ export default function ItemDetailScreen() {
       />
 
       {/* Sell to Project modal */}
-      <BottomSheet visible={sellToProjectVisible} onRequestClose={() => setSellToProjectVisible(false)}>
-        <View style={[styles.moveForm, { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }]}>
-          <AppText variant="body" style={{ fontWeight: '700' }}>
-            Sell to Project
-          </AppText>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-            Sale and purchase records will be created for financial tracking.
-            If you're just fixing a misallocation, use Reassign instead.
-          </AppText>
-          {accountId && (
-            <View style={{ gap: 8 }}>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                Target project
-              </AppText>
-              <ProjectSelector
-                accountId={accountId}
-                value={sellTargetProjectId}
-                onChange={setSellTargetProjectId}
-                excludeProjectId={projectId}
-              />
-            </View>
-          )}
-          {sellTargetProjectId && (
-            <View style={{ gap: 8 }}>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                Destination category
-              </AppText>
-              {Object.entries(budgetCategories).length === 0 ? (
-                <AppText variant="caption">Loading categories...</AppText>
-              ) : (
-                <ScrollView style={{ maxHeight: 200 }}>
-                  {Object.entries(budgetCategories)
-                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-                    .map(([catId, cat]) => (
-                      <Pressable
-                        key={catId}
-                        onPress={() => setSellDestCategoryId(catId)}
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          paddingVertical: 10,
-                          paddingHorizontal: 12,
-                          borderRadius: 8,
-                          backgroundColor: sellDestCategoryId === catId ? uiKitTheme.background.surface : undefined,
-                        }}
-                      >
-                        <AppText variant="body">{cat.name}</AppText>
-                        {sellDestCategoryId === catId && (
-                          <AppText variant="body" style={{ color: theme.colors.primary }}>✓</AppText>
-                        )}
-                      </Pressable>
-                    ))}
-                </ScrollView>
-              )}
-            </View>
-          )}
-          {sellTargetProjectId && scope === 'project' && item && !item.budgetCategoryId && (
-            <View style={{ gap: 8 }}>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                Source category (item is uncategorized)
-              </AppText>
-              {Object.entries(budgetCategories).length === 0 ? (
-                <AppText variant="caption">Loading categories...</AppText>
-              ) : (
-                <ScrollView style={{ maxHeight: 150 }}>
-                  {Object.entries(budgetCategories)
-                    .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-                    .map(([catId, cat]) => (
-                      <Pressable
-                        key={catId}
-                        onPress={() => setSellSourceCategoryId(catId)}
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          paddingVertical: 10,
-                          paddingHorizontal: 12,
-                          borderRadius: 8,
-                          backgroundColor: sellSourceCategoryId === catId ? uiKitTheme.background.surface : undefined,
-                        }}
-                      >
-                        <AppText variant="body">{cat.name}</AppText>
-                        {sellSourceCategoryId === catId && (
-                          <AppText variant="body" style={{ color: theme.colors.primary }}>✓</AppText>
-                        )}
-                      </Pressable>
-                    ))}
-                </ScrollView>
-              )}
-            </View>
-          )}
-          <AppButton
-            title="Confirm Sale"
-            variant="primary"
-            disabled={!sellTargetProjectId || !sellDestCategoryId}
-            onPress={() => {
-              if (!accountId || !sellTargetProjectId || !sellDestCategoryId || !item) return;
-              if (scope === 'project' && projectId) {
-                // Flow C: Project → Project
-                const sourceCatId = item.budgetCategoryId ?? sellSourceCategoryId;
-                if (!sourceCatId) return;
-                requestProjectToProjectMove({
-                  accountId,
-                  sourceProjectId: projectId,
-                  targetProjectId: sellTargetProjectId,
-                  destinationBudgetCategoryId: sellDestCategoryId,
-                  items: [{ ...item, budgetCategoryId: sourceCatId }],
-                });
-              } else {
-                // Flow B: Inventory → Project
-                requestBusinessToProjectPurchase({
-                  accountId,
-                  targetProjectId: sellTargetProjectId,
-                  budgetCategoryId: sellDestCategoryId,
-                  items: [item],
-                });
-              }
-              setSellToProjectVisible(false);
-              setSellTargetProjectId(null);
-              setSellDestCategoryId(null);
-              setSellSourceCategoryId(null);
-            }}
-            style={{ minHeight: 44 }}
-          />
-        </View>
-      </BottomSheet>
+      <SellToProjectModal
+        visible={sellToProjectVisible}
+        onRequestClose={() => {
+          setSellToProjectVisible(false);
+        }}
+        accountId={accountId!}
+        excludeProjectId={projectId}
+        destBudgetCategories={budgetCategories}
+        sourceBudgetCategories={budgetCategories}
+        showSourceCategoryPicker={scope === 'project' && !!item && !item.budgetCategoryId}
+        showDestCategoryPicker={true}
+        onConfirm={({ targetProjectId: tpId, destCategoryId: dcId, sourceCategoryId: scId }) => {
+          if (!accountId || !tpId || !dcId || !item) return;
+          if (scope === 'project' && projectId) {
+            const sourceCatId = item.budgetCategoryId ?? scId;
+            if (!sourceCatId) return;
+            requestProjectToProjectMove({
+              accountId,
+              sourceProjectId: projectId,
+              targetProjectId: tpId,
+              destinationBudgetCategoryId: dcId,
+              items: [{ ...item, budgetCategoryId: sourceCatId }],
+            });
+          } else {
+            requestBusinessToProjectPurchase({
+              accountId,
+              targetProjectId: tpId,
+              budgetCategoryId: dcId,
+              items: [item],
+            });
+          }
+          setSellToProjectVisible(false);
+        }}
+      />
 
       {/* Reassign to Project modal */}
-      <BottomSheet visible={reassignToProjectVisible} onRequestClose={() => setReassignToProjectVisible(false)}>
-        <View style={[styles.moveForm, { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }]}>
-          <AppText variant="body" style={{ fontWeight: '700' }}>
-            Reassign to Project
-          </AppText>
-          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-            Move this item directly to another project. No sale or purchase records will be created.
-          </AppText>
-          {accountId && (
-            <View style={{ gap: 8 }}>
-              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                Target project
-              </AppText>
-              <ProjectSelector
-                accountId={accountId}
-                value={reassignTargetProjectId}
-                onChange={setReassignTargetProjectId}
-                excludeProjectId={projectId}
-              />
-            </View>
-          )}
-          <AppButton
-            title="Reassign"
-            variant="primary"
-            disabled={!reassignTargetProjectId}
-            onPress={() => {
-              handleReassignToProjectConfirm();
-            }}
-            style={{ minHeight: 44 }}
-          />
-        </View>
-      </BottomSheet>
+      <ReassignToProjectModal
+        visible={reassignToProjectVisible}
+        onRequestClose={() => setReassignToProjectVisible(false)}
+        accountId={accountId!}
+        excludeProjectId={projectId}
+        onConfirm={(tpId) => {
+          if (!accountId || !id) return;
+          reassignItemToProject(accountId, id, tpId);
+          setReassignToProjectVisible(false);
+        }}
+      />
 
       {/* Space Picker */}
-      <BottomSheet visible={spacePickerVisible} onRequestClose={() => setSpacePickerVisible(false)}>
-        <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }}>
-          <AppText variant="body" style={{ fontWeight: '700' }}>
-            Set Space
-          </AppText>
-          {accountId && (
-            <SpaceSelector
-              projectId={projectId ?? null}
-              value={item?.spaceId ?? null}
-              onChange={handleSetSpaceConfirm}
-              allowCreate={true}
-              placeholder="Select space"
-            />
-          )}
-        </View>
-      </BottomSheet>
+      <SetSpaceModal
+        visible={spacePickerVisible}
+        onRequestClose={() => setSpacePickerVisible(false)}
+        projectId={projectId ?? null}
+        currentSpaceId={item?.spaceId ?? null}
+        onConfirm={(spaceId) => {
+          handleSetSpaceConfirm(spaceId);
+        }}
+      />
 
       {/* Status Change Menu */}
       <BottomSheetMenuList
