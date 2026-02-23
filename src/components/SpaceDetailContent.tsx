@@ -910,7 +910,7 @@ export function SpaceDetailContent({
       case 'notes':
         return (
           <View style={{ paddingTop: 12 }}>
-            <NotesSection notes={space?.notes} expandable={true} />
+            <NotesSection notes={space?.notes} />
           </View>
         );
 

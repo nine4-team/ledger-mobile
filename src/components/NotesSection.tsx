@@ -1,20 +1,15 @@
-import { useState } from 'react';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { AppText } from './AppText';
 import { useTheme } from '../theme/ThemeProvider';
 import { Card } from './Card';
 
 type NotesSectionProps = {
   notes: string | null | undefined;
-  expandable?: boolean;
 };
 
-export function NotesSection({ notes, expandable = false }: NotesSectionProps) {
+export function NotesSection({ notes }: NotesSectionProps) {
   const theme = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const trimmedNotes = notes?.trim();
-  const shouldShowToggle = expandable && trimmedNotes && trimmedNotes.length > 120;
 
   return (
     <Card>
@@ -23,26 +18,8 @@ export function NotesSection({ notes, expandable = false }: NotesSectionProps) {
           No notes.
         </AppText>
       ) : (
-        <Pressable
-          onPress={() => setIsExpanded((prev) => !prev)}
-          disabled={!shouldShowToggle}
-        >
-          <AppText variant="body" numberOfLines={isExpanded ? undefined : shouldShowToggle ? 2 : undefined}>
-            {trimmedNotes}
-          </AppText>
-          {shouldShowToggle && (
-            <AppText variant="caption" style={[styles.toggleText, { color: theme.colors.primary }]}>
-              {isExpanded ? 'Show less' : 'Show more'}
-            </AppText>
-          )}
-        </Pressable>
+        <AppText variant="body">{trimmedNotes}</AppText>
       )}
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  toggleText: {
-    marginTop: 4,
-  },
-});
