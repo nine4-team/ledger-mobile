@@ -594,8 +594,8 @@ export default function ItemDetailScreen() {
           size={24}
           color={
             (item?.bookmark ?? (item as any)?.isBookmarked)
-              ? uiKitTheme.primary.main
-              : uiKitTheme.text.secondary
+              ? uiKitTheme.status.missed.text
+              : uiKitTheme.primary.main
           }
         />
       </Pressable>

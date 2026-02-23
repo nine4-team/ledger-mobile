@@ -353,7 +353,7 @@ export function TransactionCard({
                 <MaterialIcons
                   name={bookmarked ? 'bookmark' : 'bookmark-border'}
                   size={24}
-                  color={bookmarked ? uiKitTheme.primary.main : themed.icon.color}
+                  color={bookmarked ? uiKitTheme.status.missed.text : uiKitTheme.primary.main}
                 />
               </Pressable>
             ) : null}
