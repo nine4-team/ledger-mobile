@@ -354,8 +354,9 @@ export function SharedItemsList({
   }, [accountId, embedded]);
 
   // Subscribe to source project budget categories when sell-to-business modal is open
+  const sellToBusinessOpen = sellToBusinessVisible || singleItemSellToBusinessVisible;
   useEffect(() => {
-    if (!sellToBusinessVisible || embedded) return;
+    if (!sellToBusinessOpen || embedded) return;
     if (!accountId || scopeConfig?.scope !== 'project' || !scopeConfig.projectId) {
       setSellBudgetCategories({});
       return;
@@ -363,11 +364,12 @@ export function SharedItemsList({
     return subscribeToBudgetCategories(accountId, (next) => {
       setSellBudgetCategories(mapBudgetCategories(next));
     });
-  }, [sellToBusinessVisible, accountId, scopeConfig, embedded]);
+  }, [sellToBusinessOpen, accountId, scopeConfig, embedded]);
 
   // Subscribe to target project budget categories when sell-to-project modal is open
+  const sellToProjectOpen = sellToProjectVisible || singleItemSellToProjectVisible;
   useEffect(() => {
-    if (!sellToProjectVisible || embedded || !sellTargetProjectId) {
+    if (!sellToProjectOpen || embedded || !sellTargetProjectId) {
       setSellDestBudgetCategories({});
       return;
     }
@@ -375,7 +377,7 @@ export function SharedItemsList({
     return subscribeToBudgetCategories(accountId, (next) => {
       setSellDestBudgetCategories(mapBudgetCategories(next));
     });
-  }, [sellToProjectVisible, sellTargetProjectId, accountId, embedded]);
+  }, [sellToProjectOpen, sellTargetProjectId, accountId, embedded]);
 
   useEffect(() => {
     if (embedded) return; // Skip in embedded mode
