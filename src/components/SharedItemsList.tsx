@@ -24,19 +24,20 @@ import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
 import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
 import { deleteItem, updateItem, type Item } from '../data/itemsService';
-import { requestBusinessToProjectPurchase, requestProjectToBusinessSale, requestProjectToProjectMove } from '../data/inventoryOperations';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
 import { SetSpaceModal } from './modals/SetSpaceModal';
 import { ReassignToProjectModal } from './modals/ReassignToProjectModal';
 import { SellToProjectModal } from './modals/SellToProjectModal';
 import { SellToBusinessModal } from './modals/SellToBusinessModal';
 import { TransactionPickerModal } from './modals/TransactionPickerModal';
-import { resolveSourceCategories, resolveDestinationCategories, needsSourceCategoryPicker, needsDestinationCategoryPicker, type ItemForCategoryResolution } from '../utils/bulkSaleUtils';
+import { needsSourceCategoryPicker, needsDestinationCategoryPicker, type ItemForCategoryResolution } from '../utils/bulkSaleUtils';
 import { resolveAttachmentUri } from '../offline/media';
 import { filterItemsForBulkReassign, reassignItemToInventory, reassignItemToProject } from '../data/reassignService';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { ITEM_STATUSES, getItemStatusLabel } from '../constants/itemStatuses';
+import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
+import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
 import { usePickerMode, type ItemEligibilityCheck } from '../hooks/usePickerMode';
 import { ItemPickerControlBar } from './ItemPickerControlBar';
 
@@ -797,179 +798,23 @@ export function SharedItemsList({
 
     if (!scopeConfig) return [];
 
-    const items: AnchoredMenuItem[] = [];
-
-    // Edit Details
-    items.push({
-      key: 'edit',
-      label: 'Edit Details',
-      icon: 'edit',
-      onPress: () => {
-        router.push({
-          pathname: '/items/[id]/edit',
-          params: {
-            id: item.id,
-            scope: scopeConfig.scope ?? '',
-            projectId: scopeConfig.projectId ?? '',
-          },
-        });
+    return buildSingleItemMenu({
+      context: 'list',
+      scopeConfig,
+      callbacks: {
+        onEditOrOpen: () => router.push({ pathname: '/items/[id]/edit', params: { id: item.id, scope: scopeConfig.scope ?? '', projectId: scopeConfig.projectId ?? '' } }),
+        onStatusChange: (status) => handleStatusChange(item.id, status),
+        onSetTransaction: () => { setSingleItemId(item.id); setSingleItemTransactionPickerVisible(true); },
+        onClearTransaction: () => { if (accountId) updateItem(accountId, item.id, { transactionId: null }); },
+        onSetSpace: () => { setSingleItemId(item.id); setSingleItemSpacePickerVisible(true); },
+        onClearSpace: () => { if (accountId) updateItem(accountId, item.id, { spaceId: null }); },
+        onSellToBusiness: scopeConfig.scope === 'project' ? () => { setSingleItemId(item.id); setSingleItemSellToBusinessVisible(true); } : undefined,
+        onSellToProject: () => { setSingleItemId(item.id); setSingleItemSellToProjectVisible(true); },
+        onReassignToInventory: scopeConfig.scope === 'project' ? () => { if (accountId) reassignItemToInventory(accountId, item.id); } : undefined,
+        onReassignToProject: () => { setSingleItemId(item.id); setSingleItemReassignToProjectVisible(true); },
+        onDelete: () => handleDeleteItem(item.id, label),
       },
     });
-
-    // Status submenu
-    items.push({
-      key: 'status',
-      label: 'Status',
-      icon: 'flag',
-      actionOnly: true,
-      subactions: [
-        ...ITEM_STATUSES.map(s => ({
-          key: s.key,
-          label: s.label,
-          onPress: () => handleStatusChange(item.id, s.key),
-        })),
-        { key: 'clear-status', label: 'Clear Status', onPress: () => handleStatusChange(item.id, '') },
-      ],
-    });
-
-    // Transaction submenu
-    items.push({
-      key: 'transaction',
-      label: 'Transaction',
-      icon: 'link',
-      actionOnly: true,
-      subactions: [
-        {
-          key: 'set-transaction',
-          label: 'Set Transaction',
-          icon: 'link',
-          onPress: () => {
-            setSingleItemId(item.id);
-            setSingleItemTransactionPickerVisible(true);
-          },
-        },
-        {
-          key: 'clear-transaction',
-          label: 'Clear Transaction',
-          icon: 'link-off',
-          onPress: () => { if (accountId) updateItem(accountId, item.id, { transactionId: null }); },
-        },
-      ],
-    });
-
-    // Space submenu
-    items.push({
-      key: 'space',
-      label: 'Space',
-      icon: 'place',
-      actionOnly: true,
-      subactions: [
-        {
-          key: 'set-space',
-          label: 'Set Space',
-          icon: 'place',
-          onPress: () => {
-            setSingleItemId(item.id);
-            setSingleItemSpacePickerVisible(true);
-          },
-        },
-        {
-          key: 'clear-space',
-          label: 'Clear Space',
-          icon: 'close',
-          onPress: () => { if (accountId) updateItem(accountId, item.id, { spaceId: null }); },
-        },
-      ],
-    });
-
-    // Sell submenu (scope-dependent)
-    if (scopeConfig.scope === 'project') {
-      items.push({
-        key: 'sell',
-        label: 'Sell',
-        icon: 'sell',
-        actionOnly: true,
-        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
-        subactions: [
-          {
-            key: 'sell-to-business',
-            label: 'Sell to Business',
-            icon: 'inventory',
-            onPress: () => {
-              setSingleItemId(item.id);
-              setSingleItemSellToBusinessVisible(true);
-            },
-          },
-          {
-            key: 'sell-to-project',
-            label: 'Sell to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setSingleItemId(item.id);
-              setSingleItemSellToProjectVisible(true);
-            },
-          },
-        ],
-      });
-
-      // Reassign submenu (project scope only)
-      items.push({
-        key: 'reassign',
-        label: 'Reassign',
-        icon: 'swap-horiz',
-        actionOnly: true,
-        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
-        subactions: [
-          {
-            key: 'reassign-to-inventory',
-            label: 'Reassign to Inventory',
-            icon: 'inventory',
-            onPress: () => {
-              if (!accountId) return;
-              reassignItemToInventory(accountId, item.id);
-            },
-          },
-          {
-            key: 'reassign-to-project',
-            label: 'Reassign to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setSingleItemId(item.id);
-              setSingleItemReassignToProjectVisible(true);
-            },
-          },
-        ],
-      });
-    } else if (scopeConfig.scope === 'inventory') {
-      items.push({
-        key: 'sell',
-        label: 'Sell',
-        icon: 'sell',
-        actionOnly: true,
-        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
-        subactions: [
-          {
-            key: 'sell-to-project',
-            label: 'Sell to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setSingleItemId(item.id);
-              setSingleItemSellToProjectVisible(true);
-            },
-          },
-        ],
-      });
-    }
-
-    // Delete
-    items.push({
-      key: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      onPress: () => handleDeleteItem(item.id, label),
-    });
-
-    return items;
   }, [embedded, externalGetItemMenuItems, scopeConfig, accountId, router, handleStatusChange, handleDeleteItem]);
 
   const handleBulkClearTransaction = useCallback(() => {
@@ -990,158 +835,22 @@ export function SharedItemsList({
 
   const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
     if (embedded || !scopeConfig) return [];
-    const items: AnchoredMenuItem[] = [];
-
-    // Status submenu
-    items.push({
-      key: 'status',
-      label: 'Status',
-      icon: 'flag',
-      actionOnly: true,
-      subactions: [
-        ...ITEM_STATUSES.map(s => ({
-          key: s.key,
-          label: s.label,
-          onPress: () => handleBulkStatusChange(s.key),
-        })),
-      ],
+    return buildBulkMenu({
+      context: 'list',
+      scopeConfig,
+      callbacks: {
+        onStatusChange: (status) => handleBulkStatusChange(status),
+        onSetTransaction: () => setBulkTransactionPickerVisible(true),
+        onClearTransaction: () => handleBulkClearTransaction(),
+        onSetSpace: () => setBulkSpacePickerVisible(true),
+        onClearSpace: () => handleBulkClearSpace(),
+        onSellToBusiness: scopeConfig.scope === 'project' ? () => setSellToBusinessVisible(true) : undefined,
+        onSellToProject: () => { setSellTargetProjectId(null); setSellToProjectVisible(true); },
+        onReassignToInventory: scopeConfig.scope === 'project' ? () => setReassignToInventoryVisible(true) : undefined,
+        onReassignToProject: () => setReassignToProjectVisible(true),
+        onDelete: () => handleBulkDelete(),
+      },
     });
-
-    // Transaction submenu
-    items.push({
-      key: 'transaction',
-      label: 'Transaction',
-      icon: 'link',
-      actionOnly: true,
-      subactions: [
-        {
-          key: 'set-transaction',
-          label: 'Set Transaction',
-          icon: 'link',
-          onPress: () => {
-            setBulkTransactionPickerVisible(true);
-          },
-        },
-        {
-          key: 'clear-transaction',
-          label: 'Clear Transaction',
-          icon: 'link-off',
-          onPress: handleBulkClearTransaction,
-        },
-      ],
-    });
-
-    // Space submenu
-    items.push({
-      key: 'space',
-      label: 'Space',
-      icon: 'place',
-      actionOnly: true,
-      subactions: [
-        {
-          key: 'set-space',
-          label: 'Set Space',
-          icon: 'place',
-          onPress: () => {
-            setBulkSpacePickerVisible(true);
-          },
-        },
-        {
-          key: 'clear-space',
-          label: 'Clear Space',
-          icon: 'close',
-          onPress: handleBulkClearSpace,
-        },
-      ],
-    });
-
-    // Sell submenu (project scope or inventory with capability)
-    if (scopeConfig.scope === 'project') {
-      items.push({
-        key: 'sell',
-        label: 'Sell',
-        icon: 'sell',
-        actionOnly: true,
-        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
-        subactions: [
-          {
-            key: 'sell-to-business',
-            label: 'Sell to Business',
-            icon: 'inventory',
-            onPress: () => {
-              setSellToBusinessVisible(true);
-            },
-          },
-          {
-            key: 'sell-to-project',
-            label: 'Sell to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setSellTargetProjectId(null);
-              setSellToProjectVisible(true);
-            },
-          },
-        ],
-      });
-    } else if (scopeConfig.scope === 'inventory' && scopeConfig.capabilities?.canSellToProject) {
-      items.push({
-        key: 'sell',
-        label: 'Sell',
-        icon: 'sell',
-        actionOnly: true,
-        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
-        subactions: [
-          {
-            key: 'sell-to-project',
-            label: 'Sell to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setSellTargetProjectId(null);
-              setSellToProjectVisible(true);
-            },
-          },
-        ],
-      });
-    }
-
-    // Reassign submenu (project scope only)
-    if (scopeConfig.scope === 'project') {
-      items.push({
-        key: 'reassign',
-        label: 'Reassign',
-        icon: 'swap-horiz',
-        actionOnly: true,
-        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
-        subactions: [
-          {
-            key: 'reassign-to-inventory',
-            label: 'Reassign to Inventory',
-            icon: 'inventory',
-            onPress: () => {
-              setReassignToInventoryVisible(true);
-            },
-          },
-          {
-            key: 'reassign-to-project',
-            label: 'Reassign to Project',
-            icon: 'assignment',
-            onPress: () => {
-              setReassignToProjectVisible(true);
-            },
-          },
-        ],
-      });
-    }
-
-    // Delete
-    items.push({
-      key: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      onPress: handleBulkDelete,
-    });
-
-    return items;
   }, [embedded, scopeConfig, handleBulkStatusChange, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete]);
 
   return (
@@ -1260,17 +969,7 @@ export function SharedItemsList({
         onConfirm={(scId) => {
           if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId) return;
           const selected = items.filter(i => selectedIds.includes(i.id));
-          const resolved = resolveSourceCategories(selected as ItemForCategoryResolution[], scId);
-          if (resolved.length === 0) return;
-          const itemsWithCategories = resolved.map(r => {
-            const original = selected.find(s => s.id === r.id)!;
-            return { ...original, budgetCategoryId: r.resolvedCategoryId };
-          });
-          requestProjectToBusinessSale({
-            accountId,
-            projectId: scopeConfig.projectId,
-            items: itemsWithCategories,
-          });
+          executeSellToBusiness({ accountId, projectId: scopeConfig.projectId, items: selected, sourceCategoryId: scId });
           setSellToBusinessVisible(false);
           clearSelection();
         }}
@@ -1292,34 +991,16 @@ export function SharedItemsList({
         onConfirm={({ targetProjectId: tpId, destCategoryId: dcId, sourceCategoryId: scId }) => {
           if (!accountId || !tpId) return;
           const selected = items.filter(i => selectedIds.includes(i.id));
-          if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
-            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-            const resolvedDest = resolveDestinationCategories(selected as ItemForCategoryResolution[], validDestIds, dcId);
-            const resolvedSource = resolveSourceCategories(selected as ItemForCategoryResolution[], scId);
-            if (resolvedDest.length === 0) return;
-            const destCategoryId = resolvedDest[0].resolvedCategoryId;
-            requestProjectToProjectMove({
-              accountId,
-              sourceProjectId: scopeConfig.projectId,
-              targetProjectId: tpId,
-              destinationBudgetCategoryId: destCategoryId,
-              items: resolvedSource.map(r => {
-                const original = selected.find(s => s.id === r.id)!;
-                return { ...original, budgetCategoryId: r.resolvedCategoryId };
-              }),
-            });
-          } else {
-            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-            const resolvedDest = resolveDestinationCategories(selected as ItemForCategoryResolution[], validDestIds, dcId);
-            if (resolvedDest.length === 0) return;
-            const destCategoryId = resolvedDest[0].resolvedCategoryId;
-            requestBusinessToProjectPurchase({
-              accountId,
-              targetProjectId: tpId,
-              budgetCategoryId: destCategoryId,
-              items: selected,
-            });
-          }
+          executeSellToProject({
+            accountId,
+            scope: scopeConfig?.scope ?? 'inventory',
+            sourceProjectId: scopeConfig?.projectId,
+            targetProjectId: tpId,
+            items: selected,
+            sourceCategoryId: scId,
+            destCategoryId: dcId,
+            validDestCategoryIds: new Set(Object.keys(sellDestBudgetCategories)),
+          });
           setSellToProjectVisible(false);
           clearSelection();
         }}
@@ -1352,9 +1033,8 @@ export function SharedItemsList({
                   disabled={eligible.length === 0}
                   onPress={() => {
                     if (!accountId) return;
-                    for (const itemId of eligible) {
-                      reassignItemToInventory(accountId, itemId);
-                    }
+                    const selected = items.filter(i => selectedIds.includes(i.id));
+                    executeBulkReassignToInventory({ accountId, items: selected });
                     setReassignToInventoryVisible(false);
                     clearSelection();
                   }}
@@ -1381,10 +1061,7 @@ export function SharedItemsList({
         onConfirm={(tpId) => {
           if (!accountId) return;
           const selected = items.filter(i => selectedIds.includes(i.id));
-          const { eligible } = filterItemsForBulkReassign(selected);
-          for (const itemId of eligible) {
-            reassignItemToProject(accountId, itemId, tpId);
-          }
+          executeBulkReassignToProject({ accountId, items: selected, targetProjectId: tpId });
           setReassignToProjectVisible(false);
           clearSelection();
         }}
@@ -1468,13 +1145,7 @@ export function SharedItemsList({
           if (!accountId || !scopeConfig || scopeConfig.scope !== 'project' || !scopeConfig.projectId || !singleItemId) return;
           const item = items.find(i => i.id === singleItemId);
           if (!item) return;
-          const resolved = resolveSourceCategories([item] as ItemForCategoryResolution[], scId);
-          if (resolved.length === 0) return;
-          requestProjectToBusinessSale({
-            accountId,
-            projectId: scopeConfig.projectId,
-            items: resolved.map(r => ({ ...item, budgetCategoryId: r.resolvedCategoryId })),
-          });
+          executeSellToBusiness({ accountId, projectId: scopeConfig.projectId, items: [item], sourceCategoryId: scId });
           setSingleItemSellToBusinessVisible(false);
           setSingleItemId(null);
         }}
@@ -1504,29 +1175,16 @@ export function SharedItemsList({
           if (!accountId || !tpId || !singleItemId) return;
           const item = items.find(i => i.id === singleItemId);
           if (!item) return;
-          if (scopeConfig?.scope === 'project' && scopeConfig.projectId) {
-            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-            const resolvedDest = resolveDestinationCategories([item] as ItemForCategoryResolution[], validDestIds, dcId);
-            const resolvedSource = resolveSourceCategories([item] as ItemForCategoryResolution[], scId);
-            if (resolvedDest.length === 0) return;
-            requestProjectToProjectMove({
-              accountId,
-              sourceProjectId: scopeConfig.projectId,
-              targetProjectId: tpId,
-              destinationBudgetCategoryId: resolvedDest[0].resolvedCategoryId,
-              items: resolvedSource.map(r => ({ ...item, budgetCategoryId: r.resolvedCategoryId })),
-            });
-          } else {
-            const validDestIds = new Set(Object.keys(sellDestBudgetCategories));
-            const resolvedDest = resolveDestinationCategories([item] as ItemForCategoryResolution[], validDestIds, dcId);
-            if (resolvedDest.length === 0) return;
-            requestBusinessToProjectPurchase({
-              accountId,
-              targetProjectId: tpId,
-              budgetCategoryId: resolvedDest[0].resolvedCategoryId,
-              items: [item],
-            });
-          }
+          executeSellToProject({
+            accountId,
+            scope: scopeConfig?.scope ?? 'inventory',
+            sourceProjectId: scopeConfig?.projectId,
+            targetProjectId: tpId,
+            items: [item],
+            sourceCategoryId: scId,
+            destCategoryId: dcId,
+            validDestCategoryIds: new Set(Object.keys(sellDestBudgetCategories)),
+          });
           setSingleItemSellToProjectVisible(false);
           setSingleItemId(null);
         }}

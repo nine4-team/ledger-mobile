@@ -231,7 +231,7 @@ export function ItemCard({
                 <MaterialIcons
                   name={bookmarked ? 'bookmark' : 'bookmark-border'}
                   size={24}
-                  color={bookmarked ? uiKitTheme.status.missed.text : themed.icon.color}
+                  color={bookmarked ? uiKitTheme.primary.main : themed.icon.color}
                 />
               </Pressable>
             ) : null}
