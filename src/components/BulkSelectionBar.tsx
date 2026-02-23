@@ -6,12 +6,14 @@ import { useTheme } from '../theme/ThemeProvider';
 
 type BulkSelectionBarProps = {
   selectedCount: number;
+  totalCents?: number;
   onBulkActionsPress: () => void;
   onClearSelection: () => void;
 };
 
 export function BulkSelectionBar({
   selectedCount,
+  totalCents,
   onBulkActionsPress,
   onClearSelection,
 }: BulkSelectionBarProps) {
@@ -29,9 +31,16 @@ export function BulkSelectionBar({
         },
       ]}
     >
-      <AppText variant="caption" style={styles.countText}>
-        {selectedCount} selected
-      </AppText>
+      <View style={styles.info}>
+        <AppText variant="caption" style={styles.countText}>
+          {selectedCount} selected
+        </AppText>
+        {typeof totalCents === 'number' && (
+          <AppText variant="caption">
+            ${(totalCents / 100).toFixed(2)}
+          </AppText>
+        )}
+      </View>
       <View style={styles.actions}>
         <AppButton
           title="Clear"
@@ -62,6 +71,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 8,
+  },
+  info: {
+    gap: 2,
   },
   countText: {
     fontWeight: '600',

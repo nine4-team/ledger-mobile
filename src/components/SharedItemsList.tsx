@@ -225,7 +225,7 @@ export function SharedItemsList({
   const [sortOpen, setSortOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [internalItems, setInternalItems] = useState<ScopedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!embedded);
   const [bulkSheetOpen, setBulkSheetOpen] = useState(false);
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, { name: string }>>({});
@@ -788,6 +788,14 @@ export function SharedItemsList({
     if (sortMode === 'created-asc') return 'Created (Oldest First)';
     return sortMode;
   }, [sortMode]);
+
+  const selectedTotalCents = useMemo(() => {
+    const selectedSet = new Set(selectedIds);
+    return filtered.reduce((sum, row) => {
+      if (!selectedSet.has(row.id)) return sum;
+      return sum + (getDisplayPriceCents(row.item) ?? 0);
+    }, 0);
+  }, [filtered, selectedIds]);
 
   const isSortActive = sortMode !== DEFAULT_SORT;
   const isFilterActive =
@@ -1651,6 +1659,7 @@ export function SharedItemsList({
       {!embedded && (
         <BulkSelectionBar
           selectedCount={selectedIds.length}
+          totalCents={selectedTotalCents}
           onBulkActionsPress={() => setBulkSheetOpen(true)}
           onClearSelection={clearSelection}
         />

@@ -163,6 +163,31 @@ export function subscribeToScopedItems(
   );
 }
 
+export function subscribeToTransactionItems(
+  accountId: string,
+  transactionId: string,
+  onChange: (items: ScopedItem[]) => void
+): Unsubscribe {
+  if (!isFirebaseConfigured || !db) {
+    onChange([]);
+    return () => {};
+  }
+
+  const q = query(collection(db, `accounts/${accountId}/items`), where('transactionId', '==', transactionId));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const next = snapshot.docs.map((doc) => normalizeScopedItemFromFirestore(doc.data(), doc.id));
+      onChange(toSafeArray(next));
+    },
+    (error) => {
+      console.warn('[scopedListData] transaction items subscription failed', error);
+      onChange([]);
+    }
+  );
+}
+
 export function subscribeToScopedTransactions(
   accountId: string,
   scopeConfig: ScopeConfig,

@@ -25,6 +25,7 @@ import {
   subscribeToScopedTransactions,
 } from '../data/scopedListData';
 import { isCanonicalInventorySaleTransaction } from '../data/inventoryOperations';
+import { getTransactionDisplayName } from '../utils/transactionDisplayName';
 import { subscribeToBudgetCategories, mapBudgetCategories } from '../data/budgetCategoriesService';
 import { getBudgetCategoryColor } from '../utils/budgetCategoryColors';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
@@ -40,6 +41,7 @@ type TransactionRow = {
   id: string;
   label: string;
   subtitle?: string;
+  amountCents: number | null;
   transaction: ScopedTransaction;
 };
 
@@ -67,15 +69,6 @@ const SORT_MODES = [
 type SortMode = (typeof SORT_MODES)[number];
 const DEFAULT_SORT: SortMode = 'date-desc';
 
-function getCanonicalTitle(transaction: ScopedTransaction): string {
-  if (transaction.inventorySaleDirection === 'business_to_project') {
-    return 'Inventory → Project (System)';
-  }
-  if (transaction.inventorySaleDirection === 'project_to_business') {
-    return 'Project → Inventory (System)';
-  }
-  return 'Inventory Sale (System)';
-}
 
 function formatCents(value?: number | null) {
   if (typeof value !== 'number') return null;
@@ -226,9 +219,9 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       const amountLabel = amountValue != null ? `$${(amountValue / 100).toFixed(2)}` : 'No amount';
       const dateLabel = tx.transactionDate?.trim() || 'No date';
       const sourceLabel = tx.source?.trim() || '';
-      const label = isCanonical ? getCanonicalTitle(tx) : sourceLabel || tx.id.slice(0, 6);
+      const label = getTransactionDisplayName(tx);
       const subtitle = [amountLabel, dateLabel, sourceLabel].filter(Boolean).join(' • ');
-      return { id: tx.id, label, subtitle, transaction: tx };
+      return { id: tx.id, label, subtitle, amountCents: amountValue, transaction: tx };
     });
   }, [items, transactions]);
 
@@ -971,6 +964,14 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     await Share.share({ message: csv, title: `${scopeConfig.scope}-transactions.csv` });
   }, [budgetCategories, items, scopeConfig.capabilities?.canExportCsv, scopeConfig.scope, transactions]);
 
+  const selectedTotalCents = useMemo(() => {
+    const selectedSet = new Set(selectedIds);
+    return filtered.reduce((sum, row) => {
+      if (!selectedSet.has(row.id)) return sum;
+      return sum + (row.amountCents ?? 0);
+    }, 0);
+  }, [filtered, selectedIds]);
+
   const isSortActive = sortMode !== DEFAULT_SORT;
   const isFilterActive = (() => {
     if (activeFilters.status && activeFilters.status !== 'all') {
@@ -1137,7 +1138,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
         renderItem={({ item }) => (
           <TransactionCard
             id={item.transaction.id}
-            source={item.transaction.source ?? ''}
+            source={item.label}
             amountCents={item.transaction.amountCents ?? null}
             transactionDate={item.transaction.transactionDate}
             notes={item.transaction.notes}
@@ -1205,9 +1206,14 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       />
       {selectedIds.length > 0 ? (
         <View style={styles.bulkBar}>
-          <AppText variant="caption" style={styles.semiboldText}>
-            {selectedIds.length} selected
-          </AppText>
+          <View style={styles.bulkBarInfo}>
+            <AppText variant="caption" style={styles.semiboldText}>
+              {selectedIds.length} selected
+            </AppText>
+            <AppText variant="caption">
+              ${(selectedTotalCents / 100).toFixed(2)}
+            </AppText>
+          </View>
           <View style={styles.bulkBarSpacer} />
           <View style={styles.bulkBarActions}>
             <AppButton title="Clear" variant="secondary" onPress={clearSelection} />
@@ -1304,6 +1310,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 6,
+  },
+  bulkBarInfo: {
+    gap: 2,
   },
   bulkBarSpacer: {
     flex: 1,

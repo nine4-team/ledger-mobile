@@ -20,7 +20,7 @@ import { useProjectContextStore } from '../../../src/data/projectContextStore';
 import { useAccountContextStore } from '../../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../src/data/scopeConfig';
-import { ScopedItem, subscribeToScopedItems } from '../../../src/data/scopedListData';
+import { ScopedItem, subscribeToScopedItems, subscribeToTransactionItems } from '../../../src/data/scopedListData';
 import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
 import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
@@ -195,10 +195,20 @@ export default function TransactionDetailScreen() {
     return unsub;
   }, [accountId, sellTargetProjectId]);
 
+  const isCanonicalTx = isCanonicalInventorySaleTransaction(transaction);
+
   useEffect(() => {
     if (!accountId || !id || !scope) {
       setItems([]);
       return;
+    }
+    // Canonical sale items may have a different projectId than the transaction,
+    // so query by transactionId directly instead of by scope.
+    if (isCanonicalTx) {
+      const unsubscribe = subscribeToTransactionItems(accountId, id, (next) => {
+        setItems(next);
+      });
+      return () => unsubscribe();
     }
     const scopeConfig =
       scope === 'inventory' ? createInventoryScopeConfig() : projectId ? createProjectScopeConfig(projectId) : null;
@@ -210,7 +220,7 @@ export default function TransactionDetailScreen() {
       setItems(next);
     });
     return () => unsubscribe();
-  }, [accountId, id, projectId, scope]);
+  }, [accountId, id, isCanonicalTx, projectId, scope]);
 
   const fallbackTarget = useMemo(() => {
     if (backTarget) return backTarget;
@@ -219,7 +229,7 @@ export default function TransactionDetailScreen() {
     return '/(tabs)/index';
   }, [backTarget, projectId, scope]);
 
-  const isCanonical = isCanonicalInventorySaleTransaction(transaction);
+  const isCanonical = isCanonicalTx;
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
 
   // Helper to get primary image URI

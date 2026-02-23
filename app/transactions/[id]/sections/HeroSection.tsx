@@ -4,6 +4,7 @@ import { CARD_PADDING, getCardStyle, textEmphasis } from '../../../../src/ui';
 import { useUIKitTheme } from '../../../../src/theme/ThemeProvider';
 import { getTextSecondaryStyle } from '../../../../src/ui/styles/typography';
 import type { Transaction } from '../../../../src/data/transactionsService';
+import { getTransactionDisplayName } from '../../../../src/utils/transactionDisplayName';
 
 type HeroSectionProps = {
   transaction: Transaction;
@@ -32,7 +33,7 @@ export function HeroSection({ transaction }: HeroSectionProps) {
     <View style={[styles.card, getCardStyle(uiKitTheme, { padding: CARD_PADDING })]}>
       <View style={styles.heroHeader}>
         <AppText variant="h2" style={styles.heroTitle}>
-          {transaction.source?.trim() || 'Untitled transaction'}
+          {getTransactionDisplayName(transaction)}
         </AppText>
         <View style={styles.infoRow}>
           <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>

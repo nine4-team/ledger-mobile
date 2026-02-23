@@ -197,6 +197,7 @@ function ensureCanonicalSaleTransaction(params: {
     isCanonicalInventorySale: true,
     inventorySaleDirection: direction,
     budgetCategoryId,
+    source: direction === 'project_to_business' ? 'Sale to Inventory' : 'Purchase from Inventory',
     updatedAt: now,
   };
   if (!exists) {
@@ -911,6 +912,49 @@ export const onItemTransactionIdChanged = onDocumentUpdated(
         });
       }
     }
+  }
+);
+
+/**
+ * Recompute canonical sale transaction totals when an item's price changes.
+ * Only fires for items linked to a SALE_ transaction.
+ */
+export const onItemPriceChanged = onDocumentUpdated(
+  'accounts/{accountId}/items/{itemId}',
+  async (event) => {
+    const before = event.data?.before.data() ?? null;
+    const after = event.data?.after.data() ?? null;
+    if (!before || !after) return;
+
+    const transactionId = (after as any).transactionId as string | null;
+    if (!transactionId || !transactionId.startsWith('SALE_')) return;
+
+    const beforePurchase = (before as any).purchasePriceCents ?? null;
+    const afterPurchase = (after as any).purchasePriceCents ?? null;
+    const beforeProject = (before as any).projectPriceCents ?? null;
+    const afterProject = (after as any).projectPriceCents ?? null;
+    if (beforePurchase === afterPurchase && beforeProject === afterProject) return;
+
+    const accountId = event.params.accountId as string;
+    const db = getFirestore();
+    const itemsSnapshot = await db
+      .collection(`accounts/${accountId}/items`)
+      .where('transactionId', '==', transactionId)
+      .get();
+    const amountCents = itemsSnapshot.docs.reduce(
+      (sum, doc) => sum + getItemValueCents(doc.data() ?? {}),
+      0
+    );
+    const itemIds = itemsSnapshot.docs.map((doc) => doc.id);
+
+    await db.doc(`accounts/${accountId}/transactions/${transactionId}`).set(
+      {
+        amountCents: Math.max(0, amountCents),
+        itemIds,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
   }
 );
 
