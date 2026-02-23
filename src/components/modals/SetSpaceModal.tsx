@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '../AppText';
 import { BottomSheet } from '../BottomSheet';
-import { SpaceSelector } from '../SpaceSelector';
+import { SpacePickerList } from './SpacePickerList';
 import { useTheme } from '../../theme/ThemeProvider';
 
 export interface SetSpaceModalProps {
@@ -45,12 +45,12 @@ export function SetSpaceModal({
             {subtitle}
           </AppText>
         ) : null}
-        <SpaceSelector
+        <SpacePickerList
           projectId={projectId}
-          value={currentSpaceId}
-          onChange={handleChange}
+          selectedId={currentSpaceId}
+          onSelect={handleChange}
           allowCreate
-          placeholder="Select space"
+          maxHeight={250}
         />
       </View>
     </BottomSheet>

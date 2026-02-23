@@ -45,6 +45,7 @@ import { useTransactionById } from '../../../src/hooks/useTransactionById';
 import { useSpaceById } from '../../../src/hooks/useSpaceById';
 import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
 import { executeSellToProject } from '../../../src/actions/itemActionHandlers';
+import { showToast } from '../../../src/components/toastStore';
 
 type ItemDetailParams = {
   id?: string;
@@ -166,6 +167,7 @@ export default function ItemDetailScreen() {
   const handleUnlinkTransaction = () => {
     if (!accountId || !id) return;
     updateItem(accountId, id, { transactionId: null });
+    showToast('Transaction unlinked');
   };
 
   const handleAddImage = async (localUri: string, kind: AttachmentKind) => {
@@ -241,6 +243,7 @@ export default function ItemDetailScreen() {
               items: [item],
             });
             setError(null);
+            showToast('Item sold to inventory');
           },
         },
       ]
@@ -264,6 +267,7 @@ export default function ItemDetailScreen() {
           onPress: () => {
             reassignItemToInventory(accountId, id);
             setError(null);
+            showToast('Item reassigned to inventory');
           },
         },
       ]
@@ -274,11 +278,13 @@ export default function ItemDetailScreen() {
     if (!accountId || !id) return;
     updateItem(accountId, id, { spaceId });
     setSpacePickerVisible(false);
+    showToast('Space updated');
   };
 
   const handleRemoveSpace = () => {
     if (!accountId || !id) return;
     updateItem(accountId, id, { spaceId: null });
+    showToast('Space cleared');
   };
 
   const handleDelete = () => {
@@ -290,6 +296,7 @@ export default function ItemDetailScreen() {
         style: 'destructive',
         onPress: () => {
           deleteItem(accountId, id);
+          showToast('Item deleted');
           router.replace(fallbackTarget);
         },
       },
@@ -299,6 +306,7 @@ export default function ItemDetailScreen() {
   const handleStatusChange = (newStatus: string) => {
     if (!accountId || !id) return;
     updateItem(accountId, id, { status: newStatus });
+    showToast('Status updated');
   };
 
   const statusLabel = getItemStatusLabel(item?.status);
@@ -471,9 +479,7 @@ export default function ItemDetailScreen() {
                       </AppText>
                     )
                   ) : (
-                    <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
-                      None
-                    </AppText>
+                    <AppText variant="body">None</AppText>
                   )}
                 </View>
 
@@ -492,7 +498,18 @@ export default function ItemDetailScreen() {
                   <AppText variant="caption">Space: </AppText>
                   {item.spaceId ? (
                     spaceData.data ? (
-                      <AppText variant="body">{spaceData.data.name}</AppText>
+                      <AppText
+                        variant="body"
+                        style={{ color: theme.colors.primary }}
+                        onPress={() => {
+                          const spaceRoute = scope === 'project' && projectId
+                            ? { pathname: '/project/[projectId]/spaces/[spaceId]' as const, params: { projectId, spaceId: item.spaceId! } }
+                            : { pathname: '/business-inventory/spaces/[spaceId]' as const, params: { spaceId: item.spaceId! } };
+                          router.push(spaceRoute);
+                        }}
+                      >
+                        {spaceData.data.name}
+                      </AppText>
                     ) : spaceData.loading ? (
                       <AppText variant="body">Loading...</AppText>
                     ) : (
@@ -665,6 +682,7 @@ export default function ItemDetailScreen() {
             validDestCategoryIds: new Set(Object.keys(budgetCategories)),
           });
           setSellToProjectVisible(false);
+          showToast('Item sold to project');
         }}
       />
 
@@ -678,6 +696,7 @@ export default function ItemDetailScreen() {
           if (!accountId || !id) return;
           reassignItemToProject(accountId, id, tpId);
           setReassignToProjectVisible(false);
+          showToast('Item reassigned to project');
         }}
       />
 

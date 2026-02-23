@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { AppButton } from '../AppButton';
 import { AppText } from '../AppText';
 import { BottomSheet } from '../BottomSheet';
-import { ProjectSelector } from '../ProjectSelector';
+import { ProjectPickerList } from './ProjectPickerList';
 import { useTheme } from '../../theme/ThemeProvider';
 
 export interface ReassignToProjectModalProps {
@@ -73,11 +73,12 @@ export function ReassignToProjectModal({
           <AppText variant="caption" style={{ color: theme.colors.textSecondary, fontWeight: '600' }}>
             Target project
           </AppText>
-          <ProjectSelector
+          <ProjectPickerList
             accountId={accountId}
-            value={targetProjectId}
-            onChange={setTargetProjectId}
+            selectedId={targetProjectId}
+            onSelect={setTargetProjectId}
             excludeProjectId={excludeProjectId}
+            maxHeight={150}
           />
         </View>
         <AppButton

@@ -485,11 +485,13 @@ export function SpaceDetailContent({
   const handleBulkStatusConfirm = useCallback((status: string) => {
     if (!accountId) return;
     const selectedIds = itemsManager.selectedIds;
+    const count = selectedIds.size;
     selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { status });
     });
     itemsManager.clearSelection();
     setBulkStatusPickerVisible(false);
+    showToast(`Status updated for ${count} item${count === 1 ? '' : 's'}`);
   }, [accountId, itemsManager]);
 
   const handleBulkClearTransaction = useCallback(() => {
@@ -497,6 +499,7 @@ export function SpaceDetailContent({
     const ids = Array.from(itemsManager.selectedIds);
     ids.forEach(id => updateItem(accountId, id, { transactionId: null }));
     itemsManager.clearSelection();
+    showToast(`Transaction unlinked from ${ids.length} item${ids.length === 1 ? '' : 's'}`);
   }, [accountId, itemsManager]);
 
   const handleBulkRemoveFromSpace = useCallback(() => {
@@ -513,6 +516,7 @@ export function SpaceDetailContent({
           onPress: () => {
             ids.forEach(id => updateItem(accountId, id, { spaceId: null }));
             itemsManager.clearSelection();
+            showToast(`${ids.length} item${ids.length === 1 ? '' : 's'} removed from space`);
           },
         },
       ]
@@ -529,6 +533,8 @@ export function SpaceDetailContent({
         'Reassign to Inventory',
         `${result.executed} item${result.executed === 1 ? '' : 's'} reassigned. ${result.blocked} item${result.blocked === 1 ? '' : 's'} linked to transactions were skipped.`,
       );
+    } else {
+      showToast(`${result.executed} item${result.executed === 1 ? '' : 's'} reassigned to inventory`);
     }
     itemsManager.clearSelection();
   }, [accountId, itemsManager]);
@@ -547,6 +553,7 @@ export function SpaceDetailContent({
           onPress: () => {
             ids.forEach(id => deleteItem(accountId, id));
             itemsManager.clearSelection();
+            showToast(`${ids.length} item${ids.length === 1 ? '' : 's'} deleted`);
           },
         },
       ]
@@ -917,11 +924,11 @@ export function SpaceDetailContent({
             scopeConfig,
             callbacks: {
               onEditOrOpen: () => router.push(itemDetailParams),
-              onStatusChange: (status) => { if (accountId) updateItem(accountId, item.id, { status }); },
+              onStatusChange: (status) => { if (accountId) { updateItem(accountId, item.id, { status }); showToast('Status updated'); } },
               onSetTransaction: () => { setSingleItemId(item.id); setSingleItemTransactionPickerVisible(true); },
-              onClearTransaction: () => { if (accountId) updateItem(accountId, item.id, { transactionId: null }); },
+              onClearTransaction: () => { if (accountId) { updateItem(accountId, item.id, { transactionId: null }); showToast('Transaction unlinked'); } },
               onSetSpace: () => { setSingleItemId(item.id); setSingleItemSpacePickerVisible(true); },
-              onClearSpace: () => { if (accountId) updateItem(accountId, item.id, { spaceId: null }); },
+              onClearSpace: () => { if (accountId) { updateItem(accountId, item.id, { spaceId: null }); showToast('Space cleared'); } },
               onSellToBusiness: scopeConfig.scope === 'project' ? () => { setSingleItemId(item.id); setSingleItemSellToBusinessVisible(true); } : undefined,
               onSellToProject: () => { setSingleItemId(item.id); setSingleItemSellToProjectVisible(true); },
               onReassignToInventory: scopeConfig.scope === 'project' ? () => {
@@ -946,7 +953,7 @@ export function SpaceDetailContent({
               onDelete: () => {
                 Alert.alert('Delete Item', 'Permanently delete this item? This cannot be undone.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Delete', style: 'destructive', onPress: () => { if (accountId) deleteItem(accountId, item.id); } },
+                  { text: 'Delete', style: 'destructive', onPress: () => { if (accountId) { deleteItem(accountId, item.id); showToast('Item deleted'); } } },
                 ]);
               },
             },
@@ -1245,11 +1252,13 @@ export function SpaceDetailContent({
         onConfirm={(spaceId) => {
           if (!accountId || !spaceId) return;
           const selectedIds = itemsManager.selectedIds;
+          const count = selectedIds.size;
           selectedIds.forEach((itemId) => {
             updateItem(accountId, itemId, { spaceId });
           });
           setBulkMoveSheetVisible(false);
           itemsManager.clearSelection();
+          showToast(`${count} item${count === 1 ? '' : 's'} moved to space`);
         }}
       />
 
@@ -1354,6 +1363,7 @@ export function SpaceDetailContent({
           updateItem(accountId, singleItemId, { spaceId: newSpaceId });
           setSingleItemSpacePickerVisible(false);
           setSingleItemId(null);
+          showToast('Space updated');
         }}
       />
 
@@ -1373,6 +1383,7 @@ export function SpaceDetailContent({
             updateItem(accountId, singleItemId, update);
             setSingleItemTransactionPickerVisible(false);
             setSingleItemId(null);
+            showToast('Transaction linked');
           }}
         />
       )}
@@ -1397,6 +1408,7 @@ export function SpaceDetailContent({
             });
             setBulkTransactionPickerVisible(false);
             itemsManager.clearSelection();
+            showToast(`Transaction linked to ${ids.length} item${ids.length === 1 ? '' : 's'}`);
           }}
         />
       )}

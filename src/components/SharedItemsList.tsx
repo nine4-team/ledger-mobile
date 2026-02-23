@@ -567,27 +567,33 @@ export function SharedItemsList({
 
   const handleBulkDelete = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     selectedIds.forEach((id) => {
       deleteItem(accountId, id);
     });
     clearSelection();
+    showToast(`${count} item${count === 1 ? '' : 's'} deleted`);
   }, [accountId, selectedIds, clearSelection]);
 
   const handleBulkSetSpace = useCallback((spaceId: string | null) => {
     if (!accountId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { spaceId });
     });
     setBulkSpacePickerVisible(false);
     clearSelection();
+    showToast(`Space updated for ${count} item${count === 1 ? '' : 's'}`);
   }, [accountId, selectedIds, clearSelection]);
 
   const handleBulkClearSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { spaceId: null });
     });
     clearSelection();
+    showToast(`Space cleared for ${count} item${count === 1 ? '' : 's'}`);
   }, [accountId, selectedIds, clearSelection]);
 
   const handleToggleSort = useCallback(() => {
@@ -731,6 +737,7 @@ export function SharedItemsList({
             } else {
               setInternalSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
             }
+            showToast('Item deleted');
           },
         },
       ]);
@@ -748,6 +755,7 @@ export function SharedItemsList({
       console.error('Failed to update item status:', error);
     });
     setStatusMenuItemId(null);
+    showToast('Status updated');
   }, [accountId]);
 
   const statusMenuItems = useMemo<AnchoredMenuItem[]>(() => {
@@ -816,12 +824,12 @@ export function SharedItemsList({
         onEditOrOpen: () => router.push({ pathname: '/items/[id]/edit', params: { id: item.id, scope: scopeConfig.scope ?? '', projectId: scopeConfig.projectId ?? '' } }),
         onStatusChange: (status) => handleStatusChange(item.id, status),
         onSetTransaction: () => { setSingleItemId(item.id); setSingleItemTransactionPickerVisible(true); },
-        onClearTransaction: () => { if (accountId) updateItem(accountId, item.id, { transactionId: null }); },
+        onClearTransaction: () => { if (accountId) { updateItem(accountId, item.id, { transactionId: null }); showToast('Transaction unlinked'); } },
         onSetSpace: () => { setSingleItemId(item.id); setSingleItemSpacePickerVisible(true); },
-        onClearSpace: () => { if (accountId) updateItem(accountId, item.id, { spaceId: null }); },
+        onClearSpace: () => { if (accountId) { updateItem(accountId, item.id, { spaceId: null }); showToast('Space cleared'); } },
         onSellToBusiness: scopeConfig.scope === 'project' ? () => { setSingleItemId(item.id); setSingleItemSellToBusinessVisible(true); } : undefined,
         onSellToProject: () => { setSingleItemId(item.id); setSingleItemSellToProjectVisible(true); },
-        onReassignToInventory: scopeConfig.scope === 'project' ? () => { if (accountId) reassignItemToInventory(accountId, item.id); } : undefined,
+        onReassignToInventory: scopeConfig.scope === 'project' ? () => { if (accountId) { reassignItemToInventory(accountId, item.id); showToast('Item reassigned to inventory'); } } : undefined,
         onReassignToProject: () => { setSingleItemId(item.id); setSingleItemReassignToProjectVisible(true); },
         onDelete: () => handleDeleteItem(item.id, label),
       },
@@ -830,18 +838,22 @@ export function SharedItemsList({
 
   const handleBulkClearTransaction = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { transactionId: null });
     });
     clearSelection();
+    showToast(`Transaction unlinked from ${count} item${count === 1 ? '' : 's'}`);
   }, [accountId, selectedIds, clearSelection]);
 
   const handleBulkStatusChange = useCallback((status: string) => {
     if (!accountId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { status });
     });
     clearSelection();
+    showToast(`Status updated for ${count} item${count === 1 ? '' : 's'}`);
   }, [accountId, selectedIds, clearSelection]);
 
   const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
@@ -1108,8 +1120,10 @@ export function SharedItemsList({
               }
               updateItem(accountId, itemId, update);
             });
+            const count = selectedIds.length;
             setBulkTransactionPickerVisible(false);
             clearSelection();
+            showToast(`Transaction linked to ${count} item${count === 1 ? '' : 's'}`);
           }}
         />
       )}
@@ -1124,6 +1138,7 @@ export function SharedItemsList({
           }
           setSingleItemSpacePickerVisible(false);
           setSingleItemId(null);
+          showToast('Space updated');
         }}
       />
       {/* Single-item Set Transaction */}
@@ -1143,6 +1158,7 @@ export function SharedItemsList({
             }
             setSingleItemTransactionPickerVisible(false);
             setSingleItemId(null);
+            showToast('Transaction linked');
           }}
         />
       )}

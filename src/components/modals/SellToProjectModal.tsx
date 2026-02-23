@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { AppButton } from '../AppButton';
 import { AppText } from '../AppText';
 import { BottomSheet } from '../BottomSheet';
-import { ProjectSelector } from '../ProjectSelector';
+import { ProjectPickerList } from './ProjectPickerList';
 import { CategoryPickerList } from './CategoryPickerList';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -92,11 +92,12 @@ export function SellToProjectModal({
           <AppText variant="caption" style={styles.fieldLabel}>
             Target project
           </AppText>
-          <ProjectSelector
+          <ProjectPickerList
             accountId={accountId}
-            value={targetProjectId}
-            onChange={handleTargetChange}
+            selectedId={targetProjectId}
+            onSelect={handleTargetChange}
             excludeProjectId={excludeProjectId}
+            maxHeight={150}
           />
         </View>
 
