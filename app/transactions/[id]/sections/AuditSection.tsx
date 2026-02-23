@@ -13,16 +13,27 @@ import type { Item } from '../../../../src/data/itemsService';
 type AuditSectionProps = {
   transaction: Transaction;
   items: Pick<Item, 'purchasePriceCents'>[];
+  returnedItems?: Pick<Item, 'purchasePriceCents'>[];
+  soldItems?: Pick<Item, 'purchasePriceCents'>[];
+  incompleteReturnCount?: number;
 };
 
-export function AuditSection({ transaction, items }: AuditSectionProps) {
+export function AuditSection({ transaction, items, returnedItems, soldItems, incompleteReturnCount }: AuditSectionProps) {
   const { resolvedColorScheme } = useThemeContext();
   const isDark = resolvedColorScheme === 'dark';
   const theme = useTheme();
 
+  const movedOutItems = useMemo(
+    () =>
+      returnedItems || soldItems
+        ? { returned: returnedItems ?? [], sold: soldItems ?? [] }
+        : undefined,
+    [returnedItems, soldItems],
+  );
+
   const completeness = useMemo(
-    () => computeTransactionCompleteness(transaction, items),
-    [transaction, items],
+    () => computeTransactionCompleteness(transaction, items, movedOutItems),
+    [transaction, items, movedOutItems],
   );
 
   // Handle N/A state (FR-009)
@@ -118,10 +129,26 @@ export function AuditSection({ transaction, items }: AuditSectionProps) {
           </AppText>
         </View>
 
+        {/* Returned/sold item breakdown */}
+        {(completeness.returnedItemsCount > 0 || completeness.soldItemsCount > 0) && (
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary, marginTop: 4 }}>
+            Includes{completeness.returnedItemsCount > 0 ? ` ${completeness.returnedItemsCount} returned` : ''}
+            {completeness.returnedItemsCount > 0 && completeness.soldItemsCount > 0 ? ' and' : ''}
+            {completeness.soldItemsCount > 0 ? ` ${completeness.soldItemsCount} sold` : ''} item(s)
+          </AppText>
+        )}
+
         {/* Missing price count (FR-007) */}
         {completeness.itemsMissingPriceCount > 0 && (
           <AppText variant="caption" style={{ color: warningColor, marginTop: 8 }}>
             ⚠ {completeness.itemsMissingPriceCount} item(s) missing purchase price
+          </AppText>
+        )}
+
+        {/* Incomplete return warning */}
+        {(incompleteReturnCount ?? 0) > 0 && (
+          <AppText variant="caption" style={{ color: warningColor, marginTop: 4 }}>
+            ⚠ {incompleteReturnCount} item(s) marked as returned but not linked to a return transaction
           </AppText>
         )}
       </View>

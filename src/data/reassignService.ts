@@ -1,5 +1,7 @@
 import { updateItem } from './itemsService';
 import { updateTransaction } from './transactionsService';
+import { createLineageEdge } from './lineageEdgesService';
+import { buildReassignCorrectionEdge } from '../utils/reassignEdgeBuilder';
 import type { Item } from './itemsService';
 import type { Transaction } from './transactionsService';
 
@@ -78,6 +80,12 @@ export function reassignItemToInventory(
     transactionId: null,
     spaceId: null,
   });
+  createLineageEdge(accountId, buildReassignCorrectionEdge({
+    accountId,
+    itemId,
+    transactionId: null,
+    note: 'Reassigned to inventory',
+  }));
 }
 
 /** Reassign an item to a different project (clear transaction and space). */
@@ -91,6 +99,12 @@ export function reassignItemToProject(
     transactionId: null,
     spaceId: null,
   });
+  createLineageEdge(accountId, buildReassignCorrectionEdge({
+    accountId,
+    itemId,
+    transactionId: null,
+    note: 'Reassigned to project',
+  }));
 }
 
 /**
@@ -109,6 +123,12 @@ export function reassignTransactionToProject(
       projectId: targetProjectId,
       spaceId: null,
     });
+    createLineageEdge(accountId, buildReassignCorrectionEdge({
+      accountId,
+      itemId,
+      transactionId,
+      note: 'Transaction reassigned to project',
+    }));
   }
 }
 
@@ -124,6 +144,12 @@ export function reassignTransactionToInventory(
   updateTransaction(accountId, transactionId, { projectId: null });
   for (const itemId of itemIds) {
     updateItem(accountId, itemId, { projectId: null, spaceId: null });
+    createLineageEdge(accountId, buildReassignCorrectionEdge({
+      accountId,
+      itemId,
+      transactionId,
+      note: 'Transaction reassigned to inventory',
+    }));
   }
 }
 

@@ -71,6 +71,7 @@ type SharedItemsListProps = {
   onItemPress?: (id: string) => void;
   getItemMenuItems?: (item: ScopedItem) => AnchoredMenuItem[];
   emptyMessage?: string;
+  getItemWarning?: (item: ScopedItem) => string | undefined;
 
   // Picker mode props
   picker?: boolean;
@@ -184,6 +185,7 @@ export function SharedItemsList({
   onItemPress: externalOnItemPress,
   getItemMenuItems: externalGetItemMenuItems,
   emptyMessage = "No items found",
+  getItemWarning: externalGetItemWarning,
 
   // Picker props
   picker = false,
@@ -1500,6 +1502,7 @@ export function SharedItemsList({
               onPress={() => {
                 handleOpenItem(item.id);
               }}
+              warningMessage={externalGetItemWarning?.(item.item)}
             />
           );
               };
@@ -1601,6 +1604,7 @@ export function SharedItemsList({
                       onPress: () => {
                         handleOpenItem(item.id);
                       },
+                      warningMessage: externalGetItemWarning?.(item.item),
                     };
 
                     // Apply picker mode overrides if enabled
@@ -1670,6 +1674,7 @@ export function SharedItemsList({
                 }}
                 headerAction={picker ? pickerProps.headerAction : undefined}
                 style={picker ? pickerProps.style : undefined}
+                warningMessage={externalGetItemWarning?.(item.item)}
               />
             );
           }}

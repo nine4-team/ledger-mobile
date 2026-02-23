@@ -24,6 +24,14 @@ export interface TransactionCompleteness {
   varianceCents: number;
   /** (varianceCents / transactionSubtotalCents) * 100 */
   variancePercent: number;
+  /** Count of returned items included in the total */
+  returnedItemsCount: number;
+  /** Sum of returned item prices (cents) */
+  returnedItemsTotalCents: number;
+  /** Count of sold items included in the total */
+  soldItemsCount: number;
+  /** Sum of sold item prices (cents) */
+  soldItemsTotalCents: number;
 }
 
 /**
@@ -35,6 +43,10 @@ export interface TransactionCompleteness {
 export function computeTransactionCompleteness(
   transaction: Transaction,
   items: Pick<Item, 'purchasePriceCents'>[],
+  movedOutItems?: {
+    returned: Pick<Item, 'purchasePriceCents'>[];
+    sold: Pick<Item, 'purchasePriceCents'>[];
+  },
 ): TransactionCompleteness | null {
   // Resolve subtotal using priority: explicit > inferred from tax > fallback to amount
   let transactionSubtotalCents: number;
@@ -64,18 +76,36 @@ export function computeTransactionCompleteness(
     return null;
   }
 
+  const returned = movedOutItems?.returned ?? [];
+  const sold = movedOutItems?.sold ?? [];
+
+  // Combine all items (active + returned + sold) for completeness calculation
+  const allItems = [...items, ...returned, ...sold];
+
   // Items total
-  const itemsNetTotalCents = items.reduce(
+  const itemsNetTotalCents = allItems.reduce(
     (sum, item) => sum + (item.purchasePriceCents ?? 0),
     0,
   );
 
-  const itemsCount = items.length;
+  const itemsCount = allItems.length;
 
   // Missing price: null, undefined, or 0
-  const itemsMissingPriceCount = items.filter(
+  const itemsMissingPriceCount = allItems.filter(
     (item) => !item.purchasePriceCents,
   ).length;
+
+  // Returned/sold breakdowns
+  const returnedItemsCount = returned.length;
+  const returnedItemsTotalCents = returned.reduce(
+    (sum, item) => sum + (item.purchasePriceCents ?? 0),
+    0,
+  );
+  const soldItemsCount = sold.length;
+  const soldItemsTotalCents = sold.reduce(
+    (sum, item) => sum + (item.purchasePriceCents ?? 0),
+    0,
+  );
 
   // Completeness ratio and variance
   const completenessRatio = itemsNetTotalCents / transactionSubtotalCents;
@@ -105,5 +135,9 @@ export function computeTransactionCompleteness(
     inferredTax,
     varianceCents,
     variancePercent,
+    returnedItemsCount,
+    returnedItemsTotalCents,
+    soldItemsCount,
+    soldItemsTotalCents,
   };
 }

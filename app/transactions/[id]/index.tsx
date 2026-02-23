@@ -57,6 +57,13 @@ import {
 } from './sections';
 import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
 import { showToast } from '../../../src/components/toastStore';
+import { subscribeToEdgesFromTransaction } from '../../../src/data/lineageEdgesService';
+import type { ItemLineageEdge } from '../../../src/data/lineageEdgesService';
+import { useItemsByIds } from '../../../src/hooks/useItemsByIds';
+import { findIncompleteReturns } from '../../../src/utils/incompleteReturnDetection';
+import { moveItemToReturnTransaction } from '../../../src/data/returnFlowService';
+import { ReturnTransactionPickerModal } from '../../../src/components/modals/ReturnTransactionPickerModal';
+import { MovedItemsSection } from './sections/MovedItemsSection';
 
 type TransactionDetailParams = {
   id?: string;
@@ -91,7 +98,7 @@ type TransactionItemFilterMode =
   | 'no-price'
   | 'no-image';
 
-type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'items' | 'audit';
+type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'items' | 'returnedItems' | 'soldItems' | 'audit';
 
 const SECTION_HEADER_MARKER = '__sectionHeader__';
 
@@ -126,6 +133,13 @@ export default function TransactionDetailScreen() {
   const [singleItemReassignProjectVisible, setSingleItemReassignProjectVisible] = useState(false);
   const [singleItemReassignId, setSingleItemReassignId] = useState<string | null>(null);
 
+  // Lineage edges state
+  const [edgesFromTransaction, setEdgesFromTransaction] = useState<ItemLineageEdge[]>([]);
+
+  // Return transaction picker state
+  const [returnTransactionPickerVisible, setReturnTransactionPickerVisible] = useState(false);
+  const [returnItemId, setReturnItemId] = useState<string | null>(null);
+
   // Sell-to-business modal state
   const [singleItemSellToBusinessVisible, setSingleItemSellToBusinessVisible] = useState(false);
   const [singleItemSellId, setSingleItemSellId] = useState<string | null>(null);
@@ -142,6 +156,8 @@ export default function TransactionDetailScreen() {
     notes: true,        // Default collapsed
     details: true,      // Default collapsed
     items: true,        // Default collapsed
+    returnedItems: true, // Default collapsed
+    soldItems: true,     // Default collapsed
     audit: true,        // Default collapsed
   });
 
@@ -189,6 +205,15 @@ export default function TransactionDetailScreen() {
     }
     return subscribeToBudgetCategories(accountId, (next) => setBudgetCategories(mapBudgetCategories(next)));
   }, [accountId]);
+
+  // Subscribe to lineage edges from this transaction
+  useEffect(() => {
+    if (!accountId || !id) {
+      setEdgesFromTransaction([]);
+      return;
+    }
+    return subscribeToEdgesFromTransaction(accountId, id, setEdgesFromTransaction);
+  }, [accountId, id]);
 
   // Subscribe to destination project budget categories for sell-to-project modal
   useEffect(() => {
@@ -238,6 +263,30 @@ export default function TransactionDetailScreen() {
 
   const isCanonical = isCanonicalTx;
   const linkedItems = useMemo(() => items.filter((item) => item.transactionId === id), [id, items]);
+
+  // Derive returned/sold item IDs from lineage edges
+  const returnedItemIds = useMemo(
+    () => edgesFromTransaction
+      .filter((e) => e.movementKind === 'returned')
+      .map((e) => e.itemId),
+    [edgesFromTransaction],
+  );
+  const soldItemIds = useMemo(
+    () => edgesFromTransaction
+      .filter((e) => e.movementKind === 'sold')
+      .map((e) => e.itemId),
+    [edgesFromTransaction],
+  );
+
+  // Subscribe to returned/sold items for display
+  const { items: returnedItems } = useItemsByIds(accountId, returnedItemIds);
+  const { items: soldItems } = useItemsByIds(accountId, soldItemIds);
+
+  // Compute incomplete returns (items marked as returned but not linked to a return transaction)
+  const incompleteReturnItemIds = useMemo(() => {
+    if (!transaction) return new Set<string>();
+    return new Set(findIncompleteReturns(linkedItems, transaction, edgesFromTransaction));
+  }, [linkedItems, transaction, edgesFromTransaction]);
 
   // Helper to get primary image URI
   const getPrimaryImageUri = (item: ScopedItem) => {
@@ -305,6 +354,24 @@ export default function TransactionDetailScreen() {
       badge: `${itemsManager.filteredAndSortedItems.length}`,
     });
 
+    if (returnedItems.length > 0) {
+      result.push({
+        key: 'returnedItems',
+        title: 'RETURNED ITEMS',
+        data: [SECTION_HEADER_MARKER],
+        badge: `${returnedItems.length}`,
+      });
+    }
+
+    if (soldItems.length > 0) {
+      result.push({
+        key: 'soldItems',
+        title: 'SOLD ITEMS',
+        data: [SECTION_HEADER_MARKER],
+        badge: `${soldItems.length}`,
+      });
+    }
+
     if (itemizationEnabled) {
       result.push({
         key: 'audit',
@@ -314,7 +381,7 @@ export default function TransactionDetailScreen() {
     }
 
     return result;
-  }, [transaction, itemsManager.filteredAndSortedItems, itemizationEnabled, collapsedSections]);
+  }, [transaction, itemsManager.filteredAndSortedItems, itemizationEnabled, collapsedSections, returnedItems, soldItems]);
 
   const suggestedItems = useMemo(() => {
     if (!normalizedSource) return [];
@@ -720,6 +787,44 @@ export default function TransactionDetailScreen() {
   const handleSetStatus = (itemId: string, status: string) => {
     if (!accountId) return;
     updateItem(accountId, itemId, { status });
+    // Layer 1: When setting status to 'returned' on a non-return tx, prompt to pick a return transaction
+    if (status === 'returned' && transaction?.transactionType !== 'return') {
+      setReturnItemId(itemId);
+      setReturnTransactionPickerVisible(true);
+    }
+  };
+
+  const handleMoveToReturnTransaction = (itemId: string) => {
+    setReturnItemId(itemId);
+    setReturnTransactionPickerVisible(true);
+  };
+
+  const handleReturnTransactionConfirm = (returnTx: { id: string }) => {
+    if (!accountId || !returnItemId) return;
+    moveItemToReturnTransaction({
+      accountId,
+      itemId: returnItemId,
+      fromTransactionId: id ?? null,
+      returnTransactionId: returnTx.id,
+      fromProjectId: projectId ?? null,
+      toProjectId: projectId ?? null,
+    });
+    showToast('Item moved to return transaction');
+    setReturnItemId(null);
+  };
+
+  const handleCreateNewReturnTransaction = () => {
+    router.push({
+      pathname: '/transactions/new',
+      params: {
+        scope,
+        projectId: projectId ?? '',
+        transactionType: 'return',
+        linkItemId: returnItemId ?? '',
+        linkItemFromTransactionId: id ?? '',
+      },
+    });
+    setReturnItemId(null);
   };
 
   const handleSellToDesign = (itemId: string) => {
@@ -856,12 +961,13 @@ export default function TransactionDetailScreen() {
         onSellToProject: () => handleSellToProject(item.id),
         onReassignToInventory: scopeConfig.scope === 'project' ? () => handleReassignItemToInventory(item.id) : undefined,
         onReassignToProject: () => handleReassignItemToProject(item.id),
+        onMoveToReturnTransaction: () => handleMoveToReturnTransaction(item.id),
         onDelete: () => handleDeleteItem(item.id),
       },
     });
   }, [scopeConfig, router, handleDuplicateItem, handleSetStatus, handleRemoveLinkedItem,
       handleSetSpace, handleClearSpace, handleSellToDesign, handleSellToProject,
-      handleReassignItemToInventory, handleReassignItemToProject, handleDeleteItem]);
+      handleReassignItemToInventory, handleReassignItemToProject, handleMoveToReturnTransaction, handleDeleteItem]);
 
   const handleCreateItem = () => {
     router.push({
@@ -1172,6 +1278,23 @@ export default function TransactionDetailScreen() {
     if (item === SECTION_HEADER_MARKER) {
       const collapsed = collapsedSections[section.key] ?? false;
 
+      if (section.key === 'returnedItems' || section.key === 'soldItems') {
+        const collapsed = collapsedSections[section.key] ?? true;
+        const sectionItems = section.key === 'returnedItems' ? returnedItems : soldItems;
+
+        return (
+          <View style={{ gap: 12 }}>
+            <CollapsibleSectionHeader
+              title={section.title!}
+              collapsed={collapsed}
+              onToggle={() => handleToggleSection(section.key)}
+              badge={section.badge}
+            />
+            {!collapsed && <MovedItemsSection items={sectionItems} />}
+          </View>
+        );
+      }
+
       if (section.key === 'audit') {
         const showWarning = transaction.needsReview === true;
 
@@ -1201,7 +1324,15 @@ export default function TransactionDetailScreen() {
                 )}
               </View>
             </TouchableOpacity>
-            {!collapsed && <AuditSection transaction={transaction} items={linkedItems} />}
+            {!collapsed && (
+              <AuditSection
+                transaction={transaction}
+                items={linkedItems}
+                returnedItems={returnedItems}
+                soldItems={soldItems}
+                incompleteReturnCount={incompleteReturnItemIds.size}
+              />
+            )}
           </View>
         );
       }
@@ -1292,6 +1423,11 @@ export default function TransactionDetailScreen() {
               onItemPress={(id) => router.push(`/items/${id}`)}
               getItemMenuItems={getItemMenuItems}
               emptyMessage={itemsManager.searchQuery.trim() ? 'No items match this search.' : 'No items in this transaction.'}
+              getItemWarning={(item) =>
+                incompleteReturnItemIds.has(item.id)
+                  ? 'This item is marked as returned but not linked to a return transaction.'
+                  : undefined
+              }
             />
           </View>
         );
@@ -1300,7 +1436,7 @@ export default function TransactionDetailScreen() {
       default:
         return null;
     }
-  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems, itemizationEnabled]);
+  }, [transaction, budgetCategories, mediaHandlers, itemsManager, router, getItemMenuItems, handleBulkAction, accountId, collapsedSections, handleToggleSection, uiKitTheme, linkedItems, itemizationEnabled, returnedItems, soldItems, incompleteReturnItemIds]);
 
   // Helper to get type label
   const getTypeLabel = () => {
@@ -1844,6 +1980,20 @@ export default function TransactionDetailScreen() {
                 setSingleItemSellId(null);
                 showToast('Item sold to project');
               }}
+            />
+
+            {/* Return Transaction Picker modal */}
+            <ReturnTransactionPickerModal
+              visible={returnTransactionPickerVisible}
+              onRequestClose={() => {
+                setReturnTransactionPickerVisible(false);
+                setReturnItemId(null);
+              }}
+              accountId={accountId!}
+              scopeConfig={scopeConfig!}
+              onConfirm={handleReturnTransactionConfirm}
+              onCreateNew={handleCreateNewReturnTransaction}
+              subtitle={returnItemId ? 'Moving 1 item' : undefined}
             />
           </>
         ) : (

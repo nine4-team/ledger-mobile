@@ -23,6 +23,7 @@ function mockSingleCallbacks(): SingleItemCallbacks {
     onSellToProject: jest.fn(),
     onReassignToInventory: jest.fn(),
     onReassignToProject: jest.fn(),
+    onMoveToReturnTransaction: jest.fn(),
     onDelete: jest.fn(),
   };
 }
@@ -207,6 +208,47 @@ describe('buildSingleItemMenu', () => {
     const del = items.find((i) => i.key === 'delete');
     del!.onPress!();
     expect(callbacks.onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('transaction context with onMoveToReturnTransaction — shows return subaction', () => {
+    const callbacks = mockSingleCallbacks();
+    const items = buildSingleItemMenu({
+      context: 'transaction',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeDefined();
+    expect(returnAction!.label).toBe('Move to Return Transaction');
+  });
+
+  it('transaction context without onMoveToReturnTransaction — no return subaction', () => {
+    const callbacks = mockSingleCallbacks();
+    delete callbacks.onMoveToReturnTransaction;
+    const items = buildSingleItemMenu({
+      context: 'transaction',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeUndefined();
+  });
+
+  it('non-transaction context — no return subaction regardless of callback', () => {
+    const callbacks = mockSingleCallbacks();
+    const items = buildSingleItemMenu({
+      context: 'list',
+      scopeConfig: createProjectScopeConfig('proj-1'),
+      callbacks,
+    });
+
+    const txn = items.find((i) => i.key === 'transaction');
+    const returnAction = txn!.subactions!.find((s) => s.key === 'move-to-return-transaction');
+    expect(returnAction).toBeUndefined();
   });
 });
 

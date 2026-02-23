@@ -266,4 +266,117 @@ describe('computeTransactionCompleteness', () => {
       expect(result!.variancePercent).toBe(0);
     });
   });
+
+  // ── Returned and sold items in completeness ──
+
+  describe('returned and sold items', () => {
+    it('includes returned items in itemsNetTotalCents', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: makeItems([3000]), sold: [] },
+      );
+      expect(result!.itemsNetTotalCents).toBe(8000);
+      expect(result!.itemsCount).toBe(2);
+    });
+
+    it('includes sold items in itemsNetTotalCents', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: [], sold: makeItems([4000]) },
+      );
+      expect(result!.itemsNetTotalCents).toBe(9000);
+      expect(result!.itemsCount).toBe(2);
+    });
+
+    it('combines active + returned + sold for completeness ratio', () => {
+      // active: 5000, returned: 3000, sold: 2000 = 10000 / 10000 = 1.0
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: makeItems([3000]), sold: makeItems([2000]) },
+      );
+      expect(result!.completenessRatio).toBe(1);
+      expect(result!.status).toBe('complete');
+      expect(result!.itemsCount).toBe(3);
+    });
+
+    it('backward compatible — omitting movedOutItems matches old behavior', () => {
+      const withoutMoved = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+      );
+      const withEmptyMoved = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: [], sold: [] },
+      );
+      expect(withoutMoved!.itemsNetTotalCents).toBe(withEmptyMoved!.itemsNetTotalCents);
+      expect(withoutMoved!.itemsCount).toBe(withEmptyMoved!.itemsCount);
+      expect(withoutMoved!.completenessRatio).toBe(withEmptyMoved!.completenessRatio);
+    });
+
+    it('new fields default to 0 when movedOutItems omitted', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+      );
+      expect(result!.returnedItemsCount).toBe(0);
+      expect(result!.returnedItemsTotalCents).toBe(0);
+      expect(result!.soldItemsCount).toBe(0);
+      expect(result!.soldItemsTotalCents).toBe(0);
+    });
+
+    it('populates returnedItemsCount and returnedItemsTotalCents', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: makeItems([2000, 1000]), sold: [] },
+      );
+      expect(result!.returnedItemsCount).toBe(2);
+      expect(result!.returnedItemsTotalCents).toBe(3000);
+    });
+
+    it('populates soldItemsCount and soldItemsTotalCents', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: [], sold: makeItems([1500, 500]) },
+      );
+      expect(result!.soldItemsCount).toBe(2);
+      expect(result!.soldItemsTotalCents).toBe(2000);
+    });
+
+    it('counts missing prices across all categories', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000, null]),           // 1 missing in active
+        { returned: makeItems([null]), sold: makeItems([0]) },  // 1 missing each
+      );
+      expect(result!.itemsMissingPriceCount).toBe(3);
+      expect(result!.itemsCount).toBe(4);
+    });
+
+    it('handles all returned items with null prices', () => {
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: makeItems([null, null]), sold: [] },
+      );
+      expect(result!.returnedItemsCount).toBe(2);
+      expect(result!.returnedItemsTotalCents).toBe(0);
+      expect(result!.itemsNetTotalCents).toBe(5000);
+    });
+
+    it('status uses combined total — returned items can fill the gap', () => {
+      // active: 5000, returned: 5000 → total = 10000 / 10000 = complete
+      const result = computeTransactionCompleteness(
+        makeTransaction({ subtotalCents: 10000 }),
+        makeItems([5000]),
+        { returned: makeItems([5000]), sold: [] },
+      );
+      expect(result!.status).toBe('complete');
+    });
+  });
 });

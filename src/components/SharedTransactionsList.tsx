@@ -96,6 +96,17 @@ function computeCanonicalTotal(items: ScopedItem[]): number {
   }, 0);
 }
 
+export function sumTransactionAmountCents(rows: TransactionRow[], selectedIds: string[]): number {
+  const selectedSet = new Set(selectedIds);
+  return rows.reduce((sum, row) => {
+    if (!selectedSet.has(row.id)) return sum;
+    const amount = row.amountCents ?? 0;
+    const tx = row.transaction;
+    const isNegative = tx.type === 'return' || tx.type === 'sale';
+    return sum + (isNegative ? -amount : amount);
+  }, 0);
+}
+
 export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken }: SharedTransactionsListProps) {
   const listRef = useRef<FlatList<TransactionRow>>(null);
   const { state, setSearch, setSort, setFilters, setRestoreHint, clearRestoreHint } = useListState(listStateKey);
@@ -965,13 +976,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
     await Share.share({ message: csv, title: `${scopeConfig.scope}-transactions.csv` });
   }, [budgetCategories, items, scopeConfig.capabilities?.canExportCsv, scopeConfig.scope, transactions]);
 
-  const selectedTotalCents = useMemo(() => {
-    const selectedSet = new Set(selectedIds);
-    return filtered.reduce((sum, row) => {
-      if (!selectedSet.has(row.id)) return sum;
-      return sum + (row.amountCents ?? 0);
-    }, 0);
-  }, [filtered, selectedIds]);
+  const selectedTotalCents = useMemo(() => sumTransactionAmountCents(filtered, selectedIds), [filtered, selectedIds]);
 
   const isSortActive = sortMode !== DEFAULT_SORT;
   const isFilterActive = (() => {

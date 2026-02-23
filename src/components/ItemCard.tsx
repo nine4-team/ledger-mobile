@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { resolveAttachmentUri } from '../offline/media';
@@ -44,6 +44,9 @@ export type ItemCardProps = {
    */
   headerAction?: React.ReactNode;
 
+  /** Warning message — renders a small warning icon in the header; tapping shows the message. */
+  warningMessage?: string;
+
   style?: StyleProp<ViewStyle>;
 };
 
@@ -70,6 +73,7 @@ export function ItemCard({
   onPress,
   onStatusPress,
   headerAction,
+  warningMessage,
   style,
 }: ItemCardProps) {
   const uiKitTheme = useUIKitTheme();
@@ -216,6 +220,20 @@ export function ItemCard({
                 </Pressable>
               ) : null}
             </View>
+            {warningMessage ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Alert.alert('Warning', warningMessage);
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Warning"
+                style={styles.iconButton}
+              >
+                <MaterialIcons name="warning" size={20} color="#E5A000" />
+              </Pressable>
+            ) : null}
             {headerAction ?? null}
             {onBookmarkPress ? (
               <Pressable

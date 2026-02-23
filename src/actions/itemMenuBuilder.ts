@@ -6,7 +6,7 @@
  * across SharedItemsList, SpaceDetailContent, and item detail.
  */
 
-import type { AnchoredMenuItem } from '../components/AnchoredMenuList';
+import type { AnchoredMenuItem, AnchoredMenuSubaction } from '../components/AnchoredMenuList';
 import type { ScopeConfig } from '../data/scopeConfig';
 import { ITEM_STATUSES } from '../constants/itemStatuses';
 
@@ -29,6 +29,7 @@ export type SingleItemCallbacks = {
   onSellToProject?: () => void;
   onReassignToInventory?: () => void;
   onReassignToProject?: () => void;
+  onMoveToReturnTransaction?: () => void;
   onDelete: () => void;
 };
 
@@ -139,15 +140,23 @@ export function buildSingleItemMenu(params: {
 
   // Transaction submenu
   if (context === 'transaction') {
-    // Already linked — only offer to clear
+    const txnSubactions: AnchoredMenuSubaction[] = [
+      { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
+    ];
+    if (callbacks.onMoveToReturnTransaction) {
+      txnSubactions.push({
+        key: 'move-to-return-transaction',
+        label: 'Move to Return Transaction',
+        icon: 'assignment-return',
+        onPress: callbacks.onMoveToReturnTransaction,
+      });
+    }
     items.push({
       key: 'transaction',
       label: 'Transaction',
       icon: 'link',
       actionOnly: true,
-      subactions: [
-        { key: 'clear-transaction', label: 'Clear Transaction', icon: 'link-off', onPress: callbacks.onClearTransaction },
-      ],
+      subactions: txnSubactions,
     });
   } else {
     items.push({
