@@ -42,6 +42,7 @@ type TransactionRow = {
   label: string;
   subtitle?: string;
   amountCents: number | null;
+  itemCount: number;
   transaction: ScopedTransaction;
 };
 
@@ -221,7 +222,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
       const sourceLabel = tx.source?.trim() || '';
       const label = getTransactionDisplayName(tx);
       const subtitle = [amountLabel, dateLabel, sourceLabel].filter(Boolean).join(' • ');
-      return { id: tx.id, label, subtitle, amountCents: amountValue, transaction: tx };
+      return { id: tx.id, label, subtitle, amountCents: amountValue, itemCount: linkedItems.length, transaction: tx };
     });
   }, [items, transactions]);
 
@@ -1158,6 +1159,7 @@ export function SharedTransactionsList({ scopeConfig, listStateKey, refreshToken
             needsReview={item.transaction.needsReview}
             reimbursementType={item.transaction.reimbursementType as any}
             purchasedBy={item.transaction.purchasedBy}
+            itemCount={item.itemCount}
             hasEmailReceipt={item.transaction.hasEmailReceipt}
             status={item.transaction.status as any}
             selected={selectedIds.includes(item.id)}

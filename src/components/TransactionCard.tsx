@@ -26,6 +26,9 @@ export type TransactionCardProps = {
   reimbursementType?: 'owed-to-client' | 'owed-to-company';
   purchasedBy?: string; // 'client-card' | 'design-business' | etc.
 
+  // Items
+  itemCount?: number;
+
   // Receipt and status
   hasEmailReceipt?: boolean;
   status?: 'pending' | 'completed' | 'canceled';
@@ -73,6 +76,7 @@ export function TransactionCard({
   needsReview,
   reimbursementType,
   purchasedBy,
+  itemCount,
   hasEmailReceipt,
   status,
   selected,
@@ -394,6 +398,14 @@ export function TransactionCard({
             <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
               {dateLabel}
             </Text>
+            {itemCount != null ? (
+              <>
+                <Text style={[styles.metaText, themed.metaText]}>{' · '}</Text>
+                <Text style={[styles.metaText, themed.metaText]} numberOfLines={1}>
+                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                </Text>
+              </>
+            ) : null}
           </View>
 
           {/* Notes if present */}
