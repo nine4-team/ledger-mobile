@@ -153,7 +153,7 @@ export function ReturnTransactionPickerModal({
             onRequestClose();
           }}
         >
-          <MaterialIcons name="add" size={20} color={theme.colors.primary} />
+          <MaterialIcons name="add-circle-outline" size={20} color={theme.colors.primary} />
           <AppText variant="body" style={{ color: theme.colors.primary }}>
             Create New Return Transaction
           </AppText>

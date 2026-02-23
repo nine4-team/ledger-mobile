@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Alert, Pressable, SectionList, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,13 +7,15 @@ import { AppText } from '../../../src/components/AppText';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
 import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
 import { Card } from '../../../src/components/Card';
-import { MediaGallerySection } from '../../../src/components/MediaGallerySection';
+import { MediaGallerySection, type MediaGallerySectionRef } from '../../../src/components/MediaGallerySection';
 import { NotesSection } from '../../../src/components/NotesSection';
 import { CollapsibleSectionHeader } from '../../../src/components/CollapsibleSectionHeader';
 import { DetailRow } from '../../../src/components/DetailRow';
 import { SellToProjectModal } from '../../../src/components/modals/SellToProjectModal';
 import { ReassignToProjectModal } from '../../../src/components/modals/ReassignToProjectModal';
 import { SetSpaceModal } from '../../../src/components/modals/SetSpaceModal';
+import { EditNotesModal } from '../../../src/components/modals/EditNotesModal';
+import { EditItemDetailsModal } from '../../../src/components/modals/EditItemDetailsModal';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -96,7 +98,10 @@ export default function ItemDetailScreen() {
     notes: true,
     details: true,
   });
+  const [editDetailsVisible, setEditDetailsVisible] = useState(false);
+  const [editNotesVisible, setEditNotesVisible] = useState(false);
   const [statusMenuVisible, setStatusMenuVisible] = useState(false);
+  const mediaRef = useRef<MediaGallerySectionRef>(null);
 
   // Load transaction data for hero card (cache-first for offline-first pattern)
   const transactionData = useTransactionById(accountId, item?.transactionId ?? null, { mode: 'offline' });
@@ -326,6 +331,20 @@ export default function ItemDetailScreen() {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
+  const handleSaveItemDetails = (changes: Record<string, unknown>) => {
+    if (!accountId || !id) return;
+    updateItem(accountId, id, changes);
+    setEditDetailsVisible(false);
+    showToast('Item updated');
+  };
+
+  const handleSaveNotes = (notes: string) => {
+    if (!accountId || !id) return;
+    updateItem(accountId, id, { notes });
+    setEditNotesVisible(false);
+    showToast('Notes updated');
+  };
+
   const sections: ItemSection[] = useMemo(() => {
     if (isLoading || !item) return [];
 
@@ -372,12 +391,6 @@ export default function ItemDetailScreen() {
       context: 'detail',
       scopeConfig: { scope: scope as 'project' | 'inventory', projectId: projectId ?? undefined },
       callbacks: {
-        onEditOrOpen: () => {
-          router.push({
-            pathname: '/items/[id]/edit',
-            params: { id: id!, scope: scope ?? '', projectId: projectId ?? '' },
-          });
-        },
         onStatusChange: handleStatusChange,
         onSetTransaction: () => {},
         onClearTransaction: handleUnlinkTransaction,
@@ -399,7 +412,6 @@ export default function ItemDetailScreen() {
     handleUnlinkTransaction,
     id,
     projectId,
-    router,
     scope,
   ]);
 
@@ -436,6 +448,15 @@ export default function ItemDetailScreen() {
           collapsed={collapsedSections[section.key] ?? false}
           onToggle={() => handleToggleSection(section.key)}
           badge={section.badge}
+          onEdit={
+            section.key === 'notes' ? () => setEditNotesVisible(true)
+            : section.key === 'details' ? () => setEditDetailsVisible(true)
+            : undefined
+          }
+          onAdd={
+            section.key === 'media' ? () => mediaRef.current?.triggerAdd()
+            : undefined
+          }
         />
       );
     }
@@ -537,6 +558,7 @@ export default function ItemDetailScreen() {
       case 'media':
         return (
           <MediaGallerySection
+            ref={mediaRef}
             title="Images"
             hideTitle={true}
             attachments={item.images ?? []}
@@ -709,6 +731,29 @@ export default function ItemDetailScreen() {
         onConfirm={(spaceId) => {
           handleSetSpaceConfirm(spaceId);
         }}
+      />
+
+      {/* Edit Notes Modal */}
+      <EditNotesModal
+        visible={editNotesVisible}
+        onRequestClose={() => setEditNotesVisible(false)}
+        initialNotes={item?.notes ?? ''}
+        onSave={handleSaveNotes}
+      />
+
+      {/* Edit Item Details Modal */}
+      <EditItemDetailsModal
+        visible={editDetailsVisible}
+        onRequestClose={() => setEditDetailsVisible(false)}
+        item={{
+          name: item?.name,
+          source: item?.source,
+          sku: item?.sku,
+          purchasePriceCents: item?.purchasePriceCents,
+          projectPriceCents: item?.projectPriceCents,
+          marketValueCents: item?.marketValueCents,
+        }}
+        onSave={handleSaveItemDetails}
       />
 
       {/* Status Change Menu */}

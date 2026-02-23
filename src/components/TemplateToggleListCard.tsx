@@ -286,7 +286,7 @@ export function TemplateToggleListCard({
         >
           <View style={styles.createLeft}>
             <View style={styles.createPlus}>
-              <MaterialIcons name="add" size={18} color={themed.iconBrown.color} />
+              <MaterialIcons name="add-circle-outline" size={18} color={themed.iconBrown.color} />
             </View>
             <AppText variant="body" style={[styles.createLabel, themed.createText]} numberOfLines={1}>
               {createPlaceholderLabel}

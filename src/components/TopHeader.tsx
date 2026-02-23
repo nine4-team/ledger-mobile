@@ -170,7 +170,7 @@ export function TopHeader({
               style={styles.menuButton}
             >
               <MaterialIcons
-                name="add"
+                name="add-circle-outline"
                 size={24}
                 color={uiKitTheme.button.icon.icon ?? theme.colors.textSecondary}
               />

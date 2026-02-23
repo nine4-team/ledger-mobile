@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import { AppText } from './AppText';
 import { AppButton } from './AppButton';
 import { ItemsListControlBar } from './ItemsListControlBar';
 import { ItemCard } from './ItemCard';
-import { MediaGallerySection } from './MediaGallerySection';
+import { MediaGallerySection, type MediaGallerySectionRef } from './MediaGallerySection';
 import { BottomSheet } from './BottomSheet';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { NotesSection } from './NotesSection';
@@ -18,6 +18,9 @@ import { ReassignToProjectModal } from './modals/ReassignToProjectModal';
 import { SellToProjectModal } from './modals/SellToProjectModal';
 import { SellToBusinessModal } from './modals/SellToBusinessModal';
 import { TransactionPickerModal } from './modals/TransactionPickerModal';
+import { ReturnTransactionPickerModal } from './modals/ReturnTransactionPickerModal';
+import { EditNotesModal } from './modals/EditNotesModal';
+import { EditSpaceDetailsModal } from './modals/EditSpaceDetailsModal';
 import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
 import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
 import { layout } from '../ui';
@@ -41,6 +44,7 @@ import { useOutsideItems } from '../hooks/useOutsideItems';
 import { useOptionalIsFocused } from '../hooks/useOptionalIsFocused';
 import { resolveItemMove } from '../data/resolveItemMove';
 import { useItemsManager } from '../hooks/useItemsManager';
+import { useReturnTransactionPicker } from '../hooks/useReturnTransactionPicker';
 import { SharedItemsList } from './SharedItemsList';
 import { BulkSelectionBar } from './BulkSelectionBar';
 import { SelectorCircle } from './SelectorCircle';
@@ -101,12 +105,6 @@ function getDisplayPrice(item: ScopedItem): string | undefined {
 }
 
 // --- Route helpers ---
-
-function getEditRoute(projectId: string | null, spaceId: string): string {
-  return projectId
-    ? `/project/${projectId}/spaces/${spaceId}/edit`
-    : `/business-inventory/spaces/${spaceId}/edit`;
-}
 
 function getDeleteTarget(projectId: string | null): string {
   return projectId
@@ -180,6 +178,8 @@ export function SpaceDetailContent({
   // Status picker state
   const [bulkStatusPickerVisible, setBulkStatusPickerVisible] = useState(false);
 
+  const mediaRef = useRef<MediaGallerySectionRef>(null);
+
   // Single-item modal state
   const [singleItemId, setSingleItemId] = useState<string | null>(null);
   const [singleItemSpacePickerVisible, setSingleItemSpacePickerVisible] = useState(false);
@@ -190,6 +190,9 @@ export function SpaceDetailContent({
 
   // Bulk transaction picker state
   const [bulkTransactionPickerVisible, setBulkTransactionPickerVisible] = useState(false);
+
+  const [editNameVisible, setEditNameVisible] = useState(false);
+  const [editNotesVisible, setEditNotesVisible] = useState(false);
 
   // Collapsible sections state
   const [collapsedSections, setCollapsedSections] = useState<Record<SpaceSectionKey, boolean>>({
@@ -202,6 +205,20 @@ export function SpaceDetailContent({
   const handleToggleSection = useCallback((key: SpaceSectionKey) => {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  const handleSaveSpaceName = useCallback((name: string) => {
+    if (!accountId || !spaceId) return;
+    updateSpace(accountId, spaceId, { name });
+    setEditNameVisible(false);
+    showToast('Space name updated');
+  }, [accountId, spaceId]);
+
+  const handleSaveNotes = useCallback((notes: string) => {
+    if (!accountId || !spaceId) return;
+    updateSpace(accountId, spaceId, { notes });
+    setEditNotesVisible(false);
+    showToast('Notes updated');
+  }, [accountId, spaceId]);
 
   const isFocused = useOptionalIsFocused(true);
   const scopeConfig = useMemo(
@@ -283,6 +300,15 @@ export function SpaceDetailContent({
         default: return true;
       }
     },
+  });
+
+  const returnPicker = useReturnTransactionPicker({
+    accountId,
+    scopeConfig: scopeConfig ?? null,
+    getItemTransactionId: (itemId) =>
+      itemsManager.filteredAndSortedItems.find(i => i.id === itemId)?.transactionId ?? null,
+    projectId: projectId ?? null,
+    onComplete: () => itemsManager.clearSelection(),
   });
 
   // Compute sections array for SectionList
@@ -489,10 +515,14 @@ export function SpaceDetailContent({
     selectedIds.forEach((itemId) => {
       updateItem(accountId, itemId, { status });
     });
-    itemsManager.clearSelection();
     setBulkStatusPickerVisible(false);
     showToast(`Status updated for ${count} item${count === 1 ? '' : 's'}`);
-  }, [accountId, itemsManager]);
+    if (status === 'returned') {
+      returnPicker.openForItems(Array.from(selectedIds));
+    } else {
+      itemsManager.clearSelection();
+    }
+  }, [accountId, itemsManager, returnPicker]);
 
   const handleBulkClearTransaction = useCallback(() => {
     if (!accountId) return;
@@ -609,9 +639,9 @@ export function SpaceDetailContent({
     const menuItems: AnchoredMenuItem[] = [
       {
         key: 'edit',
-        label: 'Edit',
+        label: 'Edit Name',
         icon: 'edit',
-        onPress: () => router.push(getEditRoute(projectId, spaceId)),
+        onPress: () => { onCloseSpaceMenu(); setEditNameVisible(true); },
       },
     ];
     if (canSaveTemplate) {
@@ -802,10 +832,11 @@ export function SpaceDetailContent({
         onSellToProject: () => { setBulkActionsSheetVisible(false); setSellToProjectVisible(true); },
         onReassignToInventory: scopeConfig.scope === 'project' ? () => { setBulkActionsSheetVisible(false); handleBulkReassignToInventory(); } : undefined,
         onReassignToProject: () => { setBulkActionsSheetVisible(false); setReassignToProjectVisible(true); },
+        onMoveToReturnTransaction: () => { setBulkActionsSheetVisible(false); returnPicker.openForItems(Array.from(itemsManager.selectedIds)); },
         onDelete: () => { setBulkActionsSheetVisible(false); handleBulkDelete(); },
       },
     });
-  }, [scopeConfig, handleBulkStatusConfirm, handleBulkClearTransaction, handleBulkRemoveFromSpace, handleBulkReassignToInventory, handleBulkDelete]);
+  }, [scopeConfig, handleBulkStatusConfirm, handleBulkClearTransaction, handleBulkRemoveFromSpace, handleBulkReassignToInventory, handleBulkDelete, returnPicker, itemsManager]);
 
   // --- SectionList render callbacks ---
 
@@ -882,6 +913,8 @@ export function SpaceDetailContent({
           collapsed={collapsedSections[section.key] ?? false}
           onToggle={() => handleToggleSection(section.key)}
           badge={section.badge}
+          onEdit={section.key === 'notes' ? () => setEditNotesVisible(true) : undefined}
+          onAdd={section.key === 'media' ? () => mediaRef.current?.triggerAdd() : undefined}
         />
       );
     }
@@ -891,6 +924,7 @@ export function SpaceDetailContent({
         return (
           <View style={{ paddingTop: 12 }}>
             <MediaGallerySection
+              ref={mediaRef}
               title="Images"
               hideTitle={true}
               attachments={space?.images ?? []}
@@ -924,7 +958,7 @@ export function SpaceDetailContent({
             scopeConfig,
             callbacks: {
               onEditOrOpen: () => router.push(itemDetailParams),
-              onStatusChange: (status) => { if (accountId) { updateItem(accountId, item.id, { status }); showToast('Status updated'); } },
+              onStatusChange: (status) => { if (accountId) { updateItem(accountId, item.id, { status }); showToast('Status updated'); if (status === 'returned') { returnPicker.openForItem(item.id); } } },
               onSetTransaction: () => { setSingleItemId(item.id); setSingleItemTransactionPickerVisible(true); },
               onClearTransaction: () => { if (accountId) { updateItem(accountId, item.id, { transactionId: null }); showToast('Transaction unlinked'); } },
               onSetSpace: () => { setSingleItemId(item.id); setSingleItemSpacePickerVisible(true); },
@@ -1413,6 +1447,19 @@ export function SpaceDetailContent({
         />
       )}
 
+      {/* Return Transaction Picker */}
+      {scopeConfig && (
+        <ReturnTransactionPickerModal
+          visible={returnPicker.visible}
+          onRequestClose={returnPicker.close}
+          accountId={accountId!}
+          scopeConfig={scopeConfig}
+          onConfirm={returnPicker.handleConfirm}
+          onCreateNew={returnPicker.handleCreateNew}
+          subtitle={returnPicker.subtitle}
+        />
+      )}
+
       {/* Single-item Sell to Business (project scope only) */}
       {scopeConfig?.scope === 'project' && (
         <SellToBusinessModal
@@ -1587,6 +1634,22 @@ export function SpaceDetailContent({
           />
         </View>
       </BottomSheet>
+
+      {/* Edit Space Name Modal */}
+      <EditSpaceDetailsModal
+        visible={editNameVisible}
+        onRequestClose={() => setEditNameVisible(false)}
+        initialName={space?.name ?? ''}
+        onSave={handleSaveSpaceName}
+      />
+
+      {/* Edit Notes Modal */}
+      <EditNotesModal
+        visible={editNotesVisible}
+        onRequestClose={() => setEditNotesVisible(false)}
+        initialNotes={space?.notes ?? ''}
+        onSave={handleSaveNotes}
+      />
     </View>
   );
 }

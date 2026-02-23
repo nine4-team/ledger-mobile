@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -55,14 +55,17 @@ import {
   AuditSection,
   type MediaHandlers,
 } from './sections';
+import type { MediaGallerySectionRef } from '../../../src/components/MediaGallerySection';
 import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
 import { showToast } from '../../../src/components/toastStore';
 import { subscribeToEdgesFromTransaction } from '../../../src/data/lineageEdgesService';
 import type { ItemLineageEdge } from '../../../src/data/lineageEdgesService';
 import { useItemsByIds } from '../../../src/hooks/useItemsByIds';
 import { findIncompleteReturns } from '../../../src/utils/incompleteReturnDetection';
-import { moveItemToReturnTransaction } from '../../../src/data/returnFlowService';
+import { useReturnTransactionPicker } from '../../../src/hooks/useReturnTransactionPicker';
 import { ReturnTransactionPickerModal } from '../../../src/components/modals/ReturnTransactionPickerModal';
+import { EditNotesModal } from '../../../src/components/modals/EditNotesModal';
+import { EditTransactionDetailsModal } from '../../../src/components/modals/EditTransactionDetailsModal';
 import { MovedItemsSection } from './sections/MovedItemsSection';
 
 type TransactionDetailParams = {
@@ -136,9 +139,19 @@ export default function TransactionDetailScreen() {
   // Lineage edges state
   const [edgesFromTransaction, setEdgesFromTransaction] = useState<ItemLineageEdge[]>([]);
 
-  // Return transaction picker state
-  const [returnTransactionPickerVisible, setReturnTransactionPickerVisible] = useState(false);
-  const [returnItemId, setReturnItemId] = useState<string | null>(null);
+  const scopeConfig = useMemo(
+    () => scope === 'inventory' ? createInventoryScopeConfig() : projectId ? createProjectScopeConfig(projectId) : null,
+    [scope, projectId],
+  );
+
+  // Return transaction picker hook
+  const returnPicker = useReturnTransactionPicker({
+    accountId,
+    scopeConfig: scopeConfig ?? null,
+    fromTransactionId: id ?? null,
+    projectId: projectId ?? null,
+    onComplete: () => itemsManager.clearSelection(),
+  });
 
   // Sell-to-business modal state
   const [singleItemSellToBusinessVisible, setSingleItemSellToBusinessVisible] = useState(false);
@@ -148,6 +161,9 @@ export default function TransactionDetailScreen() {
   const [singleItemSellToProjectVisible, setSingleItemSellToProjectVisible] = useState(false);
   const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
   const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
+
+  const [editDetailsVisible, setEditDetailsVisible] = useState(false);
+  const [editNotesVisible, setEditNotesVisible] = useState(false);
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -161,14 +177,12 @@ export default function TransactionDetailScreen() {
     audit: true,        // Default collapsed
   });
 
+  const receiptsRef = useRef<MediaGallerySectionRef>(null);
+  const otherImagesRef = useRef<MediaGallerySectionRef>(null);
+
   const handleToggleSection = useCallback((key: string) => {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
-
-  const scopeConfig = useMemo(
-    () => scope === 'inventory' ? createInventoryScopeConfig() : projectId ? createProjectScopeConfig(projectId) : null,
-    [scope, projectId],
-  );
 
   const outsideItemsHook = useOutsideItems({
     accountId,
@@ -631,7 +645,11 @@ export default function TransactionDetailScreen() {
     });
 
     setBulkStatusPickerVisible(false);
-    itemsManager.clearSelection();
+    if (status === 'returned' && transaction?.transactionType !== 'return') {
+      returnPicker.openForItems(Array.from(itemsManager.selectedIds));
+    } else {
+      itemsManager.clearSelection();
+    }
   };
 
   // Unified bulk action handler for ItemsSection
@@ -690,8 +708,11 @@ export default function TransactionDetailScreen() {
           ]
         );
         break;
+      case 'move-to-return':
+        returnPicker.openForItems(Array.from(itemsManager.selectedIds));
+        break;
     }
-  }, [accountId, itemsManager]);
+  }, [accountId, itemsManager, returnPicker]);
 
   // Single item operation state
   const [singleItemSpacePickerVisible, setSingleItemSpacePickerVisible] = useState(false);
@@ -787,44 +808,13 @@ export default function TransactionDetailScreen() {
   const handleSetStatus = (itemId: string, status: string) => {
     if (!accountId) return;
     updateItem(accountId, itemId, { status });
-    // Layer 1: When setting status to 'returned' on a non-return tx, prompt to pick a return transaction
     if (status === 'returned' && transaction?.transactionType !== 'return') {
-      setReturnItemId(itemId);
-      setReturnTransactionPickerVisible(true);
+      returnPicker.openForItem(itemId);
     }
   };
 
   const handleMoveToReturnTransaction = (itemId: string) => {
-    setReturnItemId(itemId);
-    setReturnTransactionPickerVisible(true);
-  };
-
-  const handleReturnTransactionConfirm = (returnTx: { id: string }) => {
-    if (!accountId || !returnItemId) return;
-    moveItemToReturnTransaction({
-      accountId,
-      itemId: returnItemId,
-      fromTransactionId: id ?? null,
-      returnTransactionId: returnTx.id,
-      fromProjectId: projectId ?? null,
-      toProjectId: projectId ?? null,
-    });
-    showToast('Item moved to return transaction');
-    setReturnItemId(null);
-  };
-
-  const handleCreateNewReturnTransaction = () => {
-    router.push({
-      pathname: '/transactions/new',
-      params: {
-        scope,
-        projectId: projectId ?? '',
-        transactionType: 'return',
-        linkItemId: returnItemId ?? '',
-        linkItemFromTransactionId: id ?? '',
-      },
-    });
-    setReturnItemId(null);
+    returnPicker.openForItem(itemId);
   };
 
   const handleSellToDesign = (itemId: string) => {
@@ -950,7 +940,7 @@ export default function TransactionDetailScreen() {
       selectedStatus: item.status ?? null,
       callbacks: {
         onViewItem: () => router.push(`/items/${item.id}`),
-        onEditOrOpen: () => router.push(`/items/${item.id}/edit`),
+        onEditOrOpen: () => router.push(`/items/${item.id}`),
         onMakeCopies: () => handleDuplicateItem(item.id),
         onStatusChange: (status) => handleSetStatus(item.id, status),
         onSetTransaction: () => {},
@@ -1134,23 +1124,22 @@ export default function TransactionDetailScreen() {
     ]);
   };
 
+  const handleSaveTransactionDetails = (changes: Partial<Transaction>) => {
+    if (!accountId || !id) return;
+    updateTransaction(accountId, id, changes);
+    setEditDetailsVisible(false);
+    showToast('Transaction updated');
+  };
+
+  const handleSaveNotes = (notes: string) => {
+    if (!accountId || !id) return;
+    updateTransaction(accountId, id, { notes });
+    setEditNotesVisible(false);
+    showToast('Notes updated');
+  };
+
   const menuItems = useMemo<AnchoredMenuItem[]>(() => {
-    const items: AnchoredMenuItem[] = [
-      {
-        label: 'Edit Details',
-        onPress: () => {
-          router.push({
-            pathname: '/transactions/[id]/edit',
-            params: {
-              id: id!,
-              scope: scope ?? '',
-              projectId: projectId ?? '',
-            },
-          });
-        },
-        icon: 'edit',
-      },
-    ];
+    const items: AnchoredMenuItem[] = [];
 
     if (!isCanonical) {
       const reassignSubactions: AnchoredMenuSubaction[] = [];
@@ -1341,9 +1330,9 @@ export default function TransactionDetailScreen() {
       const renderSectionContent = () => {
         switch (section.key) {
           case 'receipts':
-            return <ReceiptsSection transaction={transaction} handlers={mediaHandlers} />;
+            return <ReceiptsSection ref={receiptsRef} transaction={transaction} handlers={mediaHandlers} />;
           case 'otherImages':
-            return <OtherImagesSection transaction={transaction} handlers={mediaHandlers} />;
+            return <OtherImagesSection ref={otherImagesRef} transaction={transaction} handlers={mediaHandlers} />;
           case 'notes':
             return <NotesSection transaction={transaction} />;
           case 'details':
@@ -1360,6 +1349,16 @@ export default function TransactionDetailScreen() {
             collapsed={collapsed}
             onToggle={() => handleToggleSection(section.key)}
             badge={section.badge}
+            onEdit={
+              !isCanonical && section.key === 'notes' ? () => setEditNotesVisible(true)
+              : !isCanonical && section.key === 'details' ? () => setEditDetailsVisible(true)
+              : undefined
+            }
+            onAdd={
+              !isCanonical && section.key === 'receipts' ? () => receiptsRef.current?.triggerAdd()
+              : !isCanonical && section.key === 'otherImages' ? () => otherImagesRef.current?.triggerAdd()
+              : undefined
+            }
           />
           {!collapsed && renderSectionContent()}
         </View>
@@ -1651,6 +1650,15 @@ export default function TransactionDetailScreen() {
                     onPress: () => {
                       setBulkActionsSheetVisible(false);
                       handleBulkAction('remove', []);
+                    },
+                  },
+                  {
+                    key: 'move-to-return-transaction',
+                    label: 'Move to Return Transaction',
+                    icon: 'assignment-return',
+                    onPress: () => {
+                      setBulkActionsSheetVisible(false);
+                      handleBulkAction('move-to-return', []);
                     },
                   },
                 ],
@@ -1984,17 +1992,36 @@ export default function TransactionDetailScreen() {
 
             {/* Return Transaction Picker modal */}
             <ReturnTransactionPickerModal
-              visible={returnTransactionPickerVisible}
-              onRequestClose={() => {
-                setReturnTransactionPickerVisible(false);
-                setReturnItemId(null);
-              }}
+              visible={returnPicker.visible}
+              onRequestClose={returnPicker.close}
               accountId={accountId!}
               scopeConfig={scopeConfig!}
-              onConfirm={handleReturnTransactionConfirm}
-              onCreateNew={handleCreateNewReturnTransaction}
-              subtitle={returnItemId ? 'Moving 1 item' : undefined}
+              onConfirm={returnPicker.handleConfirm}
+              onCreateNew={returnPicker.handleCreateNew}
+              subtitle={returnPicker.subtitle}
             />
+
+            {/* Edit Notes Modal */}
+            {transaction && (
+              <EditNotesModal
+                visible={editNotesVisible}
+                onRequestClose={() => setEditNotesVisible(false)}
+                initialNotes={transaction.notes ?? ''}
+                onSave={handleSaveNotes}
+              />
+            )}
+
+            {/* Edit Transaction Details Modal */}
+            {transaction && (
+              <EditTransactionDetailsModal
+                visible={editDetailsVisible}
+                onRequestClose={() => setEditDetailsVisible(false)}
+                transaction={transaction}
+                budgetCategories={budgetCategories}
+                itemizationEnabled={itemizationEnabled}
+                onSave={handleSaveTransactionDetails}
+              />
+            )}
           </>
         ) : (
           <View style={styles.loadingContainer}>

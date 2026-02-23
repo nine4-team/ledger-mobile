@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -41,13 +41,17 @@ export type MediaGallerySectionProps = {
   style?: ViewStyle;
 };
 
+export type MediaGallerySectionRef = {
+  triggerAdd: () => void;
+};
+
 const TILE_SIZES = {
   sm: { mobile: 80, tablet: 64 },
   md: { mobile: 96, tablet: 80 },
   lg: { mobile: 112, tablet: 96 },
 };
 
-export function MediaGallerySection({
+export const MediaGallerySection = forwardRef<MediaGallerySectionRef, MediaGallerySectionProps>(function MediaGallerySection({
   title,
   attachments,
   maxAttachments = 5,
@@ -61,13 +65,17 @@ export function MediaGallerySection({
   pickerLabel,
   hideTitle = false,
   style,
-}: MediaGallerySectionProps) {
+}: MediaGallerySectionProps, ref: React.Ref<MediaGallerySectionRef>) {
   const uiKitTheme = useUIKitTheme();
   const [galleryVisible, setGalleryVisible] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [pdfMenuVisible, setPdfMenuVisible] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<AttachmentRef | null>(null);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    triggerAdd: () => setAddMenuVisible(true),
+  }));
 
   const tileSize = Math.round(TILE_SIZES[size].mobile * tileScale);
 
@@ -84,9 +92,6 @@ export function MediaGallerySection({
   const themed = useMemo(
     () =>
       StyleSheet.create({
-        addIconButton: {
-          borderColor: uiKitTheme.primary.main,
-        },
         fileTile: {
           borderColor: uiKitTheme.border.primary,
           backgroundColor: uiKitTheme.background.tertiary,
@@ -249,96 +254,75 @@ export function MediaGallerySection({
   const showEmptyState = attachments.length === 0;
   const canAddMore = attachments.length < maxAttachments;
 
-  const CardComponent = hideTitle ? Card : TitledCard;
-  const cardProps = hideTitle
-    ? { style: [styles.cardWithButton, style] }
-    : { title, containerStyle: style, cardStyle: styles.cardWithButton };
+  const addButton = canAddMore && onAddAttachment ? (
+    <Pressable onPress={() => setAddMenuVisible(true)} hitSlop={8}>
+      <MaterialIcons name="add-circle-outline" size={24} color={uiKitTheme.primary.main} />
+    </Pressable>
+  ) : null;
 
-  return (
-    <>
-      <CardComponent {...cardProps}>
-        {/* Add button in top-right corner */}
-        {canAddMore && onAddAttachment && (
-          <Pressable
-            onPress={() => setAddMenuVisible(true)}
-            style={[
-              styles.addIconButton,
-              themed.addIconButton,
-              { backgroundColor: uiKitTheme.background.surface },
-            ]}
-            hitSlop={8}
-          >
-            <MaterialIcons name="add" size={20} color={uiKitTheme.text.primary} />
-          </Pressable>
-        )}
+  const content = showEmptyState ? (
+    <View style={styles.emptyState}>
+      <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
+        {defaultEmptyMessage}
+      </AppText>
+    </View>
+  ) : (
+    <View style={styles.content}>
+      {imageAttachments.length > 0 && (
+        <ThumbnailGrid
+          images={imageAttachments}
+          maxImages={maxAttachments}
+          size={size}
+          tileScale={tileScale}
+          onImagePress={handleImagePress}
+          onSetPrimary={onSetPrimary}
+          onDelete={onRemoveAttachment}
+        />
+      )}
 
-        {showEmptyState ? (
-          <View style={styles.emptyState}>
-            <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
-              {defaultEmptyMessage}
-            </AppText>
-          </View>
-        ) : (
-          <View style={styles.content}>
-            {/* Image thumbnails */}
-            {imageAttachments.length > 0 && (
-              <ThumbnailGrid
-                images={imageAttachments}
-                maxImages={maxAttachments}
-                size={size}
-                tileScale={tileScale}
-                onImagePress={handleImagePress}
-                onSetPrimary={onSetPrimary}
-                onDelete={onRemoveAttachment}
-              />
-            )}
-
-            {/* PDF file tiles */}
-            {pdfAttachments.length > 0 && (
-              <View style={[styles.fileGrid, imageAttachments.length > 0 && styles.fileGridMargin]}>
-                {pdfAttachments.map((pdf) => (
-                  <Pressable
-                    key={pdf.url}
-                    onPress={() => handlePdfPress(pdf)}
-                    style={[styles.fileTile, themed.fileTile, { width: tileSize, height: tileSize }]}
-                  >
-                    <View style={styles.fileContent}>
-                      <MaterialIcons
-                        name="picture-as-pdf"
-                        size={32}
-                        color={uiKitTheme.text.secondary}
-                      />
-                      <AppText variant="caption" style={styles.fileLabel} numberOfLines={1}>
-                        {pdf.fileName || 'PDF'}
-                      </AppText>
-                    </View>
-
-                    {/* Primary badge if applicable */}
-                    {pdf.isPrimary && (
-                      <View style={[styles.primaryBadge, themed.primaryBadge]}>
-                        <MaterialIcons name="star" size={12} color="#FFFFFF" />
-                      </View>
-                    )}
-
-                    {/* Options menu */}
-                    {(onSetPrimary || onRemoveAttachment) && (
-                      <Pressable
-                        onPress={(e) => handlePdfOptionsPress(pdf, e)}
-                        style={[styles.optionsButton, themed.optionsButton]}
-                        hitSlop={4}
-                      >
-                        <MaterialIcons name="more-vert" size={14} color="#FFFFFF" />
-                      </Pressable>
-                    )}
-                  </Pressable>
-                ))}
+      {pdfAttachments.length > 0 && (
+        <View style={[styles.fileGrid, imageAttachments.length > 0 && styles.fileGridMargin]}>
+          {pdfAttachments.map((pdf) => (
+            <Pressable
+              key={pdf.url}
+              onPress={() => handlePdfPress(pdf)}
+              style={[styles.fileTile, themed.fileTile, { width: tileSize, height: tileSize }]}
+            >
+              <View style={styles.fileContent}>
+                <MaterialIcons
+                  name="picture-as-pdf"
+                  size={32}
+                  color={uiKitTheme.text.secondary}
+                />
+                <AppText variant="caption" style={styles.fileLabel} numberOfLines={1}>
+                  {pdf.fileName || 'PDF'}
+                </AppText>
               </View>
-            )}
-          </View>
-        )}
-      </CardComponent>
 
-      {/* Add menu */}
+              {pdf.isPrimary && (
+                <View style={[styles.primaryBadge, themed.primaryBadge]}>
+                  <MaterialIcons name="star" size={12} color="#FFFFFF" />
+                </View>
+              )}
+
+              {(onSetPrimary || onRemoveAttachment) && (
+                <Pressable
+                  onPress={(e) => handlePdfOptionsPress(pdf, e)}
+                  style={[styles.optionsButton, themed.optionsButton]}
+                  hitSlop={4}
+                >
+                  <MaterialIcons name="more-vert" size={14} color="#FFFFFF" />
+                </Pressable>
+              )}
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  const menus = (
+    <>
       <BottomSheetMenuList
         visible={addMenuVisible}
         onRequestClose={() => setAddMenuVisible(false)}
@@ -347,7 +331,6 @@ export function MediaGallerySection({
         showLeadingIcons={true}
       />
 
-      {/* Image gallery modal (images only) */}
       {imageAttachments.length > 0 && (
         <ImageGallery
           images={imageAttachments}
@@ -357,7 +340,6 @@ export function MediaGallerySection({
         />
       )}
 
-      {/* PDF menu */}
       {selectedPdf && (
         <BottomSheetMenuList
           visible={pdfMenuVisible}
@@ -369,24 +351,29 @@ export function MediaGallerySection({
       )}
     </>
   );
-}
+
+  if (hideTitle) {
+    return (
+      <>
+        <Card style={style}>
+          {content}
+        </Card>
+        {menus}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <TitledCard title={title} containerStyle={style} headerAction={addButton}>
+        {content}
+      </TitledCard>
+      {menus}
+    </>
+  );
+});
 
 const styles = StyleSheet.create({
-  cardWithButton: {
-    position: 'relative',
-  },
-  addIconButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    zIndex: 10,
-  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 16,
