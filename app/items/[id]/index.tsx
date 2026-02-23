@@ -15,6 +15,7 @@ import { DetailRow } from '../../../src/components/DetailRow';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { AppButton } from '../../../src/components/AppButton';
 import { ProjectSelector } from '../../../src/components/ProjectSelector';
+import { SpaceSelector } from '../../../src/components/SpaceSelector';
 import {
   CARD_PADDING,
   getCardStyle,
@@ -39,6 +40,11 @@ import {
   requestProjectToBusinessSale,
   requestProjectToProjectMove,
 } from '../../../src/data/inventoryOperations';
+import {
+  validateItemReassign,
+  reassignItemToInventory,
+  reassignItemToProject,
+} from '../../../src/data/reassignService';
 import { ITEM_STATUSES, getItemStatusLabel } from '../../../src/constants/itemStatuses';
 import { deleteLocalMediaByUrl, resolveAttachmentUri, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
@@ -89,6 +95,9 @@ export default function ItemDetailScreen() {
   const [sellTargetProjectId, setSellTargetProjectId] = useState<string | null>(null);
   const [sellDestCategoryId, setSellDestCategoryId] = useState<string | null>(null);
   const [sellSourceCategoryId, setSellSourceCategoryId] = useState<string | null>(null);
+  const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
+  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
+  const [spacePickerVisible, setSpacePickerVisible] = useState(false);
   const [budgetCategories, setBudgetCategories] = useState<Record<string, BudgetCategory>>({});
   const [spaces, setSpaces] = useState<Record<string, Space>>({});
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -254,30 +263,92 @@ export default function ItemDetailScreen() {
   };
 
   const handleSellToInventory = () => {
-    if (!accountId || !id || !projectId) return;
-    if (!item?.budgetCategoryId) {
+    if (!accountId || !id || !projectId || !item) return;
+    if (!item.budgetCategoryId) {
       setError(
         "Can’t sell to Business Inventory yet. Link this item to a categorized transaction first."
       );
       return;
     }
-    requestProjectToBusinessSale({
-      accountId,
-      projectId,
-      items: [item],
-    });
-    setError(null);
+    Alert.alert(
+      "Sell to Inventory?",
+      "This item will be moved to business inventory.\nA sale record will be created for financial tracking.\n\nIf you’re just fixing a misallocation, use Reassign instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sell",
+          onPress: () => {
+            requestProjectToBusinessSale({
+              accountId,
+              projectId,
+              items: [item],
+            });
+            setError(null);
+          },
+        },
+      ]
+    );
   };
 
-  const handleMoveToInventoryCorrection = () => {
+  const handleReassignToInventory = () => {
     if (!accountId || !id || !item) return;
-    if (item.transactionId) {
-      setError('This item is tied to a transaction. Move the transaction instead.');
+    const result = validateItemReassign(item, null);
+    if (!result.valid) {
+      setError(result.error);
       return;
     }
-    updateItem(accountId, id, { projectId: null, transactionId: null, spaceId: null });
+    Alert.alert(
+      "Reassign to Inventory?",
+      "This item will be moved to business inventory.\nNo sale or purchase records will be created.\n\nUse this to fix items that were added to the wrong project.\nIf this is a real business transfer, use Sell instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignItemToInventory(accountId, id);
+            setError(null);
+          },
+        },
+      ]
+    );
   };
 
+  const handleReassignToProjectConfirm = () => {
+    if (!accountId || !id || !item || !reassignTargetProjectId) return;
+    const result = validateItemReassign(item, reassignTargetProjectId);
+    if (!result.valid) {
+      setError(result.error);
+      return;
+    }
+    Alert.alert(
+      "Reassign to Project?",
+      "This item will be moved directly to the selected project.\nNo sale or purchase records will be created.\n\nUse this to fix items that were added to the wrong project.\nIf this is a real business transfer, use Sell instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignItemToProject(accountId, id, reassignTargetProjectId);
+            setReassignToProjectVisible(false);
+            setReassignTargetProjectId(null);
+            setError(null);
+          },
+        },
+      ]
+    );
+  };
+
+
+  const handleSetSpaceConfirm = (spaceId: string | null) => {
+    if (!accountId || !id) return;
+    updateItem(accountId, id, { spaceId });
+    setSpacePickerVisible(false);
+  };
+
+  const handleRemoveSpace = () => {
+    if (!accountId || !id) return;
+    updateItem(accountId, id, { spaceId: null });
+  };
 
   const handleDelete = () => {
     if (!accountId || !id) return;
@@ -386,8 +457,18 @@ export default function ItemDetailScreen() {
       icon: 'link',
       actionOnly: true,
       subactions: [
-        { key: 'link', label: 'Link Transaction', onPress: handleLinkTransaction, icon: 'link' },
-        { key: 'unlink', label: 'Unlink Transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
+        { key: 'set', label: 'Set Transaction', onPress: handleLinkTransaction, icon: 'link' },
+        { key: 'clear', label: 'Clear Transaction', onPress: handleUnlinkTransaction, icon: 'link-off' },
+      ],
+    });
+
+    items.push({
+      label: 'Space',
+      icon: 'place',
+      actionOnly: true,
+      subactions: [
+        { key: 'set-space', label: 'Set Space', onPress: () => setSpacePickerVisible(true), icon: 'place' },
+        { key: 'clear-space', label: 'Clear Space', onPress: handleRemoveSpace, icon: 'close' },
       ],
     });
 
@@ -396,6 +477,7 @@ export default function ItemDetailScreen() {
         label: 'Sell',
         icon: 'sell',
         actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
         subactions: [
           { key: 'sell-to-project', label: 'Sell to Project', onPress: () => setSellToProjectVisible(true), icon: 'assignment' },
         ],
@@ -405,17 +487,20 @@ export default function ItemDetailScreen() {
         label: 'Sell',
         icon: 'sell',
         actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
         subactions: [
           { key: 'sell-to-business', label: 'Sell to Business', onPress: handleSellToInventory, icon: 'inventory' },
           { key: 'sell-to-project', label: 'Sell to Project', onPress: () => setSellToProjectVisible(true), icon: 'assignment' },
         ],
       });
       items.push({
-        label: 'Move',
+        label: 'Reassign',
         icon: 'swap-horiz',
         actionOnly: true,
+        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
         subactions: [
-          { key: 'move-to-inventory', label: 'Move to Inventory', onPress: handleMoveToInventoryCorrection, icon: 'inventory' },
+          { key: 'reassign-to-inventory', label: 'Reassign to Inventory', onPress: handleReassignToInventory, icon: 'inventory' },
+          { key: 'reassign-to-project', label: 'Reassign to Project', onPress: () => setReassignToProjectVisible(true), icon: 'assignment' },
         ],
       });
     }
@@ -430,7 +515,8 @@ export default function ItemDetailScreen() {
   }, [
     handleDelete,
     handleLinkTransaction,
-    handleMoveToInventoryCorrection,
+    handleReassignToInventory,
+    handleRemoveSpace,
     handleSellToInventory,
     handleUnlinkTransaction,
     id,
@@ -691,6 +777,10 @@ export default function ItemDetailScreen() {
           <AppText variant="body" style={{ fontWeight: '700' }}>
             Sell to Project
           </AppText>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            Sale and purchase records will be created for financial tracking.
+            If you're just fixing a misallocation, use Reassign instead.
+          </AppText>
           {accountId && (
             <View style={{ gap: 8 }}>
               <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
@@ -807,6 +897,58 @@ export default function ItemDetailScreen() {
             }}
             style={{ minHeight: 44 }}
           />
+        </View>
+      </BottomSheet>
+
+      {/* Reassign to Project modal */}
+      <BottomSheet visible={reassignToProjectVisible} onRequestClose={() => setReassignToProjectVisible(false)}>
+        <View style={[styles.moveForm, { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }]}>
+          <AppText variant="body" style={{ fontWeight: '700' }}>
+            Reassign to Project
+          </AppText>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            Move this item directly to another project. No sale or purchase records will be created.
+          </AppText>
+          {accountId && (
+            <View style={{ gap: 8 }}>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                Target project
+              </AppText>
+              <ProjectSelector
+                accountId={accountId}
+                value={reassignTargetProjectId}
+                onChange={setReassignTargetProjectId}
+                excludeProjectId={projectId}
+              />
+            </View>
+          )}
+          <AppButton
+            title="Reassign"
+            variant="primary"
+            disabled={!reassignTargetProjectId}
+            onPress={() => {
+              handleReassignToProjectConfirm();
+            }}
+            style={{ minHeight: 44 }}
+          />
+        </View>
+      </BottomSheet>
+
+      {/* Space Picker */}
+      <BottomSheet visible={spacePickerVisible} onRequestClose={() => setSpacePickerVisible(false)}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 12 }}>
+          <AppText variant="body" style={{ fontWeight: '700' }}>
+            Set Space
+          </AppText>
+          {accountId && (
+            <SpaceSelector
+              projectId={projectId ?? null}
+              value={item?.spaceId ?? null}
+              onChange={handleSetSpaceConfirm}
+              allowCreate={true}
+              placeholder="Select space"
+            />
+          )}
         </View>
       </BottomSheet>
 

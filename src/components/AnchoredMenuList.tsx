@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { AnchoredMenu, AnchorLayout } from './AnchoredMenu';
+import type { InfoDialogContent } from './InfoButton';
 
 export type MenuIconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
@@ -26,6 +27,8 @@ export type AnchoredMenuItem = {
   destructive?: boolean;
   /** When true, subactions are plain navigation/action items with no selection state, checkmarks, or header value display. */
   actionOnly?: boolean;
+  /** Optional info tooltip shown via InfoButton next to the label. */
+  info?: InfoDialogContent;
 };
 
 export type MenuSelectionOptions = {

@@ -8,6 +8,7 @@ import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { resolveMenuSelection } from './AnchoredMenuList';
 import { BottomSheet } from './BottomSheet';
 import { AppScrollView } from './AppScrollView';
+import { InfoButton } from './InfoButton';
 
 export interface BottomSheetMenuListProps {
   visible: boolean;
@@ -146,6 +147,14 @@ export function BottomSheetMenuList({
                     >
                       {item.label}
                     </Text>
+                    {item.info ? (
+                      <InfoButton
+                        accessibilityLabel={`About ${item.label}`}
+                        content={item.info}
+                        iconSize={16}
+                        iconColor={uiKitTheme.text.secondary}
+                      />
+                    ) : null}
                   </View>
                   <View style={styles.menuSectionRight}>
                     {!isActionOnly && currentLabel ? (

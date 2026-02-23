@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AppText } from './AppText';
@@ -18,7 +18,9 @@ import { BulkSelectionBar } from './BulkSelectionBar';
 import { useScreenRefresh } from './Screen';
 import { useListState } from '../data/listStateStore';
 import { getScopeId, ScopeConfig } from '../data/scopeConfig';
-import { getTextColorStyle, layout } from '../ui';
+import { getTextColorStyle, getTextSecondaryStyle, layout } from '../ui';
+import { getTextInputStyle } from '../ui/styles/forms';
+import { getTransaction } from '../data/transactionsService';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
 import { useScopedListeners } from '../data/useScopedListeners';
@@ -27,8 +29,10 @@ import { deleteItem, updateItem, type Item } from '../data/itemsService';
 import { requestBusinessToProjectPurchase, requestProjectToBusinessSale, requestProjectToProjectMove } from '../data/inventoryOperations';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../data/budgetCategoriesService';
 import { ProjectSelector } from './ProjectSelector';
+import { SpaceSelector } from './SpaceSelector';
 import { resolveSourceCategories, resolveDestinationCategories, needsSourceCategoryPicker, needsDestinationCategoryPicker, type ItemForCategoryResolution } from '../utils/bulkSaleUtils';
 import { resolveAttachmentUri } from '../offline/media';
+import { filterItemsForBulkReassign, reassignItemToInventory, reassignItemToProject } from '../data/reassignService';
 import type { AnchoredMenuItem } from './AnchoredMenuList';
 import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { ITEM_STATUSES, getItemStatusLabel } from '../constants/itemStatuses';
@@ -230,6 +234,12 @@ export function SharedItemsList({
   const [sellBudgetCategories, setSellBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
   const [statusMenuItemId, setStatusMenuItemId] = useState<string | null>(null);
+  const [reassignToInventoryVisible, setReassignToInventoryVisible] = useState(false);
+  const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
+  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
+  const [bulkSpacePickerVisible, setBulkSpacePickerVisible] = useState(false);
+  const [bulkTransactionPickerVisible, setBulkTransactionPickerVisible] = useState(false);
+  const [bulkTransactionIdValue, setBulkTransactionIdValue] = useState('');
   const uiKitTheme = useUIKitTheme();
   const theme = useTheme();
   const bulkSheetDividerStyle = useMemo(
@@ -555,7 +565,16 @@ export function SharedItemsList({
     clearSelection();
   }, [accountId, selectedIds, clearSelection]);
 
-  const handleBulkRemoveFromSpace = useCallback(() => {
+  const handleBulkSetSpace = useCallback((spaceId: string | null) => {
+    if (!accountId || selectedIds.length === 0) return;
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { spaceId });
+    });
+    setBulkSpacePickerVisible(false);
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
+
+  const handleBulkClearSpace = useCallback(() => {
     if (!accountId || selectedIds.length === 0) return;
     selectedIds.forEach((id) => {
       updateItem(accountId, id, { spaceId: null });
@@ -779,16 +798,95 @@ export function SharedItemsList({
     ];
   }, [embedded, externalGetItemMenuItems, handleOpenItem, handleDeleteItem]);
 
+  const handleBulkClearTransaction = useCallback(() => {
+    if (!accountId || selectedIds.length === 0) return;
+    selectedIds.forEach((id) => {
+      updateItem(accountId, id, { transactionId: null });
+    });
+    clearSelection();
+  }, [accountId, selectedIds, clearSelection]);
+
+  const handleBulkSetTransaction = useCallback(async () => {
+    const trimmed = bulkTransactionIdValue.trim();
+    if (!accountId || selectedIds.length === 0 || !trimmed) return;
+    const transaction = await getTransaction(accountId, trimmed, 'offline');
+    if (!transaction) {
+      Alert.alert('Not Found', 'Transaction not found.');
+      return;
+    }
+    selectedIds.forEach((itemId) => {
+      const update: Partial<Item> = { transactionId: transaction.id };
+      if (transaction.budgetCategoryId) {
+        update.budgetCategoryId = transaction.budgetCategoryId;
+      }
+      updateItem(accountId, itemId, update);
+    });
+    setBulkTransactionPickerVisible(false);
+    setBulkTransactionIdValue('');
+    clearSelection();
+  }, [accountId, selectedIds, bulkTransactionIdValue, clearSelection]);
+
   const standaloneBulkMenuItems = useMemo<AnchoredMenuItem[]>(() => {
     if (embedded || !scopeConfig) return [];
     const items: AnchoredMenuItem[] = [];
 
+    // Transaction submenu
+    items.push({
+      key: 'transaction',
+      label: 'Transaction',
+      icon: 'link',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'set-transaction',
+          label: 'Set Transaction',
+          icon: 'link',
+          onPress: () => {
+            setBulkTransactionIdValue('');
+            setBulkTransactionPickerVisible(true);
+          },
+        },
+        {
+          key: 'clear-transaction',
+          label: 'Clear Transaction',
+          icon: 'link-off',
+          onPress: handleBulkClearTransaction,
+        },
+      ],
+    });
+
+    // Space submenu
+    items.push({
+      key: 'space',
+      label: 'Space',
+      icon: 'place',
+      actionOnly: true,
+      subactions: [
+        {
+          key: 'set-space',
+          label: 'Set Space',
+          icon: 'place',
+          onPress: () => {
+            setBulkSpacePickerVisible(true);
+          },
+        },
+        {
+          key: 'clear-space',
+          label: 'Clear Space',
+          icon: 'close',
+          onPress: handleBulkClearSpace,
+        },
+      ],
+    });
+
+    // Sell submenu (project scope or inventory with capability)
     if (scopeConfig.scope === 'project') {
       items.push({
         key: 'sell',
         label: 'Sell',
         icon: 'sell',
         actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
         subactions: [
           {
             key: 'sell-to-business',
@@ -812,14 +910,13 @@ export function SharedItemsList({
           },
         ],
       });
-    }
-
-    if (scopeConfig.scope === 'inventory' && scopeConfig.capabilities?.canSellToProject) {
+    } else if (scopeConfig.scope === 'inventory' && scopeConfig.capabilities?.canSellToProject) {
       items.push({
         key: 'sell',
         label: 'Sell',
         icon: 'sell',
         actionOnly: true,
+        info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
         subactions: [
           {
             key: 'sell-to-project',
@@ -835,6 +932,37 @@ export function SharedItemsList({
       });
     }
 
+    // Reassign submenu (project scope only)
+    if (scopeConfig.scope === 'project') {
+      items.push({
+        key: 'reassign',
+        label: 'Reassign',
+        icon: 'swap-horiz',
+        actionOnly: true,
+        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
+        subactions: [
+          {
+            key: 'reassign-to-inventory',
+            label: 'Reassign to Inventory',
+            icon: 'inventory',
+            onPress: () => {
+              setReassignToInventoryVisible(true);
+            },
+          },
+          {
+            key: 'reassign-to-project',
+            label: 'Reassign to Project',
+            icon: 'assignment',
+            onPress: () => {
+              setReassignTargetProjectId(null);
+              setReassignToProjectVisible(true);
+            },
+          },
+        ],
+      });
+    }
+
+    // Delete
     items.push({
       key: 'delete',
       label: 'Delete',
@@ -843,7 +971,7 @@ export function SharedItemsList({
     });
 
     return items;
-  }, [embedded, scopeConfig, handleBulkDelete]);
+  }, [embedded, scopeConfig, handleBulkClearTransaction, handleBulkClearSpace, handleBulkDelete]);
 
   return (
     <View style={styles.container}>
@@ -959,6 +1087,10 @@ export function SharedItemsList({
           </AppText>
         </View>
         <View style={styles.bulkSheetContent}>
+          <AppText variant="caption">
+            A sale record will be created for financial tracking.
+            If you're just fixing a misallocation, use Reassign instead.
+          </AppText>
           {needsSourceCategoryPicker(items.filter(i => selectedIds.includes(i.id)) as ItemForCategoryResolution[]) && (
             <View style={styles.bulkActionGroup}>
               <AppText variant="caption" style={styles.semiboldText}>
@@ -1021,6 +1153,10 @@ export function SharedItemsList({
           </AppText>
         </View>
         <View style={styles.bulkSheetContent}>
+          <AppText variant="caption">
+            Sale and purchase records will be created for financial tracking.
+            If you're just fixing a misallocation, use Reassign instead.
+          </AppText>
           {accountId && (
             <View style={styles.bulkActionGroup}>
               <AppText variant="caption" style={styles.semiboldText}>
@@ -1150,6 +1286,169 @@ export function SharedItemsList({
               setSellToProjectVisible(false);
               clearSelection();
             }}
+            style={styles.bulkActionButton}
+          />
+        </View>
+      </BottomSheet>
+      {/* Reassign to Inventory confirmation */}
+      <BottomSheet visible={reassignToInventoryVisible} onRequestClose={() => setReassignToInventoryVisible(false)}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Reassign to Inventory
+          </AppText>
+        </View>
+        <View style={styles.bulkSheetContent}>
+          {(() => {
+            const selected = items.filter(i => selectedIds.includes(i.id));
+            const { eligible, blockedCount } = filterItemsForBulkReassign(selected);
+            return (
+              <>
+                <AppText variant="caption">
+                  {eligible.length} item{eligible.length === 1 ? '' : 's'} will be moved to business inventory.
+                  No sale or purchase records will be created.
+                </AppText>
+                {blockedCount > 0 && (
+                  <AppText variant="caption" style={{ color: theme.colors.error ?? 'red' }}>
+                    {blockedCount} item{blockedCount === 1 ? ' is' : 's are'} linked to transactions and cannot be reassigned.
+                  </AppText>
+                )}
+                <AppButton
+                  title="Reassign"
+                  variant="primary"
+                  disabled={eligible.length === 0}
+                  onPress={() => {
+                    if (!accountId) return;
+                    for (const itemId of eligible) {
+                      reassignItemToInventory(accountId, itemId);
+                    }
+                    setReassignToInventoryVisible(false);
+                    clearSelection();
+                  }}
+                  style={styles.bulkActionButton}
+                />
+              </>
+            );
+          })()}
+        </View>
+      </BottomSheet>
+      {/* Reassign to Project picker */}
+      <BottomSheet visible={reassignToProjectVisible} onRequestClose={() => {
+        setReassignToProjectVisible(false);
+        setReassignTargetProjectId(null);
+      }}>
+        <View style={[styles.bulkSheetTitleRow, bulkSheetDividerStyle]}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Reassign to Project
+          </AppText>
+        </View>
+        <View style={styles.bulkSheetContent}>
+          {(() => {
+            const selected = items.filter(i => selectedIds.includes(i.id));
+            const { eligible, blockedCount } = filterItemsForBulkReassign(selected);
+            return (
+              <>
+                <AppText variant="caption">
+                  {eligible.length} item{eligible.length === 1 ? '' : 's'} will be moved directly.
+                  No sale or purchase records will be created.
+                </AppText>
+                {blockedCount > 0 && (
+                  <AppText variant="caption" style={{ color: theme.colors.error ?? 'red' }}>
+                    {blockedCount} item{blockedCount === 1 ? ' is' : 's are'} linked to transactions and cannot be reassigned.
+                  </AppText>
+                )}
+                {accountId && (
+                  <View style={styles.bulkActionGroup}>
+                    <AppText variant="caption" style={styles.semiboldText}>
+                      Target project
+                    </AppText>
+                    <ProjectSelector
+                      accountId={accountId}
+                      value={reassignTargetProjectId}
+                      onChange={setReassignTargetProjectId}
+                      excludeProjectId={scopeConfig?.projectId}
+                    />
+                  </View>
+                )}
+                <AppButton
+                  title="Reassign"
+                  variant="primary"
+                  disabled={eligible.length === 0 || !reassignTargetProjectId}
+                  onPress={() => {
+                    if (!accountId || !reassignTargetProjectId) return;
+                    for (const itemId of eligible) {
+                      reassignItemToProject(accountId, itemId, reassignTargetProjectId);
+                    }
+                    setReassignToProjectVisible(false);
+                    setReassignTargetProjectId(null);
+                    clearSelection();
+                  }}
+                  style={styles.bulkActionButton}
+                />
+              </>
+            );
+          })()}
+        </View>
+      </BottomSheet>
+      {/* Bulk Set Space */}
+      <BottomSheet visible={bulkSpacePickerVisible} onRequestClose={() => setBulkSpacePickerVisible(false)}>
+        <View style={styles.bulkSheetContent}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Set Space
+          </AppText>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
+          </AppText>
+          {accountId && (
+            <SpaceSelector
+              projectId={scopeConfig?.projectId ?? null}
+              value={null}
+              onChange={handleBulkSetSpace}
+              allowCreate={true}
+              placeholder="Select space"
+            />
+          )}
+        </View>
+      </BottomSheet>
+      {/* Bulk Set Transaction */}
+      <BottomSheet
+        visible={bulkTransactionPickerVisible}
+        onRequestClose={() => {
+          setBulkTransactionPickerVisible(false);
+          setBulkTransactionIdValue('');
+        }}
+      >
+        <View style={styles.bulkSheetContent}>
+          <AppText variant="body" style={styles.bulkSheetTitle}>
+            Set Transaction
+          </AppText>
+          <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+            {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
+          </AppText>
+          <View style={styles.bulkActionGroup}>
+            <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
+              Transaction ID
+            </AppText>
+            <TextInput
+              value={bulkTransactionIdValue}
+              onChangeText={setBulkTransactionIdValue}
+              placeholder="Enter transaction ID"
+              placeholderTextColor={uiKitTheme.text.secondary}
+              style={[
+                { minHeight: 44 },
+                getTextInputStyle(uiKitTheme, { padding: 12, radius: 10 }),
+                getTextColorStyle(uiKitTheme.text.primary),
+              ]}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleBulkSetTransaction}
+            />
+          </View>
+          <AppButton
+            title="Apply"
+            variant="primary"
+            disabled={!bulkTransactionIdValue.trim()}
+            onPress={handleBulkSetTransaction}
             style={styles.bulkActionButton}
           />
         </View>

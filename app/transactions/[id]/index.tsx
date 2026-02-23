@@ -7,7 +7,7 @@ import { AppText } from '../../../src/components/AppText';
 import { AppButton } from '../../../src/components/AppButton';
 import { BottomSheet } from '../../../src/components/BottomSheet';
 import { BottomSheetMenuList } from '../../../src/components/BottomSheetMenuList';
-import type { AnchoredMenuItem } from '../../../src/components/AnchoredMenuList';
+import type { AnchoredMenuItem, AnchoredMenuSubaction } from '../../../src/components/AnchoredMenuList';
 import { showItemConflictDialog } from '../../../src/components/ItemConflictDialog';
 import { ItemCard } from '../../../src/components/ItemCard';
 import { BulkSelectionBar } from '../../../src/components/BulkSelectionBar';
@@ -32,6 +32,15 @@ import { deleteTransaction, subscribeToTransaction, Transaction, updateTransacti
 import { isCanonicalInventorySaleTransaction } from '../../../src/data/inventoryOperations';
 import { useOutsideItems } from '../../../src/hooks/useOutsideItems';
 import { resolveItemMove } from '../../../src/data/resolveItemMove';
+import { ProjectSelector } from '../../../src/components/ProjectSelector';
+import {
+  validateTransactionReassign,
+  reassignTransactionToInventory,
+  reassignTransactionToProject,
+  validateItemReassign,
+  reassignItemToInventory,
+  reassignItemToProject,
+} from '../../../src/data/reassignService';
 import { NotesSection } from '../../../src/components/NotesSection';
 import {
   HeroSection,
@@ -106,6 +115,11 @@ export default function TransactionDetailScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
+  const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
+  const [reassignTargetProjectId, setReassignTargetProjectId] = useState<string | null>(null);
+  const [singleItemReassignProjectVisible, setSingleItemReassignProjectVisible] = useState(false);
+  const [singleItemReassignId, setSingleItemReassignId] = useState<string | null>(null);
+  const [singleItemReassignTargetProjectId, setSingleItemReassignTargetProjectId] = useState<string | null>(null);
 
   // Collapsible sections state (Phase 2)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -534,6 +548,13 @@ export default function TransactionDetailScreen() {
       case 'set-space':
         setBulkSpacePickerVisible(true);
         break;
+      case 'clear-space':
+        if (!accountId || itemsManager.selectionCount === 0) return;
+        itemsManager.selectedIds.forEach((itemId) => {
+          updateItem(accountId, itemId, { spaceId: null });
+        });
+        itemsManager.clearSelection();
+        break;
       case 'set-status':
         setBulkStatusPickerVisible(true);
         break;
@@ -698,21 +719,108 @@ export default function TransactionDetailScreen() {
     );
   };
 
-  const handleMoveToDesign = (_itemId: string) => {
+  const handleReassignItemToInventory = (itemId: string) => {
     if (!accountId) return;
+    const item = linkedItems.find((i) => i.id === itemId);
+    if (!item) return;
+    const result = validateItemReassign(item, null);
+    if (!result.valid) {
+      Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
+      return;
+    }
     Alert.alert(
-      'Move to Design Business',
-      'This feature will be available soon.',
-      [{ text: 'OK' }]
+      "Reassign to Inventory?",
+      "This item will be moved to business inventory.\nNo sale or purchase records will be created.\n\nUse this to fix items that were added to the wrong project.\nIf this is a real business transfer, use Sell instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignItemToInventory(accountId, itemId);
+          },
+        },
+      ]
     );
   };
 
-  const handleMoveToProject = (_itemId: string) => {
+  const handleReassignItemToProject = (itemId: string) => {
     if (!accountId) return;
+    setSingleItemReassignId(itemId);
+    setSingleItemReassignProjectVisible(true);
+  };
+
+  const handleSingleItemReassignConfirm = () => {
+    if (!accountId || !singleItemReassignId || !singleItemReassignTargetProjectId) return;
+    const item = linkedItems.find((i) => i.id === singleItemReassignId);
+    if (!item) return;
+    const result = validateItemReassign(item, singleItemReassignTargetProjectId);
+    if (!result.valid) {
+      Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
+      return;
+    }
     Alert.alert(
-      'Move to Project',
-      'This feature will be available soon.',
-      [{ text: 'OK' }]
+      "Reassign to Project?",
+      "This item will be moved directly to the selected project.\nNo sale or purchase records will be created.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignItemToProject(accountId, singleItemReassignId, singleItemReassignTargetProjectId);
+            setSingleItemReassignProjectVisible(false);
+            setSingleItemReassignId(null);
+            setSingleItemReassignTargetProjectId(null);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleTransactionReassignToInventory = () => {
+    if (!accountId || !id || !transaction) return;
+    const result = validateTransactionReassign(transaction, null);
+    if (!result.valid) {
+      Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
+      return;
+    }
+    const itemIds = linkedItems.map((i) => i.id);
+    Alert.alert(
+      "Reassign to Inventory?",
+      "This transaction and all its items will be moved to business inventory.\nNo sale or purchase records will be created.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignTransactionToInventory(accountId, id, itemIds);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleTransactionReassignToProjectConfirm = () => {
+    if (!accountId || !id || !transaction || !reassignTargetProjectId) return;
+    const result = validateTransactionReassign(transaction, reassignTargetProjectId);
+    if (!result.valid) {
+      Alert.alert("Cannot Reassign", result.error, [{ text: "OK" }]);
+      return;
+    }
+    const itemIds = linkedItems.map((i) => i.id);
+    Alert.alert(
+      "Reassign to Project?",
+      "This transaction and all its items will be moved to the selected project.\nNo sale or purchase records will be created.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reassign",
+          onPress: () => {
+            reassignTransactionToProject(accountId, id, reassignTargetProjectId, itemIds);
+            setReassignToProjectVisible(false);
+            setReassignTargetProjectId(null);
+          },
+        },
+      ]
     );
   };
 
@@ -742,6 +850,11 @@ export default function TransactionDetailScreen() {
     setSingleItemOperationId(null);
   };
 
+  const handleClearSpace = (itemId: string) => {
+    if (!accountId) return;
+    updateItem(accountId, itemId, { spaceId: null });
+  };
+
   // Enhanced item context menu (Phase C)
   const getItemMenuItems = useCallback((item: ScopedItem): AnchoredMenuItem[] => [
     {
@@ -760,15 +873,21 @@ export default function TransactionDetailScreen() {
       icon: 'content-copy',
     },
     {
-      label: 'Set Space',
-      onPress: () => handleSetSpace(item.id),
-      icon: 'place',
+      label: 'Transaction',
+      icon: 'link',
+      actionOnly: true,
+      subactions: [
+        { key: 'clear-transaction', label: 'Clear Transaction', onPress: () => handleRemoveLinkedItem(item.id), icon: 'link-off' },
+      ],
     },
     {
-      label: 'Remove from Transaction',
-      onPress: () => handleRemoveLinkedItem(item.id),
-      icon: 'remove-circle-outline',
-      destructive: true,
+      label: 'Space',
+      icon: 'place',
+      actionOnly: true,
+      subactions: [
+        { key: 'set-space', label: 'Set Space', onPress: () => handleSetSpace(item.id), icon: 'place' },
+        { key: 'clear-space', label: 'Clear Space', onPress: () => handleClearSpace(item.id), icon: 'close' },
+      ],
     },
     {
       label: 'Status',
@@ -799,6 +918,7 @@ export default function TransactionDetailScreen() {
     {
       label: 'Sell',
       actionOnly: true,
+      info: { title: 'About Sell', message: 'Moves items between projects and inventory with a financial record so you can track where things went.' },
       subactions: [
         {
           key: 'sell-to-design',
@@ -813,18 +933,19 @@ export default function TransactionDetailScreen() {
       ],
     },
     {
-      label: 'Move',
+      label: 'Reassign',
       actionOnly: true,
+      info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
       subactions: [
         {
-          key: 'move-to-design',
-          label: 'Move to Design Business',
-          onPress: () => handleMoveToDesign(item.id),
+          key: 'reassign-to-inventory',
+          label: 'Reassign to Inventory',
+          onPress: () => handleReassignItemToInventory(item.id),
         },
         {
-          key: 'move-to-project',
-          label: 'Move to Project',
-          onPress: () => handleMoveToProject(item.id),
+          key: 'reassign-to-project',
+          label: 'Reassign to Project',
+          onPress: () => handleReassignItemToProject(item.id),
         },
       ],
     },
@@ -1019,6 +1140,31 @@ export default function TransactionDetailScreen() {
       },
     ];
 
+    if (!isCanonical) {
+      const reassignSubactions: AnchoredMenuSubaction[] = [];
+      if (transaction?.projectId) {
+        reassignSubactions.push({
+          key: 'reassign-to-inventory',
+          label: 'Reassign to Inventory',
+          onPress: handleTransactionReassignToInventory,
+          icon: 'inventory',
+        });
+      }
+      reassignSubactions.push({
+        key: 'reassign-to-project',
+        label: 'Reassign to Project',
+        onPress: () => setReassignToProjectVisible(true),
+        icon: 'assignment',
+      });
+      items.push({
+        label: 'Reassign',
+        icon: 'swap-horiz',
+        actionOnly: true,
+        info: { title: 'About Reassign', message: 'Use when something was added to the wrong place and you need to move it. No financial records are created, as opposed to the Sell action.' },
+        subactions: reassignSubactions,
+      });
+    }
+
     items.push({
       label: 'Delete Transaction',
       onPress: handleDelete,
@@ -1026,7 +1172,7 @@ export default function TransactionDetailScreen() {
     });
 
     return items;
-  }, [handleDelete, id, projectId, router, scope]);
+  }, [handleDelete, handleTransactionReassignToInventory, id, isCanonical, projectId, router, scope, transaction?.projectId]);
 
 
   // Section renderers for SectionList
@@ -1191,10 +1337,11 @@ export default function TransactionDetailScreen() {
       case 'items': {
         // Define bulk actions for transaction detail
         const bulkActions: BulkAction[] = [
+          { id: 'remove', label: 'Clear Transaction', onPress: (ids) => handleBulkAction('remove', ids) },
           { id: 'set-space', label: 'Set Space', onPress: (ids) => handleBulkAction('set-space', ids) },
+          { id: 'clear-space', label: 'Clear Space', onPress: (ids) => handleBulkAction('clear-space', ids) },
           { id: 'set-status', label: 'Set Status', onPress: (ids) => handleBulkAction('set-status', ids) },
           { id: 'set-sku', label: 'Set SKU', onPress: (ids) => handleBulkAction('set-sku', ids) },
-          { id: 'remove', label: 'Remove from Transaction', onPress: (ids) => handleBulkAction('remove', ids) },
           { id: 'delete', label: 'Delete Items', onPress: (ids) => handleBulkAction('delete', ids), destructive: true },
         ];
 
@@ -1451,12 +1598,47 @@ export default function TransactionDetailScreen() {
             onRequestClose={() => setBulkActionsSheetVisible(false)}
             items={[
               {
-                key: 'set-space',
-                label: 'Set Space',
-                onPress: () => {
-                  setBulkActionsSheetVisible(false);
-                  handleBulkAction('set-space', []);
-                },
+                key: 'transaction',
+                label: 'Transaction',
+                icon: 'link',
+                actionOnly: true,
+                subactions: [
+                  {
+                    key: 'clear-transaction',
+                    label: 'Clear Transaction',
+                    icon: 'link-off',
+                    onPress: () => {
+                      setBulkActionsSheetVisible(false);
+                      handleBulkAction('remove', []);
+                    },
+                  },
+                ],
+              },
+              {
+                key: 'space',
+                label: 'Space',
+                icon: 'place',
+                actionOnly: true,
+                subactions: [
+                  {
+                    key: 'set-space',
+                    label: 'Set Space',
+                    icon: 'place',
+                    onPress: () => {
+                      setBulkActionsSheetVisible(false);
+                      handleBulkAction('set-space', []);
+                    },
+                  },
+                  {
+                    key: 'clear-space',
+                    label: 'Clear Space',
+                    icon: 'close',
+                    onPress: () => {
+                      setBulkActionsSheetVisible(false);
+                      handleBulkAction('clear-space', []);
+                    },
+                  },
+                ],
               },
               {
                 key: 'set-status',
@@ -1475,16 +1657,9 @@ export default function TransactionDetailScreen() {
                 },
               },
               {
-                key: 'remove',
-                label: 'Remove from Transaction',
-                onPress: () => {
-                  setBulkActionsSheetVisible(false);
-                  handleBulkAction('remove', []);
-                },
-              },
-              {
                 key: 'delete',
                 label: 'Delete Items',
+                icon: 'delete',
                 onPress: () => {
                   setBulkActionsSheetVisible(false);
                   handleBulkAction('delete', []);
@@ -1492,7 +1667,7 @@ export default function TransactionDetailScreen() {
               },
             ]}
             title={`Bulk Actions (${itemsManager.selectionCount})`}
-            showLeadingIcons={false}
+            showLeadingIcons={true}
           />
 
           <BottomSheetMenuList
@@ -1716,6 +1891,69 @@ export default function TransactionDetailScreen() {
                   onChange={handleSingleItemSpaceConfirm}
                   allowCreate={true}
                   placeholder="Select space"
+                />
+              </View>
+            </BottomSheet>
+
+            {/* Reassign transaction to project picker */}
+            <BottomSheet
+              visible={reassignToProjectVisible}
+              onRequestClose={() => {
+                setReassignToProjectVisible(false);
+                setReassignTargetProjectId(null);
+              }}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Reassign to Project</AppText>
+                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
+                  This transaction and all its items will be moved directly. No sale or purchase records will be created.
+                </AppText>
+                {accountId && (
+                  <ProjectSelector
+                    accountId={accountId}
+                    value={reassignTargetProjectId}
+                    onChange={setReassignTargetProjectId}
+                    excludeProjectId={projectId}
+                  />
+                )}
+                <AppButton
+                  title="Reassign"
+                  variant="primary"
+                  disabled={!reassignTargetProjectId}
+                  onPress={handleTransactionReassignToProjectConfirm}
+                  style={{ minHeight: 44 }}
+                />
+              </View>
+            </BottomSheet>
+
+            {/* Reassign single item to project picker */}
+            <BottomSheet
+              visible={singleItemReassignProjectVisible}
+              onRequestClose={() => {
+                setSingleItemReassignProjectVisible(false);
+                setSingleItemReassignId(null);
+                setSingleItemReassignTargetProjectId(null);
+              }}
+            >
+              <View style={styles.pickerContent}>
+                <AppText variant="h2" style={styles.pickerTitle}>Reassign Item to Project</AppText>
+                <AppText variant="caption" style={[styles.pickerSubtitle, getTextSecondaryStyle(uiKitTheme)]}>
+                  This item will be moved directly. No sale or purchase records will be created.
+                </AppText>
+                {accountId && (
+                  <ProjectSelector
+                    accountId={accountId}
+                    value={singleItemReassignTargetProjectId}
+                    onChange={setSingleItemReassignTargetProjectId}
+                    excludeProjectId={projectId}
+                  />
+                )}
+                <AppButton
+                  title="Reassign"
+                  variant="primary"
+                  disabled={!singleItemReassignTargetProjectId}
+                  onPress={handleSingleItemReassignConfirm}
+                  style={{ minHeight: 44 }}
                 />
               </View>
             </BottomSheet>
