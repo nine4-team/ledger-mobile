@@ -62,6 +62,7 @@ export default function ScreenTwo() {
       onRefresh={handleRefresh}
       contentStyle={{ paddingTop: SCREEN_PADDING }}
       hideBackButton={true}
+      hideMenu={true}
       infoContent={{
         title: 'Inventory',
         message: 'Manage everything you own — your personal items, storage spaces, and transactions for buying from or selling to projects.',
