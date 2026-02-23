@@ -22,6 +22,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
         'type',
         'status',
+        'opId',
         'createdAt',
         'createdBy',
         'payload'
@@ -106,6 +107,12 @@ service cloud.firestore {
 
     // Request-doc pattern (multi-doc correctness). These are scoped examples.
     // Adjust membership checks to your auth model (accounts, teams, etc.).
+    match /accounts/{accountId}/requests/{requestId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
+      allow update, delete: if false;
+    }
+
     match /accounts/{accountId}/projects/{projectId}/requests/{requestId} {
       allow read: if isAccountMember(accountId);
       allow create: if isAccountMember(accountId) && isRequestCreate();

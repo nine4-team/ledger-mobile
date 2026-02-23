@@ -38,6 +38,7 @@ import { BottomSheetMenuList } from './BottomSheetMenuList';
 import { ITEM_STATUSES, getItemStatusLabel } from '../constants/itemStatuses';
 import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
 import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
+import { showToast } from './toastStore';
 import { usePickerMode, type ItemEligibilityCheck } from '../hooks/usePickerMode';
 import { ItemPickerControlBar } from './ItemPickerControlBar';
 
@@ -972,6 +973,7 @@ export function SharedItemsList({
           executeSellToBusiness({ accountId, projectId: scopeConfig.projectId, items: selected, sourceCategoryId: scId });
           setSellToBusinessVisible(false);
           clearSelection();
+          showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} sold to business`);
         }}
       />
       {/* Sell to Project modal (Flow B: Inventory->Project, Flow C: Project->Project) */}
@@ -1003,6 +1005,7 @@ export function SharedItemsList({
           });
           setSellToProjectVisible(false);
           clearSelection();
+          showToast(`${selected.length} item${selected.length === 1 ? '' : 's'} sold to project`);
         }}
       />
       {/* Reassign to Inventory confirmation */}
@@ -1148,6 +1151,7 @@ export function SharedItemsList({
           executeSellToBusiness({ accountId, projectId: scopeConfig.projectId, items: [item], sourceCategoryId: scId });
           setSingleItemSellToBusinessVisible(false);
           setSingleItemId(null);
+          showToast('Item sold to business');
         }}
       />
       {/* Single-item Sell to Project */}
@@ -1187,6 +1191,7 @@ export function SharedItemsList({
           });
           setSingleItemSellToProjectVisible(false);
           setSingleItemId(null);
+          showToast('Item sold to project');
         }}
       />
       {/* Single-item Reassign to Project */}

@@ -53,6 +53,7 @@ export function SellToBusinessModal({
       </View>
       <View style={styles.content}>
         <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+          This will move items from the project into business inventory.
           A sale record will be created for financial tracking.
           If you're just fixing a misallocation, use Reassign instead.
         </AppText>
@@ -60,7 +61,7 @@ export function SellToBusinessModal({
         {showSourceCategoryPicker && (
           <View style={styles.fieldGroup}>
             <AppText variant="caption" style={styles.fieldLabel}>
-              Source category (for uncategorized items)
+              Choose Budget Category (for uncategorized items)
             </AppText>
             <CategoryPickerList
               categories={sourceBudgetCategories}
@@ -97,7 +98,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   fieldGroup: {
-    gap: 8,
+    gap: 12,
+    marginTop: 8,
   },
   fieldLabel: {
     fontWeight: '600',

@@ -14,6 +14,7 @@ import { hydrateMediaStore, registerUploadHandler, processUploadQueue, cleanupSt
 import { uploadMediaToFirebaseStorage } from '../src/offline/media/uploadHandler';
 import { useListStateStore } from '../src/data/listStateStore';
 import { useProjectContextStore } from '../src/data/projectContextStore';
+import { Toast } from '../src/components/Toast';
 
 export default function RootLayout() {
   const { user, isInitialized, timedOutWithoutAuth, initialize } = useAuthStore();
@@ -191,6 +192,7 @@ export default function RootLayout() {
               <LoadingScreen />
             </View>
           )}
+          <Toast />
         </View>
       </ThemeProvider>
     </GestureHandlerRootView>

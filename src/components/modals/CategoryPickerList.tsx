@@ -33,32 +33,77 @@ export function CategoryPickerList({
 
   return (
     <ScrollView style={{ maxHeight }}>
-      {sorted.map(([id, cat]) => (
-        <Pressable
-          key={id}
-          onPress={() => onSelect(id)}
-          style={[
-            styles.option,
-            selectedId === id && { backgroundColor: uiKitTheme.background.surface },
-          ]}
-        >
-          <AppText variant="body">{cat.name}</AppText>
-          {selectedId === id && (
-            <AppText variant="body" style={{ color: theme.colors.primary }}>✓</AppText>
-          )}
-        </Pressable>
-      ))}
+      <View style={styles.list}>
+        {sorted.map(([id, cat]) => {
+          const isSelected = selectedId === id;
+          return (
+            <Pressable
+              key={id}
+              onPress={() => onSelect(id)}
+              style={[
+                styles.option,
+                {
+                  borderColor: isSelected
+                    ? theme.colors.primary
+                    : uiKitTheme.border.secondary,
+                  backgroundColor: isSelected
+                    ? uiKitTheme.background.surface
+                    : 'transparent',
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.radio,
+                  {
+                    borderColor: isSelected
+                      ? theme.colors.primary
+                      : uiKitTheme.border.secondary,
+                  },
+                ]}
+              >
+                {isSelected && (
+                  <View
+                    style={[
+                      styles.radioFill,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                  />
+                )}
+              </View>
+              <AppText variant="body">{cat.name}</AppText>
+            </Pressable>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  list: {
+    gap: 6,
+  },
   option: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 12,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioFill: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

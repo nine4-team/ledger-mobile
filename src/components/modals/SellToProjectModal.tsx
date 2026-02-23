@@ -118,7 +118,7 @@ export function SellToProjectModal({
         {targetProjectId && showSourceCategoryPicker && (
           <View style={styles.fieldGroup}>
             <AppText variant="caption" style={styles.fieldLabel}>
-              Source category (for uncategorized items)
+              Choose Budget Category (for uncategorized items)
             </AppText>
             <CategoryPickerList
               categories={sourceBudgetCategories}
