@@ -22,7 +22,7 @@ import { useTheme, useUIKitTheme } from '../../../src/theme/ThemeProvider';
 import { createInventoryScopeConfig, createProjectScopeConfig } from '../../../src/data/scopeConfig';
 import { ScopedItem, subscribeToScopedItems, subscribeToTransactionItems } from '../../../src/data/scopedListData';
 import { updateItem, deleteItem, createItem } from '../../../src/data/itemsService';
-import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, resolveAttachmentUri } from '../../../src/offline/media';
+import { saveLocalMedia, deleteLocalMediaByUrl, enqueueUpload, processUploadQueue, resolveAttachmentUri } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../../../src/data/budgetCategoriesService';
 import { deleteTransaction, subscribeToTransaction, Transaction, updateTransaction } from '../../../src/data/transactionsService';
@@ -480,6 +480,7 @@ export default function TransactionDetailScreen() {
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
+    processUploadQueue().catch(console.error);
   };
 
   const handlePickReceiptAttachments = async (localUris: string[], kind: AttachmentKind) => {
@@ -520,6 +521,7 @@ export default function TransactionDetailScreen() {
     for (const mediaId of mediaIds) {
       await enqueueUpload({ mediaId });
     }
+    processUploadQueue().catch(console.error);
   };
 
   const handleRemoveReceiptAttachment = async (attachment: AttachmentRef) => {
@@ -577,6 +579,7 @@ export default function TransactionDetailScreen() {
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
+    processUploadQueue().catch(console.error);
   };
 
   const handlePickOtherImages = async (localUris: string[], kind: AttachmentKind) => {
@@ -611,6 +614,7 @@ export default function TransactionDetailScreen() {
     for (const mediaId of mediaIds) {
       await enqueueUpload({ mediaId });
     }
+    processUploadQueue().catch(console.error);
   };
 
   const handleRemoveOtherImage = async (attachment: AttachmentRef) => {

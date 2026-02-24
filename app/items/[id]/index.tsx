@@ -41,7 +41,7 @@ import {
   reassignItemToProject,
 } from '../../../src/data/reassignService';
 import { ITEM_STATUSES, getItemStatusLabel } from '../../../src/constants/itemStatuses';
-import { deleteLocalMediaByUrl, saveLocalMedia, enqueueUpload } from '../../../src/offline/media';
+import { deleteLocalMediaByUrl, saveLocalMedia, enqueueUpload, processUploadQueue } from '../../../src/offline/media';
 import type { AttachmentRef, AttachmentKind } from '../../../src/offline/media';
 import { useTransactionById } from '../../../src/hooks/useTransactionById';
 import { useSpaceById } from '../../../src/hooks/useSpaceById';
@@ -197,6 +197,7 @@ export default function ItemDetailScreen() {
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
+    processUploadQueue().catch(console.error);
   };
 
   const handleAddImages = async (localUris: string[], kind: AttachmentKind) => {
@@ -231,6 +232,7 @@ export default function ItemDetailScreen() {
     for (const mediaId of mediaIds) {
       await enqueueUpload({ mediaId });
     }
+    processUploadQueue().catch(console.error);
   };
 
   const handleRemoveImage = async (attachment: AttachmentRef) => {

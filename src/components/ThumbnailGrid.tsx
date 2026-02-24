@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 import { resolveAttachmentUri, resolveAttachmentState, useMediaStore } from '../offline/media';
@@ -48,8 +48,23 @@ export function ThumbnailGrid({
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuImage, setMenuImage] = useState<AttachmentRef | null>(null);
   const [menuIndex, setMenuIndex] = useState<number>(-1);
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const tileSize = Math.round(TILE_SIZES[size].mobile * tileScale);
+  const GAP = 12;
+  const minTileSize = Math.round(TILE_SIZES[size].mobile * tileScale);
+  // Calculate tile size to fill the container width evenly
+  const tileSize = useMemo(() => {
+    if (containerWidth <= 0) return minTileSize;
+    // How many tiles fit at minimum size?
+    const cols = Math.max(1, Math.floor((containerWidth + GAP) / (minTileSize + GAP)));
+    // Expand tiles to fill the row
+    return Math.floor((containerWidth - (cols - 1) * GAP) / cols);
+  }, [containerWidth, minTileSize]);
+
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  }, []);
+
   const canAddMore = images.length < maxImages;
 
   const themed = useMemo(
@@ -158,13 +173,13 @@ export function ThumbnailGrid({
 
   return (
     <>
-      <View style={[styles.grid, style]}>
+      <View style={[styles.grid, style]} onLayout={handleLayout}>
         {images.map((image, index) => {
           const resolvedUri = resolveAttachmentUri(image);
           const isPrimary = image.isPrimary ?? false;
           const hasResolvedUri = resolvedUri !== null;
           const attachmentState = resolveAttachmentState(image);
-          const isUploading = attachmentState.status === 'local_only' || attachmentState.status === 'uploading';
+          const isUploading = attachmentState.status === 'uploading';
           const isFailed = attachmentState.status === 'failed';
 
           return (
@@ -196,13 +211,13 @@ export function ThumbnailGrid({
               )}
 
               {isUploading && (
-                <View style={styles.uploadOverlay}>
+                <View style={styles.uploadOverlay} pointerEvents="none">
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 </View>
               )}
 
               {isFailed && (
-                <View style={styles.uploadOverlay}>
+                <View style={styles.uploadOverlay} pointerEvents="none">
                   <MaterialIcons name="cloud-off" size={18} color="#FFFFFF" />
                 </View>
               )}
