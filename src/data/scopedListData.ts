@@ -254,6 +254,52 @@ export async function refreshScopedTransactions(
   return snapshot.docs.map((doc: any) => normalizeScopedTransactionFromFirestore(doc.data(), doc.id));
 }
 
+export function subscribeToAllItems(
+  accountId: string,
+  onChange: (items: ScopedItem[]) => void
+): Unsubscribe {
+  if (!isFirebaseConfigured || !db) {
+    onChange([]);
+    return () => {};
+  }
+
+  const collectionRef = collection(db, `accounts/${accountId}/items`);
+  return onSnapshot(
+    collectionRef,
+    (snapshot) => {
+      const next = snapshot.docs.map((doc) => normalizeScopedItemFromFirestore(doc.data(), doc.id));
+      onChange(toSafeArray(next));
+    },
+    (error) => {
+      console.warn('[scopedListData] all items subscription failed', error);
+      onChange([]);
+    }
+  );
+}
+
+export function subscribeToAllTransactions(
+  accountId: string,
+  onChange: (items: ScopedTransaction[]) => void
+): Unsubscribe {
+  if (!isFirebaseConfigured || !db) {
+    onChange([]);
+    return () => {};
+  }
+
+  const collectionRef = collection(db, `accounts/${accountId}/transactions`);
+  return onSnapshot(
+    collectionRef,
+    (snapshot) => {
+      const next = snapshot.docs.map((doc) => normalizeScopedTransactionFromFirestore(doc.data(), doc.id));
+      onChange(toSafeArray(next));
+    },
+    (error) => {
+      console.warn('[scopedListData] all transactions subscription failed', error);
+      onChange([]);
+    }
+  );
+}
+
 export function subscribeToProjects(
   accountId: string,
   onChange: (items: ProjectSummary[]) => void

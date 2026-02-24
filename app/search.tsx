@@ -10,15 +10,14 @@ import { SpaceCard } from '../src/components/SpaceCard';
 import { useAccountContextStore } from '../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../src/theme/ThemeProvider';
 import {
-  subscribeToScopedItems,
-  subscribeToScopedTransactions,
+  subscribeToAllItems,
+  subscribeToAllTransactions,
   subscribeToProjects,
   type ScopedItem,
   type ScopedTransaction,
   type ProjectSummary,
 } from '../src/data/scopedListData';
 import { subscribeToSpaces, type Space } from '../src/data/spacesService';
-import { createInventoryScopeConfig } from '../src/data/scopeConfig';
 import { mapBudgetCategories, subscribeToBudgetCategories } from '../src/data/budgetCategoriesService';
 import { getTransactionDisplayName } from '../src/utils/transactionDisplayName';
 import { resolveAttachmentUri } from '../src/offline/media';
@@ -42,6 +41,43 @@ function formatCents(cents: number | null | undefined): string | undefined {
   if (cents == null) return undefined;
   return `$${(cents / 100).toFixed(2)}`;
 }
+
+const AMOUNT_QUERY_PATTERN = /^[0-9\s,().$-]+$/;
+
+/**
+ * Amount prefix-range matching ported from legacy web app.
+ * Typing "40" matches $40.00–$40.99; "40.0" matches $40.00–$40.09; "40.00" matches exactly.
+ */
+function getAmountPrefixRange(raw: string): { minCents: number; maxCents: number } | null {
+  const t = raw.trim();
+  if (!t || !/\d/.test(t) || !AMOUNT_QUERY_PATTERN.test(t) || /[-()]/.test(t)) return null;
+  const cleaned = t.replace(/[^\d.]/g, '');
+  if (!cleaned) return null;
+  const parts = cleaned.split('.');
+  if (parts.length > 2) return null;
+  const whole = parts[0];
+  if (!whole) return null;
+  const fractional = parts[1] ?? '';
+  const wholeValue = parseInt(whole, 10);
+  if (!Number.isFinite(wholeValue)) return null;
+
+  if (!fractional) return { minCents: wholeValue * 100, maxCents: wholeValue * 100 + 99 };
+  if (fractional.length === 1) {
+    const digit = parseInt(fractional, 10);
+    if (!Number.isFinite(digit)) return null;
+    return { minCents: wholeValue * 100 + digit * 10, maxCents: wholeValue * 100 + digit * 10 + 9 };
+  }
+  const cents = Math.round(parseFloat(`${whole}.${fractional}`) * 100);
+  if (!Number.isFinite(cents)) return null;
+  return { minCents: cents, maxCents: cents };
+}
+
+function matchesAmountRange(range: { minCents: number; maxCents: number }, ...amounts: (number | null | undefined)[]): boolean {
+  return amounts.some((c) => c != null && c >= range.minCents && c <= range.maxCents);
+}
+
+/** Normalize SKU to alphanumeric for fuzzy matching (e.g. "ABC-123" matches "abc123") */
+const normalizeAlphanumeric = (v: string) => v.replace(/[^a-z0-9]/g, '');
 
 // ---------------------------------------------------------------------------
 // Component
@@ -78,18 +114,16 @@ export default function SearchScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Subscribe to inventory-scoped items (all items in account)
+  // Subscribe to ALL items across inventory + projects
   useEffect(() => {
     if (!accountId) return;
-    const scopeConfig = createInventoryScopeConfig();
-    return subscribeToScopedItems(accountId, scopeConfig, setItems);
+    return subscribeToAllItems(accountId, setItems);
   }, [accountId]);
 
-  // Subscribe to inventory-scoped transactions
+  // Subscribe to ALL transactions across inventory + projects
   useEffect(() => {
     if (!accountId) return;
-    const scopeConfig = createInventoryScopeConfig();
-    return subscribeToScopedTransactions(accountId, scopeConfig, setTransactions);
+    return subscribeToAllTransactions(accountId, setTransactions);
   }, [accountId]);
 
   // Subscribe to projects
@@ -126,18 +160,54 @@ export default function SearchScreen() {
   // ---------------------------------------------------------------------------
 
   const filteredItems = useMemo(() => {
-    if (!debouncedQuery.trim()) return [];
-    return items.filter((item) =>
-      matchesQuery(debouncedQuery, item.name, item.source, item.sku, item.notes),
-    );
-  }, [items, debouncedQuery]);
+    const q = debouncedQuery.trim();
+    if (!q) return [];
+    const amountRange = getAmountPrefixRange(q);
+    const qLower = q.toLowerCase();
+    const normalizedSkuQuery = normalizeAlphanumeric(qLower);
+
+    return items.filter((item) => {
+      // Text match: name, source, sku (exact + normalized), notes, budget category name
+      const matchesText =
+        matchesQuery(q, item.name, item.source, item.sku, item.notes,
+          item.budgetCategoryId ? budgetCategories[item.budgetCategoryId]?.name : undefined) ||
+        (normalizedSkuQuery && item.sku
+          ? normalizeAlphanumeric(item.sku.toLowerCase()).includes(normalizedSkuQuery)
+          : false);
+
+      // Amount match: all price fields
+      const matchesAmount = amountRange
+        ? matchesAmountRange(amountRange, item.purchasePriceCents, item.projectPriceCents, item.marketValueCents)
+        : false;
+
+      return matchesText || matchesAmount;
+    });
+  }, [items, debouncedQuery, budgetCategories]);
 
   const filteredTransactions = useMemo(() => {
-    if (!debouncedQuery.trim()) return [];
-    return transactions.filter((tx) =>
-      matchesQuery(debouncedQuery, tx.source, tx.notes, tx.purchasedBy),
-    );
-  }, [transactions, debouncedQuery]);
+    const q = debouncedQuery.trim();
+    if (!q) return [];
+    const amountRange = getAmountPrefixRange(q);
+
+    return transactions.filter((tx) => {
+      // Text match: display name (handles canonical inventory sales), type, notes, purchasedBy, budget category
+      const displayName = getTransactionDisplayName({
+        source: tx.source,
+        id: tx.id,
+        isCanonicalInventorySale: tx.isCanonicalInventorySale,
+        inventorySaleDirection: tx.inventorySaleDirection,
+      });
+      const matchesText = matchesQuery(q, displayName, tx.transactionType, tx.notes, tx.purchasedBy,
+        tx.budgetCategoryId ? budgetCategories[tx.budgetCategoryId]?.name : undefined);
+
+      // Amount match
+      const matchesAmount = amountRange
+        ? matchesAmountRange(amountRange, tx.amountCents)
+        : false;
+
+      return matchesText || matchesAmount;
+    });
+  }, [transactions, debouncedQuery, budgetCategories]);
 
   const filteredSpaces = useMemo(() => {
     if (!debouncedQuery.trim()) return [];
