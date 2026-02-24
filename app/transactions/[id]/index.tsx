@@ -58,6 +58,7 @@ import {
 } from './sections';
 import type { MediaGallerySectionRef } from '../../../src/components/MediaGallerySection';
 import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
+import { computeTransactionCompleteness } from '../../../src/utils/transactionCompleteness';
 import { showToast } from '../../../src/components/toastStore';
 import { subscribeToEdgesFromTransaction } from '../../../src/data/lineageEdgesService';
 import type { ItemLineageEdge } from '../../../src/data/lineageEdgesService';
@@ -67,6 +68,7 @@ import { useReturnTransactionPicker } from '../../../src/hooks/useReturnTransact
 import { ReturnTransactionPickerModal } from '../../../src/components/modals/ReturnTransactionPickerModal';
 import { EditNotesModal } from '../../../src/components/modals/EditNotesModal';
 import { EditTransactionDetailsModal } from '../../../src/components/modals/EditTransactionDetailsModal';
+import type { EditTransactionDetailsField } from '../../../src/components/modals/EditTransactionDetailsModal';
 import { MovedItemsSection } from './sections/MovedItemsSection';
 
 type TransactionDetailParams = {
@@ -165,6 +167,7 @@ export default function TransactionDetailScreen() {
   const [sellDestBudgetCategories, setSellDestBudgetCategories] = useState<Record<string, { name: string }>>({});
 
   const [editDetailsVisible, setEditDetailsVisible] = useState(false);
+  const [editDetailsFocusField, setEditDetailsFocusField] = useState<EditTransactionDetailsField | undefined>();
   const [editNotesVisible, setEditNotesVisible] = useState(false);
 
   // Collapsible sections state (Phase 2)
@@ -343,6 +346,18 @@ export default function TransactionDetailScreen() {
   const selectedCategory = transaction?.budgetCategoryId ? budgetCategories[transaction.budgetCategoryId] : undefined;
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
+
+  // True when the audit signals that linked items don't yet cover the transaction total.
+  // Only meaningful (and shown) for itemized categories.
+  const itemsMissing = useMemo(() => {
+    if (!itemizationEnabled || !transaction) return false;
+    const completeness = computeTransactionCompleteness(
+      transaction,
+      itemsManager.filteredAndSortedItems,
+      { returned: returnedItems, sold: soldItems },
+    );
+    return completeness !== null && completeness.status === 'incomplete';
+  }, [itemizationEnabled, transaction, itemsManager.filteredAndSortedItems, returnedItems, soldItems]);
 
   // Compute badge info for header (mirrors TransactionCard badges)
   const transactionType = transaction?.transactionType;
@@ -1210,6 +1225,7 @@ export default function TransactionDetailScreen() {
     if (!accountId || !id) return;
     updateTransaction(accountId, id, changes);
     setEditDetailsVisible(false);
+    setEditDetailsFocusField(undefined);
     showToast('Transaction updated');
   };
 
@@ -1273,6 +1289,7 @@ export default function TransactionDetailScreen() {
           collapsed={collapsed}
           onToggle={() => handleToggleSection('items')}
           badge={section.badge}
+          onAdd={() => setAddMenuVisible(true)}
         />
         {!collapsed && (
           <View
@@ -1291,7 +1308,6 @@ export default function TransactionDetailScreen() {
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={() => itemsManager.hasSelection ? setBulkActionsSheetVisible(true) : setAddMenuVisible(true)}
               leftElement={
                 <TouchableOpacity
                   onPress={() => {
@@ -1462,6 +1478,7 @@ export default function TransactionDetailScreen() {
             transaction={transaction!}
             itemCount={itemsManager.filteredAndSortedItems.length}
             imageCount={(transaction!.otherImages?.length ?? 0)}
+            itemsMissing={itemsMissing}
             budgetCategories={budgetCategories}
             onScrollToSection={(sectionKey) => {
               // Find the section index and scroll to it
@@ -1470,7 +1487,10 @@ export default function TransactionDetailScreen() {
                 sectionListRef.current?.scrollToLocation({ sectionIndex: idx, itemIndex: 0, animated: true });
               }
             }}
-            onEditDetails={() => setEditDetailsVisible(true)}
+            onEditDetails={(field) => {
+              setEditDetailsFocusField(field);
+              setEditDetailsVisible(true);
+            }}
           />
         );
 
@@ -2120,12 +2140,16 @@ export default function TransactionDetailScreen() {
             {transaction && (
               <EditTransactionDetailsModal
                 visible={editDetailsVisible}
-                onRequestClose={() => setEditDetailsVisible(false)}
+                onRequestClose={() => {
+                  setEditDetailsVisible(false);
+                  setEditDetailsFocusField(undefined);
+                }}
                 transaction={transaction}
                 budgetCategories={budgetCategories}
                 itemizationEnabled={itemizationEnabled}
                 onSave={handleSaveTransactionDetails}
                 accountId={accountId!}
+                focusField={editDetailsFocusField}
               />
             )}
           </>

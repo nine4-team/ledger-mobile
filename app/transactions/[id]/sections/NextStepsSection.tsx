@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from '../../../../src/components/AppText';
 import { useTheme, useUIKitTheme } from '../../../../src/theme/ThemeProvider';
 import type { Transaction } from '../../../../src/data/transactionsService';
+import type { EditTransactionDetailsField } from '../../../../src/components/modals/EditTransactionDetailsModal';
 import { getCardStyle } from '../../../../src/ui';
 
 const BRAND_COLOR = '#987e55';
@@ -26,7 +27,7 @@ export type NextStepsSectionProps = {
   imageCount: number;
   budgetCategories: Record<string, { name: string; metadata?: any }>;
   onScrollToSection?: (section: string) => void;
-  onEditDetails?: () => void;
+  onEditDetails?: (field?: EditTransactionDetailsField) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -38,6 +39,7 @@ export function computeNextSteps(
   itemCount: number,
   imageCount: number,
   budgetCategories: Record<string, { name: string }>,
+  itemsMissing?: boolean,
 ): Omit<NextStep, 'onPress'>[] {
   const steps: Omit<NextStep, 'onPress'>[] = [];
 
@@ -68,9 +70,9 @@ export function computeNextSteps(
     icon: 'receipt',
   });
 
-  // Items — show image count hint if applicable
+  // Items — show image count hint only when the audit signals items are actually missing
   const hasItems = itemCount > 0;
-  const itemLabel = imageCount > 0 && !hasItems
+  const itemLabel = imageCount > 0 && !hasItems && itemsMissing
     ? `You uploaded ${imageCount} photo${imageCount === 1 ? '' : 's'} — create items from them?`
     : 'Add items';
   steps.push({
@@ -114,6 +116,7 @@ export function NextStepsSection({
   transaction,
   itemCount,
   imageCount,
+  itemsMissing,
   budgetCategories,
   onScrollToSection,
   onEditDetails,
@@ -122,8 +125,8 @@ export function NextStepsSection({
   const uiKitTheme = useUIKitTheme();
 
   const rawSteps = useMemo(
-    () => computeNextSteps(transaction, itemCount, imageCount, budgetCategories),
-    [transaction, itemCount, imageCount, budgetCategories],
+    () => computeNextSteps(transaction, itemCount, imageCount, budgetCategories, itemsMissing),
+    [transaction, itemCount, imageCount, budgetCategories, itemsMissing],
   );
 
   // Wire up onPress for each step
@@ -132,10 +135,16 @@ export function NextStepsSection({
       let onPress: (() => void) | undefined;
       switch (step.id) {
         case 'budget-category':
+          onPress = onEditDetails ? () => onEditDetails('budgetCategory') : undefined;
+          break;
         case 'amount':
+          onPress = onEditDetails ? () => onEditDetails('amount') : undefined;
+          break;
         case 'purchased-by':
+          onPress = onEditDetails ? () => onEditDetails('purchasedBy') : undefined;
+          break;
         case 'tax-rate':
-          onPress = onEditDetails;
+          onPress = onEditDetails ? () => onEditDetails('taxRate') : undefined;
           break;
         case 'receipt':
           onPress = () => onScrollToSection?.('receipts');

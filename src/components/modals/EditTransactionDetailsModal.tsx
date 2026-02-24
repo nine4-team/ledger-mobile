@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 
 import { FormBottomSheet } from '../FormBottomSheet';
 import { FormField } from '../FormField';
 import { MultiSelectPicker } from '../MultiSelectPicker';
-import { CategoryPickerList } from './CategoryPickerList';
+import type { MultiSelectPickerOption } from '../MultiSelectPicker';
 import { VendorPicker } from '../VendorPicker';
 import type { Transaction } from '../../data/transactionsService';
+
+export type EditTransactionDetailsField =
+  | 'vendor'
+  | 'amount'
+  | 'date'
+  | 'status'
+  | 'purchasedBy'
+  | 'transactionType'
+  | 'reimbursementType'
+  | 'budgetCategory'
+  | 'emailReceipt'
+  | 'subtotal'
+  | 'taxRate';
 
 export type EditTransactionDetailsModalProps = {
   visible: boolean;
@@ -16,6 +29,8 @@ export type EditTransactionDetailsModalProps = {
   itemizationEnabled: boolean;
   onSave: (changes: Partial<Transaction>) => void;
   accountId: string;
+  /** When set, the modal will scroll to and focus this field on open. */
+  focusField?: EditTransactionDetailsField;
 };
 
 function centsToDisplay(cents: number | null | undefined): string {
@@ -57,6 +72,7 @@ export function EditTransactionDetailsModal({
   itemizationEnabled,
   onSave,
   accountId,
+  focusField,
 }: EditTransactionDetailsModalProps) {
   const [source, setSource] = useState('');
   const [amount, setAmount] = useState('');
@@ -69,6 +85,9 @@ export function EditTransactionDetailsModal({
   const [hasEmailReceipt, setHasEmailReceipt] = useState('no');
   const [subtotal, setSubtotal] = useState('');
   const [taxRatePct, setTaxRatePct] = useState('');
+
+  const scrollRef = useRef<ScrollView>(null);
+  const fieldYRefs = useRef<Partial<Record<EditTransactionDetailsField, number>>>({});
 
   // Reset state from transaction props when modal becomes visible
   useEffect(() => {
@@ -90,6 +109,27 @@ export function EditTransactionDetailsModal({
       );
     }
   }, [visible]);
+
+  // Scroll to focusField after modal opens
+  useEffect(() => {
+    if (visible && focusField) {
+      const timer = setTimeout(() => {
+        const y = fieldYRefs.current[focusField];
+        if (y != null) {
+          scrollRef.current?.scrollTo({ y, animated: true });
+        }
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, focusField]);
+
+  const budgetCategoryOptions = useMemo<MultiSelectPickerOption<string>[]>(
+    () =>
+      Object.entries(budgetCategories)
+        .map(([id, cat]) => ({ value: id, label: cat.name }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [budgetCategories],
+  );
 
   const handleSave = () => {
     const changes: Record<string, unknown> = {
@@ -125,81 +165,104 @@ export function EditTransactionDetailsModal({
       containerStyle={{ maxHeight: '90%' }}
     >
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.fields}>
-          <VendorPicker
-            accountId={accountId}
-            value={source}
-            onChangeValue={setSource}
-          />
-          <FormField
-            label="Amount"
-            value={amount}
-            onChangeText={setAmount}
-            placeholder="$0.00"
-            inputProps={{ keyboardType: 'decimal-pad' }}
-          />
-          <FormField
-            label="Date"
-            value={transactionDate}
-            onChangeText={setTransactionDate}
-            placeholder="YYYY-MM-DD"
-          />
-          <FormField
-            label="Status"
-            value={status}
-            onChangeText={setStatus}
-            placeholder="e.g. needs_review, complete"
-          />
-          <FormField
-            label="Purchased By"
-            value={purchasedBy}
-            onChangeText={setPurchasedBy}
-            placeholder="Who made this purchase?"
-          />
-          <MultiSelectPicker
-            label="Transaction Type"
-            value={transactionType}
-            onChange={(val) => setTransactionType(val as string)}
-            options={TYPE_OPTIONS}
-          />
-          <MultiSelectPicker
-            label="Reimbursement Type"
-            value={reimbursementType}
-            onChange={(val) => setReimbursementType(val as string)}
-            options={REIMBURSEMENT_OPTIONS}
-          />
-          <CategoryPickerList
-            categories={budgetCategories}
-            selectedId={budgetCategoryId || null}
-            onSelect={setBudgetCategoryId}
-            maxHeight={160}
-          />
-          <MultiSelectPicker
-            label="Email Receipt"
-            value={hasEmailReceipt}
-            onChange={(val) => setHasEmailReceipt(val as string)}
-            options={EMAIL_RECEIPT_OPTIONS}
-          />
+          <View onLayout={(e) => { fieldYRefs.current.vendor = e.nativeEvent.layout.y; }}>
+            <VendorPicker
+              accountId={accountId}
+              value={source}
+              onChangeValue={setSource}
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.amount = e.nativeEvent.layout.y; }}>
+            <FormField
+              label="Amount"
+              value={amount}
+              onChangeText={setAmount}
+              placeholder="$0.00"
+              inputProps={{ keyboardType: 'decimal-pad' }}
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.date = e.nativeEvent.layout.y; }}>
+            <FormField
+              label="Date"
+              value={transactionDate}
+              onChangeText={setTransactionDate}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.status = e.nativeEvent.layout.y; }}>
+            <FormField
+              label="Status"
+              value={status}
+              onChangeText={setStatus}
+              placeholder="e.g. needs_review, complete"
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.purchasedBy = e.nativeEvent.layout.y; }}>
+            <FormField
+              label="Purchased By"
+              value={purchasedBy}
+              onChangeText={setPurchasedBy}
+              placeholder="Who made this purchase?"
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.transactionType = e.nativeEvent.layout.y; }}>
+            <MultiSelectPicker
+              label="Transaction Type"
+              value={transactionType}
+              onChange={(val) => setTransactionType(val as string)}
+              options={TYPE_OPTIONS}
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.reimbursementType = e.nativeEvent.layout.y; }}>
+            <MultiSelectPicker
+              label="Reimbursement Type"
+              value={reimbursementType}
+              onChange={(val) => setReimbursementType(val as string)}
+              options={REIMBURSEMENT_OPTIONS}
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.budgetCategory = e.nativeEvent.layout.y; }}>
+            <MultiSelectPicker
+              label="Budget Category"
+              value={budgetCategoryId}
+              onChange={(val) => setBudgetCategoryId(val as string)}
+              options={budgetCategoryOptions}
+            />
+          </View>
+          <View onLayout={(e) => { fieldYRefs.current.emailReceipt = e.nativeEvent.layout.y; }}>
+            <MultiSelectPicker
+              label="Email Receipt"
+              value={hasEmailReceipt}
+              onChange={(val) => setHasEmailReceipt(val as string)}
+              options={EMAIL_RECEIPT_OPTIONS}
+            />
+          </View>
           {itemizationEnabled && (
             <>
-              <FormField
-                label="Subtotal"
-                value={subtotal}
-                onChangeText={setSubtotal}
-                placeholder="$0.00"
-                inputProps={{ keyboardType: 'decimal-pad' }}
-              />
-              <FormField
-                label="Tax Rate (%)"
-                value={taxRatePct}
-                onChangeText={setTaxRatePct}
-                placeholder="e.g. 8.25"
-                inputProps={{ keyboardType: 'decimal-pad' }}
-              />
+              <View onLayout={(e) => { fieldYRefs.current.subtotal = e.nativeEvent.layout.y; }}>
+                <FormField
+                  label="Subtotal"
+                  value={subtotal}
+                  onChangeText={setSubtotal}
+                  placeholder="$0.00"
+                  inputProps={{ keyboardType: 'decimal-pad' }}
+                />
+              </View>
+              <View onLayout={(e) => { fieldYRefs.current.taxRate = e.nativeEvent.layout.y; }}>
+                <FormField
+                  label="Tax Rate (%)"
+                  value={taxRatePct}
+                  onChangeText={setTaxRatePct}
+                  placeholder="e.g. 8.25"
+                  inputProps={{ keyboardType: 'decimal-pad' }}
+                />
+              </View>
             </>
           )}
         </View>
