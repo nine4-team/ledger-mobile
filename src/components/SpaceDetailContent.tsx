@@ -1277,6 +1277,7 @@ export function SpaceDetailContent({
         onRequestClose={onCloseSpaceMenu}
         items={spaceMenuItems}
         title={space.name?.trim() || 'Space'}
+        showLeadingIcons={true}
       />
 
       {/* Sort menu */}

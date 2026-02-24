@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppText } from '../components/AppText';
 import { AppButton } from '../components/AppButton';
@@ -9,15 +9,22 @@ import { SpaceCardSkeleton } from '../components/SpaceCardSkeleton';
 import { ErrorRetryView } from '../components/ErrorRetryView';
 import { NetworkStatusBanner } from '../components/NetworkStatusBanner';
 import { useScreenRefresh } from '../components/Screen';
+import { BottomSheetMenuList } from '../components/BottomSheetMenuList';
+import { EditSpaceDetailsModal } from '../components/modals/EditSpaceDetailsModal';
+import type { AnchoredMenuItem } from '../components/AnchoredMenuList';
 import { useTheme, useUIKitTheme } from '../theme/ThemeProvider';
 import { useAccountContextStore } from '../auth/accountContextStore';
-import { refreshSpaces, subscribeToSpaces, Space } from '../data/spacesService';
+import { useAuthStore } from '../auth/authStore';
+import { refreshSpaces, subscribeToSpaces, Space, updateSpace, deleteSpace } from '../data/spacesService';
+import { createSpaceTemplate } from '../data/spaceTemplatesService';
+import { createRepository } from '../data/repository';
 import { getScopeId, createProjectScopeConfig } from '../data/scopeConfig';
 import { useScopedListenersMultiple } from '../data/useScopedListeners';
 import { refreshScopedItems, ScopedItem, subscribeToScopedItems } from '../data/scopedListData';
 import { getTextInputStyle } from '../ui/styles/forms';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { showToast } from '../components/toastStore';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 type ProjectSpacesListProps = {
@@ -28,6 +35,7 @@ type ProjectSpacesListProps = {
 export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesListProps) {
   const router = useRouter();
   const accountId = useAccountContextStore((store) => store.accountId);
+  const userId = useAuthStore((store) => store.user?.uid ?? null);
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
   const [spaces, setSpaces] = useState<Space[]>([]);
@@ -38,6 +46,12 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
   const screenRefresh = useScreenRefresh();
   const debouncedQuery = useDebouncedValue(query, 350);
   const networkStatus = useNetworkStatus();
+
+  // Kebab menu state
+  const [menuSpace, setMenuSpace] = useState<Space | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [editNameVisible, setEditNameVisible] = useState(false);
+  const [canSaveTemplate, setCanSaveTemplate] = useState(false);
 
   const scopeConfig = useMemo(() => createProjectScopeConfig(projectId), [projectId]);
   const scopeId = useMemo(() => getScopeId(scopeConfig), [scopeConfig]);
@@ -148,6 +162,92 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
     router.push(`/project/${projectId}/spaces/new`);
   }, [router, projectId]);
 
+  // Check admin role for template saving
+  useEffect(() => {
+    if (!accountId || !userId) {
+      setCanSaveTemplate(false);
+      return;
+    }
+    const repo = createRepository<{ id: string; role?: string }>(`accounts/${accountId}/users`, 'offline');
+    return repo.subscribe(userId, (member) => {
+      const role = member?.role ?? '';
+      setCanSaveTemplate(role === 'owner' || role === 'admin');
+    });
+  }, [accountId, userId]);
+
+  const handleMenuPress = useCallback((space: Space) => {
+    setMenuSpace(space);
+    setMenuVisible(true);
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    setMenuVisible(false);
+  }, []);
+
+  const handleEditName = useCallback((name: string) => {
+    if (!accountId || !menuSpace) return;
+    updateSpace(accountId, menuSpace.id, { name });
+    setEditNameVisible(false);
+    showToast('Space name updated');
+  }, [accountId, menuSpace]);
+
+  const handleSaveTemplate = useCallback(() => {
+    if (!accountId || !menuSpace) return;
+    createSpaceTemplate(accountId, {
+      name: menuSpace.name?.trim() || 'Untitled space',
+      notes: menuSpace.notes ?? null,
+      checklists: menuSpace.checklists ?? null,
+    });
+    Alert.alert('Success', 'Space saved as template successfully');
+  }, [accountId, menuSpace]);
+
+  const handleDeleteSpace = useCallback(() => {
+    if (!accountId || !menuSpace) return;
+    const spaceItems = items.filter((i) => i.spaceId === menuSpace.id);
+    const itemCount = spaceItems.length;
+    const message = itemCount > 0
+      ? `This space has ${itemCount} item${itemCount === 1 ? '' : 's'}. Items will not be deleted, but their space assignment will be cleared.`
+      : 'Are you sure you want to delete this space?';
+    Alert.alert('Delete Space', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteSpace(accountId, menuSpace.id);
+          setMenuVisible(false);
+        },
+      },
+    ]);
+  }, [accountId, menuSpace, items]);
+
+  const spaceMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const menuItems: AnchoredMenuItem[] = [
+      {
+        key: 'edit',
+        label: 'Edit Name',
+        icon: 'edit',
+        onPress: () => { handleCloseMenu(); setEditNameVisible(true); },
+      },
+    ];
+    if (canSaveTemplate) {
+      menuItems.push({
+        key: 'save-template',
+        label: 'Save as Template',
+        icon: 'save',
+        onPress: handleSaveTemplate,
+      });
+    }
+    menuItems.push({
+      key: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      destructive: true,
+      onPress: handleDeleteSpace,
+    });
+    return menuItems;
+  }, [canSaveTemplate, handleCloseMenu, handleDeleteSpace, handleSaveTemplate]);
+
   return (
     <>
       <AppScrollView
@@ -207,22 +307,41 @@ export function ProjectSpacesList({ projectId, refreshToken }: ProjectSpacesList
           </View>
         ) : (
           <View style={styles.list}>
-            {gridItems.map((item) => (
-              <SpaceCard
-                key={item.id}
-                name={item.name}
-                itemCount={item.itemCount}
-                primaryImage={item.primaryImage}
-                checklists={item.checklists}
-                notes={item.notes}
-                onPress={() => handleSpacePress(item.id)}
-              />
-            ))}
+            {gridItems.map((item) => {
+              const space = filteredSpaces.find((s) => s.id === item.id);
+              return (
+                <SpaceCard
+                  key={item.id}
+                  name={item.name}
+                  itemCount={item.itemCount}
+                  primaryImage={item.primaryImage}
+                  checklists={item.checklists}
+                  notes={item.notes}
+                  onPress={() => handleSpacePress(item.id)}
+                  onMenuPress={space ? () => handleMenuPress(space) : undefined}
+                />
+              );
+            })}
           </View>
         )}
       </AppScrollView>
 
       {!networkStatus.isOnline && <NetworkStatusBanner />}
+
+      <BottomSheetMenuList
+        visible={menuVisible}
+        onRequestClose={handleCloseMenu}
+        items={spaceMenuItems}
+        title={menuSpace?.name?.trim() || 'Space'}
+        showLeadingIcons={true}
+      />
+
+      <EditSpaceDetailsModal
+        visible={editNameVisible}
+        onRequestClose={() => setEditNameVisible(false)}
+        initialName={menuSpace?.name?.trim() ?? ''}
+        onSave={handleEditName}
+      />
     </>
   );
 }

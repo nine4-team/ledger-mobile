@@ -421,6 +421,46 @@ export function ImageGallery({
           </View>
         )}
 
+        {/* Close button always interactive, outside the pointerEvents gate */}
+        <Animated.View
+          style={[
+            styles.topBar,
+            {
+              opacity: controlsOpacity,
+              paddingTop: insets.top + 12,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          <Pressable
+            onPress={handleClose}
+            style={styles.closeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Close gallery"
+          >
+            <MaterialIcons name="close" size={24} color="#FFFFFF" />
+          </Pressable>
+
+          {onPinToggle && (
+            <Pressable
+              onPress={() => {
+                onPinToggle(currentImage, currentIndex);
+                handleClose();
+              }}
+              style={styles.pinButton}
+              accessibilityRole="button"
+              accessibilityLabel="Pin image"
+            >
+              <MaterialIcons name="push-pin" size={24} color="#FFFFFF" />
+            </Pressable>
+          )}
+        </Animated.View>
+
         <Animated.View
           style={[
             styles.controls,
@@ -432,30 +472,7 @@ export function ImageGallery({
           ]}
           pointerEvents={controlsVisible ? 'auto' : 'none'}
         >
-          <View style={styles.topBar}>
-            <Pressable
-              onPress={handleClose}
-              style={styles.closeButton}
-              accessibilityRole="button"
-              accessibilityLabel="Close gallery"
-            >
-              <MaterialIcons name="close" size={24} color="#FFFFFF" />
-            </Pressable>
-
-            {onPinToggle && (
-              <Pressable
-                onPress={() => {
-                  onPinToggle(currentImage, currentIndex);
-                  handleClose();
-                }}
-                style={styles.pinButton}
-                accessibilityRole="button"
-                accessibilityLabel="Pin image"
-              >
-                <MaterialIcons name="push-pin" size={24} color="#FFFFFF" />
-              </Pressable>
-            )}
-          </View>
+          <View style={styles.topBar} pointerEvents="none" />
 
           {images.length > 1 && (
             <View style={styles.navigation}>
