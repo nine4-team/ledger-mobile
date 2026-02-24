@@ -19,6 +19,7 @@ export const ReceiptsSection = forwardRef<MediaGallerySectionRef, ReceiptsSectio
         maxAttachments={10}
         allowedKinds={['image', 'pdf']}
         onAddAttachment={handlers.handlePickReceiptAttachment}
+        onAddAttachments={handlers.handlePickReceiptAttachments}
         onRemoveAttachment={handlers.handleRemoveReceiptAttachment}
         onSetPrimary={handlers.handleSetPrimaryReceiptAttachment}
         emptyStateMessage="No receipts yet."

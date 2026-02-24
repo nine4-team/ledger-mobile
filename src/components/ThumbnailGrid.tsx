@@ -1,9 +1,9 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
-import { resolveAttachmentUri } from '../offline/media';
+import { resolveAttachmentUri, resolveAttachmentState, useMediaStore } from '../offline/media';
 import type { AttachmentRef } from '../offline/media';
 import { useUIKitTheme } from '../theme/ThemeProvider';
 import { CARD_PADDING } from '../ui/tokens';
@@ -43,6 +43,8 @@ export function ThumbnailGrid({
   style,
 }: ThumbnailGridProps) {
   const uiKitTheme = useUIKitTheme();
+  // Subscribe to media store so tiles re-render when upload status changes
+  const mediaRecords = useMediaStore((s) => s.records);
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuImage, setMenuImage] = useState<AttachmentRef | null>(null);
   const [menuIndex, setMenuIndex] = useState<number>(-1);
@@ -161,6 +163,9 @@ export function ThumbnailGrid({
           const resolvedUri = resolveAttachmentUri(image);
           const isPrimary = image.isPrimary ?? false;
           const hasResolvedUri = resolvedUri !== null;
+          const attachmentState = resolveAttachmentState(image);
+          const isUploading = attachmentState.status === 'local_only' || attachmentState.status === 'uploading';
+          const isFailed = attachmentState.status === 'failed';
 
           return (
             <Pressable
@@ -187,6 +192,18 @@ export function ThumbnailGrid({
                     size={24}
                     color={uiKitTheme.text.secondary}
                   />
+                </View>
+              )}
+
+              {isUploading && (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </View>
+              )}
+
+              {isFailed && (
+                <View style={styles.uploadOverlay}>
+                  <MaterialIcons name="cloud-off" size={18} color="#FFFFFF" />
                 </View>
               )}
 
@@ -253,6 +270,12 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },

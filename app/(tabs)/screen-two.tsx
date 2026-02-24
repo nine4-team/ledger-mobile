@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, usePathname } from 'expo-router';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { AppText } from '../../src/components/AppText';
@@ -15,10 +16,13 @@ import { useScopeSwitching } from '../../src/data/useScopeSwitching';
 import { refreshScopedItems, refreshScopedTransactions } from '../../src/data/scopedListData';
 import { refreshSpaces } from '../../src/data/spacesService';
 import { layout, SCREEN_PADDING } from '../../src/ui';
+import { useTheme } from '../../src/theme/ThemeProvider';
 import { InventorySpacesList } from '../../src/screens/InventorySpacesList';
 
 export default function ScreenTwo() {
   const params = useLocalSearchParams<{ tab?: string }>();
+  const router = useRouter();
+  const theme = useTheme();
   const [storedTab, setStoredTab] = useState<string | null>(null);
   const accountId = useAccountContextStore((store) => store.accountId);
   const scopeConfig = useMemo(() => createInventoryScopeConfig(), []);
@@ -63,6 +67,17 @@ export default function ScreenTwo() {
       contentStyle={{ paddingTop: SCREEN_PADDING }}
       hideBackButton={true}
       hideMenu={true}
+      headerRight={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search"
+          hitSlop={10}
+          onPress={() => router.push('/search')}
+          style={({ pressed }) => [styles.headerIconButton, pressed && { opacity: 0.7 }]}
+        >
+          <MaterialIcons name="search" size={24} color={theme.colors.primary} />
+        </Pressable>
+      }
       infoContent={{
         title: 'Inventory',
         message: 'Manage everything you own — your personal items, storage spaces, and transactions for buying from or selling to projects.',
@@ -154,5 +169,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 12,
+  },
+  headerIconButton: {
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 48,
+    minHeight: 48,
   },
 });

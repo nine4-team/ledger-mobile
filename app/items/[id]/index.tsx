@@ -199,6 +199,40 @@ export default function ItemDetailScreen() {
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
+  const handleAddImages = async (localUris: string[], kind: AttachmentKind) => {
+    if (!accountId || !id || !item) return;
+
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    let currentImages = item.images ?? [];
+    const mediaIds: string[] = [];
+
+    for (const uri of localUris) {
+      if (currentImages.length >= 5) break;
+
+      const result = await saveLocalMedia({
+        localUri: uri,
+        mimeType,
+        ownerScope: `item:${id}`,
+        persistCopy: false,
+      });
+      mediaIds.push(result.mediaId);
+
+      const hasPrimary = currentImages.some((image) => image.isPrimary);
+      const newImage: AttachmentRef = {
+        url: result.attachmentRef.url,
+        kind,
+        isPrimary: !hasPrimary && kind === 'image',
+      };
+      currentImages = [...currentImages, newImage];
+
+      updateItem(accountId, id, { images: currentImages });
+    }
+
+    for (const mediaId of mediaIds) {
+      await enqueueUpload({ mediaId });
+    }
+  };
+
   const handleRemoveImage = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !item) return;
     const nextImages = (item.images ?? []).filter((image) => image.url !== attachment.url);
@@ -565,6 +599,7 @@ export default function ItemDetailScreen() {
             maxAttachments={5}
             allowedKinds={['image']}
             onAddAttachment={handleAddImage}
+            onAddAttachments={handleAddImages}
             onRemoveAttachment={handleRemoveImage}
             onSetPrimary={handleSetPrimaryImage}
             emptyStateMessage="No images yet."
@@ -594,7 +629,7 @@ export default function ItemDetailScreen() {
         return null;
     }
   }, [item, error, collapsedSections, handleToggleSection, uiKitTheme,
-      handleAddImage, handleRemoveImage, handleSetPrimaryImage,
+      handleAddImage, handleAddImages, handleRemoveImage, handleSetPrimaryImage,
       spaceLabel, budgetCategoryLabel]);
 
   // Removed inline move form - now accessed via kebab menu

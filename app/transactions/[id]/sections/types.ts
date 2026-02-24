@@ -3,9 +3,11 @@ import type { AttachmentRef, AttachmentKind } from '../../../../src/offline/medi
 
 export type MediaHandlers = {
   handlePickReceiptAttachment: (localUri: string, kind: AttachmentKind) => Promise<void>;
+  handlePickReceiptAttachments: (localUris: string[], kind: AttachmentKind) => Promise<void>;
   handleRemoveReceiptAttachment: (attachment: AttachmentRef) => Promise<void>;
   handleSetPrimaryReceiptAttachment: (attachment: AttachmentRef) => void;
   handlePickOtherImage: (localUri: string, kind: AttachmentKind) => Promise<void>;
+  handlePickOtherImages: (localUris: string[], kind: AttachmentKind) => Promise<void>;
   handleRemoveOtherImage: (attachment: AttachmentRef) => Promise<void>;
   handleSetPrimaryOtherImage: (attachment: AttachmentRef) => void;
 };

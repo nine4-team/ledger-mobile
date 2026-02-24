@@ -81,9 +81,10 @@ const PRESET_TABS: ScreenTabItem[] = [
 type SettingsContentProps = {
   selectedPresetTabKey: string;
   memberRole: 'owner' | 'admin' | 'user' | null;
+  onSignOut: () => void;
 };
 
-function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentProps) {
+function SettingsContent({ selectedPresetTabKey, memberRole, onSignOut }: SettingsContentProps) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { accountId } = useAccountContextStore();
@@ -2092,6 +2093,15 @@ function SettingsContent({ selectedPresetTabKey, memberRole }: SettingsContentPr
       </View>
 
       {!isPro && <AppButton title="Upgrade to Pro" onPress={() => router.push('/paywall')} style={styles.button} />}
+
+      <View style={styles.signOutSection}>
+        <AppButton
+          title={isAuthBypassEnabled ? 'Sign In' : 'Sign Out'}
+          variant="secondary"
+          onPress={onSignOut}
+          style={styles.signOutButton}
+        />
+      </View>
     </AppScrollView>
   );
 }
@@ -2167,12 +2177,12 @@ export default function SettingsScreen() {
       headerRight={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={isAuthBypassEnabled ? 'Sign in' : 'Sign out'}
+          accessibilityLabel="Search"
           hitSlop={10}
-          onPress={handleSignOut}
+          onPress={() => router.push('/search')}
           style={({ pressed }) => [styles.headerIconButton, pressed && styles.pressed]}
         >
-          <MaterialIcons name={isAuthBypassEnabled ? 'login' : 'logout'} size={22} color={theme.colors.primary} />
+          <MaterialIcons name="search" size={24} color={theme.colors.primary} />
         </Pressable>
       }
       renderBelowTabs={({ selectedKey }) =>
@@ -2181,7 +2191,7 @@ export default function SettingsScreen() {
         ) : null
       }
     >
-      <SettingsContent selectedPresetTabKey={selectedPresetTabKey} memberRole={memberRole} />
+      <SettingsContent selectedPresetTabKey={selectedPresetTabKey} memberRole={memberRole} onSignOut={handleSignOut} />
     </Screen>
   );
 }
@@ -2415,5 +2425,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+  signOutSection: {
+    marginTop: 24,
+    paddingBottom: 16,
+  },
+  signOutButton: {
+    alignSelf: 'stretch',
   },
 });

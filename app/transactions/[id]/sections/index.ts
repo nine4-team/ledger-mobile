@@ -5,4 +5,5 @@ export { DetailsSection } from './DetailsSection';
 export { TaxesSection } from './TaxesSection';
 export { AuditSection } from './AuditSection';
 export { MovedItemsSection } from './MovedItemsSection';
+export { NextStepsSection } from './NextStepsSection';
 export type { MediaHandlers, BudgetCategories } from './types';

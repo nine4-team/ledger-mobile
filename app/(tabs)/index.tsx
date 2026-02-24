@@ -1,7 +1,8 @@
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from '../../src/components/AppText';
 import { Screen } from '../../src/components/Screen';
 import { layout } from '../../src/ui';
@@ -18,6 +19,7 @@ import type { ProjectBudgetSummary } from '../../src/data/projectService';
 
 export default function ProjectsScreen() {
   const router = useRouter();
+  const theme = useTheme();
 
   return (
     <Screen
@@ -25,7 +27,18 @@ export default function ProjectsScreen() {
       tabs={PROJECT_TABS}
       hideBackButton={true}
       includeBottomInset={false}
-      onPressAdd={() => router.push('/project/new')}
+      hideMenu={true}
+      headerRight={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search"
+          hitSlop={10}
+          onPress={() => router.push('/search')}
+          style={({ pressed }) => [styles.headerIconButton, pressed && { opacity: 0.7 }]}
+        >
+          <MaterialIcons name="search" size={24} color={theme.colors.primary} />
+        </Pressable>
+      }
       infoContent={{
         title: 'Projects',
         message: 'Manage your projects here. Create new projects, view active and archived projects, and track budgets.',
@@ -240,5 +253,12 @@ const styles = StyleSheet.create({
   },
   projectList: {
     gap: 10,
+  },
+  headerIconButton: {
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 48,
+    minHeight: 48,
   },
 });

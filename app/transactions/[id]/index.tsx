@@ -53,6 +53,7 @@ import {
   OtherImagesSection,
   DetailsSection,
   AuditSection,
+  NextStepsSection,
   type MediaHandlers,
 } from './sections';
 import type { MediaGallerySectionRef } from '../../../src/components/MediaGallerySection';
@@ -74,6 +75,7 @@ type TransactionDetailParams = {
   projectId?: string;
   backTarget?: string;
   listStateKey?: string;
+  showNextSteps?: string;
 };
 
 type BulkAction = {
@@ -101,7 +103,7 @@ type TransactionItemFilterMode =
   | 'no-price'
   | 'no-image';
 
-type SectionKey = 'hero' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'items' | 'returnedItems' | 'soldItems' | 'audit';
+type SectionKey = 'hero' | 'nextSteps' | 'receipts' | 'otherImages' | 'notes' | 'details' | 'items' | 'returnedItems' | 'soldItems' | 'audit';
 
 const SECTION_HEADER_MARKER = '__sectionHeader__';
 
@@ -177,6 +179,7 @@ export default function TransactionDetailScreen() {
     audit: true,        // Default collapsed
   });
 
+  const sectionListRef = useRef<SectionList<any, TransactionSection>>(null);
   const receiptsRef = useRef<MediaGallerySectionRef>(null);
   const otherImagesRef = useRef<MediaGallerySectionRef>(null);
 
@@ -354,6 +357,7 @@ export default function TransactionDetailScreen() {
 
     const result: TransactionSection[] = [
       { key: 'hero', data: [transaction] },
+      { key: 'nextSteps', data: [transaction] },
       // All collapsible sections now render header + content together via SECTION_HEADER_MARKER
       { key: 'receipts', title: 'RECEIPTS', data: [SECTION_HEADER_MARKER] },
       { key: 'otherImages', title: 'OTHER IMAGES', data: [SECTION_HEADER_MARKER] },
@@ -478,6 +482,46 @@ export default function TransactionDetailScreen() {
     await enqueueUpload({ mediaId: result.mediaId });
   };
 
+  const handlePickReceiptAttachments = async (localUris: string[], kind: AttachmentKind) => {
+    if (!accountId || !id || !transaction) return;
+
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    let currentAttachments = transaction.receiptImages ?? [];
+    const mediaIds: string[] = [];
+
+    // Process each image sequentially so thumbnails appear one by one
+    for (const uri of localUris) {
+      if (currentAttachments.length >= 10) break;
+
+      const result = await saveLocalMedia({
+        localUri: uri,
+        mimeType,
+        ownerScope: `transaction:${id}`,
+        persistCopy: true,
+      });
+      mediaIds.push(result.mediaId);
+
+      const hasPrimary = currentAttachments.some((att) => att.isPrimary);
+      const newAttachment: AttachmentRef = {
+        url: result.attachmentRef.url,
+        kind,
+        isPrimary: !hasPrimary && kind === 'image',
+      };
+      currentAttachments = [...currentAttachments, newAttachment];
+
+      // Update after each image so the thumbnail appears immediately
+      updateTransaction(accountId, id, {
+        receiptImages: currentAttachments,
+        transactionImages: currentAttachments,
+      });
+    }
+
+    // Enqueue all uploads then process the queue
+    for (const mediaId of mediaIds) {
+      await enqueueUpload({ mediaId });
+    }
+  };
+
   const handleRemoveReceiptAttachment = async (attachment: AttachmentRef) => {
     if (!accountId || !id || !transaction) return;
 
@@ -533,6 +577,40 @@ export default function TransactionDetailScreen() {
 
     // Enqueue upload in background
     await enqueueUpload({ mediaId: result.mediaId });
+  };
+
+  const handlePickOtherImages = async (localUris: string[], kind: AttachmentKind) => {
+    if (!accountId || !id || !transaction) return;
+
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    let currentImages = transaction.otherImages ?? [];
+    const mediaIds: string[] = [];
+
+    for (const uri of localUris) {
+      if (currentImages.length >= 5) break;
+
+      const result = await saveLocalMedia({
+        localUri: uri,
+        mimeType,
+        ownerScope: `transaction:${id}`,
+        persistCopy: true,
+      });
+      mediaIds.push(result.mediaId);
+
+      const hasPrimary = currentImages.some((img) => img.isPrimary);
+      const newImage: AttachmentRef = {
+        url: result.attachmentRef.url,
+        kind,
+        isPrimary: !hasPrimary && kind === 'image',
+      };
+      currentImages = [...currentImages, newImage];
+
+      updateTransaction(accountId, id, { otherImages: currentImages });
+    }
+
+    for (const mediaId of mediaIds) {
+      await enqueueUpload({ mediaId });
+    }
   };
 
   const handleRemoveOtherImage = async (attachment: AttachmentRef) => {
@@ -1245,16 +1323,20 @@ export default function TransactionDetailScreen() {
   // Prepare media handlers object for MediaSection
   const mediaHandlers: MediaHandlers = useMemo(() => ({
     handlePickReceiptAttachment,
+    handlePickReceiptAttachments,
     handleRemoveReceiptAttachment,
     handleSetPrimaryReceiptAttachment,
     handlePickOtherImage,
+    handlePickOtherImages,
     handleRemoveOtherImage,
     handleSetPrimaryOtherImage,
   }), [
     handlePickReceiptAttachment,
+    handlePickReceiptAttachments,
     handleRemoveReceiptAttachment,
     handleSetPrimaryReceiptAttachment,
     handlePickOtherImage,
+    handlePickOtherImages,
     handleRemoveOtherImage,
     handleSetPrimaryOtherImage,
   ]);
@@ -1369,6 +1451,24 @@ export default function TransactionDetailScreen() {
     switch (section.key) {
       case 'hero':
         return <HeroSection transaction={item} />;
+
+      case 'nextSteps':
+        return (
+          <NextStepsSection
+            transaction={transaction!}
+            itemCount={itemsManager.filteredAndSortedItems.length}
+            imageCount={(transaction!.otherImages?.length ?? 0)}
+            budgetCategories={budgetCategories}
+            onScrollToSection={(sectionKey) => {
+              // Find the section index and scroll to it
+              const idx = sections.findIndex((s) => s.key === sectionKey);
+              if (idx >= 0) {
+                sectionListRef.current?.scrollToLocation({ sectionIndex: idx, itemIndex: 0, animated: true });
+              }
+            }}
+            onEditDetails={() => setEditDetailsVisible(true)}
+          />
+        );
 
       case 'items': {
         // Define bulk actions for transaction detail
@@ -1613,6 +1713,7 @@ export default function TransactionDetailScreen() {
       ) : transaction ? (
         <>
           <SectionList
+            ref={sectionListRef}
             style={{ flex: 1 }}
             sections={sections}
             renderSectionHeader={renderSectionHeader}

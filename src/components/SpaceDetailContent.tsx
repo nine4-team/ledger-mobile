@@ -419,6 +419,32 @@ export function SpaceDetailContent({
     updateSpace(accountId, spaceId, { images: nextImages });
   }, [accountId, space, spaceId]);
 
+  const handleAddImages = useCallback(async (localUris: string[], kind: 'image' | 'pdf' | 'file' = 'image') => {
+    if (!accountId || !spaceId || !space) return;
+    const mimeType = kind === 'pdf' ? 'application/pdf' : 'image/jpeg';
+    let currentImages = space.images ?? [];
+
+    for (const uri of localUris) {
+      if (currentImages.length >= 100) break;
+
+      const result = await saveLocalMedia({
+        localUri: uri,
+        mimeType,
+        ownerScope: `space:${spaceId}`,
+        persistCopy: false,
+      });
+      const hasPrimary = currentImages.some((image) => image.isPrimary);
+      const newImage: AttachmentRef = {
+        url: result.attachmentRef.url,
+        kind,
+        isPrimary: !hasPrimary && kind === 'image',
+      };
+      currentImages = [...currentImages, newImage];
+
+      updateSpace(accountId, spaceId, { images: currentImages });
+    }
+  }, [accountId, space, spaceId]);
+
   const handleRemoveImage = useCallback(
     async (image: AttachmentRef) => {
       if (!accountId || !spaceId || !space) return;
@@ -931,6 +957,7 @@ export function SpaceDetailContent({
               maxAttachments={100}
               allowedKinds={['image']}
               onAddAttachment={handleAddImage}
+              onAddAttachments={handleAddImages}
               onRemoveAttachment={handleRemoveImage}
               onSetPrimary={handleSetPrimaryImage}
               emptyStateMessage="No images yet."
@@ -1185,7 +1212,7 @@ export function SpaceDetailContent({
       accountId, projectId, spaceId, router, scopeConfig,
       theme.colors.textSecondary, theme.colors.background, uiKitTheme.border.primary,
       uiKitTheme.border.secondary, uiKitTheme.primary.main, checklists,
-      handleSaveChecklists, handleAddImage, handleRemoveImage, handleSetPrimaryImage]);
+      handleSaveChecklists, handleAddImage, handleAddImages, handleRemoveImage, handleSetPrimaryImage]);
 
   // --- Render ---
 

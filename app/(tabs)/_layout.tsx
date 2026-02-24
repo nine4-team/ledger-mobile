@@ -1,19 +1,27 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useState } from 'react';
 import { NetworkStatusBanner } from '../../src/components/NetworkStatusBanner';
 import { SyncStatusBanner } from '../../src/components/SyncStatusBanner';
 import { STATUS_BANNER_HEIGHT } from '../../src/components/StatusBanner';
+import { BottomSheetMenuList } from '../../src/components/BottomSheetMenuList';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { getTabBarStyle } from '../../src/ui';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
+import type { AnchoredMenuItem } from '../../src/components/AnchoredMenuList';
+
+const BRAND_COLOR = '#987e55';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
+  const router = useRouter();
   const { isOnline, isSlowConnection } = useNetworkStatus();
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
+
   const tabBarStyle = [
     getTabBarStyle(uiKitTheme, insets),
     {
@@ -26,6 +34,25 @@ export default function TabsLayout() {
   const tabBarHeight = typeof flattenedTabBarStyle?.height === 'number' ? flattenedTabBarStyle.height : 0;
   const networkBannerVisible = !isOnline || isSlowConnection;
   const syncBannerOffset = tabBarHeight + (networkBannerVisible ? STATUS_BANNER_HEIGHT : 0);
+
+  const addMenuItems: AnchoredMenuItem[] = [
+    {
+      key: 'add-item',
+      label: 'Add Item',
+      icon: 'add-circle-outline',
+      onPress: () => router.push('/items/new'),
+    },
+    {
+      key: 'add-transaction',
+      label: 'Add Transaction',
+      icon: 'receipt-long',
+      onPress: () => router.push('/transactions/new-universal'),
+    },
+  ];
+
+  const handleAddPress = useCallback(() => {
+    setAddMenuVisible(true);
+  }, []);
 
   return (
     <View style={styles.root}>
@@ -47,6 +74,28 @@ export default function TabsLayout() {
           },
         }}
       >
+        <Tabs.Screen
+          name="add"
+          options={{
+            title: 'Add',
+            tabBarLabel: () => null,
+            tabBarIcon: () => (
+              <View style={styles.addButton}>
+                <MaterialIcons name="add" size={24} color="#FFFFFF" />
+              </View>
+            ),
+            tabBarButton: ({ children }) => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add new"
+                onPress={handleAddPress}
+                style={styles.addTabButton}
+              >
+                {children}
+              </Pressable>
+            ),
+          }}
+        />
         <Tabs.Screen
           name="index"
           options={{
@@ -80,6 +129,13 @@ export default function TabsLayout() {
       </Tabs>
       <NetworkStatusBanner bottomOffset={tabBarHeight} />
       <SyncStatusBanner bottomOffset={syncBannerOffset} />
+      <BottomSheetMenuList
+        visible={addMenuVisible}
+        onRequestClose={() => setAddMenuVisible(false)}
+        items={addMenuItems}
+        title="Create New"
+        showLeadingIcons
+      />
     </View>
   );
 }
@@ -87,5 +143,18 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: BRAND_COLOR,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addTabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

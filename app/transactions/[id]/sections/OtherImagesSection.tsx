@@ -19,6 +19,7 @@ export const OtherImagesSection = forwardRef<MediaGallerySectionRef, OtherImages
         maxAttachments={5}
         allowedKinds={['image']}
         onAddAttachment={handlers.handlePickOtherImage}
+        onAddAttachments={handlers.handlePickOtherImages}
         onRemoveAttachment={handlers.handleRemoveOtherImage}
         onSetPrimary={handlers.handleSetPrimaryOtherImage}
         emptyStateMessage="No other images yet."

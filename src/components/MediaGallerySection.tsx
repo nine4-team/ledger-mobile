@@ -27,6 +27,7 @@ export type MediaGallerySectionProps = {
 
   // Handlers (all use AttachmentRef, not just URL strings)
   onAddAttachment?: (localUri: string, kind: AttachmentKind) => void | Promise<void>;
+  onAddAttachments?: (localUris: string[], kind: AttachmentKind) => void | Promise<void>;
   onRemoveAttachment?: (attachment: AttachmentRef) => void | Promise<void>;
   onSetPrimary?: (attachment: AttachmentRef) => void | Promise<void>;
 
@@ -57,6 +58,7 @@ export const MediaGallerySection = forwardRef<MediaGallerySectionRef, MediaGalle
   maxAttachments = 5,
   allowedKinds = ['image'],
   onAddAttachment,
+  onAddAttachments,
   onRemoveAttachment,
   onSetPrimary,
   size = 'md',
@@ -138,16 +140,25 @@ export const MediaGallerySection = forwardRef<MediaGallerySectionRef, MediaGalle
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return;
 
+    const remaining = maxAttachments - attachments.length;
+    const allowMultiple = remaining > 1 && !!onAddAttachments;
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.9,
-      allowsMultipleSelection: false,
+      allowsMultipleSelection: allowMultiple,
+      selectionLimit: allowMultiple ? remaining : 1,
     });
 
-    if (!result.canceled && result.assets[0] && onAddAttachment) {
+    if (result.canceled || !result.assets?.length) return;
+
+    if (result.assets.length > 1 && onAddAttachments) {
+      const uris = result.assets.map((a) => a.uri).slice(0, remaining);
+      await onAddAttachments(uris, 'image');
+    } else if (result.assets[0] && onAddAttachment) {
       await onAddAttachment(result.assets[0].uri, 'image');
     }
-  }, [onAddAttachment]);
+  }, [onAddAttachment, onAddAttachments, maxAttachments, attachments.length]);
 
   const handleTakePhoto = useCallback(async () => {
     setAddMenuVisible(false);
@@ -253,8 +264,9 @@ export const MediaGallerySection = forwardRef<MediaGallerySectionRef, MediaGalle
 
   const showEmptyState = attachments.length === 0;
   const canAddMore = attachments.length < maxAttachments;
+  const hasAddHandler = !!onAddAttachment || !!onAddAttachments;
 
-  const addButton = canAddMore && onAddAttachment ? (
+  const addButton = canAddMore && hasAddHandler ? (
     <Pressable onPress={() => setAddMenuVisible(true)} hitSlop={8}>
       <MaterialIcons name="add-circle-outline" size={24} color={uiKitTheme.primary.main} />
     </Pressable>
