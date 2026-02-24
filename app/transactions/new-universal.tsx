@@ -58,13 +58,13 @@ function getCompletedStepLabel(step: Step, state: FormState): string | null {
       return state.transactionType === 'purchase' ? 'Purchase' : 'Return';
     case 'destination':
       if (!state.destination) return null;
-      return state.destination.kind === 'inventory' ? 'Business Inventory' : 'Project';
+      return state.destination.kind === 'inventory' ? 'Inventory' : 'Project';
     case 'channel':
       return state.channel === 'online' ? 'Online' : 'In-Store';
     case 'online-action':
       if (state.onlineAction === 'amazon') return 'Amazon Import';
       if (state.onlineAction === 'wayfair') return 'Wayfair Import';
-      return 'Manual Entry';
+      return 'Create';
     case 'link-items':
       return state.returnLinkChoice === 'yes' ? 'Linked Items' : 'No Items Linked';
     default:
@@ -323,14 +323,22 @@ export default function NewUniversalTransactionScreen() {
       </View>
 
       <AppScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-        {/* Completed step chips */}
-        {completedSteps.map((step) => (
-          <CompletedStepChip
-            key={step}
-            label={getCompletedStepLabel(step, state) ?? ''}
-            onPress={() => resetFrom(step)}
-          />
-        ))}
+        {/* Completed step breadcrumbs */}
+        {completedSteps.length > 0 && (
+          <View style={styles.breadcrumbRow}>
+            {completedSteps.map((step, index) => (
+              <React.Fragment key={step}>
+                {index > 0 && (
+                  <MaterialIcons name="chevron-right" size={16} color={theme.colors.textSecondary} />
+                )}
+                <CompletedStepChip
+                  label={getCompletedStepLabel(step, state) ?? ''}
+                  onPress={() => resetFrom(step)}
+                />
+              </React.Fragment>
+            ))}
+          </View>
+        )}
 
         {/* Current step */}
         {currentStep === 'type' && (
@@ -627,23 +635,21 @@ function OptionCard({
 
 function CompletedStepChip({ label, onPress }: { label: string; onPress: () => void }) {
   const theme = useTheme();
-  const uiKitTheme = useUIKitTheme();
 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityHint="Tap to change"
       style={({ pressed }) => [
         styles.completedChip,
         {
-          backgroundColor: uiKitTheme.background.surface,
-          borderColor: uiKitTheme.border.secondary,
-          opacity: pressed ? 0.7 : 1,
+          backgroundColor: 'transparent',
+          opacity: pressed ? 0.6 : 1,
         },
       ]}
     >
-      <MaterialIcons name="check-circle" size={18} color={BRAND_COLOR} />
-      <AppText variant="caption" style={{ color: theme.colors.text }}>{label}</AppText>
-      <MaterialIcons name="close" size={14} color={theme.colors.textSecondary} />
+      <AppText variant="caption" style={{ color: theme.colors.primary, fontWeight: '600' }}>{label}</AppText>
     </Pressable>
   );
 }
@@ -717,15 +723,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  completedChip: {
+  breadcrumbRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  completedChip: {
+    paddingVertical: 4,
+    paddingHorizontal: 2,
   },
   divider: {
     alignItems: 'center',

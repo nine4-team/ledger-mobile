@@ -38,13 +38,13 @@ export default function TabsLayout() {
   const addMenuItems: AnchoredMenuItem[] = [
     {
       key: 'add-item',
-      label: 'Add Item',
+      label: 'Create Item',
       icon: 'add-circle-outline',
       onPress: () => router.push('/items/new'),
     },
     {
       key: 'add-transaction',
-      label: 'Add Transaction',
+      label: 'Create Transaction',
       icon: 'receipt-long',
       onPress: () => router.push('/transactions/new-universal'),
     },
@@ -79,6 +79,7 @@ export default function TabsLayout() {
           options={{
             title: 'Add',
             tabBarLabel: () => null,
+            tabBarIconStyle: { marginTop: 14 },
             tabBarIcon: () => (
               <View style={styles.addButton}>
                 <MaterialIcons name="add" size={24} color="#FFFFFF" />
