@@ -173,6 +173,7 @@ export function SpaceDetailContent({
   const [bulkStatusPickerVisible, setBulkStatusPickerVisible] = useState(false);
 
   const mediaRef = useRef<MediaGallerySectionRef>(null);
+  const pendingMediaAdd = useRef(false);
 
   // Single-item modal state
   const [singleItemId, setSingleItemId] = useState<string | null>(null);
@@ -204,6 +205,14 @@ export function SpaceDetailContent({
   const handleToggleSection = useCallback((key: SpaceSectionKey) => {
     setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  // Fire deferred triggerAdd once media section is expanded
+  useEffect(() => {
+    if (!collapsedSections.media && pendingMediaAdd.current) {
+      pendingMediaAdd.current = false;
+      mediaRef.current?.triggerAdd();
+    }
+  }, [collapsedSections.media]);
 
   const handleSaveSpaceName = useCallback((name: string) => {
     if (!accountId || !spaceId) return;
@@ -878,6 +887,7 @@ export function SpaceDetailContent({
           collapsed={collapsed}
           onToggle={() => handleToggleSection('items')}
           badge={section.badge}
+          onAdd={() => setAddMenuVisible(true)}
         />
         {!collapsed && (
           <View style={{
@@ -894,7 +904,6 @@ export function SpaceDetailContent({
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
-              onAdd={() => itemsManager.hasSelection ? setBulkActionsSheetVisible(true) : setAddMenuVisible(true)}
               leftElement={
                 <TouchableOpacity
                   onPress={() => {
@@ -940,7 +949,14 @@ export function SpaceDetailContent({
           badge={section.badge}
           onEdit={section.key === 'notes' ? () => setEditNotesVisible(true) : undefined}
           onAdd={
-            section.key === 'media' ? () => mediaRef.current?.triggerAdd() :
+            section.key === 'media' ? () => {
+              if (collapsedSections.media) {
+                pendingMediaAdd.current = true;
+                handleToggleSection('media');
+              } else {
+                mediaRef.current?.triggerAdd();
+              }
+            } :
             section.key === 'checklists' ? () => { setChecklistModalTarget(null); setChecklistModalVisible(true); } :
             undefined
           }
@@ -1243,6 +1259,7 @@ export function SpaceDetailContent({
         onRequestClose={() => setAddMenuVisible(false)}
         items={addMenuItems}
         title="Add Item"
+        showLeadingIcons={true}
       />
 
       {/* Bulk move — SetSpaceModal */}
