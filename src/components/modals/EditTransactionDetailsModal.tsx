@@ -5,6 +5,7 @@ import { FormBottomSheet } from '../FormBottomSheet';
 import { FormField } from '../FormField';
 import { MultiSelectPicker } from '../MultiSelectPicker';
 import { CategoryPickerList } from './CategoryPickerList';
+import { VendorPicker } from '../VendorPicker';
 import type { Transaction } from '../../data/transactionsService';
 
 export type EditTransactionDetailsModalProps = {
@@ -14,6 +15,7 @@ export type EditTransactionDetailsModalProps = {
   budgetCategories: Record<string, { name: string; metadata?: any }>;
   itemizationEnabled: boolean;
   onSave: (changes: Partial<Transaction>) => void;
+  accountId: string;
 };
 
 function centsToDisplay(cents: number | null | undefined): string {
@@ -54,6 +56,7 @@ export function EditTransactionDetailsModal({
   budgetCategories,
   itemizationEnabled,
   onSave,
+  accountId,
 }: EditTransactionDetailsModalProps) {
   const [source, setSource] = useState('');
   const [amount, setAmount] = useState('');
@@ -127,11 +130,10 @@ export function EditTransactionDetailsModal({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.fields}>
-          <FormField
-            label="Source"
+          <VendorPicker
+            accountId={accountId}
             value={source}
-            onChangeText={setSource}
-            placeholder="e.g. Home Depot"
+            onChangeValue={setSource}
           />
           <FormField
             label="Amount"

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, LayoutAnimation, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import * as ImagePicker from 'expo-image-picker';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
 import { AppButton } from '../../src/components/AppButton';
@@ -10,10 +9,13 @@ import { AppScrollView } from '../../src/components/AppScrollView';
 import { FormField } from '../../src/components/FormField';
 import { FormActions } from '../../src/components/FormActions';
 import { ProjectPickerList } from '../../src/components/modals/ProjectPickerList';
+import { VendorPicker } from '../../src/components/VendorPicker';
+import { MediaGallerySection } from '../../src/components/MediaGallerySection';
 import { useAccountContextStore } from '../../src/auth/accountContextStore';
 import { useTheme, useUIKitTheme } from '../../src/theme/ThemeProvider';
 import { createTransaction } from '../../src/data/transactionsService';
 import { saveLocalMedia } from '../../src/offline/media';
+import type { AttachmentRef } from '../../src/offline/media';
 import { layout } from '../../src/ui';
 import { getTextSecondaryStyle } from '../../src/ui/styles/typography';
 import { getCardStyle } from '../../src/ui';
@@ -223,25 +225,21 @@ export default function NewUniversalTransactionScreen() {
     });
   }, []);
 
-  // Handle image picking
-  const handlePickImage = useCallback(async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      selectionLimit: 5 - state.images.length,
-      quality: 0.8,
-    });
-    if (result.canceled || result.assets.length === 0) return;
-    const uris = result.assets.map((a) => a.uri);
-    update({ images: [...state.images, ...uris].slice(0, 5) });
+  const imageAttachments = useMemo<AttachmentRef[]>(
+    () => state.images.map((uri) => ({ url: uri, kind: 'image' as const })),
+    [state.images],
+  );
+
+  const handleAddImage = useCallback((localUri: string) => {
+    update({ images: [...state.images, localUri].slice(0, 5) });
   }, [state.images, update]);
 
-  const handleTakePhoto = useCallback(async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-    });
-    if (result.canceled || result.assets.length === 0) return;
-    update({ images: [...state.images, result.assets[0].uri].slice(0, 5) });
+  const handleAddImages = useCallback((localUris: string[]) => {
+    update({ images: [...state.images, ...localUris].slice(0, 5) });
+  }, [state.images, update]);
+
+  const handleRemoveImage = useCallback((attachment: AttachmentRef) => {
+    update({ images: state.images.filter((uri) => uri !== attachment.url) });
   }, [state.images, update]);
 
   // Navigate to invoice import screens
@@ -478,12 +476,20 @@ export default function NewUniversalTransactionScreen() {
               </View>
             )}
 
-            <FormField
-              label="Source"
-              value={state.source}
-              onChangeText={(v) => update({ source: v })}
-              placeholder="e.g. Home Depot, Amazon"
-            />
+            {accountId ? (
+              <VendorPicker
+                accountId={accountId}
+                value={state.source}
+                onChangeValue={(v) => update({ source: v })}
+              />
+            ) : (
+              <FormField
+                label="Source"
+                value={state.source}
+                onChangeText={(v) => update({ source: v })}
+                placeholder="e.g. Home Depot, Amazon"
+              />
+            )}
 
             <FormField
               label="Date"
@@ -528,35 +534,15 @@ export default function NewUniversalTransactionScreen() {
               </>
             )}
 
-            {/* Images */}
-            <View style={styles.fieldGroup}>
-              <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                {state.transactionType === 'purchase'
-                  ? 'Photos (take pictures of items and tags for later)'
-                  : 'Images'}
-              </AppText>
-              {state.images.length > 0 && (
-                <AppText variant="caption" style={getTextSecondaryStyle(uiKitTheme)}>
-                  {state.images.length}/5 images added
-                </AppText>
-              )}
-              <View style={styles.imageActions}>
-                <AppButton
-                  title="Take Photo"
-                  variant="secondary"
-                  onPress={handleTakePhoto}
-                  disabled={state.images.length >= 5}
-                  style={styles.imageButton}
-                />
-                <AppButton
-                  title="Choose from Library"
-                  variant="secondary"
-                  onPress={handlePickImage}
-                  disabled={state.images.length >= 5}
-                  style={styles.imageButton}
-                />
-              </View>
-            </View>
+            <MediaGallerySection
+              title={state.transactionType === 'purchase' ? 'Photos' : 'Images'}
+              attachments={imageAttachments}
+              maxAttachments={5}
+              onAddAttachment={handleAddImage}
+              onAddAttachments={handleAddImages}
+              onRemoveAttachment={handleRemoveImage}
+              size="sm"
+            />
 
             {error ? (
               <AppText variant="caption" style={{ color: theme.colors.error }}>
@@ -752,13 +738,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     borderWidth: 1,
-  },
-  imageActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  imageButton: {
-    flex: 1,
   },
   actionButton: {
     flex: 1,

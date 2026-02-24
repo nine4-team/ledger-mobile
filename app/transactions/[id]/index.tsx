@@ -2125,6 +2125,7 @@ export default function TransactionDetailScreen() {
                 budgetCategories={budgetCategories}
                 itemizationEnabled={itemizationEnabled}
                 onSave={handleSaveTransactionDetails}
+                accountId={accountId!}
               />
             )}
           </>
