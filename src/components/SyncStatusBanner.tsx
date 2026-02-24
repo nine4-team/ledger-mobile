@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable } from 'react-native';
 
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -28,9 +28,19 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
     lastError,
   } = useSyncStatusStore();
   const [isRetrying, setIsRetrying] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const prevTotalPendingRef = useRef(0);
 
   const totalPending = pendingWritesCount + pendingRequestDocs + pendingUploads;
   const totalFailed = failedRequestDocs + failedUploads;
+
+  // Re-show banner when new pending writes arrive after a dismiss
+  useEffect(() => {
+    if (totalPending > prevTotalPendingRef.current) {
+      setDismissed(false);
+    }
+    prevTotalPendingRef.current = totalPending;
+  }, [totalPending]);
 
   const statusVariant =
     totalFailed > 0 || lastError
@@ -43,7 +53,7 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
             ? 'queue'
             : 'idle';
 
-  const show = statusVariant !== 'idle';
+  const show = statusVariant !== 'idle' && !dismissed;
 
   const message = useMemo(() => {
     if (statusVariant === 'error') {
@@ -97,7 +107,11 @@ export const SyncStatusBanner: React.FC<SyncStatusBannerProps> = ({ bottomOffset
         </AppText>
       </Pressable>
     </>
-  ) : undefined;
+  ) : (
+    <Pressable onPress={() => setDismissed(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dismiss sync status">
+      <AppText variant="caption" style={{ fontWeight: '600', opacity: 0.5 }}>✕</AppText>
+    </Pressable>
+  );
 
   return <StatusBanner bottomOffset={bottomOffset} message={message} variant={isError ? 'error' : 'info'} actions={actions} />;
 };
