@@ -44,76 +44,89 @@ export function SpaceCard({
 
   const checklistProgress = useMemo(() => {
     if (!checklists || checklists.length === 0) return null;
-    let total = 0;
-    let checked = 0;
-    for (const cl of checklists) {
-      for (const item of cl.items) {
-        total++;
-        if (item.isChecked) checked++;
-      }
-    }
-    if (total === 0) return null;
-    return { checked, total, percentage: (checked / total) * 100 };
+    const rows = checklists
+      .map((cl) => {
+        const total = cl.items.length;
+        const checked = cl.items.filter((i) => i.isChecked).length;
+        return { id: cl.id, name: cl.name, checked, total, percentage: total > 0 ? (checked / total) * 100 : 0 };
+      })
+      .filter((row) => row.total > 0);
+    return rows.length > 0 ? rows : null;
   }, [checklists]);
+
+  const accessibilityDesc = checklistProgress
+    ? checklistProgress.map((r) => `${r.name}: ${r.checked} of ${r.total} completed`).join(', ')
+    : '';
 
   return (
     <ImageCard
       imageUri={imageUri}
       onPress={onPress}
       style={style}
-      accessibilityLabel={`${name}, ${itemCount} items${
-        checklistProgress
-          ? `, ${checklistProgress.checked} of ${checklistProgress.total} checklist items completed`
-          : ''
-      }`}
+      accessibilityLabel={`${name}, ${itemCount} items${accessibilityDesc ? `, ${accessibilityDesc}` : ''}`}
       accessibilityHint="Tap to view space details"
     >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <View style={{ flex: 1, gap: 3 }}>
+      <View style={{ gap: 3 }}>
+        {/* Name row with optional kebab */}
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <AppText
             variant="body"
-            style={{ fontWeight: '600' }}
+            style={{ fontWeight: '600', flex: 1 }}
             numberOfLines={2}
             ellipsizeMode="tail"
           >
             {name?.trim() || 'Untitled space'}
           </AppText>
-          <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </AppText>
-          {checklistProgress && (
-            <View style={{ gap: 3, marginTop: 2 }}>
-              <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
-                {checklistProgress.checked}/{checklistProgress.total} completed
-              </AppText>
-              <ProgressBar
-                percentage={checklistProgress.percentage}
-                color="#22C55E"
-                height={6}
-              />
-            </View>
-          )}
-          {showNotes && notes && (
-            <AppText
-              variant="caption"
-              style={{ color: uiKitTheme.text.secondary, marginTop: 6 }}
-              numberOfLines={2}
-              ellipsizeMode="tail"
+          {onMenuPress && (
+            <TouchableOpacity
+              onPress={onMenuPress}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Space options"
+              accessibilityRole="button"
+              style={{ marginLeft: 8, marginTop: -2 }}
             >
-              {notes}
-            </AppText>
+              <MaterialIcons name="more-vert" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
           )}
         </View>
-        {onMenuPress && (
-          <TouchableOpacity
-            onPress={onMenuPress}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel="Space options"
-            accessibilityRole="button"
-            style={{ marginLeft: 8, marginTop: -2 }}
+
+        {/* Item count */}
+        <AppText variant="caption" style={{ color: uiKitTheme.text.secondary }}>
+          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </AppText>
+
+        {/* Per-checklist progress bars — full width */}
+        {checklistProgress && (
+          <View style={{ gap: 8, marginTop: 6 }}>
+            {checklistProgress.map((row) => (
+              <View key={row.id} style={{ gap: 3 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <AppText variant="caption" style={{ color: uiKitTheme.text.secondary, flex: 1 }} numberOfLines={1} ellipsizeMode="tail">
+                    {row.name}
+                  </AppText>
+                  <AppText variant="caption" style={{ color: uiKitTheme.text.secondary, marginLeft: 8, flexShrink: 0 }}>
+                    {row.checked}/{row.total}
+                  </AppText>
+                </View>
+                <ProgressBar
+                  percentage={row.percentage}
+                  color="#22C55E"
+                  height={5}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+
+        {showNotes && notes && (
+          <AppText
+            variant="caption"
+            style={{ color: uiKitTheme.text.secondary, marginTop: 6 }}
+            numberOfLines={2}
+            ellipsizeMode="tail"
           >
-            <MaterialIcons name="more-vert" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+            {notes}
+          </AppText>
         )}
       </View>
     </ImageCard>

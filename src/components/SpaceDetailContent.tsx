@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AppText } from './AppText';
-import { AppButton } from './AppButton';
 import { ItemsListControlBar } from './ItemsListControlBar';
 import { ItemCard } from './ItemCard';
 import { MediaGallerySection, type MediaGallerySectionRef } from './MediaGallerySection';
@@ -21,6 +20,7 @@ import { TransactionPickerModal } from './modals/TransactionPickerModal';
 import { ReturnTransactionPickerModal } from './modals/ReturnTransactionPickerModal';
 import { EditNotesModal } from './modals/EditNotesModal';
 import { EditSpaceDetailsModal } from './modals/EditSpaceDetailsModal';
+import { EditChecklistModal } from './modals/EditChecklistModal';
 import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
 import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
 import { layout } from '../ui';
@@ -37,7 +37,6 @@ import { updateItem, deleteItem } from '../data/itemsService';
 import { reassignItemToInventory, reassignItemToProject } from '../data/reassignService';
 import { subscribeToBudgetCategories, mapBudgetCategories } from '../data/budgetCategoriesService';
 import { createRepository } from '../data/repository';
-import { getTextInputStyle } from '../ui/styles/forms';
 import { deleteLocalMediaByUrl, saveLocalMedia, resolveAttachmentUri } from '../offline/media';
 import type { AttachmentRef } from '../offline/media';
 import { useOutsideItems } from '../hooks/useOutsideItems';
@@ -78,11 +77,6 @@ type SpaceSection = {
 const SECTION_HEADER_MARKER = '__sectionHeader__';
 
 // --- Helpers ---
-
-function randomId(prefix: string) {
-  const cryptoApi = globalThis.crypto as { randomUUID?: () => string } | undefined;
-  return cryptoApi?.randomUUID ? cryptoApi.randomUUID() : `${prefix}_${Date.now()}_${Math.random()}`;
-}
 
 function getPrimaryImageUri(item: ScopedItem): string | undefined {
   const images = (item as any).images as AttachmentRef[] | undefined;
@@ -193,6 +187,11 @@ export function SpaceDetailContent({
 
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [editNotesVisible, setEditNotesVisible] = useState(false);
+
+  // Checklist modal state
+  const [checklistModalVisible, setChecklistModalVisible] = useState(false);
+  const [checklistModalTarget, setChecklistModalTarget] = useState<Checklist | null>(null);
+  const [checklistMenuId, setChecklistMenuId] = useState<string | null>(null);
 
   // Collapsible sections state
   const [collapsedSections, setCollapsedSections] = useState<Record<SpaceSectionKey, boolean>>({
@@ -940,7 +939,11 @@ export function SpaceDetailContent({
           onToggle={() => handleToggleSection(section.key)}
           badge={section.badge}
           onEdit={section.key === 'notes' ? () => setEditNotesVisible(true) : undefined}
-          onAdd={section.key === 'media' ? () => mediaRef.current?.triggerAdd() : undefined}
+          onAdd={
+            section.key === 'media' ? () => mediaRef.current?.triggerAdd() :
+            section.key === 'checklists' ? () => { setChecklistModalTarget(null); setChecklistModalVisible(true); } :
+            undefined
+          }
         />
       );
     }
@@ -948,7 +951,7 @@ export function SpaceDetailContent({
     switch (section.key) {
       case 'media':
         return (
-          <View style={{ paddingTop: 12 }}>
+          <View>
             <MediaGallerySection
               ref={mediaRef}
               title="Images"
@@ -969,11 +972,7 @@ export function SpaceDetailContent({
         );
 
       case 'notes':
-        return (
-          <View style={{ paddingTop: 12 }}>
-            <NotesSection notes={space?.notes} />
-          </View>
-        );
+        return <NotesSection notes={space?.notes} />;
 
       case 'items': {
         // Get menu items for individual item
@@ -1046,7 +1045,7 @@ export function SpaceDetailContent({
         };
 
         return (
-          <View style={{ paddingTop: 12 }}>
+          <View>
             <SharedItemsList
               embedded={true}
               manager={managerAdapter}
@@ -1065,18 +1064,7 @@ export function SpaceDetailContent({
 
       case 'checklists':
         return (
-          <View style={[styles.section, { paddingTop: 12 }]}>
-            <AppButton
-              title="Add checklist"
-              onPress={() =>
-                handleSaveChecklists([
-                  ...checklists,
-                  { id: randomId('checklist'), name: 'Checklist', items: [] },
-                ])
-              }
-              accessibilityLabel="Add new checklist"
-              accessibilityHint="Create a new checklist for this space"
-            />
+          <View style={styles.section}>
             {checklists.length === 0 ? (
               <AppText variant="body" style={{ color: theme.colors.textSecondary }}>
                 No checklists yet.
@@ -1088,116 +1076,68 @@ export function SpaceDetailContent({
                     key={checklist.id}
                     style={[styles.checklistCard, { borderColor: uiKitTheme.border.primary }]}
                   >
+                    {/* Header: name + kebab */}
                     <View style={styles.checklistHeader}>
-                      <TextInput
-                        value={checklist.name}
-                        onChangeText={(text) => {
-                          const next = [...checklists];
-                          next[checklistIndex] = { ...checklist, name: text };
-                          setChecklists(next);
-                        }}
-                        onBlur={() => handleSaveChecklists(checklists)}
-                        style={[getTextInputStyle(uiKitTheme, { padding: 10, radius: 8 }), styles.checklistNameInput]}
-                      />
+                      <AppText variant="body" style={styles.checklistNameText}>
+                        {checklist.name}
+                      </AppText>
                       <Pressable
-                        onPress={() => {
-                          Alert.alert(
-                            'Delete checklist',
-                            `Delete "${checklist.name}"?`,
-                            [
-                              { text: 'Cancel', style: 'cancel' },
-                              {
-                                text: 'Delete',
-                                style: 'destructive',
-                                onPress: () => {
-                                  const next = checklists.filter((_, i) => i !== checklistIndex);
-                                  handleSaveChecklists(next);
-                                },
-                              },
-                            ],
-                          );
-                        }}
+                        onPress={() => setChecklistMenuId(checklist.id)}
                         hitSlop={8}
                         accessibilityRole="button"
-                        accessibilityLabel={`Delete ${checklist.name} checklist`}
-                        style={styles.deleteButton}
+                        accessibilityLabel={`Options for ${checklist.name}`}
+                        style={styles.kebabButton}
                       >
-                        <MaterialIcons name="delete-outline" size={20} color={theme.colors.textSecondary} />
+                        <MaterialIcons name="more-vert" size={20} color={theme.colors.primary} />
                       </Pressable>
                     </View>
-                    <View style={styles.list}>
-                      {checklist.items.map((checklistItem, itemIndex) => (
-                        <View key={checklistItem.id} style={styles.checklistItem}>
-                          <Pressable
-                            onPress={() => {
-                              const next = [...checklists];
-                              const itemsNext = [...checklist.items];
-                              itemsNext[itemIndex] = {
-                                ...checklistItem,
-                                isChecked: !checklistItem.isChecked,
-                              };
-                              next[checklistIndex] = { ...checklist, items: itemsNext };
-                              handleSaveChecklists(next);
-                            }}
-                            style={[
-                              styles.checkbox,
-                              { borderColor: uiKitTheme.border.primary },
-                              checklistItem.isChecked && { backgroundColor: uiKitTheme.primary.main },
-                            ]}
-                            accessibilityRole="checkbox"
-                            accessibilityState={{ checked: checklistItem.isChecked }}
-                            accessibilityLabel={checklistItem.text}
-                            accessibilityHint="Tap to toggle checklist item"
-                          >
-                            {checklistItem.isChecked ? (
-                              <MaterialIcons name="check" size={14} color="#fff" />
-                            ) : null}
-                          </Pressable>
-                          <TextInput
-                            value={checklistItem.text}
-                            onChangeText={(text) => {
-                              const next = [...checklists];
-                              const itemsNext = [...checklist.items];
-                              itemsNext[itemIndex] = { ...checklistItem, text };
-                              next[checklistIndex] = { ...checklist, items: itemsNext };
-                              setChecklists(next);
-                            }}
-                            onBlur={() => handleSaveChecklists(checklists)}
-                            style={[
-                              getTextInputStyle(uiKitTheme, { padding: 8, radius: 8 }),
-                              styles.checklistItemInput,
-                              checklistItem.isChecked && styles.checklistItemChecked,
-                            ]}
-                          />
-                          <Pressable
-                            onPress={() => {
-                              const next = [...checklists];
-                              const itemsNext = checklist.items.filter((_, i) => i !== itemIndex);
-                              next[checklistIndex] = { ...checklist, items: itemsNext };
-                              handleSaveChecklists(next);
-                            }}
-                            hitSlop={8}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Delete ${checklistItem.text}`}
-                          >
-                            <MaterialIcons name="close" size={18} color={theme.colors.textSecondary} />
-                          </Pressable>
-                        </View>
-                      ))}
-                    </View>
-                    <AppButton
-                      title="Add item"
-                      variant="secondary"
-                      onPress={() => {
-                        const next = [...checklists];
-                        const itemsNext = [
-                          ...checklist.items,
-                          { id: randomId('item'), text: 'Item', isChecked: false },
-                        ];
-                        next[checklistIndex] = { ...checklist, items: itemsNext };
-                        handleSaveChecklists(next);
-                      }}
-                    />
+                    {/* Items — read-only with circle toggles */}
+                    {checklist.items.length > 0 ? (
+                      <View style={styles.list}>
+                        {checklist.items.map((checklistItem, itemIndex) => (
+                          <View key={checklistItem.id} style={styles.checklistItem}>
+                            <Pressable
+                              onPress={() => {
+                                const next = [...checklists];
+                                const itemsNext = [...checklist.items];
+                                itemsNext[itemIndex] = {
+                                  ...checklistItem,
+                                  isChecked: !checklistItem.isChecked,
+                                };
+                                next[checklistIndex] = { ...checklist, items: itemsNext };
+                                handleSaveChecklists(next);
+                              }}
+                              style={[
+                                styles.checklistCircle,
+                                { borderColor: uiKitTheme.border.primary },
+                                checklistItem.isChecked && { backgroundColor: uiKitTheme.primary.main, borderColor: uiKitTheme.primary.main },
+                              ]}
+                              accessibilityRole="checkbox"
+                              accessibilityState={{ checked: checklistItem.isChecked }}
+                              accessibilityLabel={checklistItem.text}
+                              accessibilityHint="Tap to toggle checklist item"
+                            >
+                              {checklistItem.isChecked ? (
+                                <MaterialIcons name="check" size={13} color="#fff" />
+                              ) : null}
+                            </Pressable>
+                            <AppText
+                              variant="body"
+                              style={[
+                                styles.checklistItemText,
+                                checklistItem.isChecked && styles.checklistItemChecked,
+                              ]}
+                            >
+                              {checklistItem.text}
+                            </AppText>
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                        No items. Tap ⋮ to edit.
+                      </AppText>
+                    )}
                   </View>
                 ))}
               </View>
@@ -1212,7 +1152,8 @@ export function SpaceDetailContent({
       accountId, projectId, spaceId, router, scopeConfig,
       theme.colors.textSecondary, theme.colors.background, uiKitTheme.border.primary,
       uiKitTheme.border.secondary, uiKitTheme.primary.main, checklists,
-      handleSaveChecklists, handleAddImage, handleAddImages, handleRemoveImage, handleSetPrimaryImage]);
+      handleSaveChecklists, handleAddImage, handleAddImages, handleRemoveImage, handleSetPrimaryImage,
+      setChecklistModalTarget, setChecklistModalVisible, setChecklistMenuId]);
 
   // --- Render ---
 
@@ -1678,6 +1619,68 @@ export function SpaceDetailContent({
         initialNotes={space?.notes ?? ''}
         onSave={handleSaveNotes}
       />
+
+      {/* Add / Edit Checklist Modal */}
+      <EditChecklistModal
+        visible={checklistModalVisible}
+        onRequestClose={() => setChecklistModalVisible(false)}
+        checklist={checklistModalTarget}
+        onSave={(saved) => {
+          const exists = checklists.some((c) => c.id === saved.id);
+          const next = exists
+            ? checklists.map((c) => (c.id === saved.id ? saved : c))
+            : [...checklists, saved];
+          handleSaveChecklists(next);
+          setChecklistModalVisible(false);
+          setChecklistModalTarget(null);
+        }}
+      />
+
+      {/* Per-checklist kebab menu */}
+      <BottomSheetMenuList
+        visible={checklistMenuId !== null}
+        onRequestClose={() => setChecklistMenuId(null)}
+        title={checklists.find((c) => c.id === checklistMenuId)?.name ?? 'Checklist'}
+        showLeadingIcons={true}
+        items={[
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: 'edit',
+            onPress: () => {
+              const target = checklists.find((c) => c.id === checklistMenuId) ?? null;
+              setChecklistMenuId(null);
+              setChecklistModalTarget(target);
+              setChecklistModalVisible(true);
+            },
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: 'delete-outline',
+            destructive: true,
+            onPress: () => {
+              const target = checklists.find((c) => c.id === checklistMenuId);
+              setChecklistMenuId(null);
+              if (!target) return;
+              Alert.alert(
+                'Delete Checklist',
+                `Delete "${target.name}"?`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                      handleSaveChecklists(checklists.filter((c) => c.id !== target.id));
+                    },
+                  },
+                ],
+              );
+            },
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -1724,10 +1727,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  checklistNameInput: {
+  checklistNameText: {
     flex: 1,
+    fontWeight: '600',
   },
-  deleteButton: {
+  kebabButton: {
     padding: 4,
   },
   checklistItem: {
@@ -1735,20 +1739,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  checklistItemInput: {
+  checklistItemText: {
     flex: 1,
   },
   checklistItemChecked: {
     textDecorationLine: 'line-through',
-    opacity: 0.6,
+    opacity: 0.5,
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 1,
-    borderRadius: 4,
+  checklistCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   loadingContainer: {
     alignItems: 'center',
