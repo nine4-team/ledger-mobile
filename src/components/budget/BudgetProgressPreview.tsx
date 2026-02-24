@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '../AppText';
-import { useTheme, useUIKitTheme } from '../../theme/ThemeProvider';
+import { ProgressBar } from '../ProgressBar';
+import { useThemeContext } from '../../theme/ThemeProvider';
+import { BUDGET_BAR_COLOR, getOverflowColor } from '../../utils/budgetColors';
 import type { BudgetCategory } from '../../data/budgetCategoriesService';
 import type { ProjectBudgetCategory } from '../../data/projectBudgetCategoriesService';
 import type { BudgetProgress } from '../../data/budgetProgressService';
@@ -16,21 +18,7 @@ type BudgetProgressPreviewProps = {
 
 function formatCurrency(cents: number): string {
   const dollars = Math.abs(cents / 100);
-  return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function getProgressColor(percentage: number, isFee: boolean): string {
-  if (isFee) {
-    // Inverted: green for high percentage (good for fees)
-    if (percentage >= 75) return '#22C55E'; // green
-    if (percentage >= 50) return '#EAB308'; // yellow
-    return '#EF4444'; // red
-  } else {
-    // Standard: red for high percentage (bad for spending)
-    if (percentage >= 75) return '#EF4444'; // red
-    if (percentage >= 50) return '#EAB308'; // yellow
-    return '#22C55E'; // green
-  }
+  return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export function BudgetProgressPreview({
@@ -40,8 +28,9 @@ export function BudgetProgressPreview({
   pinnedCategoryIds,
   maxCategories = 2,
 }: BudgetProgressPreviewProps) {
-  const theme = useTheme();
-  const uiKitTheme = useUIKitTheme();
+  const { theme, resolvedColorScheme } = useThemeContext();
+  const isDark = resolvedColorScheme === 'dark';
+  const overflowColors = useMemo(() => getOverflowColor(isDark), [isDark]);
 
   // Determine enabled categories (has non-zero budget OR has spend)
   const enabledCategories = useMemo(() => {
@@ -115,32 +104,35 @@ export function BudgetProgressPreview({
   return (
     <View style={styles.container}>
       {/* Show Overall Budget if no pins */}
-      {showOverall && (
-        <View style={styles.categoryRow}>
-          <View style={styles.labelRow}>
-            <AppText variant="caption" style={[styles.categoryName, { color: theme.colors.textSecondary }]}>
+      {showOverall && (() => {
+        const percentage = overallBudget > 0 ? (budgetProgress.spentCents / overallBudget) * 100 : 0;
+        const isOver = budgetProgress.spentCents > overallBudget;
+        const overflowPct = isOver ? ((budgetProgress.spentCents - overallBudget) / overallBudget) * 100 : 0;
+        const remaining = overallBudget - budgetProgress.spentCents;
+        return (
+          <View style={styles.categoryRow}>
+            <AppText variant="body" style={styles.categoryTitle}>
               Overall Budget
             </AppText>
-            <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-              {formatCurrency(budgetProgress.spentCents)} / {formatCurrency(overallBudget)}
-            </AppText>
-          </View>
-          <View style={[styles.track, { backgroundColor: uiKitTheme.border.secondary }]}>
-            <View
-              style={[
-                styles.fill,
-                {
-                  width: `${Math.min((budgetProgress.spentCents / overallBudget) * 100, 100)}%`,
-                  backgroundColor: getProgressColor(
-                    (budgetProgress.spentCents / overallBudget) * 100,
-                    false
-                  ),
-                },
-              ]}
+            <View style={styles.labelRow}>
+              <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
+                {formatCurrency(budgetProgress.spentCents)} spent
+              </AppText>
+              <AppText variant="caption" style={{ color: isOver ? overflowColors.text : theme.colors.textSecondary }}>
+                {isOver
+                  ? `${formatCurrency(Math.abs(remaining))} over`
+                  : `${formatCurrency(remaining)} remaining`}
+              </AppText>
+            </View>
+            <ProgressBar
+              percentage={Math.min(percentage, 100)}
+              color={BUDGET_BAR_COLOR}
+              overflowPercentage={isOver ? Math.min(overflowPct, 100) : undefined}
+              overflowColor={isOver ? overflowColors.bar : undefined}
             />
           </View>
-        </View>
-      )}
+        );
+      })()}
 
       {/* Show pinned categories */}
       {visibleCategories.map((category) => {
@@ -148,28 +140,37 @@ export function BudgetProgressPreview({
         const budgetCents = projectBudgetCategories[category.id]?.budgetCents ?? 0;
         const percentage = budgetCents > 0 ? (spentCents / budgetCents) * 100 : 0;
         const isFee = category.metadata?.categoryType === 'fee';
+        const isOver = budgetCents > 0 && spentCents > budgetCents;
+        const overflowPct = isOver ? ((spentCents - budgetCents) / budgetCents) * 100 : 0;
+        const remaining = budgetCents - spentCents;
 
         return (
           <View key={category.id} style={styles.categoryRow}>
+            <AppText variant="body" style={styles.categoryTitle}>
+              {category.name}
+            </AppText>
             <View style={styles.labelRow}>
-              <AppText variant="caption" style={[styles.categoryName, { color: theme.colors.textSecondary }]}>
-                {category.name}
-              </AppText>
               <AppText variant="caption" style={{ color: theme.colors.textSecondary }}>
-                {formatCurrency(spentCents)} / {formatCurrency(budgetCents)}
+                {isFee
+                  ? `${formatCurrency(spentCents)} received`
+                  : `${formatCurrency(spentCents)} spent`}
+              </AppText>
+              <AppText variant="caption" style={{ color: isOver ? overflowColors.text : theme.colors.textSecondary }}>
+                {isFee
+                  ? isOver
+                    ? `${formatCurrency(Math.abs(remaining))} over received`
+                    : `${formatCurrency(remaining)} remaining`
+                  : isOver
+                    ? `${formatCurrency(Math.abs(remaining))} over`
+                    : `${formatCurrency(remaining)} remaining`}
               </AppText>
             </View>
-            <View style={[styles.track, { backgroundColor: uiKitTheme.border.secondary }]}>
-              <View
-                style={[
-                  styles.fill,
-                  {
-                    width: `${Math.min(percentage, 100)}%`,
-                    backgroundColor: getProgressColor(percentage, isFee),
-                  },
-                ]}
-              />
-            </View>
+            <ProgressBar
+              percentage={Math.min(percentage, 100)}
+              color={BUDGET_BAR_COLOR}
+              overflowPercentage={isOver ? Math.min(overflowPct, 100) : undefined}
+              overflowColor={isOver ? overflowColors.bar : undefined}
+            />
           </View>
         );
       })}
@@ -185,26 +186,13 @@ const styles = StyleSheet.create({
   categoryRow: {
     gap: 4,
   },
+  categoryTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  categoryName: {
-    flex: 1,
-  },
-  amountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  track: {
-    height: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 999,
   },
 });

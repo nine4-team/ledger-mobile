@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Platform, ActionSheetIOS, Alert } f
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import {
-  getBudgetProgressColor,
+  BUDGET_BAR_COLOR,
   getOverflowColor,
 } from "../../utils/budgetColors";
 import { useThemeContext } from "../../theme/ThemeProvider";
@@ -19,6 +19,7 @@ export type BudgetCategoryTrackerProps = {
   onPress?: () => void;
   onLongPress?: () => void;
   isOverallBudget?: boolean;
+  reservePinSpace?: boolean;
 };
 
 function formatCents(cents: number): string {
@@ -45,6 +46,7 @@ export function BudgetCategoryTracker({
   onPress,
   onLongPress,
   isOverallBudget = false,
+  reservePinSpace = false,
 }: BudgetCategoryTrackerProps) {
   const { theme, resolvedColorScheme } = useThemeContext();
   const isDark = resolvedColorScheme === "dark";
@@ -65,11 +67,6 @@ export function BudgetCategoryTracker({
     ? ((spentCents - budgetCents) / budgetCents) * 100
     : 0;
   const displayPercentage = Math.min(percentage, 100);
-
-  const colors = useMemo(
-    () => getBudgetProgressColor(percentage, isFeeCategory, isDark),
-    [percentage, isFeeCategory, isDark],
-  );
 
   const overflowColors = useMemo(() => getOverflowColor(isDark), [isDark]);
 
@@ -95,7 +92,7 @@ export function BudgetCategoryTracker({
     ? theme.colors.textSecondary
     : isOverBudget
       ? overflowColors.text
-      : colors.text;
+      : theme.colors.textSecondary;
 
   const content = (
     <View style={styles.container}>
@@ -130,14 +127,14 @@ export function BudgetCategoryTracker({
           {/* Progress Bar */}
           <ProgressBar
             percentage={displayPercentage}
-            color={colors.bar}
+            color={BUDGET_BAR_COLOR}
             overflowPercentage={isOverBudget ? Math.min(overflowPercentage, 100) : undefined}
             overflowColor={isOverBudget ? overflowColors.bar : undefined}
           />
         </View>
 
-        {/* Pin icon */}
-        {onLongPress && (
+        {/* Pin icon (or spacer to keep alignment with rows that have a pin) */}
+        {onLongPress ? (
           <TouchableOpacity
             onPress={onLongPress}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -151,7 +148,9 @@ export function BudgetCategoryTracker({
               style={{ opacity: isPinned ? 1 : 0.5 }}
             />
           </TouchableOpacity>
-        )}
+        ) : reservePinSpace ? (
+          <View style={styles.pinSpacer} />
+        ) : null}
       </View>
     </View>
   );
@@ -231,5 +230,8 @@ const styles = StyleSheet.create({
   },
   pinButton: {
     paddingBottom: 1,
+  },
+  pinSpacer: {
+    width: 15,
   },
 });

@@ -23,7 +23,7 @@ export function ProgressBar({
   percentage,
   color,
   trackColor,
-  height = 8,
+  height = 7,
   overflowPercentage,
   overflowColor,
   style,
@@ -31,7 +31,7 @@ export function ProgressBar({
   const { resolvedColorScheme } = useThemeContext();
   const isDark = resolvedColorScheme === 'dark';
 
-  const defaultTrackColor = isDark ? '#3A3A3C' : '#E5E7EB';
+  const defaultTrackColor = isDark ? '#55555A' : '#D1D5DB';
   const displayPercentage = Math.min(Math.max(percentage, 0), 100);
   const displayOverflow = overflowPercentage
     ? Math.min(Math.max(overflowPercentage, 0), 100)

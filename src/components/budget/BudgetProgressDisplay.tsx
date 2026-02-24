@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { AppText } from '../AppText';
 import { AppButton } from '../AppButton';
-import { useTheme } from '../../theme/ThemeProvider';
+import { useTheme, useUIKitTheme } from '../../theme/ThemeProvider';
 import { BudgetCategoryTracker } from './BudgetCategoryTracker';
 import type { BudgetCategory } from '../../data/budgetCategoriesService';
 import type { ProjectBudgetCategory } from '../../data/projectBudgetCategoriesService';
@@ -37,6 +37,7 @@ export function BudgetProgressDisplay({
   error = null,
 }: BudgetProgressDisplayProps) {
   const theme = useTheme();
+  const uiKitTheme = useUIKitTheme();
   // Loading state
   if (isLoading) {
     return (
@@ -141,13 +142,16 @@ export function BudgetProgressDisplay({
 
       {/* Overall Budget at end */}
       {overallBudget > 0 && (
-        <BudgetCategoryTracker
+        <View style={[styles.overallBudgetWrapper, { borderTopColor: uiKitTheme.border.secondary }]}>
+          <BudgetCategoryTracker
           categoryName="Overall"
           categoryType="general"
           spentCents={budgetProgress.spentCents}
           budgetCents={overallBudget}
           isOverallBudget={true}
+          reservePinSpace={!!onPinToggle}
         />
+        </View>
       )}
     </View>
   );
@@ -156,6 +160,11 @@ export function BudgetProgressDisplay({
 const styles = StyleSheet.create({
   container: {
     gap: 12,
+  },
+  overallBudgetWrapper: {
+    borderTopWidth: 1,
+    marginTop: 4,
+    paddingTop: 12,
   },
   toggleButton: {
     alignItems: 'center',

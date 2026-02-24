@@ -5,7 +5,7 @@ import { Card } from '../../../../src/components/Card';
 import { AppText } from '../../../../src/components/AppText';
 import { ProgressBar } from '../../../../src/components/ProgressBar';
 import { useTheme, useThemeContext } from '../../../../src/theme/ThemeProvider';
-import { BUDGET_COLORS, getBudgetProgressColor, getOverflowColor } from '../../../../src/utils/budgetColors';
+import { BUDGET_BAR_COLOR, getOverflowColor } from '../../../../src/utils/budgetColors';
 import { computeTransactionCompleteness } from '../../../../src/utils/transactionCompleteness';
 import type { Transaction } from '../../../../src/data/transactionsService';
 import type { Item } from '../../../../src/data/itemsService';
@@ -55,13 +55,8 @@ export function AuditSection({ transaction, items, returnedItems, soldItems, inc
     ? (completeness.completenessRatio - 1) * 100
     : undefined;
 
-  const progressColors = getBudgetProgressColor(
-    completeness.completenessRatio * 100,
-    true,  // isFeeCategory = true → inverted: high % = green (good)
-    isDark,
-  );
   const overflowColors = overflowPercentage ? getOverflowColor(isDark) : undefined;
-  const warningColor = (isDark ? BUDGET_COLORS.dark : BUDGET_COLORS.light).standard.yellow.text;
+  const warningColor = isDark ? '#FACC15' : '#CA8A04';
 
   // Format currency
   const formatCents = (cents: number): string =>
@@ -101,8 +96,8 @@ export function AuditSection({ transaction, items, returnedItems, soldItems, inc
         {/* Status line with icon + label on left, $x/$y on right */}
         <View style={styles.statusRow}>
           <View style={styles.statusLeft}>
-            <MaterialIcons name={iconName} size={20} color={progressColors.text} />
-            <AppText variant="title" style={{ color: progressColors.text }}>
+            <MaterialIcons name={iconName} size={20} color={theme.colors.primary} />
+            <AppText variant="title" style={{ color: theme.colors.primary }}>
               {statusLabel}
             </AppText>
           </View>
@@ -114,7 +109,7 @@ export function AuditSection({ transaction, items, returnedItems, soldItems, inc
         {/* ProgressBar (FR-005) */}
         <ProgressBar
           percentage={percentage}
-          color={progressColors.bar}
+          color={BUDGET_BAR_COLOR}
           overflowPercentage={overflowPercentage}
           overflowColor={overflowColors?.bar}
         />

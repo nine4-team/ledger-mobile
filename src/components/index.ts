@@ -4,7 +4,6 @@ export { AppButton } from './AppButton';
 export { AppScrollView } from './AppScrollView';
 export { LoadingScreen } from './LoadingScreen';
 export { OfflineLoadingOverlay, StaleIndicator, QueuedWritesBadge } from './OfflineUX';
-export { BudgetProgress } from './BudgetProgress';
 export { GoogleMark } from './GoogleMark';
 export { BrandLogo } from './BrandLogo';
 export { ExpandableCard } from './ExpandableCard';
