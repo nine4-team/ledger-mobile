@@ -28,6 +28,7 @@ export type NextStepsSectionProps = {
   budgetCategories: Record<string, { name: string; metadata?: any }>;
   onScrollToSection?: (section: string) => void;
   onEditDetails?: (field?: EditTransactionDetailsField) => void;
+  onAddItem?: () => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -39,7 +40,6 @@ export function computeNextSteps(
   itemCount: number,
   imageCount: number,
   budgetCategories: Record<string, { name: string }>,
-  itemsMissing?: boolean,
 ): Omit<NextStep, 'onPress'>[] {
   const steps: Omit<NextStep, 'onPress'>[] = [];
 
@@ -70,14 +70,10 @@ export function computeNextSteps(
     icon: 'receipt',
   });
 
-  // Items — show image count hint only when the audit signals items are actually missing
   const hasItems = itemCount > 0;
-  const itemLabel = imageCount > 0 && !hasItems && itemsMissing
-    ? `You uploaded ${imageCount} photo${imageCount === 1 ? '' : 's'} — create items from them?`
-    : 'Add items';
   steps.push({
     id: 'items',
-    label: itemLabel,
+    label: 'Add items',
     completed: hasItems,
     icon: 'inventory-2',
   });
@@ -116,17 +112,17 @@ export function NextStepsSection({
   transaction,
   itemCount,
   imageCount,
-  itemsMissing,
   budgetCategories,
   onScrollToSection,
   onEditDetails,
+  onAddItem,
 }: NextStepsSectionProps) {
   const theme = useTheme();
   const uiKitTheme = useUIKitTheme();
 
   const rawSteps = useMemo(
-    () => computeNextSteps(transaction, itemCount, imageCount, budgetCategories, itemsMissing),
-    [transaction, itemCount, imageCount, budgetCategories, itemsMissing],
+    () => computeNextSteps(transaction, itemCount, imageCount, budgetCategories),
+    [transaction, itemCount, imageCount, budgetCategories],
   );
 
   // Wire up onPress for each step
@@ -150,12 +146,12 @@ export function NextStepsSection({
           onPress = () => onScrollToSection?.('receipts');
           break;
         case 'items':
-          onPress = () => onScrollToSection?.('items');
+          onPress = onAddItem ?? (() => onScrollToSection?.('items'));
           break;
       }
       return { ...step, onPress };
     });
-  }, [rawSteps, onEditDetails, onScrollToSection]);
+  }, [rawSteps, onEditDetails, onScrollToSection, onAddItem]);
 
   const completedCount = steps.filter((s) => s.completed).length;
   const totalCount = steps.length;

@@ -58,7 +58,6 @@ import {
 } from './sections';
 import type { MediaGallerySectionRef } from '../../../src/components/MediaGallerySection';
 import { buildSingleItemMenu } from '../../../src/actions/itemMenuBuilder';
-import { computeTransactionCompleteness } from '../../../src/utils/transactionCompleteness';
 import { showToast } from '../../../src/components/toastStore';
 import { subscribeToEdgesFromTransaction } from '../../../src/data/lineageEdgesService';
 import type { ItemLineageEdge } from '../../../src/data/lineageEdgesService';
@@ -347,18 +346,6 @@ export default function TransactionDetailScreen() {
   const itemizationEnabled = selectedCategory?.metadata?.categoryType === 'itemized';
   const normalizedSource = transaction?.source?.trim().toLowerCase() ?? '';
 
-  // True when the audit signals that linked items don't yet cover the transaction total.
-  // Only meaningful (and shown) for itemized categories.
-  const itemsMissing = useMemo(() => {
-    if (!itemizationEnabled || !transaction) return false;
-    const completeness = computeTransactionCompleteness(
-      transaction,
-      itemsManager.filteredAndSortedItems,
-      { returned: returnedItems, sold: soldItems },
-    );
-    return completeness !== null && completeness.status === 'incomplete';
-  }, [itemizationEnabled, transaction, itemsManager.filteredAndSortedItems, returnedItems, soldItems]);
-
   // Compute badge info for header (mirrors TransactionCard badges)
   const transactionType = transaction?.transactionType;
   const needsReview = transaction?.needsReview;
@@ -382,7 +369,7 @@ export default function TransactionDetailScreen() {
 
     result.push({
       key: 'items',
-      title: 'TRANSACTION ITEMS',
+      title: 'ITEMS',
       data: collapsedSections.items ? [] : ['items-content'],
       badge: `${itemsManager.filteredAndSortedItems.length}`,
     });
@@ -1068,27 +1055,48 @@ export default function TransactionDetailScreen() {
     });
   };
 
-  const addMenuItems: AnchoredMenuItem[] = useMemo(() => [
-    {
+  const hasOtherImages = (transaction?.otherImages?.length ?? 0) > 0;
+
+  const addMenuItems: AnchoredMenuItem[] = useMemo(() => {
+    const items: AnchoredMenuItem[] = [
+      {
+        key: 'add-existing',
+        label: 'Add Existing Items',
+        icon: 'playlist-add' as const,
+        onPress: () => {
+          setAddMenuVisible(false);
+          setTimeout(() => {
+            setIsPickingItems(true);
+            setPickerTab('suggested');
+            pickerManager.clearSelection();
+          }, 300);
+        },
+      },
+    ];
+    if (hasOtherImages) {
+      items.push({
+        key: 'from-photos',
+        label: 'Create From Photos',
+        icon: 'photo-library' as const,
+        onPress: () => {
+          setAddMenuVisible(false);
+          setTimeout(() => {
+            const idx = sections.findIndex((s) => s.key === 'otherImages');
+            if (idx >= 0) {
+              sectionListRef.current?.scrollToLocation({ sectionIndex: idx, itemIndex: 0, animated: true });
+            }
+          }, 300);
+        },
+      });
+    }
+    items.push({
       key: 'create',
-      label: 'Create Item',
+      label: 'Create Item Manually',
       icon: 'add' as const,
       onPress: handleCreateItem,
-    },
-    {
-      key: 'add-existing',
-      label: 'Add Existing Items',
-      icon: 'playlist-add' as const,
-      onPress: () => {
-        setAddMenuVisible(false);
-        setTimeout(() => {
-          setIsPickingItems(true);
-          setPickerTab('suggested');
-          pickerManager.clearSelection();
-        }, 300);
-      },
-    },
-  ], [handleCreateItem]);
+    });
+    return items;
+  }, [handleCreateItem, hasOtherImages, sections]);
 
   // Sort menu items
   const sortMenuItems = useMemo<AnchoredMenuItem[]>(() => [
@@ -1478,7 +1486,6 @@ export default function TransactionDetailScreen() {
             transaction={transaction!}
             itemCount={itemsManager.filteredAndSortedItems.length}
             imageCount={(transaction!.otherImages?.length ?? 0)}
-            itemsMissing={itemsMissing}
             budgetCategories={budgetCategories}
             onScrollToSection={(sectionKey) => {
               // Find the section index and scroll to it
@@ -1491,6 +1498,7 @@ export default function TransactionDetailScreen() {
               setEditDetailsFocusField(field);
               setEditDetailsVisible(true);
             }}
+            onAddItem={() => setAddMenuVisible(true)}
           />
         );
 

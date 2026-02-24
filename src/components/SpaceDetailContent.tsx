@@ -719,7 +719,7 @@ export function SpaceDetailContent({
   const addMenuItems: AnchoredMenuItem[] = useMemo(() => [
     {
       key: 'create',
-      label: 'Create Item',
+      label: 'Create Item Manually',
       icon: 'add' as const,
       onPress: handleCreateItemInSpace,
     },
