@@ -22,7 +22,7 @@ export function ImageCard({
   onPress,
   children,
   showPlaceholder = true,
-  imageAspectRatio = 5 / 2,
+  imageAspectRatio = 3 / 1,
   style,
   accessibilityLabel,
   accessibilityHint,
@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    gap: 6,
+    gap: 3,
   },
 });
