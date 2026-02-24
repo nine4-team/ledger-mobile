@@ -143,7 +143,7 @@ export const Screen: React.FC<ScreenProps> = ({
     return false;
   }, [hideBackButton, onPressBack, router, backTarget]);
 
-  const contentPaddingTop = (appTokens.screen.contentPaddingTop ?? 0) + (title ? 0 : insets.top);
+  const contentPaddingTop = (hasTabs ? 0 : appTokens.screen.contentPaddingTop ?? 0) + (title ? 0 : insets.top);
 
   const content = (
     <View style={[styles.container, getScreenContainerStyle(uiKitTheme), containerStyle]}>
