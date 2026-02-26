@@ -12,7 +12,7 @@ subtasks:
 - T055
 phase: Phase 2 - Logic Foundation
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "75100"
 review_status: ''
 reviewed_by: ''
@@ -233,3 +233,4 @@ spec-kitty implement WP09 --base WP01
 ## Activity Log
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
+- 2026-02-26T08:15:18Z – claude-opus – shell_pid=75100 – lane=doing – Assigned agent via workflow command
