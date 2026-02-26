@@ -249,15 +249,15 @@
 **Prompt**: `tasks/WP08-tier3-composite-components.md`
 
 ### Included Subtasks
-- [ ] T044 Create `SelectionCalculations.swift` in `Logic/` — select-all toggle logic, selection count, total amount computation from selected items
-- [ ] T045 Create `SelectionCalculationTests.swift` — tests for toggle, count, total computation (~10 tests)
-- [ ] T046 [P] Create `GroupedItemCard.swift` — collapsible card grouping multiple ItemCards, summary row (name, count, total) when collapsed, expand to show ItemCards, group-level selection via SelectorCircle
-- [ ] T047 [P] Create `MediaGallerySection.swift` — ThumbnailGrid display + ActionMenuSheet for add/remove/set-primary actions + ImageGallery for full-screen viewing, configurable max attachments and allowed file types
-- [ ] T048 [P] Create `ItemsListControlBar.swift` — pre-configured ListControlBar with search, sort, filter, and add actions
-- [ ] T049 [P] Create `FilterMenu.swift` — thin wrapper around ActionMenuSheet for filter-specific usage with filter state
-- [ ] T050 [P] Create `SortMenu.swift` — thin wrapper around ActionMenuSheet for sort-specific usage, shows active sort option
-- [ ] T051 [P] Create `ListSelectAllRow.swift` — row with select-all checkbox (SelectorCircle) and label, disabled state
-- [ ] T052 [P] Create `ListSelectionInfo.swift` — text display of current selection state, tappable for selection actions
+- [x] T044 Create `SelectionCalculations.swift` in `Logic/` — select-all toggle logic, selection count, total amount computation from selected items
+- [x] T045 Create `SelectionCalculationTests.swift` — tests for toggle, count, total computation (~10 tests)
+- [x] T046 [P] Create `GroupedItemCard.swift` — collapsible card grouping multiple ItemCards, summary row (name, count, total) when collapsed, expand to show ItemCards, group-level selection via SelectorCircle
+- [x] T047 [P] Create `MediaGallerySection.swift` — ThumbnailGrid display + ActionMenuSheet for add/remove/set-primary actions + ImageGallery for full-screen viewing, configurable max attachments and allowed file types
+- [x] T048 [P] Create `ItemsListControlBar.swift` — pre-configured ListControlBar with search, sort, filter, and add actions
+- [x] T049 [P] Create `FilterMenu.swift` — thin wrapper around ActionMenuSheet for filter-specific usage with filter state
+- [x] T050 [P] Create `SortMenu.swift` — thin wrapper around ActionMenuSheet for sort-specific usage, shows active sort option
+- [x] T051 [P] Create `ListSelectAllRow.swift` — row with select-all checkbox (SelectorCircle) and label, disabled state
+- [x] T052 [P] Create `ListSelectionInfo.swift` — text display of current selection state, tappable for selection actions
 
 ### Implementation Notes
 - GroupedItemCard: controlled/uncontrolled expansion pattern (same as selection — optional Binding with State fallback).
