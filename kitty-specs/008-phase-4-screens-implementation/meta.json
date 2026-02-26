@@ -1,0 +1,10 @@
+{
+  "feature_number": "008",
+  "slug": "phase-4-screens-implementation",
+  "friendly_name": "Phase 4 Screens Implementation",
+  "mission": "software-dev",
+  "source_description": "Phase 4 Complete Screens Implementation — All 7 sessions covering Projects, Transactions, Items, Spaces, Inventory, Creation Flows, Settings, Search, and Reports screens for the SwiftUI iOS app migration.",
+  "created_at": "2026-02-26T22:00:00Z",
+  "target_branch": "main",
+  "vcs": "git"
+}
