@@ -1,6 +1,25 @@
 import SwiftUI
 
-struct GroupedItemCard<ExpandedContent: View>: View {
+// MARK: - Item Card Data
+
+struct ItemCardData: Identifiable {
+    let id: String
+    let name: String
+    var sku: String?
+    var sourceLabel: String?
+    var locationLabel: String?
+    var notes: String?
+    var priceLabel: String?
+    var indexLabel: String?
+    var statusLabel: String?
+    var budgetCategoryName: String?
+    var thumbnailUri: String?
+    var warningMessage: String?
+}
+
+// MARK: - Grouped Item Card
+
+struct GroupedItemCard: View {
     let name: String
     var thumbnailUrl: String?
     var countLabel: String?
@@ -10,7 +29,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     var isSelected: Binding<Bool>?
     var onSelectedChange: ((Bool) -> Void)?
     var onPress: (() -> Void)?
-    @ViewBuilder let expandedContent: () -> ExpandedContent
+    var items: [ItemCardData] = []
+    var onItemPress: ((ItemCardData) -> Void)?
 
     @State private var internalExpanded: Bool
 
@@ -24,7 +44,8 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         isSelected: Binding<Bool>? = nil,
         onSelectedChange: ((Bool) -> Void)? = nil,
         onPress: (() -> Void)? = nil,
-        @ViewBuilder expandedContent: @escaping () -> ExpandedContent
+        items: [ItemCardData] = [],
+        onItemPress: ((ItemCardData) -> Void)? = nil
     ) {
         self.name = name
         self.thumbnailUrl = thumbnailUrl
@@ -35,12 +56,13 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         self.isSelected = isSelected
         self.onSelectedChange = onSelectedChange
         self.onPress = onPress
-        self.expandedContent = expandedContent
+        self.items = items
+        self.onItemPress = onItemPress
         self._internalExpanded = State(initialValue: defaultExpanded)
     }
 
     private var expanded: Bool {
-        get { isExpanded?.wrappedValue ?? internalExpanded }
+        isExpanded?.wrappedValue ?? internalExpanded
     }
 
     private func setExpanded(_ value: Bool) {
@@ -60,12 +82,34 @@ struct GroupedItemCard<ExpandedContent: View>: View {
             VStack(alignment: .leading, spacing: 0) {
                 summaryRow
 
-                if expanded {
+                if expanded && !items.isEmpty {
                     Divider()
                         .padding(.horizontal, Spacing.lg)
 
-                    expandedContent()
-                        .padding(.vertical, Spacing.sm)
+                    VStack(spacing: 0) {
+                        ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                            ItemCard(
+                                name: item.name,
+                                sku: item.sku,
+                                sourceLabel: item.sourceLabel,
+                                locationLabel: item.locationLabel,
+                                notes: item.notes,
+                                priceLabel: item.priceLabel,
+                                indexLabel: item.indexLabel,
+                                statusLabel: item.statusLabel,
+                                budgetCategoryName: item.budgetCategoryName,
+                                thumbnailUri: item.thumbnailUri,
+                                onPress: onItemPress.map { callback in { callback(item) } },
+                                warningMessage: item.warningMessage
+                            )
+
+                            if index < items.count - 1 {
+                                Divider()
+                                    .padding(.horizontal, Spacing.lg)
+                            }
+                        }
+                    }
+                    .padding(.vertical, Spacing.sm)
                 }
             }
         }
@@ -164,54 +208,21 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     }
 }
 
-// MARK: - Convenience init without expanded content
-
-extension GroupedItemCard where ExpandedContent == EmptyView {
-    init(
-        name: String,
-        thumbnailUrl: String? = nil,
-        countLabel: String? = nil,
-        totalLabel: String? = nil,
-        isExpanded: Binding<Bool>? = nil,
-        defaultExpanded: Bool = false,
-        isSelected: Binding<Bool>? = nil,
-        onSelectedChange: ((Bool) -> Void)? = nil,
-        onPress: (() -> Void)? = nil
-    ) {
-        self.init(
-            name: name,
-            thumbnailUrl: thumbnailUrl,
-            countLabel: countLabel,
-            totalLabel: totalLabel,
-            isExpanded: isExpanded,
-            defaultExpanded: defaultExpanded,
-            isSelected: isSelected,
-            onSelectedChange: onSelectedChange,
-            onPress: onPress,
-            expandedContent: { EmptyView() }
-        )
-    }
-}
-
 // MARK: - Previews
+
+private let previewItems: [ItemCardData] = [
+    ItemCardData(id: "1", name: "Sofa", sku: "SF-001", sourceLabel: "West Elm", priceLabel: "$899"),
+    ItemCardData(id: "2", name: "Coffee Table", sourceLabel: "CB2", priceLabel: "$350"),
+    ItemCardData(id: "3", name: "Floor Lamp", sku: "FL-042", priceLabel: "$201"),
+]
 
 #Preview("Collapsed") {
     GroupedItemCard(
         name: "Living Room Furniture",
         countLabel: "3 items",
-        totalLabel: "$1,450"
-    ) {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(["Sofa", "Coffee Table", "Lamp"], id: \.self) { item in
-                Text(item)
-                    .font(Typography.body)
-                    .padding(Spacing.lg)
-                if item != "Lamp" {
-                    Divider().padding(.horizontal, Spacing.lg)
-                }
-            }
-        }
-    }
+        totalLabel: "$1,450",
+        items: previewItems
+    )
     .padding(Spacing.screenPadding)
 }
 
@@ -220,18 +231,12 @@ extension GroupedItemCard where ExpandedContent == EmptyView {
 
     GroupedItemCard(
         name: "Kitchen Appliances",
-        countLabel: "2 items",
-        totalLabel: "$780",
-        isExpanded: $expanded
-    ) {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(["Blender", "Toaster"], id: \.self) { item in
-                Text(item)
-                    .font(Typography.body)
-                    .padding(Spacing.lg)
-            }
-        }
-    }
+        countLabel: "3 items",
+        totalLabel: "$1,450",
+        isExpanded: $expanded,
+        items: previewItems,
+        onItemPress: { item in print("Tapped \(item.name)") }
+    )
     .padding(Spacing.screenPadding)
 }
 
@@ -240,12 +245,10 @@ extension GroupedItemCard where ExpandedContent == EmptyView {
 
     GroupedItemCard(
         name: "Bedroom Set",
-        countLabel: "4 items",
-        totalLabel: "$2,100",
-        isSelected: $selected
-    ) {
-        Text("Item cards would go here")
-            .padding(Spacing.lg)
-    }
+        countLabel: "3 items",
+        totalLabel: "$1,450",
+        isSelected: $selected,
+        items: previewItems
+    )
     .padding(Spacing.screenPadding)
 }
