@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-protocol ItemsServiceProtocol {
+protocol ItemsServiceProtocol: Sendable {
     func getItem(accountId: String, itemId: String) async throws -> Item?
     func createItem(accountId: String, item: Item) throws -> String
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws

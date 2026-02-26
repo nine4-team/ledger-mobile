@@ -193,10 +193,12 @@ struct AccountDiscoveryTests {
         )
 
         await context.discoverAccounts(userId: "user1")
+
+        #expect(!context.discoveredAccounts.isEmpty)
+
         context.selectAccount(accountId: "acc1", userId: "user1")
 
         #expect(context.currentAccountId == "acc1")
-        #expect(!context.discoveredAccounts.isEmpty)
 
         context.deactivate()
 

@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-protocol TransactionsServiceProtocol {
+protocol TransactionsServiceProtocol: Sendable {
     func getTransaction(accountId: String, transactionId: String) async throws -> Transaction?
     func createTransaction(accountId: String, transaction: Transaction) throws -> String
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws

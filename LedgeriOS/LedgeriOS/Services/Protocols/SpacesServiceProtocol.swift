@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-protocol SpacesServiceProtocol {
+protocol SpacesServiceProtocol: Sendable {
     func getSpace(accountId: String, spaceId: String) async throws -> Space?
     func createSpace(accountId: String, space: Space) throws -> String
     func updateSpace(accountId: String, spaceId: String, fields: [String: Any]) async throws
