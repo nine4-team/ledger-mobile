@@ -6,7 +6,10 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                ProjectsPlaceholderView()
+                ProjectsListView()
+                    .navigationDestination(for: Project.self) { project in
+                        ProjectDetailView(project: project)
+                    }
             }
             .tabItem {
                 Label("Projects", systemImage: "house")
