@@ -1,7 +1,7 @@
 ---
 work_package_id: WP07
 title: Tier 3 — TransactionCard & Transaction Logic
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01, WP05]
 base_branch: 007-swiftui-component-library-WP07-merge-base
 base_commit: 8e07d86861297bbc331368eb84d6587257e651ff
@@ -226,3 +226,4 @@ spec-kitty implement WP07 --base WP05
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:44:49Z – claude-opus – shell_pid=26989 – lane=doing – Assigned agent via workflow command
+- 2026-02-26T09:04:26Z – claude-opus – shell_pid=26989 – lane=for_review – Ready for review: TransactionCard with full badge system, TransactionCardCalculations logic, 23 passing tests. All 163 tests pass.
