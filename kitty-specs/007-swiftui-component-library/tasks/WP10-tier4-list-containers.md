@@ -16,7 +16,7 @@ subtasks:
 - T062
 phase: Phase 4 - Capstone
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "51830"
 review_status: ''
 reviewed_by: ''
@@ -334,3 +334,4 @@ spec-kitty implement WP10 --base WP08
 ## Activity Log
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
+- 2026-02-26T18:51:48Z – claude-opus – shell_pid=51830 – lane=doing – Assigned agent via workflow command
