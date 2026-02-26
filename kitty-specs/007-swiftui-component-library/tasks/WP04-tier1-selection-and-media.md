@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Tier 1 — Selection, Controls & Media Components
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01]
 base_branch: 007-swiftui-component-library-WP01
 base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
@@ -258,3 +258,4 @@ spec-kitty implement WP04 --base WP01
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:14:59Z – claude-opus – shell_pid=73972 – lane=doing – Assigned agent via workflow command
+- 2026-02-26T08:34:44Z – claude-opus – shell_pid=73972 – lane=for_review – Ready for review: All 6 subtasks complete. 4 Tier 1 components (BulkSelectionBar, ListStateControls, ThumbnailGrid, ImageGallery), MediaGalleryCalculations logic, and 12 passing tests.
