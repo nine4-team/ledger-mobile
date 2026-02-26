@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */; };
+		1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */; };
+		BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */; };
+		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
+		274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */; };
+		7EA0238CE609443FB0E24364 /* ActionMenuCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */; };
+		8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */; };
+		09051FE368D342829C6A613C /* ListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74B1815C46547A0B36F00B4 /* ListControlBar.swift */; };
+		D98670FB4B844C34A26042A5 /* BudgetProgressDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */; };
+		E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */; };
+		8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */; };
+		C2EE9D45E7FF4C91AF3CD35C /* ActionMenuCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */; };
+		88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */; };
+		536AE658682D45DB9E6984E7 /* ItemCardCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */; };
 		12A676B63F549896773CA41F /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873F47E2A621690D041C7170 /* Project.swift */; };
 		177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */; };
 		1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011B2B991C66CB99379D3F13 /* ScopeFilters.swift */; };
@@ -127,6 +141,20 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
+		DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
+		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
+		0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
+		DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
+		09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
+		E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
+		E74B1815C46547A0B36F00B4 /* ListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListControlBar.swift; sourceTree = "<group>"; };
+		200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressDisplay.swift; sourceTree = "<group>"; };
+		2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
+		32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardCalculations.swift; sourceTree = "<group>"; };
+		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
+		FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
+		A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardCalculationTests.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
 		021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectServiceProtocol.swift; sourceTree = "<group>"; };
@@ -278,6 +306,9 @@
 			children = (
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
 				C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */,
+				32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */,
+				E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */,
+				09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */,
 				C5A0020100000000000L0002 /* ProgressBarCalculations.swift */,
 				B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */,
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
@@ -350,6 +381,9 @@
 				A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */,
 				785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */,
 				0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */,
+				A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */,
+				FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */,
+				F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */,
 				C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */,
 				C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */,
 				C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */,
@@ -475,6 +509,14 @@
 			children = (
 				C5A0020100000000000C0001 /* Card.swift */,
 				C5A0020100000000000C0002 /* AppButton.swift */,
+				2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */,
+				200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */,
+				E74B1815C46547A0B36F00B4 /* ListControlBar.swift */,
+				DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */,
+				0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */,
+				F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */,
+				DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */,
+				C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */,
 				C5A0020100000000000C0003 /* FormField.swift */,
 				C5A0020100000000000C0004 /* DetailRow.swift */,
 				C5A0020100000000000C0005 /* SelectorCircle.swift */,
@@ -664,6 +706,17 @@
 				A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */,
 				C5A0010100000000000C0001 /* Card.swift in Sources */,
 				C5A0010100000000000C0002 /* AppButton.swift in Sources */,
+				8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */,
+				E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */,
+				D98670FB4B844C34A26042A5 /* BudgetProgressDisplay.swift in Sources */,
+				09051FE368D342829C6A613C /* ListControlBar.swift in Sources */,
+				8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */,
+				7EA0238CE609443FB0E24364 /* ActionMenuCalculations.swift in Sources */,
+				274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */,
+				03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */,
+				BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */,
+				1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */,
+				A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */,
 				C5A0010100000000000C0003 /* FormField.swift in Sources */,
 				C5A0010100000000000C0004 /* DetailRow.swift in Sources */,
 				C5A0010100000000000C0005 /* SelectorCircle.swift in Sources */,
@@ -710,6 +763,9 @@
 			files = (
 				E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */,
 				FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */,
+				536AE658682D45DB9E6984E7 /* ItemCardCalculationTests.swift in Sources */,
+				88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */,
+				C2EE9D45E7FF4C91AF3CD35C /* ActionMenuCalculationTests.swift in Sources */,
 				A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */,
 				C5A0010100000000000X0001 /* BudgetDisplayCalculationTests.swift in Sources */,
 				C5A0010100000000000X0002 /* ProgressBarCalculationTests.swift in Sources */,
