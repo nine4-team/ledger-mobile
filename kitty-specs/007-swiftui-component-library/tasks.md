@@ -155,12 +155,12 @@
 **Prompt**: `tasks/WP05-tier2-action-menu-sheet.md`
 
 ### Included Subtasks
-- [ ] T029 Create `ActionMenuCalculations.swift` in `Logic/` — `resolveMenuSelection()`, expansion state logic, deferred action helpers
-- [ ] T030 Create `ActionMenuCalculationTests.swift` — tests for selection resolution, expansion toggle, destructive item detection (~12 tests)
-- [ ] T031 Create `ActionMenuSheet.swift` — hierarchical menu in `.sheet()`, inline submenu expansion with checkmark selection, destructive styling, multi-select mode, deferred action execution via `.onDismiss`
-- [ ] T032 Replace `.confirmationDialog()` in `ProjectsPlaceholderView.swift` with ActionMenuSheet
-- [ ] T033 Replace `.confirmationDialog()` in `InventoryPlaceholderView.swift` with ActionMenuSheet
-- [ ] T034 Replace `.confirmationDialog()` in `ProjectDetailView.swift` with ActionMenuSheet (keep destructive delete as `.confirmationDialog()`)
+- [x] T029 Create `ActionMenuCalculations.swift` in `Logic/` — `resolveMenuSelection()`, expansion state logic, deferred action helpers
+- [x] T030 Create `ActionMenuCalculationTests.swift` — tests for selection resolution, expansion toggle, destructive item detection (~12 tests)
+- [x] T031 Create `ActionMenuSheet.swift` — hierarchical menu in `.sheet()`, inline submenu expansion with checkmark selection, destructive styling, multi-select mode, deferred action execution via `.onDismiss`
+- [x] T032 Replace `.confirmationDialog()` in `ProjectsPlaceholderView.swift` with ActionMenuSheet
+- [x] T033 Replace `.confirmationDialog()` in `InventoryPlaceholderView.swift` with ActionMenuSheet
+- [x] T034 Replace `.confirmationDialog()` in `ProjectDetailView.swift` with ActionMenuSheet (keep destructive delete as `.confirmationDialog()`)
 
 ### Implementation Notes
 - ActionMenuSheet uses deferred action pattern (R1): `@State pendingAction`, dismiss sheet, execute in `.onDismiss`.
