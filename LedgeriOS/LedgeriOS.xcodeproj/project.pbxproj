@@ -114,6 +114,15 @@
 		WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0003 /* ThumbnailGrid.swift */; };
 		WP04B00100000000000C0004 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0004 /* ImageGallery.swift */; };
 		WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */; };
+		WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0001 /* GroupedItemCard.swift */; };
+		WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0002 /* MediaGallerySection.swift */; };
+		WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0003 /* ItemsListControlBar.swift */; };
+		WP08B00100000000000C0004 /* FilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0004 /* FilterMenu.swift */; };
+		WP08B00100000000000C0005 /* SortMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0005 /* SortMenu.swift */; };
+		WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0006 /* ListSelectAllRow.swift */; };
+		WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0007 /* ListSelectionInfo.swift */; };
+		WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000L0001 /* SelectionCalculations.swift */; };
+		WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000X0001 /* SelectionCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -232,6 +241,15 @@
 		WP04F00100000000000C0003 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0004 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
 		WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0001 /* GroupedItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedItemCard.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0002 /* MediaGallerySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGallerySection.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0003 /* ItemsListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListControlBar.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0004 /* FilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterMenu.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0005 /* SortMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortMenu.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0006 /* ListSelectAllRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectAllRow.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0007 /* ListSelectionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionInfo.swift; sourceTree = "<group>"; };
+		WP08F00100000000000L0001 /* SelectionCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculations.swift; sourceTree = "<group>"; };
+		WP08F00100000000000X0001 /* SelectionCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -284,6 +302,7 @@
 				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
 				WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
 				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
+				WP08F00100000000000L0001 /* SelectionCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -359,6 +378,7 @@
 				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
 				WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
 				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
+				WP08F00100000000000X0001 /* SelectionCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -493,6 +513,13 @@
 				WP04F00100000000000C0002 /* ListStateControls.swift */,
 				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
 				WP04F00100000000000C0004 /* ImageGallery.swift */,
+				WP08F00100000000000C0001 /* GroupedItemCard.swift */,
+				WP08F00100000000000C0002 /* MediaGallerySection.swift */,
+				WP08F00100000000000C0003 /* ItemsListControlBar.swift */,
+				WP08F00100000000000C0004 /* FilterMenu.swift */,
+				WP08F00100000000000C0005 /* SortMenu.swift */,
+				WP08F00100000000000C0006 /* ListSelectAllRow.swift */,
+				WP08F00100000000000C0007 /* ListSelectionInfo.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -700,6 +727,14 @@
 				WP04B00100000000000C0002 /* ListStateControls.swift in Sources */,
 				WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */,
 				WP04B00100000000000C0004 /* ImageGallery.swift in Sources */,
+				WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */,
+				WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */,
+				WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */,
+				WP08B00100000000000C0004 /* FilterMenu.swift in Sources */,
+				WP08B00100000000000C0005 /* SortMenu.swift in Sources */,
+				WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */,
+				WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */,
+				WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -718,6 +753,7 @@
 				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
 				WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
 				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
+				WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
