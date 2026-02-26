@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Tier 2 — ActionMenuSheet
-lane: "doing"
+lane: "for_review"
 dependencies: [WP01]
 base_branch: 007-swiftui-component-library-WP01
 base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
@@ -273,3 +273,4 @@ spec-kitty implement WP05 --base WP01
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:15:02Z – claude-opus – shell_pid=74281 – lane=doing – Assigned agent via workflow command
+- 2026-02-26T08:28:39Z – claude-opus – shell_pid=74281 – lane=for_review – Ready for review: ActionMenuSheet component with 16 passing tests, .confirmationDialog() replaced in 3 views
