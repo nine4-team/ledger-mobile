@@ -161,9 +161,7 @@ Replace Zustand stores with `@Observable` classes:
 
 ---
 
-## Phase 4: Screens (one at a time)
-
-Build screens in order of usage frequency. Each screen is a separate feature branch/worktree.
+## Phase 4: Screens
 
 ### Priority 1 — Core Loop
 - [ ] **Projects List** — active/archived tabs, project cards with budget summaries
@@ -209,31 +207,47 @@ Build screens in order of usage frequency. Each screen is a separate feature bra
 
 ## Phase 5: Shared Components Library
 
-Split into two groups with different timing (see "How Phases Overlap" below):
+Full component parity audit: `.plans/component-parity-audit.md`
+Component library spec: `kitty-specs/007-swiftui-component-library/spec.md`
 
-### Simple — build now, parallel with Phases 2 + 3
-These are pure UI — no data models, no Firestore, no navigation. Just props in, pixels out. Build them anytime.
+### Phase 5a — Simple (complete)
+Pure UI components, no data dependencies. All built.
 
-- [ ] `AppText` (styled Text with variants: headline, body, caption, label)
-- [ ] `Card` (surface with border, shadow, padding)
-- [ ] `AppButton` (primary/secondary styles)
-- [ ] `FormField` (label + input + error message)
-- [ ] `DetailRow` (label + value, used in detail screens)
-- [ ] `SelectorCircle` (checkbox/radio toggle)
-- [ ] `SegmentedControl`
-- [ ] `Badge` (colored pill with text)
-- [ ] `CollapsibleSection` (chevron + title + expandable content)
-- [ ] `TitledCard` (card with section header)
+- [x] `Card`, `TitledCard`, `Badge`, `DetailRow`, `ProgressBar`
+- [x] `SelectorCircle`, `AppButton`, `FormField`, `SegmentedControl`
+- [x] `CollapsibleSection`, `BudgetProgressView`
+- [x] `ScrollableTabBar`, `ProjectCard`
 
-### Complex — extract from screens during Phase 4
-These need a real screen to design against. Don't build them in isolation — let the screen pull them out when needed.
+### Phase 5b — Component Library (Tiers 1–4, ~45 components)
+Tracked in `kitty-specs/007-swiftui-component-library/`. Build order:
 
-- [ ] `ItemCard` (thumbnail, badges, metadata, selection state, context menu)
-- [ ] `TransactionCard` (badges, amount, source, date)
-- [ ] `MediaGallery` (image grid, camera/picker, viewer)
-- [ ] `SearchableFilterableList` (search bar + sort + filter + bulk select)
-- [ ] `BulkSelectionBar` (fixed bottom bar with action buttons)
-- [ ] `BottomSheet` / `.sheet` wrapper
+- [ ] **Tier 1** (16): ImageCard, SpaceCard, BudgetCategoryTracker, BudgetProgressPreview, FormSheet, MultiStepFormSheet, CategoryRow, BulkSelectionBar, ListStateControls, ThumbnailGrid, ImageGallery, StatusBanner, ErrorRetryView, LoadingScreen, DraggableCard, InfoCard
+- [ ] **Tier 2** (4): ActionMenuSheet, BudgetProgressDisplay, ListControlBar, ItemCard
+- [ ] **Tier 3** (8): TransactionCard, GroupedItemCard, MediaGallerySection, ItemsListControlBar, FilterMenu, SortMenu, ListSelectAllRow, ListSelectionInfo
+- [ ] **Tier 4** (3): SharedItemsList, SharedTransactionsList, DraggableCardList
+  - **Known limitation:** SharedItemsList embedded mode copies items into `@State` once during `.task`. If the parent updates its items array, the list won't reflect changes. Add `.onChange(of:)` handler when wiring embedded mode to parent views during Phase 4 integration.
+
+### Phase 5c — Feature Modals (Tier 5, built with screens)
+These are tightly coupled to specific screens. Built during their respective Phase 4 session, not as standalone components.
+
+- [ ] EditItemDetailsModal (Session 3: Items)
+- [ ] EditTransactionDetailsModal (Session 2: Transactions)
+- [ ] EditSpaceDetailsModal (Session 4: Spaces)
+- [ ] EditNotesModal (Sessions 2–4)
+- [ ] EditChecklistModal (Session 4: Spaces)
+- [ ] SetSpaceModal (Session 3: Items)
+- [ ] ReassignToProjectModal (Session 3: Items)
+- [ ] SellToProjectModal (Session 3: Items)
+- [ ] SellToBusinessModal (Session 3: Items)
+- [ ] TransactionPickerModal (Session 3: Items)
+- [ ] ReturnTransactionPickerModal (Session 3: Items)
+- [ ] ProjectPickerList (Sessions 3/5: Items/Inventory)
+- [ ] CategoryPickerList (Session 2: Transactions)
+- [ ] SpacePickerList (Session 3: Items)
+- [ ] ProjectSelector (Session 6: Creation flows)
+- [ ] SpaceSelector (Session 6: Creation flows)
+- [ ] VendorPicker (Session 6: Creation flows)
+- [ ] MultiSelectPicker (Session 6: Creation flows)
 
 ---
 
@@ -304,14 +318,32 @@ Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░�
 5. **Phase 6 waits for Phase 4.** macOS adaptation needs working iOS screens to adapt.
 6. **Phase 7 is last.** Ship only after everything works.
 
-### Current Status (updated 2025-02-25)
+### Current Status (updated 2026-02-25)
 
 - Phase 0: ✅ Done (remaining screenshot gaps are non-blocking)
 - Phase 1: ✅ Done
-- Phase 2: ~95% done (core models, services, state managers all built; deferred services like Invites, Lineage, Templates are not needed until their screens are built in Phase 4)
-- Phase 3: ~50% done (tab bar + auth gate work; still need nav destinations and account selection)
+- Phase 2: ✅ ~95% done (core models, services, state managers all built; deferred services added when screens need them)
+- Phase 3: ✅ Done (auth gate, account selection, tab structure, nav shell)
+- Phase 4: 🔄 Starting — Session 1 planned, not yet implemented
+- Phase 5a: ✅ Simple components built (Card, Badge, AppButton, FormField, DetailRow, SegmentedControl, CollapsibleSection, SelectorCircle, ProgressBar, BudgetProgressView, TitledCard)
 
-**Next:** Finish Phase 3 (navigation destinations, account selection). Then start Phase 4 screens.
+### Phase 4 Session Breakdown
+
+Detailed plans:
+- Session 1: `.plans/phase4-projects-list-detail-budget.md`
+- Session 2: `.plans/phase4-transactions-list-detail.md`
+
+| Session | Screens | Status |
+|---------|---------|--------|
+| Session 1 | Projects List + Project Detail Hub + Budget Tab | 📋 Planned |
+| Session 2 | Transactions Tab + Transaction Detail | 📋 Planned |
+| Session 3 | Item List + Item Detail | Not started |
+| Session 4 | Spaces Tab + Space Detail | Not started |
+| Session 5 | Inventory Screen (3-tab reuse of list components) | Not started |
+| Session 6 | Creation flows (New Project, New Transaction, New Item, New Space) | Not started |
+| Session 7+ | Settings, Search, Accounting, Reports | Not started |
+
+**Next:** Implement Phase 4 Session 1 (Projects List + Project Detail Hub + Budget Tab).
 
 ---
 

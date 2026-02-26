@@ -94,6 +94,29 @@ All design tokens live in `LedgeriOS/LedgeriOS/Theme/`:
 
 Use these constants instead of inline magic numbers. Adaptive colors auto-switch between light and dark mode via the asset catalog — no `@Environment(\.colorScheme)` branching needed in most cases.
 
+## Modal & Sheet Presentation
+
+The RN app established a "bottom sheet first" convention — all forms, pickers, action menus, and multi-step flows present as bottom sheets. The SwiftUI app must maintain this UX.
+
+**Default: `.sheet()` with `.presentationDetents()`.**
+All modals, pickers, form inputs, and action menus use `.sheet()` configured as a bottom sheet. Include `.presentationDragIndicator(.visible)` for discoverability.
+
+```swift
+.sheet(isPresented: $showingForm) {
+    FormContentView(...)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+}
+```
+
+**`.confirmationDialog()` — destructive confirmations only.** Maps to RN's `Alert.alert()`. Use for simple "Delete? Cancel / Confirm" prompts, not for action menus or pickers.
+
+**Never use:** `.popover()` (floats on iPad, inconsistent with bottom-sheet convention) or `.fullScreenCover()` (unless explicitly justified — e.g., image gallery, camera).
+
+**Extract reusable sheet components.** Don't inline sheet content. Mirror the RN pattern of extracted modal components (`FormBottomSheet`, `SetSpaceModal`, etc.) by creating SwiftUI equivalents as the app grows.
+
+**Sheet-on-sheet sequencing.** When an action inside a sheet needs to open another sheet, dismiss the first sheet and use an `onDismiss` callback or `.onChange(of:)` to trigger the next presentation. Don't attempt to stack sheets.
+
 ## Axiom Skills
 
 This is a SwiftUI/iOS project. **Use Axiom skills for architecture decisions and best practices before writing code.** Key domains:
