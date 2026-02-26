@@ -314,13 +314,13 @@
 **Prompt**: `tasks/WP10-tier4-list-containers.md`
 
 ### Included Subtasks
-- [ ] T056 Create `SharedItemsList.swift` — standalone mode: Firestore listener, pull-to-refresh via `.refreshable()`, empty state
-- [ ] T057 Extend `SharedItemsList.swift` — embedded mode: receives items array, custom item press, custom menu items
-- [ ] T058 Extend `SharedItemsList.swift` — picker mode: eligibility check, add single/multiple, added IDs tracking, add button
-- [ ] T059 Wire SharedItemsList integration: ListControlBar + ItemsListControlBar (search/sort/filter/add), GroupedItemCard + ItemCard rendering, FilterMenu + SortMenu, BulkSelectionBar, ActionMenuSheet context menus
-- [ ] T060 Create `SharedTransactionsList.swift` — filtering, sorting, selection, bulk actions, ListControlBar, FilterMenu, SortMenu, TransactionCard, ActionMenuSheet
-- [ ] T061 Create `DraggableCardList.swift` — generic drag-to-reorder list using SwiftUI List + `.onMove(perform:)`, used for category and template reordering
-- [ ] T062 Build verification — compile all components, run all tests, verify previews for SharedItemsList (3 modes), SharedTransactionsList, DraggableCardList
+- [x] T056 Create `SharedItemsList.swift` — standalone mode: Firestore listener, pull-to-refresh via `.refreshable()`, empty state
+- [x] T057 Extend `SharedItemsList.swift` — embedded mode: receives items array, custom item press, custom menu items
+- [x] T058 Extend `SharedItemsList.swift` — picker mode: eligibility check, add single/multiple, added IDs tracking, add button
+- [x] T059 Wire SharedItemsList integration: ListControlBar + ItemsListControlBar (search/sort/filter/add), GroupedItemCard + ItemCard rendering, FilterMenu + SortMenu, BulkSelectionBar, ActionMenuSheet context menus
+- [x] T060 Create `SharedTransactionsList.swift` — filtering, sorting, selection, bulk actions, ListControlBar, FilterMenu, SortMenu, TransactionCard, ActionMenuSheet
+- [x] T061 Create `DraggableCardList.swift` — generic drag-to-reorder list using SwiftUI List + `.onMove(perform:)`, used for category and template reordering
+- [x] T062 Build verification — compile all components, run all tests, verify previews for SharedItemsList (3 modes), SharedTransactionsList, DraggableCardList
 
 ### Implementation Notes
 - SharedItemsList uses `ItemsListMode` enum (WP01) to switch behavior at key decision points (R6 research).

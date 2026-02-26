@@ -1,8 +1,11 @@
 ---
 work_package_id: WP10
 title: Tier 4 — List Containers
-lane: planned
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 3a044626dd14f2950ac39d4df386bcd0c3018c1f
+created_at: '2026-02-26T18:51:48.581904+00:00'
 subtasks:
 - T056
 - T057
@@ -13,8 +16,8 @@ subtasks:
 - T062
 phase: Phase 4 - Capstone
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: "claude-opus"
+shell_pid: "51830"
 review_status: ''
 reviewed_by: ''
 history:
@@ -331,3 +334,4 @@ spec-kitty implement WP10 --base WP08
 ## Activity Log
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
+- 2026-02-26T18:51:48Z – claude-opus – shell_pid=51830 – lane=doing – Assigned agent via workflow command
