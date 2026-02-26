@@ -1,11 +1,14 @@
 ---
 work_package_id: WP08
 title: Tier 3 — Composite Components
-lane: planned
+lane: "doing"
 dependencies:
 - WP01
 - WP04
 - WP05
+base_branch: 007-swiftui-component-library-WP05
+base_commit: 8e07d86861297bbc331368eb84d6587257e651ff
+created_at: '2026-02-26T08:46:26.021262+00:00'
 subtasks:
 - T044
 - T045
@@ -19,7 +22,7 @@ subtasks:
 phase: Phase 3 - Tier 3 Components
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "29743"
 review_status: ''
 reviewed_by: ''
 history:
