@@ -1,30 +1,33 @@
 ---
-work_package_id: "WP02"
+work_package_id: WP02
+title: Tier 1 — Budget & Data Display Components
+lane: "doing"
+dependencies: [WP01]
+base_branch: 007-swiftui-component-library-WP01
+base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
+created_at: '2026-02-26T08:14:19.166397+00:00'
 subtasks:
-  - "T009"
-  - "T010"
-  - "T011"
-  - "T012"
-  - "T013"
-  - "T014"
-  - "T015"
-  - "T016"
-  - "T017"
-title: "Tier 1 — Budget & Data Display Components"
-phase: "Phase 2 - Tier 1 Components"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T009
+- T010
+- T011
+- T012
+- T013
+- T014
+- T015
+- T016
+- T017
+phase: Phase 2 - Tier 1 Components
+assignee: ''
+agent: ''
+shell_pid: "72276"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP02 – Tier 1 — Budget & Data Display Components
