@@ -1,27 +1,30 @@
 ---
-work_package_id: "WP05"
+work_package_id: WP05
+title: Tier 2 — ActionMenuSheet
+lane: "doing"
+dependencies: [WP01]
+base_branch: 007-swiftui-component-library-WP01
+base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
+created_at: '2026-02-26T08:15:02.342898+00:00'
 subtasks:
-  - "T029"
-  - "T030"
-  - "T031"
-  - "T032"
-  - "T033"
-  - "T034"
-title: "Tier 2 — ActionMenuSheet"
-phase: "Phase 2 - Tier 2 Components"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T029
+- T030
+- T031
+- T032
+- T033
+- T034
+phase: Phase 2 - Tier 2 Components
+assignee: ''
+agent: ''
+shell_pid: "74281"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP05 – Tier 2 — ActionMenuSheet
