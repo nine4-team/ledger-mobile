@@ -16,7 +16,7 @@ subtasks:
 - T039
 phase: Phase 3 - Tier 2 Remaining
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "26369"
 review_status: ''
 reviewed_by: ''
@@ -263,3 +263,4 @@ spec-kitty implement WP06 --base WP05
 ## Activity Log
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
+- 2026-02-26T08:44:37Z – claude-opus – shell_pid=26369 – lane=doing – Assigned agent via workflow command
