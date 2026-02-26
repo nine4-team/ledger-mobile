@@ -1,7 +1,15 @@
 import SwiftUI
 
 struct InventoryPlaceholderView: View {
-    @State private var showingAddDialog = false
+    @State private var showingCreateMenu = false
+    @State private var createMenuPendingAction: (() -> Void)?
+
+    private var createMenuItems: [ActionMenuItem] {
+        [
+            ActionMenuItem(id: "item", label: "Create Item", icon: "plus.circle"),
+            ActionMenuItem(id: "transaction", label: "Create Transaction", icon: "plus.circle"),
+        ]
+    }
 
     var body: some View {
         ContentUnavailableView(
@@ -13,19 +21,25 @@ struct InventoryPlaceholderView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    showingAddDialog = true
+                    showingCreateMenu = true
                 } label: {
                     Image(systemName: "plus")
                 }
             }
         }
-        .confirmationDialog("Create New", isPresented: $showingAddDialog) {
-            Button("Create Item") {
-                // Phase 4: navigate to item creation
-            }
-            Button("Create Transaction") {
-                // Phase 4: navigate to transaction creation
-            }
+        .sheet(isPresented: $showingCreateMenu, onDismiss: {
+            createMenuPendingAction?()
+            createMenuPendingAction = nil
+        }) {
+            ActionMenuSheet(
+                title: "Create New",
+                items: createMenuItems,
+                onSelectAction: { action in
+                    createMenuPendingAction = action
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
         }
     }
 }
