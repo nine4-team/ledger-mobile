@@ -1,26 +1,29 @@
 ---
-work_package_id: "WP03"
+work_package_id: WP03
+title: Tier 1 — Form Sheets & Feedback Components
+lane: "doing"
+dependencies: [WP01]
+base_branch: 007-swiftui-component-library-WP01
+base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
+created_at: '2026-02-26T08:15:20.994214+00:00'
 subtasks:
-  - "T018"
-  - "T019"
-  - "T020"
-  - "T021"
-  - "T022"
-title: "Tier 1 — Form Sheets & Feedback Components"
-phase: "Phase 2 - Tier 1 Components"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T018
+- T019
+- T020
+- T021
+- T022
+phase: Phase 2 - Tier 1 Components
+assignee: ''
+agent: ''
+shell_pid: "75175"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP03 – Tier 1 — Form Sheets & Feedback Components
