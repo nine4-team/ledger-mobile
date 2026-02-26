@@ -1,10 +1,13 @@
 ---
 work_package_id: WP06
 title: Tier 2 — ListControlBar, BudgetProgressDisplay & ItemCard
-lane: planned
+lane: "doing"
 dependencies:
 - WP01
 - WP02
+base_branch: 007-swiftui-component-library-WP06-merge-base
+base_commit: 015640ed825f3e34b778751239a6d4950da33aac
+created_at: '2026-02-26T08:44:37.381814+00:00'
 subtasks:
 - T035
 - T036
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 3 - Tier 2 Remaining
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "26369"
 review_status: ''
 reviewed_by: ''
 history:
