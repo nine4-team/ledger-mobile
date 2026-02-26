@@ -128,13 +128,13 @@ struct SharedTransactionsList: View {
     let transactions: [Transaction]
     var onTransactionPress: ((String) -> Void)?
     var getMenuItems: ((Transaction) -> [ActionMenuItem])?
+    var getBulkMenuItems: (() -> [ActionMenuItem])?
     var emptyMessage: String = "No transactions yet"
 
     @State private var searchText = ""
     @State private var isSearchVisible = false
     @State private var activeFilter: TransactionFilterOption = .all
     @State private var activeSort: TransactionSortOption = .dateDesc
-    @State private var activeFilters: Set<TransactionFilterOption> = []
     @State private var selectedIds: Set<String> = []
     @State private var showFilterMenu = false
     @State private var showSortMenu = false
@@ -166,6 +166,17 @@ struct SharedTransactionsList: View {
         }
         let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedIds, items: pairs)
         return total > 0 ? total : nil
+    }
+
+    // Issue 6: Combine custom bulk actions with default clear-selection
+    private var bulkActionMenuItems: [ActionMenuItem] {
+        var items = getBulkMenuItems?() ?? []
+        items.append(
+            ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
+                selectedIds.removeAll()
+            })
+        )
+        return items
     }
 
     // MARK: - Body
@@ -206,11 +217,7 @@ struct SharedTransactionsList: View {
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
-                items: [
-                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
-                        selectedIds.removeAll()
-                    }),
-                ]
+                items: bulkActionMenuItems
             )
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
@@ -251,9 +258,9 @@ struct SharedTransactionsList: View {
             ),
             ControlAction(
                 id: "filter",
-                title: activeFilters.isEmpty ? "Filter" : "Filter (\(activeFilters.count))",
+                title: activeFilter != .all ? "Filter (1)" : "Filter",
                 icon: "line.3.horizontal.decrease",
-                isActive: !activeFilters.isEmpty,
+                isActive: activeFilter != .all,
                 action: { showFilterMenu = true }
             ),
         ]
@@ -299,33 +306,35 @@ struct SharedTransactionsList: View {
 
     @ViewBuilder
     private func transactionCard(for transaction: Transaction) -> some View {
-        let txId = transaction.id ?? ""
-        let isSelected = selectedIds.contains(txId)
-        let menuItems = getMenuItems?(transaction) ?? []
+        // Issue 5: Skip transactions with nil IDs
+        if let txId = transaction.id {
+            let isSelected = selectedIds.contains(txId)
+            let menuItems = getMenuItems?(transaction) ?? []
 
-        TransactionCard(
-            id: txId,
-            source: transaction.source ?? "",
-            amountCents: transaction.amountCents,
-            transactionDate: transaction.transactionDate,
-            notes: transaction.notes,
-            budgetCategoryName: transaction.budgetCategoryId,
-            transactionType: transaction.transactionType,
-            needsReview: transaction.needsReview ?? false,
-            reimbursementType: transaction.reimbursementType,
-            hasEmailReceipt: transaction.hasEmailReceipt ?? false,
-            status: transaction.status,
-            itemCount: transaction.itemIds?.count,
-            isSelected: isSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
-            menuItems: menuItems,
-            onPress: {
-                if !selectedIds.isEmpty {
-                    toggleSelection(txId)
-                } else {
-                    onTransactionPress?(txId)
+            TransactionCard(
+                id: txId,
+                source: transaction.source ?? "",
+                amountCents: transaction.amountCents,
+                transactionDate: transaction.transactionDate,
+                notes: transaction.notes,
+                budgetCategoryName: transaction.budgetCategoryId,
+                transactionType: transaction.transactionType,
+                needsReview: transaction.needsReview ?? false,
+                reimbursementType: transaction.reimbursementType,
+                hasEmailReceipt: transaction.hasEmailReceipt ?? false,
+                status: transaction.status,
+                itemCount: transaction.itemIds?.count,
+                isSelected: isSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
+                menuItems: menuItems,
+                onPress: {
+                    if !selectedIds.isEmpty {
+                        toggleSelection(txId)
+                    } else {
+                        onTransactionPress?(txId)
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 
     // MARK: - Filter/Sort Menus
@@ -336,7 +345,7 @@ struct SharedTransactionsList: View {
                 ActionMenuSheet(
                     title: "Filter",
                     items: filterMenuItems,
-                    closeOnItemPress: false
+                    closeOnItemPress: true
                 )
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
@@ -356,14 +365,14 @@ struct SharedTransactionsList: View {
             }
     }
 
+    // Issue 2: Single-select filter — selecting a new filter replaces the old one
     private var filterMenuItems: [ActionMenuItem] {
-        TransactionFilterOption.allCases.compactMap { option in
-            guard option != .all else { return nil }
-            return ActionMenuItem(
+        TransactionFilterOption.allCases.map { option in
+            ActionMenuItem(
                 id: option.rawValue,
                 label: TransactionFilterSortCalculations.filterLabel(for: option),
-                icon: activeFilters.contains(option) ? "checkmark.circle.fill" : "circle",
-                onPress: { toggleFilter(option) }
+                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
+                onPress: { activeFilter = option }
             )
         }
     }
@@ -387,15 +396,6 @@ struct SharedTransactionsList: View {
         } else {
             selectedIds.insert(txId)
         }
-    }
-
-    private func toggleFilter(_ option: TransactionFilterOption) {
-        if activeFilters.contains(option) {
-            activeFilters.remove(option)
-        } else {
-            activeFilters.insert(option)
-        }
-        activeFilter = activeFilters.first ?? .all
     }
 }
 

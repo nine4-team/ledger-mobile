@@ -8,7 +8,7 @@ struct SharedItemsList: View {
     var emptyMessage: String = "No items yet"
     var getWarning: ((Item) -> String?)?
 
-    // Firestore (standalone mode)
+    // Firestore (standalone / picker mode)
     var accountId: String?
 
     @State private var items: [Item] = []
@@ -16,7 +16,6 @@ struct SharedItemsList: View {
     @State private var isSearchVisible = false
     @State private var activeFilter: ItemFilterOption = .all
     @State private var activeSort: ItemSortOption = .createdDesc
-    @State private var activeFilters: Set<ItemFilterOption> = []
     @State private var selectedIds: Set<String> = []
     @State private var showFilterMenu = false
     @State private var showSortMenu = false
@@ -71,6 +70,17 @@ struct SharedItemsList: View {
         return false
     }
 
+    private var needsFirestoreData: Bool {
+        switch mode {
+        case .standalone:
+            return true
+        case .picker(let scope, _, _, _, _):
+            return scope != nil
+        case .embedded:
+            return false
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -107,9 +117,10 @@ struct SharedItemsList: View {
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
-                activeFilters: activeFilters,
-                onToggle: { option in toggleFilter(option) }
-            )
+                activeFilter: activeFilter,
+                onSelect: { option in activeFilter = option }
+            ),
+            closeOnItemPress: true
         ))
         .background(SortMenu(
             isPresented: $showSortMenu,
@@ -137,7 +148,7 @@ struct SharedItemsList: View {
             isSearchVisible: $isSearchVisible,
             onSort: { showSortMenu = true },
             onFilter: { showFilterMenu = true },
-            activeFilterCount: activeFilters.count,
+            activeFilterCount: activeFilter != .all ? 1 : 0,
             activeSortLabel: activeSort != .createdDesc ? sortLabel(for: activeSort) : nil
         )
         .padding(.horizontal, Spacing.screenPadding)
@@ -163,7 +174,7 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private var content: some View {
-        if isLoading && isStandalone {
+        if isLoading && needsFirestoreData {
             LoadingScreen(message: "Loading items...")
         } else if let error {
             ErrorRetryView(
@@ -207,29 +218,31 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func singleItemCard(for item: Item) -> some View {
-        let itemId = item.id ?? ""
-        let isItemSelected = selectedIds.contains(itemId)
-        let menuItems = getMenuItems?(item) ?? []
-        let warning = getWarning?(item)
+        // Issue 5: Skip items with nil IDs entirely
+        if let itemId = item.id {
+            let isItemSelected = selectedIds.contains(itemId)
+            let menuItems = getMenuItems?(item) ?? []
+            let warning = getWarning?(item)
 
-        if isPicker {
-            pickerItemCard(for: item, itemId: itemId, isItemSelected: isItemSelected)
-        } else {
-            ItemCard(
-                name: item.name,
-                sku: item.sku,
-                sourceLabel: item.source,
-                priceLabel: displayPrice(for: item),
-                thumbnailUri: item.images?.first?.url,
-                isSelected: isItemSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
-                bookmarked: item.bookmark == true,
-                onPress: { handleItemPress(item) },
-                menuItems: menuItems,
-                warningMessage: warning
-            )
-            .onTapGesture {
-                if !selectedIds.isEmpty {
-                    toggleSelection(itemId)
+            if isPicker {
+                pickerItemCard(for: item, itemId: itemId, isItemSelected: isItemSelected)
+            } else {
+                ItemCard(
+                    name: item.name,
+                    sku: item.sku,
+                    sourceLabel: item.source,
+                    priceLabel: displayPrice(for: item),
+                    thumbnailUri: item.images?.first?.url,
+                    isSelected: isItemSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
+                    bookmarked: item.bookmark == true,
+                    onPress: { handleItemPress(item) },
+                    menuItems: menuItems,
+                    warningMessage: warning
+                )
+                .onTapGesture {
+                    if !selectedIds.isEmpty {
+                        toggleSelection(itemId)
+                    }
                 }
             }
         }
@@ -237,7 +250,7 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func pickerItemCard(for item: Item, itemId: String, isItemSelected: Bool) -> some View {
-        if case .picker(let eligibilityCheck, let onAddSingle, let addedIds, _) = mode {
+        if case .picker(_, let eligibilityCheck, let onAddSingle, let addedIds, _) = mode {
             let isAdded = addedIds.contains(itemId)
             let isEligible = eligibilityCheck?(item) ?? true
 
@@ -296,7 +309,9 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func groupedCard(for group: ItemGroup) -> some View {
-        let groupSelected = group.items.allSatisfy { selectedIds.contains($0.id ?? "") }
+        // Issue 4: Use compactMap to only include items with valid IDs
+        let validItems = group.items.filter { $0.id != nil }
+        let groupSelected = !validItems.isEmpty && validItems.allSatisfy { selectedIds.contains($0.id!) }
         let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
 
         GroupedItemCard(
@@ -316,9 +331,11 @@ struct SharedItemsList: View {
                     }
                 }
             },
-            items: group.items.map { item in
-                ItemCardData(
-                    id: item.id ?? UUID().uuidString,
+            items: group.items.compactMap { item in
+                // Issue 4: Skip items with nil IDs instead of UUID fallback
+                guard let id = item.id else { return nil }
+                return ItemCardData(
+                    id: id,
                     name: item.name,
                     sku: item.sku,
                     sourceLabel: item.source,
@@ -353,7 +370,7 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private var pickerBottomBar: some View {
-        if case .picker(_, _, _, let onAddSelected) = mode, !selectedIds.isEmpty {
+        if case .picker(_, _, _, _, let onAddSelected) = mode, !selectedIds.isEmpty {
             HStack {
                 Text("\(selectedIds.count) selected")
                     .font(Typography.body)
@@ -362,8 +379,10 @@ struct SharedItemsList: View {
 
                 Spacer()
 
+                // Issue 3: Clear selection after adding
                 AppButton(title: "Add Selected") {
                     onAddSelected?()
+                    selectedIds.removeAll()
                 }
                 .fixedSize()
             }
@@ -387,10 +406,9 @@ struct SharedItemsList: View {
         case .embedded(let providedItems, _):
             items = providedItems
             isLoading = false
-        case .picker(_, _, _, _):
-            // Picker can use standalone data or embedded data
-            // If accountId is provided, fetch from Firestore
-            if let accountId, case .standalone(let scope) = mode {
+        case .picker(let scope, _, _, _, _):
+            // Issue 1: Picker with scope fetches from Firestore
+            if let scope {
                 await setupStandaloneListener(scope: scope)
             } else {
                 isLoading = false
@@ -442,15 +460,6 @@ struct SharedItemsList: View {
         } else {
             selectedIds.insert(itemId)
         }
-    }
-
-    private func toggleFilter(_ option: ItemFilterOption) {
-        if activeFilters.contains(option) {
-            activeFilters.remove(option)
-        } else {
-            activeFilters.insert(option)
-        }
-        activeFilter = activeFilters.first ?? .all
     }
 
     private var bulkActionMenuItems: [ActionMenuItem] {
@@ -520,6 +529,7 @@ struct SharedItemsList: View {
 
     SharedItemsList(
         mode: .picker(
+            scope: nil,
             eligibilityCheck: { _ in true },
             onAddSingle: nil,
             addedIds: [],

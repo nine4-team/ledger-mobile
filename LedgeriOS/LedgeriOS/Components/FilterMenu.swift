@@ -4,6 +4,7 @@ struct FilterMenu: View {
     @Binding var isPresented: Bool
     let filters: [ActionMenuItem]
     var title: String = "Filter"
+    var closeOnItemPress: Bool = false
 
     var body: some View {
         EmptyView()
@@ -11,7 +12,7 @@ struct FilterMenu: View {
                 ActionMenuSheet(
                     title: title,
                     items: filters,
-                    closeOnItemPress: false
+                    closeOnItemPress: closeOnItemPress
                 )
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
@@ -29,6 +30,21 @@ struct FilterMenu: View {
                 label: filterLabel(for: option),
                 icon: activeFilters.contains(option) ? "checkmark.circle.fill" : "circle",
                 onPress: { onToggle(option) }
+            )
+        }
+    }
+
+    /// Single-select filter menu: selecting a filter replaces the current one.
+    static func filterMenuItems(
+        activeFilter: ItemFilterOption,
+        onSelect: @escaping (ItemFilterOption) -> Void
+    ) -> [ActionMenuItem] {
+        ItemFilterOption.allCases.map { option in
+            ActionMenuItem(
+                id: option.rawValue,
+                label: filterLabel(for: option),
+                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
+                onPress: { onSelect(option) }
             )
         }
     }
