@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Tier 2 — ListControlBar, BudgetProgressDisplay & ItemCard
-lane: "doing"
+lane: "done"
 dependencies:
 - WP01
 - WP02
@@ -18,8 +18,8 @@ phase: Phase 3 - Tier 2 Remaining
 assignee: ''
 agent: "claude-opus"
 shell_pid: "9100"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T07:45:42Z'
   lane: planned
@@ -266,3 +266,4 @@ spec-kitty implement WP06 --base WP05
 - 2026-02-26T08:44:37Z – claude-opus – shell_pid=26369 – lane=doing – Assigned agent via workflow command
 - 2026-02-26T09:05:31Z – claude-opus – shell_pid=26369 – lane=for_review – Ready for review: ListControlBar, BudgetProgressDisplay, ItemCard components with 18 passing tests. Includes WP04/WP05 dependency files.
 - 2026-02-26T18:15:15Z – claude-opus – shell_pid=9100 – lane=doing – Started review via workflow command
+- 2026-02-26T18:29:22Z – claude-opus – shell_pid=9100 – lane=done – Review passed: All 3 components (ListControlBar, BudgetProgressDisplay, ItemCard) implemented correctly. 18/18 tests passing. ItemCard matches reference screenshots with proper controlled/uncontrolled selection, deferred action menu pattern, and all metadata variants. Clean code quality.
