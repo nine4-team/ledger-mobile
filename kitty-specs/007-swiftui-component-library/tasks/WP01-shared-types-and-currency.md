@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: Shared Types & Currency Formatting
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 5058235f35ebbcd1fff842c102589b10266ba62e
@@ -290,3 +290,4 @@ No dependencies — this is the starting package.
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T07:57:47Z – claude-opus – shell_pid=50971 – lane=doing – Assigned agent via workflow command
+- 2026-02-26T08:08:26Z – claude-opus – shell_pid=50971 – lane=for_review – Ready for review: 6 shared type files, CurrencyFormatting logic with compact format, 16 tests passing. Uses Item directly (no ScopedItem wrapper needed), delegates to existing BudgetDisplayCalculations to avoid duplication.
