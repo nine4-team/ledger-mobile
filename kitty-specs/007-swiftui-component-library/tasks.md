@@ -59,15 +59,15 @@
 **Prompt**: `tasks/WP02-tier1-budget-and-display.md`
 
 ### Included Subtasks
-- [ ] T009 Create `BudgetTrackerCalculations.swift` in `Logic/` — formatting for category tracker (display name, spent/remaining labels, percentage, overflow detection, fee-type support)
-- [ ] T010 Create `BudgetTrackerCalculationTests.swift` — tests for spent/remaining formatting, overflow, fee categories, zero budget edge cases (~15 tests)
-- [ ] T011 [P] Create `BudgetCategoryTracker.swift` — category name, spent/remaining labels, ProgressBar with overflow, fee support
-- [ ] T012 [P] Create `BudgetProgressPreview.swift` — compact single-category preview for ProjectCard
-- [ ] T013 [P] Create `CategoryRow.swift` — single category row for settings screens
-- [ ] T014 [P] Create `ImageCard.swift` — async image with placeholder, configurable aspect ratio, loading/error states
-- [ ] T015 [P] Create `SpaceCard.swift` — space name, item count, checklist progress via ProgressBar, hero image via ImageCard, menu button
-- [ ] T016 [P] Create `InfoCard.swift` — information display card for contextual help/tips
-- [ ] T017 [P] Create `DraggableCard.swift` — card with drag handle, disabled/active states
+- [x] T009 Create `BudgetTrackerCalculations.swift` in `Logic/` — formatting for category tracker (display name, spent/remaining labels, percentage, overflow detection, fee-type support)
+- [x] T010 Create `BudgetTrackerCalculationTests.swift` — tests for spent/remaining formatting, overflow, fee categories, zero budget edge cases (~15 tests)
+- [x] T011 [P] Create `BudgetCategoryTracker.swift` — category name, spent/remaining labels, ProgressBar with overflow, fee support
+- [x] T012 [P] Create `BudgetProgressPreview.swift` — compact single-category preview for ProjectCard
+- [x] T013 [P] Create `CategoryRow.swift` — single category row for settings screens
+- [x] T014 [P] Create `ImageCard.swift` — async image with placeholder, configurable aspect ratio, loading/error states
+- [x] T015 [P] Create `SpaceCard.swift` — space name, item count, checklist progress via ProgressBar, hero image via ImageCard, menu button
+- [x] T016 [P] Create `InfoCard.swift` — information display card for contextual help/tips
+- [x] T017 [P] Create `DraggableCard.swift` — card with drag handle, disabled/active states
 
 ### Implementation Notes
 - BudgetCategoryTracker and BudgetProgressPreview share logic via BudgetTrackerCalculations.
