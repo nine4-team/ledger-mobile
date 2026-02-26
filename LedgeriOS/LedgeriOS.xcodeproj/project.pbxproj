@@ -97,6 +97,14 @@
 		ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18788219656392644ADD4F3 /* BudgetProgressService.swift */; };
 		F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */; };
 		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
+		WP01B00100000000000S0001 /* ActionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0001 /* ActionMenuItem.swift */; };
+		WP01B00100000000000S0002 /* ControlAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0002 /* ControlAction.swift */; };
+		WP01B00100000000000S0003 /* FormSheetAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0003 /* FormSheetAction.swift */; };
+		WP01B00100000000000S0004 /* StatusBannerVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0004 /* StatusBannerVariant.swift */; };
+		WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0005 /* ItemListEnums.swift */; };
+		WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0006 /* ItemsListMode.swift */; };
+		WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000L0001 /* CurrencyFormatting.swift */; };
+		WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -198,6 +206,14 @@
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
 		F89888110732C2D81B903322 /* SyncTracking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTracking.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0001 /* ActionMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuItem.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0002 /* ControlAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlAction.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0003 /* FormSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetAction.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0004 /* StatusBannerVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBannerVariant.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0005 /* ItemListEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemListEnums.swift; sourceTree = "<group>"; };
+		WP01F00100000000000S0006 /* ItemsListMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListMode.swift; sourceTree = "<group>"; };
+		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
+		WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormattingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -247,6 +263,7 @@
 				C5A0020100000000000L0002 /* ProgressBarCalculations.swift */,
 				B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */,
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
+				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -319,6 +336,7 @@
 				C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */,
 				EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */,
 				C43FE76A2E85991A0B0ABCBF /* BudgetTabCalculationTests.swift */,
+				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -421,6 +439,12 @@
 			children = (
 				D5B86A1C58FBF298270046AF /* AttachmentRef.swift */,
 				47370982DDDB5064026D1B45 /* Enums.swift */,
+				WP01F00100000000000S0001 /* ActionMenuItem.swift */,
+				WP01F00100000000000S0002 /* ControlAction.swift */,
+				WP01F00100000000000S0003 /* FormSheetAction.swift */,
+				WP01F00100000000000S0004 /* StatusBannerVariant.swift */,
+				WP01F00100000000000S0005 /* ItemListEnums.swift */,
+				WP01F00100000000000S0006 /* ItemsListMode.swift */,
 			);
 			name = Shared;
 			path = Shared;
@@ -635,6 +659,13 @@
 				41D9319222D75C37A1DA765A /* TransactionsTabPlaceholder.swift in Sources */,
 				BABD6D50486B9B785AA62BFE /* SpacesTabPlaceholder.swift in Sources */,
 				A73CA42760A53C737E57460F /* AccountingTabPlaceholder.swift in Sources */,
+				WP01B00100000000000S0001 /* ActionMenuItem.swift in Sources */,
+				WP01B00100000000000S0002 /* ControlAction.swift in Sources */,
+				WP01B00100000000000S0003 /* FormSheetAction.swift in Sources */,
+				WP01B00100000000000S0004 /* StatusBannerVariant.swift in Sources */,
+				WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */,
+				WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */,
+				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -650,6 +681,7 @@
 				C5A0010100000000000X0003 /* SelectorCircleLayoutTests.swift in Sources */,
 				E57A8103EC4D73FB50EFEC11 /* ProjectListCalculationTests.swift in Sources */,
 				B2CCDFC85C92A50857AC5B33 /* BudgetTabCalculationTests.swift in Sources */,
+				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
