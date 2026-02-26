@@ -1,0 +1,25 @@
+appId: com.nine4.ledger
+---
+# Navigate to a space via project
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Projects, tab, 2 of 4"
+- waitForAnimationToEnd
+- tapOn: "Bradshaws Desert Color Rental.*"
+- waitForAnimationToEnd
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+
+# Tap first space card
+- tapOn:
+    id: ".*items.*"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: 22_space_detail
+
+# Go back twice
+- tapOn: "Go back"
+- waitForAnimationToEnd
+- tapOn: "Go back"
+- waitForAnimationToEnd

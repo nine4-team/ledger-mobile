@@ -1,0 +1,32 @@
+appId: com.nine4.ledger
+---
+# Navigate to an item via project
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Projects, tab, 2 of 4"
+- waitForAnimationToEnd
+- tapOn: "Bradshaws Desert Color Rental.*"
+- waitForAnimationToEnd
+- tapOn: "Items tab"
+- waitForAnimationToEnd
+
+# Tap first item card
+- tapOn:
+    id: "Item card.*"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: 09_item_detail_top
+
+# Scroll down to see more sections
+- scrollUntilVisible:
+    element: "DETAILS"
+    direction: DOWN
+    timeout: 5000
+- takeScreenshot: 10_item_detail_sections
+
+# Go back twice
+- tapOn: "Go back"
+- waitForAnimationToEnd
+- tapOn: "Go back"
+- waitForAnimationToEnd

@@ -38,9 +38,9 @@ export default function TabsLayout() {
   const addMenuItems: AnchoredMenuItem[] = [
     {
       key: 'add-item',
-      label: 'Create Item Manually',
+      label: 'Create Item',
       icon: 'add-circle-outline',
-      onPress: () => router.push('/items/new'),
+      onPress: () => router.push('/items/new-universal'),
     },
     {
       key: 'add-transaction',

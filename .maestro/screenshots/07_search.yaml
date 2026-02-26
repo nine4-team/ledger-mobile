@@ -1,0 +1,25 @@
+appId: com.nine4.ledger
+---
+# Universal search
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Projects, tab, 2 of 4"
+- waitForAnimationToEnd
+
+# Tap search icon in header
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: 18_search_empty
+
+# Type a search query
+- inputText: "desk"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Items"
+    timeout: 5000
+- takeScreenshot: 19_search_results
+
+# Go back
+- tapOn: "Go back"
+- waitForAnimationToEnd

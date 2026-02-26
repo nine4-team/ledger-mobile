@@ -1,0 +1,34 @@
+appId: com.nine4.ledger
+---
+# Navigate to first project
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Projects, tab, 2 of 4"
+- waitForAnimationToEnd
+- tapOn: "Bradshaws Desert Color Rental.*"
+- waitForAnimationToEnd
+
+# Budget tab
+- tapOn: "Budget tab"
+- waitForAnimationToEnd
+- takeScreenshot: 03_project_budget
+
+# Items tab
+- tapOn: "Items tab"
+- waitForAnimationToEnd
+- takeScreenshot: 04_project_items
+
+# Transactions tab
+- tapOn: "Transactions tab"
+- waitForAnimationToEnd
+- takeScreenshot: 05_project_transactions
+
+# Spaces tab
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+- takeScreenshot: 06_project_spaces
+
+# Go back
+- tapOn: "Go back"
+- waitForAnimationToEnd

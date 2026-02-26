@@ -1,0 +1,18 @@
+appId: com.nine4.ledger
+---
+# New transaction wizard
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Add new"
+- waitForAnimationToEnd
+- takeScreenshot: 20_add_menu
+
+# Tap Create Transaction
+- tapOn: "Create Transaction"
+- waitForAnimationToEnd
+- takeScreenshot: 21_new_transaction_wizard
+
+# Go back
+- tapOn: "Go back"
+- waitForAnimationToEnd

@@ -1,0 +1,21 @@
+appId: com.nine4.ledger
+---
+# Inventory screen - Items tab
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Inventory, tab, 3 of 4"
+- waitForAnimationToEnd
+- tapOn: "Items tab"
+- waitForAnimationToEnd
+- takeScreenshot: 11_inventory_items
+
+# Transactions tab
+- tapOn: "Transactions tab"
+- waitForAnimationToEnd
+- takeScreenshot: 12_inventory_transactions
+
+# Spaces tab
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+- takeScreenshot: 13_inventory_spaces

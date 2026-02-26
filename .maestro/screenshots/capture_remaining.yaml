@@ -1,0 +1,82 @@
+appId: com.nine4.ledger
+---
+# ============================================
+# Remaining Screenshots (Inventory, Settings, Search, Add)
+# Tab bar element bounds from hierarchy:
+#   Projects:  [105,765]-[195,810] center (150, 787)
+#   Inventory: [195,765]-[284,810] center (240, 787)
+#   Settings:  [284,765]-[374,810] center (329, 787)
+# ============================================
+
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+
+# --- INVENTORY ---
+- tapOn:
+    point: "240, 787"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: 12_inventory
+
+# Inventory screen inner tabs
+- tapOn: "Transactions"
+- waitForAnimationToEnd
+- takeScreenshot: 13_inventory_transactions
+
+- tapOn: "Spaces"
+- waitForAnimationToEnd
+- takeScreenshot: 14_inventory_spaces
+
+# --- SETTINGS ---
+- tapOn:
+    point: "329, 787"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: 15_settings
+
+- tapOn: "Presets"
+- waitForAnimationToEnd
+- takeScreenshot: 16_settings_presets
+
+- tapOn: "Users"
+- waitForAnimationToEnd
+- takeScreenshot: 17_settings_users
+
+- tapOn: "Account"
+- waitForAnimationToEnd
+- takeScreenshot: 18_settings_account
+
+# --- SEARCH ---
+- tapOn:
+    point: "150, 787"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: 19_search_empty
+
+- inputText: "desk"
+- waitForAnimationToEnd
+- takeScreenshot: 20_search_results
+
+- tapOn: "Go back"
+- waitForAnimationToEnd
+
+# --- ADD MENU ---
+- tapOn: "Add new"
+- waitForAnimationToEnd
+- takeScreenshot: 21_add_menu
+
+- tapOn: "Close menu"
+- waitForAnimationToEnd
+
+# --- NEW TRANSACTION ---
+- tapOn: "Add new"
+- waitForAnimationToEnd
+- tapOn: "Create Transaction"
+- waitForAnimationToEnd
+- takeScreenshot: 22_new_transaction
+
+- tapOn: "Go back"
+- waitForAnimationToEnd

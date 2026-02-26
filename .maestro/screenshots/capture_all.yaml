@@ -1,0 +1,155 @@
+appId: com.nine4.ledger
+---
+# ============================================
+# Full Screenshot Capture - All Priority Screens
+# ============================================
+
+# --- PROJECTS LIST ---
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- takeScreenshot: 01_projects_list
+
+- tapOn: "Archived projects"
+- waitForAnimationToEnd
+- takeScreenshot: 02_projects_list_archived
+
+- tapOn: "Active projects"
+- waitForAnimationToEnd
+
+# --- PROJECT DETAIL (Budget tab) ---
+- tapOn: "Bradshaws Desert Color Rental.*"
+- waitForAnimationToEnd
+- takeScreenshot: 03_project_detail_budget
+
+# --- PROJECT DETAIL (Items tab) ---
+- tapOn: "Items tab"
+- waitForAnimationToEnd
+- takeScreenshot: 04_project_detail_items
+
+# --- PROJECT DETAIL (Transactions tab) ---
+- tapOn: "Transactions tab"
+- waitForAnimationToEnd
+- takeScreenshot: 05_project_detail_transactions
+
+# --- PROJECT DETAIL (Spaces tab) ---
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+- takeScreenshot: 06_project_detail_spaces
+
+# --- TRANSACTION DETAIL ---
+- tapOn: "Transactions tab"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Transaction card.*"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: 07_transaction_detail
+
+# Scroll to see more sections
+- swipe:
+    direction: UP
+    duration: 400
+- waitForAnimationToEnd
+- takeScreenshot: 08_transaction_detail_scrolled
+
+# Go back to project
+- tapOn: "Go back"
+- waitForAnimationToEnd
+
+# --- ITEM DETAIL ---
+- tapOn: "Items tab"
+- waitForAnimationToEnd
+- tapOn:
+    text: "Item card.*"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: 09_item_detail
+
+# Scroll to see more sections
+- swipe:
+    direction: UP
+    duration: 400
+- waitForAnimationToEnd
+- takeScreenshot: 10_item_detail_scrolled
+
+# Go back to project
+- tapOn: "Go back"
+- waitForAnimationToEnd
+
+# --- SPACE DETAIL ---
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*items.*"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: 11_space_detail
+
+# Go back to project, then back to projects list
+- tapOn: "Go back"
+- waitForAnimationToEnd
+- tapOn: "Go back"
+- waitForAnimationToEnd
+
+# --- INVENTORY ---
+- tapOn: "Inventory, tab, 3 of 4"
+- waitForAnimationToEnd
+- takeScreenshot: 12_inventory_items
+
+- tapOn: "Transactions tab"
+- waitForAnimationToEnd
+- takeScreenshot: 13_inventory_transactions
+
+- tapOn: "Spaces tab"
+- waitForAnimationToEnd
+- takeScreenshot: 14_inventory_spaces
+
+# --- SETTINGS ---
+- tapOn: "Settings, tab, 4 of 4"
+- waitForAnimationToEnd
+- takeScreenshot: 15_settings_general
+
+- tapOn: "Presets tab"
+- waitForAnimationToEnd
+- takeScreenshot: 16_settings_presets
+
+- tapOn: "Users tab"
+- waitForAnimationToEnd
+- takeScreenshot: 17_settings_users
+
+- tapOn: "Account tab"
+- waitForAnimationToEnd
+- takeScreenshot: 18_settings_account
+
+# --- SEARCH ---
+- tapOn: "Projects, tab, 2 of 4"
+- waitForAnimationToEnd
+- tapOn: "Search"
+- waitForAnimationToEnd
+- takeScreenshot: 19_search_empty
+
+- inputText: "desk"
+- waitForAnimationToEnd
+- takeScreenshot: 20_search_results
+
+- tapOn: "Go back"
+- waitForAnimationToEnd
+
+# --- ADD MENU ---
+- tapOn: "Add new"
+- waitForAnimationToEnd
+- takeScreenshot: 21_add_menu
+
+- tapOn: "Close menu"
+- waitForAnimationToEnd
+
+# --- NEW TRANSACTION ---
+- tapOn: "Add new"
+- waitForAnimationToEnd
+- tapOn: "Create Transaction"
+- waitForAnimationToEnd
+- takeScreenshot: 22_new_transaction
+
+- tapOn: "Go back"
+- waitForAnimationToEnd

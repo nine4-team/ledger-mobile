@@ -1,0 +1,28 @@
+appId: com.nine4.ledger
+---
+# Settings screen
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd
+- tapOn: "Settings, tab, 4 of 4"
+- waitForAnimationToEnd
+
+# General tab
+- tapOn: "General tab"
+- waitForAnimationToEnd
+- takeScreenshot: 14_settings_general
+
+# Presets tab
+- tapOn: "Presets tab"
+- waitForAnimationToEnd
+- takeScreenshot: 15_settings_presets
+
+# Users tab
+- tapOn: "Users tab"
+- waitForAnimationToEnd
+- takeScreenshot: 16_settings_users
+
+# Account tab
+- tapOn: "Account tab"
+- waitForAnimationToEnd
+- takeScreenshot: 17_settings_account

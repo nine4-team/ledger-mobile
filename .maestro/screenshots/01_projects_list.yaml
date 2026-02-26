@@ -1,0 +1,22 @@
+appId: com.nine4.ledger
+---
+# Projects List (Active) - app should already be on projects tab after launch
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Projects"
+    timeout: 10000
+- takeScreenshot: 01_projects_list_active
+
+# Projects List (Archived)
+- tapOn:
+    text: "Archived projects"
+- extendedWaitUntil:
+    visible: "Archived"
+    timeout: 5000
+- takeScreenshot: 02_projects_list_archived
+- tapOn:
+    text: "Active projects"
+- extendedWaitUntil:
+    visible: "Active"
+    timeout: 5000
