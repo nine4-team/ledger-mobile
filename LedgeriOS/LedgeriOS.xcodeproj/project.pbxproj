@@ -148,6 +148,17 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa
 		WP02B00100000000000C0006 /* InfoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0006 /* InfoCard.swift */; };
 		WP02B00100000000000C0007 /* DraggableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0007 /* DraggableCard.swift */; };
 		WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */; };
+		WP03B00100000000000C0001 /* ErrorRetryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0001 /* ErrorRetryView.swift */; };
+		WP03B00100000000000C0002 /* FormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0002 /* FormSheet.swift */; };
+		WP03B00100000000000C0003 /* LoadingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0003 /* LoadingScreen.swift */; };
+		WP03B00100000000000C0004 /* MultiStepFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0004 /* MultiStepFormSheet.swift */; };
+		WP03B00100000000000C0005 /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0005 /* StatusBanner.swift */; };
+		WP07B00100000000000C0001 /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000C0001 /* TransactionCard.swift */; };
+		WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000L0001 /* TransactionCardCalculations.swift */; };
+		WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */; };
+		WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0001 /* SharedItemsList.swift */; };
+		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
+		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -300,6 +311,17 @@ WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileR
 		WP02F00100000000000C0006 /* InfoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0007 /* DraggableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculationTests.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0001 /* ErrorRetryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorRetryView.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0002 /* FormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheet.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0003 /* LoadingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingScreen.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0004 /* MultiStepFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiStepFormSheet.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0005 /* StatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBanner.swift; sourceTree = "<group>"; };
+		WP07F00100000000000C0001 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
+		WP07F00100000000000L0001 /* TransactionCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculations.swift; sourceTree = "<group>"; };
+		WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculationTests.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -358,6 +380,7 @@ WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
 				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
 				WP08F00100000000000L0001 /* SelectionCalculations.swift */,
 WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
+				WP07F00100000000000L0001 /* TransactionCardCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -439,6 +462,7 @@ WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
 				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
 				WP08F00100000000000X0001 /* SelectionCalculationTests.swift */,
 WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
+				WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -595,6 +619,15 @@ WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
 				WP02F00100000000000C0005 /* SpaceCard.swift */,
 				WP02F00100000000000C0006 /* InfoCard.swift */,
 				WP02F00100000000000C0007 /* DraggableCard.swift */,
+				WP03F00100000000000C0001 /* ErrorRetryView.swift */,
+				WP03F00100000000000C0002 /* FormSheet.swift */,
+				WP03F00100000000000C0003 /* LoadingScreen.swift */,
+				WP03F00100000000000C0004 /* MultiStepFormSheet.swift */,
+				WP03F00100000000000C0005 /* StatusBanner.swift */,
+				WP07F00100000000000C0001 /* TransactionCard.swift */,
+				WP10F00100000000000C0001 /* SharedItemsList.swift */,
+				WP10F00100000000000C0002 /* SharedTransactionsList.swift */,
+				WP10F00100000000000C0003 /* DraggableCardList.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -830,6 +863,16 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
 				WP02B00100000000000C0005 /* SpaceCard.swift in Sources */,
 				WP02B00100000000000C0006 /* InfoCard.swift in Sources */,
 				WP02B00100000000000C0007 /* DraggableCard.swift in Sources */,
+				WP03B00100000000000C0001 /* ErrorRetryView.swift in Sources */,
+				WP03B00100000000000C0002 /* FormSheet.swift in Sources */,
+				WP03B00100000000000C0003 /* LoadingScreen.swift in Sources */,
+				WP03B00100000000000C0004 /* MultiStepFormSheet.swift in Sources */,
+				WP03B00100000000000C0005 /* StatusBanner.swift in Sources */,
+				WP07B00100000000000C0001 /* TransactionCard.swift in Sources */,
+				WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */,
+				WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */,
+				WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */,
+				WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -854,6 +897,7 @@ WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
 				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
 				WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */,
 WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
+				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
