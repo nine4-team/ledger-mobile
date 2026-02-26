@@ -114,6 +114,12 @@
 		WP02B00100000000000C0006 /* InfoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0006 /* InfoCard.swift */; };
 		WP02B00100000000000C0007 /* DraggableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0007 /* DraggableCard.swift */; };
 		WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */; };
+		WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */; };
+		WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0001 /* BulkSelectionBar.swift */; };
+		WP04B00100000000000C0002 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0002 /* ListStateControls.swift */; };
+		WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0003 /* ThumbnailGrid.swift */; };
+		WP04B00100000000000C0004 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0004 /* ImageGallery.swift */; };
+		WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -232,6 +238,12 @@
 		WP02F00100000000000C0006 /* InfoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0007 /* DraggableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculationTests.swift; sourceTree = "<group>"; };
+		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0001 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0002 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0003 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0004 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
+		WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -283,6 +295,7 @@
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
 				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
 				WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
+				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -357,6 +370,7 @@
 				C43FE76A2E85991A0B0ABCBF /* BudgetTabCalculationTests.swift */,
 				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
 				WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
+				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -493,6 +507,10 @@
 				WP02F00100000000000C0005 /* SpaceCard.swift */,
 				WP02F00100000000000C0006 /* InfoCard.swift */,
 				WP02F00100000000000C0007 /* DraggableCard.swift */,
+				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
+				WP04F00100000000000C0002 /* ListStateControls.swift */,
+				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
+				WP04F00100000000000C0004 /* ImageGallery.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -701,6 +719,11 @@
 				WP02B00100000000000C0005 /* SpaceCard.swift in Sources */,
 				WP02B00100000000000C0006 /* InfoCard.swift in Sources */,
 				WP02B00100000000000C0007 /* DraggableCard.swift in Sources */,
+				WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */,
+				WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */,
+				WP04B00100000000000C0002 /* ListStateControls.swift in Sources */,
+				WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */,
+				WP04B00100000000000C0004 /* ImageGallery.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -718,6 +741,7 @@
 				B2CCDFC85C92A50857AC5B33 /* BudgetTabCalculationTests.swift in Sources */,
 				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
 				WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
+				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
