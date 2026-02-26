@@ -108,6 +108,12 @@
 		WP05B00100000000000C0001 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000C0001 /* ActionMenuSheet.swift */; };
 		WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000L0001 /* ActionMenuCalculations.swift */; };
 		WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */; };
+		WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */; };
+		WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0001 /* BulkSelectionBar.swift */; };
+		WP04B00100000000000C0002 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0002 /* ListStateControls.swift */; };
+		WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0003 /* ThumbnailGrid.swift */; };
+		WP04B00100000000000C0004 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0004 /* ImageGallery.swift */; };
+		WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -220,6 +226,12 @@
 		WP05F00100000000000C0001 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
 		WP05F00100000000000L0001 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
 		WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
+		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0001 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0002 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0003 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0004 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
+		WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -271,6 +283,7 @@
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
 				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
 				WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
+				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -345,6 +358,7 @@
 				C43FE76A2E85991A0B0ABCBF /* BudgetTabCalculationTests.swift */,
 				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
 				WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
+				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -475,6 +489,10 @@
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
 				WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
+				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
+				WP04F00100000000000C0002 /* ListStateControls.swift */,
+				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
+				WP04F00100000000000C0004 /* ImageGallery.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -677,6 +695,11 @@
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
 				WP05B00100000000000C0001 /* ActionMenuSheet.swift in Sources */,
 				WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */,
+				WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */,
+				WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */,
+				WP04B00100000000000C0002 /* ListStateControls.swift in Sources */,
+				WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */,
+				WP04B00100000000000C0004 /* ImageGallery.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,6 +717,7 @@
 				B2CCDFC85C92A50857AC5B33 /* BudgetTabCalculationTests.swift in Sources */,
 				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
 				WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
+				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
