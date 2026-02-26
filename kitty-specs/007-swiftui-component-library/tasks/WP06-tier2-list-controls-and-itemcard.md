@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Tier 2 — ListControlBar, BudgetProgressDisplay & ItemCard
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP01
 - WP02
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 3 - Tier 2 Remaining
 assignee: ''
 agent: "claude-opus"
-shell_pid: "26369"
+shell_pid: "9100"
 review_status: ''
 reviewed_by: ''
 history:
@@ -265,3 +265,4 @@ spec-kitty implement WP06 --base WP05
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:44:37Z – claude-opus – shell_pid=26369 – lane=doing – Assigned agent via workflow command
 - 2026-02-26T09:05:31Z – claude-opus – shell_pid=26369 – lane=for_review – Ready for review: ListControlBar, BudgetProgressDisplay, ItemCard components with 18 passing tests. Includes WP04/WP05 dependency files.
+- 2026-02-26T18:15:15Z – claude-opus – shell_pid=9100 – lane=doing – Started review via workflow command
