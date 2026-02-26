@@ -1,7 +1,7 @@
 ---
 work_package_id: WP10
 title: Tier 4 — List Containers
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 3a044626dd14f2950ac39d4df386bcd0c3018c1f
@@ -448,3 +448,4 @@ spec-kitty implement WP10 --base WP08
 - 2026-02-26T19:14:01Z – claude-opus – shell_pid=78353 – lane=doing – Started review via workflow command
 - 2026-02-26T19:17:05Z – claude-opus – shell_pid=78353 – lane=planned – Moved to planned
 - 2026-02-26T19:17:53Z – claude-opus – shell_pid=82809 – lane=doing – Started implementation via workflow command
+- 2026-02-26T19:27:55Z – claude-opus – shell_pid=82809 – lane=for_review – All 6 review issues fixed. Build succeeds, 260 tests pass across 16 suites.
