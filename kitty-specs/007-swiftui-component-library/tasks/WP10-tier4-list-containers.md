@@ -1,7 +1,7 @@
 ---
 work_package_id: WP10
 title: Tier 4 — List Containers
-lane: "doing"
+lane: "planned"
 dependencies: []
 base_branch: main
 base_commit: 3a044626dd14f2950ac39d4df386bcd0c3018c1f
@@ -18,8 +18,8 @@ phase: Phase 4 - Capstone
 assignee: ''
 agent: "claude-opus"
 shell_pid: "78353"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T07:45:42Z'
   lane: planned
@@ -38,9 +38,118 @@ history:
 
 ## Review Feedback
 
-*[This section is empty initially.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-26
+
+## Review Feedback — WP10: Tier 4 List Containers
+
+**Reviewer:** claude-opus
+**Verdict:** Changes requested
+**Build/Tests:** Confirmed — build succeeds, 260 tests pass.
+**DraggableCardList:** Approved — clean, well-structured, no issues.
 
 ---
+
+### CRITICAL — Must fix before merge
+
+**Issue 1: Picker mode data setup is unreachable (SharedItemsList.swift:390-397)**
+
+```swift
+case .picker(_, _, _, _):
+    if let accountId, case .standalone(let scope) = mode {  // ← NEVER TRUE
+        await setupStandaloneListener(scope: scope)
+    } else {
+        isLoading = false  // ← picker with Firestore data shows empty
+    }
+```
+
+The `case .standalone` pattern match will never succeed when already inside the `.picker` case. Picker mode that needs Firestore data will always fall through to `isLoading = false` with no items loaded.
+
+**Fix:** Picker mode needs its own scope parameter or a shared data-fetch path. One approach:
+```swift
+case .picker(let scope, _, _, _):
+    if let scope {
+        await setupStandaloneListener(scope: scope)
+    } else {
+        isLoading = false
+    }
+```
+This requires updating `ItemsListMode.picker` to include an optional `ListScope`.
+
+---
+
+**Issue 2: activeFilter vs activeFilters mismatch — BOTH list components**
+
+Affects: `SharedItemsList.swift:17-19,453` AND `SharedTransactionsList.swift:135-137,398`
+
+Both components have:
+- `@State private var activeFilter` (single value, used in `processedItems`/`processedTransactions`)
+- `@State private var activeFilters: Set<...>` (populated by `toggleFilter()`, shown in UI badge count)
+
+`toggleFilter()` adds/removes from the Set, then does `activeFilter = activeFilters.first ?? .all` — so multi-select UI but only the first filter is ever applied. The filter badge shows "Filter (2)" but only one filter works.
+
+**Fix:** Either:
+- (a) Remove `activeFilters` Set entirely and make filter single-select (simpler, matches the RN app's behavior for most filter types), or
+- (b) Update `applyAllFilters()`/`applyAll()` to accept `Set<FilterOption>` and apply all selected filters with AND logic.
+
+Option (a) is recommended — the RN app uses single-select for the primary filter dimension.
+
+---
+
+**Issue 3: Picker "Add Selected" doesn't clear selection (SharedItemsList.swift:365-367)**
+
+After tapping "Add Selected", `onAddSelected?()` fires but `selectedIds` is not cleared. The UI continues showing items as selected after they've been added.
+
+**Fix:** Add `selectedIds.removeAll()` after the callback:
+```swift
+AppButton(title: "Add Selected") {
+    onAddSelected?()
+    selectedIds.removeAll()
+}
+```
+
+---
+
+### MODERATE — Should fix, but non-blocking individually
+
+**Issue 4: Unstable UUID fallback in grouped cards (SharedItemsList.swift:321)**
+
+`id: item.id ?? UUID().uuidString` generates a new ID on every render, causing SwiftUI to treat each render as a new item (broken list diffing, lost scroll position, unnecessary re-renders).
+
+**Fix:** Guard against nil IDs upstream, or use a deterministic fallback like `"item-\(index)"`.
+
+---
+
+**Issue 5: Empty string IDs in selection system (SharedItemsList.swift:210, SharedTransactionsList.swift:302)**
+
+`item.id ?? ""` / `transaction.id ?? ""` creates ghost entries in `selectedIds`. A nil-ID item becomes selectable with empty string key, which could conflict across items.
+
+**Fix:** Skip rendering items/transactions with nil IDs, or guard before adding to selection:
+```swift
+guard let itemId = item.id else { continue }
+```
+
+---
+
+**Issue 6: Bulk actions menu not extensible (SharedTransactionsList.swift:207-214)**
+
+The bulk action menu is hardcoded to only "Clear Selection". The RN reference has export CSV + other context-aware bulk actions. The component should accept bulk action items as a parameter (matching how `getMenuItems` works for individual items).
+
+**Fix:** Add parameter: `var getBulkMenuItems: (() -> [ActionMenuItem])?` and merge with the default clear-selection item.
+
+---
+
+### Summary
+
+| Component | Verdict | Issues |
+|-----------|---------|--------|
+| SharedItemsList | Changes requested | 3 critical, 2 moderate |
+| SharedTransactionsList | Changes requested | 1 critical (shared pattern), 2 moderate |
+| DraggableCardList | Approved | Clean |
+
+Focus on Issues 1-3 (critical). Issues 4-6 should also be fixed but are lower priority.
+
 
 ## Implementation Command
 
@@ -337,3 +446,4 @@ spec-kitty implement WP10 --base WP08
 - 2026-02-26T18:51:48Z – claude-opus – shell_pid=51830 – lane=doing – Assigned agent via workflow command
 - 2026-02-26T19:12:26Z – claude-opus – shell_pid=51830 – lane=for_review – Ready for review: SharedItemsList (3 modes), SharedTransactionsList, DraggableCardList. Build succeeds, 260 tests pass across 16 suites.
 - 2026-02-26T19:14:01Z – claude-opus – shell_pid=78353 – lane=doing – Started review via workflow command
+- 2026-02-26T19:17:05Z – claude-opus – shell_pid=78353 – lane=planned – Moved to planned
