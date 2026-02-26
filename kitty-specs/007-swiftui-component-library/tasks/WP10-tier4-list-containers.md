@@ -1,7 +1,7 @@
 ---
 work_package_id: WP10
 title: Tier 4 — List Containers
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 3a044626dd14f2950ac39d4df386bcd0c3018c1f
@@ -335,3 +335,4 @@ spec-kitty implement WP10 --base WP08
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T18:51:48Z – claude-opus – shell_pid=51830 – lane=doing – Assigned agent via workflow command
+- 2026-02-26T19:12:26Z – claude-opus – shell_pid=51830 – lane=for_review – Ready for review: SharedItemsList (3 modes), SharedTransactionsList, DraggableCardList. Build succeeds, 260 tests pass across 16 suites.
