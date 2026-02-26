@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Tier 1 — Form Sheets & Feedback Components
-lane: "for_review"
+lane: "doing"
 dependencies: [WP01]
 base_branch: 007-swiftui-component-library-WP01
 base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 2 - Tier 1 Components
 assignee: ''
 agent: "claude-opus"
-shell_pid: "75175"
+shell_pid: "84823"
 review_status: ''
 reviewed_by: ''
 history:
@@ -245,3 +245,4 @@ spec-kitty implement WP03 --base WP01
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:15:21Z – claude-opus – shell_pid=75175 – lane=doing – Assigned agent via workflow command
 - 2026-02-26T08:19:13Z – claude-opus – shell_pid=75175 – lane=for_review – Ready for review: All 5 Tier 1 form/feedback components implemented — FormSheet, MultiStepFormSheet, StatusBanner, ErrorRetryView, LoadingScreen. Build verified.
+- 2026-02-26T08:20:19Z – claude-opus – shell_pid=84823 – lane=doing – Started review via workflow command
