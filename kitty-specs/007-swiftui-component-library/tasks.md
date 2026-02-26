@@ -218,10 +218,10 @@
 **Prompt**: `tasks/WP07-tier3-transaction-card.md`
 
 ### Included Subtasks
-- [ ] T040 Check existing `StatusColors.swift` for transaction badge colors; add missing ones (transactionPurchase, transactionSale, transactionReturn, transactionToInventory, reimbursement, needsReview, emailReceipt) with asset catalog colorsets if needed
-- [ ] T041 Create `TransactionCardCalculations.swift` in `Logic/` — type-based badge color mapping, amount formatting with sign, date formatting, notes truncation
-- [ ] T042 Create `TransactionCardCalculationTests.swift` — tests for badge color selection, amount formatting, date formatting (~15 tests)
-- [ ] T043 Create `TransactionCard.swift` — source, amount, date, badge row (type/reimbursement/receipt/review/category), SelectorCircle for multi-select, menu button, notes preview (italic, 2-line limit), controlled/uncontrolled selection
+- [x] T040 Check existing `StatusColors.swift` for transaction badge colors; add missing ones (transactionPurchase, transactionSale, transactionReturn, transactionToInventory, reimbursement, needsReview, emailReceipt) with asset catalog colorsets if needed
+- [x] T041 Create `TransactionCardCalculations.swift` in `Logic/` — type-based badge color mapping, amount formatting with sign, date formatting, notes truncation
+- [x] T042 Create `TransactionCardCalculationTests.swift` — tests for badge color selection, amount formatting, date formatting (~15 tests)
+- [x] T043 Create `TransactionCard.swift` — source, amount, date, badge row (type/reimbursement/receipt/review/category), SelectorCircle for multi-select, menu button, notes preview (italic, 2-line limit), controlled/uncontrolled selection
 
 ### Implementation Notes
 - Transaction badge colors: check StatusColors first. R7 research identified potentially missing colors. Add only what's missing.
