@@ -15,7 +15,7 @@ subtasks:
 - T028
 phase: Phase 2 - Tier 1 Components
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "73972"
 review_status: ''
 reviewed_by: ''
@@ -257,3 +257,4 @@ spec-kitty implement WP04 --base WP01
 ## Activity Log
 
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
+- 2026-02-26T08:14:59Z – claude-opus – shell_pid=73972 – lane=doing – Assigned agent via workflow command
