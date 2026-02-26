@@ -124,12 +124,12 @@
 **Prompt**: `tasks/WP04-tier1-selection-and-media.md`
 
 ### Included Subtasks
-- [ ] T023 Create `MediaGalleryCalculations.swift` in `Logic/` — attachment validation (max count, allowed kinds), grid column calculation, primary image detection
-- [ ] T024 Create `MediaGalleryCalculationTests.swift` — tests for validation, column calc, primary detection (~10 tests)
-- [ ] T025 [P] Create `BulkSelectionBar.swift` — fixed bottom bar via `.safeAreaInset(edge: .bottom)`, selected count, optional total amount, bulk action button, clear button
-- [ ] T026 [P] Create `ListStateControls.swift` — search input field with toggleable visibility and smooth animation
-- [ ] T027 [P] Create `ThumbnailGrid.swift` — configurable column grid of image thumbnails, overlay badges (primary indicator, count), tappable
-- [ ] T028 Create `ImageGallery.swift` — full-screen image viewer via `.fullScreenCover()`, TabView with page style, pinch-to-zoom (MagnificationGesture), pan (DragGesture), double-tap toggle
+- [x] T023 Create `MediaGalleryCalculations.swift` in `Logic/` — attachment validation (max count, allowed kinds), grid column calculation, primary image detection
+- [x] T024 Create `MediaGalleryCalculationTests.swift` — tests for validation, column calc, primary detection (~10 tests)
+- [x] T025 [P] Create `BulkSelectionBar.swift` — fixed bottom bar via `.safeAreaInset(edge: .bottom)`, selected count, optional total amount, bulk action button, clear button
+- [x] T026 [P] Create `ListStateControls.swift` — search input field with toggleable visibility and smooth animation
+- [x] T027 [P] Create `ThumbnailGrid.swift` — configurable column grid of image thumbnails, overlay badges (primary indicator, count), tappable
+- [x] T028 Create `ImageGallery.swift` — full-screen image viewer via `.fullScreenCover()`, TabView with page style, pinch-to-zoom (MagnificationGesture), pan (DragGesture), double-tap toggle
 
 ### Implementation Notes
 - BulkSelectionBar uses `.safeAreaInset(edge: .bottom)` with transition animation (per R4 research).
