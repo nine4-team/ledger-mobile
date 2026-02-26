@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12A676B63F549896773CA41F /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873F47E2A621690D041C7170 /* Project.swift */; };
+		177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */; };
+		1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011B2B991C66CB99379D3F13 /* ScopeFilters.swift */; };
+		2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */; };
+		2EB56A038F955DDA41E7244C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03AED92E32EB085437B6F76 /* Item.swift */; };
+		3A8B8DAC00216F5F5F3B1FE0 /* ProjectBudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */; };
+		41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */; };
+		51A5F6D3829C766680F9178A /* ItemsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A5591BE06362A9528212DD /* ItemsService.swift */; };
+		65F1A00A24D917B71321D40A /* BudgetServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */; };
+		6802FB1D167B91F91372B029 /* TransactionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FF345E9378E3C5FA9416FB /* TransactionsService.swift */; };
+		6F72A4A5B67D935329EC7C21 /* FirestoreRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC6CAA659769069DED37219 /* FirestoreRepository.swift */; };
+		7B96D5C66E33AEEF52C96952 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6019DE1D2956133DB34D47E4 /* Foundation.framework */; };
+		7BE4EF8DD3F2F66B7C978C6E /* ItemsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */; };
+		7D571115A2B67A032EFEB239 /* ProjectContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */; };
+		8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */; };
 		A1000101000000000000AA01 /* LedgerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA01 /* LedgerApp.swift */; };
 		A1000101000000000000AA02 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA02 /* AppDelegate.swift */; };
 		A1000101000000000000AA03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA03 /* Assets.xcassets */; };
@@ -24,9 +39,55 @@
 		A1000101000000000000BB03 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A1000901000000000000CC03 /* FirebaseStorage */; };
 		A1000101000000000000BB04 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1000901000000000000CC04 /* GoogleSignIn */; };
 		A1000101000000000000BB05 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A1000901000000000000CC05 /* GoogleSignInSwift */; };
+		AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89888110732C2D81B903322 /* SyncTracking.swift */; };
+		AB715A496DC6CDD4A8EA2C1B /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47370982DDDB5064026D1B45 /* Enums.swift */; };
+		B1C4A97139A51FB63D155638 /* ProjectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E7ECCE7343406FCE2B6C74 /* ProjectService.swift */; };
+		C199091B0339E9DDE0585615 /* Space.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A548983AC0E6196622B4719 /* Space.swift */; };
+		C1CF755D2AE8CCEB427F39F2 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A62391566C00DD3400BFD5 /* Account.swift */; };
+		C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857F2893750ABBED0530AF4C /* BudgetProgress.swift */; };
+		C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0604D18D632527DF01B41A4 /* AccountContext.swift */; };
+		CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */; };
+		D013515AC042723CCE142203 /* AttachmentRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B86A1C58FBF298270046AF /* AttachmentRef.swift */; };
+		DA144F57DC347861FFCB5E2B /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC6F116D54531636D87F2F9 /* Transaction.swift */; };
+		DA7CB034BD9DE929759FE561 /* AccountMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B10F56A51B97546036FC5CC /* AccountMember.swift */; };
+		E0C8E2D81869D3725ED4AD47 /* SpacesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50623E68F8E8A1789A9C2132 /* SpacesService.swift */; };
+		E6BB3B6D6F4E2339F3A86967 /* AccountsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FA024C7D26993F0325E7C4 /* AccountsService.swift */; };
+		E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */; };
+		EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */; };
+		EC3AC233EDCA8D6130DA984D /* SpacesServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD524C3A177A74084F555003 /* SpacesServiceProtocol.swift */; };
+		ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18788219656392644ADD4F3 /* BudgetProgressService.swift */; };
+		F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */; };
+		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D7B8772852594CCFCC780A91 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1000501000000000000DD99 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1000501000000000000DD01;
+			remoteInfo = LedgeriOS;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
+		021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectServiceProtocol.swift; sourceTree = "<group>"; };
+		0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCalculationTests.swift; sourceTree = "<group>"; };
+		1A548983AC0E6196622B4719 /* Space.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Space.swift; sourceTree = "<group>"; };
+		1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetServiceProtocols.swift; sourceTree = "<group>"; };
+		2B10F56A51B97546036FC5CC /* AccountMember.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountMember.swift; sourceTree = "<group>"; };
+		47370982DDDB5064026D1B45 /* Enums.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
+		50623E68F8E8A1789A9C2132 /* SpacesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacesService.swift; sourceTree = "<group>"; };
+		6019DE1D2956133DB34D47E4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsServiceProtocol.swift; sourceTree = "<group>"; };
+		6DC6F116D54531636D87F2F9 /* Transaction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RepositoryProtocol.swift; sourceTree = "<group>"; };
+		785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModelCodableTests.swift; sourceTree = "<group>"; };
+		7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategory.swift; sourceTree = "<group>"; };
+		857F2893750ABBED0530AF4C /* BudgetProgress.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetProgress.swift; sourceTree = "<group>"; };
+		873F47E2A621690D041C7170 /* Project.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		88A5591BE06362A9528212DD /* ItemsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsService.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA01 /* LedgerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerApp.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA02 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA03 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -41,9 +102,35 @@
 		A1000201000000000000AA0C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA0D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1000201000000000000FF01 /* LedgeriOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LedgeriOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategoriesService.swift; sourceTree = "<group>"; };
+		B03AED92E32EB085437B6F76 /* Item.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		B2A62391566C00DD3400BFD5 /* Account.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
+		B4E7ECCE7343406FCE2B6C74 /* ProjectService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectService.swift; sourceTree = "<group>"; };
+		B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectContext.swift; sourceTree = "<group>"; };
+		BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectBudgetCategory.swift; sourceTree = "<group>"; };
+		C18788219656392644ADD4F3 /* BudgetProgressService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetProgressService.swift; sourceTree = "<group>"; };
+		C5FF345E9378E3C5FA9416FB /* TransactionsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsService.swift; sourceTree = "<group>"; };
+		C75E44234C0CE7E9AE18BADA /* LedgeriOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LedgeriOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CAC6CAA659769069DED37219 /* FirestoreRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirestoreRepository.swift; sourceTree = "<group>"; };
+		CD524C3A177A74084F555003 /* SpacesServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacesServiceProtocol.swift; sourceTree = "<group>"; };
+		CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountMembersService.swift; sourceTree = "<group>"; };
+		D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectBudgetCategoriesService.swift; sourceTree = "<group>"; };
+		D5B86A1C58FBF298270046AF /* AttachmentRef.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttachmentRef.swift; sourceTree = "<group>"; };
+		E1FA024C7D26993F0325E7C4 /* AccountsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountsService.swift; sourceTree = "<group>"; };
+		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
+		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
+		F89888110732C2D81B903322 /* SyncTracking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTracking.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		749B147F24C09139890E207B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B96D5C66E33AEEF52C96952 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000301000000000000DD01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -59,11 +146,102 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A1000401000000000000EE01 /* main group */ = {
+		41E4C3E7AD3CB291B4D14E08 /* Logic */ = {
+			isa = PBXGroup;
+			children = (
+				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
+			);
+			name = Logic;
+			path = Logic;
+			sourceTree = "<group>";
+		};
+		4EDD5E8B700DE9763AFB2C52 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A361CA30A9E9C606550C3AE9 /* Shared */,
+				B2A62391566C00DD3400BFD5 /* Account.swift */,
+				2B10F56A51B97546036FC5CC /* AccountMember.swift */,
+				873F47E2A621690D041C7170 /* Project.swift */,
+				6DC6F116D54531636D87F2F9 /* Transaction.swift */,
+				B03AED92E32EB085437B6F76 /* Item.swift */,
+				1A548983AC0E6196622B4719 /* Space.swift */,
+				7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */,
+				BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */,
+				857F2893750ABBED0530AF4C /* BudgetProgress.swift */,
+			);
+			name = Models;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		5049E7963806A086E13C5318 /* State */ = {
+			isa = PBXGroup;
+			children = (
+				F0604D18D632527DF01B41A4 /* AccountContext.swift */,
+				B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */,
+				F89888110732C2D81B903322 /* SyncTracking.swift */,
+			);
+			name = State;
+			path = State;
+			sourceTree = "<group>";
+		};
+		51B80CCC8A7048E0DEED3075 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				7B8257583360A8F2FA7FE7FD /* Protocols */,
+				CAC6CAA659769069DED37219 /* FirestoreRepository.swift */,
+				E1FA024C7D26993F0325E7C4 /* AccountsService.swift */,
+				B4E7ECCE7343406FCE2B6C74 /* ProjectService.swift */,
+				C5FF345E9378E3C5FA9416FB /* TransactionsService.swift */,
+				88A5591BE06362A9528212DD /* ItemsService.swift */,
+				50623E68F8E8A1789A9C2132 /* SpacesService.swift */,
+				B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */,
+				D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */,
+				C18788219656392644ADD4F3 /* BudgetProgressService.swift */,
+				CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */,
+			);
+			name = Services;
+			path = Services;
+			sourceTree = "<group>";
+		};
+		700A8D21EA3D1A74ECBC7A9B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C9D7AB7375B2BC0AFEAE2DA5 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */,
+				0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */,
+			);
+			name = LedgeriOSTests;
+			path = LedgeriOSTests;
+			sourceTree = "<group>";
+		};
+		7B8257583360A8F2FA7FE7FD /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */,
+				021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */,
+				E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */,
+				63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */,
+				CD524C3A177A74084F555003 /* SpacesServiceProtocol.swift */,
+				1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */,
+			);
+			name = Protocols;
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		A1000401000000000000EE01 = {
 			isa = PBXGroup;
 			children = (
 				A1000401000000000000EE02 /* LedgeriOS */,
 				A1000401000000000000EE03 /* Products */,
+				700A8D21EA3D1A74ECBC7A9B /* Frameworks */,
+				79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -78,6 +256,10 @@
 				A1000201000000000000AA0D /* Info.plist */,
 				A1000201000000000000AA03 /* Assets.xcassets */,
 				A1000201000000000000AA04 /* GoogleService-Info.plist */,
+				4EDD5E8B700DE9763AFB2C52 /* Models */,
+				51B80CCC8A7048E0DEED3075 /* Services */,
+				41E4C3E7AD3CB291B4D14E08 /* Logic */,
+				5049E7963806A086E13C5318 /* State */,
 			);
 			path = LedgeriOS;
 			sourceTree = "<group>";
@@ -86,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000201000000000000FF01 /* LedgeriOS.app */,
+				C75E44234C0CE7E9AE18BADA /* LedgeriOSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,6 +302,24 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		A361CA30A9E9C606550C3AE9 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D5B86A1C58FBF298270046AF /* AttachmentRef.swift */,
+				47370982DDDB5064026D1B45 /* Enums.swift */,
+			);
+			name = Shared;
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		C9D7AB7375B2BC0AFEAE2DA5 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				6019DE1D2956133DB34D47E4 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -145,6 +346,24 @@
 			productName = LedgeriOS;
 			productReference = A1000201000000000000FF01 /* LedgeriOS.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A655162AC1B9D3C6E153A0EC /* LedgeriOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9E5596AF6B668D82A8B76922 /* Build configuration list for PBXNativeTarget "LedgeriOSTests" */;
+			buildPhases = (
+				BE7419F0F54E91B514840DA5 /* Sources */,
+				749B147F24C09139890E207B /* Frameworks */,
+				8BF38BFAE2D09B7B28428F74 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6AB15A5ED801791BF5A1EC04 /* PBXTargetDependency */,
+			);
+			name = LedgeriOSTests;
+			productName = LedgeriOSTests;
+			productReference = C75E44234C0CE7E9AE18BADA /* LedgeriOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -179,11 +398,19 @@
 			projectRoot = "";
 			targets = (
 				A1000501000000000000DD01 /* LedgeriOS */,
+				A655162AC1B9D3C6E153A0EC /* LedgeriOSTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8BF38BFAE2D09B7B28428F74 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1000601000000000000DD02 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -210,12 +437,78 @@
 				A1000101000000000000AA0A /* FirestoreTestView.swift in Sources */,
 				A1000101000000000000AA0B /* MainTabView.swift in Sources */,
 				A1000101000000000000AA0C /* RootView.swift in Sources */,
+				D013515AC042723CCE142203 /* AttachmentRef.swift in Sources */,
+				AB715A496DC6CDD4A8EA2C1B /* Enums.swift in Sources */,
+				C1CF755D2AE8CCEB427F39F2 /* Account.swift in Sources */,
+				DA7CB034BD9DE929759FE561 /* AccountMember.swift in Sources */,
+				12A676B63F549896773CA41F /* Project.swift in Sources */,
+				DA144F57DC347861FFCB5E2B /* Transaction.swift in Sources */,
+				2EB56A038F955DDA41E7244C /* Item.swift in Sources */,
+				C199091B0339E9DDE0585615 /* Space.swift in Sources */,
+				8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */,
+				EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */,
+				C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */,
+				41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */,
+				F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */,
+				7BE4EF8DD3F2F66B7C978C6E /* ItemsServiceProtocol.swift in Sources */,
+				177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */,
+				EC3AC233EDCA8D6130DA984D /* SpacesServiceProtocol.swift in Sources */,
+				65F1A00A24D917B71321D40A /* BudgetServiceProtocols.swift in Sources */,
+				6F72A4A5B67D935329EC7C21 /* FirestoreRepository.swift in Sources */,
+				E6BB3B6D6F4E2339F3A86967 /* AccountsService.swift in Sources */,
+				B1C4A97139A51FB63D155638 /* ProjectService.swift in Sources */,
+				6802FB1D167B91F91372B029 /* TransactionsService.swift in Sources */,
+				51A5F6D3829C766680F9178A /* ItemsService.swift in Sources */,
+				E0C8E2D81869D3725ED4AD47 /* SpacesService.swift in Sources */,
+				2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */,
+				3A8B8DAC00216F5F5F3B1FE0 /* ProjectBudgetCategoriesService.swift in Sources */,
+				ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */,
+				CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */,
+				1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */,
+				C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */,
+				7D571115A2B67A032EFEB239 /* ProjectContext.swift in Sources */,
+				AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BE7419F0F54E91B514840DA5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */,
+				FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		6AB15A5ED801791BF5A1EC04 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LedgeriOS;
+			target = A1000501000000000000DD01 /* LedgeriOS */;
+			targetProxy = D7B8772852594CCFCC780A91 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		72A6AA6EF6F3890779EDAC7B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_IDENTIFIER = com.ledger.LedgeriOS.tests;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ledger.LedgeriOSTests;
+				PRODUCT_NAME = LedgeriOSTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LedgeriOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LedgeriOS";
+			};
+			name = Debug;
+		};
 		A1000702000000000000DD01 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -397,9 +690,36 @@
 			};
 			name = Release;
 		};
+		E2A60D72036760EF10772BF4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_IDENTIFIER = com.ledger.LedgeriOS.tests;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ledger.LedgeriOSTests;
+				PRODUCT_NAME = LedgeriOSTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LedgeriOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LedgeriOS";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9E5596AF6B668D82A8B76922 /* Build configuration list for PBXNativeTarget "LedgeriOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2A60D72036760EF10772BF4 /* Release */,
+				72A6AA6EF6F3890779EDAC7B /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A1000701000000000000DD01 /* Build configuration list for PBXProject "LedgeriOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

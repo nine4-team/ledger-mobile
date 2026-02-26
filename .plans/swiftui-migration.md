@@ -69,42 +69,51 @@ Still needed (not screenshot-dependent):
 
 ### Models (Swift structs, Codable)
 
-Port each TypeScript interface to a Swift struct:
+Core models (implemented):
 
-- [ ] `Account` / `AccountSummary`
-- [ ] `Project` + `ProjectBudgetSummary` + `BudgetSummaryCategory`
-- [ ] `Transaction` (largest model — ~25 fields)
-- [ ] `Item` + `ItemWrite` (with legacy `description` → `name` migration)
-- [ ] `Space` + `Checklist` + `ChecklistItem`
-- [ ] `BudgetCategory` + `BudgetCategoryType` enum
-- [ ] `ProjectBudgetCategory`
+- [x] `Account`
+- [x] `Project` + `ProjectBudgetSummary` + `BudgetSummaryCategory`
+- [x] `Transaction` (~24 fields)
+- [x] `Item` (greenfield — uses `name`, no legacy `description`)
+- [x] `Space` + `Checklist` + `ChecklistItem`
+- [x] `BudgetCategory` + `BudgetCategoryType` enum
+- [x] `ProjectBudgetCategory`
+- [x] `AccountMember`
+- [x] `AttachmentRef` + `AttachmentKind` enum
+- [x] `BudgetProgress` (pure computation struct)
+- [x] Shared enums: `MemberRole`, `InventorySaleDirection`
+
+Deferred (added when their screens need them):
+
 - [ ] `ItemLineageEdge`
 - [ ] `Invite`
-- [ ] `AccountMember`
 - [ ] `BusinessProfile`
 - [ ] `SpaceTemplate`
 - [ ] `VendorDefaults`
 - [ ] `ProjectPreferences`
 - [ ] `AccountPresets`
 - [ ] `RequestDoc<T>` (generic)
-- [ ] `AttachmentRef` + media types
 
 ### Service Layer
 
-Port each service file. The native SDK makes this simpler (no cache-first hacks needed):
+Core services (implemented):
 
-- [ ] Generic `FirestoreRepository<T>` with subscribe/list/get/upsert/delete
-- [ ] `AccountsService`
-- [ ] `ProjectService`
-- [ ] `TransactionsService`
-- [ ] `ItemsService`
-- [ ] `SpacesService`
-- [ ] `BudgetCategoriesService`
-- [ ] `ProjectBudgetCategoriesService`
-- [ ] `BudgetProgressService` (aggregation logic)
+- [x] Generic `FirestoreRepository<T>` with subscribe/list/get/create/update/delete
+- [x] `RepositoryProtocol` (for mock testing)
+- [x] `AccountsService`
+- [x] `ProjectService`
+- [x] `TransactionsService`
+- [x] `ItemsService`
+- [x] `SpacesService`
+- [x] `BudgetCategoriesService`
+- [x] `ProjectBudgetCategoriesService`
+- [x] `BudgetProgressService` (pure aggregation logic)
+- [x] `AccountMembersService`
+
+Deferred (added when their screens need them):
+
 - [ ] `LineageEdgesService`
 - [ ] `InvitesService`
-- [ ] `AccountMembersService`
 - [ ] `BusinessProfileService`
 - [ ] `SpaceTemplatesService`
 - [ ] `VendorDefaultsService`
@@ -118,9 +127,10 @@ Port each service file. The native SDK makes this simpler (no cache-first hacks 
 
 Replace Zustand stores with `@Observable` classes:
 
-- [ ] `AuthStore` → `AuthManager` (@Observable)
-- [ ] `AccountContextStore` → `AccountContext` (@Observable)
-- [ ] `ProjectContextStore` → `ProjectContext` (@Observable)
+- [x] `AuthStore` → `AuthManager` (@Observable) — Phase 1
+- [x] `AccountContextStore` → `AccountContext` (@Observable)
+- [x] `ProjectContextStore` → `ProjectContext` (@Observable)
+- [x] `SyncTracking` protocol + `NoOpSyncTracker` stub
 - [ ] `SyncStatusStore` → `SyncStatus` (@Observable)
 - [ ] `BillingStore` → `BillingManager` (@Observable) — StoreKit 2 replaces RevenueCat
 - [ ] `ListStateStore` → `ListStateManager` (@Observable)

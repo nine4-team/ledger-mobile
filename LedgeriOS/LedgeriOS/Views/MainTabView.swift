@@ -34,10 +34,12 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                Text("Settings")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
-                    .navigationTitle("Settings")
+                List {
+                    NavigationLink("Firestore Test") {
+                        FirestoreTestView()
+                    }
+                }
+                .navigationTitle("Settings")
             }
             .tabItem {
                 Label("Settings", systemImage: "gear")
