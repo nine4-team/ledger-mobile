@@ -58,6 +58,32 @@
 		ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18788219656392644ADD4F3 /* BudgetProgressService.swift */; };
 		F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */; };
 		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
+		A2B3C4D5E6F7089012345602 /* AccountGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345601 /* AccountGateView.swift */; };
+		A2B3C4D5E6F7089012345604 /* ProjectsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345603 /* ProjectsPlaceholderView.swift */; };
+		A2B3C4D5E6F7089012345606 /* InventoryPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */; };
+		A2B3C4D5E6F7089012345608 /* SearchPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */; };
+		A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */; };
+		A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */; };
+		C5A0010100000000000C0001 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0001 /* Card.swift */; };
+		C5A0010100000000000C0002 /* AppButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0002 /* AppButton.swift */; };
+		C5A0010100000000000C0003 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0003 /* FormField.swift */; };
+		C5A0010100000000000C0004 /* DetailRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0004 /* DetailRow.swift */; };
+		C5A0010100000000000C0005 /* SelectorCircle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0005 /* SelectorCircle.swift */; };
+		C5A0010100000000000C0006 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0006 /* Badge.swift */; };
+		C5A0010100000000000C0007 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0007 /* ProgressBar.swift */; };
+		C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0008 /* SegmentedControl.swift */; };
+		C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0009 /* CollapsibleSection.swift */; };
+		C5A0010100000000000C000A /* TitledCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000A /* TitledCard.swift */; };
+		C5A0010100000000000C000B /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000B /* BudgetProgressView.swift */; };
+		C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */; };
+		C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0002 /* ProgressBarCalculations.swift */; };
+		C5A0010100000000000T0001 /* Dimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0001 /* Dimensions.swift */; };
+		C5A0010100000000000T0002 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0002 /* Spacing.swift */; };
+		C5A0010100000000000T0003 /* StatusColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0003 /* StatusColors.swift */; };
+		C5A0010100000000000T0004 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0004 /* Typography.swift */; };
+		C5A0010100000000000X0001 /* BudgetDisplayCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */; };
+		C5A0010100000000000X0002 /* ProgressBarCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */; };
+		C5A0010100000000000X0003 /* SelectorCircleLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,6 +146,32 @@
 		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
 		F89888110732C2D81B903322 /* SyncTracking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTracking.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7089012345601 /* AccountGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountGateView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7089012345603 /* ProjectsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsPlaceholderView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryPlaceholderView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPlaceholderView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaceholderView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryTests.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0001 /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0002 /* AppButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppButton.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0003 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0004 /* DetailRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailRow.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0005 /* SelectorCircle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectorCircle.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0006 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0007 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0008 /* SegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C0009 /* CollapsibleSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleSection.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C000A /* TitledCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitledCard.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C000B /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressView.swift; sourceTree = "<group>"; };
+		C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculations.swift; sourceTree = "<group>"; };
+		C5A0020100000000000L0002 /* ProgressBarCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarCalculations.swift; sourceTree = "<group>"; };
+		C5A0020100000000000T0001 /* Dimensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dimensions.swift; sourceTree = "<group>"; };
+		C5A0020100000000000T0002 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		C5A0020100000000000T0003 /* StatusColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusColors.swift; sourceTree = "<group>"; };
+		C5A0020100000000000T0004 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculationTests.swift; sourceTree = "<group>"; };
+		C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarCalculationTests.swift; sourceTree = "<group>"; };
+		C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectorCircleLayoutTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +202,8 @@
 			isa = PBXGroup;
 			children = (
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
+				C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */,
+				C5A0020100000000000L0002 /* ProgressBarCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -214,8 +268,12 @@
 		79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */ = {
 			isa = PBXGroup;
 			children = (
+				A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */,
 				785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */,
 				0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */,
+				C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */,
+				C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */,
+				C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -260,6 +318,7 @@
 				51B80CCC8A7048E0DEED3075 /* Services */,
 				41E4C3E7AD3CB291B4D14E08 /* Logic */,
 				5049E7963806A086E13C5318 /* State */,
+				C5A0040100000000000G0001 /* Components */,
 			);
 			path = LedgeriOS;
 			sourceTree = "<group>";
@@ -287,6 +346,10 @@
 			isa = PBXGroup;
 			children = (
 				A1000201000000000000AA08 /* BrandColors.swift */,
+				C5A0020100000000000T0001 /* Dimensions.swift */,
+				C5A0020100000000000T0002 /* Spacing.swift */,
+				C5A0020100000000000T0003 /* StatusColors.swift */,
+				C5A0020100000000000T0004 /* Typography.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -294,10 +357,15 @@
 		A1000401000000000000EE06 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A2B3C4D5E6F7089012345601 /* AccountGateView.swift */,
 				A1000201000000000000AA09 /* AuthView.swift */,
 				A1000201000000000000AA0A /* FirestoreTestView.swift */,
+				A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */,
 				A1000201000000000000AA0B /* MainTabView.swift */,
+				A2B3C4D5E6F7089012345603 /* ProjectsPlaceholderView.swift */,
 				A1000201000000000000AA0C /* RootView.swift */,
+				A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */,
+				A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -318,6 +386,24 @@
 				6019DE1D2956133DB34D47E4 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		C5A0040100000000000G0001 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				C5A0020100000000000C0001 /* Card.swift */,
+				C5A0020100000000000C0002 /* AppButton.swift */,
+				C5A0020100000000000C0003 /* FormField.swift */,
+				C5A0020100000000000C0004 /* DetailRow.swift */,
+				C5A0020100000000000C0005 /* SelectorCircle.swift */,
+				C5A0020100000000000C0006 /* Badge.swift */,
+				C5A0020100000000000C0007 /* ProgressBar.swift */,
+				C5A0020100000000000C0008 /* SegmentedControl.swift */,
+				C5A0020100000000000C0009 /* CollapsibleSection.swift */,
+				C5A0020100000000000C000A /* TitledCard.swift */,
+				C5A0020100000000000C000B /* BudgetProgressView.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -468,6 +554,28 @@
 				C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */,
 				7D571115A2B67A032EFEB239 /* ProjectContext.swift in Sources */,
 				AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */,
+				C5A0010100000000000T0001 /* Dimensions.swift in Sources */,
+				C5A0010100000000000T0002 /* Spacing.swift in Sources */,
+				C5A0010100000000000T0003 /* StatusColors.swift in Sources */,
+				C5A0010100000000000T0004 /* Typography.swift in Sources */,
+				A2B3C4D5E6F7089012345602 /* AccountGateView.swift in Sources */,
+				A2B3C4D5E6F7089012345604 /* ProjectsPlaceholderView.swift in Sources */,
+				A2B3C4D5E6F7089012345606 /* InventoryPlaceholderView.swift in Sources */,
+				A2B3C4D5E6F7089012345608 /* SearchPlaceholderView.swift in Sources */,
+				A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */,
+				C5A0010100000000000C0001 /* Card.swift in Sources */,
+				C5A0010100000000000C0002 /* AppButton.swift in Sources */,
+				C5A0010100000000000C0003 /* FormField.swift in Sources */,
+				C5A0010100000000000C0004 /* DetailRow.swift in Sources */,
+				C5A0010100000000000C0005 /* SelectorCircle.swift in Sources */,
+				C5A0010100000000000C0006 /* Badge.swift in Sources */,
+				C5A0010100000000000C0007 /* ProgressBar.swift in Sources */,
+				C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */,
+				C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */,
+				C5A0010100000000000C000A /* TitledCard.swift in Sources */,
+				C5A0010100000000000C000B /* BudgetProgressView.swift in Sources */,
+				C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */,
+				C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -477,6 +585,10 @@
 			files = (
 				E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */,
 				FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */,
+				A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */,
+				C5A0010100000000000X0001 /* BudgetDisplayCalculationTests.swift in Sources */,
+				C5A0010100000000000X0002 /* ProgressBarCalculationTests.swift in Sources */,
+				C5A0010100000000000X0003 /* SelectorCircleLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,6 @@
 import Foundation
 
-protocol SyncTracking {
+protocol SyncTracking: Sendable {
     func trackPendingWrite()
 }
 

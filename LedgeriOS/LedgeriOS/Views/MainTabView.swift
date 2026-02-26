@@ -1,54 +1,62 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @SceneStorage("selectedTab") private var selectedTab = Tab.projects.rawValue
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             NavigationStack {
-                Text("Projects")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
-                    .navigationTitle("Projects")
+                ProjectsPlaceholderView()
             }
             .tabItem {
                 Label("Projects", systemImage: "house")
             }
+            .tag(Tab.projects.rawValue)
 
             NavigationStack {
-                Text("Inventory")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
-                    .navigationTitle("Inventory")
+                InventoryPlaceholderView()
             }
             .tabItem {
                 Label("Inventory", systemImage: "shippingbox")
             }
+            .tag(Tab.inventory.rawValue)
 
             NavigationStack {
-                Text("Search")
-                    .font(.title)
-                    .foregroundStyle(.secondary)
-                    .navigationTitle("Search")
+                SearchPlaceholderView()
             }
             .tabItem {
                 Label("Search", systemImage: "magnifyingglass")
             }
+            .tag(Tab.search.rawValue)
 
             NavigationStack {
-                List {
-                    NavigationLink("Firestore Test") {
-                        FirestoreTestView()
-                    }
-                }
-                .navigationTitle("Settings")
+                SettingsPlaceholderView()
             }
             .tabItem {
                 Label("Settings", systemImage: "gear")
             }
+            .tag(Tab.settings.rawValue)
         }
         .tint(BrandColors.primary)
     }
 }
 
+// MARK: - Tab Enum
+
+extension MainTabView {
+    enum Tab: String {
+        case projects
+        case inventory
+        case search
+        case settings
+    }
+}
+
 #Preview {
     MainTabView()
+        .environment(AuthManager())
+        .environment(AccountContext(
+            accountsService: AccountsService(syncTracker: NoOpSyncTracker()),
+            membersService: AccountMembersService(syncTracker: NoOpSyncTracker())
+        ))
 }

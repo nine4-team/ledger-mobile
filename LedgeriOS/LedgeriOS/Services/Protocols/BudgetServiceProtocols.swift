@@ -2,14 +2,14 @@ import FirebaseFirestore
 
 // MARK: - AccountsService
 
-protocol AccountsServiceProtocol {
+protocol AccountsServiceProtocol: Sendable {
     func getAccount(accountId: String) async throws -> Account?
     func subscribeToAccount(accountId: String, onChange: @escaping (Account?) -> Void) -> ListenerRegistration
 }
 
 // MARK: - BudgetCategoriesService
 
-protocol BudgetCategoriesServiceProtocol {
+protocol BudgetCategoriesServiceProtocol: Sendable {
     func subscribeToBudgetCategories(accountId: String, onChange: @escaping ([BudgetCategory]) -> Void) -> ListenerRegistration
     func createBudgetCategory(accountId: String, category: BudgetCategory) throws -> String
     func updateBudgetCategory(accountId: String, categoryId: String, fields: [String: Any]) async throws
@@ -18,13 +18,14 @@ protocol BudgetCategoriesServiceProtocol {
 
 // MARK: - ProjectBudgetCategoriesService
 
-protocol ProjectBudgetCategoriesServiceProtocol {
+protocol ProjectBudgetCategoriesServiceProtocol: Sendable {
     func subscribeToProjectBudgetCategories(accountId: String, projectId: String, onChange: @escaping ([ProjectBudgetCategory]) -> Void) -> ListenerRegistration
     func setProjectBudgetCategory(accountId: String, projectId: String, categoryId: String, budgetCents: Int, userId: String?) async throws
 }
 
 // MARK: - AccountMembersService
 
-protocol AccountMembersServiceProtocol {
+protocol AccountMembersServiceProtocol: Sendable {
     func subscribeToMember(accountId: String, userId: String, onChange: @escaping (AccountMember?) -> Void) -> ListenerRegistration
+    func listMembershipsForUser(userId: String) async throws -> [AccountMember]
 }
