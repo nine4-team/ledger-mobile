@@ -1,25 +1,28 @@
 ---
-work_package_id: "WP07"
+work_package_id: WP07
+title: Tier 3 — TransactionCard & Transaction Logic
+lane: "doing"
+dependencies: [WP01, WP05]
+base_branch: 007-swiftui-component-library-WP07-merge-base
+base_commit: 8e07d86861297bbc331368eb84d6587257e651ff
+created_at: '2026-02-26T08:44:49.341921+00:00'
 subtasks:
-  - "T040"
-  - "T041"
-  - "T042"
-  - "T043"
-title: "Tier 3 — TransactionCard & Transaction Logic"
-phase: "Phase 3 - Tier 3 Components"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01", "WP05"]
+- T040
+- T041
+- T042
+- T043
+phase: Phase 3 - Tier 3 Components
+assignee: ''
+agent: ''
+shell_pid: "26989"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP07 – Tier 3 — TransactionCard & Transaction Logic
