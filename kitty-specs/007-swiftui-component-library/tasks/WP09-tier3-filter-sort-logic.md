@@ -1,24 +1,27 @@
 ---
-work_package_id: "WP09"
+work_package_id: WP09
+title: Tier 3 — List Filter/Sort Logic
+lane: "doing"
+dependencies: [WP01]
+base_branch: 007-swiftui-component-library-WP01
+base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
+created_at: '2026-02-26T08:15:18.647586+00:00'
 subtasks:
-  - "T053"
-  - "T054"
-  - "T055"
-title: "Tier 3 — List Filter/Sort Logic"
-phase: "Phase 2 - Logic Foundation"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T053
+- T054
+- T055
+phase: Phase 2 - Logic Foundation
+assignee: ''
+agent: ''
+shell_pid: "75100"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP09 – Tier 3 — List Filter/Sort Logic
