@@ -6,6 +6,8 @@ struct ProjectDetailView: View {
     @Environment(ProjectContext.self) private var projectContext
     @State private var selectedTab = "budget"
     @State private var showingMenu = false
+    @State private var menuPendingAction: (() -> Void)?
+    @State private var showingDeleteConfirmation = false
 
     private let tabs = [
         TabBarItem(id: "budget", label: "Budget"),
@@ -57,16 +59,34 @@ struct ProjectDetailView: View {
                 }
             }
         }
-        .confirmationDialog("Project Options", isPresented: $showingMenu) {
-            Button("Edit Project") {
-                // Future: navigate to edit
-            }
-            Button("Export Transactions") {
-                // Future: CSV export
-            }
-            Button("Delete Project", role: .destructive) {
+        .sheet(isPresented: $showingMenu, onDismiss: {
+            menuPendingAction?()
+            menuPendingAction = nil
+        }) {
+            ActionMenuSheet(
+                title: "Project Options",
+                items: [
+                    ActionMenuItem(id: "edit", label: "Edit Project", icon: "pencil"),
+                    ActionMenuItem(id: "export", label: "Export Transactions", icon: "square.and.arrow.up"),
+                    ActionMenuItem(
+                        id: "delete", label: "Delete Project", icon: "trash",
+                        isDestructive: true,
+                        onPress: { showingDeleteConfirmation = true }
+                    ),
+                ],
+                onSelectAction: { action in
+                    menuPendingAction = action
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
+        .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
                 // Future: delete flow
             }
+        } message: {
+            Text("This action cannot be undone.")
         }
         .task(id: project.id) {
             guard let accountId = accountContext.currentAccountId,
