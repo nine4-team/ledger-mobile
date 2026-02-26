@@ -93,11 +93,11 @@
 **Prompt**: `tasks/WP03-tier1-forms-and-feedback.md`
 
 ### Included Subtasks
-- [ ] T018 [P] Create `FormSheet.swift` — reusable sheet scaffold (title, description, scrollable content, primary/secondary buttons with loading states, error display area)
-- [ ] T019 [P] Create `MultiStepFormSheet.swift` — extends FormSheet with step indicator ("Step X of Y")
-- [ ] T020 [P] Create `StatusBanner.swift` — error/warning/info variants, optional action buttons, auto-dismiss or manual dismiss
-- [ ] T021 [P] Create `ErrorRetryView.swift` — error message, retry button, offline indicator
-- [ ] T022 [P] Create `LoadingScreen.swift` — full-screen ProgressView with optional message text
+- [x] T018 [P] Create `FormSheet.swift` — reusable sheet scaffold (title, description, scrollable content, primary/secondary buttons with loading states, error display area)
+- [x] T019 [P] Create `MultiStepFormSheet.swift` — extends FormSheet with step indicator ("Step X of Y")
+- [x] T020 [P] Create `StatusBanner.swift` — error/warning/info variants, optional action buttons, auto-dismiss or manual dismiss
+- [x] T021 [P] Create `ErrorRetryView.swift` — error message, retry button, offline indicator
+- [x] T022 [P] Create `LoadingScreen.swift` — full-screen ProgressView with optional message text
 
 ### Implementation Notes
 - FormSheet uses `.sheet()` + `.presentationDetents([.medium, .large])` + `.presentationDragIndicator(.visible)` per CLAUDE.md convention.
