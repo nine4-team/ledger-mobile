@@ -1,27 +1,30 @@
 ---
-work_package_id: "WP04"
+work_package_id: WP04
+title: Tier 1 — Selection, Controls & Media Components
+lane: "doing"
+dependencies: [WP01]
+base_branch: 007-swiftui-component-library-WP01
+base_commit: 125de502fd2f1682240a1147bc6176e85c037cba
+created_at: '2026-02-26T08:14:59.207221+00:00'
 subtasks:
-  - "T023"
-  - "T024"
-  - "T025"
-  - "T026"
-  - "T027"
-  - "T028"
-title: "Tier 1 — Selection, Controls & Media Components"
-phase: "Phase 2 - Tier 1 Components"
-lane: "planned"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
-dependencies: ["WP01"]
+- T023
+- T024
+- T025
+- T026
+- T027
+- T028
+phase: Phase 2 - Tier 1 Components
+assignee: ''
+agent: ''
+shell_pid: "73972"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T07:45:42Z"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T07:45:42Z'
+  lane: planned
+  agent: system
+  shell_pid: ''
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP04 – Tier 1 — Selection, Controls & Media Components
