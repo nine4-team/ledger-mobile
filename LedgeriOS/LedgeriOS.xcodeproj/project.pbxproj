@@ -162,6 +162,14 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa
 		WP07B00100000000000C0001 /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000C0001 /* TransactionCard.swift */; };
 		WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */; };
 >>>>>>> 007-swiftui-component-library-WP08
+		WP03B00100000000000C0001 /* ErrorRetryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0001 /* ErrorRetryView.swift */; };
+		WP03B00100000000000C0002 /* FormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0002 /* FormSheet.swift */; };
+		WP03B00100000000000C0003 /* LoadingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0003 /* LoadingScreen.swift */; };
+		WP03B00100000000000C0004 /* MultiStepFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0004 /* MultiStepFormSheet.swift */; };
+		WP03B00100000000000C0005 /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0005 /* StatusBanner.swift */; };
+		WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0001 /* SharedItemsList.swift */; };
+		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
+		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -287,9 +295,7 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa
 		WP01F00100000000000S0006 /* ItemsListMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListMode.swift; sourceTree = "<group>"; };
 		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormattingTests.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculations.swift; sourceTree = "<group>"; };
-=======
 WP05F00100000000000C0001 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
 		WP05F00100000000000L0001 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
 		WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
@@ -317,6 +323,7 @@ WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileR
 		WP02F00100000000000C0006 /* InfoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0007 /* DraggableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculationTests.swift; sourceTree = "<group>"; };
+<<<<<<< HEAD
 		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0001 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0002 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
@@ -329,7 +336,19 @@ WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileR
 		WP07F00100000000000L0001 /* TransactionCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculations.swift; sourceTree = "<group>"; };
 		WP07F00100000000000C0001 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
 		WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculationTests.swift; sourceTree = "<group>"; };
->>>>>>> 007-swiftui-component-library-WP08
+=======
+		WP03F00100000000000C0001 /* ErrorRetryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorRetryView.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0002 /* FormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheet.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0003 /* LoadingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingScreen.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0004 /* MultiStepFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiStepFormSheet.swift; sourceTree = "<group>"; };
+		WP03F00100000000000C0005 /* StatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBanner.swift; sourceTree = "<group>"; };
+		WP07F00100000000000C0001 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
+		WP07F00100000000000L0001 /* TransactionCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculations.swift; sourceTree = "<group>"; };
+		WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculationTests.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
+		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
+>>>>>>> 007-swiftui-component-library-WP10
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -394,6 +413,9 @@ WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
 				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
 				WP08F00100000000000L0001 /* SelectionCalculations.swift */,
 WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
+=======
+				WP07F00100000000000L0001 /* TransactionCardCalculations.swift */,
+>>>>>>> 007-swiftui-component-library-WP10
 			);
 			name = Logic;
 			path = Logic;
@@ -471,6 +493,7 @@ WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
 				WP09F00100000000000X0001 /* ListFilterSortCalculationTests.swift */,
 				C43FE76A2E85991A0B0ABCBF /* BudgetTabCalculationTests.swift */,
 				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
+<<<<<<< HEAD
 				WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
 				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
 				WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
@@ -616,6 +639,7 @@ WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
 				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
+>>>>>>> 007-swiftui-component-library-WP10
 WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
 				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
 				WP04F00100000000000C0002 /* ListStateControls.swift */,
@@ -635,13 +659,24 @@ WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
 				WP02F00100000000000C0005 /* SpaceCard.swift */,
 				WP02F00100000000000C0006 /* InfoCard.swift */,
 				WP02F00100000000000C0007 /* DraggableCard.swift */,
+<<<<<<< HEAD
 				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
 				WP04F00100000000000C0002 /* ListStateControls.swift */,
 				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
 				WP04F00100000000000C0004 /* ImageGallery.swift */,
 				WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
 				WP07F00100000000000C0001 /* TransactionCard.swift */,
->>>>>>> 007-swiftui-component-library-WP08
+=======
+				WP03F00100000000000C0001 /* ErrorRetryView.swift */,
+				WP03F00100000000000C0002 /* FormSheet.swift */,
+				WP03F00100000000000C0003 /* LoadingScreen.swift */,
+				WP03F00100000000000C0004 /* MultiStepFormSheet.swift */,
+				WP03F00100000000000C0005 /* StatusBanner.swift */,
+				WP07F00100000000000C0001 /* TransactionCard.swift */,
+				WP10F00100000000000C0001 /* SharedItemsList.swift */,
+				WP10F00100000000000C0002 /* SharedTransactionsList.swift */,
+				WP10F00100000000000C0003 /* DraggableCardList.swift */,
+>>>>>>> 007-swiftui-component-library-WP10
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -854,9 +889,7 @@ WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
 				WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */,
 				WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */,
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
-<<<<<<< HEAD
 				WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
-=======
 WP05B00100000000000C0001 /* ActionMenuSheet.swift in Sources */,
 				WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */,
 				WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */,
@@ -880,6 +913,7 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
 				WP02B00100000000000C0005 /* SpaceCard.swift in Sources */,
 				WP02B00100000000000C0006 /* InfoCard.swift in Sources */,
 				WP02B00100000000000C0007 /* DraggableCard.swift in Sources */,
+<<<<<<< HEAD
 				WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */,
 				WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */,
 				WP04B00100000000000C0002 /* ListStateControls.swift in Sources */,
@@ -889,7 +923,18 @@ WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
 				WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */,
 				WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */,
 				WP07B00100000000000C0001 /* TransactionCard.swift in Sources */,
->>>>>>> 007-swiftui-component-library-WP08
+=======
+				WP03B00100000000000C0001 /* ErrorRetryView.swift in Sources */,
+				WP03B00100000000000C0002 /* FormSheet.swift in Sources */,
+				WP03B00100000000000C0003 /* LoadingScreen.swift in Sources */,
+				WP03B00100000000000C0004 /* MultiStepFormSheet.swift in Sources */,
+				WP03B00100000000000C0005 /* StatusBanner.swift in Sources */,
+				WP07B00100000000000C0001 /* TransactionCard.swift in Sources */,
+				WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */,
+				WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */,
+				WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */,
+				WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */,
+>>>>>>> 007-swiftui-component-library-WP10
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -920,6 +965,10 @@ WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
 				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
 				WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */,
 WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
+<<<<<<< HEAD
+=======
+				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
+>>>>>>> 007-swiftui-component-library-WP10
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
