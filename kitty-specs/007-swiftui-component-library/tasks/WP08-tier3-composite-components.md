@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Tier 3 — Composite Components
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP01
 - WP04
@@ -326,3 +326,4 @@ spec-kitty implement WP08 --base WP06
 - 2026-02-26T07:45:42Z – system – lane=planned – Prompt created.
 - 2026-02-26T08:46:26Z – claude-opus – shell_pid=29743 – lane=doing – Assigned agent via workflow command
 - 2026-02-26T18:17:13Z – claude-opus – shell_pid=29743 – lane=for_review – Ready for review: All 7 Tier 3 composite components implemented with SelectionCalculations logic and 15 passing tests. Build compiles cleanly.
+- 2026-02-26T18:33:44Z – claude-opus – shell_pid=29743 – lane=doing – Review failed: ItemsListControlBar must wrap ListControlBar (WP06) instead of standalone implementation to prevent design drift. GroupedItemCard must accept typed ItemCard data instead of generic @ViewBuilder to maintain coupling with ItemCard component.
