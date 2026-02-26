@@ -105,6 +105,15 @@
 		WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0006 /* ItemsListMode.swift */; };
 		WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000L0001 /* CurrencyFormatting.swift */; };
 		WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */; };
+		WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */; };
+		WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */; };
+		WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0002 /* BudgetProgressPreview.swift */; };
+		WP02B00100000000000C0003 /* CategoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0003 /* CategoryRow.swift */; };
+		WP02B00100000000000C0004 /* ImageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0004 /* ImageCard.swift */; };
+		WP02B00100000000000C0005 /* SpaceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0005 /* SpaceCard.swift */; };
+		WP02B00100000000000C0006 /* InfoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0006 /* InfoCard.swift */; };
+		WP02B00100000000000C0007 /* DraggableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0007 /* DraggableCard.swift */; };
+		WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -214,6 +223,15 @@
 		WP01F00100000000000S0006 /* ItemsListMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListMode.swift; sourceTree = "<group>"; };
 		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormattingTests.swift; sourceTree = "<group>"; };
+		WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculations.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategoryTracker.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0002 /* BudgetProgressPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressPreview.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0003 /* CategoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRow.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0004 /* ImageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCard.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0005 /* SpaceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCard.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0006 /* InfoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCard.swift; sourceTree = "<group>"; };
+		WP02F00100000000000C0007 /* DraggableCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCard.swift; sourceTree = "<group>"; };
+		WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +282,7 @@
 				B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */,
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
 				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
+				WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -337,6 +356,7 @@
 				EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */,
 				C43FE76A2E85991A0B0ABCBF /* BudgetTabCalculationTests.swift */,
 				WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */,
+				WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -466,6 +486,13 @@
 				C5A0020100000000000C000B /* BudgetProgressView.swift */,
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
+				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
+				WP02F00100000000000C0002 /* BudgetProgressPreview.swift */,
+				WP02F00100000000000C0003 /* CategoryRow.swift */,
+				WP02F00100000000000C0004 /* ImageCard.swift */,
+				WP02F00100000000000C0005 /* SpaceCard.swift */,
+				WP02F00100000000000C0006 /* InfoCard.swift */,
+				WP02F00100000000000C0007 /* DraggableCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -666,6 +693,14 @@
 				WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */,
 				WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */,
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
+				WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
+				WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */,
+				WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */,
+				WP02B00100000000000C0003 /* CategoryRow.swift in Sources */,
+				WP02B00100000000000C0004 /* ImageCard.swift in Sources */,
+				WP02B00100000000000C0005 /* SpaceCard.swift in Sources */,
+				WP02B00100000000000C0006 /* InfoCard.swift in Sources */,
+				WP02B00100000000000C0007 /* DraggableCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -682,6 +717,7 @@
 				E57A8103EC4D73FB50EFEC11 /* ProjectListCalculationTests.swift in Sources */,
 				B2CCDFC85C92A50857AC5B33 /* BudgetTabCalculationTests.swift in Sources */,
 				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
+				WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
