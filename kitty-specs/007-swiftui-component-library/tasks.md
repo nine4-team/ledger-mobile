@@ -285,9 +285,9 @@
 **Prompt**: `tasks/WP09-tier3-filter-sort-logic.md`
 
 ### Included Subtasks
-- [ ] T053 Create `ListFilterSortCalculations.swift` in `Logic/` — item filter predicates (bookmarked, from-inventory, to-return, returned, no-sku, no-name, no-project-price, no-image, no-transaction), item sort comparators (created-desc/asc, alphabetical-asc/desc), transaction filter/sort equivalents
-- [ ] T054 Create item grouping logic in `ListFilterSortCalculations.swift` — group items by name+SKU for GroupedItemCard, compute group summary (count, total)
-- [ ] T055 Create `ListFilterSortCalculationTests.swift` — tests for each filter predicate, each sort comparator, grouping logic, empty input edge cases (~25 tests)
+- [x] T053 Create `ListFilterSortCalculations.swift` in `Logic/` — item filter predicates (bookmarked, from-inventory, to-return, returned, no-sku, no-name, no-project-price, no-image, no-transaction), item sort comparators (created-desc/asc, alphabetical-asc/desc), transaction filter/sort equivalents
+- [x] T054 Create item grouping logic in `ListFilterSortCalculations.swift` — group items by name+SKU for GroupedItemCard, compute group summary (count, total)
+- [x] T055 Create `ListFilterSortCalculationTests.swift` — tests for each filter predicate, each sort comparator, grouping logic, empty input edge cases (~25 tests)
 
 ### Implementation Notes
 - Filter predicates: pure functions `(ScopedItem) -> Bool` for each ItemFilterOption case.
