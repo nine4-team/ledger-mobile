@@ -1,86 +1,117 @@
 # Ledger Mobile
 
-## Code Conventions
+Native SwiftUI iOS app, migrating from a React Native (Expo) codebase that lives in `src/`. The RN app runs in parallel until the SwiftUI version reaches feature parity. Migration plan: `.plans/swiftui-migration.md`.
 
-### Offline-First Coding Rules
+## Project Structure
 
-Architecture spec: `.cursor/plans/firebase-mobile-migration/10_architecture/offline_first_principles.md`
+- **`LedgeriOS/`** — Xcode project (SwiftUI, iOS target). All new work goes here.
+- **`src/`** — Legacy React Native app. Reference only — do not modify.
+- **`reference/screenshots/dark/`** — Dark mode screenshots are the source of truth for visual parity.
+- **Dependencies:** Swift Package Manager only. No CocoaPods, no Carthage.
+  - Firebase Swift SDK (Auth, Firestore, Storage)
+  - GoogleSignIn-iOS
 
-These rules are non-negotiable. Violating them causes the app to hang when connectivity is poor.
+## Architecture
 
-1. **Never `await` Firestore write operations in UI code.** Use fire-and-forget with `.catch()` for error logging. Navigation and UI state updates happen immediately.
-2. **All `create*` service functions must return document IDs synchronously** using pre-generated IDs via `doc(collection(...))`, not `addDoc`.
-3. **Read operations in save/submit handlers must use cache-first mode** (`mode: 'offline'`). Server-first reads (`mode: 'online'`) are only for explicit pull-to-refresh.
-4. **No "spinners of doom"** — never show loading states that block on server acknowledgment. If local data exists, show it immediately.
-5. **Only actual byte uploads (Firebase Storage) and Firebase Auth operations may require connectivity.** All Firestore writes (including request-doc creation) must work offline.
-6. **All Firestore write service functions must call `trackPendingWrite()`** after the write for sync status visibility.
+### State Management
 
-### Firestore Data Normalization Rules
+Use `@Observable` classes with `@MainActor` isolation. Inject via SwiftUI `.environment()`.
 
-**All `snapshot.data()` calls must go through entity-specific normalizer functions** — never spread `snapshot.data()` directly.
+```swift
+@MainActor
+@Observable
+final class SomeManager {
+    // State properties — no @Published needed with @Observable
+    var items: [Item] = []
+}
 
-**Why:** Normalizers provide a single place per entity to handle data transformations (legacy field migrations, default values, type coercions, array validation). Without them, migration logic scatters across every callsite.
+// In App or parent view:
+.environment(someManager)
 
-Secondary benefit: for single-document snapshots (`DocumentSnapshot`), the normalizer guards against a React Native Firebase edge case where `data()` can return `undefined` even when `exists=true` during race conditions. This doesn't apply to collection queries (`QueryDocumentSnapshot.data()` is always defined), but using normalizers everywhere means you don't have to think about which snapshot type you're dealing with.
+// In child views:
+@Environment(SomeManager.self) private var someManager
+```
 
-**Required Pattern:**
+Reference: `LedgeriOS/LedgeriOS/Auth/AuthManager.swift`
 
-Every service file must define entity-specific normalizer functions:
+### Firestore Models
 
-```typescript
-function normalizeEntityFromFirestore(raw: unknown, id: string): EntityType {
-  const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  // Entity-specific transformations: legacy field migrations, defaults, type coercions
-  return { ...(data as object), id } as EntityType;
+All Firestore entities are Swift structs conforming to `Codable`. Use `CodingKeys` for field name mapping and custom `init(from:)` for legacy field migrations or default values.
+
+```swift
+struct Item: Codable, Identifiable {
+    let id: String
+    var name: String
+    var status: ItemStatus
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, status
+        // Legacy: case description  (migrated to `name`)
+    }
 }
 ```
 
-**Use normalizers at all callsites** (both single-doc and collection queries):
-```typescript
-// Single-doc subscription:
-normalizeEntityFromFirestore(snapshot.data(), snapshot.id)
+### Navigation
 
-// Collection query:
-snapshot.docs.map(d => normalizeEntityFromFirestore(d.data(), d.id))
+One `NavigationStack` per tab. Use `NavigationLink(value:)` with `.navigationDestination(for:)` — not the deprecated label-based `NavigationLink`.
+
+```swift
+NavigationStack {
+    List(items) { item in
+        NavigationLink(value: item) {
+            ItemRow(item: item)
+        }
+    }
+    .navigationDestination(for: Item.self) { item in
+        ItemDetailView(item: item)
+    }
+}
 ```
 
-**Reference:** `src/data/itemsService.ts` (includes legacy field migration example)
+### App Entry Point
 
-**Generic repository:** Use parameterized normalizer in `createRepository<T>(path, mode, normalizer)` third argument.
+`LedgerApp` (`@main`) → `RootView` (auth gate) → `MainTabView` (4 tabs: Projects, Inventory, Search, Settings).
 
-## Detail Screen Patterns
+## Offline-First Principles
 
-Guide: `kitty-specs/005-detail-screen-polish/quickstart.md`
+The native Firestore SDK handles cache-first reads and offline persistence automatically — no workarounds needed. But these principles still apply:
 
-### Item List Components
+1. **No spinners of doom.** Never block UI on server acknowledgment. If local/cached data exists, show it immediately.
+2. **Optimistic UI.** Navigate and update state immediately after a write. Don't wait for server confirmation.
+3. **Only block on connectivity for:** Firebase Storage uploads (actual bytes) and Firebase Auth operations. All Firestore reads/writes must work offline.
 
-- **SharedItemsList**: Full-featured item list with grouping, bulk selection (bottom bar + sheet), search/sort/filter
-  - Supports `embedded={true}` mode for use in detail screens (hides top controls)
-  - Pass `manager` from `useItemsManager` for external state control
-  - Configure context-specific bulk actions via `bulkActions` prop
-- **ItemsSection**: Deprecated - replace with `SharedItemsList` in embedded mode
+## Theming
 
-### Section Spacing
+All design tokens live in `LedgeriOS/LedgeriOS/Theme/`:
 
-All detail screens (transaction, item, space) must use consistent spacing:
-- **Section gap** (between collapsible headers): `4px`
-- **Item list gap** (between item cards): `10px`
-- **Card padding**: `16px` (`CARD_PADDING`)
+| File | Contents |
+|------|----------|
+| `BrandColors.swift` | Brand primary, adaptive light/dark colors (backgrounds, text, borders, buttons, inputs, destructive). Uses asset catalog colorsets in `Assets.xcassets/Colors/`. |
+| `StatusColors.swift` | Budget status colors (met, in-progress, missed, overflow) and transaction badge colors. |
+| `Spacing.swift` | Spacing scale (`xs` 4pt through `xxxl` 48pt) plus semantic aliases (`screenPadding`, `cardPadding`, `cardListGap`). |
+| `Typography.swift` | Type scale (`h1`–`h3`, `body`, `small`, `caption`, `button`, `label`) plus `.sectionLabelStyle()` modifier. |
+| `Dimensions.swift` | Corner radii (`cardRadius` 12, `buttonRadius` 8, `inputRadius` 8) and border widths. |
 
-### Collapsible Section Titles
+Use these constants instead of inline magic numbers. Adaptive colors auto-switch between light and dark mode via the asset catalog — no `@Environment(\.colorScheme)` branching needed in most cases.
 
-Use `Card` (not `TitledCard`) inside `CollapsibleSectionHeader` to avoid duplicate titles:
-```typescript
-<CollapsibleSectionHeader title="DETAILS">
-  <Card>{/* content */}</Card>  {/* ✓ No duplicate title */}
-</CollapsibleSectionHeader>
-```
+## Axiom Skills
 
-### Info Row Styling
+This is a SwiftUI/iOS project. **Use Axiom skills for architecture decisions and best practices before writing code.** Key domains:
 
-Transaction and item detail hero cards use consistent info row pattern:
-- Label: `<AppText variant="caption">` (secondary color)
-- Value: `<AppText variant="body">` (primary color)
-- Links: `style={{ color: theme.colors.primary }}` + `onPress`
-- Separator: ` | ` (literal pipe with spaces, caption variant)
-- Layout: `flexDirection: 'row'`, `alignItems: 'baseline'`
+- `axiom-ios-ui` — SwiftUI patterns, component structure, HIG compliance
+- `axiom-ios-data` — Firestore/persistence patterns
+- `axiom-swift-concurrency` — async/await, actor isolation, Sendable
+- `axiom-ios-build` — build failures, SPM issues, Xcode problems
+- `axiom-swift-testing` — Swift Testing framework (`@Test`, `#expect`, `@Suite`)
+- `axiom-swiftui-nav` — navigation architecture (NavigationStack, deep linking)
+- `axiom-codable` — Codable patterns for Firestore model serialization
+
+## Testing
+
+Use **Swift Testing** framework (not XCTest) for all new tests. The global CLAUDE.md test-first workflow applies — plan → write tests → implement → iterate.
+
+For Firestore service testing, extract business logic into pure functions that can be tested without a live Firestore connection. Mock the Firestore layer at the boundary, not inside the logic.
+
+## UI Copy
+
+Button labels use title case with lowercase prepositions: `Save to Draft`, `Add New Item`.

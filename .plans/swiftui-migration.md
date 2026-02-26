@@ -39,9 +39,9 @@ Screenshots captured in `reference/screenshots/dark/`:
 
 Still needed (not screenshot-dependent):
 
-- [ ] Document the color system (brand color `#987e55`, dark mode palette, status colors)
-- [ ] Document the typography scale (h1, h2/title, body, caption sizes and weights)
-- [ ] Document spacing constants (card padding, section gaps, screen padding)
+- [x] Document the color system (brand color `#987e55`, dark mode palette, status colors) — `Theme/BrandColors.swift`, `Theme/StatusColors.swift`, asset catalog colorsets
+- [x] Document the typography scale (h1, h2/title, body, caption sizes and weights) — `Theme/Typography.swift`
+- [x] Document spacing constants (card padding, section gaps, screen padding) — `Theme/Spacing.swift`, `Theme/Dimensions.swift`
 
 ---
 
@@ -55,10 +55,11 @@ Still needed (not screenshot-dependent):
 - [x] Implement Firebase initialization — `FirebaseApp.configure()` in `LedgerApp.init()`, `GIDSignIn` configured same place
 - [x] Implement sign-in / sign-up screens — email/password + Google Sign-In (`GoogleSignIn-iOS` via SPM, `AuthManager` @Observable/@MainActor)
 - [x] User successfully authenticated and navigated the tab bar (verified manually)
-- [ ] Verify Firestore reads work — `FirestoreTestView` exists, needs a "Test Connection" button wired into Settings tab
-- [ ] Verify offline persistence works out of the box — test after Firestore read is verified
+- [x] Verify Firestore reads work — `FirestoreTestView` confirms account read from production Firestore (verified manually)
+- [x] Verify offline persistence works out of the box — cache-source read confirmed after server fetch (verified manually)
+- [x] Seed production Firestore — account doc + owner membership doc created via firebase-admin; `health/ping` created
 
-**Deliverable:** App launches, user can sign in, console shows Firestore data.
+**Deliverable:** ✅ Complete — app launches, user signs in, reads account from Firestore, cache read confirmed offline.
 
 ---
 
@@ -198,29 +199,31 @@ Build screens in order of usage frequency. Each screen is a separate feature bra
 
 ## Phase 5: Shared Components Library
 
-These get built incrementally as screens need them, not upfront:
+Split into two groups with different timing (see "How Phases Overlap" below):
 
-### Simple (build first, reuse everywhere)
-- `AppText` equivalent (styled Text with variants)
-- `Card` (surface with border, shadow, padding)
-- `AppButton` (primary/secondary)
-- `FormField` (label + input + error)
-- `DetailRow` (label + value)
-- `SelectorCircle` (checkbox/radio)
-- `SegmentedControl`
-- `Badge` (colored pill)
+### Simple — build now, parallel with Phases 2 + 3
+These are pure UI — no data models, no Firestore, no navigation. Just props in, pixels out. Build them anytime.
 
-### Medium
-- `CollapsibleSection` (chevron + title + expandable content)
-- `BottomSheet` / `.sheet` modifier
-- `BulkSelectionBar` (fixed bottom bar)
-- `TitledCard` (card with section header)
+- [ ] `AppText` (styled Text with variants: headline, body, caption, label)
+- [ ] `Card` (surface with border, shadow, padding)
+- [ ] `AppButton` (primary/secondary styles)
+- [ ] `FormField` (label + input + error message)
+- [ ] `DetailRow` (label + value, used in detail screens)
+- [ ] `SelectorCircle` (checkbox/radio toggle)
+- [ ] `SegmentedControl`
+- [ ] `Badge` (colored pill with text)
+- [ ] `CollapsibleSection` (chevron + title + expandable content)
+- [ ] `TitledCard` (card with section header)
 
-### Complex
-- `ItemCard` (thumbnail, badges, metadata, selection, menu)
-- `TransactionCard` (badges, amount, source, date)
-- `MediaGallery` (image grid, camera/picker, viewer)
-- `SearchableFilterableList` (search + sort + filter + bulk select)
+### Complex — extract from screens during Phase 4
+These need a real screen to design against. Don't build them in isolation — let the screen pull them out when needed.
+
+- [ ] `ItemCard` (thumbnail, badges, metadata, selection state, context menu)
+- [ ] `TransactionCard` (badges, amount, source, date)
+- [ ] `MediaGallery` (image grid, camera/picker, viewer)
+- [ ] `SearchableFilterableList` (search bar + sort + filter + bulk select)
+- [ ] `BulkSelectionBar` (fixed bottom bar with action buttons)
+- [ ] `BottomSheet` / `.sheet` wrapper
 
 ---
 
@@ -266,17 +269,53 @@ These get built incrementally as screens need them, not upfront:
 
 ---
 
+## How Phases Overlap
+
+Phases are **not** strictly sequential. Here's what can run at the same time:
+
+```
+Phase 0  ████░░░░░░░░░░░░░░░░░░░░░░░░░░  (done — screenshots are reference)
+Phase 1  ░░████░░░░░░░░░░░░░░░░░░░░░░░░  (done — Xcode + Firebase foundation)
+Phase 2  ░░░░░░████████░░░░░░░░░░░░░░░░  (models + services)
+Phase 3  ░░░░░░████░░░░░░░░░░░░░░░░░░░░  (nav shell — runs alongside Phase 2)
+Phase 5a ░░░░░░████░░░░░░░░░░░░░░░░░░░░  (simple components — runs alongside 2+3)
+Phase 4  ░░░░░░░░░░░░████████████████░░  (screens — starts after 2+3 are done)
+Phase 5b ░░░░░░░░░░░░░░████████████░░░░  (complex components — extracted from screens)
+Phase 6  ░░░░░░░░░░░░░░░░░░░░░░░░████░░  (macOS — needs working iOS screens)
+Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░██  (migration — needs everything else)
+```
+
+### Rules
+
+1. **Phases 2, 3, and simple Phase 5 components all run at the same time.** Simple components (`Card`, `Badge`, `AppButton`, `DetailRow`, `FormField`, `SegmentedControl`, `CollapsibleSection`, `SelectorCircle`) have no data dependencies — they take strings and colors as inputs. They can be built now.
+2. **Phase 4 starts after both 2 and 3 are done.** Screens need real data (Phase 2) wired into real navigation (Phase 3). Don't start screens until both are finished.
+3. **Within Phase 4, screens can run in parallel.** Each screen is its own feature branch. Multiple screens can be built at the same time as long as each one builds and runs independently.
+4. **Complex Phase 5 components are extracted from screens, not built upfront.** `ItemCard`, `TransactionCard`, `SearchableFilterableList`, `BulkSelectionBar`, `MediaGallery` all need a real screen to design against. Build them as Phase 4 needs them.
+5. **Phase 6 waits for Phase 4.** macOS adaptation needs working iOS screens to adapt.
+6. **Phase 7 is last.** Ship only after everything works.
+
+### Current Status (updated 2025-02-25)
+
+- Phase 0: ✅ Done (remaining screenshot gaps are non-blocking)
+- Phase 1: ✅ Done
+- Phase 2: ~95% done (core models, services, state managers all built; deferred services like Invites, Lineage, Templates are not needed until their screens are built in Phase 4)
+- Phase 3: ~50% done (tab bar + auth gate work; still need nav destinations and account selection)
+
+**Next:** Finish Phase 3 (navigation destinations, account selection). Then start Phase 4 screens.
+
+---
+
 ## Estimated Scope
 
-| Phase | Effort | Can Parallelize? |
-|-------|--------|-----------------|
-| Phase 0: Screenshots | 1 session | No (manual) |
-| Phase 1: Xcode + Firebase | 1-2 sessions | No |
-| Phase 2: Models + Services | 3-5 sessions | Yes (by entity) |
-| Phase 3: Navigation Shell | 1-2 sessions | No |
-| Phase 4: Screens | 10-15 sessions | Yes (by screen) |
-| Phase 5: Components | Built incrementally | N/A |
-| Phase 6: iOS Target | 2-3 sessions | No |
-| Phase 7: Migration | 1-2 sessions | No |
+| Phase | Effort | Notes |
+|-------|--------|-------|
+| Phase 0: Screenshots | 1 session | Done |
+| Phase 1: Xcode + Firebase | 1-2 sessions | Done |
+| Phase 2: Models + Services | 3-5 sessions | Parallel with Phase 3 |
+| Phase 3: Navigation Shell | 1-2 sessions | Parallel with Phase 2 |
+| Phase 4: Screens | 10-15 sessions | Multiple screens in parallel |
+| Phase 5: Components | Built incrementally | Part of Phase 4 work |
+| Phase 6: macOS Target | 2-3 sessions | After Phase 4 |
+| Phase 7: Migration | 1-2 sessions | After everything |
 
 Each "session" = a focused worktree feature branch.
