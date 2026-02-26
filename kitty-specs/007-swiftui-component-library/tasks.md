@@ -187,11 +187,11 @@
 **Prompt**: `tasks/WP06-tier2-list-controls-and-itemcard.md`
 
 ### Included Subtasks
-- [ ] T035 Create `ItemCardCalculations.swift` in `Logic/` — badge computation (status, category, index), metadata line formatting, controlled/uncontrolled selection state helpers
-- [ ] T036 Create `ItemCardCalculationTests.swift` — tests for badge logic, metadata formatting, selection state (~15 tests)
-- [ ] T037 [P] Create `ListControlBar.swift` — generic search bar + configurable action buttons (standard, icon-only, tile variants), horizontal layout
-- [ ] T038 [P] Create `BudgetProgressDisplay.swift` — composes multiple BudgetCategoryTracker rows + action button for budget management
-- [ ] T039 Create `ItemCard.swift` — thumbnail, metadata lines (name, SKU, source, location, price), badge header, SelectorCircle, bookmark toggle, menu button triggering ActionMenuSheet, controlled/uncontrolled selection, expandable
+- [x] T035 Create `ItemCardCalculations.swift` in `Logic/` — badge computation (status, category, index), metadata line formatting, controlled/uncontrolled selection state helpers
+- [x] T036 Create `ItemCardCalculationTests.swift` — tests for badge logic, metadata formatting, selection state (~15 tests)
+- [x] T037 [P] Create `ListControlBar.swift` — generic search bar + configurable action buttons (standard, icon-only, tile variants), horizontal layout
+- [x] T038 [P] Create `BudgetProgressDisplay.swift` — composes multiple BudgetCategoryTracker rows + action button for budget management
+- [x] T039 Create `ItemCard.swift` — thumbnail, metadata lines (name, SKU, source, location, price), badge header, SelectorCircle, bookmark toggle, menu button triggering ActionMenuSheet, controlled/uncontrolled selection, expandable
 
 ### Implementation Notes
 - ItemCard uses the controlled/uncontrolled selection pattern (R2): optional `Binding<Bool>?` with `@State` fallback.
