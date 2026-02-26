@@ -120,6 +120,25 @@
 		WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000L0001 /* CurrencyFormatting.swift */; };
 		WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */; };
 		WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */; };
+WP05B00100000000000C0001 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000C0001 /* ActionMenuSheet.swift */; };
+		WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000L0001 /* ActionMenuCalculations.swift */; };
+		WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */; };
+		WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */; };
+		WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0001 /* BulkSelectionBar.swift */; };
+		WP04B00100000000000C0002 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0002 /* ListStateControls.swift */; };
+		WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0003 /* ThumbnailGrid.swift */; };
+		WP04B00100000000000C0004 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000C0004 /* ImageGallery.swift */; };
+		WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */; };
+		WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0001 /* GroupedItemCard.swift */; };
+		WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0002 /* MediaGallerySection.swift */; };
+		WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0003 /* ItemsListControlBar.swift */; };
+		WP08B00100000000000C0004 /* FilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0004 /* FilterMenu.swift */; };
+		WP08B00100000000000C0005 /* SortMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0005 /* SortMenu.swift */; };
+		WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0006 /* ListSelectAllRow.swift */; };
+		WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0007 /* ListSelectionInfo.swift */; };
+		WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000L0001 /* SelectionCalculations.swift */; };
+		WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000X0001 /* SelectionCalculationTests.swift */; };
+WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */; };
 		WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */; };
 		WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0002 /* BudgetProgressPreview.swift */; };
 		WP02B00100000000000C0003 /* CategoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0003 /* CategoryRow.swift */; };
@@ -140,6 +159,7 @@
 		WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000L0001 /* TransactionCardCalculations.swift */; };
 		WP07B00100000000000C0001 /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000C0001 /* TransactionCard.swift */; };
 		WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */; };
+>>>>>>> 007-swiftui-component-library-WP08
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -263,7 +283,28 @@
 		WP01F00100000000000S0006 /* ItemsListMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListMode.swift; sourceTree = "<group>"; };
 		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormattingTests.swift; sourceTree = "<group>"; };
+<<<<<<< HEAD
 		WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculations.swift; sourceTree = "<group>"; };
+=======
+WP05F00100000000000C0001 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
+		WP05F00100000000000L0001 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
+		WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
+		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0001 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0002 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0003 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
+		WP04F00100000000000C0004 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
+		WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0001 /* GroupedItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedItemCard.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0002 /* MediaGallerySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGallerySection.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0003 /* ItemsListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListControlBar.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0004 /* FilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterMenu.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0005 /* SortMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortMenu.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0006 /* ListSelectAllRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectAllRow.swift; sourceTree = "<group>"; };
+		WP08F00100000000000C0007 /* ListSelectionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionInfo.swift; sourceTree = "<group>"; };
+		WP08F00100000000000L0001 /* SelectionCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculations.swift; sourceTree = "<group>"; };
+		WP08F00100000000000X0001 /* SelectionCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculationTests.swift; sourceTree = "<group>"; };
+WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetTrackerCalculations.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategoryTracker.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0002 /* BudgetProgressPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressPreview.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0003 /* CategoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRow.swift; sourceTree = "<group>"; };
@@ -284,6 +325,7 @@
 		WP07F00100000000000L0001 /* TransactionCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculations.swift; sourceTree = "<group>"; };
 		WP07F00100000000000C0001 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
 		WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculationTests.swift; sourceTree = "<group>"; };
+>>>>>>> 007-swiftui-component-library-WP08
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,10 +379,16 @@
 				B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */,
 				C3A35064A05FAE90DE8F1986 /* BudgetTabCalculations.swift */,
 				WP01F00100000000000L0001 /* CurrencyFormatting.swift */,
+<<<<<<< HEAD
 				WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
 				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
 				WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
 				WP07F00100000000000L0001 /* TransactionCardCalculations.swift */,
+=======
+WP05F00100000000000L0001 /* ActionMenuCalculations.swift */,
+				WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */,
+				WP08F00100000000000L0001 /* SelectionCalculations.swift */,
+WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -421,6 +469,9 @@
 				WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */,
 				WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
 				WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */,
+WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */,
+				WP08F00100000000000X0001 /* SelectionCalculationTests.swift */,
+WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -559,6 +610,19 @@
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
 				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
+WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
+				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
+				WP04F00100000000000C0002 /* ListStateControls.swift */,
+				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
+				WP04F00100000000000C0004 /* ImageGallery.swift */,
+				WP08F00100000000000C0001 /* GroupedItemCard.swift */,
+				WP08F00100000000000C0002 /* MediaGallerySection.swift */,
+				WP08F00100000000000C0003 /* ItemsListControlBar.swift */,
+				WP08F00100000000000C0004 /* FilterMenu.swift */,
+				WP08F00100000000000C0005 /* SortMenu.swift */,
+				WP08F00100000000000C0006 /* ListSelectAllRow.swift */,
+				WP08F00100000000000C0007 /* ListSelectionInfo.swift */,
+WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
 				WP02F00100000000000C0002 /* BudgetProgressPreview.swift */,
 				WP02F00100000000000C0003 /* CategoryRow.swift */,
 				WP02F00100000000000C0004 /* ImageCard.swift */,
@@ -571,6 +635,7 @@
 				WP04F00100000000000C0004 /* ImageGallery.swift */,
 				WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
 				WP07F00100000000000C0001 /* TransactionCard.swift */,
+>>>>>>> 007-swiftui-component-library-WP08
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -782,7 +847,25 @@
 				WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */,
 				WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */,
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
+<<<<<<< HEAD
 				WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
+=======
+WP05B00100000000000C0001 /* ActionMenuSheet.swift in Sources */,
+				WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */,
+				WP04B00100000000000L0001 /* MediaGalleryCalculations.swift in Sources */,
+				WP04B00100000000000C0001 /* BulkSelectionBar.swift in Sources */,
+				WP04B00100000000000C0002 /* ListStateControls.swift in Sources */,
+				WP04B00100000000000C0003 /* ThumbnailGrid.swift in Sources */,
+				WP04B00100000000000C0004 /* ImageGallery.swift in Sources */,
+				WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */,
+				WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */,
+				WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */,
+				WP08B00100000000000C0004 /* FilterMenu.swift in Sources */,
+				WP08B00100000000000C0005 /* SortMenu.swift in Sources */,
+				WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */,
+				WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */,
+				WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */,
+WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
 				WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */,
 				WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */,
 				WP02B00100000000000C0003 /* CategoryRow.swift in Sources */,
@@ -799,6 +882,7 @@
 				WP05B00100000000000L0001 /* ActionMenuCalculations.swift in Sources */,
 				WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */,
 				WP07B00100000000000C0001 /* TransactionCard.swift in Sources */,
+>>>>>>> 007-swiftui-component-library-WP08
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -818,10 +902,16 @@
 				E57A8103EC4D73FB50EFEC11 /* ProjectListCalculationTests.swift in Sources */,
 				B2CCDFC85C92A50857AC5B33 /* BudgetTabCalculationTests.swift in Sources */,
 				WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */,
+<<<<<<< HEAD
 				WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
 				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
 				WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
 				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
+=======
+WP05B00100000000000X0001 /* ActionMenuCalculationTests.swift in Sources */,
+				WP04B00100000000000X0001 /* MediaGalleryCalculationTests.swift in Sources */,
+				WP08B00100000000000X0001 /* SelectionCalculationTests.swift in Sources */,
+WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
