@@ -25,14 +25,14 @@
 **Prompt**: `tasks/WP01-shared-types-and-currency.md`
 
 ### Included Subtasks
-- [ ] T001 [P] Create `ActionMenuItem` and `ActionMenuSubitem` structs in `Models/Shared/ActionMenuItem.swift`
-- [ ] T002 [P] Create `ControlAction` struct and `ControlActionAppearance` enum in `Models/Shared/ControlAction.swift`
-- [ ] T003 [P] Create `FormSheetAction` struct in `Models/Shared/FormSheetAction.swift`
-- [ ] T004 [P] Create `StatusBannerVariant` enum in `Models/Shared/StatusBannerVariant.swift`
-- [ ] T005 [P] Create `ItemFilterOption` and `ItemSortOption` enums in `Models/Shared/ItemListEnums.swift`
-- [ ] T006 [P] Create `ItemsListMode` enum in `Models/Shared/ItemsListMode.swift`
-- [ ] T007 Create `CurrencyFormatting.swift` in `Logic/` — shared `formatCents()` helper (check existing `BudgetDisplayCalculations.formatCentsAsDollars` to avoid duplication)
-- [ ] T008 Create `CurrencyFormattingTests.swift` — tests for locale-aware formatting, edge cases (zero, negative, large amounts)
+- [x] T001 [P] Create `ActionMenuItem` and `ActionMenuSubitem` structs in `Models/Shared/ActionMenuItem.swift`
+- [x] T002 [P] Create `ControlAction` struct and `ControlActionAppearance` enum in `Models/Shared/ControlAction.swift`
+- [x] T003 [P] Create `FormSheetAction` struct in `Models/Shared/FormSheetAction.swift`
+- [x] T004 [P] Create `StatusBannerVariant` enum in `Models/Shared/StatusBannerVariant.swift`
+- [x] T005 [P] Create `ItemFilterOption` and `ItemSortOption` enums in `Models/Shared/ItemListEnums.swift`
+- [x] T006 [P] Create `ItemsListMode` enum in `Models/Shared/ItemsListMode.swift`
+- [x] T007 Create `CurrencyFormatting.swift` in `Logic/` — shared `formatCents()` helper (check existing `BudgetDisplayCalculations.formatCentsAsDollars` to avoid duplication)
+- [x] T008 Create `CurrencyFormattingTests.swift` — tests for locale-aware formatting, edge cases (zero, negative, large amounts)
 
 ### Implementation Notes
 - Check if `BudgetDisplayCalculations.formatCentsAsDollars` already covers enough; if so, just re-export or delegate. If budget-specific, create a general-purpose `CurrencyFormatting` enum.
