@@ -84,11 +84,11 @@
 **Prompt**: `tasks/WP02-session-1-screens.md`
 
 ### Included Subtasks
-- [ ] T009 Extend `Views/Projects/ProjectsListView.swift` — real Firestore subscription, active/archived toggle, search bar, `ProjectCard` wiring, empty states ("No active projects yet." / "No archived projects yet.")
-- [ ] T010 Extend `Views/Projects/ProjectDetailView.swift` — 5-tab `ScrollableTabBar` (Budget/Items/Transactions/Spaces/Accounting), kebab menu (Edit Project / Export Transactions CSV / Delete Project with `.confirmationDialog()`), subscription lifecycle `activate`/`deactivate`
-- [ ] T011 Implement "Export Transactions CSV" action — generate CSV string (columns: id, date, source, amount, categoryName, budgetCategoryId, inventorySaleDirection, itemCategories), share via `UIActivityViewController`
-- [ ] T012 Extend `Views/Projects/BudgetTabView.swift` — wire WP01 logic, pinned categories, correct sort, "received" label for fee categories, overflow color
-- [ ] T013 Implement `NavigationLink(value: project)` → `ProjectDetailView` navigation from projects list
+- [x] T009 Extend `Views/Projects/ProjectsListView.swift` — real Firestore subscription, active/archived toggle, search bar, `ProjectCard` wiring, empty states ("No active projects yet." / "No archived projects yet.")
+- [x] T010 Extend `Views/Projects/ProjectDetailView.swift` — 5-tab `ScrollableTabBar` (Budget/Items/Transactions/Spaces/Accounting), kebab menu (Edit Project / Export Transactions CSV / Delete Project with `.confirmationDialog()`), subscription lifecycle `activate`/`deactivate`
+- [x] T011 Implement "Export Transactions CSV" action — generate CSV string (columns: id, date, source, amount, categoryName, budgetCategoryId, inventorySaleDirection, itemCategories), share via `UIActivityViewController`
+- [x] T012 Extend `Views/Projects/BudgetTabView.swift` — wire WP01 logic, pinned categories, correct sort, "received" label for fee categories, overflow color
+- [x] T013 Implement `NavigationLink(value: project)` → `ProjectDetailView` navigation from projects list
 
 ### Implementation Notes
 - Use `NavigationLink(value:)` + `.navigationDestination(for: Project.self)`.
