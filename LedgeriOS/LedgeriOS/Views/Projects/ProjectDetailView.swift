@@ -10,8 +10,7 @@ struct ProjectDetailView: View {
     @State private var showingMenu = false
     @State private var menuPendingAction: (() -> Void)?
     @State private var showingDeleteConfirmation = false
-
-    private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
+    @State private var errorMessage: String?
 
     private let tabs = [
         TabBarItem(id: "budget", label: "Budget"),
@@ -45,7 +44,7 @@ struct ProjectDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
+                VStack(spacing: Spacing.xs) {
                     Text(project.name.isEmpty ? "Project" : project.name)
                         .font(Typography.h3)
                         .foregroundStyle(BrandColors.textPrimary)
@@ -95,6 +94,14 @@ struct ProjectDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .alert("Error", isPresented: .init(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
+        }
         .task(id: project.id) {
             guard let accountId = accountContext.currentAccountId,
                   let projectId = project.id else { return }
@@ -115,8 +122,12 @@ struct ProjectDetailView: View {
         guard let accountId = accountContext.currentAccountId,
               let projectId = project.id else { return }
         Task {
-            try? await projectService.deleteProject(accountId: accountId, projectId: projectId)
-            dismiss()
+            do {
+                try await projectContext.deleteProject(accountId: accountId, projectId: projectId)
+                dismiss()
+            } catch {
+                errorMessage = "Failed to delete project. Please try again."
+            }
         }
     }
 
@@ -133,6 +144,7 @@ struct ProjectDetailView: View {
         do {
             try csv.write(to: tempURL, atomically: true, encoding: .utf8)
         } catch {
+            errorMessage = "Failed to export transactions."
             return
         }
 

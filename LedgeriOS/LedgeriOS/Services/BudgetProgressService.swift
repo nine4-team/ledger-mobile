@@ -60,20 +60,6 @@ struct BudgetProgressService {
     }
 
     func normalizeSpendAmount(_ transaction: Transaction) -> Int {
-        guard transaction.isCanceled != true else { return 0 }
-
-        let amount = transaction.amountCents ?? 0
-
-        // Inventory sales can be negative (returns/credits)
-        if transaction.isCanonicalInventorySale == true {
-            switch transaction.inventorySaleDirection {
-            case .projectToBusiness:
-                return -amount
-            default:
-                return amount
-            }
-        }
-
-        return amount
+        BudgetTabCalculations.normalizeTransactionAmount(transaction)
     }
 }

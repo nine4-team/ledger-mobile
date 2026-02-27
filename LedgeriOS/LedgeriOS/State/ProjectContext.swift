@@ -125,6 +125,10 @@ final class ProjectContext {
         }
     }
 
+    func deleteProject(accountId: String, projectId: String) async throws {
+        try await projectService.deleteProject(accountId: accountId, projectId: projectId)
+    }
+
     func deactivate() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()
