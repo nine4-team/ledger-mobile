@@ -13,7 +13,7 @@ subtasks:
 - T004
 phase: Phase 0 - Foundation
 assignee: ''
-agent: ''
+agent: "claude"
 shell_pid: "70120"
 review_status: ''
 reviewed_by: ''
@@ -212,3 +212,4 @@ Run tests: Product → Test (⌘U) in Xcode, or `xcodebuild test -scheme Ledgeri
 ## Activity Log
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
+- 2026-02-27T02:01:37Z – claude – shell_pid=70120 – lane=doing – Assigned agent via workflow command
