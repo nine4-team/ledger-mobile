@@ -1,9 +1,12 @@
 ---
 work_package_id: WP04
 title: Session 2 Screens – Transactions Tab + Transaction Detail + Modals
-lane: planned
+lane: "doing"
 dependencies:
 - WP02
+base_branch: 008-phase-4-screens-implementation-WP02
+base_commit: c8543c031a946d9d8fd627756e2d37959de23803
+created_at: '2026-02-27T23:10:07.332505+00:00'
 subtasks:
 - T020
 - T021
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 2 - Session 2
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "25734"
 review_status: ''
 reviewed_by: ''
 history:
