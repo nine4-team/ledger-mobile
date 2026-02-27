@@ -132,7 +132,7 @@ Replace Zustand stores with `@Observable` classes:
 - [x] `ProjectContextStore` → `ProjectContext` (@Observable)
 - [x] `SyncTracking` protocol + `NoOpSyncTracker` stub
 - [ ] `SyncStatusStore` → `SyncStatus` (@Observable)
-- [ ] `BillingStore` → `BillingManager` (@Observable) — StoreKit 2 replaces RevenueCat
+- [ ] `BillingStore` → `BillingManager` (@Observable) — RevenueCat Swift SDK (`revenuecat/purchases-ios` via SPM), native SwiftUI paywalls via `RevenueCatUI`, server-side receipt validation, analytics
 - [ ] `ListStateStore` → `ListStateManager` (@Observable)
 - [ ] `MediaStore` → `MediaManager` (@Observable)
 
@@ -199,7 +199,7 @@ Replace Zustand stores with `@Observable` classes:
 ### Priority 6 — Search & Polish
 - [ ] **Universal Search** — cross-entity search with tabs
 - [ ] **Import flows** (Amazon, Wayfair)
-- [ ] **Paywall / subscription** (StoreKit 2)
+- [ ] **Paywall / subscription** — RevenueCat Swift SDK (`PaywallView`/`PaywallFooterView` from `RevenueCatUI`), server-side validation, entitlement checks throughout app
 
 **Deliverable per screen:** Visually matches reference screenshots, all data operations work, light + dark mode correct.
 
@@ -218,13 +218,13 @@ Pure UI components, no data dependencies. All built.
 - [x] `CollapsibleSection`, `BudgetProgressView`
 - [x] `ScrollableTabBar`, `ProjectCard`
 
-### Phase 5b — Component Library (Tiers 1–4, ~45 components)
-Tracked in `kitty-specs/007-swiftui-component-library/`. Build order:
+### Phase 5b — Component Library (Tiers 1–4, ~45 components) ✅
+Tracked in `kitty-specs/007-swiftui-component-library/`. Merged to main.
 
-- [ ] **Tier 1** (16): ImageCard, SpaceCard, BudgetCategoryTracker, BudgetProgressPreview, FormSheet, MultiStepFormSheet, CategoryRow, BulkSelectionBar, ListStateControls, ThumbnailGrid, ImageGallery, StatusBanner, ErrorRetryView, LoadingScreen, DraggableCard, InfoCard
-- [ ] **Tier 2** (4): ActionMenuSheet, BudgetProgressDisplay, ListControlBar, ItemCard
-- [ ] **Tier 3** (8): TransactionCard, GroupedItemCard, MediaGallerySection, ItemsListControlBar, FilterMenu, SortMenu, ListSelectAllRow, ListSelectionInfo
-- [ ] **Tier 4** (3): SharedItemsList, SharedTransactionsList, DraggableCardList
+- [x] **Tier 1** (16): ImageCard, SpaceCard, BudgetCategoryTracker, BudgetProgressPreview, FormSheet, MultiStepFormSheet, CategoryRow, BulkSelectionBar, ListStateControls, ThumbnailGrid, ImageGallery, StatusBanner, ErrorRetryView, LoadingScreen, DraggableCard, InfoCard
+- [x] **Tier 2** (4): ActionMenuSheet, BudgetProgressDisplay, ListControlBar, ItemCard
+- [x] **Tier 3** (8): TransactionCard, GroupedItemCard, MediaGallerySection, ItemsListControlBar, FilterMenu, SortMenu, ListSelectAllRow, ListSelectionInfo
+- [x] **Tier 4** (3): SharedItemsList, SharedTransactionsList, DraggableCardList
   - **Known limitation:** SharedItemsList embedded mode copies items into `@State` once during `.task`. If the parent updates its items array, the list won't reflect changes. Add `.onChange(of:)` handler when wiring embedded mode to parent views during Phase 4 integration.
 
 ### Phase 5c — Feature Modals (Tier 5, built with screens)
@@ -274,13 +274,27 @@ These are tightly coupled to specific screens. Built during their respective Pha
 
 ---
 
+## Billing & Subscriptions
+
+Use the **RevenueCat Swift SDK** — not StoreKit 2 directly, not the RN/JS SDK.
+
+- Native SwiftUI paywalls via `RevenueCatUI` (`PaywallView`, `PaywallFooterView`)
+- Server-side receipt validation (RevenueCat handles this — no client-side validation code)
+- Purchase analytics and entitlement management via RevenueCat dashboard
+- `BillingManager` (@Observable, @MainActor) wraps `Purchases` shared instance
+- Add `revenuecat/purchases-ios` via SPM when billing screen is built (Phase 4 Session 7+)
+
+Reference RN implementation: `src/stores/billingStore.ts`, `src/components/paywall/`
+
+---
+
 ## What We DON'T Need to Port
 
 - React Native Firebase workarounds (cache-first prelude, trackPendingWrite)
 - Hermes/JS bridge considerations
 - Expo SDK dependency management
 - AsyncStorage hydration pattern (use SwiftData or UserDefaults)
-- RevenueCat SDK (use StoreKit 2 directly)
+- RevenueCat JS/RN SDK (replaced by RevenueCat Swift SDK — see Billing & Subscriptions above)
 
 ## What Gets Simpler
 
@@ -344,6 +358,14 @@ Detailed plans:
 | Session 7+ | Settings, Search, Accounting, Reports | Not started |
 
 **Next:** Implement Phase 4 Session 1 (Projects List + Project Detail Hub + Budget Tab).
+
+### Phase 4 Review Notes (carry forward)
+
+Issues identified during WP reviews that affect future WPs:
+
+1. **TransactionListCalculations completeness filter uses AND logic** — Selecting both "needs-review" and "complete" simultaneously returns zero results. When building the filter UI (likely Session 2 screen work), either use OR logic for multi-select or ensure the UI prevents selecting conflicting completeness values.
+2. **CompletenessResult omits returned/sold item breakdowns** — The RN `transactionCompleteness.ts` returns `returnedItemsCount`, `returnedItemsTotalCents`, `soldItemsCount`, `soldItemsTotalCents`. The Swift port in `TransactionCompletenessCalculations.swift` omits these 4 fields. If the Transaction Detail view needs a returned/sold breakdown, add these fields to `CompletenessResult` and update `computeCompleteness`.
+3. **Missing test coverage for completeness filter dimension** — `TransactionListCalculationTests.swift` tests 7 of 8 filter dimensions but not `completenessValues`. Add coverage when touching that file.
 
 ---
 
