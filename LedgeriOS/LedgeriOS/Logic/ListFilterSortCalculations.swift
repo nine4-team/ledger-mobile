@@ -88,7 +88,7 @@ enum ListFilterSortCalculations {
 
     // MARK: - Search
 
-    /// Filters items by a search query against name, SKU, and notes.
+    /// Filters items by a search query against name, SKU, notes, and source.
     /// Returns all items when query is empty or whitespace-only.
     static func applySearch(_ items: [Item], query: String) -> [Item] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
@@ -99,8 +99,40 @@ enum ListFilterSortCalculations {
                 item.name,
                 item.sku ?? "",
                 item.notes ?? "",
+                item.source ?? "",
             ].joined(separator: " ").lowercased()
             return haystack.contains(needle)
+        }
+    }
+
+    // MARK: - Available Filters
+
+    /// Returns the filter options available for the given list scope.
+    /// Inventory scope excludes project-specific filters (fromInventory, toReturn, returned).
+    static func availableFilters(for scope: ListScope) -> [ItemFilterOption] {
+        switch scope {
+        case .inventory:
+            return ItemFilterOption.allCases.filter { option in
+                option != .fromInventory && option != .toReturn && option != .returned
+            }
+        case .project, .all:
+            return ItemFilterOption.allCases
+        }
+    }
+
+    // MARK: - Multi-Filter
+
+    /// Filters items using UNION (OR) logic across multiple filter modes.
+    /// An item is included if it matches ANY of the selected modes.
+    /// Returns all items when modes is empty or contains `.all`.
+    static func applyMultipleFilters(_ items: [Item], modes: Set<ItemFilterOption>) -> [Item] {
+        if modes.isEmpty || modes.contains(.all) {
+            return items
+        }
+        return items.filter { item in
+            modes.contains { mode in
+                filterPredicate(for: mode)(item)
+            }
         }
     }
 
@@ -118,15 +150,28 @@ enum ListFilterSortCalculations {
         return applySort(searched, sort: sort)
     }
 
+    /// Applies multi-filter, search, and sort in sequence.
+    /// Uses UNION (OR) logic for the filter set.
+    static func applyAllMultiFilters(
+        _ items: [Item],
+        filters: Set<ItemFilterOption>,
+        sort: ItemSortOption,
+        search: String
+    ) -> [Item] {
+        let filtered = applyMultipleFilters(items, modes: filters)
+        let searched = applySearch(filtered, query: search)
+        return applySort(searched, sort: sort)
+    }
+
     // MARK: - Grouping
 
-    /// Groups items by normalized name + SKU key.
-    /// Items with same name and same SKU form a single group.
+    /// Groups items by normalized name + SKU + source key.
+    /// Items with same name, SKU, and source form a single group.
     /// Single items become groups of 1 for uniform list handling.
     static func groupItems(_ items: [Item]) -> [ItemGroup] {
         guard !items.isEmpty else { return [] }
 
-        var groupMap: [String: (name: String, sku: String?, items: [Item])] = [:]
+        var groupMap: [String: (name: String, sku: String?, source: String?, items: [Item])] = [:]
         var keyOrder: [String] = []
 
         for item in items {
@@ -134,7 +179,7 @@ enum ListFilterSortCalculations {
             if groupMap[key] != nil {
                 groupMap[key]?.items.append(item)
             } else {
-                groupMap[key] = (name: item.name, sku: item.sku, items: [item])
+                groupMap[key] = (name: item.name, sku: item.sku, source: item.source, items: [item])
                 keyOrder.append(key)
             }
         }
@@ -145,6 +190,7 @@ enum ListFilterSortCalculations {
                 id: key,
                 name: group.name,
                 sku: group.sku,
+                source: group.source,
                 items: group.items
             )
         }
@@ -167,11 +213,12 @@ enum ListFilterSortCalculations {
         return true
     }
 
-    /// Generates a grouping key from name + SKU, normalized to lowercase.
+    /// Generates a grouping key from name + SKU + source, normalized to lowercase.
     private static func groupKey(for item: Item) -> String {
         let name = item.name.trimmingCharacters(in: .whitespaces).lowercased()
         let sku = (item.sku ?? "").trimmingCharacters(in: .whitespaces).lowercased()
-        return "\(name)::\(sku)"
+        let source = (item.source ?? "").trimmingCharacters(in: .whitespaces).lowercased()
+        return "\(name)::\(sku)::\(source)"
     }
 }
 
@@ -181,6 +228,7 @@ struct ItemGroup: Identifiable {
     let id: String
     let name: String
     let sku: String?
+    let source: String?
     let items: [Item]
 
     var count: Int { items.count }
