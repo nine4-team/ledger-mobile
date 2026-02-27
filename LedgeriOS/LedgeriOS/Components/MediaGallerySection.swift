@@ -1,11 +1,14 @@
 import SwiftUI
+import PhotosUI
 
 struct MediaGallerySection: View {
     let title: String
     let attachments: [AttachmentRef]
     var maxAttachments: Int = 10
     var allowedKinds: [AttachmentKind] = [.image]
-    var onAddAttachment: (() -> Void)?
+    /// Called when the user confirms image selection. Receives JPEG data; caller should upload
+    /// via MediaService and append the resulting AttachmentRef to the entity's images array.
+    var onUploadAttachment: ((Data) async throws -> Void)?
     var onRemoveAttachment: ((AttachmentRef) -> Void)?
     var onSetPrimary: ((AttachmentRef) -> Void)?
     var emptyStateMessage: String = "No images yet"
@@ -15,6 +18,9 @@ struct MediaGallerySection: View {
     @State private var showAttachmentMenu = false
     @State private var selectedAttachment: AttachmentRef?
     @State private var menuPendingAction: (() -> Void)?
+    @State private var pickerItem: PhotosPickerItem?
+    @State private var isUploading = false
+    @State private var uploadError: String?
 
     private var canAdd: Bool {
         MediaGalleryCalculations.canAddAttachment(current: attachments, maxAttachments: maxAttachments)
@@ -32,12 +38,22 @@ struct MediaGallerySection: View {
                 galleryContent
             }
         } headerAction: {
-            if canAdd, let onAddAttachment {
-                Button("Add") {
-                    onAddAttachment()
+            if canAdd, onUploadAttachment != nil {
+                PhotosPicker(
+                    selection: $pickerItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    if isUploading {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    } else {
+                        Text("Add")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.primary)
+                    }
                 }
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.primary)
+                .disabled(isUploading)
             }
         }
         .fullScreenCover(isPresented: $showGallery) {
@@ -57,6 +73,29 @@ struct MediaGallerySection: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
+        }
+        .onChange(of: pickerItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                await handlePickedItem(newItem)
+                pickerItem = nil
+            }
+        }
+    }
+
+    // MARK: - Photo Picker Handling
+
+    private func handlePickedItem(_ item: PhotosPickerItem) async {
+        guard let onUploadAttachment else { return }
+        isUploading = true
+        uploadError = nil
+        defer { isUploading = false }
+
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self) else { return }
+            try await onUploadAttachment(data)
+        } catch {
+            uploadError = error.localizedDescription
         }
     }
 
@@ -126,8 +165,7 @@ struct MediaGallerySection: View {
 #Preview("Empty") {
     MediaGallerySection(
         title: "IMAGES",
-        attachments: [],
-        onAddAttachment: {}
+        attachments: []
     )
     .padding(Spacing.screenPadding)
 }
@@ -140,7 +178,6 @@ struct MediaGallerySection: View {
             AttachmentRef(url: "https://picsum.photos/200/200?2"),
             AttachmentRef(url: "https://picsum.photos/200/200?3"),
         ],
-        onAddAttachment: {},
         onRemoveAttachment: { _ in },
         onSetPrimary: { _ in }
     )
