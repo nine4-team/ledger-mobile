@@ -1,7 +1,7 @@
 ---
 work_package_id: WP07
 title: Session 4 Logic – Space List + Space Detail Calculations
-lane: "doing"
+lane: "for_review"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP03
 base_commit: 968fb05c4a9313bef7f7fb43e8c19ca947d73d22
@@ -165,3 +165,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T22:34:13Z – claude-opus – shell_pid=68198 – lane=doing – Assigned agent via workflow command
+- 2026-02-27T22:41:45Z – claude-opus – shell_pid=68198 – lane=for_review – Ready for review: SpaceListCalculations + SpaceDetailCalculations with 25 passing tests
