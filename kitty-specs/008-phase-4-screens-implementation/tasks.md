@@ -22,10 +22,10 @@
 **Prompt**: `tasks/WP00-media-service-prerequisite.md`
 
 ### Included Subtasks
-- [ ] T001 Add `quantity: Int?` to `Item.swift` with correct `CodingKeys` mapping
-- [ ] T002 Create `Services/MediaService.swift` — upload via `putData()`, download URL resolution, delete
-- [ ] T003 Wire `MediaService` into existing `MediaGallerySection` add/remove/set-primary actions
-- [ ] T004 Write Swift Testing tests for MediaService happy paths and error cases
+- [x] T001 Add `quantity: Int?` to `Item.swift` with correct `CodingKeys` mapping
+- [x] T002 Create `Services/MediaService.swift` — upload via `putData()`, download URL resolution, delete
+- [x] T003 Wire `MediaService` into existing `MediaGallerySection` add/remove/set-primary actions
+- [x] T004 Write Swift Testing tests for MediaService happy paths and error cases
 
 ### Implementation Notes
 - `MediaService` is a `@MainActor @Observable` class injected via `.environment()`.
