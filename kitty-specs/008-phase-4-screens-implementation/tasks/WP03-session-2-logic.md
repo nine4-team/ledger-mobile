@@ -2,7 +2,7 @@
 work_package_id: "WP03"
 title: "Session 2 Logic – Transaction Display + Next Steps + Completeness + Receipt Parser"
 phase: "Phase 2 - Session 2"
-lane: "for_review"
+lane: "doing"
 dependencies: ["WP00"]
 subtasks:
   - "T014"
@@ -13,7 +13,7 @@ subtasks:
   - "T019"
 assignee: ""
 agent: "claude-opus"
-shell_pid: ""
+shell_pid: "53031"
 review_status: ""
 reviewed_by: ""
 history:
@@ -321,3 +321,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T21:55:05Z – claude-opus – lane=doing – Starting implementation - worktree created manually from main (WP00 merged)
 - 2026-02-27T22:23:07Z – claude-opus – lane=for_review – Ready for review: 5 logic modules + 92 tests all passing
+- 2026-02-27T22:23:55Z – claude-opus – shell_pid=53031 – lane=doing – Started review via workflow command
