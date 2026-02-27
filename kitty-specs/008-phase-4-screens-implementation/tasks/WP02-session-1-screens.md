@@ -2,7 +2,7 @@
 work_package_id: "WP02"
 title: "Session 1 Screens – Projects List + Project Detail + Budget Tab"
 phase: "Phase 1 - Session 1"
-lane: "done"
+lane: "doing"
 dependencies: ["WP01"]
 subtasks:
   - "T009"
@@ -12,7 +12,7 @@ subtasks:
   - "T013"
 assignee: ""
 agent: "claude-opus"
-shell_pid: "95619"
+shell_pid: "19680"
 review_status: "approved"
 reviewed_by: "nine4-team"
 history:
@@ -243,3 +243,4 @@ history:
 - 2026-02-27T22:55:14Z – claude-opus – shell_pid=72783 – lane=for_review – Ready for review: CSV export, delete project, pinned budget categories, all 315 tests passing
 - 2026-02-27T22:57:12Z – claude-opus – shell_pid=95619 – lane=doing – Started review via workflow command
 - 2026-02-27T23:02:09Z – claude-opus – shell_pid=95619 – lane=done – Review passed: CSV export, delete project, and pinned budget categories all implemented correctly. 47 new tests passing. Pure function architecture, correct sheet patterns, theme constants used throughout. Minor advisories: deleteProject dismisses unconditionally on try?, normalization divergence between BudgetTabCalculations and BudgetProgressService (dead code path), standalone ProjectService in view bypasses sync tracking. Non-blocking — approve as-is.
+- 2026-02-27T23:07:33Z – claude-opus – shell_pid=19680 – lane=doing – Started review via workflow command
