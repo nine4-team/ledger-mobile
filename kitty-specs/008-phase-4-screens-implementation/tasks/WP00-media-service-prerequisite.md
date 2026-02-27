@@ -1,7 +1,7 @@
 ---
 work_package_id: WP00
 title: MediaService Prerequisite
-lane: "doing"
+lane: "done"
 dependencies: []
 base_branch: main
 base_commit: 23d2af72bc649ac3a4b27c26cc96cd1edd5b7b99
@@ -15,8 +15,8 @@ phase: Phase 0 - Foundation
 assignee: ''
 agent: "claude"
 shell_pid: "39732"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -215,3 +215,4 @@ Run tests: Product → Test (⌘U) in Xcode, or `xcodebuild test -scheme Ledgeri
 - 2026-02-27T02:01:37Z – claude – shell_pid=70120 – lane=doing – Assigned agent via workflow command
 - 2026-02-27T02:32:58Z – claude – shell_pid=70120 – lane=for_review – Ready for review: MediaService with testable StorageUploading protocol, Item.quantity field, PhotosPicker wiring in MediaGallerySection, 8 passing Swift Testing tests
 - 2026-02-27T02:35:51Z – claude – shell_pid=39732 – lane=doing – Started review via workflow command
+- 2026-02-27T21:49:34Z – claude – shell_pid=39732 – lane=done – Review passed: MediaService with StorageUploading protocol for testability, Item.quantity field, PhotosPicker wiring in MediaGallerySection (onUploadAttachment async throws, onRemove/onSetPrimary sync for offline-first correctness), 8 Swift Testing tests covering uploadPath/upload/delete happy paths and error propagation. fullScreenCover on ImageGallery is the documented exception. Clean, no hardcoded values or XCTest.
