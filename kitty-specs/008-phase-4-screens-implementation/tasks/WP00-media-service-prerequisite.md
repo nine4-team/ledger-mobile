@@ -1,24 +1,27 @@
 ---
-work_package_id: "WP00"
-title: "MediaService Prerequisite"
-phase: "Phase 0 - Foundation"
-lane: "planned"
+work_package_id: WP00
+title: MediaService Prerequisite
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 23d2af72bc649ac3a4b27c26cc96cd1edd5b7b99
+created_at: '2026-02-27T02:01:37.422707+00:00'
 subtasks:
-  - "T001"
-  - "T002"
-  - "T003"
-  - "T004"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+- T001
+- T002
+- T003
+- T004
+phase: Phase 0 - Foundation
+assignee: ''
+agent: ''
+shell_pid: "70120"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T22:30:00Z"
-    lane: "planned"
-    agent: "system"
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T22:30:00Z'
+  lane: planned
+  agent: system
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP00 – MediaService Prerequisite
