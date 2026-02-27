@@ -1,23 +1,26 @@
 ---
-work_package_id: "WP09"
-title: "Session 5 Logic – Inventory Context"
-phase: "Phase 5 - Session 5"
-lane: "planned"
-dependencies: ["WP08"]
+work_package_id: WP09
+title: Session 5 Logic – Inventory Context
+lane: "doing"
+dependencies: [WP08]
+base_branch: 008-phase-4-screens-implementation-WP07
+base_commit: 968fb05c4a9313bef7f7fb43e8c19ca947d73d22
+created_at: '2026-02-27T22:35:24.284905+00:00'
 subtasks:
-  - "T043"
-  - "T044"
-  - "T045"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+- T043
+- T044
+- T045
+phase: Phase 5 - Session 5
+assignee: ''
+agent: ''
+shell_pid: "69112"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T22:30:00Z"
-    lane: "planned"
-    agent: "system"
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T22:30:00Z'
+  lane: planned
+  agent: system
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP09 – Session 5 Logic — Inventory Context
