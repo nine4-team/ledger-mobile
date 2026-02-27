@@ -1,23 +1,26 @@
 ---
-work_package_id: "WP07"
-title: "Session 4 Logic – Space List + Space Detail Calculations"
-phase: "Phase 4 - Session 4"
-lane: "planned"
-dependencies: ["WP06"]
+work_package_id: WP07
+title: Session 4 Logic – Space List + Space Detail Calculations
+lane: "doing"
+dependencies: [WP06]
+base_branch: 008-phase-4-screens-implementation-WP03
+base_commit: 968fb05c4a9313bef7f7fb43e8c19ca947d73d22
+created_at: '2026-02-27T22:34:13.317255+00:00'
 subtasks:
-  - "T036"
-  - "T037"
-  - "T038"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+- T036
+- T037
+- T038
+phase: Phase 4 - Session 4
+assignee: ''
+agent: ''
+shell_pid: "68198"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T22:30:00Z"
-    lane: "planned"
-    agent: "system"
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T22:30:00Z'
+  lane: planned
+  agent: system
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP07 – Session 4 Logic — Space List + Space Detail Calculations
