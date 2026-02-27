@@ -117,12 +117,12 @@
 **Prompt**: `tasks/WP03-session-2-logic.md`
 
 ### Included Subtasks
-- [ ] T014 Create `Logic/TransactionDisplayCalculations.swift` — display name priority (source → canonical label → ID prefix → "Untitled Transaction"), badge config (type/reimbursement/receipt/needs-review/category colors), formatted date, formatted amount
-- [ ] T015 Create `Logic/TransactionNextStepsCalculations.swift` — 5-step base checklist (categorize, enter amount, add receipt, add items, set purchased by) + conditional 6th step (set tax rate — only for itemized budget categories); hide card when all complete
-- [ ] T016 Create `Logic/TransactionCompletenessCalculations.swift` — port from `src/utils/transactionCompleteness.ts`: ratio=itemsNetTotalCents/subtotal; exact thresholds: over>1.2, complete≤1%, near≤20%, incomplete otherwise; subtotal resolution priority (explicit → inferred from amount+taxRate → fallback amount)
-- [ ] T017 Create `Logic/TransactionListCalculations.swift` — 8 sort modes (date/created/source/amount asc+desc), 8 filter dimensions (status, reimbursement, receipt, type, completeness, budget category, purchased by, source), text search (source/notes/type/amount)
-- [ ] T018 Create `Logic/ReceiptListParser.swift` — port from `src/utils/receiptListParser.ts`: parse free-form text into `[(name: String, priceCents: Int?)]` pairs; expose skipped lines
-- [ ] T019 Write Swift Testing suites for all 5 modules (completeness thresholds all 4 states + null, subtotal resolution priority, next-steps 5-step and 6-step, all 8 filter dimensions, receiptListParser edge cases)
+- [x] T014 Create `Logic/TransactionDisplayCalculations.swift` — display name priority (source → canonical label → ID prefix → "Untitled Transaction"), badge config (type/reimbursement/receipt/needs-review/category colors), formatted date, formatted amount
+- [x] T015 Create `Logic/TransactionNextStepsCalculations.swift` — 5-step base checklist (categorize, enter amount, add receipt, add items, set purchased by) + conditional 6th step (set tax rate — only for itemized budget categories); hide card when all complete
+- [x] T016 Create `Logic/TransactionCompletenessCalculations.swift` — port from `src/utils/transactionCompleteness.ts`: ratio=itemsNetTotalCents/subtotal; exact thresholds: over>1.2, complete≤1%, near≤20%, incomplete otherwise; subtotal resolution priority (explicit → inferred from amount+taxRate → fallback amount)
+- [x] T017 Create `Logic/TransactionListCalculations.swift` — 8 sort modes (date/created/source/amount asc+desc), 8 filter dimensions (status, reimbursement, receipt, type, completeness, budget category, purchased by, source), text search (source/notes/type/amount)
+- [x] T018 Create `Logic/ReceiptListParser.swift` — port from `src/utils/receiptListParser.ts`: parse free-form text into `[(name: String, priceCents: Int?)]` pairs; expose skipped lines
+- [x] T019 Write Swift Testing suites for all 5 modules (completeness thresholds all 4 states + null, subtotal resolution priority, next-steps 5-step and 6-step, all 8 filter dimensions, receiptListParser edge cases)
 
 ### Implementation Notes
 - All monetary values as `Int` cents — never `Double`.
