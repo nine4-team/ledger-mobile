@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Session 2 Screens – Transactions Tab + Transaction Detail + Modals
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP02
 base_branch: 008-phase-4-screens-implementation-WP02
@@ -241,3 +241,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T23:10:07Z – claude-opus – shell_pid=25734 – lane=doing – Assigned agent via workflow command
+- 2026-02-27T23:27:03Z – claude-opus – shell_pid=25734 – lane=for_review – Ready for review: TransactionsTabView replaces placeholder with real data, TransactionDetailView with hero card + 8 collapsible sections + Next Steps + delete, 4 modals (EditDetails, EditNotes, CategoryPicker, CreateItemsFromList), 3 pure logic files ported from RN (NextSteps, Completeness, ReceiptListParser), ProgressRing component. Build passes clean.
