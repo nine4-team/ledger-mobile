@@ -2,7 +2,7 @@
 work_package_id: "WP01"
 title: "Session 1 Logic – Project List + Budget Tab Calculations"
 phase: "Phase 1 - Session 1"
-lane: "doing"
+lane: "done"
 dependencies: ["WP00"]
 subtasks:
   - "T005"
@@ -12,8 +12,8 @@ subtasks:
 assignee: ""
 agent: "claude-opus"
 shell_pid: "47530"
-review_status: ""
-reviewed_by: ""
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
   - timestamp: "2026-02-26T22:30:00Z"
     lane: "planned"
@@ -230,3 +230,4 @@ Run: ⌘U in Xcode or `xcodebuild test -scheme LedgeriOS`.
 - 2026-02-27T21:54:23Z – unknown – lane=doing – Starting implementation - agent: claude-opus
 - 2026-02-27T22:19:37Z – unknown – lane=for_review – Ready for review: ProjectListCalculations + BudgetTabCalculations pure logic with 57 tests, all 300 tests passing
 - 2026-02-27T22:21:50Z – claude-opus – shell_pid=47530 – lane=doing – Started review via workflow command
+- 2026-02-27T22:24:01Z – claude-opus – shell_pid=47530 – lane=done – Review passed: All 6 review criteria met — sort/filter/search FR-1 compliance, 10 spend normalization combinations tested, fee 'received' labels correct, overall budget exclusion working, no SwiftUI/Firestore imports in logic files, 57 new tests with full coverage
