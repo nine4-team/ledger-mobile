@@ -2,7 +2,7 @@
 work_package_id: "WP02"
 title: "Session 1 Screens – Projects List + Project Detail + Budget Tab"
 phase: "Phase 1 - Session 1"
-lane: "planned"
+lane: "doing"
 dependencies: ["WP01"]
 subtasks:
   - "T009"
@@ -11,8 +11,8 @@ subtasks:
   - "T012"
   - "T013"
 assignee: ""
-agent: ""
-shell_pid: ""
+agent: "claude-opus"
+shell_pid: "72783"
 review_status: ""
 reviewed_by: ""
 history:
@@ -239,3 +239,4 @@ history:
 ## Activity Log
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
+- 2026-02-27T22:41:31Z – claude-opus – shell_pid=72783 – lane=doing – Started implementation via workflow command
