@@ -2,7 +2,7 @@
 work_package_id: "WP05"
 title: "Session 3 Logic – Item List + Item Detail + Bulk Sale Calculations"
 phase: "Phase 3 - Session 3"
-lane: "doing"
+lane: "for_review"
 dependencies: ["WP00"]
 subtasks:
   - "T026"
@@ -229,3 +229,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T22:43:46Z – unknown – lane=doing – Starting implementation, agent: claude-opus
+- 2026-02-27T22:58:08Z – unknown – lane=for_review – Ready for review: Added ItemDetailCalculations, BulkSaleResolutionCalculations, extended ListFilterSortCalculations with multi-filter/scope/source. All 326 tests pass.
