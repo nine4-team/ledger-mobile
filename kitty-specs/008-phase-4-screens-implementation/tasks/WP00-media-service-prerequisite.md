@@ -1,7 +1,7 @@
 ---
 work_package_id: WP00
 title: MediaService Prerequisite
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 23d2af72bc649ac3a4b27c26cc96cd1edd5b7b99
@@ -213,3 +213,4 @@ Run tests: Product → Test (⌘U) in Xcode, or `xcodebuild test -scheme Ledgeri
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T02:01:37Z – claude – shell_pid=70120 – lane=doing – Assigned agent via workflow command
+- 2026-02-27T02:32:58Z – claude – shell_pid=70120 – lane=for_review – Ready for review: MediaService with testable StorageUploading protocol, Item.quantity field, PhotosPicker wiring in MediaGallerySection, 8 passing Swift Testing tests
