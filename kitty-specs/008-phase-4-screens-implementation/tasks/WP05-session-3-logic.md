@@ -2,7 +2,7 @@
 work_package_id: "WP05"
 title: "Session 3 Logic – Item List + Item Detail + Bulk Sale Calculations"
 phase: "Phase 3 - Session 3"
-lane: "doing"
+lane: "done"
 dependencies: ["WP00"]
 subtasks:
   - "T026"
@@ -12,8 +12,8 @@ subtasks:
 assignee: ""
 agent: "claude-opus"
 shell_pid: "98823"
-review_status: ""
-reviewed_by: ""
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
   - timestamp: "2026-02-26T22:30:00Z"
     lane: "planned"
@@ -231,3 +231,4 @@ history:
 - 2026-02-27T22:43:46Z – unknown – lane=doing – Starting implementation, agent: claude-opus
 - 2026-02-27T22:58:08Z – unknown – lane=for_review – Ready for review: Added ItemDetailCalculations, BulkSaleResolutionCalculations, extended ListFilterSortCalculations with multi-filter/scope/source. All 326 tests pass.
 - 2026-02-27T22:58:48Z – claude-opus – shell_pid=98823 – lane=doing – Started review via workflow command
+- 2026-02-27T23:02:59Z – claude-opus – shell_pid=98823 – lane=done – Review passed: All 3 logic modules correct. 10 filter modes tested individually + multi-filter OR logic matches RN source. Grouping is case-insensitive with source in key. Returned items get limited action menu. BulkSaleResolution correctly filters by transactionId and budgetCategoryId. No SwiftUI/Firestore imports in logic. All tests pass. Reviewed by claude-opus.
