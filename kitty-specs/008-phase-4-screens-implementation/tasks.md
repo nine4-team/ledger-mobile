@@ -54,7 +54,7 @@
 **Prompt**: `tasks/WP01-session-1-logic.md`
 
 ### Included Subtasks
-- [ ] T005 Create `Logic/ProjectListCalculations.swift` — active/archived filter, alphabetical sort (case-insensitive), search across name+client, empty-state logic, budget bar priority
+- [x] T005 Create `Logic/ProjectListCalculations.swift` — active/archived filter, alphabetical sort (case-insensitive), search across name+client, empty-state logic, budget bar priority
 - [ ] T006 Create (or extend) `Logic/BudgetTabCalculations.swift` — enabled-categories filter, fee-last sort, spend normalization (canceled=$0, returns subtract, canonical sales sign-based, fee label "received"), overall budget exclusion for `excludeFromOverallBudget` categories
 - [ ] T007 Write Swift Testing suite for ProjectListCalculations (happy path, all-archived, no-name sort, search)
 - [ ] T008 Write Swift Testing suite for BudgetTabCalculations (normalization rules, fee label, pinned order, overall budget exclusion)
