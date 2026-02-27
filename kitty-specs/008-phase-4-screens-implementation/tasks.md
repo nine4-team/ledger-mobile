@@ -252,9 +252,9 @@
 **Prompt**: `tasks/WP07-session-4-logic.md`
 
 ### Included Subtasks
-- [ ] T036 Create `Logic/SpaceListCalculations.swift` — sort (alphabetical), filter (name search), checklist progress computation (X of Y complete across all checklists)
-- [ ] T037 Create `Logic/SpaceDetailCalculations.swift` — checklist progress per space; item grouping for space-scoped display (filter items by `spaceId`); role check for "Save as Template" (owner/admin only)
-- [ ] T038 Write Swift Testing suite for both modules (progress edge cases: empty checklists, all complete, partial; role gate: owner/admin pass, member fails; item grouping by spaceId)
+- [x] T036 Create `Logic/SpaceListCalculations.swift` — sort (alphabetical), filter (name search), checklist progress computation (X of Y complete across all checklists)
+- [x] T037 Create `Logic/SpaceDetailCalculations.swift` — checklist progress per space; item grouping for space-scoped display (filter items by `spaceId`); role check for "Save as Template" (owner/admin only)
+- [x] T038 Write Swift Testing suite for both modules (progress edge cases: empty checklists, all complete, partial; role gate: owner/admin pass, member fails; item grouping by spaceId)
 
 ### Implementation Notes
 - Checklist progress: sum of all `isChecked=true` across all checklists / total checklist items across all checklists.
