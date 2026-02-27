@@ -151,12 +151,12 @@
 **Prompt**: `tasks/WP04-session-2-screens.md`
 
 ### Included Subtasks
-- [ ] T020 Create `Views/Projects/TransactionsTabView.swift` — replaces placeholder; real data from `ProjectContext.transactions`; toolbar (search, sort, filter, add pills); transaction cards sorted date-desc; navigation to detail
-- [ ] T021 Create `Views/Projects/TransactionDetailView.swift` — hero card, Next Steps card (hidden when complete), 8 collapsible sections (Receipts expanded; Others/Notes/Details/Items/ReturnedItems/SoldItems/TransactionAudit collapsed), Moved Items non-collapsible (FR-5.13), Transaction Audit section, action menu for delete
-- [ ] T022 Create/wire `Modals/EditTransactionDetailsModal.swift` — field order: Vendor/Source (with vendor suggestions from presets), Amount, Date, Status, Purchased By, Transaction Type, Reimbursement Type, Budget Category, Email Receipt, conditional Subtotal+TaxRate; present as bottom sheet
-- [ ] T023 Create/wire `Modals/EditNotesModal.swift` — shared notes editing bottom sheet
-- [ ] T024 Create/wire `Modals/CategoryPickerList.swift` — single-select budget category picker; used from transaction detail
-- [ ] T025 Create `Modals/CreateItemsFromListModal.swift` — two-step: (1) paste text → (2) preview parsed items + skipped-lines disclosure → create all items linked to transaction; uses `ReceiptListParser`
+- [x] T020 Create `Views/Projects/TransactionsTabView.swift` — replaces placeholder; real data from `ProjectContext.transactions`; toolbar (search, sort, filter, add pills); transaction cards sorted date-desc; navigation to detail
+- [x] T021 Create `Views/Projects/TransactionDetailView.swift` — hero card, Next Steps card (hidden when complete), 8 collapsible sections (Receipts expanded; Others/Notes/Details/Items/ReturnedItems/SoldItems/TransactionAudit collapsed), Moved Items non-collapsible (FR-5.13), Transaction Audit section, action menu for delete
+- [x] T022 Create/wire `Modals/EditTransactionDetailsModal.swift` — field order: Vendor/Source (with vendor suggestions from presets), Amount, Date, Status, Purchased By, Transaction Type, Reimbursement Type, Budget Category, Email Receipt, conditional Subtotal+TaxRate; present as bottom sheet
+- [x] T023 Create/wire `Modals/EditNotesModal.swift` — shared notes editing bottom sheet
+- [x] T024 Create/wire `Modals/CategoryPickerList.swift` — single-select budget category picker; used from transaction detail
+- [x] T025 Create `Modals/CreateItemsFromListModal.swift` — two-step: (1) paste text → (2) preview parsed items + skipped-lines disclosure → create all items linked to transaction; uses `ReceiptListParser`
 
 ### Implementation Notes
 - Transaction detail Items section (FR-5.15): 6 sort modes + 6 filter modes for the items subsection.
