@@ -2,7 +2,7 @@
 work_package_id: "WP02"
 title: "Session 1 Screens – Projects List + Project Detail + Budget Tab"
 phase: "Phase 1 - Session 1"
-lane: "doing"
+lane: "for_review"
 dependencies: ["WP01"]
 subtasks:
   - "T009"
@@ -240,3 +240,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T22:41:31Z – claude-opus – shell_pid=72783 – lane=doing – Started implementation via workflow command
+- 2026-02-27T22:55:14Z – claude-opus – shell_pid=72783 – lane=for_review – Ready for review: CSV export, delete project, pinned budget categories, all 315 tests passing
