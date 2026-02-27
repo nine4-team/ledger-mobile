@@ -1,7 +1,7 @@
 ---
 work_package_id: WP09
 title: Session 5 Logic – Inventory Context
-lane: "doing"
+lane: "planned"
 dependencies: [WP08]
 base_branch: 008-phase-4-screens-implementation-WP07
 base_commit: 968fb05c4a9313bef7f7fb43e8c19ca947d73d22
@@ -167,3 +167,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T22:35:24Z – claude-opus – shell_pid=69112 – lane=doing – Assigned agent via workflow command
+- 2026-02-27T22:39:30Z – claude-opus – shell_pid=69112 – lane=planned – Unwinding: must follow dependency chain (WP07 → WP08 → WP09)
