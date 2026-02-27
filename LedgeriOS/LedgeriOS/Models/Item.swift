@@ -17,6 +17,7 @@ struct Item: Codable, Identifiable, Hashable {
     var purchasedBy: String?
     var bookmark: Bool?
     var budgetCategoryId: String?
+    var quantity: Int?
     var images: [AttachmentRef]?
     var createdBy: String?
     var updatedBy: String?
