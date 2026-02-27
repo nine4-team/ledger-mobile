@@ -2,7 +2,7 @@
 work_package_id: "WP01"
 title: "Session 1 Logic – Project List + Budget Tab Calculations"
 phase: "Phase 1 - Session 1"
-lane: "doing"
+lane: "for_review"
 dependencies: ["WP00"]
 subtasks:
   - "T005"
@@ -228,3 +228,4 @@ Run: ⌘U in Xcode or `xcodebuild test -scheme LedgeriOS`.
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-27T21:54:23Z – unknown – lane=doing – Starting implementation - agent: claude-opus
+- 2026-02-27T22:19:37Z – unknown – lane=for_review – Ready for review: ProjectListCalculations + BudgetTabCalculations pure logic with 57 tests, all 300 tests passing
