@@ -165,6 +165,16 @@
 		WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0001 /* SharedItemsList.swift */; };
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
+		7EF3313AC9CDE6AEB528A13A /* TransactionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4EEAD965745C023A6670C1 /* TransactionsTabView.swift */; };
+		0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */; };
+		71B016DAAEC7FD2AAB300A0E /* EditTransactionDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */; };
+		E81C9960E9EDAD6E5C83C411 /* EditNotesModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */; };
+		E95BEA371D8AB6BB4EC53141 /* CategoryPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */; };
+		9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */; };
+		180F69A4AF52A9C1019ACB63 /* TransactionNextStepsCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */; };
+		6FF4858B2EBE341784859F93 /* TransactionCompletenessCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */; };
+		F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */; };
+		10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -334,6 +344,16 @@
 		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
+		1D4EEAD965745C023A6670C1 /* TransactionsTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabView.swift; sourceTree = "<group>"; };
+		F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
+		3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditTransactionDetailsModal.swift; sourceTree = "<group>"; };
+		FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
+		49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryPickerList.swift; sourceTree = "<group>"; };
+		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
+		C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionNextStepsCalculations.swift; sourceTree = "<group>"; };
+		91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCompletenessCalculations.swift; sourceTree = "<group>"; };
+		05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptListParser.swift; sourceTree = "<group>"; };
+		6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -370,6 +390,8 @@
 				0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */,
 				4A32986DD6B2D33762465CCB /* SpacesTabPlaceholder.swift */,
 				8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */,
+				1D4EEAD965745C023A6670C1 /* TransactionsTabView.swift */,
+				F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */,
 			);
 			name = Projects;
 			path = Projects;
@@ -394,6 +416,9 @@
 				WP02F00100000000000L0001 /* BudgetTrackerCalculations.swift */,
 				WP07F00100000000000L0001 /* TransactionCardCalculations.swift */,
 				35948E498E737612AB645098 /* TransactionExportCalculations.swift */,
+				C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */,
+				91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */,
+				05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -526,6 +551,7 @@
 				41E4C3E7AD3CB291B4D14E08 /* Logic */,
 				5049E7963806A086E13C5318 /* State */,
 				C5A0040100000000000G0001 /* Components */,
+				WP04G00100000000000M0001 /* Modals */,
 			);
 			path = LedgeriOS;
 			sourceTree = "<group>";
@@ -646,6 +672,7 @@
 				WP10F00100000000000C0001 /* SharedItemsList.swift */,
 				WP10F00100000000000C0002 /* SharedTransactionsList.swift */,
 				WP10F00100000000000C0003 /* DraggableCardList.swift */,
+				6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -656,6 +683,17 @@
 				6019DE1D2956133DB34D47E4 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		WP04G00100000000000M0001 /* Modals */ = {
+			isa = PBXGroup;
+			children = (
+				3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */,
+				FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */,
+				49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */,
+				00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */,
+			);
+			path = Modals;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -895,6 +933,16 @@
 				2A07E979DB3CD6B37D0B9B44 /* ProjectPreferences.swift in Sources */,
 				812FF2207D742F67E3870934 /* ProjectPreferencesService.swift in Sources */,
 				D7A04F61BEE513200213BF35 /* TransactionExportCalculations.swift in Sources */,
+				7EF3313AC9CDE6AEB528A13A /* TransactionsTabView.swift in Sources */,
+				0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */,
+				71B016DAAEC7FD2AAB300A0E /* EditTransactionDetailsModal.swift in Sources */,
+				E81C9960E9EDAD6E5C83C411 /* EditNotesModal.swift in Sources */,
+				E95BEA371D8AB6BB4EC53141 /* CategoryPickerList.swift in Sources */,
+				9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */,
+				180F69A4AF52A9C1019ACB63 /* TransactionNextStepsCalculations.swift in Sources */,
+				6FF4858B2EBE341784859F93 /* TransactionCompletenessCalculations.swift in Sources */,
+				F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */,
+				10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
