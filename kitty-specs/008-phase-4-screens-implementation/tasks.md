@@ -189,7 +189,7 @@
 - [x] T026 Create `Logic/ItemListCalculations.swift` — 10 filter modes (project scope): all/bookmarked/from-inventory/to-return/returned/no-sku/no-name/no-project-price/no-image/no-transaction; 7 filter modes (inventory scope): all/bookmarked/no-sku/no-name/no-project-price/no-image/no-transaction; multi-select filter support; 4 sort modes (created-desc default, created-asc, alpha-asc, alpha-desc); text search (name/source/SKU/notes); duplicate grouping algorithm (name+SKU+source case-insensitive → expandable group rows)
 - [x] T027 Create `Logic/ItemDetailCalculations.swift` — contextual action menu generation based on item status (active items: full 11 operations; returned/sold items: limited); display logic (project price vs purchase price priority; space name resolution; category name resolution)
 - [x] T028 Create `Logic/BulkSaleResolutionCalculations.swift` — category resolution map for sell operations; filters out items with `transactionId` (must unlink first for bulk reassign)
-- [ ] T029 Write Swift Testing suite for all three modules (all 10 filter modes individually + combined; duplicate grouping with case variations; action menu for each item status; bulk sale eligibility filter)
+- [x] T029 Write Swift Testing suite for all three modules (all 10 filter modes individually + combined; duplicate grouping with case variations; action menu for each item status; bulk sale eligibility filter)
 
 ### Implementation Notes
 - Duplicate grouping: group key = `(name ?? "").lowercased() + "|" + (sku ?? "").lowercased() + "|" + (source ?? "").lowercased()`. Groups with count>1 become expandable group rows in the list.
