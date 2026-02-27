@@ -420,6 +420,49 @@ struct BudgetTabCalculationTests {
         #expect(result[0].id == "active")
     }
 
+    // MARK: - applyPinning
+
+    @Test("Pinned categories move to top in user-defined order")
+    func applyPinningMovesToTop() {
+        let categories = [
+            makeCategoryProgress(id: "a", name: "Appliances"),
+            makeCategoryProgress(id: "b", name: "Furniture"),
+            makeCategoryProgress(id: "c", name: "Materials"),
+        ]
+        let result = BudgetTabCalculations.applyPinning(categories, pinnedCategoryIds: ["c", "a"])
+        #expect(result.map(\.id) == ["c", "a", "b"])
+    }
+
+    @Test("Empty pinned list preserves existing order")
+    func applyPinningEmptyPreservesOrder() {
+        let categories = [
+            makeCategoryProgress(id: "a", name: "Appliances"),
+            makeCategoryProgress(id: "b", name: "Furniture"),
+        ]
+        let result = BudgetTabCalculations.applyPinning(categories, pinnedCategoryIds: [])
+        #expect(result.map(\.id) == ["a", "b"])
+    }
+
+    @Test("Pinned ID not in categories is safely ignored")
+    func applyPinningIgnoresMissingIds() {
+        let categories = [
+            makeCategoryProgress(id: "a", name: "Appliances"),
+            makeCategoryProgress(id: "b", name: "Furniture"),
+        ]
+        let result = BudgetTabCalculations.applyPinning(categories, pinnedCategoryIds: ["nonexistent", "a"])
+        #expect(result.map(\.id) == ["a", "b"])
+    }
+
+    @Test("All categories pinned returns all in pinned order")
+    func applyPinningAllPinned() {
+        let categories = [
+            makeCategoryProgress(id: "a", name: "Appliances"),
+            makeCategoryProgress(id: "b", name: "Furniture"),
+        ]
+        let result = BudgetTabCalculations.applyPinning(categories, pinnedCategoryIds: ["b", "a"])
+        #expect(result.map(\.id) == ["b", "a"])
+    }
+
     // MARK: - buildBudgetRows
 
     @Test("Build budget rows produces correct output")

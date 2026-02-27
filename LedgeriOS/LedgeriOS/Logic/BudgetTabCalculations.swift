@@ -81,6 +81,34 @@ enum BudgetTabCalculations {
         }
     }
 
+    // MARK: - Pinning
+
+    /// Reorders categories so pinned categories appear first (in the order
+    /// specified by `pinnedCategoryIds`), followed by the remaining categories
+    /// in their existing sort order.
+    static func applyPinning(
+        _ categories: [BudgetProgress.CategoryProgress],
+        pinnedCategoryIds: [String]
+    ) -> [BudgetProgress.CategoryProgress] {
+        guard !pinnedCategoryIds.isEmpty else { return categories }
+
+        let categoriesById = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
+        let pinnedSet = Set(pinnedCategoryIds)
+
+        // Pinned categories in user-defined order
+        var pinned: [BudgetProgress.CategoryProgress] = []
+        for id in pinnedCategoryIds {
+            if let cat = categoriesById[id] {
+                pinned.append(cat)
+            }
+        }
+
+        // Remaining categories preserve existing sort order
+        let remaining = categories.filter { !pinnedSet.contains($0.id) }
+
+        return pinned + remaining
+    }
+
     // MARK: - Transaction-Based Spend Normalization
 
     /// Normalizes a single transaction's contribution to category spend.

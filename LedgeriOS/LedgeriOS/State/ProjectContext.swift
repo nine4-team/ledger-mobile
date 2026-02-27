@@ -12,6 +12,7 @@ final class ProjectContext {
     var budgetCategories: [BudgetCategory] = []
     var projectBudgetCategories: [ProjectBudgetCategory] = []
     var budgetProgress: BudgetProgress?
+    var projectPreferences: ProjectPreferences?
 
     private var listeners: [ListenerRegistration] = []
     private let projectService: ProjectServiceProtocol
@@ -21,6 +22,7 @@ final class ProjectContext {
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol
     private let budgetProgressService: BudgetProgressService
+    private let projectPreferencesService: ProjectPreferencesService
 
     init(
         projectService: ProjectServiceProtocol,
@@ -29,7 +31,8 @@ final class ProjectContext {
         spacesService: SpacesServiceProtocol,
         budgetCategoriesService: BudgetCategoriesServiceProtocol,
         projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol,
-        budgetProgressService: BudgetProgressService = BudgetProgressService()
+        budgetProgressService: BudgetProgressService = BudgetProgressService(),
+        projectPreferencesService: ProjectPreferencesService = ProjectPreferencesService()
     ) {
         self.projectService = projectService
         self.transactionsService = transactionsService
@@ -38,11 +41,12 @@ final class ProjectContext {
         self.budgetCategoriesService = budgetCategoriesService
         self.projectBudgetCategoriesService = projectBudgetCategoriesService
         self.budgetProgressService = budgetProgressService
+        self.projectPreferencesService = projectPreferencesService
     }
 
     /// Activate subscriptions for a project. Call from `.task(id: projectId)` —
     /// SwiftUI auto-cancels on disappear or ID change.
-    func activate(accountId: String, projectId: String) {
+    func activate(accountId: String, projectId: String, userId: String? = nil) {
         deactivate()
         currentProjectId = projectId
 
@@ -106,6 +110,19 @@ final class ProjectContext {
                 }
             }
         )
+
+        // 8. Project preferences (pinned categories)
+        if let userId {
+            listeners.append(
+                projectPreferencesService.subscribeToProjectPreferences(
+                    accountId: accountId,
+                    userId: userId,
+                    projectId: projectId
+                ) { [weak self] prefs in
+                    Task { @MainActor in self?.projectPreferences = prefs }
+                }
+            )
+        }
     }
 
     func deactivate() {
@@ -120,6 +137,7 @@ final class ProjectContext {
         budgetCategories = []
         projectBudgetCategories = []
         budgetProgress = nil
+        projectPreferences = nil
     }
 
     private func recomputeBudgetProgress() {

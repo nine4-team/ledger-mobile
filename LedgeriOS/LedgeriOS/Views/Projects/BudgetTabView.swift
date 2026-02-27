@@ -3,10 +3,15 @@ import SwiftUI
 struct BudgetTabView: View {
     @Environment(ProjectContext.self) private var projectContext
 
+    private var pinnedCategoryIds: [String] {
+        projectContext.projectPreferences?.pinnedBudgetCategoryIds ?? []
+    }
+
     private var categories: [BudgetProgress.CategoryProgress] {
         guard let progress = projectContext.budgetProgress else { return [] }
         let enabled = BudgetTabCalculations.enabledCategories(allCategories: progress.categories)
-        return BudgetTabCalculations.sortCategories(enabled)
+        let sorted = BudgetTabCalculations.sortCategories(enabled)
+        return BudgetTabCalculations.applyPinning(sorted, pinnedCategoryIds: pinnedCategoryIds)
     }
 
     private var overallBudgetCents: Int {
