@@ -193,6 +193,8 @@
 		WP06BFITEMSTABVIEW000000 /* ItemsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRITEMSTABVIEW000000 /* ItemsTabView.swift */; };
 		WP06BFLINEAGEEDGESSERVIC /* LineageEdgesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */; };
 		WP06BFINVENTORYOPERATION /* InventoryOperationsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */; };
+		WP14B00100000000000L0001 /* SearchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP14F00100000000000L0001 /* SearchCalculations.swift */; };
+		WP14B00100000000000X0001 /* SearchCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP14F00100000000000X0001 /* SearchCalculationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -390,6 +392,8 @@
 		WP06FRITEMSTABVIEW000000 /* ItemsTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabView.swift; sourceTree = "<group>"; };
 		WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LineageEdgesService.swift; sourceTree = "<group>"; };
 		WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsService.swift; sourceTree = "<group>"; };
+		WP14F00100000000000L0001 /* SearchCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCalculations.swift; sourceTree = "<group>"; };
+		WP14F00100000000000X0001 /* SearchCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCalculationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -457,6 +461,7 @@
 				C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */,
 				91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */,
 				05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */,
+				WP14F00100000000000L0001 /* SearchCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -549,6 +554,7 @@
 				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
 				WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */,
 				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
+				WP14F00100000000000X0001 /* SearchCalculationTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -1012,6 +1018,7 @@
 				6FF4858B2EBE341784859F93 /* TransactionCompletenessCalculations.swift in Sources */,
 				F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */,
 				10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */,
+				WP14B00100000000000L0001 /* SearchCalculations.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1042,6 +1049,7 @@
 				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
 				WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */,
 				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
+				WP14B00100000000000X0001 /* SearchCalculationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
