@@ -1,7 +1,7 @@
 ---
 work_package_id: WP14
 title: Session 7b Logic – Search Calculations
-lane: "for_review"
+lane: "doing"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP06
 base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
@@ -12,7 +12,7 @@ subtasks:
 phase: Phase 7 - Session 7b
 assignee: ''
 agent: "claude-opus"
-shell_pid: "44284"
+shell_pid: "20951"
 review_status: ''
 reviewed_by: ''
 history:
@@ -192,3 +192,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T23:08:48Z – claude-opus – shell_pid=44284 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:23:54Z – claude-opus – shell_pid=44284 – lane=for_review – Ready for review: SearchCalculations with 3 matching strategies (text, SKU normalization, amount prefix-range), per-entity field mappings, 40+ tests all passing
+- 2026-02-28T23:34:20Z – claude-opus – shell_pid=20951 – lane=doing – Started review via workflow command
