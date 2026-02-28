@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Session 4 Screens – Spaces Tab + Space Detail + Modals
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP06
 base_branch: 008-phase-4-screens-implementation-WP06
@@ -16,8 +16,8 @@ phase: Phase 4 - Session 4
 assignee: ''
 agent: "claude-opus"
 shell_pid: "97784"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -35,9 +35,43 @@ history:
 
 ## Review Feedback
 
-*[Empty — no feedback yet.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-28
 
----
+## Review Feedback — WP08
+
+**Reviewer:** claude-opus
+
+### Issue 1 (MUST FIX): EditChecklistModal missing `.onMove` reorder support
+
+The spec explicitly requires drag-to-reorder for checklist items:
+
+> "Drag handle for reordering: `.onMove { indices, destination in ... }` in edit mode."
+> "Use `List` with `.onMove` for reorder drag handles — requires `EditButton` or toggling `.environment(\.editMode, .constant(.active))`."
+
+The current `EditChecklistModal.swift` uses `ForEach` within a `VStack` but has no `.onMove` modifier — neither for reordering checklists relative to each other, nor for reordering items within a checklist.
+
+**How to fix:**
+1. Wrap the checklist items `ForEach` in a `List` (or use `ForEach` with `.onMove`) 
+2. Add `.onMove { indices, destination in ... }` that mutates `checklist.wrappedValue.items.move(fromOffsets:toOffset:)`
+3. Set `.environment(\.editMode, .constant(.active))` on the list section to show drag handles, or use an `EditButton`
+4. Optionally also support reordering the top-level checklists themselves
+
+### Issue 2 (MINOR — Optional): SpaceCard checklist progress text
+
+The spec mentions "checklist progress (as text 'X of Y' or fraction for a progress bar)". The SpaceCard renders a `ProgressBar` (good) but no textual label. Consider adding a small "X/Y" text label next to or below the progress bar for accessibility/clarity. This is a nice-to-have, not a blocker.
+
+### Everything else: PASS
+
+- SpacesTabView: All 6 requirements pass — correct data sourcing, archive filtering, search, SpaceCard rendering, NavigationLink pattern, LazyVStack
+- SpaceDetailView: All 13 requirements pass — 4 collapsible sections with correct defaults, Media/Notes/Items/Checklists all wired correctly, role-gated template stub, action menu, delete confirmation, optimistic checklist toggling
+- EditSpaceDetailsModal: All 4 requirements pass — correct sheet presentation, name/notes fields, validation, save/dismiss
+- EditChecklistModal: 7 of 8 pass — add/remove/check items all work, add checklist works, save/dismiss works. Only reorder is missing.
+- All types and dependencies confirmed to exist with correct signatures
+- Architecture follows CLAUDE.md patterns (bottom sheets, @Observable, NavigationLink(value:), theme tokens)
+- Sheet-on-sheet sequencing correctly uses onDismiss pattern
+
 
 ## Objectives & Success Criteria
 
@@ -191,3 +225,4 @@ history:
 - 2026-02-28T22:37:47Z – claude-opus – shell_pid=45115 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T22:47:01Z – claude-opus – shell_pid=45115 – lane=for_review – Ready for review: SpacesTabView, SpaceDetailView with 4 collapsible sections, EditSpaceDetailsModal, EditChecklistModal. Build succeeds.
 - 2026-02-28T22:47:16Z – claude-opus – shell_pid=97784 – lane=doing – Started review via workflow command
+- 2026-02-28T22:53:44Z – claude-opus – shell_pid=97784 – lane=planned – Moved to planned
