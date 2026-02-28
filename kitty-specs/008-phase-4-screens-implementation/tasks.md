@@ -342,10 +342,10 @@
 **Prompt**: `tasks/WP10-inventory-screens.md`
 
 ### Included Subtasks
-- [ ] T046 Create `Views/Inventory/InventoryView.swift` — replaces placeholder; 3 sub-tabs via `ScrollableTabBar` (Items/Transactions/Spaces); reads from `InventoryContext`; restores last tab from UserDefaults
-- [ ] T047 Wire inventory Items sub-tab: reuse `SharedItemsList` with inventory-scoped data; full filter/sort/bulk ops; navigation → `ItemDetailView` (same screen as project-scoped)
-- [ ] T048 Wire inventory Transactions sub-tab: reuse `SharedTransactionsList` with inventory-scoped data; full filter/sort; navigation → `TransactionDetailView`
-- [ ] T049 Wire inventory Spaces sub-tab: reuse space card list with inventory-scoped spaces; add button; navigation → `SpaceDetailView`
+- [x] T046 Create `Views/Inventory/InventoryView.swift` — replaces placeholder; 3 sub-tabs via `ScrollableTabBar` (Items/Transactions/Spaces); reads from `InventoryContext`; restores last tab from UserDefaults
+- [x] T047 Wire inventory Items sub-tab: reuse `SharedItemsList` with inventory-scoped data; full filter/sort/bulk ops; navigation → `ItemDetailView` (same screen as project-scoped)
+- [x] T048 Wire inventory Transactions sub-tab: reuse `SharedTransactionsList` with inventory-scoped data; full filter/sort; navigation → `TransactionDetailView`
+- [x] T049 Wire inventory Spaces sub-tab: reuse space card list with inventory-scoped spaces; add button; navigation → `SpaceDetailView`
 
 ### Implementation Notes
 - All detail screens (`ItemDetailView`, `TransactionDetailView`, `SpaceDetailView`) are reused — no new detail views needed.
