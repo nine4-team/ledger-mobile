@@ -21,6 +21,9 @@
 		32E5DED81173DDDE282CC643 /* ProjectListCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */; };
 		3A8B8DAC00216F5F5F3B1FE0 /* ProjectBudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */; };
 		3F582B99A07E893EB77D4930 /* TransactionExportCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */; };
+		WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */; };
+		WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */; };
+		WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000003X0001 /* ReceiptListParserTests.swift */; };
 		41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */; };
 		41D9319222D75C37A1DA765A /* TransactionsTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */; };
 		4736BEA99AE52195374A39CB /* ProjectCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D728B501E3FD1CF2F39E557D /* ProjectCard.swift */; };
@@ -206,6 +209,9 @@
 		4A32986DD6B2D33762465CCB /* SpacesTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacesTabPlaceholder.swift; sourceTree = "<group>"; };
 		4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOSTests/TransactionExportCalculationTests.swift; sourceTree = SOURCE_ROOT; };
+		WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionNextStepsCalculationTests.swift; sourceTree = "<group>"; };
+		WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCompletenessCalculationTests.swift; sourceTree = "<group>"; };
+		WP04F00100000000003X0001 /* ReceiptListParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptListParserTests.swift; sourceTree = "<group>"; };
 		50623E68F8E8A1789A9C2132 /* SpacesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacesService.swift; sourceTree = "<group>"; };
 		5CE461E5CE01EC26784E658E /* ProjectPreferencesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Services/ProjectPreferencesService.swift; sourceTree = SOURCE_ROOT; };
 		5DD203EAE8B8232355376751 /* BudgetTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetTabView.swift; sourceTree = "<group>"; };
@@ -506,6 +512,9 @@
 				WP02F00100000000000X0001 /* BudgetTrackerCalculationTests.swift */,
 				WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */,
 				4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */,
+				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
+				WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */,
+				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -970,6 +979,9 @@
 				WP02B00100000000000X0001 /* BudgetTrackerCalculationTests.swift in Sources */,
 				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
 				3F582B99A07E893EB77D4930 /* TransactionExportCalculationTests.swift in Sources */,
+				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
+				WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */,
+				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
