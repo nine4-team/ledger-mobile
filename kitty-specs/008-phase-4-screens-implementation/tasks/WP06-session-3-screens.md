@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: "doing"
+lane: "done"
 dependencies:
 - WP04
 base_branch: 008-phase-4-screens-implementation-WP04
@@ -326,3 +326,4 @@ Please fix Issues 1-4 and resubmit for review.
 - 2026-02-28T01:32:51Z – claude-opus – shell_pid=39205 – lane=doing – Started implementation via workflow command
 - 2026-02-28T01:40:52Z – claude-opus – shell_pid=39205 – lane=for_review – Fixed all 4 review issues: (1) removed undeclared createdCount, (2) lineage edges now atomic in WriteBatch, (3) SellToProjectModal fetches categories independently via BudgetCategoriesService, (4) SetSpaceModal wired at both call sites. Also fixed pre-existing Swift 6 concurrency errors and EditItemDetailsModal init capture error. Build succeeds.
 - 2026-02-28T22:34:48Z – claude-opus – shell_pid=38769 – lane=doing – Started review via workflow command
+- 2026-02-28T22:37:06Z – claude-opus – shell_pid=38769 – lane=done – Review passed: All 4 previously-flagged issues confirmed fixed. (1) MakeCopiesModal createdCount removed — compiles cleanly. (2) Lineage edges now atomic in WriteBatch — no separate writes or try? suppression. (3) SellToProjectModal fetches destination categories independently via BudgetCategoriesService — step 2 uses accountCategories, step 3 correctly uses source projectContext. (4) SetSpaceModal wired at both ItemDetailView and ItemsTabView call sites — no dead code. General code quality is excellent: all modals use bottom sheets with drag indicators, NavigationLink is 100% value-based, @Observable/@MainActor patterns correct, theme constants used consistently, button labels follow title case convention. Minor notes (not blocking): some hardcoded icon sizes in picker checkmarks, no feature docs created yet.
