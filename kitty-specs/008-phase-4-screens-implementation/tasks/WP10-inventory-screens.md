@@ -1,9 +1,12 @@
 ---
 work_package_id: WP10
 title: Session 5 Screens – Inventory Screen
-lane: planned
+lane: "doing"
 dependencies:
 - WP09
+base_branch: 008-phase-4-screens-implementation-WP09
+base_commit: 45d8b5ddd4bb9c0ab5d92dc4a6cbd451db1269ea
+created_at: '2026-02-28T23:23:51.469667+00:00'
 subtasks:
 - T046
 - T047
@@ -12,7 +15,7 @@ subtasks:
 phase: Phase 5 - Session 5
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "92917"
 review_status: ''
 reviewed_by: ''
 history:
