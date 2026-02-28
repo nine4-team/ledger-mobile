@@ -1,7 +1,7 @@
 ---
 work_package_id: WP13
 title: Session 7a Screens – Settings
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP00
 base_branch: 008-phase-4-screens-implementation-WP00
@@ -316,3 +316,4 @@ Update `defaultVendors` to match the full list from the RN source. The spec expl
 - 2026-02-28T23:34:02Z – claude-opus – shell_pid=19688 – lane=doing – Started review via workflow command
 - 2026-02-28T23:36:41Z – claude-opus – shell_pid=19688 – lane=planned – Moved to planned
 - 2026-02-28T23:38:58Z – claude-opus – shell_pid=34957 – lane=doing – Started implementation via workflow command
+- 2026-02-28T23:42:42Z – claude-opus – shell_pid=34957 – lane=for_review – Ready for review: Addressed both review issues - (1) Added drag-reorder via List+.onMove to BudgetCategoryManagementView, SpaceTemplateManagementView, and VendorDefaultsView with order persistence; (2) Updated defaultVendors to full 15-item list from RN source. Build succeeds.
