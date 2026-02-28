@@ -1,7 +1,7 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: "planned"
+lane: "doing"
 dependencies:
 - WP00
 - WP04
@@ -18,7 +18,7 @@ subtasks:
 phase: Phase 7 - Session 7c
 assignee: ''
 agent: "claude-opus"
-shell_pid: "22309"
+shell_pid: "66415"
 review_status: "has_feedback"
 reviewed_by: "claude-opus"
 history:
@@ -346,3 +346,4 @@ history:
 - 2026-02-28T23:34:38Z – claude-opus – shell_pid=22309 – lane=doing – Started review via workflow command
 - 2026-02-28T23:36:22Z – claude-opus – shell_pid=22309 – lane=done – Review passed: All 3 report aggregation functions correctly compute invoice (charges/credits/net due), client summary (spent/saved/category breakdown), and property management (space grouping). AccountingTabView properly excludes canceled transactions from reimbursement totals. 3 native SwiftUI report views with PDF sharing via ImageRenderer. 16 Swift Testing tests with comprehensive coverage. Clean logic/view separation, proper theme token usage, correct NavigationLink(value:) pattern.
 - 2026-02-28T23:51:42Z – claude-opus – shell_pid=22309 – lane=planned – Changes requested: PDF content views lost all branded styling from original RN/web reports. The 3 *PDFContent structs use generic system fonts/colors instead of brand color #987e55, branded card backgrounds, table layouts with zebra striping, receipt badges, header logos, footers, etc. On-screen report views are fine — only the PDF export views need rework to match the original reportHtml.ts stylesheet.
+- 2026-02-28T23:52:59Z – claude-opus – shell_pid=66415 – lane=doing – Started implementation via workflow command
