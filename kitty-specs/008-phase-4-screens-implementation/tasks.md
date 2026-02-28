@@ -439,12 +439,12 @@
 **Prompt**: `tasks/WP13-settings-screens.md`
 
 ### Included Subtasks
-- [ ] T060 Create new models: `Models/SpaceTemplate.swift`, `Models/VendorDefault.swift`, `Models/Invite.swift`, `Models/BusinessProfile.swift` (Swift structs, Codable, per data-model.md)
-- [ ] T061 Create new services: `Services/SpaceTemplatesService.swift`, `Services/VendorDefaultsService.swift`, `Services/InvitesService.swift`, `Services/BusinessProfileService.swift`, `Services/AccountPresetsService.swift` (Firestore CRUD with offline-first reads)
-- [ ] T062 Create `Views/Settings/SettingsView.swift` — replaces placeholder; 4-tab interface (General/Presets/Users/Account) via `ScrollableTabBar`
-- [ ] T063 Create `Views/Settings/BudgetCategoryManagementView.swift` + `Modals/CategoryFormModal.swift` — full CRUD, drag-reorder (`DraggableCardList`), archive/unarchive with warning; exact validation error messages from spec
-- [ ] T064 [P] Create `Views/Settings/SpaceTemplateManagementView.swift` — full CRUD, reorder; template fields per data-model.md
-- [ ] T065 [P] Create `Views/Settings/VendorDefaultsView.swift` + `Views/Settings/UsersView.swift` + `Views/Settings/AccountView.swift` — manage vendor list, team members, business profile (logo upload via MediaService), sign-out action
+- [x] T060 Create new models: `Models/SpaceTemplate.swift`, `Models/VendorDefault.swift`, `Models/Invite.swift`, `Models/BusinessProfile.swift` (Swift structs, Codable, per data-model.md)
+- [x] T061 Create new services: `Services/SpaceTemplatesService.swift`, `Services/VendorDefaultsService.swift`, `Services/InvitesService.swift`, `Services/BusinessProfileService.swift`, `Services/AccountPresetsService.swift` (Firestore CRUD with offline-first reads)
+- [x] T062 Create `Views/Settings/SettingsView.swift` — replaces placeholder; 4-tab interface (General/Presets/Users/Account) via `ScrollableTabBar`
+- [x] T063 Create `Views/Settings/BudgetCategoryManagementView.swift` + `Modals/CategoryFormModal.swift` — full CRUD, drag-reorder (`DraggableCardList`), archive/unarchive with warning; exact validation error messages from spec
+- [x] T064 [P] Create `Views/Settings/SpaceTemplateManagementView.swift` — full CRUD, reorder; template fields per data-model.md
+- [x] T065 [P] Create `Views/Settings/VendorDefaultsView.swift` + `Views/Settings/UsersView.swift` + `Views/Settings/AccountView.swift` — manage vendor list, team members, business profile (logo upload via MediaService), sign-out action
 
 ### Implementation Notes
 - `CategoryFormModal` exact validation: name max 100 chars → "Category name must be 100 characters or less"; isItemized AND isFee → "A category cannot be both Itemized and Fee".
