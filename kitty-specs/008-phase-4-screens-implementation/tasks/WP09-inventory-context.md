@@ -1,7 +1,7 @@
 ---
 work_package_id: WP09
 title: Session 5 Logic – Inventory Context
-lane: "for_review"
+lane: "doing"
 dependencies: [WP08]
 base_branch: 008-phase-4-screens-implementation-WP08
 base_commit: 8dd0f94c525a7425ca5e49f0647c6dc69b979705
@@ -12,8 +12,8 @@ subtasks:
 - T045
 phase: Phase 5 - Session 5
 assignee: ''
-agent: claude-opus
-shell_pid: "44779"
+agent: "claude-opus"
+shell_pid: "85231"
 review_status: ''
 reviewed_by: ''
 history:
@@ -169,3 +169,4 @@ history:
 - 2026-02-27T22:35:24Z – claude-opus – shell_pid=69112 – lane=doing – Assigned agent via workflow command
 - 2026-02-27T22:39:30Z – claude-opus – shell_pid=69112 – lane=planned – Unwinding: must follow dependency chain (WP07 → WP08 → WP09)
 - 2026-02-28T23:19:03Z – claude-opus – shell_pid=44779 – lane=for_review – Ready for review: InventoryContext with 3 subscriptions (.inventory scope), UserDefaults tab persistence, environment injection, and 4 passing tests
+- 2026-02-28T23:21:26Z – claude-opus – shell_pid=85231 – lane=doing – Started review via workflow command
