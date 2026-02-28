@@ -1,7 +1,7 @@
 ---
 work_package_id: WP13
 title: Session 7a Screens – Settings
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP00
 base_branch: 008-phase-4-screens-implementation-WP00
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 7 - Session 7a
 assignee: ''
 agent: "claude-opus"
-shell_pid: "49033"
+shell_pid: "19688"
 review_status: ''
 reviewed_by: ''
 history:
@@ -293,3 +293,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T23:10:06Z – claude-opus – shell_pid=49033 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:24:50Z – claude-opus – shell_pid=49033 – lane=for_review – Ready for review: Settings screens with 4-tab interface (General/Presets/Users/Account), 4 models, 5 services, CategoryFormModal with validation, theme selection, sign out flow. Build succeeds.
+- 2026-02-28T23:34:02Z – claude-opus – shell_pid=19688 – lane=doing – Started review via workflow command
