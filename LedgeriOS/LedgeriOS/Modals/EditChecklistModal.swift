@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Bottom sheet modal for full checklist management —
-/// add/remove checklists, add/remove/check items within each checklist.
+/// add/remove checklists, add/remove/reorder/check items within each checklist.
 struct EditChecklistModal: View {
     let space: Space
     let onSave: ([Checklist]) -> Void
@@ -16,106 +16,122 @@ struct EditChecklistModal: View {
     }
 
     var body: some View {
-        FormSheet(
-            title: "Edit Checklists",
-            primaryAction: FormSheetAction(title: "Save") {
-                onSave(localChecklists)
-                dismiss()
-            },
-            secondaryAction: FormSheetAction(title: "Cancel") {
-                dismiss()
-            }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                ForEach($localChecklists) { $checklist in
-                    checklistSection(checklist: $checklist)
+        VStack(spacing: 0) {
+            // Header
+            Text("Edit Checklists")
+                .font(Typography.h2)
+                .foregroundStyle(BrandColors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.screenPadding)
+                .padding(.bottom, Spacing.sm)
+
+            // List with reorder support
+            List {
+                ForEach(localChecklists.indices, id: \.self) { checklistIndex in
+                    Section {
+                        ForEach(localChecklists[checklistIndex].items.indices, id: \.self) { itemIndex in
+                            checklistItemRow(
+                                checklistIndex: checklistIndex,
+                                itemIndex: itemIndex
+                            )
+                        }
+                        .onMove { indices, destination in
+                            localChecklists[checklistIndex].items.move(fromOffsets: indices, toOffset: destination)
+                        }
+                        .onDelete { indices in
+                            localChecklists[checklistIndex].items.remove(atOffsets: indices)
+                        }
+
+                        // Add Item
+                        Button {
+                            localChecklists[checklistIndex].items.append(ChecklistItem())
+                        } label: {
+                            Label("Add Item", systemImage: "plus")
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        }
+                    } header: {
+                        checklistHeader(checklistIndex: checklistIndex)
+                    }
                 }
 
-                Button {
-                    localChecklists.append(Checklist(name: "New Checklist"))
-                } label: {
-                    Label("Add Checklist", systemImage: "plus.circle.fill")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.primary)
+                // Add Checklist
+                Section {
+                    Button {
+                        localChecklists.append(Checklist(name: "New Checklist"))
+                    } label: {
+                        Label("Add Checklist", systemImage: "plus.circle.fill")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.primary)
+                    }
                 }
             }
+            .listStyle(.insetGrouped)
+            .environment(\.editMode, .constant(.active))
+
+            // Actions
+            VStack(spacing: Spacing.sm) {
+                AppButton(title: "Save") {
+                    onSave(localChecklists)
+                    dismiss()
+                }
+
+                AppButton(title: "Cancel", variant: .secondary) {
+                    dismiss()
+                }
+            }
+            .padding(Spacing.screenPadding)
         }
     }
 
-    // MARK: - Checklist Section
+    // MARK: - Checklist Header
 
     @ViewBuilder
-    private func checklistSection(checklist: Binding<Checklist>) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Checklist title row
-            HStack(spacing: Spacing.sm) {
-                TextField("Checklist Name", text: checklist.name)
-                    .font(Typography.h3)
-                    .foregroundStyle(BrandColors.textPrimary)
+    private func checklistHeader(checklistIndex: Int) -> some View {
+        HStack(spacing: Spacing.sm) {
+            TextField("Checklist Name", text: $localChecklists[checklistIndex].name)
+                .font(Typography.h3)
+                .foregroundStyle(BrandColors.textPrimary)
+                .textCase(nil)
 
-                Spacer()
+            Spacer()
 
-                Button {
-                    localChecklists.removeAll { $0.id == checklist.wrappedValue.id }
-                } label: {
-                    Image(systemName: "trash")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.destructive)
-                }
-                .buttonStyle(.plain)
-            }
-
-            // Items
-            ForEach(checklist.items) { $item in
-                HStack(spacing: Spacing.sm) {
-                    // Checkbox
-                    Button {
-                        item.isChecked.toggle()
-                    } label: {
-                        Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(
-                                item.isChecked ? BrandColors.primary : BrandColors.textTertiary
-                            )
-                            .font(Typography.body)
-                    }
-                    .buttonStyle(.plain)
-
-                    // Item text
-                    TextField("Item text", text: $item.text)
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textPrimary)
-
-                    // Delete item
-                    Button {
-                        checklist.wrappedValue.items.removeAll { $0.id == item.id }
-                    } label: {
-                        Image(systemName: "minus.circle.fill")
-                            .foregroundStyle(BrandColors.destructive)
-                            .font(Typography.small)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            // Add Item
             Button {
-                checklist.wrappedValue.items.append(ChecklistItem())
+                localChecklists.remove(at: checklistIndex)
             } label: {
-                Label("Add Item", systemImage: "plus")
+                Image(systemName: "trash")
                     .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
+                    .foregroundStyle(BrandColors.destructive)
             }
-
-            Divider()
-                .overlay(BrandColors.border)
+            .buttonStyle(.plain)
         }
-        .padding(Spacing.md)
-        .background(BrandColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-        )
+    }
+
+    // MARK: - Checklist Item Row
+
+    @ViewBuilder
+    private func checklistItemRow(checklistIndex: Int, itemIndex: Int) -> some View {
+        HStack(spacing: Spacing.sm) {
+            // Checkbox
+            Button {
+                localChecklists[checklistIndex].items[itemIndex].isChecked.toggle()
+            } label: {
+                Image(systemName: localChecklists[checklistIndex].items[itemIndex].isChecked
+                    ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(
+                        localChecklists[checklistIndex].items[itemIndex].isChecked
+                            ? BrandColors.primary : BrandColors.textTertiary
+                    )
+                    .font(Typography.body)
+            }
+            .buttonStyle(.plain)
+
+            // Item text
+            TextField("Item text", text: $localChecklists[checklistIndex].items[itemIndex].text)
+                .font(Typography.body)
+                .foregroundStyle(BrandColors.textPrimary)
+        }
     }
 }
 
