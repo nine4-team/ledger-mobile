@@ -19,8 +19,8 @@ phase: Phase 7 - Session 7c
 assignee: ''
 agent: "claude-opus"
 shell_pid: "22309"
-review_status: "approved"
-reviewed_by: "nine4-team"
+review_status: "has_feedback"
+reviewed_by: "claude-opus"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -38,7 +38,39 @@ history:
 
 ## Review Feedback
 
-*[Empty — no feedback yet.]*
+**Reviewer:** claude-opus | **Date:** 2026-02-28
+
+### Issue: PDF content views lost all branded styling from original reports
+
+**Severity:** High — PDFs are the client-facing deliverable.
+
+**What's wrong:** The 3 private `*PDFContent` structs (`InvoiceReportPDFContent`, `ClientSummaryPDFContent`, `PropertyManagementPDFContent`) use generic system fonts and colors instead of matching the branded design from the original RN app's `src/utils/reportHtml.ts` stylesheet. The on-screen report views correctly use theme tokens — only the PDF export content needs rework.
+
+**What's missing vs. the original reports:**
+
+| Element | Original (reportHtml.ts) | Current SwiftUI PDF |
+|---------|--------------------------|---------------------|
+| Report title | 22px / 700 weight / `#987e55` brand color | System `.title2.bold()` / no brand color |
+| Section headers | 16px / 600 / `#987e55` with `#e0d5c5` underline border | System `.caption.weight(.semibold)` / no color |
+| Table headers | 11px / 600 / uppercase / `#666` on `#f7f3ee` background | None — no table structure |
+| Table rows | Zebra striping (`#faf8f5` alternating), `#f0ebe4` row borders | Plain VStack, no striping |
+| Net Due row | 15px / 700 / `#987e55` with 2px brand-color top border | System `.body.bold()` / no brand highlight |
+| Overview cards | `#faf8f5` background, `#e0d5c5` border, 8px radius | None — just plain text |
+| Card labels | 11px / 600 / uppercase / `#666` | None |
+| Card values | 20px / 700 / `#1a1a1a` | None |
+| Missing price indicator | Italic / `#c0392b` / 11px | None |
+| Receipt badges | 10px / 600 / `#987e55` text on `#f7f3ee` bg / 4px radius | None |
+| Header border | 2px solid `#987e55` bottom border | None |
+| Footer | 11px / `#999` / centered / `#e0d5c5` top border / generation date | None |
+| Page width | 800px with 40px padding (20px for print) | 612pt with 24pt padding |
+| Currency format | `Intl.NumberFormat` locale-aware | `String(format: "$%.2f")` — no locale |
+
+**How to fix:**
+
+1. Define PDF-specific color constants matching the original palette: brand `#987e55`, card bg `#faf8f5`, card/table border `#e0d5c5`, body text `#1a1a1a`, secondary text `#666`, error `#c0392b`.
+2. Rebuild each `*PDFContent` struct to replicate the original layout: branded header with border, table-style rows with zebra striping, overview cards, section headers with brand color and underline, net due highlight, receipt badges, footer.
+3. Use `CurrencyFormatting.formatCentsWithDecimals` (already available) instead of raw `String(format:)`.
+4. Reference file: `src/utils/reportHtml.ts` — the `getReportStyles()` function and 3 `generate*Html()` functions define the exact design to match.
 
 ---
 
