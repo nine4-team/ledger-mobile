@@ -1,7 +1,7 @@
 ---
 work_package_id: WP14
 title: Session 7b Logic – Search Calculations
-lane: "doing"
+lane: "done"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP06
 base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
@@ -13,8 +13,8 @@ phase: Phase 7 - Session 7b
 assignee: ''
 agent: "claude-opus"
 shell_pid: "20951"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -193,3 +193,4 @@ history:
 - 2026-02-28T23:08:48Z – claude-opus – shell_pid=44284 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:23:54Z – claude-opus – shell_pid=44284 – lane=for_review – Ready for review: SearchCalculations with 3 matching strategies (text, SKU normalization, amount prefix-range), per-entity field mappings, 40+ tests all passing
 - 2026-02-28T23:34:20Z – claude-opus – shell_pid=20951 – lane=doing – Started review via workflow command
+- 2026-02-28T23:39:10Z – claude-opus – shell_pid=20951 – lane=done – Review passed: All 8 review checklist items verified. Amount prefix-range algorithm matches spec exactly (40→4000..4099, 40.0→4000..4009, 40.00→4000..4000, $1,200→120000..120099). SKU normalization correct. Empty query returns all. 51 tests pass across 5 suites. No SwiftUI/Firestore imports. Minor note: transactionDisplayName is a simplified local helper (source→Untitled) because TransactionDisplayCalculations from WP03 is not on the WP06 base branch; should be updated to delegate to TransactionDisplayCalculations.displayName(for:) after WP03 merges (covers canonical inventory sale handling). Test filename uses singular (SearchCalculationTests vs SearchCalculationsTests) — minor inconsistency.
