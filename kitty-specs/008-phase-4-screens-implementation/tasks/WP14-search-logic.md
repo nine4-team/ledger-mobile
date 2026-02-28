@@ -1,7 +1,7 @@
 ---
 work_package_id: WP14
 title: Session 7b Logic – Search Calculations
-lane: "doing"
+lane: "for_review"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP06
 base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
@@ -209,3 +209,4 @@ Either way, the display name resolution in search must match what the UI shows. 
 - 2026-02-28T23:39:10Z – claude-opus – shell_pid=20951 – lane=done – Review passed: All 8 review checklist items verified. Amount prefix-range algorithm matches spec exactly (40→4000..4099, 40.0→4000..4009, 40.00→4000..4000, $1,200→120000..120099). SKU normalization correct. Empty query returns all. 51 tests pass across 5 suites. No SwiftUI/Firestore imports. Minor note: transactionDisplayName is a simplified local helper (source→Untitled) because TransactionDisplayCalculations from WP03 is not on the WP06 base branch; should be updated to delegate to TransactionDisplayCalculations.displayName(for:) after WP03 merges (covers canonical inventory sale handling). Test filename uses singular (SearchCalculationTests vs SearchCalculationsTests) — minor inconsistency.
 - 2026-02-28T23:50:10Z – claude-opus – shell_pid=20951 – lane=planned – Moved to planned
 - 2026-02-28T23:50:49Z – claude-opus – shell_pid=60875 – lane=doing – Started implementation via workflow command
+- 2026-02-28T23:55:27Z – claude-opus – shell_pid=60875 – lane=for_review – Ready for review: Addressed all review feedback — transactionDisplayName now uses full 4-priority chain (source → canonical inventory sale label → ID prefix → Untitled Transaction), 13 new display name tests added, test file renamed to SearchCalculationsTests. 62 tests pass across 5 suites.
