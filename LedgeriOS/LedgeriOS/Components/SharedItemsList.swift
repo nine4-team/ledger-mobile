@@ -26,6 +26,12 @@ struct SharedItemsList: View {
 
     // MARK: - Computed
 
+    /// Extracts items from embedded mode so we can observe changes with .onChange.
+    private var embeddedSourceItems: [Item] {
+        if case .embedded(let providedItems, _) = mode { return providedItems }
+        return []
+    }
+
     private var processedItems: [Item] {
         ListFilterSortCalculations.applyAllFilters(
             items,
@@ -109,6 +115,11 @@ struct SharedItemsList: View {
         }
         .task {
             await setupData()
+        }
+        .onChange(of: embeddedSourceItems) { _, newItems in
+            if !newItems.isEmpty || !isStandalone {
+                items = newItems
+            }
         }
         .onDisappear {
             listener?.remove()

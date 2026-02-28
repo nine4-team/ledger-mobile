@@ -178,6 +178,21 @@
 		6FF4858B2EBE341784859F93 /* TransactionCompletenessCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */; };
 		F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */; };
 		10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */; };
+		WP06BFSPACEPICKERLIST000 /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRSPACEPICKERLIST000 /* SpacePickerList.swift */; };
+		WP06BFREASSIGNTOPROJECTM /* ReassignToProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRREASSIGNTOPROJECTM /* ReassignToProjectModal.swift */; };
+		WP06BFSELLTOBUSINESSMODA /* SellToBusinessModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRSELLTOBUSINESSMODA /* SellToBusinessModal.swift */; };
+		WP06BFRETURNTRANSACTIONP /* ReturnTransactionPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRRETURNTRANSACTIONP /* ReturnTransactionPickerModal.swift */; };
+		WP06BFSELLTOPROJECTMODAL /* SellToProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRSELLTOPROJECTMODAL /* SellToProjectModal.swift */; };
+		WP06BFSTATUSPICKERMODAL0 /* StatusPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRSTATUSPICKERMODAL0 /* StatusPickerModal.swift */; };
+		WP06BFEDITITEMDETAILSMOD /* EditItemDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FREDITITEMDETAILSMOD /* EditItemDetailsModal.swift */; };
+		WP06BFSETSPACEMODAL00000 /* SetSpaceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRSETSPACEMODAL00000 /* SetSpaceModal.swift */; };
+		WP06BFPROJECTPICKERLIST0 /* ProjectPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRPROJECTPICKERLIST0 /* ProjectPickerList.swift */; };
+		WP06BFMAKECOPIESMODAL000 /* MakeCopiesModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRMAKECOPIESMODAL000 /* MakeCopiesModal.swift */; };
+		WP06BFTRANSACTIONPICKERM /* TransactionPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRTRANSACTIONPICKERM /* TransactionPickerModal.swift */; };
+		WP06BFITEMDETAILVIEW0000 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRITEMDETAILVIEW0000 /* ItemDetailView.swift */; };
+		WP06BFITEMSTABVIEW000000 /* ItemsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRITEMSTABVIEW000000 /* ItemsTabView.swift */; };
+		WP06BFLINEAGEEDGESSERVIC /* LineageEdgesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */; };
+		WP06BFINVENTORYOPERATION /* InventoryOperationsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -360,6 +375,21 @@
 		91DE176B19A2B7617AB2CA87 /* TransactionCompletenessCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCompletenessCalculations.swift; sourceTree = "<group>"; };
 		05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptListParser.swift; sourceTree = "<group>"; };
 		6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
+		WP06FRSPACEPICKERLIST000 /* SpacePickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacePickerList.swift; sourceTree = "<group>"; };
+		WP06FRREASSIGNTOPROJECTM /* ReassignToProjectModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReassignToProjectModal.swift; sourceTree = "<group>"; };
+		WP06FRSELLTOBUSINESSMODA /* SellToBusinessModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SellToBusinessModal.swift; sourceTree = "<group>"; };
+		WP06FRRETURNTRANSACTIONP /* ReturnTransactionPickerModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReturnTransactionPickerModal.swift; sourceTree = "<group>"; };
+		WP06FRSELLTOPROJECTMODAL /* SellToProjectModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SellToProjectModal.swift; sourceTree = "<group>"; };
+		WP06FRSTATUSPICKERMODAL0 /* StatusPickerModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusPickerModal.swift; sourceTree = "<group>"; };
+		WP06FREDITITEMDETAILSMOD /* EditItemDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditItemDetailsModal.swift; sourceTree = "<group>"; };
+		WP06FRSETSPACEMODAL00000 /* SetSpaceModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetSpaceModal.swift; sourceTree = "<group>"; };
+		WP06FRPROJECTPICKERLIST0 /* ProjectPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectPickerList.swift; sourceTree = "<group>"; };
+		WP06FRMAKECOPIESMODAL000 /* MakeCopiesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MakeCopiesModal.swift; sourceTree = "<group>"; };
+		WP06FRTRANSACTIONPICKERM /* TransactionPickerModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionPickerModal.swift; sourceTree = "<group>"; };
+		WP06FRITEMDETAILVIEW0000 /* ItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
+		WP06FRITEMSTABVIEW000000 /* ItemsTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabView.swift; sourceTree = "<group>"; };
+		WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LineageEdgesService.swift; sourceTree = "<group>"; };
+		WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -389,6 +419,8 @@
 		2467EB342B9890A03C91F1B3 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				WP06FRITEMSTABVIEW000000 /* ItemsTabView.swift */,
+				WP06FRITEMDETAILVIEW0000 /* ItemDetailView.swift */,
 				4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */,
 				D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */,
 				5DD203EAE8B8232355376751 /* BudgetTabView.swift */,
@@ -463,6 +495,8 @@
 		51B80CCC8A7048E0DEED3075 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */,
+				WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */,
 				63426CD1523A4E8D9D239F04 /* MediaService.swift */,
 				7B8257583360A8F2FA7FE7FD /* Protocols */,
 				CAC6CAA659769069DED37219 /* FirestoreRepository.swift */,
@@ -697,6 +731,17 @@
 		WP04G00100000000000M0001 /* Modals */ = {
 			isa = PBXGroup;
 			children = (
+				WP06FRTRANSACTIONPICKERM /* TransactionPickerModal.swift */,
+				WP06FRMAKECOPIESMODAL000 /* MakeCopiesModal.swift */,
+				WP06FRPROJECTPICKERLIST0 /* ProjectPickerList.swift */,
+				WP06FRSETSPACEMODAL00000 /* SetSpaceModal.swift */,
+				WP06FREDITITEMDETAILSMOD /* EditItemDetailsModal.swift */,
+				WP06FRSTATUSPICKERMODAL0 /* StatusPickerModal.swift */,
+				WP06FRSELLTOPROJECTMODAL /* SellToProjectModal.swift */,
+				WP06FRRETURNTRANSACTIONP /* ReturnTransactionPickerModal.swift */,
+				WP06FRSELLTOBUSINESSMODA /* SellToBusinessModal.swift */,
+				WP06FRREASSIGNTOPROJECTM /* ReassignToProjectModal.swift */,
+				WP06FRSPACEPICKERLIST000 /* SpacePickerList.swift */,
 				3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */,
 				FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */,
 				49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */,
@@ -812,6 +857,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				WP06BFINVENTORYOPERATION /* InventoryOperationsService.swift in Sources */,
+				WP06BFLINEAGEEDGESSERVIC /* LineageEdgesService.swift in Sources */,
+				WP06BFITEMSTABVIEW000000 /* ItemsTabView.swift in Sources */,
+				WP06BFITEMDETAILVIEW0000 /* ItemDetailView.swift in Sources */,
+				WP06BFTRANSACTIONPICKERM /* TransactionPickerModal.swift in Sources */,
+				WP06BFMAKECOPIESMODAL000 /* MakeCopiesModal.swift in Sources */,
+				WP06BFPROJECTPICKERLIST0 /* ProjectPickerList.swift in Sources */,
+				WP06BFSETSPACEMODAL00000 /* SetSpaceModal.swift in Sources */,
+				WP06BFEDITITEMDETAILSMOD /* EditItemDetailsModal.swift in Sources */,
+				WP06BFSTATUSPICKERMODAL0 /* StatusPickerModal.swift in Sources */,
+				WP06BFSELLTOPROJECTMODAL /* SellToProjectModal.swift in Sources */,
+				WP06BFRETURNTRANSACTIONP /* ReturnTransactionPickerModal.swift in Sources */,
+				WP06BFSELLTOBUSINESSMODA /* SellToBusinessModal.swift in Sources */,
+				WP06BFREASSIGNTOPROJECTM /* ReassignToProjectModal.swift in Sources */,
+				WP06BFSPACEPICKERLIST000 /* SpacePickerList.swift in Sources */,
 				A1000101000000000000AA01 /* LedgerApp.swift in Sources */,
 				A1000101000000000000AA02 /* AppDelegate.swift in Sources */,
 				A1000101000000000000AA05 /* AuthManager.swift in Sources */,
