@@ -405,11 +405,11 @@
 **Prompt**: `tasks/WP12-creation-screens.md`
 
 ### Included Subtasks
-- [ ] T055 Create `Views/Creation/NewProjectView.swift` — name (required), clientName (required), description, main image upload (via MediaService + PhotosPicker), per-category budget allocation; presents as `.sheet()` `.presentationDetents([.large])`
-- [ ] T056 Create `Views/Creation/NewTransactionView.swift` — progressive disclosure: type selection → destination/channel → detail fields (source, date, amount, status, purchasedBy, reimbursementType, notes, category, emailReceipt, conditional tax); vendor suggestions from VendorDefaults
-- [ ] T057 Create `Views/Creation/NewItemView.swift` — name, source, SKU, status, purchase/project/market price, quantity, space selection (`SpacePickerList`), transaction association (`TransactionPickerModal`), image upload (MediaService)
-- [ ] T058 Create `Views/Creation/NewSpaceView.swift` — name, notes, optional template selection (from `SpaceTemplatesService` — stub if WP13 not yet done)
-- [ ] T059 Wire accessibility entry points: "Add" button in project detail tabs + Inventory sub-tabs + potential center FAB button
+- [x] T055 Create `Views/Creation/NewProjectView.swift` — name (required), clientName (required), description, main image upload (via MediaService + PhotosPicker), per-category budget allocation; presents as `.sheet()` `.presentationDetents([.large])`
+- [x] T056 Create `Views/Creation/NewTransactionView.swift` — progressive disclosure: type selection → destination/channel → detail fields (source, date, amount, status, purchasedBy, reimbursementType, notes, category, emailReceipt, conditional tax); vendor suggestions from VendorDefaults
+- [x] T057 Create `Views/Creation/NewItemView.swift` — name, source, SKU, status, purchase/project/market price, quantity, space selection (`SpacePickerList`), transaction association (`TransactionPickerModal`), image upload (MediaService)
+- [x] T058 Create `Views/Creation/NewSpaceView.swift` — name, notes, optional template selection (from `SpaceTemplatesService` — stub if WP13 not yet done)
+- [x] T059 Wire accessibility entry points: "Add" button in project detail tabs + Inventory sub-tabs + potential center FAB button
 
 ### Implementation Notes
 - All forms: optimistic UI — call `dismiss()` immediately after initiating Firestore write (don't `await`).
