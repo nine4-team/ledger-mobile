@@ -1,7 +1,7 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP00
 - WP04
@@ -18,7 +18,7 @@ subtasks:
 phase: Phase 7 - Session 7c
 assignee: ''
 agent: "claude-opus"
-shell_pid: "46281"
+shell_pid: "22309"
 review_status: ''
 reviewed_by: ''
 history:
@@ -311,3 +311,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T23:09:18Z – claude-opus – shell_pid=46281 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:24:55Z – claude-opus – shell_pid=46281 – lane=for_review – Ready for review: ReportAggregationCalculations with 3 report types (Invoice, Client Summary, Property Management), AccountingTabView with reimbursement summary cards, 3 native SwiftUI report views with PDF sharing via ImageRenderer, 16 passing Swift Testing tests covering all aggregation functions
+- 2026-02-28T23:34:38Z – claude-opus – shell_pid=22309 – lane=doing – Started review via workflow command
