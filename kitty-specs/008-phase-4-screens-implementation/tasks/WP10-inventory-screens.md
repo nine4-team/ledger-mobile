@@ -1,7 +1,7 @@
 ---
 work_package_id: WP10
 title: Session 5 Screens – Inventory Screen
-lane: "doing"
+lane: "done"
 dependencies:
 - WP09
 base_branch: 008-phase-4-screens-implementation-WP09
@@ -16,8 +16,8 @@ phase: Phase 5 - Session 5
 assignee: ''
 agent: "claude-opus"
 shell_pid: "24322"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -171,3 +171,4 @@ history:
 - 2026-02-28T23:23:51Z – claude-opus – shell_pid=92917 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:34:09Z – claude-opus – shell_pid=92917 – lane=for_review – Ready for review: InventoryView with 3 sub-tabs (Items, Transactions, Spaces), full filter/sort/bulk ops, tab persistence, navigation to detail screens
 - 2026-02-28T23:35:09Z – claude-opus – shell_pid=24322 – lane=doing – Started review via workflow command
+- 2026-02-28T23:38:45Z – claude-opus – shell_pid=24322 – lane=done – Review passed: All 4 subtasks (T046-T049) implemented correctly. InventoryView with 3 sub-tabs using ScrollableTabBar, tab persistence via UserDefaults, proper activate/deactivate lifecycle. Items sub-tab has full filter/sort/bulk ops matching project-scoped pattern. Transactions and Spaces sub-tabs follow existing conventions. All 20 shared components verified. Minor: InventoryPlaceholderView.swift is dead code (not deleted but unreferenced) — can be cleaned up in a future pass.
