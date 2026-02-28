@@ -1,7 +1,7 @@
 ---
 work_package_id: WP10
 title: Session 5 Screens – Inventory Screen
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP09
 base_branch: 008-phase-4-screens-implementation-WP09
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 5 - Session 5
 assignee: ''
 agent: "claude-opus"
-shell_pid: "92917"
+shell_pid: "24322"
 review_status: ''
 reviewed_by: ''
 history:
@@ -170,3 +170,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T23:23:51Z – claude-opus – shell_pid=92917 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:34:09Z – claude-opus – shell_pid=92917 – lane=for_review – Ready for review: InventoryView with 3 sub-tabs (Items, Transactions, Spaces), full filter/sort/bulk ops, tab persistence, navigation to detail screens
+- 2026-02-28T23:35:09Z – claude-opus – shell_pid=24322 – lane=doing – Started review via workflow command
