@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Session 2 Screens – Transactions Tab + Transaction Detail + Modals
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP02
 base_branch: 008-phase-4-screens-implementation-WP02
@@ -18,8 +18,8 @@ phase: Phase 2 - Session 2
 assignee: ''
 agent: "claude-sonnet"
 shell_pid: "4628"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -37,9 +37,44 @@ history:
 
 ## Review Feedback
 
-*[Empty — no feedback yet.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-28
 
----
+## Review Feedback — WP04
+
+### Missing Tests for New Logic Files (Blocking)
+
+Three pure logic files were introduced in this WP with **zero test coverage**:
+- `Logic/TransactionNextStepsCalculations.swift`
+- `Logic/TransactionCompletenessCalculations.swift`
+- `Logic/ReceiptListParser.swift`
+
+The plan explicitly calls this out (plan.md line 179): "Tests: completeness thresholds (all 4 states + null), subtotal resolution priority, next-steps (5-step and 6-step), filter dimensions, receiptListParser edge cases" and line 334: "port `transactionCompleteness.test.ts` and `receiptListParser.test.ts` verbatim."
+
+CLAUDE.md mandates the test-first workflow for every new feature: logic must have tests before being marked complete.
+
+**Required**: Add test files:
+- `LedgeriOSTests/TransactionNextStepsCalculationTests.swift` — test 5-step and 6-step cases (with/without itemized category), allStepsComplete with all done and partial completion
+- `LedgeriOSTests/TransactionCompletenessCalculationTests.swift` — test all 4 statuses (complete/near/incomplete/over), subtotal resolution priority (explicit > inferred from tax > fallback), nil/zero amount returns nil, varianceCents and variancePercent correctness
+- `LedgeriOSTests/ReceiptListParserTests.swift` — standard line format, price with comma separators, lines without tax flag (no T), empty lines skipped, invalid lines go to skippedLines, empty input returns empty result
+
+### Everything Else: ✅ Approved
+
+- TransactionsTabView: real data, date-desc sort, filter/sort/search/add toolbar — correct
+- TransactionDetailView: hero card, all 8 sections with correct default states (receipts expanded, rest collapsed), Next Steps hidden when all complete, delete via confirmationDialog — correct
+- Modal field order (FR-5.6): Vendor → Amount → Date → Status → Purchased By → Transaction Type → Reimbursement Type → Budget Category → Email Receipt → (conditional) Subtotal → Tax Rate — matches spec exactly
+- CreateItemsFromListModal: two-step flow, DisclosureGroup for skipped lines, Create All disabled when empty — correct
+- Sheet-on-sheet sequencing via onDismiss pattern — correct per CLAUDE.md
+- navigationDestination(for: Transaction.self) in ProjectDetailView — correct
+- All modals use .sheet() with presentationDetents + presentationDragIndicator(.visible) — correct
+- ProgressRing component — clean, well-animated, correct percentage display
+- Category picker excludes archived categories — correct
+
+### Minor Note (Non-blocking)
+
+`CreateItemsFromListModal` callback signature in the spec says `onCreated: ([Item]) -> Void` but implementation uses `onCreated: ([ReceiptListParser.ParsedItem]) -> Void`. The implementation is actually cleaner (separation of concerns — modal doesn't touch ItemsService, parent handles creation). No change needed, just noting the intentional deviation.
+
 
 ## Objectives & Success Criteria
 
@@ -243,3 +278,4 @@ history:
 - 2026-02-27T23:10:07Z – claude-opus – shell_pid=25734 – lane=doing – Assigned agent via workflow command
 - 2026-02-27T23:27:03Z – claude-opus – shell_pid=25734 – lane=for_review – Ready for review: TransactionsTabView replaces placeholder with real data, TransactionDetailView with hero card + 8 collapsible sections + Next Steps + delete, 4 modals (EditDetails, EditNotes, CategoryPicker, CreateItemsFromList), 3 pure logic files ported from RN (NextSteps, Completeness, ReceiptListParser), ProgressRing component. Build passes clean.
 - 2026-02-28T00:33:11Z – claude-sonnet – shell_pid=4628 – lane=doing – Started review via workflow command
+- 2026-02-28T00:35:31Z – claude-sonnet – shell_pid=4628 – lane=planned – Moved to planned
