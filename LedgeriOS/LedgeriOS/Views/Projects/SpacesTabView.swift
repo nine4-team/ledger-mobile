@@ -5,6 +5,7 @@ struct SpacesTabView: View {
 
     @State private var searchText = ""
     @State private var isSearchVisible = false
+    @State private var showNewSpace = false
 
     // MARK: - Computed
 
@@ -27,6 +28,13 @@ struct SpacesTabView: View {
         }
         .navigationDestination(for: Space.self) { space in
             SpaceDetailView(space: space)
+        }
+        .sheet(isPresented: $showNewSpace) {
+            if let projectId = projectContext.currentProjectId {
+                NewSpaceView(context: .project(projectId))
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
 
@@ -58,6 +66,18 @@ struct SpacesTabView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
+
+                Button {
+                    showNewSpace = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(BrandColors.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                }
+                .buttonStyle(.plain)
             }
 
             ListStateControls(
