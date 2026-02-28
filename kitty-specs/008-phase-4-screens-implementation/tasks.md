@@ -217,12 +217,12 @@
 **Prompt**: `tasks/WP06-session-3-screens.md`
 
 ### Included Subtasks
-- [ ] T030 Create `Views/Projects/ItemsTabView.swift` — replaces placeholder; real data from `ProjectContext.items`; `ItemsListControlBar` (sort + filter chips); multi-select with `BulkSelectionBar`; duplicate group rows (expandable); fix `SharedItemsList` embedded mode `.onChange(of:)` handler; navigation to detail
-- [ ] T031 Create `Views/Projects/ItemDetailView.swift` — hero card (name, quantity, purchase price, project price, market value), 3 collapsible sections (Media expanded, Notes collapsed, Details collapsed), contextual action menu sheet
-- [ ] T032 Create `Services/InventoryOperationsService.swift` — sell-to-business (creates sale + purchase Firestore records), sell-to-project (destination project + category resolution), reassign operations; multi-item Firestore batch writes
-- [ ] T033 Create `Services/LineageEdgesService.swift` — read/write lineage edges for Moved Items display in TransactionDetailView
-- [ ] T034 [P] Wire item modals (7): `EditItemDetailsModal` (field order: Name/Source/SKU/PurchasePrice/ProjectPrice/MarketValue), `SetSpaceModal`, `ReassignToProjectModal`, `SellToBusinessModal` (description text per spec), `SellToProjectModal` (description text per spec), `MakeCopiesModal`, `StatusPickerModal`
-- [ ] T035 [P] Wire picker modals (6): `TransactionPickerModal`, `ReturnTransactionPickerModal`, `CategoryPickerList`, `SpacePickerList`, `ProjectPickerList`, `EditNotesModal` (reuse from WP04)
+- [x] T030 Create `Views/Projects/ItemsTabView.swift` — replaces placeholder; real data from `ProjectContext.items`; `ItemsListControlBar` (sort + filter chips); multi-select with `BulkSelectionBar`; duplicate group rows (expandable); fix `SharedItemsList` embedded mode `.onChange(of:)` handler; navigation to detail
+- [x] T031 Create `Views/Projects/ItemDetailView.swift` — hero card (name, quantity, purchase price, project price, market value), 3 collapsible sections (Media expanded, Notes collapsed, Details collapsed), contextual action menu sheet
+- [x] T032 Create `Services/InventoryOperationsService.swift` — sell-to-business (creates sale + purchase Firestore records), sell-to-project (destination project + category resolution), reassign operations; multi-item Firestore batch writes
+- [x] T033 Create `Services/LineageEdgesService.swift` — read/write lineage edges for Moved Items display in TransactionDetailView
+- [x] T034 [P] Wire item modals (7): `EditItemDetailsModal` (field order: Name/Source/SKU/PurchasePrice/ProjectPrice/MarketValue), `SetSpaceModal`, `ReassignToProjectModal`, `SellToBusinessModal` (description text per spec), `SellToProjectModal` (description text per spec), `MakeCopiesModal`, `StatusPickerModal`
+- [x] T035 [P] Wire picker modals (6): `TransactionPickerModal`, `ReturnTransactionPickerModal`, `CategoryPickerList`, `SpacePickerList`, `ProjectPickerList`, `EditNotesModal` (reuse from WP04)
 
 ### Implementation Notes
 - `SellToBusinessModal`: show description "This will move items from the project into business inventory. A sale record will be created for financial tracking. If you're just fixing a misallocation, use Reassign instead."
