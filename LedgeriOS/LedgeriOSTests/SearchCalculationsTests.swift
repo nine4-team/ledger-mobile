@@ -35,7 +35,9 @@ private func makeTransaction(
     notes: String? = nil,
     purchasedBy: String? = nil,
     budgetCategoryId: String? = nil,
-    amountCents: Int? = nil
+    amountCents: Int? = nil,
+    isCanonicalInventorySale: Bool? = nil,
+    inventorySaleDirection: InventorySaleDirection? = nil
 ) -> Transaction {
     var tx = Transaction()
     tx.id = id
@@ -45,6 +47,8 @@ private func makeTransaction(
     tx.purchasedBy = purchasedBy
     tx.budgetCategoryId = budgetCategoryId
     tx.amountCents = amountCents
+    tx.isCanonicalInventorySale = isCanonicalInventorySale
+    tx.inventorySaleDirection = inventorySaleDirection
     return tx
 }
 
@@ -468,21 +472,121 @@ struct FullSearchTests {
 @Suite("Transaction Display Name")
 struct TransactionDisplayNameTests {
 
+    // Priority 1: Source
+
     @Test("Uses source when available")
     func usesSource() {
         let tx = makeTransaction(source: "Home Depot")
         #expect(SearchCalculations.transactionDisplayName(for: tx) == "Home Depot")
     }
 
-    @Test("Falls back to Untitled Transaction when no source")
+    @Test("Source takes priority over canonical inventory sale")
+    func sourcePriorityOverCanonical() {
+        let tx = makeTransaction(
+            source: "Home Depot",
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "Home Depot")
+    }
+
+    @Test("Whitespace-only source falls through")
+    func whitespaceSourceFallsThrough() {
+        let tx = makeTransaction(id: "abc123def", source: "   ")
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "abc123")
+    }
+
+    // Priority 2: Canonical inventory sale label
+
+    @Test("Canonical inventory sale with businessToProject → To Inventory")
+    func canonicalBusinessToProject() {
+        let tx = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "To Inventory")
+    }
+
+    @Test("Canonical inventory sale with projectToBusiness → From Inventory")
+    func canonicalProjectToBusiness() {
+        let tx = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "From Inventory")
+    }
+
+    @Test("Canonical inventory sale with no direction → Inventory Transfer")
+    func canonicalNoDirection() {
+        let tx = makeTransaction(isCanonicalInventorySale: true)
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "Inventory Transfer")
+    }
+
+    @Test("isCanonicalInventorySale=false does not trigger inventory label")
+    func canonicalFalseSkips() {
+        let tx = makeTransaction(
+            id: "xyz789abc",
+            isCanonicalInventorySale: false,
+            inventorySaleDirection: .businessToProject
+        )
+        // Should fall through to ID prefix
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "xyz789")
+    }
+
+    // Priority 3: ID prefix
+
+    @Test("ID prefix used when no source and not canonical sale")
+    func idPrefixFallback() {
+        let tx = makeTransaction(id: "abc123def456")
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "abc123")
+    }
+
+    @Test("Short ID returns full ID")
+    func shortIdReturnsFullId() {
+        let tx = makeTransaction(id: "abc")
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "abc")
+    }
+
+    // Priority 4: Fallback
+
+    @Test("Falls back to Untitled Transaction when no source, not canonical, no ID")
     func fallsBackToUntitled() {
         let tx = makeTransaction(source: nil)
         #expect(SearchCalculations.transactionDisplayName(for: tx) == "Untitled Transaction")
     }
 
-    @Test("Empty source falls back to Untitled Transaction")
-    func emptySourceFallback() {
+    @Test("Empty source with no ID falls back to Untitled Transaction")
+    func emptySourceNoIdFallback() {
         let tx = makeTransaction(source: "")
         #expect(SearchCalculations.transactionDisplayName(for: tx) == "Untitled Transaction")
+    }
+
+    // Search integration with display name
+
+    @Test("Search matches canonical inventory sale label")
+    func searchMatchesCanonicalLabel() {
+        let tx = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        let result = SearchCalculations.transactionMatches(transaction: tx, query: "inventory", categories: [])
+        #expect(result == true)
+    }
+
+    @Test("Search matches From Inventory label")
+    func searchMatchesFromInventory() {
+        let tx = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        let result = SearchCalculations.transactionMatches(transaction: tx, query: "from inv", categories: [])
+        #expect(result == true)
+    }
+
+    @Test("Search matches ID prefix when no source")
+    func searchMatchesIdPrefix() {
+        let tx = makeTransaction(id: "abc123def456")
+        let result = SearchCalculations.transactionMatches(transaction: tx, query: "abc123", categories: [])
+        #expect(result == true)
     }
 }

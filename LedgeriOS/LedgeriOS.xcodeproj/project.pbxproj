@@ -194,7 +194,7 @@
 		WP06BFLINEAGEEDGESSERVIC /* LineageEdgesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */; };
 		WP06BFINVENTORYOPERATION /* InventoryOperationsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */; };
 		WP14B00100000000000L0001 /* SearchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP14F00100000000000L0001 /* SearchCalculations.swift */; };
-		WP14B00100000000000X0001 /* SearchCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP14F00100000000000X0001 /* SearchCalculationTests.swift */; };
+		WP14B00100000000000X0001 /* SearchCalculationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP14F00100000000000X0001 /* SearchCalculationsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -393,7 +393,7 @@
 		WP06FRLINEAGEEDGESSERVIC /* LineageEdgesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LineageEdgesService.swift; sourceTree = "<group>"; };
 		WP06FRINVENTORYOPERATION /* InventoryOperationsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsService.swift; sourceTree = "<group>"; };
 		WP14F00100000000000L0001 /* SearchCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCalculations.swift; sourceTree = "<group>"; };
-		WP14F00100000000000X0001 /* SearchCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCalculationTests.swift; sourceTree = "<group>"; };
+		WP14F00100000000000X0001 /* SearchCalculationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCalculationsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -554,7 +554,7 @@
 				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
 				WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */,
 				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
-				WP14F00100000000000X0001 /* SearchCalculationTests.swift */,
+				WP14F00100000000000X0001 /* SearchCalculationsTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -1049,7 +1049,7 @@
 				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
 				WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */,
 				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
-				WP14B00100000000000X0001 /* SearchCalculationTests.swift in Sources */,
+				WP14B00100000000000X0001 /* SearchCalculationsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
