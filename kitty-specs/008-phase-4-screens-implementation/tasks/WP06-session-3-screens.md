@@ -16,7 +16,7 @@ subtasks:
 - T035
 phase: Phase 3 - Session 3
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "61367"
 review_status: ''
 reviewed_by: ''
@@ -246,3 +246,4 @@ history:
 ## Activity Log
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
+- 2026-02-28T00:54:50Z – claude-sonnet – shell_pid=61367 – lane=doing – Assigned agent via workflow command
