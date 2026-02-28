@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Session 4 Screens – Spaces Tab + Space Detail + Modals
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP06
 base_branch: 008-phase-4-screens-implementation-WP06
@@ -15,7 +15,7 @@ subtasks:
 phase: Phase 4 - Session 4
 assignee: ''
 agent: "claude-opus"
-shell_pid: "15132"
+shell_pid: "38079"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -228,3 +228,4 @@ The spec mentions "checklist progress (as text 'X of Y' or fraction for a progre
 - 2026-02-28T22:53:44Z – claude-opus – shell_pid=97784 – lane=planned – Moved to planned
 - 2026-02-28T22:55:04Z – claude-opus – shell_pid=15132 – lane=doing – Started implementation via workflow command
 - 2026-02-28T22:59:45Z – claude-opus – shell_pid=15132 – lane=for_review – Review feedback addressed: EditChecklistModal now uses List with .onMove/.onDelete for drag-to-reorder, SpaceCard has X/Y progress text. Build succeeds.
+- 2026-02-28T23:05:57Z – claude-opus – shell_pid=38079 – lane=doing – Started review via workflow command
