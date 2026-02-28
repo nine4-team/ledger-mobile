@@ -1,7 +1,7 @@
 ---
 work_package_id: WP13
 title: Session 7a Screens – Settings
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP00
 base_branch: 008-phase-4-screens-implementation-WP00
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 7 - Session 7a
 assignee: ''
 agent: "claude-opus"
-shell_pid: "60136"
+shell_pid: "76687"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -319,3 +319,4 @@ Update `defaultVendors` to match the full list from the RN source. The spec expl
 - 2026-02-28T23:42:42Z – claude-opus – shell_pid=34957 – lane=for_review – Ready for review: Addressed both review issues - (1) Added drag-reorder via List+.onMove to BudgetCategoryManagementView, SpaceTemplateManagementView, and VendorDefaultsView with order persistence; (2) Updated defaultVendors to full 15-item list from RN source. Build succeeds.
 - 2026-02-28T23:50:37Z – claude-opus – shell_pid=60136 – lane=doing – Started implementation via workflow command
 - 2026-02-28T23:56:46Z – claude-opus – shell_pid=60136 – lane=for_review – Ready for review: Addressed all issues - (1) Role-gated Settings tabs (Users=admin+, Account=owner), (2) Non-admin Presets message, (3) Copy-to-clipboard on invite rows, (4) Checklist editor in template management. Build succeeds.
+- 2026-02-28T23:57:13Z – claude-opus – shell_pid=76687 – lane=doing – Started review via workflow command
