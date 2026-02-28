@@ -1,7 +1,7 @@
 ---
 work_package_id: WP14
 title: Session 7b Logic – Search Calculations
-lane: "for_review"
+lane: "doing"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP06
 base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
@@ -12,7 +12,7 @@ subtasks:
 phase: Phase 7 - Session 7b
 assignee: ''
 agent: "claude-opus"
-shell_pid: "60875"
+shell_pid: "75907"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -210,3 +210,4 @@ Either way, the display name resolution in search must match what the UI shows. 
 - 2026-02-28T23:50:10Z – claude-opus – shell_pid=20951 – lane=planned – Moved to planned
 - 2026-02-28T23:50:49Z – claude-opus – shell_pid=60875 – lane=doing – Started implementation via workflow command
 - 2026-02-28T23:55:27Z – claude-opus – shell_pid=60875 – lane=for_review – Ready for review: Addressed all review feedback — transactionDisplayName now uses full 4-priority chain (source → canonical inventory sale label → ID prefix → Untitled Transaction), 13 new display name tests added, test file renamed to SearchCalculationsTests. 62 tests pass across 5 suites.
+- 2026-02-28T23:57:00Z – claude-opus – shell_pid=75907 – lane=doing – Started review via workflow command
