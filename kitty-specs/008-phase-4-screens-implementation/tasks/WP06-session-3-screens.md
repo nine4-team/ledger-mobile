@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP04
 base_branch: 008-phase-4-screens-implementation-WP04
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 3 - Session 3
 assignee: ''
 agent: "claude-opus"
-shell_pid: "39205"
+shell_pid: "38769"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -325,3 +325,4 @@ Please fix Issues 1-4 and resubmit for review.
 - 2026-02-28T01:30:55Z – claude-opus – shell_pid=26590 – lane=planned – Moved to planned
 - 2026-02-28T01:32:51Z – claude-opus – shell_pid=39205 – lane=doing – Started implementation via workflow command
 - 2026-02-28T01:40:52Z – claude-opus – shell_pid=39205 – lane=for_review – Fixed all 4 review issues: (1) removed undeclared createdCount, (2) lineage edges now atomic in WriteBatch, (3) SellToProjectModal fetches categories independently via BudgetCategoriesService, (4) SetSpaceModal wired at both call sites. Also fixed pre-existing Swift 6 concurrency errors and EditItemDetailsModal init capture error. Build succeeds.
+- 2026-02-28T22:34:48Z – claude-opus – shell_pid=38769 – lane=doing – Started review via workflow command
