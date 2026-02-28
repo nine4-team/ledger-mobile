@@ -1,7 +1,7 @@
 ---
 work_package_id: WP12
 title: Session 6 Screens – Creation Flows
-lane: "doing"
+lane: "done"
 dependencies:
 - WP11
 base_branch: 008-phase-4-screens-implementation-WP11
@@ -17,8 +17,8 @@ phase: Phase 6 - Session 6
 assignee: ''
 agent: "claude-opus"
 shell_pid: "35879"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -233,3 +233,4 @@ history:
 - 2026-02-28T23:25:41Z – claude-opus – shell_pid=98337 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:36:08Z – claude-opus – shell_pid=98337 – lane=for_review – Ready for review: All 4 creation forms (NewProjectView, NewTransactionView, NewItemView, NewSpaceView) implemented with Add button wiring across all list views. Build passes.
 - 2026-02-28T23:39:14Z – claude-opus – shell_pid=35879 – lane=doing – Started review via workflow command
+- 2026-02-28T23:41:42Z – claude-opus – shell_pid=35879 – lane=done – Review passed: All 4 creation forms (NewProjectView, NewTransactionView, NewItemView, NewSpaceView) present as bottom sheets with .presentationDetents([.large]) and drag indicator. Required field validation disables submit buttons correctly. Optimistic UI pattern followed — synchronous create + immediate dismiss, background Tasks for image uploads and budget allocations. Progressive disclosure in NewTransactionView works across 3 steps. Add buttons wired in all 5 entry points (projects list, transactions tab, items tab, spaces tab, inventory). Template selection gracefully stubbed in NewSpaceView pending WP13. Design tokens used throughout for adaptive light/dark mode.
