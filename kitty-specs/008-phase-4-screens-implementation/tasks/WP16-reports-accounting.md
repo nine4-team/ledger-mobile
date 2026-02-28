@@ -1,10 +1,13 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: planned
+lane: "doing"
 dependencies:
 - WP00
 - WP04
+base_branch: 008-phase-4-screens-implementation-WP04
+base_commit: a7a758408bf79314ea4914afc4e900681ef8906f
+created_at: '2026-02-28T23:09:18.327282+00:00'
 subtasks:
 - T071
 - T072
@@ -15,7 +18,7 @@ subtasks:
 phase: Phase 7 - Session 7c
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "46281"
 review_status: ''
 reviewed_by: ''
 history:
