@@ -1,9 +1,12 @@
 ---
 work_package_id: WP08
 title: Session 4 Screens – Spaces Tab + Space Detail + Modals
-lane: planned
+lane: "doing"
 dependencies:
 - WP06
+base_branch: 008-phase-4-screens-implementation-WP06
+base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
+created_at: '2026-02-28T22:37:46.865153+00:00'
 subtasks:
 - T039
 - T040
@@ -12,7 +15,7 @@ subtasks:
 phase: Phase 4 - Session 4
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "45115"
 review_status: ''
 reviewed_by: ''
 history:
