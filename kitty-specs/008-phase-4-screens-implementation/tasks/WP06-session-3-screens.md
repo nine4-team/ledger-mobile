@@ -1,9 +1,12 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: planned
+lane: "doing"
 dependencies:
 - WP04
+base_branch: 008-phase-4-screens-implementation-WP04
+base_commit: a7a758408bf79314ea4914afc4e900681ef8906f
+created_at: '2026-02-28T00:54:50.698618+00:00'
 subtasks:
 - T030
 - T031
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 3 - Session 3
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "61367"
 review_status: ''
 reviewed_by: ''
 history:
