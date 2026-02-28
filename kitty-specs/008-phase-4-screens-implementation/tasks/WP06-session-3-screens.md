@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP04
 base_branch: 008-phase-4-screens-implementation-WP04
@@ -247,3 +247,4 @@ history:
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T00:54:50Z – claude-sonnet – shell_pid=61367 – lane=doing – Assigned agent via workflow command
+- 2026-02-28T01:08:30Z – claude-sonnet – shell_pid=61367 – lane=for_review – Ready for review: ItemsTabView (real items + filter/sort/multi-select), ItemDetailView (hero card + 3 collapsible sections), InventoryOperationsService (atomic batch writes), LineageEdgesService, 7 operation modals + 4 picker modals wired. SharedItemsList embedded bug fixed. Exact FR-8.5/8.6 description texts in SellTo* modals.
