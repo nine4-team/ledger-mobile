@@ -313,9 +313,9 @@
 **Prompt**: `tasks/WP09-inventory-context.md`
 
 ### Included Subtasks
-- [ ] T043 Create `State/InventoryContext.swift` — `@MainActor @Observable` class; manages 3 Firestore subscriptions (items/transactions/spaces with `scope: .inventory`); `activate(accountId:)` / `deactivate()` lifecycle; persists `lastSelectedTab` to `UserDefaults("inventorySelectedTab")`
-- [ ] T044 Inject `InventoryContext` into the app environment (`.environment(inventoryContext)`) alongside existing `ProjectContext` and `AccountContext`
-- [ ] T045 Write Swift Testing suite: scope filtering (inventory scope returns no project-scoped data), UserDefaults persistence round-trip
+- [x] T043 Create `State/InventoryContext.swift` — `@MainActor @Observable` class; manages 3 Firestore subscriptions (items/transactions/spaces with `scope: .inventory`); `activate(accountId:)` / `deactivate()` lifecycle; persists `lastSelectedTab` to `UserDefaults("inventorySelectedTab")`
+- [x] T044 Inject `InventoryContext` into the app environment (`.environment(inventoryContext)`) alongside existing `ProjectContext` and `AccountContext`
+- [x] T045 Write Swift Testing suite: scope filtering (inventory scope returns no project-scoped data), UserDefaults persistence round-trip
 
 ### Implementation Notes
 - Pattern mirrors `ProjectContext` — use same `activate`/`deactivate` lifecycle with `@Observable`.
