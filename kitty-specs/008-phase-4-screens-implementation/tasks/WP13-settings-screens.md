@@ -1,7 +1,7 @@
 ---
 work_package_id: WP13
 title: Session 7a Screens – Settings
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP00
 base_branch: 008-phase-4-screens-implementation-WP00
@@ -18,8 +18,8 @@ phase: Phase 7 - Session 7a
 assignee: ''
 agent: "claude-opus"
 shell_pid: "19688"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -37,9 +37,29 @@ history:
 
 ## Review Feedback
 
-*[Empty — no feedback yet.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-28
 
----
+**Issue 1 (Medium): Missing drag-reorder on categories, templates, and vendors**
+
+The spec explicitly requires drag-reorder via `.onMove` for:
+- `BudgetCategoryManagementView` (T063 step 3: "drag handles (.onMove)")
+- `SpaceTemplateManagementView` (T064 step 6: "Reorder → update order field")
+- `VendorDefaultsView` (T065: "drag handles for reorder")
+
+All three views use static `LazyVStack` with no reorder support. To fix, switch to `List` with `.onMove` modifier and persist the updated `order` values. Since the spec also suggested `.environment(\.editMode, .constant(.active))` as a mitigation, that's a valid approach. Alternatively, keep `LazyVStack` and add a drag-to-reorder gesture or a move-up/move-down button pattern.
+
+**Issue 2 (Low): Default vendor list is incomplete**
+
+`VendorDefaultsService.defaultVendors` has only 4 real vendors (`Home Depot`, `Wayfair`, `West Elm`, `Pottery Barn`) + 6 empty strings. The RN source (`src/constants/transactionSources.ts` via the legacy web app, referenced by `src/data/accountPresetsService.ts`) defines 15 vendors:
+
+```
+Homegoods, Amazon, Wayfair, Target, Ross, Arhaus, Pottery Barn, Crate & Barrel, West Elm, Living Spaces, Home Depot, Lowes, Movers, Gas, Inventory
+```
+
+Update `defaultVendors` to match the full list from the RN source. The spec explicitly says to "check `src/data/accountPresetsService.ts` for full list of default vendors."
+
 
 ## Objectives & Success Criteria
 
@@ -294,3 +314,4 @@ history:
 - 2026-02-28T23:10:06Z – claude-opus – shell_pid=49033 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:24:50Z – claude-opus – shell_pid=49033 – lane=for_review – Ready for review: Settings screens with 4-tab interface (General/Presets/Users/Account), 4 models, 5 services, CategoryFormModal with validation, theme selection, sign out flow. Build succeeds.
 - 2026-02-28T23:34:02Z – claude-opus – shell_pid=19688 – lane=doing – Started review via workflow command
+- 2026-02-28T23:36:41Z – claude-opus – shell_pid=19688 – lane=planned – Moved to planned
