@@ -41,12 +41,23 @@ struct LedgerApp: App {
         ))
     }
 
+    @AppStorage("colorSchemePreference") private var colorSchemePreference = "system"
+
+    private var resolvedColorScheme: ColorScheme? {
+        switch colorSchemePreference {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(authManager)
                 .environment(accountContext)
                 .environment(projectContext)
+                .preferredColorScheme(resolvedColorScheme)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
