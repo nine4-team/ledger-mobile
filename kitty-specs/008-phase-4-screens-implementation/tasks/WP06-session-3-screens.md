@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: "planned"
+lane: "doing"
 dependencies:
 - WP04
 base_branch: 008-phase-4-screens-implementation-WP04
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 3 - Session 3
 assignee: ''
 agent: "claude-opus"
-shell_pid: "26590"
+shell_pid: "39205"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -323,3 +323,4 @@ Please fix Issues 1-4 and resubmit for review.
 - 2026-02-28T01:08:30Z – claude-sonnet – shell_pid=61367 – lane=for_review – Ready for review: ItemsTabView (real items + filter/sort/multi-select), ItemDetailView (hero card + 3 collapsible sections), InventoryOperationsService (atomic batch writes), LineageEdgesService, 7 operation modals + 4 picker modals wired. SharedItemsList embedded bug fixed. Exact FR-8.5/8.6 description texts in SellTo* modals.
 - 2026-02-28T01:26:59Z – claude-opus – shell_pid=26590 – lane=doing – Started review via workflow command
 - 2026-02-28T01:30:55Z – claude-opus – shell_pid=26590 – lane=planned – Moved to planned
+- 2026-02-28T01:32:51Z – claude-opus – shell_pid=39205 – lane=doing – Started implementation via workflow command
