@@ -1,9 +1,12 @@
 ---
 work_package_id: WP13
 title: Session 7a Screens – Settings
-lane: planned
+lane: "doing"
 dependencies:
 - WP00
+base_branch: 008-phase-4-screens-implementation-WP00
+base_commit: 5635cf5479637c42d5d31eb9ce1911b40ef3f438
+created_at: '2026-02-28T23:10:06.401426+00:00'
 subtasks:
 - T060
 - T061
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 7 - Session 7a
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "49033"
 review_status: ''
 reviewed_by: ''
 history:
