@@ -38,7 +38,7 @@ struct ProjectDetailView: View {
                 case "spaces":
                     SpacesTabPlaceholder()
                 case "accounting":
-                    AccountingTabPlaceholder()
+                    AccountingTabView()
                 default:
                     BudgetTabView()
                 }
