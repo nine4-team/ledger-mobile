@@ -1,7 +1,7 @@
 ---
 work_package_id: WP12
 title: Session 6 Screens – Creation Flows
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP11
 base_branch: 008-phase-4-screens-implementation-WP11
@@ -16,7 +16,7 @@ subtasks:
 phase: Phase 6 - Session 6
 assignee: ''
 agent: "claude-opus"
-shell_pid: "98337"
+shell_pid: "35879"
 review_status: ''
 reviewed_by: ''
 history:
@@ -232,3 +232,4 @@ history:
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
 - 2026-02-28T23:25:41Z – claude-opus – shell_pid=98337 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T23:36:08Z – claude-opus – shell_pid=98337 – lane=for_review – Ready for review: All 4 creation forms (NewProjectView, NewTransactionView, NewItemView, NewSpaceView) implemented with Add button wiring across all list views. Build passes.
+- 2026-02-28T23:39:14Z – claude-opus – shell_pid=35879 – lane=doing – Started review via workflow command
