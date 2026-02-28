@@ -50,10 +50,11 @@ struct ReassignToProjectModal: View {
               let projectId = project.id else { return }
         isSaving = true
         let service = InventoryOperationsService()
+        let itemsToReassign = items
         Task {
             do {
                 try await service.reassignToProject(
-                    items: items,
+                    items: itemsToReassign,
                     destinationProjectId: projectId,
                     accountId: accountId
                 )

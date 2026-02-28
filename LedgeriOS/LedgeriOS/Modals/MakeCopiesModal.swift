@@ -75,7 +75,6 @@ struct MakeCopiesModal: View {
             do {
                 for _ in 0..<copyCount {
                     _ = try service.createItem(accountId: accountId, item: copyItem)
-                    createdCount += 1
                 }
                 await MainActor.run { dismiss() }
             } catch {

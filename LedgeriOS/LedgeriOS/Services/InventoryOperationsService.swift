@@ -4,18 +4,19 @@ import FirebaseFirestore
 /// sell to business, sell to project, reassign, reassign to inventory.
 struct InventoryOperationsService {
     private let db = Firestore.firestore()
-    private let lineageService = LineageEdgesService()
 
     // MARK: - Sell to Business
 
     /// Moves items from a project into business inventory.
     /// Creates a sale transaction in the source project and marks items as purchased.
+    /// Lineage edges are written atomically in the same batch.
     func sellToBusiness(items: [Item], accountId: String) async throws {
         guard !items.isEmpty else { return }
 
         let batch = db.batch()
         let itemsCollection = db.collection("accounts/\(accountId)/items")
         let txCollection = db.collection("accounts/\(accountId)/transactions")
+        let edgesCollection = db.collection("accounts/\(accountId)/lineageEdges")
 
         // Create one sale transaction record
         let saleRef = txCollection.document()
@@ -41,29 +42,28 @@ struct InventoryOperationsService {
                 "transactionId": saleRef.documentID,
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocument: itemRef)
+
+            // Lineage edge — atomic with item update
+            let edgeRef = edgesCollection.document()
+            let edgeData: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "toTransactionId": saleRef.documentID,
+                "movementKind": "sold",
+                "source": "app",
+                "fromProjectId": item.projectId as Any,
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            batch.setData(edgeData, forDocument: edgeRef)
         }
 
         try await batch.commit()
-
-        // Create lineage edges (fire-and-forget after batch)
-        for item in items {
-            guard let itemId = item.id else { continue }
-            var edge = LineageEdge()
-            edge.accountId = accountId
-            edge.itemId = itemId
-            edge.fromTransactionId = nil
-            edge.toTransactionId = saleRef.documentID
-            edge.movementKind = "sold"
-            edge.source = "app"
-            edge.fromProjectId = item.projectId
-            edge.toProjectId = nil
-            try? lineageService.createEdge(edge, accountId: accountId)
-        }
     }
 
     // MARK: - Sell to Project
 
     /// Moves items between projects, creating sale + purchase transaction records.
+    /// Lineage edges are written atomically in the same batch.
     func sellToProject(
         items: [Item],
         destinationProjectId: String,
@@ -76,6 +76,7 @@ struct InventoryOperationsService {
         let batch = db.batch()
         let itemsCollection = db.collection("accounts/\(accountId)/items")
         let txCollection = db.collection("accounts/\(accountId)/transactions")
+        let edgesCollection = db.collection("accounts/\(accountId)/lineageEdges")
 
         // Sale transaction in source project
         let saleRef = txCollection.document()
@@ -119,24 +120,24 @@ struct InventoryOperationsService {
                 "transactionId": purchaseRef.documentID,
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocument: itemRef)
+
+            // Lineage edge — atomic with item update
+            let edgeRef = edgesCollection.document()
+            let edgeData: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "fromTransactionId": saleRef.documentID,
+                "toTransactionId": purchaseRef.documentID,
+                "movementKind": "sold",
+                "source": "app",
+                "fromProjectId": item.projectId as Any,
+                "toProjectId": destinationProjectId,
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            batch.setData(edgeData, forDocument: edgeRef)
         }
 
         try await batch.commit()
-
-        // Create lineage edges
-        for item in items {
-            guard let itemId = item.id else { continue }
-            var edge = LineageEdge()
-            edge.accountId = accountId
-            edge.itemId = itemId
-            edge.fromTransactionId = saleRef.documentID
-            edge.toTransactionId = purchaseRef.documentID
-            edge.movementKind = "sold"
-            edge.source = "app"
-            edge.fromProjectId = item.projectId
-            edge.toProjectId = destinationProjectId
-            try? lineageService.createEdge(edge, accountId: accountId)
-        }
     }
 
     // MARK: - Reassign to Project

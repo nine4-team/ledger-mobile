@@ -84,10 +84,14 @@ struct ItemDetailView: View {
         }
         // Set Space
         .sheet(isPresented: $showSetSpace) {
-            SpacePickerList(spaces: projectContext.spaces) { space in
-                let fields: [String: Any] = space != nil ? ["spaceId": space!.id ?? ""] : ["spaceId": NSNull()]
-                updateItem(fields: fields)
-            }
+            SetSpaceModal(
+                spaces: projectContext.spaces,
+                currentSpaceId: item.spaceId,
+                onSelect: { space in
+                    let fields: [String: Any] = space != nil ? ["spaceId": space!.id ?? ""] : ["spaceId": NSNull()]
+                    updateItem(fields: fields)
+                }
+            )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }

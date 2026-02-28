@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseFirestore
 
 /// Multi-step flow for selling items to another project.
 /// Steps: (1) pick destination project, (2) destination category, (3) source category.
@@ -17,6 +18,11 @@ struct SellToProjectModal: View {
     @State private var sourceCategoryId: String?
     @State private var isSaving = false
     @State private var errorMessage: String?
+    /// Budget categories fetched independently for the destination project step.
+    /// Categories are account-level presets, but we fetch them separately to avoid
+    /// coupling to the source project's ProjectContext.
+    @State private var accountCategories: [BudgetCategory] = []
+    @State private var categoriesListener: ListenerRegistration?
 
     private static let descriptionText = "Sale and purchase records will be created for financial tracking. If you're just fixing a misallocation, use Reassign instead."
 
@@ -34,6 +40,10 @@ struct SellToProjectModal: View {
             default:
                 EmptyView()
             }
+        }
+        .onDisappear {
+            categoriesListener?.remove()
+            categoriesListener = nil
         }
     }
 
@@ -89,6 +99,7 @@ struct SellToProjectModal: View {
 
             ProjectPickerList { project in
                 destinationProject = project
+                loadAccountCategories()
                 step = 2
             }
         }
@@ -104,7 +115,7 @@ struct SellToProjectModal: View {
                 .padding(.horizontal, Spacing.screenPadding)
 
             CategoryPickerList(
-                categories: projectContext.budgetCategories,
+                categories: accountCategories,
                 selectedId: destinationCategoryId,
                 onSelect: { category in
                     destinationCategoryId = category?.id
@@ -162,14 +173,18 @@ struct SellToProjectModal: View {
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
+        let itemsToSell = items
+        let acctId = accountId
+        let srcCatId = sourceCategoryId
+        let destCatId = destinationCategoryId
         Task {
             do {
                 try await service.sellToProject(
-                    items: items,
+                    items: itemsToSell,
                     destinationProjectId: projectId,
-                    accountId: accountId,
-                    sourceCategoryId: sourceCategoryId,
-                    destinationCategoryId: destinationCategoryId
+                    accountId: acctId,
+                    sourceCategoryId: srcCatId,
+                    destinationCategoryId: destCatId
                 )
                 await MainActor.run {
                     onComplete()
@@ -180,6 +195,16 @@ struct SellToProjectModal: View {
                     errorMessage = "Failed to complete sale. Please try again."
                     isSaving = false
                 }
+            }
+        }
+    }
+
+    private func loadAccountCategories() {
+        categoriesListener?.remove()
+        let service = BudgetCategoriesService(syncTracker: NoOpSyncTracker())
+        categoriesListener = service.subscribeToBudgetCategories(accountId: accountId) { categories in
+            Task { @MainActor in
+                accountCategories = categories
             }
         }
     }

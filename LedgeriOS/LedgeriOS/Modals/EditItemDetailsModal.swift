@@ -21,9 +21,9 @@ struct EditItemDetailsModal: View {
         _name = State(initialValue: item.name)
         _source = State(initialValue: item.source ?? "")
         _sku = State(initialValue: item.sku ?? "")
-        _purchasePrice = State(initialValue: item.purchasePriceCents.map { formatCents($0) } ?? "")
-        _projectPrice = State(initialValue: item.projectPriceCents.map { formatCents($0) } ?? "")
-        _marketValue = State(initialValue: item.marketValueCents.map { formatCents($0) } ?? "")
+        _purchasePrice = State(initialValue: item.purchasePriceCents.map { Self.formatCents($0) } ?? "")
+        _projectPrice = State(initialValue: item.projectPriceCents.map { Self.formatCents($0) } ?? "")
+        _marketValue = State(initialValue: item.marketValueCents.map { Self.formatCents($0) } ?? "")
     }
 
     var body: some View {
@@ -83,7 +83,7 @@ struct EditItemDetailsModal: View {
 
     // MARK: - Helpers
 
-    private func formatCents(_ cents: Int) -> String {
+    private static func formatCents(_ cents: Int) -> String {
         String(format: "%.2f", Double(cents) / 100.0)
     }
 

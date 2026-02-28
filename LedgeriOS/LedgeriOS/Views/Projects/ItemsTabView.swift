@@ -104,9 +104,13 @@ struct ItemsTabView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showBulkSetSpace) {
-            SpacePickerList(spaces: projectContext.spaces) { space in
-                setSpaceForSelected(spaceId: space?.id)
-            }
+            SetSpaceModal(
+                spaces: projectContext.spaces,
+                currentSpaceId: nil,
+                onSelect: { space in
+                    setSpaceForSelected(spaceId: space?.id)
+                }
+            )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }

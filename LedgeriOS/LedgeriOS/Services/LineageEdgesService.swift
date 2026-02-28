@@ -25,10 +25,11 @@ struct LineageEdgesService {
 
     /// Fetches edges where the given transaction is either the source or destination.
     func edges(forTransaction transactionId: String, accountId: String) async throws -> [LineageEdge] {
-        async let fromEdges = try collection(accountId: accountId)
+        let col = collection(accountId: accountId)
+        async let fromEdges = col
             .whereField("fromTransactionId", isEqualTo: transactionId)
             .getDocuments()
-        async let toEdges = try collection(accountId: accountId)
+        async let toEdges = col
             .whereField("toTransactionId", isEqualTo: transactionId)
             .getDocuments()
 

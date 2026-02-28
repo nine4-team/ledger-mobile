@@ -63,9 +63,11 @@ struct SellToBusinessModal: View {
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
+        let itemsToSell = items
+        let acctId = accountId
         Task {
             do {
-                try await service.sellToBusiness(items: items, accountId: accountId)
+                try await service.sellToBusiness(items: itemsToSell, accountId: acctId)
                 await MainActor.run {
                     onComplete()
                     dismiss()
