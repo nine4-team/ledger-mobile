@@ -282,10 +282,10 @@
 **Prompt**: `tasks/WP08-session-4-screens.md`
 
 ### Included Subtasks
-- [ ] T039 Create `Views/Projects/SpacesTabView.swift` — replaces placeholder; space cards (name, item count, checklist progress); add button; navigation to detail
-- [ ] T040 Create `Views/Projects/SpaceDetailView.swift` — 4 collapsible sections: Media (expanded), Notes (collapsed), Items (collapsed, with full `ItemsListControlBar` + 10 filter modes), Checklists (collapsed); "Save as Template" action (role-gated)
-- [ ] T041 Create/wire `Modals/EditSpaceDetailsModal.swift` — edit name and notes fields; bottom sheet
-- [ ] T042 Create/wire `Modals/EditChecklistModal.swift` — add/remove/reorder/check checklist items; Firestore optimistic update
+- [x] T039 Create `Views/Projects/SpacesTabView.swift` — replaces placeholder; space cards (name, item count, checklist progress); add button; navigation to detail
+- [x] T040 Create `Views/Projects/SpaceDetailView.swift` — 4 collapsible sections: Media (expanded), Notes (collapsed), Items (collapsed, with full `ItemsListControlBar` + 10 filter modes), Checklists (collapsed); "Save as Template" action (role-gated)
+- [x] T041 Create/wire `Modals/EditSpaceDetailsModal.swift` — edit name and notes fields; bottom sheet
+- [x] T042 Create/wire `Modals/EditChecklistModal.swift` — add/remove/reorder/check checklist items; Firestore optimistic update
 
 ### Implementation Notes
 - "Save as Template" creates a `SpaceTemplate` in Firestore via `SpaceTemplatesService` (stubbed here, fully built in WP13).
