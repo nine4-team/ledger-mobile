@@ -39,7 +39,7 @@ struct ProjectDetailView: View {
                             TransactionDetailView(transaction: transaction)
                         }
                 case "spaces":
-                    SpacesTabPlaceholder()
+                    SpacesTabView()
                 case "accounting":
                     AccountingTabPlaceholder()
                 default:
