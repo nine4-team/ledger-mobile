@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: Session 2 Screens – Transactions Tab + Transaction Detail + Modals
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP02
 base_branch: 008-phase-4-screens-implementation-WP02
@@ -280,3 +280,4 @@ CLAUDE.md mandates the test-first workflow for every new feature: logic must hav
 - 2026-02-28T00:33:11Z – claude-sonnet – shell_pid=4628 – lane=doing – Started review via workflow command
 - 2026-02-28T00:35:31Z – claude-sonnet – shell_pid=4628 – lane=planned – Moved to planned
 - 2026-02-28T00:37:40Z – claude-sonnet – shell_pid=13964 – lane=doing – Started implementation via workflow command
+- 2026-02-28T00:50:28Z – claude-sonnet – shell_pid=13964 – lane=for_review – Addresses review feedback: added missing test files for TransactionNextStepsCalculations (5-step + 6-step paths, allStepsComplete), TransactionCompletenessCalculations (all 4 statuses, subtotal resolution priority, nil/zero returns nil, variance), and ReceiptListParser (standard format, comma prices, no-T flag, empty lines skipped, invalid lines to skippedLines). All 52 tests pass.
