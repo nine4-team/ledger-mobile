@@ -373,11 +373,11 @@
 **Prompt**: `tasks/WP11-creation-form-validation.md`
 
 ### Included Subtasks
-- [ ] T050 Create `Logic/ProjectFormValidation.swift` — required: name ("Name is required"), clientName ("Client name is required"); budget allocation sum validation
-- [ ] T051 Create `Logic/TransactionFormValidation.swift` — progressive disclosure: type required → destination required → detail field rules per type; required fields per type
-- [ ] T052 Create `Logic/ItemFormValidation.swift` — required: name ("Name is required"); price field validation (non-negative integers)
-- [ ] T053 Create `Logic/SpaceFormValidation.swift` — required: name ("Name is required")
-- [ ] T054 Write Swift Testing suites for all 4 validators (required field errors with exact messages, boundary values, valid inputs, transaction type-specific field requirements)
+- [x] T050 Create `Logic/ProjectFormValidation.swift` — required: name ("Name is required"), clientName ("Client name is required"); budget allocation sum validation
+- [x] T051 Create `Logic/TransactionFormValidation.swift` — progressive disclosure: type required → destination required → detail field rules per type; required fields per type
+- [x] T052 Create `Logic/ItemFormValidation.swift` — required: name ("Name is required"); price field validation (non-negative integers)
+- [x] T053 Create `Logic/SpaceFormValidation.swift` — required: name ("Name is required")
+- [x] T054 Write Swift Testing suites for all 4 validators (required field errors with exact messages, boundary values, valid inputs, transaction type-specific field requirements)
 
 ### Implementation Notes
 - Use exact error messages from the spec (data-model.md: Validation Error Messages table).
