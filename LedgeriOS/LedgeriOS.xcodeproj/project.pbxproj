@@ -199,6 +199,10 @@
 		WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0001 /* SharedItemsList.swift */; };
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
+		WP10B00100000000000V0001 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000V0001 /* InventoryView.swift */; };
+		WP10B00100000000000V0002 /* InventoryItemsSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000V0002 /* InventoryItemsSubTab.swift */; };
+		WP10B00100000000000V0003 /* InventoryTransactionsSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000V0003 /* InventoryTransactionsSubTab.swift */; };
+		WP10B00100000000000V0004 /* InventorySpacesSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000V0004 /* InventorySpacesSubTab.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -402,6 +406,10 @@
 		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
+		WP10F00100000000000V0001 /* InventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryView.swift; sourceTree = "<group>"; };
+		WP10F00100000000000V0002 /* InventoryItemsSubTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryItemsSubTab.swift; sourceTree = "<group>"; };
+		WP10F00100000000000V0003 /* InventoryTransactionsSubTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryTransactionsSubTab.swift; sourceTree = "<group>"; };
+		WP10F00100000000000V0004 /* InventorySpacesSubTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventorySpacesSubTab.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -652,6 +660,7 @@
 				A2B3C4D5E6F7089012345601 /* AccountGateView.swift */,
 				A1000201000000000000AA09 /* AuthView.swift */,
 				A1000201000000000000AA0A /* FirestoreTestView.swift */,
+				WP10G00100000000000V0001 /* Inventory */,
 				A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */,
 				A1000201000000000000AA0B /* MainTabView.swift */,
 				A2B3C4D5E6F7089012345603 /* ProjectsPlaceholderView.swift */,
@@ -766,6 +775,18 @@
 				615B8F1D64128D2CD09DA5FC /* EditChecklistModal.swift */,
 			);
 			path = Modals;
+			sourceTree = "<group>";
+		};
+		WP10G00100000000000V0001 /* Inventory */ = {
+			isa = PBXGroup;
+			children = (
+				WP10F00100000000000V0001 /* InventoryView.swift */,
+				WP10F00100000000000V0002 /* InventoryItemsSubTab.swift */,
+				WP10F00100000000000V0003 /* InventoryTransactionsSubTab.swift */,
+				WP10F00100000000000V0004 /* InventorySpacesSubTab.swift */,
+			);
+			name = Inventory;
+			path = Inventory;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1035,6 +1056,10 @@
 				DC76DB0C550E576CA56808D2 /* SpaceDetailView.swift in Sources */,
 				204793682A3A121F49A7B744 /* EditSpaceDetailsModal.swift in Sources */,
 				BF2E942252FB11034B9244E3 /* EditChecklistModal.swift in Sources */,
+				WP10B00100000000000V0001 /* InventoryView.swift in Sources */,
+				WP10B00100000000000V0002 /* InventoryItemsSubTab.swift in Sources */,
+				WP10B00100000000000V0003 /* InventoryTransactionsSubTab.swift in Sources */,
+				WP10B00100000000000V0004 /* InventorySpacesSubTab.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

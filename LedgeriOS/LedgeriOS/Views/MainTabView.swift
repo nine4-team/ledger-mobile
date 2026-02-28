@@ -17,7 +17,7 @@ struct MainTabView: View {
             .tag(Tab.projects.rawValue)
 
             NavigationStack {
-                InventoryPlaceholderView()
+                InventoryView()
             }
             .tabItem {
                 Label("Inventory", systemImage: "shippingbox")
