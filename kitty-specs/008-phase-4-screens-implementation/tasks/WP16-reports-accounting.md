@@ -17,7 +17,7 @@ subtasks:
 - T076
 phase: Phase 7 - Session 7c
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "46281"
 review_status: ''
 reviewed_by: ''
@@ -309,3 +309,4 @@ history:
 ## Activity Log
 
 - 2026-02-26T22:30:00Z – system – lane=planned – Prompt created.
+- 2026-02-28T23:09:18Z – claude-opus – shell_pid=46281 – lane=doing – Assigned agent via workflow command
