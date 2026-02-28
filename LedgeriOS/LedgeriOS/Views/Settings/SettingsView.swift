@@ -1,14 +1,30 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(AccountContext.self) private var accountContext
     @State private var selectedTab = "general"
 
-    private let tabs = [
-        TabBarItem(id: "general", label: "General"),
-        TabBarItem(id: "presets", label: "Presets"),
-        TabBarItem(id: "users", label: "Users"),
-        TabBarItem(id: "account", label: "Account"),
-    ]
+    private var isAdmin: Bool {
+        accountContext.member?.role == .owner || accountContext.member?.role == .admin
+    }
+
+    private var isOwner: Bool {
+        accountContext.member?.role == .owner
+    }
+
+    private var tabs: [TabBarItem] {
+        var items = [
+            TabBarItem(id: "general", label: "General"),
+            TabBarItem(id: "presets", label: "Presets"),
+        ]
+        if isAdmin {
+            items.append(TabBarItem(id: "users", label: "Users"))
+        }
+        if isOwner {
+            items.append(TabBarItem(id: "account", label: "Account"))
+        }
+        return items
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,7 +35,7 @@ struct SettingsView: View {
                 case "general":
                     GeneralSettingsView()
                 case "presets":
-                    PresetsSettingsView()
+                    PresetsSettingsView(isAdmin: isAdmin)
                 case "users":
                     UsersView()
                 case "account":
@@ -93,31 +109,47 @@ private struct GeneralSettingsView: View {
 // MARK: - Presets Settings (sub-tabs)
 
 private struct PresetsSettingsView: View {
+    let isAdmin: Bool
     @State private var selectedPreset = "categories"
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("Preset Type", selection: $selectedPreset) {
-                Text("Categories").tag("categories")
-                Text("Templates").tag("templates")
-                Text("Vendors").tag("vendors")
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.sm)
+        if isAdmin {
+            VStack(spacing: 0) {
+                Picker("Preset Type", selection: $selectedPreset) {
+                    Text("Categories").tag("categories")
+                    Text("Templates").tag("templates")
+                    Text("Vendors").tag("vendors")
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.sm)
 
-            Group {
-                switch selectedPreset {
-                case "categories":
-                    BudgetCategoryManagementView()
-                case "templates":
-                    SpaceTemplateManagementView()
-                case "vendors":
-                    VendorDefaultsView()
-                default:
-                    BudgetCategoryManagementView()
+                Group {
+                    switch selectedPreset {
+                    case "categories":
+                        BudgetCategoryManagementView()
+                    case "templates":
+                        SpaceTemplateManagementView()
+                    case "vendors":
+                        VendorDefaultsView()
+                    default:
+                        BudgetCategoryManagementView()
+                    }
                 }
             }
+        } else {
+            VStack(spacing: Spacing.lg) {
+                Spacer()
+                Image(systemName: "lock")
+                    .font(.system(size: 32))
+                    .foregroundStyle(BrandColors.textTertiary)
+                Text("Presets are only configurable by account administrators.")
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                Spacer()
+            }
+            .padding(Spacing.screenPadding)
         }
     }
 }

@@ -65,15 +65,15 @@ struct SpaceTemplateManagementView: View {
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
         .sheet(isPresented: $showingCreateSheet) {
-            TemplateFormSheet(mode: .create) { name, notes in
-                createTemplate(name: name, notes: notes)
+            TemplateFormSheet(mode: .create) { name, notes, checklists in
+                createTemplate(name: name, notes: notes, checklists: checklists)
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
         .sheet(item: $editingTemplate) { template in
-            TemplateFormSheet(mode: .edit(template)) { name, notes in
-                updateTemplate(template, name: name, notes: notes)
+            TemplateFormSheet(mode: .edit(template)) { name, notes, checklists in
+                updateTemplate(template, name: name, notes: notes, checklists: checklists)
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
@@ -104,16 +104,17 @@ struct SpaceTemplateManagementView: View {
         }
     }
 
-    private func createTemplate(name: String, notes: String?) {
+    private func createTemplate(name: String, notes: String?, checklists: [Checklist]) {
         guard let accountId = accountContext.currentAccountId else { return }
         var template = SpaceTemplate()
         template.name = name
         template.notes = notes
+        template.checklists = checklists.isEmpty ? nil : checklists
         template.order = (sortedTemplates.last?.order ?? 0) + 1
         _ = try? service.create(accountId: accountId, template: template)
     }
 
-    private func updateTemplate(_ template: SpaceTemplate, name: String, notes: String?) {
+    private func updateTemplate(_ template: SpaceTemplate, name: String, notes: String?, checklists: [Checklist]) {
         guard let accountId = accountContext.currentAccountId, let id = template.id else { return }
         var fields: [String: Any] = [
             "name": name,
@@ -124,6 +125,16 @@ struct SpaceTemplateManagementView: View {
         } else {
             fields["notes"] = NSNull()
         }
+        let checklistData = checklists.map { checklist in
+            [
+                "id": checklist.id,
+                "name": checklist.name,
+                "items": checklist.items.map { item in
+                    ["id": item.id, "text": item.text, "isChecked": item.isChecked] as [String: Any]
+                }
+            ] as [String: Any]
+        }
+        fields["checklists"] = checklistData.isEmpty ? NSNull() : checklistData
         Task { try? await service.update(accountId: accountId, templateId: id, fields: fields) }
     }
 
@@ -200,24 +211,27 @@ private struct TemplateFormSheet: View {
     }
 
     let mode: Mode
-    let onSave: (String, String?) -> Void
+    let onSave: (String, String?, [Checklist]) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String
     @State private var notes: String
+    @State private var checklists: [Checklist]
     @State private var hasSubmitted = false
 
-    init(mode: Mode, onSave: @escaping (String, String?) -> Void) {
+    init(mode: Mode, onSave: @escaping (String, String?, [Checklist]) -> Void) {
         self.mode = mode
         self.onSave = onSave
         switch mode {
         case .create:
             _name = State(initialValue: "")
             _notes = State(initialValue: "")
+            _checklists = State(initialValue: [])
         case .edit(let template):
             _name = State(initialValue: template.name)
             _notes = State(initialValue: template.notes ?? "")
+            _checklists = State(initialValue: template.checklists ?? [])
         }
     }
 
@@ -253,6 +267,40 @@ private struct TemplateFormSheet: View {
                     placeholder: "Optional notes",
                     axis: .vertical
                 )
+
+                // Checklists section
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    HStack {
+                        Text("Checklists")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+
+                        Spacer()
+
+                        Button {
+                            checklists.append(Checklist(name: "", items: []))
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus")
+                                Text("Add")
+                            }
+                            .font(Typography.buttonSmall)
+                            .foregroundStyle(BrandColors.primary)
+                        }
+                    }
+
+                    if checklists.isEmpty {
+                        Text("No checklists. Add one to include in this template.")
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textTertiary)
+                    } else {
+                        ForEach($checklists) { $checklist in
+                            ChecklistEditor(checklist: $checklist) {
+                                checklists.removeAll { $0.id == checklist.id }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -261,7 +309,68 @@ private struct TemplateFormSheet: View {
         hasSubmitted = true
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        onSave(trimmed, notes.isEmpty ? nil : notes)
+        // Filter out empty checklists (no name and no items)
+        let validChecklists = checklists.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty || !$0.items.isEmpty }
+        onSave(trimmed, notes.isEmpty ? nil : notes, validChecklists)
         dismiss()
+    }
+}
+
+// MARK: - Checklist Editor
+
+private struct ChecklistEditor: View {
+    @Binding var checklist: Checklist
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                TextField("Checklist name", text: $checklist.name)
+                    .font(Typography.body)
+                    .textFieldStyle(.roundedBorder)
+
+                Button { onDelete() } label: {
+                    Image(systemName: "trash")
+                        .foregroundStyle(BrandColors.destructive)
+                        .font(Typography.small)
+                }
+                .buttonStyle(.plain)
+            }
+
+            ForEach($checklist.items) { $item in
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "circle")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textTertiary)
+
+                    TextField("Item text", text: $item.text)
+                        .font(Typography.small)
+                        .textFieldStyle(.roundedBorder)
+
+                    Button {
+                        checklist.items.removeAll { $0.id == item.id }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .font(Typography.caption)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Button {
+                checklist.items.append(ChecklistItem(text: ""))
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus")
+                    Text("Add Item")
+                }
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.primary)
+            }
+        }
+        .padding(Spacing.sm)
+        .background(BrandColors.inputBackground.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
     }
 }

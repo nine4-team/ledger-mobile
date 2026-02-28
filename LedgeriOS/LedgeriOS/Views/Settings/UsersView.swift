@@ -171,6 +171,8 @@ private struct InviteRow: View {
     let invite: Invite
     let onRevoke: () -> Void
 
+    @State private var showingCopied = false
+
     var body: some View {
         Card {
             HStack {
@@ -183,9 +185,23 @@ private struct InviteRow: View {
 
                 Spacer()
 
-                Button("Revoke") { onRevoke() }
-                    .font(Typography.buttonSmall)
-                    .foregroundStyle(BrandColors.destructive)
+                HStack(spacing: Spacing.md) {
+                    Button {
+                        UIPasteboard.general.string = invite.email
+                        showingCopied = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showingCopied = false
+                        }
+                    } label: {
+                        Image(systemName: showingCopied ? "checkmark" : "doc.on.doc")
+                            .foregroundStyle(showingCopied ? .green : BrandColors.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button("Revoke") { onRevoke() }
+                        .font(Typography.buttonSmall)
+                        .foregroundStyle(BrandColors.destructive)
+                }
             }
         }
     }
