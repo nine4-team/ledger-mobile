@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Session 3 Screens – Items Tab + Item Detail + 13 Modals
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP04
 base_branch: 008-phase-4-screens-implementation-WP04
@@ -18,8 +18,8 @@ phase: Phase 3 - Session 3
 assignee: ''
 agent: "claude-opus"
 shell_pid: "26590"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -37,9 +37,82 @@ history:
 
 ## Review Feedback
 
-*[Empty — no feedback yet.]*
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-02-28
+
+## Review Feedback — WP06
+
+Reviewer: claude-opus
+Date: 2026-02-28
+
+Overall: Strong implementation — ItemsTabView, ItemDetailView, both services, and most modals are well-structured and follow project conventions. All modals use bottom sheets with drag indicators correctly. SharedItemsList embedded-mode bug fix is properly implemented. SellToBusiness/SellToProject description texts are exact character-for-character matches. However, there are 2 critical issues that must be fixed (one is a compilation error), plus several high-priority items.
 
 ---
+
+### CRITICAL (must fix before merge)
+
+**Issue 1: MakeCopiesModal.swift line 78 — `createdCount` is undeclared (will not compile)**
+
+`createdCount += 1` references a variable that is never declared. Either add `@State private var createdCount = 0` or remove the line (since `createdCount` is never read).
+
+**File:** `LedgeriOS/LedgeriOS/Modals/MakeCopiesModal.swift:78`
+**Fix:** Remove line 78 (`createdCount += 1`) — the variable is never read, so the tracking serves no purpose.
+
+---
+
+**Issue 2: Lineage edges are NOT written atomically in sell batch writes**
+
+In `InventoryOperationsService.swift`, lineage edges are created *after* `batch.commit()` as separate fire-and-forget writes with `try?` error suppression (lines ~60 and ~138). If the batch commits but edge creation fails (e.g., app crash, connectivity loss), items are moved with no lineage trail — a data integrity gap.
+
+**Fix:** Encode `LineageEdge` as a `[String: Any]` dictionary and add it to the same `WriteBatch` via `batch.setData(...)` before `commit()`. This ensures atomic write of both item updates and lineage records. If this is too complex right now, at minimum replace `try?` with `try` and propagate the error — silent failure is unacceptable for financial data.
+
+---
+
+### HIGH PRIORITY (should fix before merge)
+
+**Issue 3: SellToProjectModal step 2 uses wrong project's categories**
+
+`SellToProjectModal.swift` line 107 uses `projectContext.budgetCategories` (the *source* project's categories) for the destination project's category picker. When selling items to a different project, the user sees incorrect categories.
+
+**Fix:** Either fetch the destination project's budget categories when the user selects a destination project in step 1, or skip the destination category step and document it as a known limitation for now.
+
+**Issue 4: SetSpaceModal exists but is dead code**
+
+`SetSpaceModal.swift` wraps `SpacePickerList` with a proper title header and dismiss button, but both `ItemDetailView.swift:86` and `ItemsTabView.swift:106` use `SpacePickerList` directly. The modal wrapper is never instantiated outside its Preview.
+
+**Fix:** Change call sites to use `SetSpaceModal` instead of `SpacePickerList` directly, or delete `SetSpaceModal.swift`.
+
+---
+
+### LOW PRIORITY (acceptable to defer)
+
+**Issue 5: `ItemDetailCalculations` layer is missing**
+
+The spec calls for `ItemDetailCalculations.displayPrice()` and `ItemDetailCalculations.availableActions()`, but no such type exists. Price display and action menu logic are inlined in the view. This makes the logic untestable in isolation but is functionally correct.
+
+**Issue 6: MediaGallerySection is read-only**
+
+The spec says "wired to MediaService" but `MediaGallerySection` in `ItemDetailView.swift:235` receives no upload/remove/setPrimary callbacks. Media is display-only. This may be intentional for WP06 scope.
+
+**Issue 7: SpacePickerList missing "Create New Space" row**
+
+The doc comment promises a "Create New Space" option but it is not implemented. The spec says "optional" so this is acceptable to defer.
+
+**Issue 8: `try?` error suppression throughout**
+
+Multiple locations use `try?` to silently swallow Firestore errors (ItemDetailView, ItemsTabView bulk actions). While acceptable for optimistic UI, there is zero user feedback when writes fail. Consider adding error state/alerts for at least delete and sell operations.
+
+---
+
+### Summary
+
+- 2 critical issues (compilation error + lineage atomicity)
+- 2 high-priority issues (wrong categories in SellToProject + dead SetSpaceModal)
+- 4 low-priority items (acceptable to defer to later WPs)
+
+Please fix Issues 1-4 and resubmit for review.
+
 
 ## Objectives & Success Criteria
 
@@ -249,3 +322,4 @@ history:
 - 2026-02-28T00:54:50Z – claude-sonnet – shell_pid=61367 – lane=doing – Assigned agent via workflow command
 - 2026-02-28T01:08:30Z – claude-sonnet – shell_pid=61367 – lane=for_review – Ready for review: ItemsTabView (real items + filter/sort/multi-select), ItemDetailView (hero card + 3 collapsible sections), InventoryOperationsService (atomic batch writes), LineageEdgesService, 7 operation modals + 4 picker modals wired. SharedItemsList embedded bug fixed. Exact FR-8.5/8.6 description texts in SellTo* modals.
 - 2026-02-28T01:26:59Z – claude-opus – shell_pid=26590 – lane=doing – Started review via workflow command
+- 2026-02-28T01:30:55Z – claude-opus – shell_pid=26590 – lane=planned – Moved to planned
