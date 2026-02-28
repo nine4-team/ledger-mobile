@@ -1,9 +1,12 @@
 ---
 work_package_id: WP12
 title: Session 6 Screens – Creation Flows
-lane: planned
+lane: "doing"
 dependencies:
 - WP11
+base_branch: 008-phase-4-screens-implementation-WP11
+base_commit: 1ebc6c75a33486632d7c44764aeca3bac590a22f
+created_at: '2026-02-28T23:25:41.585474+00:00'
 subtasks:
 - T055
 - T056
@@ -13,7 +16,7 @@ subtasks:
 phase: Phase 6 - Session 6
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "98337"
 review_status: ''
 reviewed_by: ''
 history:
