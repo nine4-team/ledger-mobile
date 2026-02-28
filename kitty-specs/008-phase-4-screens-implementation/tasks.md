@@ -540,12 +540,12 @@
 **Prompt**: `tasks/WP16-reports-accounting.md`
 
 ### Included Subtasks
-- [ ] T071 Create `Logic/ReportAggregationCalculations.swift` — three aggregation functions: Invoice (split by reimbursementType, exclude canceled, per-line display name/date/notes/amount/category/items, compute charges+credits+netDue, flag missing project prices); Client Summary (total spent=sum projectPrices, total market value, total saved=sum(marketValue−projectPrice where marketValue>0), per-category breakdown, per-item list with receipt link 3 states); Property Management (group items by spaceId → space name, "No Space" for nil, per item: name/source/SKU/marketValue, total count+total market value)
-- [ ] T072 Write Swift Testing suite for all 3 aggregations (Invoice net due, Client Summary totals, Property Management grouping including "No Space" group)
-- [ ] T073 Create `Views/Projects/AccountingTabView.swift` — replaces `AccountingTabPlaceholder.swift`; two reimbursement summary cards (Owed to Design Business / Owed to Client; skip canceled transactions); three report navigation buttons (Property Management / Client Summary / Invoice)
-- [ ] T074 Create `Views/Reports/InvoiceReportView.swift` — native SwiftUI scrollable; Charge Lines section + Credit Lines section + net due summary; share button → `ImageRenderer` PDF → `UIActivityViewController`
-- [ ] T075 [P] Create `Views/Reports/ClientSummaryReportView.swift` — category breakdown + per-item list + totals; share button → PDF
-- [ ] T076 [P] Create `Views/Reports/PropertyManagementReportView.swift` — grouped by space; "No Space" section; totals; share button → PDF
+- [x] T071 Create `Logic/ReportAggregationCalculations.swift` — three aggregation functions: Invoice (split by reimbursementType, exclude canceled, per-line display name/date/notes/amount/category/items, compute charges+credits+netDue, flag missing project prices); Client Summary (total spent=sum projectPrices, total market value, total saved=sum(marketValue−projectPrice where marketValue>0), per-category breakdown, per-item list with receipt link 3 states); Property Management (group items by spaceId → space name, "No Space" for nil, per item: name/source/SKU/marketValue, total count+total market value)
+- [x] T072 Write Swift Testing suite for all 3 aggregations (Invoice net due, Client Summary totals, Property Management grouping including "No Space" group)
+- [x] T073 Create `Views/Projects/AccountingTabView.swift` — replaces `AccountingTabPlaceholder.swift`; two reimbursement summary cards (Owed to Design Business / Owed to Client; skip canceled transactions); three report navigation buttons (Property Management / Client Summary / Invoice)
+- [x] T074 Create `Views/Reports/InvoiceReportView.swift` — native SwiftUI scrollable; Charge Lines section + Credit Lines section + net due summary; share button → `ImageRenderer` PDF → `UIActivityViewController`
+- [x] T075 [P] Create `Views/Reports/ClientSummaryReportView.swift` — category breakdown + per-item list + totals; share button → PDF
+- [x] T076 [P] Create `Views/Reports/PropertyManagementReportView.swift` — grouped by space; "No Space" section; totals; share button → PDF
 
 ### Implementation Notes
 - Receipt link 3 states for Client Summary (FR-15.2): `{type:'invoice'}` (canonical sale or invoiceable reimbursement), `{type:'receipt-url', url:String}` (has receipt image), `null` (none).
