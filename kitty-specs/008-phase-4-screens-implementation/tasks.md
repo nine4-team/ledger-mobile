@@ -474,8 +474,8 @@
 **Prompt**: `tasks/WP14-search-logic.md`
 
 ### Included Subtasks
-- [ ] T066 Create `Logic/SearchCalculations.swift` — three matching strategies: (1) case-insensitive text substring for text fields; (2) amount prefix-range (parse typed string → cents range; handle $, commas, integer/decimal variants per data-model.md algorithm); (3) normalized SKU (strip non-alphanumeric, case-insensitive); per-entity field mapping (FR-13.4–13.6)
-- [ ] T067 Write Swift Testing suite — amount prefix-range edge cases (integer-only, one decimal, two decimal, $ prefix, comma separators, invalid input); SKU normalization (hyphen, slash, space, mixed case); text substring (case sensitivity, empty query, nil fields); per-entity field mapping verification
+- [x] T066 Create `Logic/SearchCalculations.swift` — three matching strategies: (1) case-insensitive text substring for text fields; (2) amount prefix-range (parse typed string → cents range; handle $, commas, integer/decimal variants per data-model.md algorithm); (3) normalized SKU (strip non-alphanumeric, case-insensitive); per-entity field mapping (FR-13.4–13.6)
+- [x] T067 Write Swift Testing suite — amount prefix-range edge cases (integer-only, one decimal, two decimal, $ prefix, comma separators, invalid input); SKU normalization (hyphen, slash, space, mixed case); text substring (case sensitivity, empty query, nil fields); per-entity field mapping verification
 
 ### Implementation Notes
 - Amount prefix-range algorithm (from data-model.md):
