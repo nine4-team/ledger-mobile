@@ -1,22 +1,25 @@
 ---
-work_package_id: "WP14"
-title: "Session 7b Logic – Search Calculations"
-phase: "Phase 7 - Session 7b"
-lane: "planned"
-dependencies: ["WP06"]
+work_package_id: WP14
+title: Session 7b Logic – Search Calculations
+lane: "doing"
+dependencies: [WP06]
+base_branch: 008-phase-4-screens-implementation-WP06
+base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
+created_at: '2026-02-28T23:08:48.334663+00:00'
 subtasks:
-  - "T066"
-  - "T067"
-assignee: ""
-agent: ""
-shell_pid: ""
-review_status: ""
-reviewed_by: ""
+- T066
+- T067
+phase: Phase 7 - Session 7b
+assignee: ''
+agent: ''
+shell_pid: "44284"
+review_status: ''
+reviewed_by: ''
 history:
-  - timestamp: "2026-02-26T22:30:00Z"
-    lane: "planned"
-    agent: "system"
-    action: "Prompt generated via /spec-kitty.tasks"
+- timestamp: '2026-02-26T22:30:00Z'
+  lane: planned
+  agent: system
+  action: Prompt generated via /spec-kitty.tasks
 ---
 
 # Work Package Prompt: WP14 – Session 7b Logic — Search Calculations
