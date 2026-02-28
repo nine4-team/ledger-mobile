@@ -46,16 +46,22 @@ struct BudgetCategoryManagementView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                         .padding(.horizontal, Spacing.screenPadding)
                 } else {
-                    LazyVStack(spacing: Spacing.cardListGap) {
+                    List {
                         ForEach(activeCategories) { category in
                             CategoryManagementRow(
                                 category: category,
                                 onEdit: { editingCategory = category },
                                 onArchive: { archiveTarget = category }
                             )
+                            .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
+                        .onMove(perform: moveCategories)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
+                    .listStyle(.plain)
+                    .environment(\.editMode, .constant(.active))
+                    .frame(minHeight: CGFloat(activeCategories.count) * 72)
                 }
 
                 // Archived section
@@ -155,6 +161,17 @@ struct BudgetCategoryManagementView: View {
         guard let accountId = accountContext.currentAccountId, let id = category.id else { return }
         let fields: [String: Any] = ["isArchived": true, "updatedAt": FieldValue.serverTimestamp()]
         Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
+    }
+
+    private func moveCategories(from source: IndexSet, to destination: Int) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        var reordered = activeCategories
+        reordered.move(fromOffsets: source, toOffset: destination)
+        for (index, category) in reordered.enumerated() {
+            guard let id = category.id else { continue }
+            let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
+            Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
+        }
     }
 
     private func unarchiveCategory(_ category: BudgetCategory) {

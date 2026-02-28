@@ -11,8 +11,8 @@ struct VendorDefaultsView: View {
 
     private let service = VendorDefaultsService(syncTracker: NoOpSyncTracker())
 
-    private var nonEmptyVendors: [(offset: Int, element: String)] {
-        Array(vendors.enumerated().filter { !$0.element.isEmpty })
+    private var displayVendors: [String] {
+        vendors.filter { !$0.isEmpty }
     }
 
     var body: some View {
@@ -33,33 +33,39 @@ struct VendorDefaultsView: View {
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.top, Spacing.sm)
 
-                if nonEmptyVendors.isEmpty {
+                if displayVendors.isEmpty {
                     Text("No vendors configured.")
                         .font(Typography.body)
                         .foregroundStyle(BrandColors.textSecondary)
                         .padding(.horizontal, Spacing.screenPadding)
                 } else {
-                    LazyVStack(spacing: Spacing.cardListGap) {
-                        ForEach(nonEmptyVendors, id: \.offset) { index, vendor in
-                            Card {
-                                HStack {
-                                    Text(vendor)
-                                        .font(Typography.body)
-                                        .foregroundStyle(BrandColors.textPrimary)
+                    List {
+                        ForEach(Array(displayVendors.enumerated()), id: \.offset) { index, vendor in
+                            HStack {
+                                Text(vendor)
+                                    .font(Typography.body)
+                                    .foregroundStyle(BrandColors.textPrimary)
 
-                                    Spacer()
+                                Spacer()
 
-                                    Button {
-                                        removeVendor(at: index)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundStyle(BrandColors.destructive)
-                                    }
+                                Button {
+                                    removeVendor(vendor)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(BrandColors.destructive)
                                 }
+                                .buttonStyle(.plain)
                             }
+                            .padding(.vertical, Spacing.sm)
+                            .listRowInsets(EdgeInsets(top: 0, leading: Spacing.screenPadding, bottom: 0, trailing: Spacing.screenPadding))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
+                        .onMove(perform: moveVendors)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
+                    .listStyle(.plain)
+                    .environment(\.editMode, .constant(.active))
+                    .frame(minHeight: CGFloat(displayVendors.count) * 52)
                 }
             }
             .padding(.bottom, Spacing.xl)
@@ -94,19 +100,24 @@ struct VendorDefaultsView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
 
-        // Find first empty slot or append
-        if let emptyIndex = vendors.firstIndex(of: "") {
-            vendors[emptyIndex] = trimmed
-        } else {
-            vendors.append(trimmed)
+        vendors.append(trimmed)
+        try? service.save(accountId: accountId, vendors: vendors)
+    }
+
+    private func removeVendor(_ name: String) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        if let index = vendors.firstIndex(of: name) {
+            vendors.remove(at: index)
         }
         try? service.save(accountId: accountId, vendors: vendors)
     }
 
-    private func removeVendor(at index: Int) {
+    private func moveVendors(from source: IndexSet, to destination: Int) {
         guard let accountId = accountContext.currentAccountId else { return }
-        guard index < vendors.count else { return }
-        vendors[index] = ""
+        // Work on the non-empty subset
+        var reordered = displayVendors
+        reordered.move(fromOffsets: source, toOffset: destination)
+        vendors = reordered
         try? service.save(accountId: accountId, vendors: vendors)
     }
 }

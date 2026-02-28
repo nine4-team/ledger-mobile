@@ -41,16 +41,22 @@ struct SpaceTemplateManagementView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                         .padding(.horizontal, Spacing.screenPadding)
                 } else {
-                    LazyVStack(spacing: Spacing.cardListGap) {
+                    List {
                         ForEach(sortedTemplates) { template in
                             TemplateRow(
                                 template: template,
                                 onEdit: { editingTemplate = template },
                                 onDelete: { deleteTarget = template }
                             )
+                            .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
+                        .onMove(perform: moveTemplates)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
+                    .listStyle(.plain)
+                    .environment(\.editMode, .constant(.active))
+                    .frame(minHeight: CGFloat(sortedTemplates.count) * 72)
                 }
             }
             .padding(.bottom, Spacing.xl)
@@ -119,6 +125,17 @@ struct SpaceTemplateManagementView: View {
             fields["notes"] = NSNull()
         }
         Task { try? await service.update(accountId: accountId, templateId: id, fields: fields) }
+    }
+
+    private func moveTemplates(from source: IndexSet, to destination: Int) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        var reordered = sortedTemplates
+        reordered.move(fromOffsets: source, toOffset: destination)
+        for (index, template) in reordered.enumerated() {
+            guard let id = template.id else { continue }
+            let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
+            Task { try? await service.update(accountId: accountId, templateId: id, fields: fields) }
+        }
     }
 
     private func deleteTemplate(_ template: SpaceTemplate) {

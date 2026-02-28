@@ -4,8 +4,9 @@ struct VendorDefaultsService: VendorDefaultsServiceProtocol {
     let syncTracker: SyncTracking
 
     static let defaultVendors: [String] = [
-        "Home Depot", "Wayfair", "West Elm", "Pottery Barn",
-        "", "", "", "", "", ""
+        "Homegoods", "Amazon", "Wayfair", "Target", "Ross",
+        "Arhaus", "Pottery Barn", "Crate & Barrel", "West Elm",
+        "Living Spaces", "Home Depot", "Lowes", "Movers", "Gas", "Inventory"
     ]
 
     private func documentRef(accountId: String) -> DocumentReference {
