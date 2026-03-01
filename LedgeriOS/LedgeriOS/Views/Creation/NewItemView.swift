@@ -68,7 +68,7 @@ struct NewItemView: View {
         ) {
             VStack(spacing: Spacing.md) {
                 FormField(label: "Name *", text: $name, placeholder: "Item name")
-                FormField(label: "Source", text: $source, placeholder: "e.g. HomeGoods, Ross")
+                VendorPickerField(value: $source)
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
 
                 // Status

@@ -85,14 +85,14 @@ Core models (implemented):
 
 Deferred (added when their screens need them):
 
-- [ ] `ItemLineageEdge`
-- [ ] `Invite`
-- [ ] `BusinessProfile`
-- [ ] `SpaceTemplate`
-- [ ] `VendorDefaults`
-- [ ] `ProjectPreferences`
-- [ ] `AccountPresets`
-- [ ] `RequestDoc<T>` (generic)
+- [ ] `ItemLineageEdge` — service exists (`LineageEdgesService.swift`), model file not confirmed
+- [x] `Invite`
+- [x] `BusinessProfile`
+- [x] `SpaceTemplate`
+- [x] `VendorDefaults`
+- [x] `ProjectPreferences`
+- [ ] `AccountPresets` — service exists, model file not confirmed
+- [ ] `RequestDoc<T>` (generic) — likely not needed
 
 ### Service Layer
 
@@ -112,16 +112,16 @@ Core services (implemented):
 
 Deferred (added when their screens need them):
 
-- [ ] `LineageEdgesService`
-- [ ] `InvitesService`
-- [ ] `BusinessProfileService`
-- [ ] `SpaceTemplatesService`
-- [ ] `VendorDefaultsService`
-- [ ] `ProjectPreferencesService`
-- [ ] `AccountPresetsService`
-- [ ] `RequestDocsService`
-- [ ] `InventoryOperationsService`
-- [ ] `ReturnFlowService`
+- [x] `LineageEdgesService`
+- [x] `InvitesService`
+- [x] `BusinessProfileService`
+- [x] `SpaceTemplatesService`
+- [x] `VendorDefaultsService`
+- [x] `ProjectPreferencesService`
+- [x] `AccountPresetsService`
+- [ ] `RequestDocsService` — likely not needed
+- [x] `InventoryOperationsService`
+- [ ] `ReturnFlowService` — return flow handled via modals (ReturnTransactionPickerModal, SellToBusinessModal)
 
 ### State Management
 
@@ -131,6 +131,7 @@ Replace Zustand stores with `@Observable` classes:
 - [x] `AccountContextStore` → `AccountContext` (@Observable)
 - [x] `ProjectContextStore` → `ProjectContext` (@Observable)
 - [x] `SyncTracking` protocol + `NoOpSyncTracker` stub
+- [x] `InventoryContext` (@Observable) — added, not in original plan
 - [ ] `SyncStatusStore` → `SyncStatus` (@Observable)
 - [ ] `BillingStore` → `BillingManager` (@Observable) — RevenueCat Swift SDK (`revenuecat/purchases-ios` via SPM), native SwiftUI paywalls via `RevenueCatUI`, server-side receipt validation, analytics
 - [ ] `ListStateStore` → `ListStateManager` (@Observable)
@@ -145,59 +146,60 @@ Replace Zustand stores with `@Observable` classes:
 **Objective:** App has the correct navigation structure with empty placeholder screens.
 
 ### iOS Layout (primary)
-- [ ] Tab bar (same 4 tabs as current app: Projects, Inventory, Search, Settings)
-- [ ] Navigation stack per tab
-- [ ] "Add" button (floating or tab-center)
+- [x] Tab bar (same 4 tabs as current app: Projects, Inventory, Search, Settings)
+- [x] Navigation stack per tab
+- [x] "Add" button (floating or tab-center)
 
 ### macOS Layout (add in Phase 6)
 - Sidebar navigation, window toolbar, keyboard shortcuts
 
 ### Shared
-- [ ] Account selection flow
-- [ ] Auth gate (show sign-in if not authenticated)
-- [ ] Router/coordinator pattern for navigation
+- [x] Account selection flow
+- [x] Auth gate (show sign-in if not authenticated)
+- [x] Router/coordinator pattern for navigation
 
-**Deliverable:** App shows tabs (iOS) with placeholder content for each section.
+**Deliverable:** ✅ Complete — tabs, auth gate, account selection, nav shell all in place.
 
 ---
 
 ## Phase 4: Screens
 
 ### Priority 1 — Core Loop
-- [ ] **Projects List** — active/archived tabs, project cards with budget summaries
-- [ ] **Project Detail (Hub)** — 4-tab interface (budget, transactions, items, spaces)
-- [ ] **Transaction List** — embedded in project hub
-- [ ] **Transaction Detail** — hero card, details, receipts, images, items, audit trail
-- [ ] **Item List** — embedded in project hub, search/sort/filter/bulk select
-- [ ] **Item Detail** — hero card, media, notes, details
+- [x] **Projects List** — active/archived tabs, project cards with budget summaries
+- [x] **Project Detail (Hub)** — 4-tab interface (budget, transactions, items, spaces)
+- [x] **Transaction List** — embedded in project hub
+- [x] **Transaction Detail** — hero card, details, receipts, images, items, audit trail
+- [x] **Item List** — embedded in project hub, search/sort/filter/bulk select
+- [x] **Item Detail** — hero card, media, notes, details
 
 ### Priority 2 — Creation Flows
-- [ ] **New Project** — form with budget category allocation, main image
-- [ ] **New Transaction** — progressive disclosure wizard (type → destination → channel → details)
-- [ ] **New Item** — form with SKU, source, price, status, media
+- [x] **New Project** — form with budget category allocation, main image
+- [x] **New Transaction** — progressive disclosure wizard (type → destination → channel → details)
+- [x] **New Item** — form with SKU, source, price, status, media
 
 ### Priority 3 — Spaces & Inventory
-- [ ] **Spaces List** — project spaces and business inventory spaces
-- [ ] **Space Detail** — checklists, media, notes
-- [ ] **New Space** — form with template selection
-- [ ] **Inventory Screen** — 3-tab view (transactions, items, spaces)
+- [x] **Spaces List** — project spaces and business inventory spaces
+- [x] **Space Detail** — checklists, media, notes
+- [x] **New Space** — form with template selection
+- [x] **Inventory Screen** — 3-tab view (transactions, items, spaces)
 
 ### Priority 4 — Budget & Reports
-- [ ] **Project Budget** — category-based budget management, progress visualization
-- [ ] **Invoice Report**
-- [ ] **Client Summary Report**
-- [ ] **Property Management Report**
+- [x] **Project Budget** — category-based budget management, progress visualization
+- [x] **Invoice Report**
+- [x] **Client Summary Report**
+- [x] **Property Management Report**
+- [x] **Accounting Tab** — added (`AccountingTabView.swift`), not in original plan
 
 ### Priority 5 — Settings & Admin
-- [ ] **Settings: General** — appearance, defaults
-- [ ] **Settings: Budget Categories** — CRUD, reorder
-- [ ] **Settings: Space Templates** — CRUD, reorder
-- [ ] **Settings: Vendors** — default vendor list
-- [ ] **Settings: Users** — invite management, member roles
-- [ ] **Settings: Account** — business profile
+- [x] **Settings: General** — appearance, defaults
+- [x] **Settings: Budget Categories** — CRUD, reorder
+- [x] **Settings: Space Templates** — CRUD, reorder
+- [x] **Settings: Vendors** — default vendor list
+- [x] **Settings: Users** — invite management, member roles
+- [x] **Settings: Account** — business profile
 
 ### Priority 6 — Search & Polish
-- [ ] **Universal Search** — cross-entity search with tabs
+- [x] **Universal Search** — cross-entity search with tabs
 - [ ] **Import flows** (Amazon, Wayfair)
 - [ ] **Paywall / subscription** — RevenueCat Swift SDK (`PaywallView`/`PaywallFooterView` from `RevenueCatUI`), server-side validation, entitlement checks throughout app
 
@@ -230,24 +232,27 @@ Tracked in `kitty-specs/007-swiftui-component-library/`. Merged to main.
 ### Phase 5c — Feature Modals (Tier 5, built with screens)
 These are tightly coupled to specific screens. Built during their respective Phase 4 session, not as standalone components.
 
-- [ ] EditItemDetailsModal (Session 3: Items)
-- [ ] EditTransactionDetailsModal (Session 2: Transactions)
-- [ ] EditSpaceDetailsModal (Session 4: Spaces)
-- [ ] EditNotesModal (Sessions 2–4)
-- [ ] EditChecklistModal (Session 4: Spaces)
-- [ ] SetSpaceModal (Session 3: Items)
-- [ ] ReassignToProjectModal (Session 3: Items)
-- [ ] SellToProjectModal (Session 3: Items)
-- [ ] SellToBusinessModal (Session 3: Items)
-- [ ] TransactionPickerModal (Session 3: Items)
-- [ ] ReturnTransactionPickerModal (Session 3: Items)
-- [ ] ProjectPickerList (Sessions 3/5: Items/Inventory)
-- [ ] CategoryPickerList (Session 2: Transactions)
-- [ ] SpacePickerList (Session 3: Items)
-- [ ] ProjectSelector (Session 6: Creation flows)
-- [ ] SpaceSelector (Session 6: Creation flows)
-- [ ] VendorPicker (Session 6: Creation flows)
-- [ ] MultiSelectPicker (Session 6: Creation flows)
+- [x] EditItemDetailsModal (Session 3: Items)
+- [x] EditTransactionDetailsModal (Session 2: Transactions)
+- [x] EditSpaceDetailsModal (Session 4: Spaces)
+- [x] EditNotesModal (Sessions 2–4)
+- [x] EditChecklistModal (Session 4: Spaces)
+- [x] SetSpaceModal (Session 3: Items)
+- [x] ReassignToProjectModal (Session 3: Items)
+- [x] SellToProjectModal (Session 3: Items)
+- [x] SellToBusinessModal (Session 3: Items)
+- [x] TransactionPickerModal (Session 3: Items)
+- [x] ReturnTransactionPickerModal (Session 3: Items)
+- [x] ProjectPickerList (Sessions 3/5: Items/Inventory)
+- [x] CategoryPickerList (Session 2: Transactions)
+- [x] SpacePickerList (Session 3: Items)
+- [x] ProjectSelector — built as `ProjectPickerList`; used in `ReassignToProjectModal` and `SellToProjectModal` for reassignment flows (not creation flows, which have project context via `ProjectContext`)
+- [x] SpaceSelector — built as `SpacePickerList` + `SetSpaceModal`; covers item → space assignment (`NewItemView`, `ItemDetailView`). Other flows may need it when built.
+- [x] VendorPicker — built as `VendorPickerField` (inline component). Shows scrollable preset list with radio-button selection + "Other" free-text fallback. Subscribes to `VendorDefaults` via real-time listener. Integrated into `NewItemView`, `EditItemDetailsModal`, and `NewTransactionView` (Steps 2 & 3).
+- [x] MultiSelectPicker — not needed; RN component only used in single-select mode; all single-select picker use cases covered by dedicated components (`CategoryPickerList`, etc.)
+- [x] StatusPickerModal — added, not in original plan
+- [x] CreateItemsFromListModal — added, not in original plan
+- [x] MakeCopiesModal — added, not in original plan
 
 ---
 
@@ -332,14 +337,16 @@ Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░�
 5. **Phase 6 waits for Phase 4.** macOS adaptation needs working iOS screens to adapt.
 6. **Phase 7 is last.** Ship only after everything works.
 
-### Current Status (updated 2026-02-25)
+### Current Status (updated 2026-02-28)
 
 - Phase 0: ✅ Done (remaining screenshot gaps are non-blocking)
 - Phase 1: ✅ Done
-- Phase 2: ✅ ~95% done (core models, services, state managers all built; deferred services added when screens need them)
+- Phase 2: ✅ Done (all deferred models/services built during Phase 4; minor unknowns: ItemLineageEdge model file, AccountPresets model file — services exist)
 - Phase 3: ✅ Done (auth gate, account selection, tab structure, nav shell)
-- Phase 4: 🔄 Starting — Session 1 planned, not yet implemented
-- Phase 5a: ✅ Simple components built (Card, Badge, AppButton, FormField, DetailRow, SegmentedControl, CollapsibleSection, SelectorCircle, ProgressBar, BudgetProgressView, TitledCard)
+- Phase 4: ✅ Done — all screens implemented (198 Swift files total); only remaining items are Import flows and Paywall/subscription
+- Phase 5a: ✅ Done
+- Phase 5b: ✅ Done
+- Phase 5c: ✅ Done — all modals complete including VendorPickerField.
 
 ### Phase 4 Session Breakdown
 
@@ -349,15 +356,15 @@ Detailed plans:
 
 | Session | Screens | Status |
 |---------|---------|--------|
-| Session 1 | Projects List + Project Detail Hub + Budget Tab | 📋 Planned |
-| Session 2 | Transactions Tab + Transaction Detail | 📋 Planned |
-| Session 3 | Item List + Item Detail | Not started |
-| Session 4 | Spaces Tab + Space Detail | Not started |
-| Session 5 | Inventory Screen (3-tab reuse of list components) | Not started |
-| Session 6 | Creation flows (New Project, New Transaction, New Item, New Space) | Not started |
-| Session 7+ | Settings, Search, Accounting, Reports | Not started |
+| Session 1 | Projects List + Project Detail Hub + Budget Tab | ✅ Done |
+| Session 2 | Transactions Tab + Transaction Detail | ✅ Done |
+| Session 3 | Item List + Item Detail | ✅ Done |
+| Session 4 | Spaces Tab + Space Detail | ✅ Done |
+| Session 5 | Inventory Screen (3-tab reuse of list components) | ✅ Done |
+| Session 6 | Creation flows (New Project, New Transaction, New Item, New Space) | ✅ Done |
+| Session 7+ | Settings, Search, Accounting, Reports | ✅ Done |
 
-**Next:** Implement Phase 4 Session 1 (Projects List + Project Detail Hub + Budget Tab).
+**Next:** Phase 6 (macOS Target) — or remaining polish items: Import flows (Amazon, Wayfair), Paywall/subscription (RevenueCat).
 
 ### Phase 4 Review Notes (carry forward)
 

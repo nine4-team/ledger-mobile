@@ -131,7 +131,7 @@ struct NewTransactionView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
-                FormField(label: "Source / Vendor", text: $destination, placeholder: "e.g. HomeGoods, Ross")
+                VendorPickerField(value: $destination, label: "Source / Vendor")
             }
         }
     }
@@ -163,9 +163,9 @@ struct NewTransactionView: View {
                     .foregroundStyle(BrandColors.textSecondary)
 
                 if !destination.isEmpty {
-                    FormField(label: "Source / Vendor", text: $destination, placeholder: "e.g. HomeGoods")
+                    VendorPickerField(value: $destination, label: "Source / Vendor")
                 } else {
-                    FormField(label: "Source / Vendor", text: $source, placeholder: "e.g. HomeGoods")
+                    VendorPickerField(value: $source, label: "Source / Vendor")
                 }
 
                 // Date
