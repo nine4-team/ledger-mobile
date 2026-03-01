@@ -509,9 +509,9 @@
 **Prompt**: `tasks/WP15-search-screens.md`
 
 ### Included Subtasks
-- [ ] T068 Create `Views/Search/UniversalSearchView.swift` — replaces placeholder; search bar (auto-focus on mount via `.focused()`); initial state: centered search icon + "Start typing to search"; 3 result tabs (Items/Transactions/Spaces) with result counts; debounce ~400ms; per-tab empty states ("No items found", "No transactions found", "No spaces found")
-- [ ] T069 Wire search results — read from `AccountContext` / `ProjectContext` data (all items, transactions, spaces the user has access to); apply `SearchCalculations.search()` on debounced query; display using existing `ItemCard`, `TransactionCard`, space card components
-- [ ] T070 Wire result navigation — `ItemCard` tap → `ItemDetailView`; `TransactionCard` tap → `TransactionDetailView`; space row tap → `SpaceDetailView`
+- [x] T068 Create `Views/Search/UniversalSearchView.swift` — replaces placeholder; search bar (auto-focus on mount via `.focused()`); initial state: centered search icon + "Start typing to search"; 3 result tabs (Items/Transactions/Spaces) with result counts; debounce ~400ms; per-tab empty states ("No items found", "No transactions found", "No spaces found")
+- [x] T069 Wire search results — read from `AccountContext` / `ProjectContext` data (all items, transactions, spaces the user has access to); apply `SearchCalculations.search()` on debounced query; display using existing `ItemCard`, `TransactionCard`, space card components
+- [x] T070 Wire result navigation — `ItemCard` tap → `ItemDetailView`; `TransactionCard` tap → `TransactionDetailView`; space row tap → `SpaceDetailView`
 
 ### Implementation Notes
 - Debounce using Combine `PassthroughSubject` + `.debounce(for: .milliseconds(400), scheduler: RunLoop.main)` or Swift Concurrency `Task.sleep(for: .milliseconds(400))`.
