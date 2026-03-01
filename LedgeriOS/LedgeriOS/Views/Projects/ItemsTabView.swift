@@ -143,9 +143,11 @@ struct ItemsTabView: View {
             Text("This action cannot be undone.")
         }
         .sheet(isPresented: $showNewItem) {
-            Text("New Item — Coming Soon")
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+            if let projectId = projectContext.currentProjectId {
+                NewItemView(context: .project(projectId, spaceId: nil))
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
         }
     }
 

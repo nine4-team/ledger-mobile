@@ -14,6 +14,7 @@ struct TransactionsTabView: View {
     @State private var showFilterMenu = false
     @State private var showSortMenu = false
     @State private var showBulkActionMenu = false
+    @State private var showNewTransaction = false
 
     // MARK: - Computed
 
@@ -90,6 +91,13 @@ struct TransactionsTabView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showNewTransaction) {
+            if let projectId = projectContext.currentProjectId {
+                NewTransactionView(projectId: projectId)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
     }
 
     // MARK: - Control Bar
@@ -137,7 +145,7 @@ struct TransactionsTabView: View {
                 variant: .primary,
                 icon: "plus"
             ) {
-                // Stub — WP12 builds NewTransactionView
+                showNewTransaction = true
             },
         ]
     }

@@ -8,6 +8,7 @@ struct ProjectsListView: View {
     @State private var isSearching = false
     @State private var projects: [Project] = []
     @State private var listener: ListenerRegistration?
+    @State private var showNewProject = false
 
     private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
 
@@ -74,13 +75,26 @@ struct ProjectsListView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    isSearching = true
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(BrandColors.textSecondary)
+                HStack(spacing: Spacing.sm) {
+                    Button {
+                        isSearching = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    Button {
+                        showNewProject = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(BrandColors.primary)
+                    }
                 }
             }
+        }
+        .sheet(isPresented: $showNewProject) {
+            NewProjectView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .task(id: accountContext.currentAccountId) {
             startListening()

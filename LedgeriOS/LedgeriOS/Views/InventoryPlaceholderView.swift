@@ -2,12 +2,17 @@ import SwiftUI
 
 struct InventoryPlaceholderView: View {
     @State private var showingCreateMenu = false
-    @State private var createMenuPendingAction: (() -> Void)?
+    @State private var showNewItem = false
+    @State private var showNewSpace = false
 
     private var createMenuItems: [ActionMenuItem] {
         [
-            ActionMenuItem(id: "item", label: "Create Item", icon: "plus.circle"),
-            ActionMenuItem(id: "transaction", label: "Create Transaction", icon: "plus.circle"),
+            ActionMenuItem(id: "item", label: "Create Item", icon: "plus.circle", onPress: {
+                showNewItem = true
+            }),
+            ActionMenuItem(id: "space", label: "Create Space", icon: "square.grid.2x2", onPress: {
+                showNewSpace = true
+            }),
         ]
     }
 
@@ -27,19 +32,23 @@ struct InventoryPlaceholderView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingCreateMenu, onDismiss: {
-            createMenuPendingAction?()
-            createMenuPendingAction = nil
-        }) {
+        .sheet(isPresented: $showingCreateMenu) {
             ActionMenuSheet(
                 title: "Create New",
-                items: createMenuItems,
-                onSelectAction: { action in
-                    createMenuPendingAction = action
-                }
+                items: createMenuItems
             )
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showNewItem) {
+            NewItemView(context: .inventory)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showNewSpace) {
+            NewSpaceView(context: .inventory)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
     }
 }
