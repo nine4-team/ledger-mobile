@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: macOS Target Setup
-lane: "doing"
+lane: "done"
 dependencies: []
 base_branch: main
 base_commit: 4651b59d566e91668ed2dd6b8ffe5090e7fe7707
@@ -15,8 +15,8 @@ phase: Phase 1 - Foundation
 assignee: ''
 agent: "claude-reviewer"
 shell_pid: "34494"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -174,3 +174,4 @@ To change a work package's lane, either:
 - 2026-03-01T05:57:59Z – claude – shell_pid=77935 – lane=doing – Assigned agent via workflow command
 - 2026-03-01T06:05:05Z – claude – shell_pid=77935 – lane=for_review – Ready for review: macOS target configured — SUPPORTED_PLATFORMS + SDKROOT=auto + MACOSX_DEPLOYMENT_TARGET=15.0 added, entitlements file created, LSApplicationCategoryType added to Info.plist, SPM packages resolve, build starts compilation and produces expected UIKit errors
 - 2026-03-01T06:23:00Z – claude-reviewer – shell_pid=34494 – lane=doing – Started review via workflow command
+- 2026-03-01T06:27:32Z – claude-reviewer – shell_pid=34494 – lane=done – Review passed: All 4 subtasks verified — macOS destination (SUPPORTED_PLATFORMS + SDKROOT + MACOSX_DEPLOYMENT_TARGET), entitlements (app-sandbox + network.client), Info.plist category (business), SPM resolution (17 packages). Rebased on main to resolve FirebaseEmulatorConfig.swift conflict — kept main's version with SSL fix.
