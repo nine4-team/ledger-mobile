@@ -47,7 +47,7 @@ struct InventoryView: View {
             }
         }
         .navigationTitle("Inventory")
-        .navigationBarTitleDisplayMode(.large)
+        .navBarTitleDisplayMode(.large)
         .task {
             guard let accountId = accountContext.currentAccountId else { return }
             inventoryContext.activate(accountId: accountId)

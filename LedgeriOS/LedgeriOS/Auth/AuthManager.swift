@@ -1,4 +1,3 @@
-import UIKit
 import FirebaseAuth
 import GoogleSignIn
 import GoogleSignInSwift
@@ -36,10 +35,10 @@ final class AuthManager {
         try await Auth.auth().createUser(withEmail: email, password: password)
     }
 
-    func signInWithGoogle(presentingViewController: UIViewController) async throws {
+    func signInWithGoogle() async throws {
         errorMessage = nil
 
-        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+        let result = try await platformSignIn()
 
         guard let idToken = result.user.idToken?.tokenString else {
             throw NSError(

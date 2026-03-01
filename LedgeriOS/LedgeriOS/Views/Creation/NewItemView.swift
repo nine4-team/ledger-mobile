@@ -86,11 +86,11 @@ struct NewItemView: View {
 
                 // Prices
                 FormField(label: "Purchase Price", text: $purchasePrice, placeholder: "$0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
                 FormField(label: "Project Price", text: $projectPrice, placeholder: "$0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
                 FormField(label: "Market Value", text: $marketValue, placeholder: "$0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
 
                 // Quantity
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -133,9 +133,8 @@ struct NewItemView: View {
                         .foregroundStyle(BrandColors.textSecondary)
 
                     PhotosPicker(selection: $imageItem, matching: .images) {
-                        if let imageData, let uiImage = UIImage(data: imageData) {
-                            Image(uiImage: uiImage)
-                                .resizable()
+                        if let imageData {
+                            platformImage(from: imageData)
                                 .scaledToFill()
                                 .frame(height: 100)
                                 .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))

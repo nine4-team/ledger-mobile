@@ -104,14 +104,14 @@ struct TransactionDetailView: View {
             .padding(.vertical, Spacing.lg)
         }
         .background(BrandColors.background)
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(transaction.source ?? "Transaction")
                     .font(Typography.h3)
                     .foregroundStyle(BrandColors.textPrimary)
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showDeleteConfirmation = true
                 } label: {

@@ -16,4 +16,15 @@ enum Dimensions {
 
     /// Standard border/divider — 1pt
     static let borderWidth: CGFloat = 1
+
+    // MARK: - Adaptive Layout
+
+    /// Maximum width for content in list/detail views (prevents stretching on wide screens)
+    static let contentMaxWidth: CGFloat = 720
+
+    /// Maximum width for form sheets on macOS
+    static let formMaxWidth: CGFloat = 560
+
+    /// Minimum card width for responsive grid calculation
+    static let cardMinWidth: CGFloat = 320
 }

@@ -8,7 +8,12 @@ enum ReportPDFSharing {
         fileName: String
     ) {
         let renderer = ImageRenderer(content: content)
+
+        #if canImport(UIKit)
         renderer.scale = UIScreen.main.scale
+        #elseif canImport(AppKit)
+        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        #endif
 
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(fileName)
@@ -24,6 +29,7 @@ enum ReportPDFSharing {
 
         guard FileManager.default.fileExists(atPath: tempURL.path) else { return }
 
+        #if canImport(UIKit)
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = scene.windows.first?.rootViewController else { return }
 
@@ -32,5 +38,14 @@ enum ReportPDFSharing {
             applicationActivities: nil
         )
         rootVC.present(activityVC, animated: true)
+        #elseif canImport(AppKit)
+        let savePanel = NSSavePanel()
+        savePanel.nameFieldStringValue = fileName
+        savePanel.allowedContentTypes = [.pdf]
+        savePanel.begin { response in
+            guard response == .OK, let destinationURL = savePanel.url else { return }
+            try? FileManager.default.copyItem(at: tempURL, to: destinationURL)
+        }
+        #endif
     }
 }

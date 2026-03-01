@@ -72,7 +72,7 @@ struct ItemsTabView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button { showNewItem = true } label: {
                     Image(systemName: "plus").foregroundStyle(BrandColors.primary)
                 }

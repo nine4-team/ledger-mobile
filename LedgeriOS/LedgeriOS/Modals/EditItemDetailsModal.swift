@@ -41,11 +41,11 @@ struct EditItemDetailsModal: View {
                 VendorPickerField(value: $source)
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
                 FormField(label: "Purchase Price", text: $purchasePrice, placeholder: "0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
                 FormField(label: "Project Price", text: $projectPrice, placeholder: "0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
                 FormField(label: "Market Value", text: $marketValue, placeholder: "0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
             }
         }
     }

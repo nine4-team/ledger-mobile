@@ -47,7 +47,7 @@ struct ProjectDetailView: View {
                 }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: Spacing.xs) {
@@ -59,7 +59,7 @@ struct ProjectDetailView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showingMenu = true
                 } label: {
@@ -154,10 +154,19 @@ struct ProjectDetailView: View {
             return
         }
 
+        #if canImport(UIKit)
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = scene.windows.first?.rootViewController else { return }
 
         let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
         rootVC.present(activityVC, animated: true)
+        #elseif canImport(AppKit)
+        let savePanel = NSSavePanel()
+        savePanel.nameFieldStringValue = fileName
+        savePanel.begin { response in
+            guard response == .OK, let destinationURL = savePanel.url else { return }
+            try? FileManager.default.copyItem(at: tempURL, to: destinationURL)
+        }
+        #endif
     }
 }

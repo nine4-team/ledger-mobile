@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 import FirebaseCore
 
@@ -10,3 +11,4 @@ final class AppDelegate: NSObject, UIApplicationDelegate, @unchecked Sendable {
         return true
     }
 }
+#endif

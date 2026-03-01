@@ -179,7 +179,7 @@ struct NewTransactionView: View {
 
                 // Amount
                 FormField(label: "Amount", text: $amount, placeholder: "$0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
 
                 // Status
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -262,9 +262,9 @@ struct NewTransactionView: View {
                 // Conditional: Itemized category fields
                 if isItemizedCategory {
                     FormField(label: "Subtotal", text: $subtotal, placeholder: "$0.00")
-                        .keyboardType(.decimalPad)
+                        .platformKeyboardType(.decimalPad)
                     FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.0")
-                        .keyboardType(.decimalPad)
+                        .platformKeyboardType(.decimalPad)
                 }
             }
         }

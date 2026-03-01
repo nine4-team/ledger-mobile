@@ -16,11 +16,15 @@ struct ImageGallery: View {
                         .tag(index)
                 }
             }
+            #if canImport(UIKit)
             .tabViewStyle(.page(indexDisplayMode: .automatic))
+            #endif
 
             closeButton
         }
+        #if canImport(UIKit)
         .statusBarHidden()
+        #endif
         .onAppear {
             currentIndex = initialIndex
         }

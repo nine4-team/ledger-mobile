@@ -77,7 +77,7 @@ struct EditTransactionDetailsModal: View {
 
                 // 2. Amount
                 FormField(label: "Amount ($)", text: $amountText, placeholder: "0.00")
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
 
                 // 3. Date
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -160,10 +160,10 @@ struct EditTransactionDetailsModal: View {
                 // 10-11. Conditional: Subtotal + Tax Rate (only for itemized categories)
                 if isItemizedCategory {
                     FormField(label: "Subtotal ($)", text: $subtotalText, placeholder: "0.00")
-                        .keyboardType(.decimalPad)
+                        .platformKeyboardType(.decimalPad)
 
                     FormField(label: "Tax Rate (%)", text: $taxRateText, placeholder: "0.00")
-                        .keyboardType(.decimalPad)
+                        .platformKeyboardType(.decimalPad)
 
                     // Read-only computed tax amount
                     DetailRow(label: "Tax Amount", value: computedTaxAmount, showDivider: false)

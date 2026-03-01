@@ -73,9 +73,9 @@ struct InvoiceReportView: View {
             .padding(Spacing.screenPadding)
         }
         .navigationTitle("Invoice")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     sharePDF()
                 } label: {

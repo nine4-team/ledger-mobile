@@ -63,7 +63,7 @@ struct SpaceSearchDetailView: View {
         }
         .background(BrandColors.background)
         .navigationTitle(space.name)
-        .navigationBarTitleDisplayMode(.large)
+        .navBarTitleDisplayMode(.large)
     }
 }
 

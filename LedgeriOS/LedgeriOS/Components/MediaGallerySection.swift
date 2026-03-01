@@ -56,6 +56,7 @@ struct MediaGallerySection: View {
                 .disabled(isUploading)
             }
         }
+        #if canImport(UIKit)
         .fullScreenCover(isPresented: $showGallery) {
             ImageGallery(
                 images: imageAttachments,
@@ -63,6 +64,15 @@ struct MediaGallerySection: View {
                 isPresented: $showGallery
             )
         }
+        #else
+        .sheet(isPresented: $showGallery) {
+            ImageGallery(
+                images: imageAttachments,
+                initialIndex: galleryIndex,
+                isPresented: $showGallery
+            )
+        }
+        #endif
         .sheet(isPresented: $showAttachmentMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil

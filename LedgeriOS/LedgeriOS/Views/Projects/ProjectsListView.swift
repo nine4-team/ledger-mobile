@@ -66,7 +66,7 @@ struct ProjectsListView: View {
         .navigationTitle("Projects")
         .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search projects")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .leadingNavBar) {
                 Button {
                     // Info button — future: show tooltip
                 } label: {
@@ -74,7 +74,7 @@ struct ProjectsListView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 HStack(spacing: Spacing.sm) {
                     Button {
                         isSearching = true

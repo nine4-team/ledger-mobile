@@ -9,7 +9,9 @@ struct DraggableCardList<T: Identifiable>: View {
     var onReorder: (([T]) -> Void)?
     var isItemDraggable: ((T) -> Bool)?
 
+    #if canImport(UIKit)
     @State private var editMode: EditMode = .active
+    #endif
 
     var body: some View {
         List {
@@ -35,7 +37,9 @@ struct DraggableCardList<T: Identifiable>: View {
             .onMove(perform: moveItems)
         }
         .listStyle(.plain)
+        #if canImport(UIKit)
         .environment(\.editMode, $editMode)
+        #endif
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {

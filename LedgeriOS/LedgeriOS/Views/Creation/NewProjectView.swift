@@ -47,9 +47,8 @@ struct NewProjectView: View {
                         .foregroundStyle(BrandColors.textSecondary)
 
                     PhotosPicker(selection: $heroImageItem, matching: .images) {
-                        if let heroImageData, let uiImage = UIImage(data: heroImageData) {
-                            Image(uiImage: uiImage)
-                                .resizable()
+                        if let heroImageData {
+                            platformImage(from: heroImageData)
                                 .scaledToFill()
                                 .frame(height: 120)
                                 .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
@@ -95,7 +94,7 @@ struct NewProjectView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
 
                                     TextField("$0", text: budgetBinding(for: catId))
-                                        .keyboardType(.numberPad)
+                                        .platformKeyboardType(.numberPad)
                                         .font(Typography.input)
                                         .multilineTextAlignment(.trailing)
                                         .frame(width: 100)

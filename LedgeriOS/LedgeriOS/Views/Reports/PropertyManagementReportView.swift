@@ -52,9 +52,9 @@ struct PropertyManagementReportView: View {
             .padding(Spacing.screenPadding)
         }
         .navigationTitle("Property Management")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     sharePDF()
                 } label: {

@@ -65,7 +65,7 @@ struct SpaceDetailView: View {
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(liveSpace.name.isEmpty ? "Space" : liveSpace.name)
@@ -73,7 +73,7 @@ struct SpaceDetailView: View {
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showActionMenu = true
                 } label: {

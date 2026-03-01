@@ -60,7 +60,9 @@ struct BudgetCategoryManagementView: View {
                         .onMove(perform: moveCategories)
                     }
                     .listStyle(.plain)
+                    #if canImport(UIKit)
                     .environment(\.editMode, .constant(.active))
+                    #endif
                     .frame(minHeight: CGFloat(activeCategories.count) * 72)
                 }
 
