@@ -1,7 +1,7 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: "planned"
+lane: "doing"
 dependencies:
 - WP00
 - WP04
@@ -18,7 +18,7 @@ subtasks:
 phase: Phase 7 - Session 7c
 assignee: ''
 agent: "claude-opus"
-shell_pid: "89768"
+shell_pid: "17694"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -475,3 +475,4 @@ Also add a test for this edge case.
 - 2026-03-01T00:02:12Z – claude-opus – shell_pid=89768 – lane=doing – Started review via workflow command
 - 2026-03-01T00:06:42Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
 - 2026-03-01T00:12:48Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
+- 2026-03-01T00:13:25Z – claude-opus – shell_pid=17694 – lane=doing – Started implementation via workflow command
