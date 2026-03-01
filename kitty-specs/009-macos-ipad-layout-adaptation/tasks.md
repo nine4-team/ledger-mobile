@@ -25,10 +25,10 @@
 **Estimated Size**: ~250 lines
 
 ### Included Subtasks
-- [ ] T001 Add macOS as supported destination in Xcode project settings
-- [ ] T002 Create macOS App Sandbox entitlements file with network client capability
-- [ ] T003 Add LSApplicationCategoryType to Info.plist for macOS
-- [ ] T004 Verify all SPM dependencies (Firebase, GoogleSignIn) resolve for macOS target
+- [x] T001 Add macOS as supported destination in Xcode project settings
+- [x] T002 Create macOS App Sandbox entitlements file with network client capability
+- [x] T003 Add LSApplicationCategoryType to Info.plist for macOS
+- [x] T004 Verify all SPM dependencies (Firebase, GoogleSignIn) resolve for macOS target
 
 ### Implementation Notes
 - Xcode project modification: Add `macosx` to `SUPPORTED_PLATFORMS` in build settings
