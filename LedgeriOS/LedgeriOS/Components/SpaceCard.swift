@@ -13,14 +13,19 @@ struct SpaceCard: View {
             ?? space.images?.first?.url
     }
 
-    private var checklistProgress: Double? {
+    private var checklistCounts: (checked: Int, total: Int)? {
         guard let checklists = space.checklists, !checklists.isEmpty else { return nil }
         let totalItems = checklists.reduce(0) { $0 + $1.items.count }
         guard totalItems > 0 else { return nil }
         let checkedItems = checklists.reduce(0) { sum, checklist in
             sum + checklist.items.filter(\.isChecked).count
         }
-        return Double(checkedItems) / Double(totalItems) * 100
+        return (checkedItems, totalItems)
+    }
+
+    private var checklistProgress: Double? {
+        guard let counts = checklistCounts else { return nil }
+        return Double(counts.checked) / Double(counts.total) * 100
     }
 
     var body: some View {
@@ -49,12 +54,19 @@ struct SpaceCard: View {
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
-                if let progress = checklistProgress {
-                    ProgressBar(
-                        percentage: progress,
-                        fillColor: BrandColors.primary,
-                        height: 4
-                    )
+                if let progress = checklistProgress, let counts = checklistCounts {
+                    HStack(spacing: Spacing.sm) {
+                        ProgressBar(
+                            percentage: progress,
+                            fillColor: BrandColors.primary,
+                            height: 4
+                        )
+
+                        Text("\(counts.checked)/\(counts.total)")
+                            .font(Typography.caption)
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .fixedSize()
+                    }
                 }
 
                 if showNotes, let notes = space.notes, !notes.isEmpty {
