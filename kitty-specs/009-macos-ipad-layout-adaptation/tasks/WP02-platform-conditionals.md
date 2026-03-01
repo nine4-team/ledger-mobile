@@ -16,7 +16,7 @@ subtasks:
 - T010
 phase: Phase 1 - Foundation
 assignee: ''
-agent: ''
+agent: "claude-opus"
 shell_pid: "73384"
 review_status: ''
 reviewed_by: ''
@@ -257,3 +257,4 @@ To change a work package's lane, either:
 2. **Use CLI**: `spec-kitty agent tasks move-task WP02 --to <lane> --note "message"`
 
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
+- 2026-03-01T06:40:34Z – claude-opus – shell_pid=73384 – lane=doing – Assigned agent via workflow command
