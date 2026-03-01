@@ -139,21 +139,65 @@ private struct PropertyManagementPDFContent: View {
             }
             .padding(.top, 20)
 
-            // Items section header
-            sectionHeader("Items")
+            // Per-space grouped sections
+            ForEach(Array(data.spaceGroups.enumerated()), id: \.offset) { _, group in
+                spaceTableSection(
+                    title: group.space.name,
+                    items: group.items,
+                    marketValueCents: group.marketValueCents
+                )
+            }
 
-            // Table header
+            // No Space section
+            if !data.noSpaceItems.isEmpty {
+                let noSpaceMarketValue = data.noSpaceItems.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
+                spaceTableSection(
+                    title: "No Space",
+                    items: data.noSpaceItems,
+                    marketValueCents: noSpaceMarketValue
+                )
+            }
+
+            // Footer
+            pdfFooter()
+        }
+        .padding(S.pagePadding)
+        .frame(width: S.pageWidth)
+        .background(Color.white)
+    }
+
+    // MARK: - Space Table Section
+
+    private func spaceTableSection(title: String, items: [Item], marketValueCents: Int) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Section header with space name
+            HStack {
+                Text(title)
+                    .font(S.sectionHeaderFont)
+                    .foregroundStyle(S.brand)
+                Spacer()
+                Text(CurrencyFormatting.formatCentsWithDecimals(marketValueCents))
+                    .font(S.bodyBoldFont)
+                    .foregroundStyle(S.textDark)
+            }
+            .padding(.top, 28)
+            .padding(.bottom, 12)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(S.border)
+                    .frame(height: 1)
+            }
+
+            // Table header for this section
             HStack(spacing: 0) {
                 Text("ITEM")
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("SOURCE")
-                    .frame(width: 110, alignment: .leading)
+                    .frame(width: 120, alignment: .leading)
                 Text("SKU")
-                    .frame(width: 100, alignment: .leading)
-                Text("SPACE")
                     .frame(width: 110, alignment: .leading)
                 Text("MARKET VALUE")
-                    .frame(width: 110, alignment: .trailing)
+                    .frame(width: 120, alignment: .trailing)
             }
             .font(S.tableHeaderFont)
             .foregroundStyle(S.textSecondary)
@@ -167,29 +211,11 @@ private struct PropertyManagementPDFContent: View {
                     .frame(height: 1)
             }
 
-            // Space groups
-            var rowIndex = 0
-            ForEach(Array(data.spaceGroups.enumerated()), id: \.offset) { _, group in
-                ForEach(Array(group.items.enumerated()), id: \.offset) { itemIndex, item in
-                    let currentRow = rowIndex + itemIndex
-                    itemRow(item: item, spaceName: group.space.name, index: currentRow)
-                }
+            // Item rows with zebra striping restarting per section
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                itemRow(item: item, index: index)
             }
-
-            // No Space items
-            if !data.noSpaceItems.isEmpty {
-                ForEach(Array(data.noSpaceItems.enumerated()), id: \.offset) { index, item in
-                    let currentRow = data.spaceGroups.reduce(0) { $0 + $1.items.count } + index
-                    itemRow(item: item, spaceName: "", index: currentRow, noMarketValueWarning: item.marketValueCents == nil)
-                }
-            }
-
-            // Footer
-            pdfFooter()
         }
-        .padding(S.pagePadding)
-        .frame(width: S.pageWidth)
-        .background(Color.white)
     }
 
     // MARK: - Header
@@ -240,41 +266,24 @@ private struct PropertyManagementPDFContent: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Section Header
-
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(S.sectionHeaderFont)
-            .foregroundStyle(S.brand)
-            .padding(.top, 28)
-            .padding(.bottom, 12)
-            .overlay(alignment: .bottom) {
-                Rectangle()
-                    .fill(S.border)
-                    .frame(height: 1)
-            }
-    }
-
     // MARK: - Item Row
 
-    private func itemRow(item: Item, spaceName: String, index: Int, noMarketValueWarning: Bool = false) -> some View {
+    private func itemRow(item: Item, index: Int) -> some View {
         HStack(spacing: 0) {
             Text(item.name)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(item.source ?? "")
-                .frame(width: 110, alignment: .leading)
+                .frame(width: 120, alignment: .leading)
             Text(item.sku ?? "")
-                .frame(width: 100, alignment: .leading)
-            Text(spaceName)
                 .frame(width: 110, alignment: .leading)
             if item.marketValueCents == nil {
                 Text("No market value")
                     .font(S.missingPriceFont)
                     .foregroundStyle(S.error)
-                    .frame(width: 110, alignment: .trailing)
+                    .frame(width: 120, alignment: .trailing)
             } else {
                 Text(CurrencyFormatting.formatCentsWithDecimals(item.marketValueCents ?? 0))
-                    .frame(width: 110, alignment: .trailing)
+                    .frame(width: 120, alignment: .trailing)
             }
         }
         .font(S.bodyFont)

@@ -303,11 +303,15 @@ enum ReportAggregationCalculations {
             }
         }
 
-        let spaceGroups = grouped.compactMap { spaceId, groupItems -> SpaceGroup? in
-            guard let space = spaceMap[spaceId] else { return nil }
-            return SpaceGroup(space: space, items: groupItems)
+        var spaceGroupsArray: [SpaceGroup] = []
+        for (spaceId, groupItems) in grouped {
+            if let space = spaceMap[spaceId] {
+                spaceGroupsArray.append(SpaceGroup(space: space, items: groupItems))
+            } else {
+                noSpaceItems.append(contentsOf: groupItems)
+            }
         }
-        .sorted { ($0.space.name) < ($1.space.name) }
+        let spaceGroups = spaceGroupsArray.sorted { $0.space.name < $1.space.name }
 
         let totalMarketValueCents = items.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
 

@@ -362,6 +362,26 @@ struct ReportAggregationCalculationTests {
         #expect(result.spaceGroups.count == 1)
     }
 
+    @Test("Items with orphaned spaceId (not in spaces array) fall back to noSpaceItems")
+    func orphanedSpaceIdFallsBackToNoSpace() {
+        let items = [
+            makeItem(id: "item1", spaceId: "space1"),
+            makeItem(id: "item2", spaceId: "space-deleted"),
+            makeItem(id: "item3", spaceId: nil),
+        ]
+        let spaces = [makeSpace(id: "space1", name: "Living Room")]
+
+        let result = ReportAggregationCalculations.computePropertyManagement(
+            items: items, spaces: spaces
+        )
+
+        #expect(result.spaceGroups.count == 1)
+        #expect(result.spaceGroups[0].items.count == 1)
+        // Both nil-spaceId and orphaned-spaceId items end up in noSpaceItems
+        #expect(result.noSpaceItems.count == 2)
+        #expect(result.totalItemCount == 3)
+    }
+
     @Test("Total market value sums across all items")
     func totalMarketValue() {
         let items = [
