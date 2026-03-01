@@ -181,6 +181,7 @@
 		42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */; };
 		2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */; };
 		BE98ABCF37AE4A6CA0CD7FEE /* ReportPDFSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0715DEDB6E5B432081A76B9F /* ReportPDFSharing.swift */; };
+		F1E2D3C4B5A647B89C0D1E2F /* ReportPDFStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F64A7B8C9D0E1F /* ReportPDFStyles.swift */; };
 		FA8BBCB00F8B4135B8FDC17E /* InvoiceReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2503E38446BA855C288 /* InvoiceReportView.swift */; };
 		4F309ACF7E7047C7AFCAF93D /* ClientSummaryReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB6C2207DB245C7B6FE8828 /* ClientSummaryReportView.swift */; };
 		3C9C9C33C7D14276BE0F6FB6 /* PropertyManagementReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */; };
@@ -370,6 +371,7 @@
 		835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportAggregationCalculations.swift; sourceTree = "<group>"; };
 		47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountingTabView.swift; sourceTree = "<group>"; };
 		0715DEDB6E5B432081A76B9F /* ReportPDFSharing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportPDFSharing.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F64A7B8C9D0E1F /* ReportPDFStyles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportPDFStyles.swift; sourceTree = "<group>"; };
 		6346A2503E38446BA855C288 /* InvoiceReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceReportView.swift; sourceTree = "<group>"; };
 		3CB6C2207DB245C7B6FE8828 /* ClientSummaryReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientSummaryReportView.swift; sourceTree = "<group>"; };
 		CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportView.swift; sourceTree = "<group>"; };
@@ -727,6 +729,7 @@
 			isa = PBXGroup;
 			children = (
 				0715DEDB6E5B432081A76B9F /* ReportPDFSharing.swift */,
+				A1B2C3D4E5F64A7B8C9D0E1F /* ReportPDFStyles.swift */,
 				6346A2503E38446BA855C288 /* InvoiceReportView.swift */,
 				3CB6C2207DB245C7B6FE8828 /* ClientSummaryReportView.swift */,
 				CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */,
@@ -844,6 +847,7 @@
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
 				2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */,
 				BE98ABCF37AE4A6CA0CD7FEE /* ReportPDFSharing.swift in Sources */,
+				F1E2D3C4B5A647B89C0D1E2F /* ReportPDFStyles.swift in Sources */,
 				FA8BBCB00F8B4135B8FDC17E /* InvoiceReportView.swift in Sources */,
 				4F309ACF7E7047C7AFCAF93D /* ClientSummaryReportView.swift in Sources */,
 				3C9C9C33C7D14276BE0F6FB6 /* PropertyManagementReportView.swift in Sources */,
