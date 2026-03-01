@@ -15,15 +15,21 @@ struct AccountGateView: View {
             }
         }
         .task {
-            guard let uid = authManager.currentUser?.uid else { return }
+            guard let uid = authManager.currentUser?.uid else {
+                print("🟡 AccountGateView.task: uid is nil, returning early")
+                return
+            }
+            print("🟡 AccountGateView.task: uid=\(uid)")
 
             // Fast path: if we have a persisted account, activate immediately
             if let lastId = accountContext.lastSelectedAccountId {
+                print("🟡 AccountGateView.task: fast path — lastSelectedAccountId=\(lastId)")
                 accountContext.selectAccount(accountId: lastId, userId: uid)
                 return
             }
 
             // Otherwise, discover accounts
+            print("🟡 AccountGateView.task: calling discoverAccounts")
             await accountContext.discoverAccounts(userId: uid)
 
             // Auto-select if exactly one account

@@ -10,6 +10,11 @@ struct LedgerApp: App {
 
     init() {
         FirebaseApp.configure()
+
+        #if DEBUG
+        FirebaseEmulatorConfig.configureIfEnabled()
+        #endif
+
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(
             clientID: FirebaseApp.app()!.options.clientID!
         )
@@ -62,6 +67,20 @@ struct LedgerApp: App {
                 .environment(accountContext)
                 .environment(projectContext)
                 .preferredColorScheme(resolvedColorScheme)
+                #if DEBUG
+                .overlay(alignment: .top) {
+                    if FirebaseEmulatorConfig.isEnabled {
+                        Text("EMULATOR")
+                            .font(.caption2.bold())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(.orange)
+                            .clipShape(Capsule())
+                            .padding(.top, 2)
+                    }
+                }
+                #endif
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }

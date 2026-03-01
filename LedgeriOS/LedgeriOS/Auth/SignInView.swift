@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 struct SignInView: View {
     @Environment(AuthManager.self) private var authManager
@@ -123,6 +124,12 @@ struct SignInView: View {
             do {
                 try await authManager.signIn(email: email, password: password)
             } catch {
+                let nsError = error as NSError
+                print("🔴 Auth signIn error: domain=\(nsError.domain) code=\(nsError.code)")
+                print("🔴 Auth signIn error: \(error)")
+                if let authCode = AuthErrorCode(rawValue: nsError.code) {
+                    print("🔴 AuthErrorCode: \(authCode)")
+                }
                 errorMessage = error.localizedDescription
             }
             isLoading = false

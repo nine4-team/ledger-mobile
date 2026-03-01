@@ -58,6 +58,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Collection group query for discovering which accounts a user belongs to.
+    // Used by: AccountMembersService.listMembershipsForUser(userId:)
+    // Uses resource.data.uid (field) instead of path variable {uid} so the
+    // Firestore rules engine can prove the query constraint
+    // whereField("uid", isEqualTo: userId) satisfies the rule for list operations.
+    match /{path=**}/users/{uid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // Per-user project preferences (pinned categories, etc.).
     match /accounts/{accountId}/users/{uid}/projectPreferences/{projectId} {
       allow read, create, update, delete: if isAccountMember(accountId);

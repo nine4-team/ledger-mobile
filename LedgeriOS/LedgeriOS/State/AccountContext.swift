@@ -55,17 +55,23 @@ final class AccountContext {
     // MARK: - Discovery
 
     func discoverAccounts(userId: String) async {
+        print("🟡 discoverAccounts called for userId: \(userId)")
         isDiscovering = true
         defer { isDiscovering = false }
 
         do {
             let memberships = try await membersService.listMembershipsForUser(userId: userId)
+            print("🟡 memberships returned: \(memberships.count)")
 
             var accounts: [DiscoveredAccount] = []
             for membership in memberships {
-                guard let accountId = membership.accountId else { continue }
+                guard let accountId = membership.accountId else {
+                    print("🟡 membership skipped — nil accountId: \(membership)")
+                    continue
+                }
                 let account = try await accountsService.getAccount(accountId: accountId)
                 let name = account?.name ?? "(unnamed)"
+                print("🟡 resolved account: \(accountId) → \(name)")
                 accounts.append(DiscoveredAccount(id: accountId, name: name))
             }
 
@@ -77,8 +83,10 @@ final class AccountContext {
                 return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
 
+            print("🟡 discoverAccounts result: \(accounts.count) accounts")
             discoveredAccounts = accounts
         } catch {
+            print("🔴 discoverAccounts failed: \(error)")
             discoveredAccounts = []
         }
     }
