@@ -1,0 +1,10 @@
+{
+  "feature_number": "009",
+  "slug": "009-macos-ipad-layout-adaptation",
+  "friendly_name": "macOS + iPad Layout Adaptation",
+  "mission": "software-dev",
+  "source_description": "## Phase 6: macOS Target + Layout Adaptation\n\n- [ ] Add macOS target to existing Xcode project (Mac Catalyst or native SwiftUI for Mac)\n- [ ] Register Mac app in Firebase Console, add `GoogleService-Info.plist` for Mac target\n- [ ] `NavigationSplitView` sidebar for Mac (collapses to stack on iPhone, already working)\n- [ ] Window toolbar with account selector\n- [ ] Keyboard shortcuts (Cmd+N for new, Cmd+F for search, etc.)\n- [ ] Adapt card layouts for wider screens\n- [ ] Test on Mac (various window sizes), iPad (sidebar collapse), iPhone SE + 15 Pro Max\n- [ ] Ensure all screens work at all sizes\n\nfrom @.plans/swiftui-migration.md",
+  "created_at": "2026-02-28T22:15:00Z",
+  "target_branch": "main",
+  "vcs": "git"
+}
