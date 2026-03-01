@@ -1,7 +1,7 @@
 ---
 work_package_id: WP14
 title: Session 7b Logic – Search Calculations
-lane: "doing"
+lane: "done"
 dependencies: [WP06]
 base_branch: 008-phase-4-screens-implementation-WP06
 base_commit: 85c5f7a38ca0c3971640237a96a16797619ecd80
@@ -211,3 +211,4 @@ Either way, the display name resolution in search must match what the UI shows. 
 - 2026-02-28T23:50:49Z – claude-opus – shell_pid=60875 – lane=doing – Started implementation via workflow command
 - 2026-02-28T23:55:27Z – claude-opus – shell_pid=60875 – lane=for_review – Ready for review: Addressed all review feedback — transactionDisplayName now uses full 4-priority chain (source → canonical inventory sale label → ID prefix → Untitled Transaction), 13 new display name tests added, test file renamed to SearchCalculationsTests. 62 tests pass across 5 suites.
 - 2026-02-28T23:57:00Z – claude-opus – shell_pid=75907 – lane=doing – Started review via workflow command
+- 2026-03-01T00:00:30Z – claude-opus – shell_pid=75907 – lane=done – Review passed: All 8 review checklist items verified. Amount prefix-range algorithm correct (40→4000..4099, 40.0→4000..4009, 40.00→4000..4000, $1,200→120000..120099). SKU normalization correct. Empty query returns all. 429 tests pass across 26 suites (TEST SUCCEEDED). No SwiftUI/Firestore imports. Review feedback fully addressed — transactionDisplayName now implements full 4-priority chain (source → canonical inventory sale label → ID prefix → Untitled Transaction) with 13 display name tests covering all priority levels. Per-entity field mappings match spec exactly.
