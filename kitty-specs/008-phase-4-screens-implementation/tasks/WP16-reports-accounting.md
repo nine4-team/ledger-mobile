@@ -1,7 +1,7 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP00
 - WP04
@@ -476,3 +476,4 @@ Also add a test for this edge case.
 - 2026-03-01T00:06:42Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
 - 2026-03-01T00:12:48Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
 - 2026-03-01T00:13:25Z – claude-opus – shell_pid=17694 – lane=doing – Started implementation via workflow command
+- 2026-03-01T00:18:07Z – claude-opus – shell_pid=17694 – lane=for_review – Ready for review: Addressed all review feedback — (1) Restructured PropertyManagementPDFContent from flat table to per-space grouped sections matching FR-15.3 and on-screen view, (2) Fixed orphaned spaceId items silently dropped — now fall back to noSpaceItems, (3) Fixed zebra striping bug by removing broken var rowIndex pattern, (4) Added test for orphaned spaceId edge case. 17 tests pass, build succeeds.
