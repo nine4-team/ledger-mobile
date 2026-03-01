@@ -1,7 +1,7 @@
 ---
 work_package_id: WP16
 title: Session 7c Logic + Screens – Reports + Accounting Tab
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP00
 - WP04
@@ -20,7 +20,7 @@ assignee: ''
 agent: "claude-opus"
 shell_pid: "89768"
 review_status: "has_feedback"
-reviewed_by: "claude-opus"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-02-26T22:30:00Z'
   lane: planned
@@ -38,7 +38,72 @@ history:
 
 ## Review Feedback
 
-**Reviewer:** claude-opus | **Date:** 2026-02-28
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-03-01
+
+**Reviewer:** claude-opus | **Date:** 2026-03-01
+
+### PDF branded styling: RESOLVED
+
+The previous review feedback (PDF content views lost branded styling) has been fully addressed. All 13 elements from the original `reportHtml.ts` stylesheet now match: brand color titles, section headers with underlines, table headers with backgrounds, zebra striping, net due highlight, overview cards, card labels/values, missing price indicators, receipt badges, header borders, footers, and locale-aware currency formatting via `CurrencyFormatting.formatCentsWithDecimals`.
+
+---
+
+### Issue 1: `var rowIndex` bug in PropertyManagementPDFContent — zebra striping broken
+
+**Severity:** High — visual defect in the client-facing PDF.
+
+**File:** `Views/Reports/PropertyManagementReportView.swift`, line 171
+
+**What's wrong:** `var rowIndex = 0` is declared inside the `@ViewBuilder` body but is never incremented between space groups. The `currentRow = rowIndex + itemIndex` on line 174 always equals `itemIndex` within each group. This means zebra striping restarts for every space group instead of being continuous across the whole table.
+
+Ironically, the "No Space" section (line 182) correctly computes a running offset: `data.spaceGroups.reduce(0) { $0 + $1.items.count } + index` — this is the right approach.
+
+**How to fix:** Replace the `var rowIndex` pattern with a running offset computed from the enumeration. For each space group, compute the cumulative item count from all preceding groups:
+
+```swift
+ForEach(Array(data.spaceGroups.enumerated()), id: \.offset) { groupIndex, group in
+    let groupOffset = data.spaceGroups[..<groupIndex].reduce(0) { $0 + $1.items.count }
+    ForEach(Array(group.items.enumerated()), id: \.offset) { itemIndex, item in
+        itemRow(item: item, spaceName: group.space.name, index: groupOffset + itemIndex)
+    }
+}
+```
+
+---
+
+### Issue 2: Items with orphaned spaceId silently dropped from Property Management report
+
+**Severity:** Medium — data integrity issue, totals won't match visible items.
+
+**File:** `Logic/ReportAggregationCalculations.swift`, line 306
+
+**What's wrong:** In `computePropertyManagement`, items whose `spaceId` references a space not in the `spaces` array are discarded by `compactMap`:
+
+```swift
+let spaceGroups = grouped.compactMap { spaceId, groupItems -> SpaceGroup? in
+    guard let space = spaceMap[spaceId] else { return nil }  // ← drops entire group
+    return SpaceGroup(space: space, items: groupItems)
+}
+```
+
+These items are excluded from both `spaceGroups` and `noSpaceItems`, but `totalItemCount` and `totalMarketValueCents` are computed from the raw `items` array (lines 312-318) — so the totals include items invisible in the grouped display.
+
+**How to fix:** Items with an unresolvable `spaceId` should be added to `noSpaceItems`:
+
+```swift
+for (spaceId, groupItems) in grouped {
+    if let space = spaceMap[spaceId] {
+        spaceGroupsArray.append(SpaceGroup(space: space, items: groupItems))
+    } else {
+        noSpaceItems.append(contentsOf: groupItems)
+    }
+}
+```
+
+Also add a test for this edge case.
+
 
 ### Issue: PDF content views lost all branded styling from original reports
 
@@ -349,3 +414,4 @@ history:
 - 2026-02-28T23:52:59Z – claude-opus – shell_pid=66415 – lane=doing – Started implementation via workflow command
 - 2026-03-01T00:01:25Z – claude-opus – shell_pid=66415 – lane=for_review – Ready for review: Reworked all 3 PDF content views (InvoiceReportPDFContent, ClientSummaryPDFContent, PropertyManagementPDFContent) with branded styling matching reportHtml.ts. Added ReportPDFStyles enum with all PDF-specific colors (#987e55 brand, #faf8f5 card bg, #e0d5c5 borders, etc) and font constants. PDFs now have branded headers with 2px border, table layouts with zebra striping, overview cards, receipt badges, section headers with brand underlines, net due highlight, footer. Uses CurrencyFormatting.formatCentsWithDecimals. 383 tests pass.
 - 2026-03-01T00:02:12Z – claude-opus – shell_pid=89768 – lane=doing – Started review via workflow command
+- 2026-03-01T00:06:42Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
