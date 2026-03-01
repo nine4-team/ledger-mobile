@@ -1,7 +1,7 @@
 ---
 work_package_id: WP01
 title: macOS Target Setup
-lane: "doing"
+lane: "for_review"
 dependencies: []
 base_branch: main
 base_commit: 4651b59d566e91668ed2dd6b8ffe5090e7fe7707
@@ -13,7 +13,7 @@ subtasks:
 - T004
 phase: Phase 1 - Foundation
 assignee: ''
-agent: ''
+agent: "claude"
 shell_pid: "77935"
 review_status: ''
 reviewed_by: ''
@@ -171,3 +171,5 @@ To change a work package's lane, either:
 2. **Use CLI**: `spec-kitty agent tasks move-task WP01 --to <lane> --note "message"`
 
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
+- 2026-03-01T05:57:59Z – claude – shell_pid=77935 – lane=doing – Assigned agent via workflow command
+- 2026-03-01T06:05:05Z – claude – shell_pid=77935 – lane=for_review – Ready for review: macOS target configured — SUPPORTED_PLATFORMS + SDKROOT=auto + MACOSX_DEPLOYMENT_TARGET=15.0 added, entitlements file created, LSApplicationCategoryType added to Info.plist, SPM packages resolve, build starts compilation and produces expected UIKit errors
