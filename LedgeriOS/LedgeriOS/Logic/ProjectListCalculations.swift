@@ -1,5 +1,9 @@
 import Foundation
 
+enum ProjectArchiveFilter {
+    case active, archived
+}
+
 /// Pure functions for filtering and sorting project lists.
 /// Used by project list views and testable without SwiftUI.
 enum ProjectListCalculations {
@@ -39,5 +43,69 @@ enum ProjectListCalculations {
             if !nameB.isEmpty { return false }
             return (a.id ?? "") < (b.id ?? "")
         }
+    }
+
+    // MARK: - Combined Filter
+
+    /// Filters projects by archive state and search query in one call.
+    static func filterProjects(
+        _ projects: [Project],
+        filter: ProjectArchiveFilter,
+        query: String
+    ) -> [Project] {
+        let archiveFiltered = filterByArchiveState(
+            projects: projects,
+            showArchived: filter == .archived
+        )
+        return filterBySearch(projects: archiveFiltered, query: query)
+    }
+
+    // MARK: - Empty State
+
+    /// Returns the appropriate empty state message for a given filter.
+    static func projectEmptyStateText(for filter: ProjectArchiveFilter) -> String {
+        switch filter {
+        case .active:
+            return "No active projects yet."
+        case .archived:
+            return "No archived projects yet."
+        }
+    }
+
+    // MARK: - Budget Bar Categories
+
+    /// Returns ordered categories for the project card budget bar preview.
+    /// Priority: (1) pinned categories in pinnedCategoryIds order,
+    /// (2) remaining sorted by spend percentage descending,
+    /// (3) if no category has any activity, returns empty (caller shows Overall Budget).
+    static func budgetBarCategories(
+        categories: [BudgetProgress.CategoryProgress],
+        pinnedCategoryIds: [String]
+    ) -> [BudgetProgress.CategoryProgress] {
+        let enabled = categories.filter { $0.budgetCents > 0 || $0.spentCents != 0 }
+        guard !enabled.isEmpty else { return [] }
+
+        let enabledById = Dictionary(uniqueKeysWithValues: enabled.map { ($0.id, $0) })
+
+        // Pinned categories in user-defined order
+        var pinned: [BudgetProgress.CategoryProgress] = []
+        var pinnedIds = Set<String>()
+        for id in pinnedCategoryIds {
+            if let cat = enabledById[id] {
+                pinned.append(cat)
+                pinnedIds.insert(id)
+            }
+        }
+
+        // Remaining categories sorted by spend% descending
+        let remaining = enabled
+            .filter { !pinnedIds.contains($0.id) }
+            .sorted { a, b in
+                let pctA = a.budgetCents > 0 ? Double(a.spentCents) / Double(a.budgetCents) : 0
+                let pctB = b.budgetCents > 0 ? Double(b.spentCents) / Double(b.budgetCents) : 0
+                return pctA > pctB
+            }
+
+        return pinned + remaining
     }
 }
