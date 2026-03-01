@@ -98,10 +98,10 @@ enum TransactionListCalculations {
                     transaction: txn, items: txnItems
                 )
                 if filter.completenessValues.contains("needs-review") {
-                    if completeness.status == .complete || completeness.status == nil { return false }
+                    if completeness == nil || completeness?.status == .complete { return false }
                 }
                 if filter.completenessValues.contains("complete") {
-                    if completeness.status != .complete { return false }
+                    if completeness?.status != .complete { return false }
                 }
             }
 
