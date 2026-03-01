@@ -21,6 +21,7 @@ import { ReturnTransactionPickerModal } from './modals/ReturnTransactionPickerMo
 import { EditNotesModal } from './modals/EditNotesModal';
 import { EditSpaceDetailsModal } from './modals/EditSpaceDetailsModal';
 import { EditChecklistModal } from './modals/EditChecklistModal';
+import { AiSpaceSearchModal } from './modals/AiSpaceSearchModal';
 import { buildSingleItemMenu, buildBulkMenu } from '../actions/itemMenuBuilder';
 import { executeSellToBusiness, executeSellToProject, executeBulkReassignToInventory, executeBulkReassignToProject } from '../actions/itemActionHandlers';
 import { layout } from '../ui';
@@ -188,6 +189,7 @@ export function SpaceDetailContent({
 
   const [editNameVisible, setEditNameVisible] = useState(false);
   const [editNotesVisible, setEditNotesVisible] = useState(false);
+  const [aiSearchVisible, setAiSearchVisible] = useState(false);
 
   // Checklist modal state
   const [checklistModalVisible, setChecklistModalVisible] = useState(false);
@@ -904,6 +906,7 @@ export function SpaceDetailContent({
               isSortActive={itemsManager.isSortActive}
               onFilter={() => itemsManager.setFilterMenuVisible(true)}
               isFilterActive={itemsManager.isFilterActive}
+              onAiSearch={() => setAiSearchVisible(true)}
               leftElement={
                 <TouchableOpacity
                   onPress={() => {
@@ -1650,6 +1653,18 @@ export function SpaceDetailContent({
           handleSaveChecklists(next);
           setChecklistModalVisible(false);
           setChecklistModalTarget(null);
+        }}
+      />
+
+      {/* AI Space Search */}
+      <AiSpaceSearchModal
+        visible={aiSearchVisible}
+        onRequestClose={() => setAiSearchVisible(false)}
+        allItems={items.map((i) => ({ id: i.id, name: i.name, notes: i.notes }))}
+        spaceItemIds={new Set(spaceItems.map((i) => i.id))}
+        onAddItems={(ids) => {
+          if (!accountId) return;
+          ids.forEach((id) => updateItem(accountId, id, { spaceId }));
         }}
       />
 

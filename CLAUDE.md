@@ -138,3 +138,29 @@ For Firestore service testing, extract business logic into pure functions that c
 ## UI Copy
 
 Button labels use title case with lowercase prepositions: `Save to Draft`, `Add New Item`.
+
+## Feature Documentation
+
+Each feature area gets a doc file at `docs/features/[name].md`. These capture what's specific to that feature — what the root CLAUDE.md doesn't already cover. The template is at `docs/features/_template.md`.
+
+**When to create one:** When a feature spans 3+ files across layers (Views, Services, Logic, State) and has domain-specific patterns worth preserving. Create it during the first implementation session, not retroactively.
+
+**When to update one:** When the feature's shape changes — new state, new sheet flows, new Firestore paths, new architectural decisions. Bug fixes and minor UI tweaks don't require doc updates.
+
+**Updating docs is part of "done."** After completing feature work that changes the feature's shape, update the relevant doc. Specifically:
+
+- New `@Observable` store added → document its purpose, what state it owns, and what creates it
+- New sheet flow → document the trigger, dismissal pattern, and any sequencing with other sheets
+- New Firestore collection or subcollection read/written → add it to the feature's Data section
+- Architectural decision made → record it and the reason, so future work doesn't re-litigate it
+
+## Shared Components
+
+Reusable components in `Components/` that have a non-obvious usage contract.
+
+| Component | Purpose | Key Props / Notes |
+|-----------|---------|-------------------|
+| `FormSheet` | Standard bottom sheet wrapper for forms | Handles detents, drag indicator, dismiss |
+| `MultiStepFormSheet` | Multi-step form flow in a sheet | Step navigation, back/next/done |
+| `ActionMenuSheet` | Action menu presented as bottom sheet | Takes `[ActionMenuItem]` |
+| `ListStateControls` | Filter/sort/bulk-select toolbar for lists | Combines FilterMenu, SortMenu, BulkSelectionBar |

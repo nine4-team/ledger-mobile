@@ -66,6 +66,8 @@ import { findIncompleteReturns } from '../../../src/utils/incompleteReturnDetect
 import { useReturnTransactionPicker } from '../../../src/hooks/useReturnTransactionPicker';
 import { ReturnTransactionPickerModal } from '../../../src/components/modals/ReturnTransactionPickerModal';
 import { EditNotesModal } from '../../../src/components/modals/EditNotesModal';
+import { CreateItemsFromListModal } from '../../../src/components/modals/CreateItemsFromListModal';
+import type { ParsedReceiptItem } from '../../../src/utils/receiptListParser';
 import { EditTransactionDetailsModal } from '../../../src/components/modals/EditTransactionDetailsModal';
 import type { EditTransactionDetailsField } from '../../../src/components/modals/EditTransactionDetailsModal';
 import { MovedItemsSection } from './sections/MovedItemsSection';
@@ -134,6 +136,7 @@ export default function TransactionDetailScreen() {
   const [pickerTab, setPickerTab] = useState<ItemPickerTab>('suggested');
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const [listImportVisible, setListImportVisible] = useState(false);
   const [bulkActionsSheetVisible, setBulkActionsSheetVisible] = useState(false);
   const [reassignToProjectVisible, setReassignToProjectVisible] = useState(false);
   const [singleItemReassignProjectVisible, setSingleItemReassignProjectVisible] = useState(false);
@@ -1055,6 +1058,29 @@ export default function TransactionDetailScreen() {
     });
   };
 
+  const handleCreateItemsFromList = useCallback(
+    (parsedItems: ParsedReceiptItem[]) => {
+      if (!accountId || !id) return;
+      const isCanonical = isCanonicalInventorySaleTransaction(transaction);
+      const budgetCategoryId = !isCanonical ? (transaction?.budgetCategoryId ?? null) : null;
+      for (const parsed of parsedItems) {
+        createItem(accountId, {
+          name: parsed.name,
+          sku: parsed.sku,
+          purchasePriceCents: parsed.priceCents,
+          projectPriceCents: parsed.priceCents,
+          projectId: scope === 'project' ? (projectId ?? null) : null,
+          transactionId: id,
+          budgetCategoryId,
+          spaceId: null,
+          source: null,
+        });
+      }
+      showToast(`Created ${parsedItems.length} item${parsedItems.length !== 1 ? 's' : ''}`);
+    },
+    [accountId, id, scope, projectId, transaction],
+  );
+
   const hasOtherImages = (transaction?.otherImages?.length ?? 0) > 0;
 
   const addMenuItems: AnchoredMenuItem[] = useMemo(() => {
@@ -1089,6 +1115,15 @@ export default function TransactionDetailScreen() {
         },
       });
     }
+    items.push({
+      key: 'from-list',
+      label: 'Create Items from List',
+      icon: 'receipt-long' as const,
+      onPress: () => {
+        setAddMenuVisible(false);
+        setTimeout(() => setListImportVisible(true), 300);
+      },
+    });
     items.push({
       key: 'create',
       label: 'Create Item Manually',
@@ -2160,6 +2195,13 @@ export default function TransactionDetailScreen() {
                 focusField={editDetailsFocusField}
               />
             )}
+
+            {/* Create Items from List Modal */}
+            <CreateItemsFromListModal
+              visible={listImportVisible}
+              onRequestClose={() => setListImportVisible(false)}
+              onCreateItems={handleCreateItemsFromList}
+            />
           </>
         ) : (
           <View style={styles.loadingContainer}>

@@ -11,6 +11,7 @@ type ItemsListControlBarProps = {
   onFilter: () => void;
   isFilterActive: boolean;
   onAdd?: () => void;
+  onAiSearch?: () => void;
   leftElement?: React.ReactNode;
 };
 
@@ -24,6 +25,7 @@ export function ItemsListControlBar({
   onFilter,
   isFilterActive,
   onAdd,
+  onAiSearch,
   leftElement,
 }: ItemsListControlBarProps) {
   return (
@@ -57,6 +59,13 @@ export function ItemsListControlBar({
           active: isFilterActive,
           accessibilityLabel: 'Filter items',
         },
+        ...(onAiSearch ? [{
+          title: 'AI Search',
+          variant: 'secondary' as const,
+          onPress: onAiSearch,
+          iconName: 'auto-awesome' as const,
+          accessibilityLabel: 'AI Search',
+        }] : []),
         ...(onAdd ? [{
           title: 'Add',
           variant: 'primary' as const,
