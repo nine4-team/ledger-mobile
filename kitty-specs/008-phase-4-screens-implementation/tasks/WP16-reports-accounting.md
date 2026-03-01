@@ -46,6 +46,65 @@ history:
 
 ### PDF branded styling: RESOLVED
 
+The previous review feedback (PDF content views lost branded styling) has been fully addressed. All 13 elements from the original `reportHtml.ts` stylesheet now match.
+
+---
+
+### Issue 1: Property Management PDF uses flat table instead of grouped-by-space sections
+
+**Severity:** High — violates FR-15.3 and the explicit design decision to override the RN flat list.
+
+**File:** `Views/Reports/PropertyManagementReportView.swift`, lines 140-185 (the `PropertyManagementPDFContent` body)
+
+**What's wrong:** The on-screen view correctly renders discrete `spaceSection()` blocks — each space gets its own header and item list. But the PDF content struct flattens everything into a single continuous table with "SPACE" as a column, which is the old RN flat-list approach that FR-15.3 explicitly overrides.
+
+From the spec (FR-15.3): "Groups items by space. Each space section shows the space name and its items."
+From the audit: "Property Management report — grouped by space (design decision, overriding RN flat list)."
+
+**How to fix:** Restructure `PropertyManagementPDFContent` to render per-space sections matching the on-screen view. Each space group should have:
+- A branded section header with the space name
+- Its own table header row
+- Its own item rows (zebra striping restarts per section — this is correct for discontinuous sections)
+- Then the "No Space" section at the end
+
+Remove the "SPACE" column from the table header since space identity comes from the section header.
+
+---
+
+### Issue 2: Items with orphaned spaceId silently dropped from Property Management report
+
+**Severity:** Medium — data integrity issue, totals won't match visible items.
+
+**File:** `Logic/ReportAggregationCalculations.swift`, line 306
+
+**What's wrong:** In `computePropertyManagement`, items whose `spaceId` references a space not in the `spaces` array are discarded by `compactMap`:
+
+```swift
+let spaceGroups = grouped.compactMap { spaceId, groupItems -> SpaceGroup? in
+    guard let space = spaceMap[spaceId] else { return nil }  // ← drops entire group
+    return SpaceGroup(space: space, items: groupItems)
+}
+```
+
+These items are excluded from both `spaceGroups` and `noSpaceItems`, but `totalItemCount` and `totalMarketValueCents` are computed from the raw `items` array — so totals include items invisible in the grouped display.
+
+**How to fix:** Items with an unresolvable `spaceId` should be added to `noSpaceItems`:
+
+```swift
+for (spaceId, groupItems) in grouped {
+    if let space = spaceMap[spaceId] {
+        spaceGroupsArray.append(SpaceGroup(space: space, items: groupItems))
+    } else {
+        noSpaceItems.append(contentsOf: groupItems)
+    }
+}
+```
+
+Also add a test for this edge case.
+
+
+### PDF branded styling: RESOLVED
+
 The previous review feedback (PDF content views lost branded styling) has been fully addressed. All 13 elements from the original `reportHtml.ts` stylesheet now match: brand color titles, section headers with underlines, table headers with backgrounds, zebra striping, net due highlight, overview cards, card labels/values, missing price indicators, receipt badges, header borders, footers, and locale-aware currency formatting via `CurrencyFormatting.formatCentsWithDecimals`.
 
 ---
@@ -415,3 +474,4 @@ Also add a test for this edge case.
 - 2026-03-01T00:01:25Z – claude-opus – shell_pid=66415 – lane=for_review – Ready for review: Reworked all 3 PDF content views (InvoiceReportPDFContent, ClientSummaryPDFContent, PropertyManagementPDFContent) with branded styling matching reportHtml.ts. Added ReportPDFStyles enum with all PDF-specific colors (#987e55 brand, #faf8f5 card bg, #e0d5c5 borders, etc) and font constants. PDFs now have branded headers with 2px border, table layouts with zebra striping, overview cards, receipt badges, section headers with brand underlines, net due highlight, footer. Uses CurrencyFormatting.formatCentsWithDecimals. 383 tests pass.
 - 2026-03-01T00:02:12Z – claude-opus – shell_pid=89768 – lane=doing – Started review via workflow command
 - 2026-03-01T00:06:42Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
+- 2026-03-01T00:12:48Z – claude-opus – shell_pid=89768 – lane=planned – Moved to planned
