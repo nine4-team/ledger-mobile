@@ -55,12 +55,12 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T005 Wrap UIKit imports/usage in `AuthManager.swift` with `#if canImport(UIKit)` / `#if canImport(AppKit)`
-- [ ] T006 Create `Platform/PlatformPresenting.swift` for cross-platform GoogleSignIn presentation
-- [ ] T007 [P] Wrap `UIApplicationDelegateAdaptor` in `LedgerApp.swift` with `#if canImport(UIKit)`
-- [ ] T008 [P] Wrap UIScreen/UIApplication usage in `ReportPDFSharing.swift` with `#if canImport(UIKit)`
-- [ ] T009 [P] Add `contentMaxWidth`, `formMaxWidth`, `cardMinWidth` constants to `Dimensions.swift`
-- [ ] T010 Build and launch on macOS — verify app reaches auth screen without crashes
+- [x] T005 Wrap UIKit imports/usage in `AuthManager.swift` with `#if canImport(UIKit)` / `#if canImport(AppKit)`
+- [x] T006 Create `Platform/PlatformPresenting.swift` for cross-platform GoogleSignIn presentation
+- [x] T007 [P] Wrap `UIApplicationDelegateAdaptor` in `LedgerApp.swift` with `#if canImport(UIKit)`
+- [x] T008 [P] Wrap UIScreen/UIApplication usage in `ReportPDFSharing.swift` with `#if canImport(UIKit)`
+- [x] T009 [P] Add `contentMaxWidth`, `formMaxWidth`, `cardMinWidth` constants to `Dimensions.swift`
+- [x] T010 Build and launch on macOS — verify app reaches auth screen without crashes
 
 ### Implementation Notes
 - AuthManager.swift is the only file importing UIKit directly (for GoogleSignIn's `UIViewController` presentation)
