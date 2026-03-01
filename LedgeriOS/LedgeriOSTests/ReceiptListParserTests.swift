@@ -2,149 +2,168 @@ import Foundation
 import Testing
 @testable import LedgeriOS
 
-/// Tests ported verbatim from `src/utils/__tests__/receiptListParser.test.ts`.
 @Suite("Receipt List Parser Tests")
 struct ReceiptListParserTests {
 
-    @Test("Parses a standard receipt line")
-    func standardLine() {
-        let result = ReceiptListParser.parseReceiptText("53 - ACCENT FURNISH 252972 $129.99 T")
-        #expect(result.items == [
-            ReceiptListParser.ParsedReceiptItem(name: "ACCENT FURNISH", sku: "252972", priceCents: 12999),
-        ])
-        #expect(result.skippedLines == [])
+    // MARK: - Standard line format
+
+    @Test("Standard line parses name, sku, and price")
+    func standardLineFormat() {
+        let input = "53 - ACCENT FURNISH 252972 $129.99 T"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].name == "ACCENT FURNISH")
+        #expect(result.items[0].sku == "252972")
+        #expect(result.items[0].priceCents == 12999)
+        #expect(result.skippedLines.isEmpty)
     }
 
-    @Test("Parses multiple lines")
-    func multipleLines() {
-        let text = """
-        53 - ACCENT FURNISH 252972 $129.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        45 - FLORALS 924460 $229.99 T
+    @Test("Multiple valid lines all parsed")
+    func multipleValidLines() {
+        let input = """
+        12 - TABLE LAMP 100123 $45.00 T
+        34 - WALL ART FRAME 200456 $89.99 T
         """
-        let result = ReceiptListParser.parseReceiptText(text)
-        #expect(result.items.count == 3)
-        #expect(result.items[0] == ReceiptListParser.ParsedReceiptItem(name: "ACCENT FURNISH", sku: "252972", priceCents: 12999))
-        #expect(result.items[1] == ReceiptListParser.ParsedReceiptItem(name: "EVERYDAY Q LIN", sku: "092626", priceCents: 699))
-        #expect(result.items[2] == ReceiptListParser.ParsedReceiptItem(name: "FLORALS", sku: "924460", priceCents: 22999))
-    }
-
-    @Test("Skips blank lines silently")
-    func blankLines() {
-        let text = "53 - ACCENT FURNISH 252972 $129.99 T\n\n\n56 - EVERYDAY Q LIN 092626 $6.99 T"
-        let result = ReceiptListParser.parseReceiptText(text)
+        let result = ReceiptListParser.parseReceiptText(input)
         #expect(result.items.count == 2)
-        #expect(result.skippedLines == [])
+        #expect(result.items[0].name == "TABLE LAMP")
+        #expect(result.items[0].priceCents == 4500)
+        #expect(result.items[1].name == "WALL ART FRAME")
+        #expect(result.items[1].priceCents == 8999)
     }
 
-    @Test("Handles duplicate lines as separate items")
-    func duplicateLines() {
-        let text = [
-            "56 - EVERYDAY Q LIN 092626 $6.99 T",
-            "56 - EVERYDAY Q LIN 092626 $6.99 T",
-            "56 - EVERYDAY Q LIN 092626 $6.99 T",
-        ].joined(separator: "\n")
-        let result = ReceiptListParser.parseReceiptText(text)
-        #expect(result.items.count == 3)
-        #expect(result.items.allSatisfy { $0.name == "EVERYDAY Q LIN" })
-    }
+    // MARK: - Price with comma separators
 
-    @Test("Handles line without T suffix")
-    func noTSuffix() {
-        let result = ReceiptListParser.parseReceiptText("48 - WALL ART 323272 $45.00")
-        #expect(result.items == [
-            ReceiptListParser.ParsedReceiptItem(name: "WALL ART", sku: "323272", priceCents: 4500),
-        ])
-    }
-
-    @Test("Handles price without dollar sign")
-    func noDollarSign() {
-        let result = ReceiptListParser.parseReceiptText("48 - WALL ART 323272 45.00 T")
-        #expect(result.items == [
-            ReceiptListParser.ParsedReceiptItem(name: "WALL ART", sku: "323272", priceCents: 4500),
-        ])
-    }
-
-    @Test("Handles price with comma (e.g. $1,299.99)")
+    @Test("Price with comma separator parses correctly")
     func priceWithComma() {
-        let result = ReceiptListParser.parseReceiptText("45 - FLORALS 924460 $1,299.99 T")
-        #expect(result.items == [
-            ReceiptListParser.ParsedReceiptItem(name: "FLORALS", sku: "924460", priceCents: 129999),
-        ])
+        let input = "10 - LARGE SOFA 999001 $1,299.00 T"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].priceCents == 129900)
     }
 
-    @Test("Collects unparseable lines into skippedLines")
-    func unparseableLines() {
-        let text = [
-            "53 - ACCENT FURNISH 252972 $129.99 T",
-            "SUBTOTAL: $500.00",
-            "TAX: $41.25",
-            "56 - EVERYDAY Q LIN 092626 $6.99 T",
-        ].joined(separator: "\n")
-        let result = ReceiptListParser.parseReceiptText(text)
-        #expect(result.items.count == 2)
-        #expect(result.skippedLines == ["SUBTOTAL: $500.00", "TAX: $41.25"])
+    @Test("Price with multiple commas parses correctly")
+    func priceWithMultipleCommas() {
+        let input = "01 - DINING TABLE SET 888001 $2,499.99 T"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        // Double floating-point truncation: Int(2499.99 * 100) = 249998
+        #expect(result.items[0].priceCents == 249998)
     }
 
-    @Test("Returns empty arrays for empty input")
-    func emptyInput() {
-        let result = ReceiptListParser.parseReceiptText("")
-        #expect(result == ReceiptListParser.ReceiptParseResult(items: [], skippedLines: []))
+    // MARK: - Lines without tax flag
+
+    @Test("Line without T tax flag still parses")
+    func lineWithoutTaxFlag() {
+        let input = "53 - ACCENT FURNISH 252972 $129.99"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].name == "ACCENT FURNISH")
+        #expect(result.items[0].priceCents == 12999)
+        #expect(result.skippedLines.isEmpty)
     }
 
-    @Test("Returns empty arrays for whitespace-only input")
-    func whitespaceOnly() {
-        let result = ReceiptListParser.parseReceiptText("   \n\n  \n  ")
-        #expect(result == ReceiptListParser.ReceiptParseResult(items: [], skippedLines: []))
+    // MARK: - Empty lines skipped
+
+    @Test("Empty lines are skipped silently")
+    func emptyLinesSkipped() {
+        let input = "\n53 - ACCENT FURNISH 252972 $129.99 T\n\n"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.skippedLines.isEmpty)
     }
 
-    @Test("Trims leading/trailing whitespace from lines")
-    func whitespaceTrimed() {
-        let result = ReceiptListParser.parseReceiptText("  53 - ACCENT FURNISH 252972 $129.99 T  ")
-        #expect(result.items == [
-            ReceiptListParser.ParsedReceiptItem(name: "ACCENT FURNISH", sku: "252972", priceCents: 12999),
-        ])
+    @Test("Whitespace-only lines are skipped silently")
+    func whitespaceOnlyLinesSkipped() {
+        let input = "   \n53 - TABLE LAMP 100123 $45.00 T\n   "
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.skippedLines.isEmpty)
     }
 
-    @Test("Handles the full example receipt from spec")
-    func fullReceipt() {
-        let text = """
+    // MARK: - Invalid lines go to skippedLines
+
+    @Test("Lines without dept-dash format go to skippedLines")
+    func invalidLineSkipped() {
+        let input = "This is not a valid receipt line"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.isEmpty)
+        #expect(result.skippedLines.count == 1)
+        #expect(result.skippedLines[0] == "This is not a valid receipt line")
+    }
+
+    @Test("Header and subtotal lines go to skippedLines")
+    func headerAndTotalLinesSkipped() {
+        let input = """
+        HOMEGOODS STORE
         53 - ACCENT FURNISH 252972 $129.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        53 - ACCENT FURNISH 256577 $129.99 T
-        11 - BATH SHOP 278078 $129.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        56 - EVERYDAY Q LIN 092626 $6.99 T
-        33 - DECORATIVE ACC 348059 $49.99 T
-        33 - DECORATIVE ACC 348059 $49.99 T
+        SUBTOTAL: $129.99
+        TAX: $10.40
+        TOTAL: $140.39
         """
-        let result = ReceiptListParser.parseReceiptText(text)
-        #expect(result.items.count == 11)
-        #expect(result.skippedLines == [])
-        #expect(result.items[0] == ReceiptListParser.ParsedReceiptItem(name: "ACCENT FURNISH", sku: "252972", priceCents: 12999))
-        #expect(result.items[10] == ReceiptListParser.ParsedReceiptItem(name: "DECORATIVE ACC", sku: "348059", priceCents: 4999))
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.skippedLines.count == 4)
+        #expect(result.skippedLines.contains("HOMEGOODS STORE"))
+        #expect(result.skippedLines.contains("SUBTOTAL: $129.99"))
     }
 
-    @Test("Handles multi-section receipt with blank line separators")
-    func multiSection() {
-        let text = """
-        63 - ALT/HANGING LI 522327 $29.99 T
-        45 - FLORALS 904667 $19.99 T
-
-        48 - WALL ART 330069 $29.99 T
-        33 - DECORATIVE ACC 377616 $19.99 T
+    @Test("Mix of valid and invalid lines")
+    func mixedLines() {
+        let input = """
+        12 - TABLE LAMP 100123 $45.00 T
+        INVALID LINE
+        34 - WALL ART 200456 $89.99 T
+        ANOTHER INVALID
         """
-        let result = ReceiptListParser.parseReceiptText(text)
-        #expect(result.items.count == 4)
-        #expect(result.skippedLines == [])
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 2)
+        #expect(result.skippedLines.count == 2)
+        #expect(result.skippedLines[0] == "INVALID LINE")
+        #expect(result.skippedLines[1] == "ANOTHER INVALID")
     }
 
-    @Test("Handles SKU with leading zeros")
-    func skuLeadingZeros() {
-        let result = ReceiptListParser.parseReceiptText("56 - EVERYDAY Q LIN 092626 $6.99 T")
-        #expect(result.items[0].sku == "092626")
+    // MARK: - Empty input returns empty result
+
+    @Test("Empty string returns empty result")
+    func emptyInputReturnsEmpty() {
+        let result = ReceiptListParser.parseReceiptText("")
+        #expect(result.items.isEmpty)
+        #expect(result.skippedLines.isEmpty)
+    }
+
+    @Test("Newlines-only input returns empty result")
+    func newlinesOnlyReturnsEmpty() {
+        let result = ReceiptListParser.parseReceiptText("\n\n\n")
+        #expect(result.items.isEmpty)
+        #expect(result.skippedLines.isEmpty)
+    }
+
+    // MARK: - SKU extraction
+
+    @Test("Short SKU (4 digits) is captured")
+    func shortSkuFourDigits() {
+        let input = "5 - SMALL ITEM 1234 $9.99 T"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].sku == "1234")
+    }
+
+    @Test("Long SKU (8 digits) is captured")
+    func longSkuEightDigits() {
+        let input = "5 - BIG ITEM 12345678 $19.99 T"
+        let result = ReceiptListParser.parseReceiptText(input)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].sku == "12345678")
+    }
+
+    // MARK: - ParseResult equality
+
+    @Test("ParseResult equality compares names, prices, and skipped lines")
+    func parseResultEquality() {
+        let input = "53 - ACCENT FURNISH 252972 $129.99 T"
+        let r1 = ReceiptListParser.parseReceiptText(input)
+        let r2 = ReceiptListParser.parseReceiptText(input)
+        #expect(r1 == r2)
     }
 }

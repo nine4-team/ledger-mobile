@@ -11,170 +11,240 @@ struct TransactionNextStepsCalculationTests {
         budgetCategoryId: String? = nil,
         amountCents: Int? = nil,
         receiptImages: [AttachmentRef]? = nil,
-        hasEmailReceipt: Bool? = nil,
         purchasedBy: String? = nil,
         taxRatePct: Double? = nil
     ) -> Transaction {
-        var txn = Transaction()
-        txn.budgetCategoryId = budgetCategoryId
-        txn.amountCents = amountCents
-        txn.receiptImages = receiptImages
-        txn.hasEmailReceipt = hasEmailReceipt
-        txn.purchasedBy = purchasedBy
-        txn.taxRatePct = taxRatePct
-        return txn
+        var tx = Transaction()
+        tx.budgetCategoryId = budgetCategoryId
+        tx.amountCents = amountCents
+        tx.receiptImages = receiptImages
+        tx.purchasedBy = purchasedBy
+        tx.taxRatePct = taxRatePct
+        return tx
     }
 
-    private func makeCategory(type: BudgetCategoryType) -> BudgetCategory {
+    private func makeCategory(id: String, type: BudgetCategoryType = .general) -> BudgetCategory {
         var cat = BudgetCategory()
-        cat.id = "cat1"
-        cat.name = "Test"
-        cat.metadata = BudgetCategoryMetadata(categoryType: type)
+        cat.id = id
+        cat.name = "Test Category"
+        cat.metadata = BudgetCategoryMetadata(categoryType: type, excludeFromOverallBudget: false)
         return cat
     }
 
-    // MARK: - 5-Step (non-itemized)
+    // MARK: - 5-step path (non-itemized category)
 
-    @Test("Non-itemized category produces 5 steps (no tax rate step)")
-    func fiveStepsNonItemized() {
-        let txn = makeTransaction()
-        let cat = makeCategory(type: .general)
+    @Test("5-step path: all steps incomplete")
+    func fiveStepAllIncomplete() {
+        let tx = makeTransaction()
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: cat, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(steps.count == 5)
+        #expect(steps.allSatisfy { !$0.completed })
+    }
+
+    @Test("5-step path: all steps complete")
+    func fiveStepAllComplete() {
+        let cat = makeCategory(id: "cat1", type: .general)
+        let tx = makeTransaction(
+            budgetCategoryId: "cat1",
+            amountCents: 5000,
+            receiptImages: [AttachmentRef(url: "r1")],
+            purchasedBy: "Alice"
+        )
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 1,
+            budgetCategories: ["cat1": cat]
+        )
+        #expect(steps.count == 5)
+        #expect(TransactionNextStepsCalculations.allStepsComplete(steps))
+    }
+
+    @Test("5-step path: budget category step completed")
+    func fiveStepBudgetCategoryComplete() {
+        let cat = makeCategory(id: "cat1", type: .general)
+        let tx = makeTransaction(budgetCategoryId: "cat1")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["cat1": cat]
+        )
+        let budgetStep = steps.first { $0.id == "budget-category" }
+        #expect(budgetStep?.completed == true)
+    }
+
+    @Test("5-step path: amount step completed when positive")
+    func fiveStepAmountComplete() {
+        let tx = makeTransaction(amountCents: 1)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        let amountStep = steps.first { $0.id == "amount" }
+        #expect(amountStep?.completed == true)
+    }
+
+    @Test("5-step path: amount step incomplete when zero")
+    func fiveStepAmountZero() {
+        let tx = makeTransaction(amountCents: 0)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        let amountStep = steps.first { $0.id == "amount" }
+        #expect(amountStep?.completed == false)
+    }
+
+    @Test("5-step path: receipt step completed when images present")
+    func fiveStepReceiptComplete() {
+        let tx = makeTransaction(receiptImages: [AttachmentRef(url: "img/r1")])
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        let receiptStep = steps.first { $0.id == "receipt" }
+        #expect(receiptStep?.completed == true)
+    }
+
+    @Test("5-step path: items step completed when itemCount > 0")
+    func fiveStepItemsComplete() {
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: makeTransaction(),
+            itemCount: 3,
+            budgetCategories: [:]
+        )
+        let itemsStep = steps.first { $0.id == "items" }
+        #expect(itemsStep?.completed == true)
+    }
+
+    @Test("5-step path: purchased-by step completed when set")
+    func fiveStepPurchasedByComplete() {
+        let tx = makeTransaction(purchasedBy: "client-card")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        let pbStep = steps.first { $0.id == "purchased-by" }
+        #expect(pbStep?.completed == true)
+    }
+
+    @Test("5-step path: whitespace-only purchasedBy is incomplete")
+    func fiveStepPurchasedByWhitespace() {
+        let tx = makeTransaction(purchasedBy: "   ")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        let pbStep = steps.first { $0.id == "purchased-by" }
+        #expect(pbStep?.completed == false)
+    }
+
+    @Test("5-step path: no tax-rate step for non-itemized category")
+    func fiveStepNoTaxStepForGeneralCategory() {
+        let cat = makeCategory(id: "cat1", type: .general)
+        let tx = makeTransaction(budgetCategoryId: "cat1")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["cat1": cat]
         )
         #expect(steps.count == 5)
         #expect(!steps.contains { $0.id == "tax-rate" })
     }
 
-    @Test("Nil category produces 5 steps")
-    func fiveStepsNilCategory() {
-        let txn = makeTransaction()
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
-        )
-        #expect(steps.count == 5)
-    }
+    // MARK: - 6-step path (itemized category)
 
-    // MARK: - 6-Step (itemized)
-
-    @Test("Itemized category produces 6 steps including tax rate")
-    func sixStepsItemized() {
-        let txn = makeTransaction()
-        let cat = makeCategory(type: .itemized)
+    @Test("6-step path: tax-rate step added for itemized category")
+    func sixStepTaxRateStepPresent() {
+        let cat = makeCategory(id: "cat1", type: .itemized)
+        let tx = makeTransaction(budgetCategoryId: "cat1")
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: cat, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["cat1": cat]
         )
         #expect(steps.count == 6)
         #expect(steps.last?.id == "tax-rate")
-        #expect(steps.last?.title == "Set the tax rate")
     }
 
-    // MARK: - Individual Step Completion
-
-    @Test("Budget category step complete when budgetCategoryId set")
-    func budgetCategoryComplete() {
-        let txn = makeTransaction(budgetCategoryId: "cat123")
+    @Test("6-step path: tax-rate step incomplete when zero")
+    func sixStepTaxRateIncomplete() {
+        let cat = makeCategory(id: "cat1", type: .itemized)
+        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 0)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["cat1": cat]
         )
-        #expect(steps.first { $0.id == "budget-category" }?.isComplete == true)
+        let taxStep = steps.first { $0.id == "tax-rate" }
+        #expect(taxStep?.completed == false)
     }
 
-    @Test("Amount step complete when amountCents is non-zero")
-    func amountComplete() {
-        let txn = makeTransaction(amountCents: 5000)
+    @Test("6-step path: tax-rate step complete when positive")
+    func sixStepTaxRateComplete() {
+        let cat = makeCategory(id: "cat1", type: .itemized)
+        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 8.5)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["cat1": cat]
         )
-        #expect(steps.first { $0.id == "amount" }?.isComplete == true)
+        let taxStep = steps.first { $0.id == "tax-rate" }
+        #expect(taxStep?.completed == true)
     }
 
-    @Test("Amount step incomplete when amountCents is zero")
-    func amountIncompleteZero() {
-        let txn = makeTransaction(amountCents: 0)
+    @Test("6-step path: no tax-rate step when category not in map")
+    func sixStepNoTaxStepWhenCategoryMissing() {
+        let tx = makeTransaction(budgetCategoryId: "missing-cat")
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
         )
-        #expect(steps.first { $0.id == "amount" }?.isComplete == false)
-    }
-
-    @Test("Receipt step complete when receipt images exist")
-    func receiptCompleteWithImages() {
-        let ref = AttachmentRef(url: "https://example.com/receipt.jpg")
-        let txn = makeTransaction(receiptImages: [ref])
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
-        )
-        #expect(steps.first { $0.id == "receipt" }?.isComplete == true)
-    }
-
-    @Test("Receipt step complete when hasEmailReceipt is true")
-    func receiptCompleteWithEmail() {
-        let txn = makeTransaction(hasEmailReceipt: true)
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
-        )
-        #expect(steps.first { $0.id == "receipt" }?.isComplete == true)
-    }
-
-    @Test("Items step complete when items array is non-empty")
-    func itemsComplete() {
-        let item = Item()
-        let txn = makeTransaction()
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: [item]
-        )
-        #expect(steps.first { $0.id == "items" }?.isComplete == true)
-    }
-
-    @Test("Purchased-by step complete when purchasedBy set")
-    func purchasedByComplete() {
-        let txn = makeTransaction(purchasedBy: "client-card")
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
-        )
-        #expect(steps.first { $0.id == "purchased-by" }?.isComplete == true)
-    }
-
-    @Test("Tax rate step complete when taxRatePct set")
-    func taxRateComplete() {
-        let txn = makeTransaction(taxRatePct: 8.25)
-        let cat = makeCategory(type: .itemized)
-        let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: cat, items: []
-        )
-        #expect(steps.first { $0.id == "tax-rate" }?.isComplete == true)
+        // Category not found → hasBudgetCategory is false → no 6th step
+        #expect(steps.count == 5)
     }
 
     // MARK: - allStepsComplete
 
-    @Test("allStepsComplete returns true when all steps done")
-    func allComplete() {
-        let ref = AttachmentRef(url: "https://example.com/receipt.jpg")
-        let txn = makeTransaction(
+    @Test("allStepsComplete returns true when all done")
+    func allStepsCompleteTrue() {
+        let cat = makeCategory(id: "cat1", type: .general)
+        let tx = makeTransaction(
             budgetCategoryId: "cat1",
             amountCents: 5000,
-            receiptImages: [ref],
-            purchasedBy: "client-card"
+            receiptImages: [AttachmentRef(url: "r1")],
+            purchasedBy: "Alice"
         )
-        let item = Item()
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: [item]
+            transaction: tx,
+            itemCount: 1,
+            budgetCategories: ["cat1": cat]
         )
         #expect(TransactionNextStepsCalculations.allStepsComplete(steps))
     }
 
     @Test("allStepsComplete returns false when any step incomplete")
-    func notAllComplete() {
-        let txn = makeTransaction(budgetCategoryId: "cat1", amountCents: 5000)
+    func allStepsCompleteFalse() {
+        let tx = makeTransaction(amountCents: 5000)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
-            transaction: txn, category: nil, items: []
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
         )
         #expect(!TransactionNextStepsCalculations.allStepsComplete(steps))
     }
 
-    @Test("allStepsComplete returns true for empty array")
-    func emptySteps() {
-        #expect(TransactionNextStepsCalculations.allStepsComplete([]))
+    @Test("allStepsComplete returns false for empty array")
+    func allStepsCompleteEmptyArray() {
+        #expect(!TransactionNextStepsCalculations.allStepsComplete([]))
     }
 }

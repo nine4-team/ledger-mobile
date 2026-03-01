@@ -1,73 +1,89 @@
 import Foundation
 
-/// Pure functions to compute the "Next Steps" checklist shown on TransactionDetailView.
+/// Pure functions for computing transaction "Next Steps" checklist.
+/// Ported from RN `NextStepsSection.computeNextSteps()`.
 enum TransactionNextStepsCalculations {
 
-    struct NextStep: Equatable, Identifiable {
+    struct NextStep: Identifiable, Equatable {
         let id: String
-        let title: String
-        let isComplete: Bool
+        let label: String
+        let completed: Bool
+        let sfSymbol: String
     }
 
-    /// Computes the next steps checklist for a transaction.
-    /// Step 6 (tax rate) only appears when the budget category type is "itemized".
+    /// Computes the ordered list of next steps for a transaction.
+    /// The 6th step (tax rate) only appears if the budget category type is "itemized".
     static func computeNextSteps(
         transaction: Transaction,
-        category: BudgetCategory?,
-        items: [Item]
+        itemCount: Int,
+        budgetCategories: [String: BudgetCategory]
     ) -> [NextStep] {
         var steps: [NextStep] = []
 
-        // Step 1: Add a budget category
+        // 1. Budget category
+        let hasBudgetCategory = transaction.budgetCategoryId != nil
+            && budgetCategories[transaction.budgetCategoryId ?? ""] != nil
         steps.append(NextStep(
             id: "budget-category",
-            title: "Add a budget category",
-            isComplete: transaction.budgetCategoryId != nil
+            label: "Categorize this transaction",
+            completed: hasBudgetCategory,
+            sfSymbol: "folder"
         ))
 
-        // Step 2: Enter the amount
+        // 2. Amount
+        let hasAmount = (transaction.amountCents ?? 0) > 0
         steps.append(NextStep(
             id: "amount",
-            title: "Enter the amount",
-            isComplete: transaction.amountCents != nil && transaction.amountCents != 0
+            label: "Enter the amount",
+            completed: hasAmount,
+            sfSymbol: "dollarsign"
         ))
 
-        // Step 3: Add a receipt
+        // 3. Receipt
+        let hasReceipt = !(transaction.receiptImages ?? []).isEmpty
         steps.append(NextStep(
             id: "receipt",
-            title: "Add a receipt",
-            isComplete: (transaction.receiptImages?.isEmpty == false) || transaction.hasEmailReceipt == true
+            label: "Add a receipt",
+            completed: hasReceipt,
+            sfSymbol: "doc.text"
         ))
 
-        // Step 4: Add items
+        // 4. Items
+        let hasItems = itemCount > 0
         steps.append(NextStep(
             id: "items",
-            title: "Add items",
-            isComplete: !items.isEmpty
+            label: "Add items",
+            completed: hasItems,
+            sfSymbol: "shippingbox"
         ))
 
-        // Step 5: Set who purchased this
+        // 5. Purchased by
+        let hasPurchasedBy = !(transaction.purchasedBy ?? "").trimmingCharacters(in: .whitespaces).isEmpty
         steps.append(NextStep(
             id: "purchased-by",
-            title: "Set who purchased this",
-            isComplete: transaction.purchasedBy != nil
+            label: "Set purchased by",
+            completed: hasPurchasedBy,
+            sfSymbol: "person"
         ))
 
-        // Step 6 (conditional): Set the tax rate — only for itemized categories
-        let isItemized = category?.metadata?.categoryType == .itemized
-        if isItemized {
+        // 6. Tax rate (only if budget category is itemized)
+        if hasBudgetCategory, let catId = transaction.budgetCategoryId,
+           let cat = budgetCategories[catId],
+           cat.metadata?.categoryType == .itemized {
+            let hasTaxRate = (transaction.taxRatePct ?? 0) > 0
             steps.append(NextStep(
                 id: "tax-rate",
-                title: "Set the tax rate",
-                isComplete: transaction.taxRatePct != nil
+                label: "Set tax rate",
+                completed: hasTaxRate,
+                sfSymbol: "percent"
             ))
         }
 
         return steps
     }
 
-    /// Returns true when every step in the list is complete.
+    /// Returns true when every step is completed.
     static func allStepsComplete(_ steps: [NextStep]) -> Bool {
-        steps.allSatisfy(\.isComplete)
+        !steps.isEmpty && steps.allSatisfy(\.completed)
     }
 }

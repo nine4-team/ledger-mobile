@@ -31,7 +31,10 @@ struct ProjectDetailView: View {
                 case "items":
                     ItemsTabPlaceholder()
                 case "transactions":
-                    TransactionsTabPlaceholder()
+                    TransactionsTabView()
+                        .navigationDestination(for: Transaction.self) { transaction in
+                            TransactionDetailView(transaction: transaction)
+                        }
                 case "spaces":
                     SpacesTabPlaceholder()
                 case "accounting":
