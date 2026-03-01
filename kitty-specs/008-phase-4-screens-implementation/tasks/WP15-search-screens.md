@@ -1,9 +1,12 @@
 ---
 work_package_id: WP15
 title: Session 7b Screens – Universal Search
-lane: planned
+lane: "doing"
 dependencies:
 - WP14
+base_branch: 008-phase-4-screens-implementation-WP14
+base_commit: 940e7822b73dabe187574111731d7b36f0923db0
+created_at: '2026-03-01T00:01:56.534836+00:00'
 subtasks:
 - T068
 - T069
@@ -11,7 +14,7 @@ subtasks:
 phase: Phase 7 - Session 7b
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "88807"
 review_status: ''
 reviewed_by: ''
 history:
