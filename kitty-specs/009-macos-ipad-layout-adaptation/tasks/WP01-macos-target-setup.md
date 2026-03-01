@@ -1,8 +1,11 @@
 ---
 work_package_id: WP01
 title: macOS Target Setup
-lane: planned
+lane: "doing"
 dependencies: []
+base_branch: main
+base_commit: 4651b59d566e91668ed2dd6b8ffe5090e7fe7707
+created_at: '2026-03-01T05:57:58.919074+00:00'
 subtasks:
 - T001
 - T002
@@ -11,7 +14,7 @@ subtasks:
 phase: Phase 1 - Foundation
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "77935"
 review_status: ''
 reviewed_by: ''
 history:
