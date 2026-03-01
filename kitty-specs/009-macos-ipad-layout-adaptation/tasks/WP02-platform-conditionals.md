@@ -1,9 +1,12 @@
 ---
 work_package_id: WP02
 title: Platform Conditional Compilation
-lane: planned
+lane: "doing"
 dependencies:
 - WP01
+base_branch: 009-macos-ipad-layout-adaptation-WP01
+base_commit: 002fa8e1cce2284577f44d44f1c8c39aec0e9d37
+created_at: '2026-03-01T06:40:34.513796+00:00'
 subtasks:
 - T005
 - T006
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 1 - Foundation
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "73384"
 review_status: ''
 reviewed_by: ''
 history:
