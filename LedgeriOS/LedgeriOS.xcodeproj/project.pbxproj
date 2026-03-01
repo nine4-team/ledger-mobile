@@ -89,6 +89,8 @@
 		C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857F2893750ABBED0530AF4C /* BudgetProgress.swift */; };
 		C2EE9D45E7FF4C91AF3CD35C /* ActionMenuCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */; };
 		C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0604D18D632527DF01B41A4 /* AccountContext.swift */; };
+		WP09B001INVENTORYCTX0001 /* InventoryContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP09F001INVENTORYCTX0001 /* InventoryContext.swift */; };
+		WP09B001INVENTORYCTX0002 /* InventoryContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP09F001INVENTORYCTX0002 /* InventoryContextTests.swift */; };
 		C5A0010100000000000C0001 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0001 /* Card.swift */; };
 		C5A0010100000000000C0002 /* AppButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0002 /* AppButton.swift */; };
 		C5A0010100000000000C0003 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0003 /* FormField.swift */; };
@@ -326,6 +328,8 @@
 		E74B1815C46547A0B36F00B4 /* ListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListControlBar.swift; sourceTree = "<group>"; };
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
+		WP09F001INVENTORYCTX0001 /* InventoryContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryContext.swift; sourceTree = "<group>"; };
+		WP09F001INVENTORYCTX0002 /* InventoryContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryContextTests.swift; sourceTree = "<group>"; };
 		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
 		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
 		F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
@@ -495,6 +499,7 @@
 			isa = PBXGroup;
 			children = (
 				F0604D18D632527DF01B41A4 /* AccountContext.swift */,
+				WP09F001INVENTORYCTX0001 /* InventoryContext.swift */,
 				B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */,
 				F89888110732C2D81B903322 /* SyncTracking.swift */,
 			);
@@ -559,6 +564,7 @@
 				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
 				WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */,
 				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
+				WP09F001INVENTORYCTX0002 /* InventoryContextTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -924,6 +930,7 @@
 				CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */,
 				1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */,
 				C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */,
+				WP09B001INVENTORYCTX0001 /* InventoryContext.swift in Sources */,
 				7D571115A2B67A032EFEB239 /* ProjectContext.swift in Sources */,
 				AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */,
 				C5A0010100000000000T0001 /* Dimensions.swift in Sources */,
@@ -1058,6 +1065,7 @@
 				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
 				WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */,
 				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
+				WP09B001INVENTORYCTX0002 /* InventoryContextTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
