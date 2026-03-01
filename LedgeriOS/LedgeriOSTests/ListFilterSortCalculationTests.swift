@@ -440,4 +440,207 @@ struct ListFilterSortCalculationTests {
         #expect(result[0].name == "Red Chair")
         #expect(result[1].name == "Blue Chair")
     }
+
+    // MARK: - Available Filters
+
+    @Test("Project scope returns all 10 filter options")
+    func availableFiltersProjectScope() {
+        let filters = ListFilterSortCalculations.availableFilters(for: .project("proj-1"))
+        #expect(filters.count == 10)
+        #expect(filters == ItemFilterOption.allCases)
+    }
+
+    @Test("Inventory scope returns 7 filter options excluding project-specific ones")
+    func availableFiltersInventoryScope() {
+        let filters = ListFilterSortCalculations.availableFilters(for: .inventory)
+        #expect(filters.count == 7)
+        #expect(!filters.contains(.fromInventory))
+        #expect(!filters.contains(.toReturn))
+        #expect(!filters.contains(.returned))
+    }
+
+    @Test("All scope returns all 10 filter options")
+    func availableFiltersAllScope() {
+        let filters = ListFilterSortCalculations.availableFilters(for: .all)
+        #expect(filters.count == 10)
+        #expect(filters == ItemFilterOption.allCases)
+    }
+
+    // MARK: - Multi-Filter
+
+    @Test("Empty modes set returns all items")
+    func multiFilterEmptyModesReturnsAll() {
+        let items = [
+            makeItem(name: "A", bookmark: true),
+            makeItem(name: "B"),
+            makeItem(name: "C", sku: "SKU-1"),
+        ]
+        let result = ListFilterSortCalculations.applyMultipleFilters(items, modes: [])
+        #expect(result.count == 3)
+    }
+
+    @Test("Modes containing .all returns all items")
+    func multiFilterAllModeReturnsAll() {
+        let items = [
+            makeItem(name: "A", bookmark: true),
+            makeItem(name: "B"),
+        ]
+        let result = ListFilterSortCalculations.applyMultipleFilters(items, modes: [.all, .bookmarked])
+        #expect(result.count == 2)
+    }
+
+    @Test("Single mode works same as single filter")
+    func multiFilterSingleMode() {
+        let items = [
+            makeItem(name: "Bookmarked", bookmark: true),
+            makeItem(name: "Not bookmarked", bookmark: false),
+            makeItem(name: "Nil bookmark"),
+        ]
+        let multiResult = ListFilterSortCalculations.applyMultipleFilters(items, modes: [.bookmarked])
+        let singleResult = ListFilterSortCalculations.applyFilter(items, filter: .bookmarked)
+        #expect(multiResult.count == singleResult.count)
+        #expect(multiResult.map(\.name) == singleResult.map(\.name))
+    }
+
+    @Test("Two modes uses OR logic — bookmarked + noSku returns items matching either")
+    func multiFilterTwoModesOrLogic() {
+        let items = [
+            makeItem(name: "Bookmarked with SKU", sku: "ABC", bookmark: true),
+            makeItem(name: "Not bookmarked no SKU"),
+            makeItem(name: "Not bookmarked with SKU", sku: "DEF"),
+        ]
+        let result = ListFilterSortCalculations.applyMultipleFilters(items, modes: [.bookmarked, .noSku])
+        #expect(result.count == 2)
+        #expect(result.map(\.name).contains("Bookmarked with SKU"))
+        #expect(result.map(\.name).contains("Not bookmarked no SKU"))
+    }
+
+    @Test("Item matching both modes appears once — no duplicates")
+    func multiFilterNoDuplicates() {
+        let items = [
+            makeItem(name: "Bookmarked and no SKU", bookmark: true),
+        ]
+        let result = ListFilterSortCalculations.applyMultipleFilters(items, modes: [.bookmarked, .noSku])
+        #expect(result.count == 1)
+    }
+
+    // MARK: - Search: source field
+
+    @Test("Search matches source field")
+    func searchMatchesSource() {
+        let items = [
+            makeItem(name: "Chair", source: "Restoration Hardware"),
+            makeItem(name: "Table", source: "IKEA"),
+        ]
+        let result = ListFilterSortCalculations.applySearch(items, query: "restoration")
+        #expect(result.count == 1)
+        #expect(result[0].name == "Chair")
+    }
+
+    // MARK: - Grouping: source in key
+
+    @Test("Items with same name and SKU but different source are separate groups")
+    func groupDifferentSourceSeparateGroups() {
+        let items = [
+            makeItem(name: "Chair", sku: "CH-1", source: "Store A"),
+            makeItem(name: "Chair", sku: "CH-1", source: "Store B"),
+        ]
+        let groups = ListFilterSortCalculations.groupItems(items)
+        #expect(groups.count == 2)
+        #expect(groups.allSatisfy { $0.count == 1 })
+    }
+
+    @Test("Items with same name, SKU, and source form one group")
+    func groupSameSourceSameGroup() {
+        let items = [
+            makeItem(name: "Chair", sku: "CH-1", source: "Store A"),
+            makeItem(name: "Chair", sku: "CH-1", source: "Store A"),
+        ]
+        let groups = ListFilterSortCalculations.groupItems(items)
+        #expect(groups.count == 1)
+        #expect(groups[0].count == 2)
+    }
+
+    @Test("ItemGroup.source property is populated from grouped items")
+    func groupSourcePropertyPopulated() {
+        let items = [
+            makeItem(name: "Chair", sku: "CH-1", source: "Pottery Barn"),
+            makeItem(name: "Chair", sku: "CH-1", source: "Pottery Barn"),
+        ]
+        let groups = ListFilterSortCalculations.groupItems(items)
+        #expect(groups.count == 1)
+        #expect(groups[0].source == "Pottery Barn")
+    }
+
+    @Test("Items with nil source group together")
+    func groupNilSourceTogether() {
+        let items = [
+            makeItem(name: "Chair", sku: "CH-1"),
+            makeItem(name: "Chair", sku: "CH-1"),
+        ]
+        let groups = ListFilterSortCalculations.groupItems(items)
+        #expect(groups.count == 1)
+        #expect(groups[0].count == 2)
+        #expect(groups[0].source == nil)
+    }
+
+    @Test("Items with nil vs non-nil source are separate groups")
+    func groupNilVsNonNilSourceSeparate() {
+        let items = [
+            makeItem(name: "Chair", sku: "CH-1"),
+            makeItem(name: "Chair", sku: "CH-1", source: "Store A"),
+        ]
+        let groups = ListFilterSortCalculations.groupItems(items)
+        #expect(groups.count == 2)
+    }
+
+    // MARK: - Combined Multi-Filter Pipeline
+
+    @Test("applyAllMultiFilters applies multi-filter, search, and sort together")
+    func combinedMultiFilterPipeline() {
+        let old = Date(timeIntervalSince1970: 1000)
+        let mid = Date(timeIntervalSince1970: 2000)
+        let recent = Date(timeIntervalSince1970: 3000)
+        let items = [
+            makeItem(name: "Blue Chair", bookmark: true, createdAt: old),
+            makeItem(name: "Red Chair", createdAt: recent),
+            makeItem(name: "Green Table", bookmark: true, createdAt: mid),
+            makeItem(name: "Yellow Lamp", sku: "HAS-SKU", createdAt: mid),
+        ]
+        // Filters: bookmarked OR noSku (union). Search: "chair" or "table".
+        // bookmarked: Blue Chair, Green Table
+        // noSku: Blue Chair, Red Chair, Green Table (all have nil SKU)
+        // Union: Blue Chair, Red Chair, Green Table
+        // Search "chair": Blue Chair, Red Chair
+        // Sort createdDesc: Red Chair (recent), Blue Chair (old)
+        let result = ListFilterSortCalculations.applyAllMultiFilters(
+            items,
+            filters: [.bookmarked, .noSku],
+            sort: .createdDesc,
+            search: "chair"
+        )
+        #expect(result.count == 2)
+        #expect(result[0].name == "Red Chair")
+        #expect(result[1].name == "Blue Chair")
+    }
+
+    @Test("applyAllMultiFilters with empty filters returns all items filtered by search and sort")
+    func combinedMultiFilterEmptyFilters() {
+        let old = Date(timeIntervalSince1970: 1000)
+        let recent = Date(timeIntervalSince1970: 3000)
+        let items = [
+            makeItem(name: "Blue Chair", createdAt: old),
+            makeItem(name: "Red Chair", createdAt: recent),
+            makeItem(name: "Green Table", createdAt: old),
+        ]
+        let result = ListFilterSortCalculations.applyAllMultiFilters(
+            items,
+            filters: [],
+            sort: .alphabeticalAsc,
+            search: "chair"
+        )
+        #expect(result.count == 2)
+        #expect(result[0].name == "Blue Chair")
+        #expect(result[1].name == "Red Chair")
+    }
 }
