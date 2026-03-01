@@ -67,6 +67,8 @@
 		A2B3C4D5E6F7089012345606 /* InventoryPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */; };
 		A2B3C4D5E6F7089012345608 /* SearchPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */; };
 		A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */; };
+		WP15B00100000000000S0001 /* UniversalSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP15F00100000000000S0001 /* UniversalSearchView.swift */; };
+		WP15B00100000000000S0002 /* SpaceSearchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP15F00100000000000S0002 /* SpaceSearchDetailView.swift */; };
 		A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */; };
 		A73CA42760A53C737E57460F /* AccountingTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */; };
 		A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */; };
@@ -264,6 +266,8 @@
 		A2B3C4D5E6F7089012345605 /* InventoryPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryPlaceholderView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPlaceholderView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaceholderView.swift; sourceTree = "<group>"; };
+		WP15F00100000000000S0001 /* UniversalSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSearchView.swift; sourceTree = "<group>"; };
+		WP15F00100000000000S0002 /* SpaceSearchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceSearchDetailView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryTests.swift; sourceTree = "<group>"; };
 		A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardCalculationTests.swift; sourceTree = "<group>"; };
 		A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Models/ProjectPreferences.swift; sourceTree = SOURCE_ROOT; };
@@ -636,6 +640,15 @@
 			path = Theme;
 			sourceTree = "<group>";
 		};
+		WP15G00100000000000S0001 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				WP15F00100000000000S0001 /* UniversalSearchView.swift */,
+				WP15F00100000000000S0002 /* SpaceSearchDetailView.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
 		A1000401000000000000EE06 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -649,6 +662,7 @@
 				A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */,
 				A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */,
 				2467EB342B9890A03C91F1B3 /* Projects */,
+				WP15G00100000000000S0001 /* Search */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -928,6 +942,8 @@
 				A2B3C4D5E6F7089012345604 /* ProjectsPlaceholderView.swift in Sources */,
 				A2B3C4D5E6F7089012345606 /* InventoryPlaceholderView.swift in Sources */,
 				A2B3C4D5E6F7089012345608 /* SearchPlaceholderView.swift in Sources */,
+				WP15B00100000000000S0001 /* UniversalSearchView.swift in Sources */,
+				WP15B00100000000000S0002 /* SpaceSearchDetailView.swift in Sources */,
 				A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */,
 				C5A0010100000000000C0001 /* Card.swift in Sources */,
 				C5A0010100000000000C0002 /* AppButton.swift in Sources */,

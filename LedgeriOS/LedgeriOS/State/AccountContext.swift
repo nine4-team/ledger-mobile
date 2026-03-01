@@ -15,9 +15,19 @@ final class AccountContext {
     var discoveredAccounts: [DiscoveredAccount] = []
     var isDiscovering = false
 
+    // Cross-project data for universal search
+    var allItems: [Item] = []
+    var allTransactions: [Transaction] = []
+    var allSpaces: [Space] = []
+    var allBudgetCategories: [BudgetCategory] = []
+
     private var listeners: [ListenerRegistration] = []
     private let accountsService: AccountsServiceProtocol
     private let membersService: AccountMembersServiceProtocol
+    private let itemsService: ItemsServiceProtocol?
+    private let transactionsService: TransactionsServiceProtocol?
+    private let spacesService: SpacesServiceProtocol?
+    private let budgetCategoriesService: BudgetCategoriesServiceProtocol?
 
     private static let lastAccountKey = "lastSelectedAccountId"
 
@@ -28,10 +38,18 @@ final class AccountContext {
 
     init(
         accountsService: AccountsServiceProtocol,
-        membersService: AccountMembersServiceProtocol
+        membersService: AccountMembersServiceProtocol,
+        itemsService: ItemsServiceProtocol? = nil,
+        transactionsService: TransactionsServiceProtocol? = nil,
+        spacesService: SpacesServiceProtocol? = nil,
+        budgetCategoriesService: BudgetCategoriesServiceProtocol? = nil
     ) {
         self.accountsService = accountsService
         self.membersService = membersService
+        self.itemsService = itemsService
+        self.transactionsService = transactionsService
+        self.spacesService = spacesService
+        self.budgetCategoriesService = budgetCategoriesService
     }
 
     // MARK: - Discovery
@@ -89,6 +107,35 @@ final class AccountContext {
             }
         }
         listeners.append(memberListener)
+
+        // Cross-project subscriptions for universal search
+        if let itemsService {
+            let itemsListener = itemsService.subscribeToItems(accountId: accountId, scope: .all) { [weak self] items in
+                Task { @MainActor in self?.allItems = items }
+            }
+            listeners.append(itemsListener)
+        }
+
+        if let transactionsService {
+            let txListener = transactionsService.subscribeToTransactions(accountId: accountId, scope: .all) { [weak self] transactions in
+                Task { @MainActor in self?.allTransactions = transactions }
+            }
+            listeners.append(txListener)
+        }
+
+        if let spacesService {
+            let spacesListener = spacesService.subscribeToSpaces(accountId: accountId, scope: .all) { [weak self] spaces in
+                Task { @MainActor in self?.allSpaces = spaces }
+            }
+            listeners.append(spacesListener)
+        }
+
+        if let budgetCategoriesService {
+            let categoriesListener = budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
+                Task { @MainActor in self?.allBudgetCategories = categories }
+            }
+            listeners.append(categoriesListener)
+        }
     }
 
     func deactivate() {
@@ -98,5 +145,9 @@ final class AccountContext {
         account = nil
         member = nil
         discoveredAccounts = []
+        allItems = []
+        allTransactions = []
+        allSpaces = []
+        allBudgetCategories = []
     }
 }

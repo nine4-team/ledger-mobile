@@ -25,7 +25,16 @@ struct MainTabView: View {
             .tag(Tab.inventory.rawValue)
 
             NavigationStack {
-                SearchPlaceholderView()
+                UniversalSearchView()
+                    .navigationDestination(for: Item.self) { item in
+                        ItemDetailView(item: item)
+                    }
+                    .navigationDestination(for: Transaction.self) { transaction in
+                        TransactionDetailView(transaction: transaction)
+                    }
+                    .navigationDestination(for: Space.self) { space in
+                        SpaceSearchDetailView(space: space)
+                    }
             }
             .tabItem {
                 Label("Search", systemImage: "magnifyingglass")
