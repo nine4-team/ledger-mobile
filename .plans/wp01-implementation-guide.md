@@ -3,12 +3,12 @@
 ## Current State (as of 2026-02-09 cleanup)
 
 - `main` has the full app codebase (67 commits) plus 4 spec-kitty planning commits on top
-- WP01 worktree already exists and is ready to go
+- WP01 worktree already exists at `.worktrees/001-architecture-critique-implementation-WP01/`
 - `useEditForm` hook is already scaffolded in the worktree at `src/hooks/useEditForm.ts`
-- WP01 status is **"doing"** in tasks.md
-- Stash (`stash@{0}`) has unrelated in-progress work (transaction screen, .gitignore) — leave it alone
+- WP01 status is **"doing"** in tasks.md (already claimed by claude-sonnet agent)
+- Stash is cleared — no uncommitted work blocking
 
-## 1. Enter the WP01 Worktree — CRITICAL
+## 1. Enter the WP01 Worktree ⚠️ CRITICAL
 
 ```bash
 cd /Users/benjaminmackenzie/Dev/ledger_mobile/.worktrees/001-architecture-critique-implementation-WP01/
@@ -31,20 +31,27 @@ ls src/hooks/useEditForm.ts
 ~/.local/bin/spec-kitty agent workflow implement WP01 --agent <your-name>
 ```
 
+**What this does:**
+- Displays the full WP01 prompt (~1000+ lines of detailed instructions)
+- Auto-moves WP01 from "planned" → "doing" in tasks.md (if not already doing)
+- Records the agent name in the task metadata
+
 **IMPORTANT:**
 - MUST provide `--agent <your-name>` to track who's implementing
-- Output will be LONG (~1000+ lines)
-- **SCROLL TO THE BOTTOM** to see the completion command
+- Output will be LONG — **SCROLL TO THE BOTTOM** for the completion command
 - The scaffolded `useEditForm.ts` is a starting point — the prompt will tell you what screens to migrate
 
 ## 3. Implement the Work Package
 
 Follow the detailed instructions from the prompt. Key points:
-- WP01 migrates 3 simple edit screens (project, 2 spaces) to use `useEditForm`
+- WP01 migrates 3 simple edit screens to use `useEditForm`:
+  - `app/projects/[id]/edit.tsx` (project edit)
+  - `app/shared-spaces/[id]/edit.tsx` (shared space edit)
+  - `app/personal-spaces/[id]/edit.tsx` (personal space edit)
 - The hook tracks changed fields and does partial Firestore writes
-- Test as you go
+- Test each screen as you go
 
-## 4. Commit Your Changes — REQUIRED BEFORE REVIEW
+## 4. Commit Your Changes ⚠️ REQUIRED BEFORE REVIEW
 
 ```bash
 # Still in worktree directory
@@ -53,8 +60,9 @@ git commit -m "feat(WP01): migrate simple edit screens to useEditForm"
 ```
 
 **Why this matters:**
-- `move-task` validates commits exist beyond the main branch
+- `move-task` validates commits exist beyond the base branch
 - Uncommitted changes will BLOCK the move to `for_review`
+- Prevents lost work
 
 ## 5. Move to Review
 
@@ -62,11 +70,21 @@ git commit -m "feat(WP01): migrate simple edit screens to useEditForm"
 ~/.local/bin/spec-kitty agent tasks move-task WP01 --to for_review --note "Ready for review: migrated 3 screens with change tracking"
 ```
 
+**What this does:**
+- Validates you have commits in the worktree
+- Updates tasks.md automatically (no manual editing needed!)
+- Marks WP01 as "for_review" in the kanban
+- Records your note in the activity log
+
 ## 6. Check Status (Optional)
 
 ```bash
 ~/.local/bin/spec-kitty status
+# or
+~/.local/bin/spec-kitty agent tasks status
 ```
+
+Shows the kanban board with all WPs across lanes.
 
 ---
 
@@ -83,35 +101,84 @@ git commit -m "feat(WP01): migrate simple edit screens to useEditForm"
 
 **Parallelization:** WP01-WP04 + WP05 can all run in parallel if multiple devs. Solo: sequential order above.
 
+---
+
 ## Starting a New WP (WP02+)
 
 ```bash
 # From main repo root (NOT a worktree)
 cd /Users/benjaminmackenzie/Dev/ledger_mobile
-~/.local/bin/spec-kitty implement WP##
-# Then cd into the worktree path shown in output
+
+# Create worktree and get implementation prompt
+~/.local/bin/spec-kitty implement WP02
+# This creates .worktrees/001-architecture-critique-implementation-WP02/
+# and outputs the path to cd into
+
+# Enter the worktree
+cd .worktrees/001-architecture-critique-implementation-WP02/
+
+# Get the implementation prompt
+~/.local/bin/spec-kitty agent workflow implement WP02 --agent <your-name>
+
+# Follow steps 3-5 above
 ```
+
+**Alternative:** If you want to branch WP02 from WP01's changes (dependency):
+```bash
+~/.local/bin/spec-kitty agent workflow implement WP02 --agent <your-name> --base WP01
+# This creates a worktree branching from WP01's feature branch
+```
+
+---
 
 ## Quick Reference
 
 ```bash
-# Start a new WP
+# Create worktree for a WP (from main repo root)
 ~/.local/bin/spec-kitty implement WP##
 
-# Get implementation prompt
+# Get implementation prompt (from worktree)
 ~/.local/bin/spec-kitty agent workflow implement WP## --agent <name>
 
-# Check status
+# Check kanban status
 ~/.local/bin/spec-kitty status
 
 # Move to review (after committing!)
 ~/.local/bin/spec-kitty agent tasks move-task WP## --to for_review --note "<summary>"
+
+# List all tasks
+~/.local/bin/spec-kitty agent tasks list-tasks
+
+# Add activity log entry
+~/.local/bin/spec-kitty agent tasks add-history WP## --note "<what you did>"
 ```
+
+---
 
 ## Key Reminders
 
-- Always work in the worktree directory, never main repo
-- Always provide `--agent <your-name>` flag
-- Always commit before moving to `for_review`
-- Scroll to bottom of workflow prompt for completion command
-- `stash@{0}` exists with unrelated work — don't pop it
+- ✅ Always work in the worktree directory, never main repo
+- ✅ Always provide `--agent <your-name>` flag when using workflow commands
+- ✅ Always commit before moving to `for_review`
+- ✅ Scroll to bottom of workflow prompt for completion command
+- ✅ The Python script updates tasks.md automatically — no manual editing needed
+- ✅ WP01 is already in "doing" lane — just cd into the worktree and get the prompt
+
+---
+
+## Troubleshooting
+
+**"Command not found: spec-kitty"**
+```bash
+~/.local/bin/spec-kitty --version
+# If that works, spec-kitty is installed but not in PATH
+# Use full path: ~/.local/bin/spec-kitty
+```
+
+**"Work package already in doing lane"**
+- This is expected for WP01 — just proceed with implementation
+- The command is idempotent
+
+**"No commits found beyond base"**
+- You forgot to commit your changes
+- Run `git add -A && git commit -m "..."` first
