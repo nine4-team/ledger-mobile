@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Cross-Platform Testing & Polish
-lane: "doing"
+lane: "planned"
 dependencies:
 - WP03
 - WP04
@@ -23,8 +23,8 @@ phase: Phase 3 - Polish
 assignee: ''
 agent: "claude-opus"
 shell_pid: "57410"
-review_status: ''
-reviewed_by: ''
+review_status: "has_feedback"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -46,11 +46,40 @@ history:
 
 ## Review Feedback
 
-> **Populated by `/spec-kitty.review`**
+**Reviewed by**: nine4-team
+**Status**: ❌ Changes Requested
+**Date**: 2026-03-03
 
-*[This section is empty initially.]*
+## Review Feedback — WP08
 
----
+### Blockers (must fix)
+
+**Issue 1: Keyboard shortcut conflicts with macOS system defaults**
+
+`LedgerCommands.swift` uses `CommandGroup(after: ...)` which *adds* menu items alongside existing system commands, creating duplicate shortcuts:
+
+- **Cmd+N** (line 9): Conflicts with system "New Window" in a `WindowGroup`. Both your "New Project" and the system "New Window" will have the same shortcut.
+- **Cmd+F** (line 31): Conflicts with system "Find" command from `TextEditingCommands`. When a text field is focused, both bindings fight.
+- **Cmd+,** (line 38): Conflicts with system "Settings..." that SwiftUI provides automatically via `appSettings` command group. You'll get two Cmd+Comma items.
+
+**Fix:** Use `CommandGroup(replacing: .newItem)` instead of `CommandGroup(after: .newItem)` for the new-item group. Use `CommandGroup(replacing: .textEditing)` for search (or pick a different shortcut like Cmd+Shift+F). Use `CommandGroup(replacing: .appSettings)` for settings. This removes the system defaults and substitutes your custom commands.
+
+**Issue 2: Missing `AdaptiveContentWidth` on project tab views**
+
+`ItemsTabView`, `TransactionsTabView`, and `SpacesTabView` are the only scrollable list views that don't use `AdaptiveContentWidth`. These views appear inside `ProjectDetailView`, and on a maximized 27" display, the detail area can be ~2300px wide after the sidebar. List cards stretching that full width would look inconsistent with how `ProjectsListView`, search results, and settings views are constrained.
+
+**Fix:** Add `AdaptiveContentWidth` wrapping the main `LazyVStack` in each of these three views, matching the pattern used in `ProjectsListView` and `UniversalSearchView`.
+
+### Should Fix (non-blocking)
+
+**Issue 3: `AccountToolbarMenu` has no empty/loading state**
+
+When `discoveredAccounts` is empty (initial load), the menu dropdown is empty with no feedback. Add a fallback `Text("Loading...")` or `Text("No accounts")` item when the array is empty.
+
+**Issue 4: `RootView` minimum window size is too wide for auth screens**
+
+`minWidth: 800` applied to the entire `RootView` means the auth/login screen also enforces an 800pt minimum. This is too wide for a simple sign-in form. Consider applying the min size constraint only to `MainTabView` and using a smaller minimum (e.g., 400x500) for auth views.
+
 
 ## Implementation Command
 
@@ -232,3 +261,4 @@ To change a work package's lane, either:
 - 2026-03-03T22:38:40Z – claude-opus – shell_pid=19333 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:54:40Z – claude-opus – shell_pid=19333 – lane=for_review – Ready for review: Fixed macOS platform guards, added AccountToolbarMenu to project, added AdaptiveContentWidth to 8 Settings/Report views. Builds on macOS/iPhone/iPad. 400 tests pass.
 - 2026-03-03T23:00:19Z – claude-opus – shell_pid=57410 – lane=doing – Started review via workflow command
+- 2026-03-03T23:05:02Z – claude-opus – shell_pid=57410 – lane=planned – Moved to planned
