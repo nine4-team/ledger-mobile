@@ -14,6 +14,9 @@ struct RootView: View {
                 MainTabView()
             }
         }
+        #if os(macOS)
+        .frame(minWidth: 800, minHeight: 600)
+        #endif
         .animation(.default, value: authManager.isAuthenticated)
         .animation(.default, value: accountContext.currentAccountId)
         .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
