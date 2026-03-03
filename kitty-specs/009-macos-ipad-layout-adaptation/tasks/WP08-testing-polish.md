@@ -1,13 +1,16 @@
 ---
 work_package_id: WP08
 title: Cross-Platform Testing & Polish
-lane: planned
+lane: "doing"
 dependencies:
 - WP03
 - WP04
 - WP05
 - WP06
 - WP07
+base_branch: 009-macos-ipad-layout-adaptation-WP07
+base_commit: caaa1fed075ab30954670ced775265533b6b34f1
+created_at: '2026-03-03T22:38:40.340747+00:00'
 subtasks:
 - T042
 - T043
@@ -19,7 +22,7 @@ subtasks:
 phase: Phase 3 - Polish
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "19333"
 review_status: ''
 reviewed_by: ''
 history:
