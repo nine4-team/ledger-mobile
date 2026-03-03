@@ -1,7 +1,7 @@
 ---
 work_package_id: WP07
 title: Adaptive Layouts — Detail Views, Forms & Grids
-lane: "doing"
+lane: "done"
 dependencies:
 - WP06
 base_branch: 009-macos-ipad-layout-adaptation-WP06
@@ -19,8 +19,8 @@ phase: Phase 2 - Features
 assignee: ''
 agent: "claude-opus"
 shell_pid: "13832"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -242,3 +242,4 @@ To change a work package's lane, either:
 - 2026-03-03T22:26:00Z – claude-sonnet – shell_pid=4634 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:31:21Z – claude-sonnet – shell_pid=4634 – lane=for_review – Ready for review: Applied AdaptiveContentWidth to all detail views (Project, Item, Transaction, Space), AdaptiveContentWidth for BudgetTabView linear content, responsive LazyVGrid for AccountingTabView summary cards, and formMaxWidth constraint on FormSheet
 - 2026-03-03T22:35:06Z – claude-opus – shell_pid=13832 – lane=doing – Started review via workflow command
+- 2026-03-03T22:37:20Z – claude-opus – shell_pid=13832 – lane=done – Review passed: All 7 subtasks correctly implemented. Detail views (Project, Item, Transaction, Space) properly wrap content in AdaptiveContentWidth with padding inside the constraint. ProjectDetailView correctly keeps tab bar full-width. AccountingTabView uses LazyVGrid with onGeometryChange for responsive columns. BudgetTabView correctly uses AdaptiveContentWidth only (linear content). FormSheet constrains to formMaxWidth with centering; MultiStepFormSheet inherits via composition. No UIDevice/UIScreen hardcoded checks. Single focused commit.
