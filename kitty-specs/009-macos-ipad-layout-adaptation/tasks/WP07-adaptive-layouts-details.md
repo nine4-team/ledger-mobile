@@ -1,7 +1,7 @@
 ---
 work_package_id: WP07
 title: Adaptive Layouts — Detail Views, Forms & Grids
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP06
 base_branch: 009-macos-ipad-layout-adaptation-WP06
@@ -17,8 +17,8 @@ subtasks:
 - T041
 phase: Phase 2 - Features
 assignee: ''
-agent: "claude-sonnet"
-shell_pid: "4634"
+agent: "claude-opus"
+shell_pid: "13832"
 review_status: ''
 reviewed_by: ''
 history:
@@ -241,3 +241,4 @@ To change a work package's lane, either:
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-03T22:26:00Z – claude-sonnet – shell_pid=4634 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:31:21Z – claude-sonnet – shell_pid=4634 – lane=for_review – Ready for review: Applied AdaptiveContentWidth to all detail views (Project, Item, Transaction, Space), AdaptiveContentWidth for BudgetTabView linear content, responsive LazyVGrid for AccountingTabView summary cards, and formMaxWidth constraint on FormSheet
+- 2026-03-03T22:35:06Z – claude-opus – shell_pid=13832 – lane=doing – Started review via workflow command
