@@ -1,7 +1,7 @@
 ---
 work_package_id: WP02
 title: Platform Conditional Compilation
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP01
 base_branch: 009-macos-ipad-layout-adaptation-WP01
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 1 - Foundation
 assignee: ''
 agent: "claude-opus"
-shell_pid: "73384"
+shell_pid: "38393"
 review_status: ''
 reviewed_by: ''
 history:
@@ -259,3 +259,4 @@ To change a work package's lane, either:
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-01T06:40:34Z – claude-opus – shell_pid=73384 – lane=doing – Assigned agent via workflow command
 - 2026-03-01T07:03:21Z – claude-opus – shell_pid=73384 – lane=for_review – Ready for review: Platform conditional compilation complete. All UIKit-only code wrapped with #if canImport(UIKit/AppKit). Created PlatformPresenting.swift and PlatformModifiers.swift for cross-platform abstractions. Builds succeed on both macOS and iOS.
+- 2026-03-03T21:51:13Z – claude-opus – shell_pid=38393 – lane=doing – Started review via workflow command
