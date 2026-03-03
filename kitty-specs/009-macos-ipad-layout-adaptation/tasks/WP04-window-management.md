@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: macOS Window Management & Toolbar
-lane: "doing"
+lane: "done"
 dependencies:
 - WP03
 base_branch: 009-macos-ipad-layout-adaptation-WP03
@@ -18,8 +18,8 @@ phase: Phase 2 - Features
 assignee: ''
 agent: "claude-sonnet"
 shell_pid: "6732"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -266,3 +266,4 @@ To change a work package's lane, either:
 - 2026-03-03T22:25:39Z – claude – shell_pid=4093 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:27:08Z – claude – shell_pid=4093 – lane=for_review – Ready for review: macOS window management and toolbar implemented — default size 1000x700, min 800x600, unified toolbar style, AccountToolbarMenu with account switcher in MainTabView toolbar
 - 2026-03-03T22:29:57Z – claude-sonnet – shell_pid=6732 – lane=doing – Started review via workflow command
+- 2026-03-03T22:30:47Z – claude-sonnet – shell_pid=6732 – lane=done – Review passed: T017-T019 window modifiers correct (defaultSize 1000x700, contentMinSize resizability, unified toolbar) — no #if guards needed per spec. T018 RootView frame correctly gated with #if os(macOS). T020 AccountToolbarMenu verified against AccountContext API — all property/method names match (discoveredAccounts, currentAccountId, account?.name, selectAccount(accountId:userId:)). T021 toolbar item correctly placed in MainTabView gated with #if os(macOS). Clean 44-line diff, no regressions.
