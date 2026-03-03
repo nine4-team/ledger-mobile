@@ -71,13 +71,6 @@ struct ItemsTabView: View {
                 )
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button { showNewItem = true } label: {
-                    Image(systemName: "plus").foregroundStyle(BrandColors.primary)
-                }
-            }
-        }
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
@@ -159,6 +152,7 @@ struct ItemsTabView: View {
             isSearchVisible: $isSearchVisible,
             onSort: { showSortMenu = true },
             onFilter: { showFilterMenu = true },
+            onAdd: { showNewItem = true },
             activeFilterCount: activeFilter != .all ? 1 : 0,
             activeSortLabel: activeSort != .createdDesc ? sortLabel(for: activeSort) : nil
         )

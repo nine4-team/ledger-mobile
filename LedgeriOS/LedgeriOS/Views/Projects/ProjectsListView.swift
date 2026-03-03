@@ -5,7 +5,6 @@ struct ProjectsListView: View {
     @Environment(AccountContext.self) private var accountContext
     @State private var selectedTab = "active"
     @State private var searchText = ""
-    @State private var isSearching = false
     @State private var projects: [Project] = []
     @State private var listener: ListenerRegistration?
     @State private var showNewProject = false
@@ -64,7 +63,6 @@ struct ProjectsListView: View {
             }
         }
         .navigationTitle("Projects")
-        .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search projects")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -75,19 +73,11 @@ struct ProjectsListView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: Spacing.sm) {
-                    Button {
-                        isSearching = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(BrandColors.textSecondary)
-                    }
-                    Button {
-                        showNewProject = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundStyle(BrandColors.primary)
-                    }
+                Button {
+                    showNewProject = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(BrandColors.primary)
                 }
             }
         }
