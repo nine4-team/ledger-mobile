@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Cross-Platform Testing & Polish
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP03
 - WP04
@@ -22,7 +22,7 @@ subtasks:
 phase: Phase 3 - Polish
 assignee: ''
 agent: "claude-opus"
-shell_pid: "19333"
+shell_pid: "57410"
 review_status: ''
 reviewed_by: ''
 history:
@@ -231,3 +231,4 @@ To change a work package's lane, either:
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-03T22:38:40Z – claude-opus – shell_pid=19333 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:54:40Z – claude-opus – shell_pid=19333 – lane=for_review – Ready for review: Fixed macOS platform guards, added AccountToolbarMenu to project, added AdaptiveContentWidth to 8 Settings/Report views. Builds on macOS/iPhone/iPad. 400 tests pass.
+- 2026-03-03T23:00:19Z – claude-opus – shell_pid=57410 – lane=doing – Started review via workflow command
