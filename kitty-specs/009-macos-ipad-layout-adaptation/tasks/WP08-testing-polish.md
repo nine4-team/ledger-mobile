@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Cross-Platform Testing & Polish
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP03
 - WP04
@@ -22,7 +22,7 @@ subtasks:
 phase: Phase 3 - Polish
 assignee: ''
 agent: "claude-sonnet"
-shell_pid: "66410"
+shell_pid: "76676"
 review_status: "has_feedback"
 reviewed_by: "nine4-team"
 history:
@@ -264,3 +264,4 @@ To change a work package's lane, either:
 - 2026-03-03T23:05:02Z – claude-opus – shell_pid=57410 – lane=planned – Moved to planned
 - 2026-03-03T23:06:14Z – claude-sonnet – shell_pid=66410 – lane=doing – Started implementation via workflow command
 - 2026-03-03T23:09:51Z – claude-sonnet – shell_pid=66410 – lane=for_review – Ready for review: Fixed all 4 review issues - CommandGroup(replacing:) for newItem/textEditing/appSettings to eliminate shortcut conflicts; AdaptiveContentWidth on ItemsTabView, TransactionsTabView, SpacesTabView; AccountToolbarMenu loading state; RootView per-state min sizes (400x500 auth, 800x600 main). Build passes.
+- 2026-03-03T23:10:39Z – claude-sonnet – shell_pid=76676 – lane=doing – Started review via workflow command
