@@ -7,15 +7,20 @@ struct AccountToolbarMenu: View {
 
     var body: some View {
         Menu {
-            ForEach(accountContext.discoveredAccounts) { account in
-                Button {
-                    guard let userId = authManager.currentUser?.uid else { return }
-                    accountContext.selectAccount(accountId: account.id, userId: userId)
-                } label: {
-                    HStack {
-                        Text(account.name)
-                        if account.id == accountContext.currentAccountId {
-                            Image(systemName: "checkmark")
+            if accountContext.discoveredAccounts.isEmpty {
+                Text("Loading...")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(accountContext.discoveredAccounts) { account in
+                    Button {
+                        guard let userId = authManager.currentUser?.uid else { return }
+                        accountContext.selectAccount(accountId: account.id, userId: userId)
+                    } label: {
+                        HStack {
+                            Text(account.name)
+                            if account.id == accountContext.currentAccountId {
+                                Image(systemName: "checkmark")
+                            }
                         }
                     }
                 }

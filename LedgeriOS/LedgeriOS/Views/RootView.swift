@@ -8,15 +8,21 @@ struct RootView: View {
         Group {
             if !authManager.isAuthenticated {
                 AuthView()
+                    #if os(macOS)
+                    .frame(minWidth: 400, minHeight: 500)
+                    #endif
             } else if accountContext.currentAccountId == nil {
                 AccountGateView()
+                    #if os(macOS)
+                    .frame(minWidth: 400, minHeight: 500)
+                    #endif
             } else {
                 MainTabView()
+                    #if os(macOS)
+                    .frame(minWidth: 800, minHeight: 600)
+                    #endif
             }
         }
-        #if os(macOS)
-        .frame(minWidth: 800, minHeight: 600)
-        #endif
         .animation(.default, value: authManager.isAuthenticated)
         .animation(.default, value: accountContext.currentAccountId)
         .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
