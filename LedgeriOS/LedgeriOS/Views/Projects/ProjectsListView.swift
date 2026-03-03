@@ -47,19 +47,21 @@ struct ProjectsListView: View {
                 )
             } else {
                 ScrollView {
-                    LazyVStack(spacing: Spacing.cardListGap) {
-                        ForEach(filteredProjects) { project in
-                            NavigationLink(value: project) {
-                                ProjectCard(
-                                    project: project,
-                                    budgetPreview: budgetPreviewFor(project)
-                                )
+                    AdaptiveContentWidth {
+                        LazyVStack(spacing: Spacing.cardListGap) {
+                            ForEach(filteredProjects) { project in
+                                NavigationLink(value: project) {
+                                    ProjectCard(
+                                        project: project,
+                                        budgetPreview: budgetPreviewFor(project)
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.md)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.md)
                 }
             }
         }

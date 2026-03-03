@@ -153,23 +153,25 @@ struct InventoryItemsSubTab: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    if showGrouped {
-                        ForEach(groups) { group in
-                            if group.count > 1 {
-                                expandableGroupCard(for: group)
-                            } else if let item = group.items.first {
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.cardListGap) {
+                        if showGrouped {
+                            ForEach(groups) { group in
+                                if group.count > 1 {
+                                    expandableGroupCard(for: group)
+                                } else if let item = group.items.first {
+                                    itemRow(for: item)
+                                }
+                            }
+                        } else {
+                            ForEach(processedItems) { item in
                                 itemRow(for: item)
                             }
                         }
-                    } else {
-                        ForEach(processedItems) { item in
-                            itemRow(for: item)
-                        }
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
         }
     }

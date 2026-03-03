@@ -19,6 +19,7 @@ struct SignUpView: View {
     }
 
     var body: some View {
+        AdaptiveContentWidth(maxWidth: Dimensions.formMaxWidth) {
         VStack(spacing: 24) {
             Spacer()
 
@@ -97,6 +98,7 @@ struct SignUpView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
+        }
     }
 
     private func signUp() {

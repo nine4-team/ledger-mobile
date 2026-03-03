@@ -16,6 +16,7 @@
 		0BE4F226EBCD44DAA206A6C5 /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */; };
 		0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */; };
 		10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */; };
+		WP06B00100000000000C0001 /* AdaptiveContentWidth.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06F00100000000000C0001 /* AdaptiveContentWidth.swift */; };
 		12A676B63F549896773CA41F /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873F47E2A621690D041C7170 /* Project.swift */; };
 		177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */; };
 		180F69A4AF52A9C1019ACB63 /* TransactionNextStepsCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */; };
@@ -310,6 +311,7 @@
 		63426CD1523A4E8D9D239F04 /* MediaService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaService.swift; sourceTree = "<group>"; };
 		6346A2503E38446BA855C288 /* InvoiceReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceReportView.swift; sourceTree = "<group>"; };
 		6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
+		WP06F00100000000000C0001 /* AdaptiveContentWidth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveContentWidth.swift; sourceTree = "<group>"; };
 		6DC6F116D54531636D87F2F9 /* Transaction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		72FB2AE7B011092E46E9D316 /* SpaceDetailCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceDetailCalculations.swift; sourceTree = "<group>"; };
 		735D35058B9B023DFF14D776 /* ProjectPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectPickerList.swift; sourceTree = "<group>"; };
@@ -899,6 +901,7 @@
 				WP10F00100000000000C0002 /* SharedTransactionsList.swift */,
 				WP10F00100000000000C0003 /* DraggableCardList.swift */,
 				6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */,
+				WP06F00100000000000C0001 /* AdaptiveContentWidth.swift */,
 				D2CCDD39E89BE8F8B12864B3 /* Modals */,
 			);
 			path = Components;
@@ -1214,6 +1217,7 @@
 				6FF4858B2EBE341784859F93 /* TransactionCompletenessCalculations.swift in Sources */,
 				F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */,
 				10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */,
+				WP06B00100000000000C0001 /* AdaptiveContentWidth.swift in Sources */,
 				4443A4A251A8A9A80018D179 /* ItemFormValidation.swift in Sources */,
 				38B64700D19DC7268618121F /* BulkSaleResolutionCalculations.swift in Sources */,
 				7D340E0754FE1CA6DFEC8BD5 /* SpaceListCalculations.swift in Sources */,
