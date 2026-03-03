@@ -158,11 +158,11 @@
 **Estimated Size**: ~300 lines
 
 ### Included Subtasks
-- [ ] T023 Define `Notification.Name` extensions for keyboard shortcut notifications (createProject, createTransaction, createItem, createSpace, focusSearch)
-- [ ] T024 Create `LedgerCommands` struct implementing `Commands` protocol with Cmd+N, Cmd+Shift+N, Cmd+F, Cmd+, shortcuts
-- [ ] T025 Add `.commands { LedgerCommands() }` to WindowGroup in `LedgerApp.swift`
-- [ ] T026 Wire context-sensitive Cmd+N in list views: `ProjectsListView`, `ItemsTabView`, `TransactionsTabView`, `SpacesTabView` observe notification and trigger creation sheet
-- [ ] T027 Wire Cmd+F to focus search field in `UniversalSearchView` via `@FocusState`
+- [x] T023 Define `Notification.Name` extensions for keyboard shortcut notifications (createProject, createTransaction, createItem, createSpace, focusSearch)
+- [x] T024 Create `LedgerCommands` struct implementing `Commands` protocol with Cmd+N, Cmd+Shift+N, Cmd+F, Cmd+, shortcuts
+- [x] T025 Add `.commands { LedgerCommands() }` to WindowGroup in `LedgerApp.swift`
+- [x] T026 Wire context-sensitive Cmd+N in list views: `ProjectsListView`, `ItemsTabView`, `TransactionsTabView`, `SpacesTabView` observe notification and trigger creation sheet
+- [x] T027 Wire Cmd+F to focus search field in `UniversalSearchView` via `@FocusState`
 
 ### Implementation Notes
 - Per plan.md: Menu bar commands post `NotificationCenter` notifications. Active list views observe and trigger appropriate creation sheets.
