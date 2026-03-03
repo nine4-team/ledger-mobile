@@ -1,7 +1,7 @@
 ---
 work_package_id: WP03
 title: Adaptive Navigation — Tab/Sidebar
-lane: "for_review"
+lane: "doing"
 dependencies:
 - WP02
 base_branch: 009-macos-ipad-layout-adaptation-WP02
@@ -17,7 +17,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: "claude-opus"
-shell_pid: "44277"
+shell_pid: "64212"
 review_status: ''
 reviewed_by: ''
 history:
@@ -260,3 +260,4 @@ To change a work package's lane, either:
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-03T21:54:57Z – claude-opus – shell_pid=44277 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:01:52Z – claude-opus – shell_pid=44277 – lane=for_review – Ready for review: Adaptive navigation with iOS 18+ Tab syntax, .sidebarAdaptable style, AppSection enum, deployment target bumped to iOS 18. Builds and all 400 tests pass on both iPhone and macOS.
+- 2026-03-03T22:05:02Z – claude-opus – shell_pid=64212 – lane=doing – Started review via workflow command
