@@ -1,9 +1,12 @@
 ---
 work_package_id: WP07
 title: Adaptive Layouts — Detail Views, Forms & Grids
-lane: planned
+lane: "doing"
 dependencies:
 - WP06
+base_branch: 009-macos-ipad-layout-adaptation-WP06
+base_commit: 8562950c31af0bfc990d39e5c3e96f97576b7343
+created_at: '2026-03-03T22:26:00.496123+00:00'
 subtasks:
 - T035
 - T036
@@ -15,7 +18,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "4634"
 review_status: ''
 reviewed_by: ''
 history:
