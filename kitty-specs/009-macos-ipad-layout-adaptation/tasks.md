@@ -225,13 +225,13 @@
 **Estimated Size**: ~400 lines
 
 ### Included Subtasks
-- [ ] T035 [P] Apply maxWidth to `ProjectDetailView` content sections
-- [ ] T036 [P] Apply maxWidth to `ItemDetailView` content sections
-- [ ] T037 [P] Apply maxWidth to `TransactionDetailView` content sections
-- [ ] T038 [P] Apply maxWidth to `SpaceDetailView` content sections
-- [ ] T039 Add responsive grid columns to `BudgetTabView` via `onGeometryChange`
-- [ ] T040 Add responsive grid columns to `AccountingTabView` via `onGeometryChange`
-- [ ] T041 Constrain `FormSheet` width on macOS using `Dimensions.formMaxWidth`
+- [x] T035 [P] Apply maxWidth to `ProjectDetailView` content sections
+- [x] T036 [P] Apply maxWidth to `ItemDetailView` content sections
+- [x] T037 [P] Apply maxWidth to `TransactionDetailView` content sections
+- [x] T038 [P] Apply maxWidth to `SpaceDetailView` content sections
+- [x] T039 Add responsive grid columns to `BudgetTabView` via `onGeometryChange`
+- [x] T040 Add responsive grid columns to `AccountingTabView` via `onGeometryChange`
+- [x] T041 Constrain `FormSheet` width on macOS using `Dimensions.formMaxWidth`
 
 ### Implementation Notes
 - Detail views: Wrap content in `AdaptiveContentWidth` (from WP06) or use `.frame(maxWidth: Dimensions.contentMaxWidth)` directly
