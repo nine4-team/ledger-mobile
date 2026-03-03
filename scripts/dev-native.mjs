@@ -4,11 +4,12 @@
  *
  * Usage: npm run dev:native
  *
- * Same as dev.mjs but auto-launches the iOS simulator:
+ * Full native dev workflow:
  * 1. Starts Firebase emulators with persistence
  * 2. Waits for Auth + Firestore to be ready
  * 3. Seeds Firestore, Storage, and creates the auth user
- * 4. Starts Metro and opens the app in the iOS simulator
+ * 4. Builds the SwiftUI app (LedgeriOS Emulator scheme)
+ * 5. Boots the iPhone 16e simulator and launches the app
  */
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -158,31 +159,62 @@ async function main() {
     logError(`Auth user creation failed: ${err.message}`);
   }
 
-  // 6. Start Metro and auto-launch iOS simulator
-  log('Starting Metro + iOS simulator...');
+  // 6. Build and launch SwiftUI app on simulator
+  const SIMULATOR_NAME = 'iPhone 16e';
+  const SCHEME = 'LedgeriOS (Emulator)';
+  const BUNDLE_ID = 'com.nine4.LedgeriOS';
+
+  log(`Building ${SCHEME}...`);
+  try {
+    run('xcodebuild', [
+      '-project', 'LedgeriOS/LedgeriOS.xcodeproj',
+      '-scheme', SCHEME,
+      '-destination', `platform=iOS Simulator,name=${SIMULATOR_NAME}`,
+      '-derivedDataPath', 'LedgeriOS/DerivedData',
+      'build',
+    ]);
+  } catch (err) {
+    logError(`Build failed: ${err.message}`);
+    emulatorProc.kill();
+    process.exit(1);
+  }
+
+  // Boot simulator if needed
+  log(`Booting ${SIMULATOR_NAME}...`);
+  spawnSync('xcrun', ['simctl', 'boot', SIMULATOR_NAME], { stdio: 'ignore' }); // OK if already booted
+  spawnSync('open', ['-a', 'Simulator']);
+
+  // Install and launch
+  const appPath = spawnSync('find', [
+    'LedgeriOS/DerivedData/Build/Products/Debug-iphonesimulator',
+    '-name', '*.app', '-maxdepth', '1',
+  ], { encoding: 'utf8' }).stdout.trim();
+
+  if (!appPath) {
+    logError('Could not find built .app bundle');
+    emulatorProc.kill();
+    process.exit(1);
+  }
+
+  log('Installing app...');
+  run('xcrun', ['simctl', 'install', 'booted', appPath]);
+
+  log('Launching app...');
+  run('xcrun', ['simctl', 'launch', 'booted', BUNDLE_ID]);
+
   log('──────────────────────────────────────────');
   log('Sign in with: team@nine4.co / password123');
   log('──────────────────────────────────────────');
+  log('App launched. Emulators running in foreground — Ctrl+C to stop.');
 
-  const metroProc = spawn('npx', ['expo', 'start', '--ios'], {
-    stdio: 'inherit',
-    env: { ...process.env, EXPO_PUBLIC_USE_FIREBASE_EMULATORS: 'true' },
-  });
-
-  metroProc.on('error', (err) => {
-    logError(`Metro error: ${err.message}`);
-  });
-
-  // Forward Ctrl+C to Metro; emulators handle their own shutdown
+  // Keep process alive for emulators; forward Ctrl+C
   process.on('SIGINT', () => {
-    metroProc.kill('SIGINT');
+    emulatorProc.kill('SIGINT');
+    process.exit(0);
   });
   process.on('SIGTERM', () => {
-    metroProc.kill('SIGTERM');
-  });
-
-  metroProc.on('exit', (code) => {
-    process.exit(code ?? 0);
+    emulatorProc.kill('SIGTERM');
+    process.exit(0);
   });
 }
 
