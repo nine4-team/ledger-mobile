@@ -6,6 +6,7 @@ struct PropertyManagementReportView: View {
 
     var body: some View {
         ScrollView {
+            AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 // Space groups
                 ForEach(Array(data.spaceGroups.enumerated()), id: \.offset) { _, group in
@@ -50,6 +51,7 @@ struct PropertyManagementReportView: View {
                 }
             }
             .padding(Spacing.screenPadding)
+            }
         }
         .navigationTitle("Property Management")
         .navBarTitleDisplayMode(.inline)

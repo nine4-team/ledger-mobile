@@ -17,63 +17,65 @@ struct UsersView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.xl) {
-                // Members section
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("Team Members")
-                        .sectionLabelStyle()
-
-                    if members.isEmpty {
-                        Text("No team members found.")
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textSecondary)
-                    } else {
-                        LazyVStack(spacing: Spacing.cardListGap) {
-                            ForEach(members) { member in
-                                MemberRow(member: member)
-                            }
-                        }
-                    }
-                }
-
-                // Pending Invitations section
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    HStack {
-                        Text("Pending Invitations")
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.xl) {
+                    // Members section
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        Text("Team Members")
                             .sectionLabelStyle()
 
-                        Spacer()
-
-                        Button {
-                            showingInviteSheet = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "plus")
-                                Text("Invite")
+                        if members.isEmpty {
+                            Text("No team members found.")
+                                .font(Typography.body)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        } else {
+                            LazyVStack(spacing: Spacing.cardListGap) {
+                                ForEach(members) { member in
+                                    MemberRow(member: member)
+                                }
                             }
-                            .font(Typography.buttonSmall)
-                            .foregroundStyle(BrandColors.primary)
                         }
                     }
 
-                    if invites.isEmpty {
-                        Text("No pending invitations.")
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textSecondary)
-                    } else {
-                        LazyVStack(spacing: Spacing.cardListGap) {
-                            ForEach(invites) { invite in
-                                InviteRow(invite: invite) {
-                                    revokeTarget = invite
+                    // Pending Invitations section
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        HStack {
+                            Text("Pending Invitations")
+                                .sectionLabelStyle()
+
+                            Spacer()
+
+                            Button {
+                                showingInviteSheet = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "plus")
+                                    Text("Invite")
+                                }
+                                .font(Typography.buttonSmall)
+                                .foregroundStyle(BrandColors.primary)
+                            }
+                        }
+
+                        if invites.isEmpty {
+                            Text("No pending invitations.")
+                                .font(Typography.body)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        } else {
+                            LazyVStack(spacing: Spacing.cardListGap) {
+                                ForEach(invites) { invite in
+                                    InviteRow(invite: invite) {
+                                        revokeTarget = invite
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.md)
+                .padding(.bottom, Spacing.xl)
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.top, Spacing.md)
-            .padding(.bottom, Spacing.xl)
         }
         .background(BrandColors.background)
         .onAppear { startListening() }

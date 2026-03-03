@@ -20,48 +20,50 @@ struct SpaceTemplateManagementView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                // Add button
-                Button {
-                    showingCreateSheet = true
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Template")
-                    }
-                    .font(Typography.button)
-                    .foregroundStyle(BrandColors.primary)
-                }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-
-                if sortedTemplates.isEmpty {
-                    Text("No templates yet. Create one or save from a space.")
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .padding(.horizontal, Spacing.screenPadding)
-                } else {
-                    List {
-                        ForEach(sortedTemplates) { template in
-                            TemplateRow(
-                                template: template,
-                                onEdit: { editingTemplate = template },
-                                onDelete: { deleteTarget = template }
-                            )
-                            .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    // Add button
+                    Button {
+                        showingCreateSheet = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Template")
                         }
-                        .onMove(perform: moveTemplates)
+                        .font(Typography.button)
+                        .foregroundStyle(BrandColors.primary)
                     }
-                    .listStyle(.plain)
-                    #if canImport(UIKit)
-                    .environment(\.editMode, .constant(.active))
-                    #endif
-                    .frame(minHeight: CGFloat(sortedTemplates.count) * 72)
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.top, Spacing.sm)
+
+                    if sortedTemplates.isEmpty {
+                        Text("No templates yet. Create one or save from a space.")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .padding(.horizontal, Spacing.screenPadding)
+                    } else {
+                        List {
+                            ForEach(sortedTemplates) { template in
+                                TemplateRow(
+                                    template: template,
+                                    onEdit: { editingTemplate = template },
+                                    onDelete: { deleteTarget = template }
+                                )
+                                .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                            .onMove(perform: moveTemplates)
+                        }
+                        .listStyle(.plain)
+                        #if canImport(UIKit)
+                        .environment(\.editMode, .constant(.active))
+                        #endif
+                        .frame(minHeight: CGFloat(sortedTemplates.count) * 72)
+                    }
                 }
+                .padding(.bottom, Spacing.xl)
             }
-            .padding(.bottom, Spacing.xl)
         }
         .background(BrandColors.background)
         .onAppear { startListening() }

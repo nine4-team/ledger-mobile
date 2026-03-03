@@ -7,6 +7,7 @@ struct InvoiceReportView: View {
 
     var body: some View {
         ScrollView {
+            AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 // Header
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -71,6 +72,7 @@ struct InvoiceReportView: View {
                 }
             }
             .padding(Spacing.screenPadding)
+            }
         }
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
