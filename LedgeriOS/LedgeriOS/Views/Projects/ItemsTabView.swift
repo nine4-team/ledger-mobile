@@ -149,6 +149,9 @@ struct ItemsTabView: View {
                     .presentationDragIndicator(.visible)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
+            showNewItem = true
+        }
     }
 
     // MARK: - Control Bar

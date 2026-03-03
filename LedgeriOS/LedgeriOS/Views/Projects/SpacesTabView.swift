@@ -36,6 +36,9 @@ struct SpacesTabView: View {
                     .presentationDragIndicator(.visible)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .createSpace)) { _ in
+            showNewSpace = true
+        }
     }
 
     // MARK: - Search Bar
