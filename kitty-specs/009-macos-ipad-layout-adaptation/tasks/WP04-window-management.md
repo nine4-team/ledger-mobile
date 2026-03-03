@@ -1,9 +1,12 @@
 ---
 work_package_id: WP04
 title: macOS Window Management & Toolbar
-lane: planned
+lane: "doing"
 dependencies:
 - WP03
+base_branch: 009-macos-ipad-layout-adaptation-WP03
+base_commit: 40d104fdd44487c3485e80f7dcbec691189565d9
+created_at: '2026-03-03T22:25:39.648569+00:00'
 subtasks:
 - T017
 - T018
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "4093"
 review_status: ''
 reviewed_by: ''
 history:
