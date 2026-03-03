@@ -1,66 +1,66 @@
 import SwiftUI
 
+// MARK: - App Section
+
+enum AppSection: String, CaseIterable {
+    case projects
+    case inventory
+    case search
+    case settings
+}
+
+// MARK: - Main Tab View
+
 struct MainTabView: View {
-    @SceneStorage("selectedTab") private var selectedTab = Tab.projects.rawValue
+    @SceneStorage("selectedTab") private var selectedTab: AppSection = .projects
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationStack {
-                ProjectsListView()
-                    .navigationDestination(for: Project.self) { project in
-                        ProjectDetailView(project: project)
-                    }
+            Tab("Projects", systemImage: "folder", value: .projects) {
+                NavigationStack {
+                    ProjectsListView()
+                        .navigationDestination(for: Project.self) { project in
+                            ProjectDetailView(project: project)
+                        }
+                }
             }
-            .tabItem {
-                Label("Projects", systemImage: "house")
-            }
-            .tag(Tab.projects.rawValue)
 
-            NavigationStack {
-                InventoryView()
+            Tab("Inventory", systemImage: "archivebox", value: .inventory) {
+                NavigationStack {
+                    InventoryView()
+                }
             }
-            .tabItem {
-                Label("Inventory", systemImage: "shippingbox")
-            }
-            .tag(Tab.inventory.rawValue)
 
-            NavigationStack {
-                UniversalSearchView()
-                    .navigationDestination(for: Item.self) { item in
-                        ItemDetailView(item: item)
-                    }
-                    .navigationDestination(for: Transaction.self) { transaction in
-                        TransactionDetailView(transaction: transaction)
-                    }
-                    .navigationDestination(for: Space.self) { space in
-                        SpaceSearchDetailView(space: space)
-                    }
+            Tab("Search", systemImage: "magnifyingglass", value: .search) {
+                NavigationStack {
+                    UniversalSearchView()
+                        .navigationDestination(for: Item.self) { item in
+                            ItemDetailView(item: item)
+                        }
+                        .navigationDestination(for: Transaction.self) { transaction in
+                            TransactionDetailView(transaction: transaction)
+                        }
+                        .navigationDestination(for: Space.self) { space in
+                            SpaceSearchDetailView(space: space)
+                        }
+                }
             }
-            .tabItem {
-                Label("Search", systemImage: "magnifyingglass")
-            }
-            .tag(Tab.search.rawValue)
 
-            NavigationStack {
-                SettingsView()
+            Tab("Settings", systemImage: "gear", value: .settings) {
+                NavigationStack {
+                    SettingsView()
+                }
             }
-            .tabItem {
-                Label("Settings", systemImage: "gear")
-            }
-            .tag(Tab.settings.rawValue)
         }
+        .tabViewStyle(.sidebarAdaptable)
         .tint(BrandColors.primary)
-    }
-}
-
-// MARK: - Tab Enum
-
-extension MainTabView {
-    enum Tab: String {
-        case projects
-        case inventory
-        case search
-        case settings
+        #if os(macOS)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                AccountToolbarMenu()
+            }
+        }
+        #endif
     }
 }
 
