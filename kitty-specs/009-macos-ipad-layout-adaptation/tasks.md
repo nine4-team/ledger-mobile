@@ -261,13 +261,13 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T042 Test Scenario 1: First Launch on Mac — sign in, sidebar, projects load
-- [ ] T043 Test Scenario 2: Multi-Window Workflow — two windows, independent navigation, shared data
-- [ ] T044 Test Scenario 3: iPad Landscape/Portrait Transition — sidebar ↔ tabs, section preserved
-- [ ] T045 Test Scenario 4: Keyboard-Driven Project Creation — Cmd+N, form keyboard navigation
-- [ ] T046 Test Scenario 5: Account Switching via Mac Toolbar — dropdown, context refresh
-- [ ] T047 Test Scenario 6: Wide Screen Card Layout — cards readable at 2560px, no stretching
-- [ ] T048 Test Scenario 7: iPhone Experience Unchanged — iPhone SE, iPhone 15 Pro Max, no regressions
+- [x] T042 Test Scenario 1: First Launch on Mac — sign in, sidebar, projects load
+- [x] T043 Test Scenario 2: Multi-Window Workflow — two windows, independent navigation, shared data
+- [x] T044 Test Scenario 3: iPad Landscape/Portrait Transition — sidebar ↔ tabs, section preserved
+- [x] T045 Test Scenario 4: Keyboard-Driven Project Creation — Cmd+N, form keyboard navigation
+- [x] T046 Test Scenario 5: Account Switching via Mac Toolbar — dropdown, context refresh
+- [x] T047 Test Scenario 6: Wide Screen Card Layout — cards readable at 2560px, no stretching
+- [x] T048 Test Scenario 7: iPhone Experience Unchanged — iPhone SE, iPhone 15 Pro Max, no regressions
 
 ### Implementation Notes
 - Run each scenario manually on the appropriate platform/device
