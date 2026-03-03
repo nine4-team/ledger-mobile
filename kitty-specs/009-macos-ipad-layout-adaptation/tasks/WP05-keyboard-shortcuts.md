@@ -1,7 +1,7 @@
 ---
 work_package_id: WP05
 title: Keyboard Shortcuts & Menu Bar
-lane: "doing"
+lane: "done"
 dependencies:
 - WP03
 base_branch: 009-macos-ipad-layout-adaptation-WP03
@@ -17,8 +17,8 @@ phase: Phase 2 - Features
 assignee: ''
 agent: "claude-opus"
 shell_pid: "13096"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -301,3 +301,4 @@ To change a work package's lane, either:
 - 2026-03-03T22:25:18Z – claude-sonnet – shell_pid=3444 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:31:46Z – claude-sonnet – shell_pid=3444 – lane=for_review – Ready for review: keyboard shortcuts and menu bar implemented via NotificationCenter pattern. LedgerCommands dispatches notifications; list views observe with .onReceive.
 - 2026-03-03T22:34:43Z – claude-opus – shell_pid=13096 – lane=doing – Started review via workflow command
+- 2026-03-03T22:35:55Z – claude-opus – shell_pid=13096 – lane=done – Review passed: All 5 subtasks verified. Notification names, LedgerCommands, .commands wiring, list view observers, and search focus all correctly implemented. State variable names match existing code. Clean 83-line diff across 10 files. No iOS regressions.
