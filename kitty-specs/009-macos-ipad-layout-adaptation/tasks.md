@@ -125,12 +125,12 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T017 Add `.defaultSize(width: 1000, height: 700)` and `.windowResizability(.contentMinSize)` to WindowGroup scene
-- [ ] T018 Add `.frame(minWidth: 800, minHeight: 600)` to RootView (macOS only via `#if os(macOS)`)
-- [ ] T019 Add `.windowToolbarStyle(.unified)` to WindowGroup scene
-- [ ] T020 [P] Create `AccountToolbarMenu` component for macOS toolbar account switching
-- [ ] T021 Add `#if os(macOS)` toolbar item in MainTabView or RootView for `AccountToolbarMenu`
-- [ ] T022 Verify multi-window behavior: independent navigation state, shared data updates
+- [x] T017 Add `.defaultSize(width: 1000, height: 700)` and `.windowResizability(.contentMinSize)` to WindowGroup scene
+- [x] T018 Add `.frame(minWidth: 800, minHeight: 600)` to RootView (macOS only via `#if os(macOS)`)
+- [x] T019 Add `.windowToolbarStyle(.unified)` to WindowGroup scene
+- [x] T020 [P] Create `AccountToolbarMenu` component for macOS toolbar account switching
+- [x] T021 Add `#if os(macOS)` toolbar item in MainTabView or RootView for `AccountToolbarMenu`
+- [x] T022 Verify multi-window behavior: independent navigation state, shared data updates
 
 ### Implementation Notes
 - Window modifiers (`.defaultSize`, `.windowResizability`, `.windowToolbarStyle`) are silently ignored on iOS — safe to include unconditionally
