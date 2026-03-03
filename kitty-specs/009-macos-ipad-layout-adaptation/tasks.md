@@ -191,13 +191,13 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T028 Create `AdaptiveContentWidth` wrapper component in `Components/AdaptiveContentWidth.swift`
-- [ ] T029 [P] Apply `AdaptiveContentWidth` to `ProjectsListView`
-- [ ] T030 [P] Apply `AdaptiveContentWidth` to `InventoryView` and sub-tabs (`InventoryItemsSubTab`, `InventorySpacesSubTab`, `InventoryTransactionsSubTab`)
-- [ ] T031 [P] Apply `AdaptiveContentWidth` to `UniversalSearchView`
-- [ ] T032 [P] Apply `AdaptiveContentWidth` to `SettingsView`
-- [ ] T033 [P] Apply `AdaptiveContentWidth` to `AccountGateView` layout
-- [ ] T034 [P] Apply `AdaptiveContentWidth` to `AuthView` / `SignInView` / `SignUpView`
+- [x] T028 Create `AdaptiveContentWidth` wrapper component in `Components/AdaptiveContentWidth.swift`
+- [x] T029 [P] Apply `AdaptiveContentWidth` to `ProjectsListView`
+- [x] T030 [P] Apply `AdaptiveContentWidth` to `InventoryView` and sub-tabs (`InventoryItemsSubTab`, `InventorySpacesSubTab`, `InventoryTransactionsSubTab`)
+- [x] T031 [P] Apply `AdaptiveContentWidth` to `UniversalSearchView`
+- [x] T032 [P] Apply `AdaptiveContentWidth` to `SettingsView`
+- [x] T033 [P] Apply `AdaptiveContentWidth` to `AccountGateView` layout
+- [x] T034 [P] Apply `AdaptiveContentWidth` to `AuthView` / `SignInView` / `SignUpView`
 
 ### Implementation Notes
 - `AdaptiveContentWidth` is a thin wrapper: `content.frame(maxWidth: maxWidth).frame(maxWidth: .infinity)` — centers content within available space
