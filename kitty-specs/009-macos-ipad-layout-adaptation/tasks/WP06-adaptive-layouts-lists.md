@@ -1,9 +1,12 @@
 ---
 work_package_id: WP06
 title: Adaptive Layouts — List Views & Auth Screens
-lane: planned
+lane: "doing"
 dependencies:
 - WP02
+base_branch: 009-macos-ipad-layout-adaptation-WP02
+base_commit: 4675111b7a670ac455aa15b493bf01b1c8425f5a
+created_at: '2026-03-03T21:55:08.937049+00:00'
 subtasks:
 - T028
 - T029
@@ -15,7 +18,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "44805"
 review_status: ''
 reviewed_by: ''
 history:
