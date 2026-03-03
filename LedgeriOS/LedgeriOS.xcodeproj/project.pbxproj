@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC01B00100000000000C0001 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01F00100000000000C0001 /* CameraCapture.swift */; };
 		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
 		0491897D47F0AAE29CDD0C50 /* Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923BE246BDFE7441513642E /* Invite.swift */; };
@@ -143,7 +144,6 @@
 		C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0008 /* SegmentedControl.swift */; };
 		C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0009 /* CollapsibleSection.swift */; };
 		C5A0010100000000000C000A /* TitledCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000A /* TitledCard.swift */; };
-		C5A0010100000000000C000B /* BudgetProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000B /* BudgetProgressView.swift */; };
 		C5A0010100000000000C000C /* VendorPickerField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000C /* VendorPickerField.swift */; };
 		C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */; };
 		C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0002 /* ProgressBarCalculations.swift */; };
@@ -249,6 +249,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CC01F00100000000000C0001 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
@@ -381,7 +382,6 @@
 		C5A0020100000000000C0008 /* SegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0009 /* CollapsibleSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleSection.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C000A /* TitledCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitledCard.swift; sourceTree = "<group>"; };
-		C5A0020100000000000C000B /* BudgetProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressView.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C000C /* VendorPickerField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorPickerField.swift; sourceTree = "<group>"; };
 		C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculations.swift; sourceTree = "<group>"; };
 		C5A0020100000000000L0002 /* ProgressBarCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarCalculations.swift; sourceTree = "<group>"; };
@@ -859,7 +859,6 @@
 				C5A0020100000000000C0008 /* SegmentedControl.swift */,
 				C5A0020100000000000C0009 /* CollapsibleSection.swift */,
 				C5A0020100000000000C000A /* TitledCard.swift */,
-				C5A0020100000000000C000B /* BudgetProgressView.swift */,
 				C5A0020100000000000C000C /* VendorPickerField.swift */,
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
@@ -892,6 +891,7 @@
 				WP10F00100000000000C0002 /* SharedTransactionsList.swift */,
 				WP10F00100000000000C0003 /* DraggableCardList.swift */,
 				6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */,
+				CC01F00100000000000C0001 /* CameraCapture.swift */,
 				D2CCDD39E89BE8F8B12864B3 /* Modals */,
 			);
 			path = Components;
@@ -1136,7 +1136,6 @@
 				C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */,
 				C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */,
 				C5A0010100000000000C000A /* TitledCard.swift in Sources */,
-				C5A0010100000000000C000B /* BudgetProgressView.swift in Sources */,
 				C5A0010100000000000C000C /* VendorPickerField.swift in Sources */,
 				C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */,
 				C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */,
@@ -1256,6 +1255,7 @@
 				1D7FE69B546833A0F92FE7BC /* InventoryOperationsService.swift in Sources */,
 				448E17C391B6588513A357F6 /* BusinessProfileService.swift in Sources */,
 				A56BCF3DEFEABFF050700075 /* SettingsServiceProtocols.swift in Sources */,
+				CC01B00100000000000C0001 /* CameraCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Compact budget preview for ProjectCard — shows category name, spent label, and thin progress bar.
+/// Compact budget preview for ProjectCard — shows category name, spent/remaining labels, and thin progress bar.
+/// Matches the React Native BudgetProgressPreview layout.
 struct BudgetProgressPreview: View {
     let categoryName: String
     let spentCents: Int
@@ -19,20 +20,28 @@ struct BudgetProgressPreview: View {
         BudgetTrackerCalculations.overflowPercentage(spentCents: spentCents, budgetCents: budgetCents)
     }
 
+    private var remainingLabel: String {
+        BudgetTrackerCalculations.remainingLabel(spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(categoryName)
+                .font(Typography.small)
+                .fontWeight(.medium)
+                .foregroundStyle(BrandColors.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
             HStack {
-                Text(categoryName)
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Spacer()
-
                 Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, categoryType: categoryType))
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
+                Spacer()
+                Text(remainingLabel)
+                    .font(Typography.caption)
+                    .fontWeight(overBudget ? .bold : .regular)
+                    .foregroundStyle(overBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
             }
 
             ProgressBar(
@@ -47,16 +56,19 @@ struct BudgetProgressPreview: View {
 }
 
 #Preview("Normal (50%)") {
-    BudgetProgressPreview(categoryName: "Materials", spentCents: 25000, budgetCents: 50000)
+    BudgetProgressPreview(categoryName: "Furnishings", spentCents: 10_093_600, budgetCents: 10_320_000)
         .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Over Budget") {
     BudgetProgressPreview(categoryName: "Appliances", spentCents: 75000, budgetCents: 50000)
         .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Fee Category") {
     BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 30000, budgetCents: 50000, categoryType: .fee)
         .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
 }

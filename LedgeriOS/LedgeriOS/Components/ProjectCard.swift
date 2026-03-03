@@ -18,17 +18,18 @@ struct ProjectCard: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
 
-                    ForEach(budgetPreview) { cat in
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text(cat.name)
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                            BudgetProgressView(
-                                spentCents: cat.spentCents,
-                                budgetCents: cat.budgetCents,
-                                compact: true
-                            )
+                    if !budgetPreview.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            ForEach(budgetPreview) { cat in
+                                BudgetProgressPreview(
+                                    categoryName: cat.name,
+                                    spentCents: cat.spentCents,
+                                    budgetCents: cat.budgetCents,
+                                    categoryType: cat.categoryType
+                                )
+                            }
                         }
+                        .padding(.top, Spacing.xs)
                     }
                 }
                 .padding(Spacing.cardPadding)
@@ -74,6 +75,11 @@ struct ProjectCard: View {
         BudgetProgress.CategoryProgress(
             id: "1", name: "Furnishings",
             budgetCents: 10_320_000, spentCents: 10_093_600,
+            categoryType: .general, excludeFromOverallBudget: false
+        ),
+        BudgetProgress.CategoryProgress(
+            id: "2", name: "Additional Requests",
+            budgetCents: 5_000_000, spentCents: 5_356_000,
             categoryType: .general, excludeFromOverallBudget: false
         ),
     ]

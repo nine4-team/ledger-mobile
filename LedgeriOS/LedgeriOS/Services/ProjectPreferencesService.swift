@@ -23,4 +23,18 @@ struct ProjectPreferencesService: Sendable {
             onChange(prefs)
         }
     }
+
+    /// Updates the pinned budget category IDs for a project.
+    /// Path: accounts/{accountId}/users/{userId}/projectPreferences/{projectId}
+    func updatePinnedCategories(
+        accountId: String,
+        userId: String,
+        projectId: String,
+        pinnedIds: [String]
+    ) async throws {
+        let db = Firestore.firestore()
+        let docRef = db.collection("accounts/\(accountId)/users/\(userId)/projectPreferences")
+            .document(projectId)
+        try await docRef.setData(["pinnedBudgetCategoryIds": pinnedIds], merge: true)
+    }
 }

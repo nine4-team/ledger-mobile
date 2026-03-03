@@ -121,12 +121,28 @@ struct ProjectsListView: View {
         listener = nil
     }
 
-    /// Build a simplified budget preview from the project's denormalized budgetSummary.
-    /// Full per-category progress requires activating ProjectContext (done in detail view).
+    /// Builds budget preview categories from the project's denormalized budgetSummary.
+    /// Shows up to 2 categories ordered by: pinned first, then highest spend percentage.
+    /// Pinning is not available in the list (requires per-project subscription), so pinned IDs are empty.
     private func budgetPreviewFor(_ project: Project) -> [BudgetProgress.CategoryProgress] {
-        // The denormalized budgetSummary doesn't have per-category spend data,
-        // so we can't show meaningful progress bars in the list.
-        // For now, return empty — the detail view shows the real budget breakdown.
-        return []
+        guard let summary = project.budgetSummary,
+              let categories = summary.categories else { return [] }
+
+        let allProgress: [BudgetProgress.CategoryProgress] = categories.compactMap { catId, catData in
+            guard catData.isArchived != true else { return nil }
+            return BudgetProgress.CategoryProgress(
+                id: catId,
+                name: catData.name ?? "",
+                budgetCents: catData.budgetCents ?? 0,
+                spentCents: catData.spentCents ?? 0,
+                categoryType: BudgetCategoryType(rawValue: catData.categoryType ?? "") ?? .general,
+                excludeFromOverallBudget: catData.excludeFromOverallBudget ?? false
+            )
+        }
+
+        return Array(ProjectListCalculations.budgetBarCategories(
+            categories: allProgress,
+            pinnedCategoryIds: []
+        ).prefix(2))
     }
 }
