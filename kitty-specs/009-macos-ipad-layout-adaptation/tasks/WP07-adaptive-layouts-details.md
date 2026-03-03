@@ -17,7 +17,7 @@ subtasks:
 - T041
 phase: Phase 2 - Features
 assignee: ''
-agent: ''
+agent: "claude-sonnet"
 shell_pid: "4634"
 review_status: ''
 reviewed_by: ''
@@ -239,3 +239,4 @@ To change a work package's lane, either:
 2. **Use CLI**: `spec-kitty agent tasks move-task WP07 --to <lane> --note "message"`
 
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
+- 2026-03-03T22:26:00Z – claude-sonnet – shell_pid=4634 – lane=doing – Assigned agent via workflow command
