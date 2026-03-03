@@ -1,9 +1,12 @@
 ---
 work_package_id: WP05
 title: Keyboard Shortcuts & Menu Bar
-lane: planned
+lane: "doing"
 dependencies:
 - WP03
+base_branch: 009-macos-ipad-layout-adaptation-WP03
+base_commit: 40d104fdd44487c3485e80f7dcbec691189565d9
+created_at: '2026-03-03T22:25:18.447800+00:00'
 subtasks:
 - T023
 - T024
@@ -13,7 +16,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "3444"
 review_status: ''
 reviewed_by: ''
 history:
