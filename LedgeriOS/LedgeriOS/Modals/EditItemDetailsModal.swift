@@ -18,7 +18,7 @@ struct EditItemDetailsModal: View {
     init(item: Item, onSave: @escaping ([String: Any]) -> Void) {
         self.item = item
         self.onSave = onSave
-        _name = State(initialValue: item.name)
+        _name = State(initialValue: item.displayName)
         _source = State(initialValue: item.source ?? "")
         _sku = State(initialValue: item.sku ?? "")
         _purchasePrice = State(initialValue: item.purchasePriceCents.map { Self.formatCents($0) } ?? "")

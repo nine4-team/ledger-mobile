@@ -41,7 +41,7 @@ struct ItemDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(item.name.isEmpty ? "Item" : item.name)
+                Text(item.displayName.isEmpty ? "Item" : item.displayName)
                     .font(Typography.h3)
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
@@ -59,7 +59,7 @@ struct ItemDetailView: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: item.name.isEmpty ? "Item" : item.name,
+                title: item.displayName.isEmpty ? "Item" : item.displayName,
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
@@ -173,7 +173,7 @@ struct ItemDetailView: View {
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(item.name.isEmpty ? "Unnamed Item" : item.name)
+            Text(item.displayName.isEmpty ? "Unnamed Item" : item.displayName)
                 .font(Typography.h2)
                 .foregroundStyle(BrandColors.textPrimary)
 

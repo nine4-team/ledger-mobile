@@ -9,9 +9,12 @@ struct BudgetCategory: Codable, Identifiable, Hashable {
     var isArchived: Bool?
     var order: Int?
     var metadata: BudgetCategoryMetadata?
+    var createdAt: Date?
+    var updatedAt: Date?
 
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case id, accountId, projectId, name, slug, isArchived, order, metadata
+    }
 }
 
 struct BudgetCategoryMetadata: Codable, Hashable {

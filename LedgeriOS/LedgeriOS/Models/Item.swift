@@ -5,7 +5,8 @@ struct Item: Codable, Identifiable, Hashable {
     var accountId: String?
     var projectId: String?
     var spaceId: String?
-    var name: String = ""
+    var name: String?
+    var description: String?
     var notes: String?
     var status: String?
     var source: String?
@@ -21,7 +22,17 @@ struct Item: Codable, Identifiable, Hashable {
     var images: [AttachmentRef]?
     var createdBy: String?
     var updatedBy: String?
+    var createdAt: Date?
+    var updatedAt: Date?
 
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    /// Best available display name — prefers `name`, falls back to `description`.
+    var displayName: String {
+        name ?? description ?? ""
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, accountId, projectId, spaceId, name, description, notes, status, source, sku,
+             transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
+             purchasedBy, bookmark, budgetCategoryId, quantity, images, createdBy, updatedBy
+    }
 }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
+exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -96,6 +96,7 @@ function ensureCanonicalSaleTransaction(params) {
         isCanonicalInventorySale: true,
         inventorySaleDirection: direction,
         budgetCategoryId,
+        source: direction === 'project_to_business' ? 'Sale to Inventory' : 'Purchase from Inventory',
         updatedAt: now,
     };
     if (!exists) {
@@ -687,6 +688,38 @@ exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('account
         }
     }
 });
+/**
+ * Recompute canonical sale transaction totals when an item's price changes.
+ * Only fires for items linked to a SALE_ transaction.
+ */
+exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
+    const before = event.data?.before.data() ?? null;
+    const after = event.data?.after.data() ?? null;
+    if (!before || !after)
+        return;
+    const transactionId = after.transactionId;
+    if (!transactionId || !transactionId.startsWith('SALE_'))
+        return;
+    const beforePurchase = before.purchasePriceCents ?? null;
+    const afterPurchase = after.purchasePriceCents ?? null;
+    const beforeProject = before.projectPriceCents ?? null;
+    const afterProject = after.projectPriceCents ?? null;
+    if (beforePurchase === afterPurchase && beforeProject === afterProject)
+        return;
+    const accountId = event.params.accountId;
+    const db = (0, firestore_1.getFirestore)();
+    const itemsSnapshot = await db
+        .collection(`accounts/${accountId}/items`)
+        .where('transactionId', '==', transactionId)
+        .get();
+    const amountCents = itemsSnapshot.docs.reduce((sum, doc) => sum + getItemValueCents(doc.data() ?? {}), 0);
+    const itemIds = itemsSnapshot.docs.map((doc) => doc.id);
+    await db.doc(`accounts/${accountId}/transactions/${transactionId}`).set({
+        amountCents: Math.max(0, amountCents),
+        itemIds,
+        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+    }, { merge: true });
+});
 exports.onProjectRequestCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/projects/{projectId}/requests/{requestId}', async (event) => {
     const requestRef = event.data?.ref;
     const requestData = event.data?.data();
@@ -839,9 +872,17 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
     const collectionRef = db.collection(`accounts/${accountId}/presets/default/budgetCategories`);
     const accountPresetsRef = db.doc(`accounts/${accountId}/presets/default`);
     await db.runTransaction(async (tx) => {
-        // Fast path: if Furnishings exists, ensure it's usable (not archived) and exit.
+        // PHASE 1: ALL READS — Firestore requires all reads before any writes.
         const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));
+        // Pre-read seed refs and account presets (needed for the slow path).
+        const seedRefs = BUDGET_CATEGORY_PRESET_SEED.map((seed) => collectionRef.doc(seed.id));
+        const [accountPresetsSnap, ...seedSnaps] = await Promise.all([
+            tx.get(accountPresetsRef),
+            ...seedRefs.map((ref) => tx.get(ref)),
+        ]);
+        // PHASE 2: ALL WRITES
         if (!existingFurnishings.empty) {
+            // Fast path: presets already exist. Ensure Furnishings isn't archived.
             const docSnap = existingFurnishings.docs[0];
             const data = docSnap.data();
             if (data?.isArchived === true) {
@@ -853,16 +894,15 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
             }
             return;
         }
-        // Seed all 4 default budget categories in an idempotent way.
-        for (const seed of BUDGET_CATEGORY_PRESET_SEED) {
-            const seedRef = collectionRef.doc(seed.id);
-            const seedSnap = await tx.get(seedRef);
-            if (seedSnap.exists)
+        // Seed all default budget categories in an idempotent way.
+        for (let i = 0; i < BUDGET_CATEGORY_PRESET_SEED.length; i++) {
+            const seed = BUDGET_CATEGORY_PRESET_SEED[i];
+            if (seedSnaps[i].exists)
                 continue;
             const normalizedMetadata = seed.metadata?.categoryType
                 ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
                 : seed.metadata ?? null;
-            tx.set(seedRef, {
+            tx.set(seedRefs[i], {
                 id: seed.id,
                 accountId,
                 projectId: null,
@@ -878,8 +918,7 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
                 updatedBy: createdBy ?? null,
             }, { merge: false });
         }
-        // Set Furnishings as the default category in AccountPresets
-        const accountPresetsSnap = await tx.get(accountPresetsRef);
+        // Set Furnishings as the default category in AccountPresets.
         if (!accountPresetsSnap.exists || !accountPresetsSnap.data()?.defaultBudgetCategoryId) {
             tx.set(accountPresetsRef, {
                 id: 'default',

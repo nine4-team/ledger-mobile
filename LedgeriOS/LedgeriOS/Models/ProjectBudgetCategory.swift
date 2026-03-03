@@ -5,7 +5,10 @@ struct ProjectBudgetCategory: Codable, Identifiable, Hashable {
     var budgetCents: Int?
     var createdBy: String?
     var updatedBy: String?
+    var createdAt: Date?
+    var updatedAt: Date?
 
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case id, budgetCents, createdBy, updatedBy
+    }
 }

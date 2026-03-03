@@ -182,7 +182,7 @@ struct InventoryItemsSubTab: View {
             if selectedItemIds.isEmpty {
                 NavigationLink(value: item) {
                     ItemCard(
-                        name: item.name,
+                        name: item.displayName,
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),
@@ -194,7 +194,7 @@ struct InventoryItemsSubTab: View {
                 .buttonStyle(.plain)
             } else {
                 ItemCard(
-                    name: item.name,
+                    name: item.displayName,
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
@@ -223,7 +223,7 @@ struct InventoryItemsSubTab: View {
                     guard let id = item.id else { return nil }
                     return ItemCardData(
                         id: id,
-                        name: item.name,
+                        name: item.displayName,
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),

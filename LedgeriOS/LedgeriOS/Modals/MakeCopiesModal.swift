@@ -28,7 +28,7 @@ struct MakeCopiesModal: View {
             error: errorMessage
         ) {
             VStack(spacing: Spacing.lg) {
-                Text("How many copies of \"\(item.name)\" would you like to create?")
+                Text("How many copies of \"\(item.displayName)\" would you like to create?")
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textSecondary)
 

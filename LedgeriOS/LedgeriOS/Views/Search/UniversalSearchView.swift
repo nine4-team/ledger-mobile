@@ -132,7 +132,7 @@ struct UniversalSearchView: View {
                 ForEach(searchResults.items) { item in
                     NavigationLink(value: item) {
                         ItemCard(
-                            name: item.name,
+                            name: item.displayName,
                             sku: item.sku,
                             sourceLabel: item.source,
                             priceLabel: item.purchasePriceCents.map {

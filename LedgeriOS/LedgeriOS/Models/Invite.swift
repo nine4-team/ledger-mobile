@@ -7,8 +7,11 @@ struct Invite: Codable, Identifiable, Hashable {
     var role: String = ""
     var token: String?
     var createdByUid: String?
-
-    @ServerTimestamp var createdAt: Date?
+    var createdAt: Date?
     var acceptedAt: Date?
     var revokedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, accountId, email, role, token, createdByUid, acceptedAt, revokedAt
+    }
 }

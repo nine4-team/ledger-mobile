@@ -1190,9 +1190,19 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
   const accountPresetsRef = db.doc(`accounts/${accountId}/presets/default`);
 
   await db.runTransaction(async (tx) => {
-    // Fast path: if Furnishings exists, ensure it's usable (not archived) and exit.
+    // PHASE 1: ALL READS — Firestore requires all reads before any writes.
     const existingFurnishings = await tx.get(collectionRef.where('name', '==', 'Furnishings').limit(1));
+
+    // Pre-read seed refs and account presets (needed for the slow path).
+    const seedRefs = BUDGET_CATEGORY_PRESET_SEED.map((seed) => collectionRef.doc(seed.id));
+    const [accountPresetsSnap, ...seedSnaps] = await Promise.all([
+      tx.get(accountPresetsRef),
+      ...seedRefs.map((ref) => tx.get(ref)),
+    ]);
+
+    // PHASE 2: ALL WRITES
     if (!existingFurnishings.empty) {
+      // Fast path: presets already exist. Ensure Furnishings isn't archived.
       const docSnap = existingFurnishings.docs[0];
       const data = docSnap.data() as any;
       if (data?.isArchived === true) {
@@ -1209,16 +1219,15 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
       return;
     }
 
-    // Seed all 4 default budget categories in an idempotent way.
-    for (const seed of BUDGET_CATEGORY_PRESET_SEED) {
-      const seedRef = collectionRef.doc(seed.id);
-      const seedSnap = await tx.get(seedRef);
-      if (seedSnap.exists) continue;
+    // Seed all default budget categories in an idempotent way.
+    for (let i = 0; i < BUDGET_CATEGORY_PRESET_SEED.length; i++) {
+      const seed = BUDGET_CATEGORY_PRESET_SEED[i];
+      if (seedSnaps[i].exists) continue;
       const normalizedMetadata = seed.metadata?.categoryType
         ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
         : seed.metadata ?? null;
       tx.set(
-        seedRef,
+        seedRefs[i],
         {
           id: seed.id,
           accountId,
@@ -1238,8 +1247,7 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
       );
     }
 
-    // Set Furnishings as the default category in AccountPresets
-    const accountPresetsSnap = await tx.get(accountPresetsRef);
+    // Set Furnishings as the default category in AccountPresets.
     if (!accountPresetsSnap.exists || !accountPresetsSnap.data()?.defaultBudgetCategoryId) {
       tx.set(
         accountPresetsRef,

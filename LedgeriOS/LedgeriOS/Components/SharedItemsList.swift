@@ -239,7 +239,7 @@ struct SharedItemsList: View {
                 pickerItemCard(for: item, itemId: itemId, isItemSelected: isItemSelected)
             } else {
                 ItemCard(
-                    name: item.name,
+                    name: item.displayName,
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
@@ -283,7 +283,7 @@ struct SharedItemsList: View {
                     }
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(item.name)
+                        Text(item.displayName)
                             .font(Typography.body)
                             .foregroundStyle(isEligible || isAdded ? BrandColors.textPrimary : BrandColors.textDisabled)
                             .lineLimit(2)
@@ -347,7 +347,7 @@ struct SharedItemsList: View {
                 guard let id = item.id else { return nil }
                 return ItemCardData(
                     id: id,
-                    name: item.name,
+                    name: item.displayName,
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),

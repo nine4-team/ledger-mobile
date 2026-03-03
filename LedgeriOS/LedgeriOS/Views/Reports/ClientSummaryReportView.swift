@@ -44,7 +44,7 @@ struct ClientSummaryReportView: View {
                         ForEach(Array(data.items.enumerated()), id: \.offset) { _, clientItem in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(clientItem.item.name)
+                                    Text(clientItem.item.displayName)
                                         .font(Typography.body)
                                         .foregroundStyle(BrandColors.textPrimary)
                                     if let spaceName = clientItem.spaceName {
@@ -224,7 +224,7 @@ private struct ClientSummaryPDFContent: View {
                 ForEach(Array(data.items.enumerated()), id: \.offset) { index, clientItem in
                     HStack(spacing: 0) {
                         HStack(spacing: 0) {
-                            Text(clientItem.item.name)
+                            Text(clientItem.item.displayName)
                             receiptBadge(clientItem.receiptLink)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

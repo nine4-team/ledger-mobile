@@ -55,7 +55,7 @@ struct ModelCodableTests {
         let item = Item()
         let dict = try encodeToDict(item)
 
-        #expect(dict["name"] as? String == "")
+        #expect(dict["name"] == nil) // name is String?, defaults to nil
         #expect(dict["purchasePriceCents"] == nil)
         #expect(dict["images"] == nil)
     }
@@ -82,7 +82,7 @@ struct ModelCodableTests {
         #expect(dict["projectId"] as? String == "proj1")
         #expect(dict["amountCents"] as? Int == 5000)
         #expect(dict["source"] as? String == "Home Depot")
-        #expect(dict["transactionType"] as? String == "purchase")
+        #expect(dict["type"] as? String == "purchase") // CodingKey maps transactionType → "type"
         #expect(dict["isCanceled"] as? Bool == false)
         #expect(dict["budgetCategoryId"] as? String == "cat1")
         #expect(dict["itemIds"] as? [String] == ["item1", "item2"])
@@ -111,8 +111,8 @@ struct ModelCodableTests {
         project.budgetSummary = ProjectBudgetSummary(
             totalBudgetCents: 500000,
             categories: [
-                BudgetSummaryCategory(budgetCategoryId: "cat1", budgetCents: 200000),
-                BudgetSummaryCategory(budgetCategoryId: "cat2", budgetCents: 300000)
+                "cat1": BudgetSummaryCategory(budgetCents: 200000, name: "Furniture"),
+                "cat2": BudgetSummaryCategory(budgetCents: 300000, name: "Labor")
             ]
         )
 
@@ -125,9 +125,9 @@ struct ModelCodableTests {
         let summary = dict["budgetSummary"] as? [String: Any]
         #expect(summary?["totalBudgetCents"] as? Int == 500000)
 
-        let cats = summary?["categories"] as? [[String: Any]]
+        let cats = summary?["categories"] as? [String: Any]
         #expect(cats?.count == 2)
-        #expect(cats?.first?["budgetCents"] as? Int == 200000)
+        #expect((cats?["cat1"] as? [String: Any])?["budgetCents"] as? Int == 200000)
     }
 
     // MARK: - Space

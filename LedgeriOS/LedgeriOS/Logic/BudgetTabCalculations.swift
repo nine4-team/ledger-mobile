@@ -76,7 +76,7 @@ enum BudgetTabCalculations {
         switch categoryType {
         case .fee:
             return "\(formatted) received"
-        case .general, .itemized:
+        case .general, .standard, .itemized:
             return "\(formatted) spent"
         }
     }

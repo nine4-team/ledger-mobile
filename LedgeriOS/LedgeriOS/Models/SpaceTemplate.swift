@@ -7,7 +7,10 @@ struct SpaceTemplate: Codable, Identifiable, Hashable {
     var checklists: [Checklist]?
     var isArchived: Bool?
     var order: Int?
+    var createdAt: Date?
+    var updatedAt: Date?
 
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case id, name, notes, checklists, isArchived, order
+    }
 }

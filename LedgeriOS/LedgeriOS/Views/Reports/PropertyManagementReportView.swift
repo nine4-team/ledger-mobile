@@ -80,7 +80,7 @@ struct PropertyManagementReportView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.name)
+                        Text(item.displayName)
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textPrimary)
                         HStack(spacing: Spacing.sm) {
@@ -270,7 +270,7 @@ private struct PropertyManagementPDFContent: View {
 
     private func itemRow(item: Item, index: Int) -> some View {
         HStack(spacing: 0) {
-            Text(item.name)
+            Text(item.displayName)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(item.source ?? "")
                 .frame(width: 120, alignment: .leading)

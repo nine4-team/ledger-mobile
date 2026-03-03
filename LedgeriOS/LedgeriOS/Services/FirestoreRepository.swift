@@ -1,4 +1,5 @@
 import FirebaseFirestore
+import os.log
 
 final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     private let collectionPath: String
@@ -22,14 +23,14 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
 
     func list() async throws -> [T] {
         let snapshot = try await collectionRef.getDocuments()
-        return snapshot.documents.compactMap { try? $0.data(as: T.self) }
+        return snapshot.documents.compactMap { doc in Self.decodeDocument(doc) }
     }
 
     func list(where field: String, isEqualTo value: Any) async throws -> [T] {
         let snapshot = try await collectionRef
             .whereField(field, isEqualTo: value)
             .getDocuments()
-        return snapshot.documents.compactMap { try? $0.data(as: T.self) }
+        return snapshot.documents.compactMap { doc in Self.decodeDocument(doc) }
     }
 
     // MARK: - Write (fire-and-forget for offline-first)
@@ -53,7 +54,7 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     func subscribe(onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
         collectionRef.addSnapshotListener { snapshot, error in
             guard let docs = snapshot?.documents else { return }
-            let items = docs.compactMap { try? $0.data(as: T.self) }
+            let items = docs.compactMap { doc in Self.decodeDocument(doc) }
             onChange(items)
         }
     }
@@ -63,7 +64,7 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
             .whereField(field, isEqualTo: value)
             .addSnapshotListener { snapshot, error in
                 guard let docs = snapshot?.documents else { return }
-                let items = docs.compactMap { try? $0.data(as: T.self) }
+                let items = docs.compactMap { doc in Self.decodeDocument(doc) }
                 onChange(items)
             }
     }
@@ -74,8 +75,37 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
                 onChange(nil)
                 return
             }
-            let item = try? snapshot.data(as: T.self)
+            let item = Self.decodeDocument(snapshot)
             onChange(item)
+        }
+    }
+
+    // MARK: - Decode helper
+
+    private nonisolated static var logger: Logger { Logger(subsystem: "apps.nine4.ledger", category: "FirestoreRepository") }
+
+    private static func decodeDocument(_ doc: DocumentSnapshot) -> T? {
+        do {
+            return try doc.data(as: T.self)
+        } catch let decodingError as DecodingError {
+            let detail: String
+            switch decodingError {
+            case .typeMismatch(let type, let ctx):
+                detail = "typeMismatch(\(type)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
+            case .valueNotFound(let type, let ctx):
+                detail = "valueNotFound(\(type)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
+            case .keyNotFound(let key, let ctx):
+                detail = "keyNotFound(\(key.stringValue)) at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
+            case .dataCorrupted(let ctx):
+                detail = "dataCorrupted at \(ctx.codingPath.map(\.stringValue).joined(separator: ".")) — \(ctx.debugDescription)"
+            @unknown default:
+                detail = "\(decodingError)"
+            }
+            logger.error("Failed to decode \(String(describing: T.self)) from doc \(doc.documentID): \(detail)")
+            return nil
+        } catch {
+            logger.error("Failed to decode \(String(describing: T.self)) from doc \(doc.documentID): \(error)")
+            return nil
         }
     }
 }

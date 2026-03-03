@@ -1,7 +1,10 @@
-import FirebaseFirestore
+import Foundation
 
 struct VendorDefaults: Codable {
     var vendors: [String] = []
+    var updatedAt: Date?
 
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case vendors
+    }
 }

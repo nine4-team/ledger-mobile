@@ -210,7 +210,7 @@ struct ItemsTabView: View {
             if selectedItemIds.isEmpty {
                 NavigationLink(value: item) {
                     ItemCard(
-                        name: item.name,
+                        name: item.displayName,
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),
@@ -222,7 +222,7 @@ struct ItemsTabView: View {
                 .buttonStyle(.plain)
             } else {
                 ItemCard(
-                    name: item.name,
+                    name: item.displayName,
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
@@ -251,7 +251,7 @@ struct ItemsTabView: View {
                     guard let id = item.id else { return nil }
                     return ItemCardData(
                         id: id,
-                        name: item.name,
+                        name: item.displayName,
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),

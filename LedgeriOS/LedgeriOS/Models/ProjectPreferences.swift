@@ -6,6 +6,10 @@ struct ProjectPreferences: Codable, Identifiable {
     var userId: String?
     var projectId: String?
     var pinnedBudgetCategoryIds: [String]?
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    var createdAt: Date?
+    var updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, accountId, userId, projectId, pinnedBudgetCategoryIds
+    }
 }

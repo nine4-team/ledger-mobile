@@ -22,7 +22,7 @@ enum ListFilterSortCalculations {
         case .noSku:
             return { $0.sku == nil || $0.sku?.trimmingCharacters(in: .whitespaces).isEmpty == true }
         case .noName:
-            return { $0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+            return { $0.displayName.trimmingCharacters(in: .whitespaces).isEmpty }
         case .noProjectPrice:
             return { !hasMeaningfulProjectPrice($0) }
         case .noImage:
@@ -58,8 +58,8 @@ enum ListFilterSortCalculations {
             }
         case .alphabeticalAsc:
             return { a, b in
-                let nameA = a.name.lowercased()
-                let nameB = b.name.lowercased()
+                let nameA = a.displayName.lowercased()
+                let nameB = b.displayName.lowercased()
                 if !nameA.isEmpty && !nameB.isEmpty {
                     return nameA.localizedCompare(nameB) == .orderedAscending
                 }
@@ -69,8 +69,8 @@ enum ListFilterSortCalculations {
             }
         case .alphabeticalDesc:
             return { a, b in
-                let nameA = a.name.lowercased()
-                let nameB = b.name.lowercased()
+                let nameA = a.displayName.lowercased()
+                let nameB = b.displayName.lowercased()
                 if !nameA.isEmpty && !nameB.isEmpty {
                     return nameA.localizedCompare(nameB) == .orderedDescending
                 }
@@ -96,7 +96,7 @@ enum ListFilterSortCalculations {
         let needle = trimmed.lowercased()
         return items.filter { item in
             let haystack = [
-                item.name,
+                item.displayName,
                 item.sku ?? "",
                 item.notes ?? "",
                 item.source ?? "",
@@ -179,7 +179,7 @@ enum ListFilterSortCalculations {
             if groupMap[key] != nil {
                 groupMap[key]?.items.append(item)
             } else {
-                groupMap[key] = (name: item.name, sku: item.sku, source: item.source, items: [item])
+                groupMap[key] = (name: item.displayName, sku: item.sku, source: item.source, items: [item])
                 keyOrder.append(key)
             }
         }
@@ -215,7 +215,7 @@ enum ListFilterSortCalculations {
 
     /// Generates a grouping key from name + SKU + source, normalized to lowercase.
     private static func groupKey(for item: Item) -> String {
-        let name = item.name.trimmingCharacters(in: .whitespaces).lowercased()
+        let name = item.displayName.trimmingCharacters(in: .whitespaces).lowercased()
         let sku = (item.sku ?? "").trimmingCharacters(in: .whitespaces).lowercased()
         let source = (item.source ?? "").trimmingCharacters(in: .whitespaces).lowercased()
         return "\(name)::\(sku)::\(source)"

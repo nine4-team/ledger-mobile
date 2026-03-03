@@ -7,6 +7,7 @@ struct LedgerApp: App {
     @State private var authManager: AuthManager
     @State private var accountContext: AccountContext
     @State private var projectContext: ProjectContext
+    @State private var inventoryContext: InventoryContext
 
     init() {
         FirebaseApp.configure()
@@ -48,6 +49,12 @@ struct LedgerApp: App {
             budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService
         ))
+
+        _inventoryContext = State(initialValue: InventoryContext(
+            itemsService: itemsService,
+            transactionsService: transactionsService,
+            spacesService: spacesService
+        ))
     }
 
     @AppStorage("colorSchemePreference") private var colorSchemePreference = "system"
@@ -66,6 +73,7 @@ struct LedgerApp: App {
                 .environment(authManager)
                 .environment(accountContext)
                 .environment(projectContext)
+                .environment(inventoryContext)
                 .preferredColorScheme(resolvedColorScheme)
                 #if DEBUG
                 .overlay(alignment: .top) {

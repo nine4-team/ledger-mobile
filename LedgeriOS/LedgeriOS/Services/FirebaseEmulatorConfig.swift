@@ -5,7 +5,7 @@ import FirebaseFirestore
 import FirebaseStorage
 
 enum FirebaseEmulatorConfig {
-    static let host = "localhost"
+    static let host = "127.0.0.1"
     static let authPort = 9099
     static let firestorePort = 8181
     static let storagePort = 9199

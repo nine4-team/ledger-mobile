@@ -21,16 +21,16 @@ struct AccountGateView: View {
             }
             print("🟡 AccountGateView.task: uid=\(uid)")
 
-            // Fast path: if we have a persisted account, activate immediately
-            if let lastId = accountContext.lastSelectedAccountId {
+            // Discover accounts first so we can validate
+            await accountContext.discoverAccounts(userId: uid)
+
+            // Fast path: if we have a persisted account that still exists, activate it
+            if let lastId = accountContext.lastSelectedAccountId,
+               accountContext.discoveredAccounts.contains(where: { $0.id == lastId }) {
                 print("🟡 AccountGateView.task: fast path — lastSelectedAccountId=\(lastId)")
                 accountContext.selectAccount(accountId: lastId, userId: uid)
                 return
             }
-
-            // Otherwise, discover accounts
-            print("🟡 AccountGateView.task: calling discoverAccounts")
-            await accountContext.discoverAccounts(userId: uid)
 
             // Auto-select if exactly one account
             if accountContext.discoveredAccounts.count == 1,

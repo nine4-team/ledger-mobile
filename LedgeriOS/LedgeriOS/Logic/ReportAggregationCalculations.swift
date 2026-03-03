@@ -128,7 +128,7 @@ enum ReportAggregationCalculations {
                 if isMissing { hasMissingPrices = true }
                 amountCents += priceCents
                 invoiceItems.append(InvoiceItem(
-                    name: item.name,
+                    name: item.displayName,
                     projectPriceCents: item.projectPriceCents,
                     isMissingPrice: isMissing
                 ))

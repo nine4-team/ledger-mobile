@@ -1,7 +1,7 @@
 import Foundation
 
 enum BudgetCategoryType: String, Codable {
-    case general, itemized, fee
+    case general, standard, itemized, fee
 }
 
 enum MemberRole: String, Codable {

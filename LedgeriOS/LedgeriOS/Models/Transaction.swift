@@ -25,7 +25,16 @@ struct Transaction: Codable, Identifiable, Hashable {
     var needsReview: Bool?
     var taxRatePct: Double?
     var subtotalCents: Int?
+    var createdAt: Date?
+    var updatedAt: Date?
 
-    @ServerTimestamp var createdAt: Date?
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case id, projectId, transactionDate, amountCents, source,
+             isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
+             itemIds, status, purchasedBy, reimbursementType, notes, isCanceled,
+             budgetCategoryId, receiptImages, otherImages, transactionImages,
+             needsReview, taxRatePct, subtotalCents
+        case transactionType = "type"
+        case hasEmailReceipt = "receiptEmailed"
+    }
 }

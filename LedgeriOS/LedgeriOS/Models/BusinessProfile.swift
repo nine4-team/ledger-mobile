@@ -1,8 +1,11 @@
-import FirebaseFirestore
+import Foundation
 
 struct BusinessProfile: Codable {
     var name: String?
     var logoUrl: String?
+    var updatedAt: Date?
 
-    @ServerTimestamp var updatedAt: Date?
+    enum CodingKeys: String, CodingKey {
+        case name, logoUrl
+    }
 }
