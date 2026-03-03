@@ -200,7 +200,9 @@ async function main() {
   run('xcrun', ['simctl', 'install', 'booted', appPath]);
 
   log('Launching app...');
-  run('xcrun', ['simctl', 'launch', 'booted', BUNDLE_ID]);
+  run('xcrun', ['simctl', 'launch', 'booted', BUNDLE_ID], {
+    SIMCTL_CHILD_USE_FIREBASE_EMULATORS: '1',
+  });
 
   log('──────────────────────────────────────────');
   log('Sign in with: team@nine4.co / password123');
