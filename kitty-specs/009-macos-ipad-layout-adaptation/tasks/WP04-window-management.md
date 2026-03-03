@@ -1,7 +1,7 @@
 ---
 work_package_id: WP04
 title: macOS Window Management & Toolbar
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP03
 base_branch: 009-macos-ipad-layout-adaptation-WP03
@@ -264,3 +264,4 @@ To change a work package's lane, either:
 
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-03T22:25:39Z – claude – shell_pid=4093 – lane=doing – Assigned agent via workflow command
+- 2026-03-03T22:27:08Z – claude – shell_pid=4093 – lane=for_review – Ready for review: macOS window management and toolbar implemented — default size 1000x700, min 800x600, unified toolbar style, AccountToolbarMenu with account switcher in MainTabView toolbar
