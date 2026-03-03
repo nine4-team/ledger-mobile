@@ -100,24 +100,8 @@ struct TransactionCard: View {
     }
 
     var body: some View {
-        Card(padding: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                headerRow
-                contentSection
-            }
-        }
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(
-                    selected ? BrandColors.primary : Color.clear,
-                    lineWidth: selected ? 2 : 0
-                )
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onPress?()
-        }
-        .sheet(isPresented: $showMenu) {
+        cardView
+            .sheet(isPresented: $showMenu) {
             ActionMenuSheet(
                 title: source,
                 items: menuItems,
@@ -133,6 +117,30 @@ struct TransactionCard: View {
                 menuPendingAction = nil
                 action()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var cardView: some View {
+        let base = Card(padding: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                headerRow
+                contentSection
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                .stroke(
+                    selected ? BrandColors.primary : Color.clear,
+                    lineWidth: selected ? 2 : 0
+                )
+        )
+        .contentShape(Rectangle())
+
+        if let onPress {
+            base.onTapGesture { onPress() }
+        } else {
+            base
         }
     }
 
