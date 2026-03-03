@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Adaptive Layouts — List Views & Auth Screens
-lane: "doing"
+lane: "done"
 dependencies:
 - WP02
 base_branch: 009-macos-ipad-layout-adaptation-WP02
@@ -19,8 +19,8 @@ phase: Phase 2 - Features
 assignee: ''
 agent: "claude-opus"
 shell_pid: "64983"
-review_status: ''
-reviewed_by: ''
+review_status: "approved"
+reviewed_by: "nine4-team"
 history:
 - timestamp: '2026-03-01T05:27:35Z'
   lane: planned
@@ -269,3 +269,4 @@ To change a work package's lane, either:
 - 2026-03-03T21:55:09Z – claude-opus – shell_pid=44805 – lane=doing – Assigned agent via workflow command
 - 2026-03-03T22:02:37Z – claude-opus – shell_pid=44805 – lane=for_review – Ready for review: AdaptiveContentWidth component + applied to all list views and auth screens. Build passes.
 - 2026-03-03T22:05:26Z – claude-opus – shell_pid=64983 – lane=doing – Started review via workflow command
+- 2026-03-03T22:06:28Z – claude-opus – shell_pid=64983 – lane=done – Review passed: AdaptiveContentWidth component is clean and reusable. All list views (Projects, Inventory×3, Search, Settings) and auth screens (SignIn, SignUp, AccountGate) correctly wrapped. formMaxWidth used for auth/gate views, contentMaxWidth for lists. No UIDevice/UIScreen checks. Single focused commit.
