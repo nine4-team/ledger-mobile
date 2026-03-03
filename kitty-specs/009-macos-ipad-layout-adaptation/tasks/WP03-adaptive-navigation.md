@@ -1,9 +1,12 @@
 ---
 work_package_id: WP03
 title: Adaptive Navigation — Tab/Sidebar
-lane: planned
+lane: "doing"
 dependencies:
 - WP02
+base_branch: 009-macos-ipad-layout-adaptation-WP02
+base_commit: 4675111b7a670ac455aa15b493bf01b1c8425f5a
+created_at: '2026-03-03T21:54:57.515680+00:00'
 subtasks:
 - T011
 - T012
@@ -14,7 +17,7 @@ subtasks:
 phase: Phase 2 - Features
 assignee: ''
 agent: ''
-shell_pid: ''
+shell_pid: "44277"
 review_status: ''
 reviewed_by: ''
 history:
