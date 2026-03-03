@@ -77,7 +77,7 @@ struct ProjectsListView: View {
                     showNewProject = true
                 } label: {
                     Image(systemName: "plus")
-                        .foregroundStyle(BrandColors.primary)
+                        .foregroundStyle(BrandColors.textSecondary)
                 }
             }
         }

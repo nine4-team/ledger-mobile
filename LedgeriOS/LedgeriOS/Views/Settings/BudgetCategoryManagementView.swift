@@ -211,7 +211,7 @@ private struct CategoryManagementRow: View {
                 HStack(spacing: Spacing.md) {
                     Button { onEdit() } label: {
                         Image(systemName: "pencil")
-                            .foregroundStyle(BrandColors.primary)
+                            .foregroundStyle(BrandColors.textSecondary)
                     }
 
                     Button { onArchive() } label: {
