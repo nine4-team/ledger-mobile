@@ -1,7 +1,7 @@
 ---
 work_package_id: WP06
 title: Adaptive Layouts — List Views & Auth Screens
-lane: "doing"
+lane: "for_review"
 dependencies:
 - WP02
 base_branch: 009-macos-ipad-layout-adaptation-WP02
@@ -267,3 +267,4 @@ To change a work package's lane, either:
 
 **Valid lanes**: `planned`, `doing`, `for_review`, `done`
 - 2026-03-03T21:55:09Z – claude-opus – shell_pid=44805 – lane=doing – Assigned agent via workflow command
+- 2026-03-03T22:02:37Z – claude-opus – shell_pid=44805 – lane=for_review – Ready for review: AdaptiveContentWidth component + applied to all list views and auth screens. Build passes.
