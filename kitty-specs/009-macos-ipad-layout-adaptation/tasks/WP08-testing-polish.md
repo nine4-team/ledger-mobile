@@ -1,7 +1,7 @@
 ---
 work_package_id: WP08
 title: Cross-Platform Testing & Polish
-lane: "doing"
+lane: "done"
 dependencies:
 - WP03
 - WP04
@@ -265,3 +265,4 @@ To change a work package's lane, either:
 - 2026-03-03T23:06:14Z – claude-sonnet – shell_pid=66410 – lane=doing – Started implementation via workflow command
 - 2026-03-03T23:09:51Z – claude-sonnet – shell_pid=66410 – lane=for_review – Ready for review: Fixed all 4 review issues - CommandGroup(replacing:) for newItem/textEditing/appSettings to eliminate shortcut conflicts; AdaptiveContentWidth on ItemsTabView, TransactionsTabView, SpacesTabView; AccountToolbarMenu loading state; RootView per-state min sizes (400x500 auth, 800x600 main). Build passes.
 - 2026-03-03T23:10:39Z – claude-sonnet – shell_pid=76676 – lane=doing – Started review via workflow command
+- 2026-03-03T23:11:36Z – claude-sonnet – shell_pid=76676 – lane=done – Review passed: All 4 feedback items addressed — CommandGroup(replacing:) for shortcut conflicts, AdaptiveContentWidth on ItemsTabView/TransactionsTabView/SpacesTabView, AccountToolbarMenu loading state, per-state RootView min sizes.
