@@ -50,10 +50,6 @@ struct TransactionsTabView: View {
         VStack(spacing: 0) {
             controlBar
 
-            if !processedTransactions.isEmpty {
-                selectAllRow
-            }
-
             if !selectedIds.isEmpty {
                 ListSelectionInfo(
                     text: SelectionCalculations.selectionLabel(
@@ -107,7 +103,20 @@ struct TransactionsTabView: View {
             searchText: $searchText,
             isSearchVisible: $isSearchVisible,
             actions: controlActions
-        )
+        ) {
+            if !processedTransactions.isEmpty {
+                Button {
+                    selectedIds = SelectionCalculations.selectAllToggle(
+                        selectedIds: selectedIds,
+                        allIds: allVisibleIds
+                    )
+                } label: {
+                    SelectorCircle(isSelected: isAllSelected, indicator: .check)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select all")
+            }
+        }
         .padding(.horizontal, Spacing.screenPadding)
     }
 
@@ -148,22 +157,6 @@ struct TransactionsTabView: View {
                 showNewTransaction = true
             },
         ]
-    }
-
-    // MARK: - Select All
-
-    private var selectAllRow: some View {
-        ListSelectAllRow(
-            isChecked: isAllSelected,
-            onToggle: {
-                selectedIds = SelectionCalculations.selectAllToggle(
-                    selectedIds: selectedIds,
-                    allIds: allVisibleIds
-                )
-            }
-        )
-        .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Content

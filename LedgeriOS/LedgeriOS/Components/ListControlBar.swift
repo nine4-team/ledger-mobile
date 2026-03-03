@@ -1,18 +1,33 @@
 import SwiftUI
 
-struct ListControlBar: View {
+struct ListControlBar<LeftElement: View>: View {
     @Binding var searchText: String
     @Binding var isSearchVisible: Bool
     var actions: [ControlAction]
     var searchPlaceholder: String = "Search..."
+    @ViewBuilder var leftElement: () -> LeftElement
+
+    init(
+        searchText: Binding<String>,
+        isSearchVisible: Binding<Bool>,
+        actions: [ControlAction],
+        searchPlaceholder: String = "Search...",
+        @ViewBuilder leftElement: @escaping () -> LeftElement = { EmptyView() }
+    ) {
+        self._searchText = searchText
+        self._isSearchVisible = isSearchVisible
+        self.actions = actions
+        self.searchPlaceholder = searchPlaceholder
+        self.leftElement = leftElement
+    }
 
     var body: some View {
         VStack(spacing: Spacing.sm) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Spacing.sm) {
-                    ForEach(actions) { action in
-                        actionButton(action)
-                    }
+            HStack(spacing: Spacing.sm) {
+                leftElement()
+
+                ForEach(actions) { action in
+                    actionButton(action)
                 }
             }
 
@@ -22,6 +37,7 @@ struct ListControlBar: View {
                 placeholder: searchPlaceholder
             )
         }
+        .padding(.top, Spacing.sm)
     }
 
     @ViewBuilder
@@ -136,7 +152,7 @@ struct ListControlBar: View {
             ControlAction(id: "filter", title: "Filter", icon: "line.3.horizontal.decrease") {},
         ]
     )
-    .padding()
+    .padding(.horizontal)
 }
 
 #Preview("With Search Visible") {
@@ -148,7 +164,29 @@ struct ListControlBar: View {
             ControlAction(id: "filter", title: "Filter", icon: "line.3.horizontal.decrease") {},
         ]
     )
-    .padding()
+    .padding(.horizontal)
+}
+
+#Preview("With Left Element (Select All)") {
+    @Previewable @State var allSelected = false
+
+    ListControlBar(
+        searchText: .constant(""),
+        isSearchVisible: .constant(false),
+        actions: [
+            ControlAction(id: "search", title: "", icon: "magnifyingglass", appearance: .iconOnly) {},
+            ControlAction(id: "sort", title: "Sort", icon: "arrow.up.arrow.down") {},
+            ControlAction(id: "filter", title: "Filter", icon: "line.3.horizontal.decrease") {},
+            ControlAction(id: "add", title: "", variant: .primary, icon: "plus", appearance: .iconOnly) {},
+        ]
+    ) {
+        Button { allSelected.toggle() } label: {
+            SelectorCircle(isSelected: allSelected, indicator: .check)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Select all")
+    }
+    .padding(.horizontal)
 }
 
 #Preview("Mixed Appearances") {
@@ -162,20 +200,5 @@ struct ListControlBar: View {
             ControlAction(id: "add", title: "Add", variant: .primary, icon: "plus") {},
         ]
     )
-    .padding()
-}
-
-#Preview("Many Actions (Scrollable)") {
-    ListControlBar(
-        searchText: .constant(""),
-        isSearchVisible: .constant(false),
-        actions: [
-            ControlAction(id: "search", title: "", icon: "magnifyingglass", appearance: .iconOnly) {},
-            ControlAction(id: "sort", title: "Sort", icon: "arrow.up.arrow.down") {},
-            ControlAction(id: "filter", title: "Filter", icon: "line.3.horizontal.decrease") {},
-            ControlAction(id: "add", title: "Add", variant: .primary, icon: "plus") {},
-            ControlAction(id: "tile", title: "", icon: "square.dashed", appearance: .tile) {},
-        ]
-    )
-    .padding()
+    .padding(.horizontal)
 }

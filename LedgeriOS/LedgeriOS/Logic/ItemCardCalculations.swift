@@ -79,4 +79,23 @@ enum ItemCardCalculations {
     ) -> Bool {
         externalSelected ?? internalSelected
     }
+
+    /// Determines the display price for a grouped card's collapsed state.
+    /// If totalLabel provided, uses it as the primary price.
+    /// Adds " (X each)" suffix when total differs from a uniform per-item price.
+    /// If no totalLabel, uses the per-item price when all items share the same price.
+    static func groupedCollapsedPrice(
+        totalLabel: String?,
+        itemPriceLabels: [String?]
+    ) -> (price: String?, suffix: String?) {
+        let filtered = itemPriceLabels.compactMap { $0 }.filter { !$0.isEmpty }
+        let uniquePrices = Set(filtered)
+        let uniformPerItemPrice: String? = uniquePrices.count == 1 ? filtered[0] : nil
+
+        if let total = totalLabel {
+            let suffix = uniformPerItemPrice.map { " (\($0) each)" }
+            return (total, suffix)
+        }
+        return (uniformPerItemPrice, nil)
+    }
 }

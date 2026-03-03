@@ -208,7 +208,13 @@ struct ItemsTabView: View {
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),
+                        statusLabel: item.status,
+                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
                         thumbnailUri: item.images?.first?.url,
+                        isSelected: Binding(
+                            get: { selectedItemIds.contains(itemId) },
+                            set: { if $0 { selectedItemIds.insert(itemId) } else { selectedItemIds.remove(itemId) } }
+                        ),
                         bookmarked: item.bookmark == true,
                         menuItems: singleItemMenuItems(for: item)
                     )
@@ -220,8 +226,13 @@ struct ItemsTabView: View {
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
+                    statusLabel: item.status,
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     thumbnailUri: item.images?.first?.url,
-                    isSelected: .constant(selectedItemIds.contains(itemId)),
+                    isSelected: Binding(
+                        get: { selectedItemIds.contains(itemId) },
+                        set: { if $0 { selectedItemIds.insert(itemId) } else { selectedItemIds.remove(itemId) } }
+                    ),
                     bookmarked: item.bookmark == true
                 )
                 .onTapGesture { toggleSelection(itemId) }
@@ -232,13 +243,19 @@ struct ItemsTabView: View {
     @ViewBuilder
     private func expandableGroupCard(for group: ItemGroup) -> some View {
         let isExpanded = expandedGroups.contains(group.id)
+        let totalLabel = group.totalCents > 0
+            ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
+        let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+
         VStack(spacing: Spacing.xs) {
             GroupedItemCard(
                 name: group.name,
-                thumbnailUrl: group.items.first?.images?.first?.url,
-                countLabel: "\(group.count) items",
-                totalLabel: group.totalCents > 0
-                    ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil,
+                thumbnailUrl: summaryItem?.images?.first?.url,
+                countLabel: "×\(group.count)",
+                totalLabel: totalLabel,
+                sku: summaryItem?.sku,
+                sourceLabel: summaryItem?.source,
+                priceLabel: totalLabel,
                 isSelected: .constant(false),
                 onSelectedChange: { _ in },
                 items: group.items.compactMap { item in
@@ -249,6 +266,8 @@ struct ItemsTabView: View {
                         sku: item.sku,
                         sourceLabel: item.source,
                         priceLabel: displayPrice(for: item),
+                        statusLabel: item.status,
+                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
                         thumbnailUri: item.images?.first?.url
                     )
                 },
@@ -337,6 +356,11 @@ struct ItemsTabView: View {
     }
 
     // MARK: - Helpers
+
+    private func categoryName(for categoryId: String?) -> String? {
+        guard let categoryId else { return nil }
+        return accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+    }
 
     private func displayPrice(for item: Item) -> String? {
         if let price = item.projectPriceCents, price != item.purchasePriceCents {

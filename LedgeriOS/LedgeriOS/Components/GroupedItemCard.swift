@@ -24,6 +24,11 @@ struct GroupedItemCard: View {
     var thumbnailUrl: String?
     var countLabel: String?
     var totalLabel: String?
+    var sku: String?
+    var sourceLabel: String?
+    var locationLabel: String?
+    var priceLabel: String?
+    var microcopyWhenCollapsed: String? = "View All"
     var isExpanded: Binding<Bool>?
     var defaultExpanded: Bool = false
     var isSelected: Binding<Bool>?
@@ -39,6 +44,11 @@ struct GroupedItemCard: View {
         thumbnailUrl: String? = nil,
         countLabel: String? = nil,
         totalLabel: String? = nil,
+        sku: String? = nil,
+        sourceLabel: String? = nil,
+        locationLabel: String? = nil,
+        priceLabel: String? = nil,
+        microcopyWhenCollapsed: String? = "View All",
         isExpanded: Binding<Bool>? = nil,
         defaultExpanded: Bool = false,
         isSelected: Binding<Bool>? = nil,
@@ -51,6 +61,11 @@ struct GroupedItemCard: View {
         self.thumbnailUrl = thumbnailUrl
         self.countLabel = countLabel
         self.totalLabel = totalLabel
+        self.sku = sku
+        self.sourceLabel = sourceLabel
+        self.locationLabel = locationLabel
+        self.priceLabel = priceLabel
+        self.microcopyWhenCollapsed = microcopyWhenCollapsed
         self.isExpanded = isExpanded
         self.defaultExpanded = defaultExpanded
         self.isSelected = isSelected
@@ -80,7 +95,22 @@ struct GroupedItemCard: View {
     var body: some View {
         Card(padding: 0) {
             VStack(alignment: .leading, spacing: 0) {
-                summaryRow
+                Button {
+                    if let onPress {
+                        onPress()
+                    } else {
+                        withAnimation { setExpanded(!expanded) }
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 0) {
+                        headerRow
+                        if !expanded {
+                            collapsedContent
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
 
                 if expanded && !items.isEmpty {
                     Divider()
@@ -120,59 +150,83 @@ struct GroupedItemCard: View {
         .animation(.default, value: expanded)
     }
 
-    // MARK: - Summary Row
+    // MARK: - Header Row
 
-    private var summaryRow: some View {
-        Button {
-            if let onPress {
-                onPress()
-            } else {
-                withAnimation { setExpanded(!expanded) }
-            }
-        } label: {
-            HStack(spacing: Spacing.md) {
-                if isSelected != nil {
-                    SelectorCircle(isSelected: selected, indicator: .check)
-                        .onTapGesture {
-                            let newValue = !selected
-                            isSelected?.wrappedValue = newValue
-                            onSelectedChange?(newValue)
-                        }
-                }
-
-                thumbnail
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text(name)
-                        .font(Typography.h3)
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .lineLimit(2)
-
-                    HStack(spacing: Spacing.sm) {
-                        if let countLabel {
-                            Text(countLabel)
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                        }
-                        if let totalLabel {
-                            Text(totalLabel)
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                        }
+    private var headerRow: some View {
+        HStack(spacing: Spacing.sm) {
+            if isSelected != nil {
+                SelectorCircle(isSelected: selected, indicator: .dot)
+                    .onTapGesture {
+                        let newValue = !selected
+                        isSelected?.wrappedValue = newValue
+                        onSelectedChange?(newValue)
                     }
+            }
+
+            Spacer()
+
+            HStack(spacing: Spacing.sm) {
+                if let countLabel {
+                    Badge(text: countLabel, color: BrandColors.primary)
                 }
 
-                Spacer()
+                if !expanded, let microcopyWhenCollapsed {
+                    Text(microcopyWhenCollapsed)
+                        .font(Typography.caption.italic())
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
 
-                Image(systemName: "chevron.right")
+                Image(systemName: expanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(BrandColors.textTertiary)
-                    .rotationEffect(.degrees(expanded ? 90 : 0))
             }
-            .padding(Spacing.lg)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
+        .overlay(alignment: .bottom) {
+            Divider()
+                .foregroundStyle(BrandColors.borderSecondary)
+        }
+    }
+
+    // MARK: - Collapsed Content
+
+    private var collapsedContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(name)
+                .font(Typography.h3)
+                .foregroundStyle(BrandColors.textPrimary)
+                .lineLimit(3)
+
+            HStack(alignment: .top, spacing: Spacing.md) {
+                thumbnail
+
+                VStack(alignment: .leading, spacing: 6) {
+                    if let displayPrice = priceLabel ?? totalLabel, !displayPrice.isEmpty {
+                        Text(displayPrice)
+                            .font(Typography.h3)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
+                    if let sourceLabel, !sourceLabel.isEmpty {
+                        Text("Source: \(sourceLabel)")
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    if let sku, !sku.isEmpty {
+                        Text("SKU: \(sku)")
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    if let locationLabel, !locationLabel.isEmpty {
+                        Text("Location: \(locationLabel)")
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .lineLimit(2)
+                    }
+                }
+            }
+        }
+        .padding(Spacing.lg)
     }
 
     // MARK: - Thumbnail
@@ -186,25 +240,38 @@ struct GroupedItemCard: View {
                     image
                         .resizable()
                         .scaledToFill()
+                case .empty:
+                    ProgressView()
+                        .frame(width: 108, height: 108)
                 default:
                     thumbnailPlaceholder
                 }
             }
-            .frame(width: 56, height: 56)
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+            .frame(width: 108, height: 108)
+            .clipShape(RoundedRectangle(cornerRadius: 21))
+            .background(BrandColors.surfaceTertiary)
+            .overlay(
+                RoundedRectangle(cornerRadius: 21)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
         } else {
             thumbnailPlaceholder
         }
     }
 
     private var thumbnailPlaceholder: some View {
-        RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
-            .fill(BrandColors.inputBackground)
-            .frame(width: 56, height: 56)
-            .overlay(
-                Image(systemName: "photo")
-                    .foregroundStyle(BrandColors.textTertiary)
-            )
+        ZStack {
+            RoundedRectangle(cornerRadius: 21)
+                .fill(BrandColors.surfaceTertiary)
+            Image(systemName: "photo")
+                .font(.system(size: 24))
+                .foregroundStyle(BrandColors.textSecondary)
+        }
+        .frame(width: 108, height: 108)
+        .overlay(
+            RoundedRectangle(cornerRadius: 21)
+                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+        )
     }
 }
 
@@ -219,8 +286,24 @@ private let previewItems: [ItemCardData] = [
 #Preview("Collapsed") {
     GroupedItemCard(
         name: "Living Room Furniture",
-        countLabel: "3 items",
+        thumbnailUrl: "https://picsum.photos/200",
+        countLabel: "×3",
         totalLabel: "$1,450",
+        sku: "SF-001",
+        sourceLabel: "West Elm",
+        priceLabel: "$1,450",
+        items: previewItems
+    )
+    .padding(Spacing.screenPadding)
+}
+
+#Preview("Collapsed - No Image") {
+    GroupedItemCard(
+        name: "Living Room Furniture",
+        countLabel: "×3",
+        totalLabel: "$1,450",
+        sourceLabel: "West Elm",
+        priceLabel: "$1,450",
         items: previewItems
     )
     .padding(Spacing.screenPadding)
@@ -231,8 +314,10 @@ private let previewItems: [ItemCardData] = [
 
     GroupedItemCard(
         name: "Kitchen Appliances",
-        countLabel: "3 items",
+        thumbnailUrl: "https://picsum.photos/201",
+        countLabel: "×3",
         totalLabel: "$1,450",
+        priceLabel: "$1,450",
         isExpanded: $expanded,
         items: previewItems,
         onItemPress: { item in print("Tapped \(item.name)") }
@@ -241,12 +326,13 @@ private let previewItems: [ItemCardData] = [
 }
 
 #Preview("With Selection") {
-    @Previewable @State var selected = true
+    @Previewable @State var selected = false
 
     GroupedItemCard(
         name: "Bedroom Set",
-        countLabel: "3 items",
+        countLabel: "×3",
         totalLabel: "$1,450",
+        priceLabel: "$1,450",
         isSelected: $selected,
         items: previewItems
     )

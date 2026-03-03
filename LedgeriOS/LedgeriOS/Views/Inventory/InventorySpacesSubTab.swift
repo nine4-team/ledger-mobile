@@ -23,7 +23,7 @@ struct InventorySpacesSubTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            searchBar
+            controlBar
             content
         }
         .sheet(isPresented: $showNewSpace) {
@@ -33,56 +33,37 @@ struct InventorySpacesSubTab: View {
         }
     }
 
-    // MARK: - Search Bar
+    // MARK: - Control Bar
 
-    private var searchBar: some View {
-        VStack(spacing: Spacing.sm) {
-            HStack {
-                Button {
+    private var controlBar: some View {
+        ListControlBar(
+            searchText: $searchText,
+            isSearchVisible: $isSearchVisible,
+            actions: [
+                ControlAction(
+                    id: "search",
+                    title: "",
+                    icon: "magnifyingglass",
+                    isActive: isSearchVisible,
+                    appearance: .iconOnly
+                ) {
                     withAnimation {
                         isSearchVisible.toggle()
                         if !isSearchVisible { searchText = "" }
                     }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 16))
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .frame(width: 40, height: 40)
-                        .background(BrandColors.buttonSecondaryBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
-                                .stroke(
-                                    isSearchVisible ? BrandColors.primary : BrandColors.border,
-                                    lineWidth: Dimensions.borderWidth
-                                )
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-
-                Button {
-                    showNewSpace = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.white)
-                        .frame(width: 40, height: 40)
-                        .background(BrandColors.primary)
-                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
-                }
-                .buttonStyle(.plain)
-            }
-
-            ListStateControls(
-                searchText: $searchText,
-                isSearchVisible: isSearchVisible,
-                placeholder: "Search spaces..."
-            )
-        }
+                },
+                ControlAction(
+                    id: "add",
+                    title: "",
+                    variant: .primary,
+                    icon: "plus",
+                    appearance: .iconOnly,
+                    action: { showNewSpace = true }
+                ),
+            ],
+            searchPlaceholder: "Search spaces..."
+        )
         .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Content

@@ -11,6 +11,8 @@ struct SharedItemsList: View {
     // Firestore (standalone / picker mode)
     var accountId: String?
 
+    @Environment(AccountContext.self) private var accountContext
+
     @State private var items: [Item] = []
     @State private var searchText = ""
     @State private var isSearchVisible = false
@@ -93,10 +95,6 @@ struct SharedItemsList: View {
         VStack(spacing: 0) {
             controlBar
 
-            if !processedItems.isEmpty && !isPicker {
-                selectAllRow
-            }
-
             if !selectedIds.isEmpty {
                 ListSelectionInfo(
                     text: SelectionCalculations.selectionLabel(
@@ -161,24 +159,21 @@ struct SharedItemsList: View {
             onFilter: { showFilterMenu = true },
             activeFilterCount: activeFilter != .all ? 1 : 0,
             activeSortLabel: activeSort != .createdDesc ? sortLabel(for: activeSort) : nil
-        )
-        .padding(.horizontal, Spacing.screenPadding)
-    }
-
-    // MARK: - Select All Row
-
-    private var selectAllRow: some View {
-        ListSelectAllRow(
-            isChecked: isAllSelected,
-            onToggle: {
-                selectedIds = SelectionCalculations.selectAllToggle(
-                    selectedIds: selectedIds,
-                    allIds: allVisibleIds
-                )
+        ) {
+            if !processedItems.isEmpty && !isPicker {
+                Button {
+                    selectedIds = SelectionCalculations.selectAllToggle(
+                        selectedIds: selectedIds,
+                        allIds: allVisibleIds
+                    )
+                } label: {
+                    SelectorCircle(isSelected: isAllSelected, indicator: .check)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select all")
             }
-        )
+        }
         .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Content
@@ -243,8 +238,13 @@ struct SharedItemsList: View {
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
+                    statusLabel: item.status,
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     thumbnailUri: item.images?.first?.url,
-                    isSelected: isItemSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
+                    isSelected: Binding(
+                        get: { selectedIds.contains(itemId) },
+                        set: { if $0 { selectedIds.insert(itemId) } else { selectedIds.remove(itemId) } }
+                    ),
                     bookmarked: item.bookmark == true,
                     onPress: { handleItemPress(item) },
                     menuItems: menuItems,
@@ -325,20 +325,30 @@ struct SharedItemsList: View {
         let groupSelected = !validItems.isEmpty && validItems.allSatisfy { selectedIds.contains($0.id!) }
         let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
 
+        let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+
         GroupedItemCard(
             name: group.name,
-            thumbnailUrl: group.items.first?.images?.first?.url,
-            countLabel: "\(group.count) items",
+            thumbnailUrl: summaryItem?.images?.first?.url,
+            countLabel: "×\(group.count)",
             totalLabel: totalLabel,
-            isSelected: groupSelected ? .constant(true) : .constant(false),
+            sku: summaryItem?.sku,
+            sourceLabel: summaryItem?.source,
+            priceLabel: totalLabel,
+            isSelected: Binding(
+                get: { groupSelected },
+                set: { selected in
+                    for item in group.items {
+                        if let id = item.id {
+                            if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
+                        }
+                    }
+                }
+            ),
             onSelectedChange: { selected in
                 for item in group.items {
                     if let id = item.id {
-                        if selected {
-                            selectedIds.insert(id)
-                        } else {
-                            selectedIds.remove(id)
-                        }
+                        if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
                     }
                 }
             },
@@ -351,6 +361,8 @@ struct SharedItemsList: View {
                     sku: item.sku,
                     sourceLabel: item.source,
                     priceLabel: displayPrice(for: item),
+                    statusLabel: item.status,
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     thumbnailUri: item.images?.first?.url,
                     warningMessage: getWarning?(item)
                 )
@@ -482,6 +494,11 @@ struct SharedItemsList: View {
     }
 
     // MARK: - Helpers
+
+    private func categoryName(for categoryId: String?) -> String? {
+        guard let categoryId else { return nil }
+        return accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+    }
 
     private func displayPrice(for item: Item) -> String? {
         if let price = item.projectPriceCents, price != item.purchasePriceCents {

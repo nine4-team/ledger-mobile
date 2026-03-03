@@ -175,6 +175,68 @@ struct ItemCardCalculationTests {
         #expect(url == nil)
     }
 
+    // MARK: - groupedCollapsedPrice
+
+    @Test("Total with uniform per-item price adds suffix")
+    func groupedPriceTotalWithUniformItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: "$498.00",
+            itemPriceLabels: ["$249.00", "$249.00"]
+        )
+        #expect(price == "$498.00")
+        #expect(suffix == " ($249.00 each)")
+    }
+
+    @Test("Total with mixed item prices has no suffix")
+    func groupedPriceTotalWithMixedItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: "$498.00",
+            itemPriceLabels: ["$249.00", "$199.00"]
+        )
+        #expect(price == "$498.00")
+        #expect(suffix == nil)
+    }
+
+    @Test("No total with uniform items returns item price")
+    func groupedPriceNoTotalUniformItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: nil,
+            itemPriceLabels: ["$99.00", "$99.00", "$99.00"]
+        )
+        #expect(price == "$99.00")
+        #expect(suffix == nil)
+    }
+
+    @Test("No total with mixed items returns nil")
+    func groupedPriceNoTotalMixedItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: nil,
+            itemPriceLabels: ["$10.00", "$20.00"]
+        )
+        #expect(price == nil)
+        #expect(suffix == nil)
+    }
+
+    @Test("Empty items array returns nil")
+    func groupedPriceEmptyItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: nil,
+            itemPriceLabels: []
+        )
+        #expect(price == nil)
+        #expect(suffix == nil)
+    }
+
+    @Test("Total with all nil item prices has no suffix")
+    func groupedPriceTotalWithNilItems() {
+        let (price, suffix) = ItemCardCalculations.groupedCollapsedPrice(
+            totalLabel: "$100.00",
+            itemPriceLabels: [nil, nil]
+        )
+        #expect(price == "$100.00")
+        #expect(suffix == nil)
+    }
+
     // MARK: - resolvedSelected
 
     @Test("External selected overrides internal")
