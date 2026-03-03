@@ -18,9 +18,12 @@ struct MediaGallerySection: View {
     @State private var showAttachmentMenu = false
     @State private var selectedAttachment: AttachmentRef?
     @State private var menuPendingAction: (() -> Void)?
-    @State private var pickerItem: PhotosPickerItem?
+    @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isUploading = false
     @State private var uploadError: String?
+    @State private var showAddSourceMenu = false
+    @State private var showCamera = false
+    @State private var showPhotoPicker = false
 
     private var canAdd: Bool {
         MediaGalleryCalculations.canAddAttachment(current: attachments, maxAttachments: maxAttachments)
@@ -30,30 +33,45 @@ struct MediaGallerySection: View {
         attachments.filter { $0.kind == .image }
     }
 
+    private var hasOptionsButton: Bool {
+        MediaGalleryCalculations.shouldShowOptionsButton(
+            hasSetPrimary: onSetPrimary != nil,
+            hasRemove: onRemoveAttachment != nil
+        )
+    }
+
+    private var remainingSlots: Int {
+        max(0, maxAttachments - attachments.count)
+    }
+
     var body: some View {
         TitledCard(title: title) {
-            if attachments.isEmpty {
-                emptyState
-            } else {
-                galleryContent
+            VStack(spacing: Spacing.sm) {
+                if attachments.isEmpty {
+                    emptyState
+                } else {
+                    galleryContent
+                }
+
+                if let uploadError {
+                    Text(uploadError)
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.destructive)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
         } headerAction: {
             if canAdd, onUploadAttachment != nil {
-                PhotosPicker(
-                    selection: $pickerItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    if isUploading {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                    } else {
-                        Text("Add")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.primary)
+                if isUploading {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                } else {
+                    Button("Add") {
+                        showAddSourceMenu = true
                     }
+                    .font(Typography.label)
+                    .foregroundStyle(BrandColors.primary)
                 }
-                .disabled(isUploading)
             }
         }
         .fullScreenCover(isPresented: $showGallery) {
@@ -74,11 +92,37 @@ struct MediaGallerySection: View {
                     .presentationDragIndicator(.visible)
             }
         }
-        .onChange(of: pickerItem) { _, newItem in
-            guard let newItem else { return }
+        .sheet(isPresented: $showAddSourceMenu, onDismiss: {
+            menuPendingAction?()
+            menuPendingAction = nil
+        }) {
+            addSourceMenu
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCapture { imageData in
+                Task {
+                    await handlePickedImageData(imageData)
+                }
+            } onDismiss: {
+                showCamera = false
+            }
+        }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: $pickerItems,
+            maxSelectionCount: remainingSlots,
+            matching: .images,
+            photoLibrary: .shared()
+        )
+        .onChange(of: pickerItems) { _, newItems in
+            guard !newItems.isEmpty else { return }
             Task {
-                await handlePickedItem(newItem)
-                pickerItem = nil
+                for item in newItems {
+                    await handlePickedItem(item)
+                }
+                pickerItems = []
             }
         }
     }
@@ -86,13 +130,21 @@ struct MediaGallerySection: View {
     // MARK: - Photo Picker Handling
 
     private func handlePickedItem(_ item: PhotosPickerItem) async {
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self) else { return }
+            await handlePickedImageData(data)
+        } catch {
+            uploadError = error.localizedDescription
+        }
+    }
+
+    private func handlePickedImageData(_ data: Data) async {
         guard let onUploadAttachment else { return }
         isUploading = true
         uploadError = nil
         defer { isUploading = false }
 
         do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { return }
             try await onUploadAttachment(data)
         } catch {
             uploadError = error.localizedDescription
@@ -115,12 +167,50 @@ struct MediaGallerySection: View {
         ThumbnailGrid(
             attachments: imageAttachments,
             showPrimaryBadge: true,
+            showOptionsButton: hasOptionsButton,
+            showAddTile: canAdd && onUploadAttachment != nil,
             onThumbnailTap: { index in
                 galleryIndex = index
                 showGallery = true
+            },
+            onOptionsButtonTap: { index in
+                guard index < imageAttachments.count else { return }
+                selectedAttachment = imageAttachments[index]
+                showAttachmentMenu = true
+            },
+            onAddTap: {
+                showAddSourceMenu = true
             }
         )
-        .onLongPressGesture(minimumDuration: 0) {} // no-op for default
+    }
+
+    // MARK: - Add Source Menu
+
+    private var addSourceMenu: some View {
+        ActionMenuSheet(
+            title: "Add Image",
+            items: [
+                ActionMenuItem(
+                    id: "camera",
+                    label: "Camera",
+                    icon: "camera.fill",
+                    onPress: {
+                        showCamera = true
+                    }
+                ),
+                ActionMenuItem(
+                    id: "photo-library",
+                    label: "Photo Library",
+                    icon: "photo.on.rectangle",
+                    onPress: {
+                        showPhotoPicker = true
+                    }
+                ),
+            ],
+            onSelectAction: { action in
+                menuPendingAction = action
+            }
+        )
     }
 
     // MARK: - Attachment Menu
@@ -129,7 +219,20 @@ struct MediaGallerySection: View {
         let isPrimary = attachment.isPrimary ?? false
         var items: [ActionMenuItem] = []
 
-        if !isPrimary {
+        // Open in lightbox
+        if let index = imageAttachments.firstIndex(where: { $0.url == attachment.url }) {
+            items.append(ActionMenuItem(
+                id: "open",
+                label: "Open",
+                icon: "arrow.up.left.and.arrow.down.right",
+                onPress: { [self] in
+                    galleryIndex = index
+                    showGallery = true
+                }
+            ))
+        }
+
+        if !isPrimary, onSetPrimary != nil {
             items.append(ActionMenuItem(
                 id: "set-primary",
                 label: "Set as Primary",
@@ -140,15 +243,17 @@ struct MediaGallerySection: View {
             ))
         }
 
-        items.append(ActionMenuItem(
-            id: "remove",
-            label: "Remove",
-            icon: "trash",
-            isDestructive: true,
-            onPress: { [onRemoveAttachment] in
-                onRemoveAttachment?(attachment)
-            }
-        ))
+        if onRemoveAttachment != nil {
+            items.append(ActionMenuItem(
+                id: "remove",
+                label: "Remove",
+                icon: "trash",
+                isDestructive: true,
+                onPress: { [onRemoveAttachment] in
+                    onRemoveAttachment?(attachment)
+                }
+            ))
+        }
 
         return ActionMenuSheet(
             title: attachment.fileName ?? "Attachment",
@@ -165,7 +270,8 @@ struct MediaGallerySection: View {
 #Preview("Empty") {
     MediaGallerySection(
         title: "IMAGES",
-        attachments: []
+        attachments: [],
+        onUploadAttachment: { _ in }
     )
     .padding(Spacing.screenPadding)
 }
@@ -178,6 +284,7 @@ struct MediaGallerySection: View {
             AttachmentRef(url: "https://picsum.photos/200/200?2"),
             AttachmentRef(url: "https://picsum.photos/200/200?3"),
         ],
+        onUploadAttachment: { _ in },
         onRemoveAttachment: { _ in },
         onSetPrimary: { _ in }
     )
