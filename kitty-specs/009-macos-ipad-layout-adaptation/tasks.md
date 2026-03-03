@@ -90,12 +90,12 @@
 **Estimated Size**: ~350 lines
 
 ### Included Subtasks
-- [ ] T011 Create `AppSection` enum (projects, inventory, search, settings) for type-safe tab selection
-- [ ] T012 Refactor MainTabView from `TabView` + `.tabItem` to iOS 18+ `Tab` syntax
-- [ ] T013 Apply `.tabViewStyle(.sidebarAdaptable)` to MainTabView's TabView
-- [ ] T014 Update `@SceneStorage("selectedTab")` from `Int` to `AppSection` type
-- [ ] T015 Verify each tab's `NavigationStack` works independently in sidebar mode
-- [ ] T016 Verify iPhone tab behavior is identical to pre-refactor (no regressions)
+- [x] T011 Create `AppSection` enum (projects, inventory, search, settings) for type-safe tab selection
+- [x] T012 Refactor MainTabView from `TabView` + `.tabItem` to iOS 18+ `Tab` syntax
+- [x] T013 Apply `.tabViewStyle(.sidebarAdaptable)` to MainTabView's TabView
+- [x] T014 Update `@SceneStorage("selectedTab")` from `Int` to `AppSection` type
+- [x] T015 Verify each tab's `NavigationStack` works independently in sidebar mode
+- [x] T016 Verify iPhone tab behavior is identical to pre-refactor (no regressions)
 
 ### Implementation Notes
 - Per Axiom `axiom-swiftui-nav` Pattern 5: Each `Tab` wraps its own `NavigationStack`
