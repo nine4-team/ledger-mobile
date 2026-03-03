@@ -54,6 +54,12 @@ struct MainTabView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tint(BrandColors.primary)
+        .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
+            selectedTab = .settings
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+            selectedTab = .search
+        }
     }
 }
 

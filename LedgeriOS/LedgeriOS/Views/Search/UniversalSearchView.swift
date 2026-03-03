@@ -35,6 +35,9 @@ struct UniversalSearchView: View {
                 searchFocused = true
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+            searchFocused = true
+        }
         .onChange(of: query) { _, newValue in
             debounceTask?.cancel()
             debounceTask = Task {

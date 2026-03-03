@@ -102,6 +102,9 @@ struct ProjectsListView: View {
         .onDisappear {
             stopListening()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .createProject)) { _ in
+            showNewProject = true
+        }
     }
 
     // MARK: - Data

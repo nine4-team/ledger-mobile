@@ -85,5 +85,8 @@ struct LedgerApp: App {
                     GIDSignIn.sharedInstance.handle(url)
                 }
         }
+        .commands {
+            LedgerCommands()
+        }
     }
 }

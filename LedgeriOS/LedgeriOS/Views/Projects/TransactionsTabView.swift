@@ -98,6 +98,9 @@ struct TransactionsTabView: View {
                     .presentationDragIndicator(.visible)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .createTransaction)) { _ in
+            showNewTransaction = true
+        }
     }
 
     // MARK: - Control Bar
