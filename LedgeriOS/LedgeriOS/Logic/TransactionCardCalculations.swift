@@ -8,10 +8,12 @@ enum TransactionCardCalculations {
     struct BadgeItem: Equatable {
         let text: String
         let color: Color
+        var backgroundOpacity: Double = 0.10
+        var borderOpacity: Double = 0.20
     }
 
     /// Returns ordered array of badges for a transaction.
-    /// Order: type → reimbursement → receipt → needs review → category
+    /// Order: needs review → type → category
     static func badgeItems(
         transactionType: String?,
         reimbursementType: String?,
@@ -22,40 +24,29 @@ enum TransactionCardCalculations {
     ) -> [BadgeItem] {
         var badges: [BadgeItem] = []
 
-        // 1. Transaction type badge
+        // 1. Needs review badge (always leftmost)
+        if needsReview {
+            badges.append(BadgeItem(
+                text: "Needs Review",
+                color: StatusColors.badgeNeedsReview,
+                backgroundOpacity: 0.08,
+                borderOpacity: 0.20
+            ))
+        }
+
+        // 2. Transaction type badge (purchase/return only)
         if let type = transactionType?.lowercased() {
             switch type {
             case "purchase":
-                badges.append(BadgeItem(text: "Purchase", color: StatusColors.badgeSuccess))
-            case "sale":
-                badges.append(BadgeItem(text: "Sale", color: StatusColors.badgeInfo))
+                badges.append(BadgeItem(text: "Purchase", color: BrandColors.primary))
             case "return":
-                badges.append(BadgeItem(text: "Return", color: StatusColors.badgeError))
-            case "to-inventory":
-                badges.append(BadgeItem(text: "To Inventory", color: BrandColors.primary))
+                badges.append(BadgeItem(text: "Return", color: BrandColors.primary))
             default:
                 break
             }
         }
 
-        // 2. Reimbursement badge
-        if let reimburse = reimbursementType?.lowercased() {
-            switch reimburse {
-            case "owed-to-client":
-                badges.append(BadgeItem(text: "Owed to Client", color: StatusColors.badgeWarning))
-            case "owed-to-company":
-                badges.append(BadgeItem(text: "Owed to Business", color: StatusColors.badgeWarning))
-            default:
-                break
-            }
-        }
-
-        // 4. Needs review badge
-        if needsReview {
-            badges.append(BadgeItem(text: "Needs Review", color: StatusColors.badgeNeedsReview))
-        }
-
-        // 5. Budget category badge
+        // 3. Budget category badge
         if let category = budgetCategoryName, !category.isEmpty {
             badges.append(BadgeItem(text: category, color: BrandColors.primary))
         }

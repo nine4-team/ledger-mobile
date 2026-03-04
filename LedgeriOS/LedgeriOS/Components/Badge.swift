@@ -3,18 +3,20 @@ import SwiftUI
 struct Badge: View {
     let text: String
     var color: Color = BrandColors.primary
+    var backgroundOpacity: Double = 0.10
+    var borderOpacity: Double = 0.20
 
     var body: some View {
         Text(text)
-            .font(Typography.caption.weight(.semibold))
+            .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(color)
             .lineLimit(1)
             .truncationMode(.tail)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(color.opacity(0.2))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(backgroundOpacity))
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(color.opacity(0.33), lineWidth: 1))
+            .overlay(Capsule().stroke(color.opacity(borderOpacity), lineWidth: 1))
     }
 }
 

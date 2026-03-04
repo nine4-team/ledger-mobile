@@ -183,7 +183,12 @@ struct InventoryTransactionsSubTab: View {
             reimbursementType: transaction.reimbursementType,
             hasEmailReceipt: transaction.hasEmailReceipt ?? false,
             status: transaction.status,
-            itemCount: transaction.itemIds?.count
+            itemCount: transaction.itemIds?.count,
+            isSelected: Binding(
+                get: { selectedIds.contains(txId) },
+                set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }
+            ),
+            menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: txId) : []
         )
     }
 
@@ -195,5 +200,13 @@ struct InventoryTransactionsSubTab: View {
         } else {
             selectedIds.insert(txId)
         }
+    }
+
+    private func singleTransactionMenuItems(for txId: String) -> [ActionMenuItem] {
+        [
+            ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
+                selectedIds.insert(txId)
+            }),
+        ]
     }
 }

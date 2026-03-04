@@ -213,7 +213,12 @@ struct TransactionDetailView: View {
                 if !badges.isEmpty {
                     HStack(spacing: Spacing.sm) {
                         ForEach(Array(badges.enumerated()), id: \.offset) { _, badge in
-                            Badge(text: badge.text, color: badge.color)
+                            Badge(
+                                text: badge.text,
+                                color: badge.color,
+                                backgroundOpacity: badge.backgroundOpacity,
+                                borderOpacity: badge.borderOpacity
+                            )
                         }
                     }
                 }

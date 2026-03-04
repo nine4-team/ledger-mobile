@@ -15,7 +15,7 @@ struct SharedItemsList: View {
 
     @State private var items: [Item] = []
     @State private var searchText = ""
-    @State private var activeFilter: ItemFilterOption = .all
+    @State private var activeFilters: Set<ItemFilterOption> = []
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
@@ -34,9 +34,9 @@ struct SharedItemsList: View {
     }
 
     private var processedItems: [Item] {
-        ListFilterSortCalculations.applyAllFilters(
+        ListFilterSortCalculations.applyAllMultiFilters(
             items,
-            filter: activeFilter,
+            filters: activeFilters,
             sort: activeSort,
             search: searchText
         )
@@ -140,11 +140,17 @@ struct SharedItemsList: View {
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
-                activeFilter: activeFilter,
+                activeFilters: activeFilters,
                 scope: isStandalone ? .inventory : .project,
-                onSelect: { activeFilter = $0 }
+                onToggle: { option in
+                    if activeFilters.contains(option) {
+                        activeFilters.remove(option)
+                    } else {
+                        activeFilters.insert(option)
+                    }
+                }
             ),
-            closeOnItemPress: true
+            closeOnItemPress: false
         ))
     }
 
@@ -176,7 +182,7 @@ struct SharedItemsList: View {
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
             }
         }
     }

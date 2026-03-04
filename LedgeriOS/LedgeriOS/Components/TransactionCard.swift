@@ -148,7 +148,7 @@ struct TransactionCard: View {
 
     @ViewBuilder
     private var headerRow: some View {
-        HStack(spacing: Spacing.md) {
+        HStack(spacing: Spacing.sm) {
             if showSelector {
                 Button {
                     setSelected(!selected)
@@ -156,32 +156,39 @@ struct TransactionCard: View {
                     SelectorCircle(isSelected: selected, indicator: .dot)
                 }
                 .buttonStyle(.plain)
+                .contentShape(Rectangle())
                 .accessibilityLabel("Select \(source)")
             }
 
-            Spacer(minLength: 0)
-
             if !badges.isEmpty {
                 badgeRow
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
 
             headerActions
         }
-        .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.md)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
         .overlay(alignment: .bottom) {
-            Divider().foregroundStyle(BrandColors.border)
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: 1)
         }
     }
 
     @ViewBuilder
     private var badgeRow: some View {
-        // Use a flexible layout that wraps on smaller screens
-        FlowLayout(spacing: Spacing.sm) {
+        HStack(spacing: Spacing.sm) {
             ForEach(Array(badges.enumerated()), id: \.offset) { _, badge in
-                Badge(text: badge.text, color: badge.color)
+                Badge(
+                    text: badge.text,
+                    color: badge.color,
+                    backgroundOpacity: badge.backgroundOpacity,
+                    borderOpacity: badge.borderOpacity
+                )
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     @ViewBuilder
@@ -192,11 +199,12 @@ struct TransactionCard: View {
                     onBookmarkPress()
                 } label: {
                     Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 20))
+                        .font(.system(size: 18))
                         .foregroundStyle(bookmarked ? StatusColors.badgeError : BrandColors.primary)
+                        .padding(6)
                 }
                 .buttonStyle(.plain)
-                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityLabel(bookmarked ? "Remove bookmark" : "Add bookmark")
             }
 
@@ -205,12 +213,13 @@ struct TransactionCard: View {
                     showMenu = true
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 20))
+                        .font(.system(size: 18))
                         .foregroundStyle(BrandColors.textSecondary)
                         .rotationEffect(.degrees(90))
+                        .padding(6)
                 }
                 .buttonStyle(.plain)
-                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityLabel("More options")
             }
         }

@@ -8,11 +8,11 @@ enum ItemFilterScope {
     var options: [ItemFilterOption] {
         switch self {
         case .inventory:
-            return [.all, .bookmarked, .noSku, .noName, .noProjectPrice, .noImage, .noTransaction]
+            return [.bookmarked, .noSku, .noName, .noProjectPrice, .noImage, .noTransaction]
         case .project:
-            return ItemFilterOption.allCases
+            return ItemFilterOption.allCases.filter { $0 != .all }
         case .spaceDetail:
-            return [.all, .bookmarked, .noSku, .noImage]
+            return [.bookmarked, .noSku, .noImage]
         }
     }
 }
@@ -51,33 +51,18 @@ struct FilterMenu: View {
         }
     }
 
-    /// Single-select filter menu: selecting a filter replaces the current one.
+    /// Scope-aware multi-select filter menu with toggle behavior.
     static func filterMenuItems(
-        activeFilter: ItemFilterOption,
-        onSelect: @escaping (ItemFilterOption) -> Void
-    ) -> [ActionMenuItem] {
-        ItemFilterOption.allCases.map { option in
-            ActionMenuItem(
-                id: option.rawValue,
-                label: filterLabel(for: option),
-                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
-                onPress: { onSelect(option) }
-            )
-        }
-    }
-
-    /// Scope-aware single-select filter menu.
-    static func filterMenuItems(
-        activeFilter: ItemFilterOption,
+        activeFilters: Set<ItemFilterOption>,
         scope: ItemFilterScope,
-        onSelect: @escaping (ItemFilterOption) -> Void
+        onToggle: @escaping (ItemFilterOption) -> Void
     ) -> [ActionMenuItem] {
         scope.options.map { option in
             ActionMenuItem(
                 id: option.rawValue,
                 label: filterLabel(for: option),
-                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
-                onPress: { onSelect(option) }
+                icon: activeFilters.contains(option) ? "checkmark.circle.fill" : "circle",
+                onPress: { onToggle(option) }
             )
         }
     }

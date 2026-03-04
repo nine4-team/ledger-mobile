@@ -5,7 +5,7 @@ struct InventoryItemsSubTab: View {
     @Environment(AccountContext.self) private var accountContext
 
     @State private var searchText = ""
-    @State private var activeFilter: ItemFilterOption = .all
+    @State private var activeFilters: Set<ItemFilterOption> = []
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var selectedItemIds: Set<String> = []
     @State private var expandedGroups: Set<String> = []
@@ -21,9 +21,9 @@ struct InventoryItemsSubTab: View {
     // MARK: - Computed
 
     private var processedItems: [Item] {
-        ListFilterSortCalculations.applyAllFilters(
+        ListFilterSortCalculations.applyAllMultiFilters(
             inventoryContext.items,
-            filter: activeFilter,
+            filters: activeFilters,
             sort: activeSort,
             search: searchText
         )
@@ -135,11 +135,17 @@ struct InventoryItemsSubTab: View {
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
-                activeFilter: activeFilter,
+                activeFilters: activeFilters,
                 scope: .inventory,
-                onSelect: { activeFilter = $0 }
+                onToggle: { option in
+                    if activeFilters.contains(option) {
+                        activeFilters.remove(option)
+                    } else {
+                        activeFilters.insert(option)
+                    }
+                }
             ),
-            closeOnItemPress: true
+            closeOnItemPress: false
         ))
     }
 
@@ -171,7 +177,7 @@ struct InventoryItemsSubTab: View {
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
             }
         }
     }
@@ -183,7 +189,7 @@ struct InventoryItemsSubTab: View {
         if processedItems.isEmpty {
             ContentUnavailableView {
                 Label(
-                    activeFilter != .all || !searchText.isEmpty
+                    !activeFilters.isEmpty || !searchText.isEmpty
                         ? "No items match your filters"
                         : "No inventory items yet",
                     systemImage: "shippingbox"

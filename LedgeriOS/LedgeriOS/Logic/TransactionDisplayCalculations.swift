@@ -7,6 +7,8 @@ enum TransactionDisplayCalculations {
     struct BadgeConfig: Equatable {
         let text: String
         let color: Color
+        var backgroundOpacity: Double = 0.10
+        var borderOpacity: Double = 0.20
     }
 
     enum TransactionBadgeType {
@@ -48,50 +50,33 @@ enum TransactionDisplayCalculations {
     // MARK: - Badge Configs
 
     /// Returns ordered array of badges for a transaction.
-    /// Order: type → reimbursement → receipt → needs review → category.
+    /// Order: needs review → type → category.
     static func badgeConfigs(for transaction: Transaction, category: BudgetCategory?) -> [BadgeConfig] {
         var badges: [BadgeConfig] = []
 
-        // 1. Type badge (always present if type is known)
+        // 1. Needs review badge (always leftmost)
+        if transaction.needsReview == true {
+            badges.append(BadgeConfig(
+                text: "Needs Review",
+                color: StatusColors.badgeNeedsReview,
+                backgroundOpacity: 0.08,
+                borderOpacity: 0.20
+            ))
+        }
+
+        // 2. Type badge (purchase/return only)
         if let type = transaction.transactionType?.lowercased() {
             switch type {
             case "purchase":
-                badges.append(BadgeConfig(text: "Purchase", color: StatusColors.badgeSuccess))
-            case "sale":
-                badges.append(BadgeConfig(text: "Sale", color: StatusColors.badgeInfo))
+                badges.append(BadgeConfig(text: "Purchase", color: BrandColors.primary))
             case "return":
-                badges.append(BadgeConfig(text: "Return", color: StatusColors.badgeError))
-            case "to-inventory":
-                badges.append(BadgeConfig(text: "To Inventory", color: BrandColors.primary))
+                badges.append(BadgeConfig(text: "Return", color: BrandColors.primary))
             default:
                 break
             }
         }
 
-        // 2. Reimbursement badge
-        if let reimburse = transaction.reimbursementType?.lowercased(),
-           reimburse != "none", !reimburse.isEmpty {
-            switch reimburse {
-            case "owed-to-client":
-                badges.append(BadgeConfig(text: "Owed to Client", color: StatusColors.badgeWarning))
-            case "owed-to-company":
-                badges.append(BadgeConfig(text: "Owed to Business", color: StatusColors.badgeWarning))
-            default:
-                break
-            }
-        }
-
-        // 3. Receipt badge
-        if (transaction.receiptImages?.isEmpty == false) || transaction.hasEmailReceipt == true {
-            badges.append(BadgeConfig(text: "Receipt", color: BrandColors.primary))
-        }
-
-        // 4. Needs review badge
-        if transaction.needsReview == true {
-            badges.append(BadgeConfig(text: "Needs Review", color: StatusColors.badgeNeedsReview))
-        }
-
-        // 5. Category badge
+        // 3. Category badge
         if let cat = category, let name = cat.id, !name.isEmpty {
             let displayName = cat.name.isEmpty ? "Category" : cat.name
             badges.append(BadgeConfig(text: displayName, color: BrandColors.primary))

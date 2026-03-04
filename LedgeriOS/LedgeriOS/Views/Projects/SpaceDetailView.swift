@@ -25,7 +25,7 @@ struct SpaceDetailView: View {
 
     // Items section state
     @State private var searchText = ""
-    @State private var activeFilter: ItemFilterOption = .all
+    @State private var activeFilters: Set<ItemFilterOption> = []
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
@@ -41,9 +41,9 @@ struct SpaceDetailView: View {
     }
 
     private var filteredItems: [Item] {
-        ListFilterSortCalculations.applyAllFilters(
+        ListFilterSortCalculations.applyAllMultiFilters(
             spaceItems,
-            filter: activeFilter,
+            filters: activeFilters,
             sort: activeSort,
             search: searchText
         )
@@ -141,11 +141,17 @@ struct SpaceDetailView: View {
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
-                activeFilter: activeFilter,
+                activeFilters: activeFilters,
                 scope: .spaceDetail,
-                onSelect: { activeFilter = $0 }
+                onToggle: { option in
+                    if activeFilters.contains(option) {
+                        activeFilters.remove(option)
+                    } else {
+                        activeFilters.insert(option)
+                    }
+                }
             ),
-            closeOnItemPress: true
+            closeOnItemPress: false
         ))
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
@@ -253,7 +259,7 @@ struct SpaceDetailView: View {
             } filterMenu: {
                 Button { showFilterMenu = true } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                        .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
                 }
             }
 
