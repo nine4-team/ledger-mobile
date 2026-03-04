@@ -6,6 +6,7 @@ struct ClientSummaryReportView: View {
 
     var body: some View {
         ScrollView {
+            AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 // Summary cards
                 VStack(spacing: Spacing.cardListGap) {
@@ -71,6 +72,7 @@ struct ClientSummaryReportView: View {
                 }
             }
             .padding(Spacing.screenPadding)
+            }
         }
         .navigationTitle("Client Summary")
         .navBarTitleDisplayMode(.inline)

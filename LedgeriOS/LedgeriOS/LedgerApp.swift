@@ -95,11 +95,13 @@ struct LedgerApp: App {
                     GIDSignIn.sharedInstance.handle(url)
                 }
         }
+        #if os(macOS)
         .defaultSize(width: 1000, height: 700)
         .windowResizability(.contentMinSize)
         .windowToolbarStyle(.unified)
         .commands {
             LedgerCommands()
         }
+        #endif
     }
 }

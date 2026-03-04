@@ -155,18 +155,20 @@ struct TransactionsTabView: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    ForEach(processedTransactions) { transaction in
-                        if let txId = transaction.id {
-                            NavigationLink(value: transaction) {
-                                transactionCardContent(for: transaction, txId: txId)
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.cardListGap) {
+                        ForEach(processedTransactions) { transaction in
+                            if let txId = transaction.id {
+                                NavigationLink(value: transaction) {
+                                    transactionCardContent(for: transaction, txId: txId)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
         }
     }

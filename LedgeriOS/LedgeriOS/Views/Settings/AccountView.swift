@@ -12,74 +12,76 @@ struct AccountView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.xl) {
-                // Business Profile section
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("Business Profile")
-                        .sectionLabelStyle()
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.xl) {
+                    // Business Profile section
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        Text("Business Profile")
+                            .sectionLabelStyle()
 
-                    Card {
-                        VStack(alignment: .leading, spacing: Spacing.md) {
-                            DetailRow(
-                                label: "Business Name",
-                                value: businessProfile?.name ?? accountContext.account?.name ?? "—"
-                            )
+                        Card {
+                            VStack(alignment: .leading, spacing: Spacing.md) {
+                                DetailRow(
+                                    label: "Business Name",
+                                    value: businessProfile?.name ?? accountContext.account?.name ?? "—"
+                                )
 
-                            Button {
-                                showingEditProfile = true
-                            } label: {
-                                HStack {
-                                    Image(systemName: "pencil")
-                                    Text("Edit Profile")
+                                Button {
+                                    showingEditProfile = true
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "pencil")
+                                        Text("Edit Profile")
+                                    }
+                                    .font(Typography.button)
+                                    .foregroundStyle(BrandColors.primary)
                                 }
-                                .font(Typography.button)
-                                .foregroundStyle(BrandColors.primary)
+                            }
+                        }
+                    }
+
+                    // Account Actions section
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        Text("Account")
+                            .sectionLabelStyle()
+
+                        Card {
+                            VStack(spacing: Spacing.md) {
+                                Button {
+                                    accountContext.deactivate()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "arrow.left.arrow.right")
+                                        Text("Switch Account")
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .foregroundStyle(BrandColors.textTertiary)
+                                    }
+                                    .font(Typography.body)
+                                    .foregroundStyle(BrandColors.textPrimary)
+                                }
+
+                                Divider()
+
+                                Button {
+                                    showingSignOutConfirmation = true
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        Text("Sign Out")
+                                        Spacer()
+                                    }
+                                    .font(Typography.body)
+                                    .foregroundStyle(BrandColors.destructive)
+                                }
                             }
                         }
                     }
                 }
-
-                // Account Actions section
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("Account")
-                        .sectionLabelStyle()
-
-                    Card {
-                        VStack(spacing: Spacing.md) {
-                            Button {
-                                accountContext.deactivate()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "arrow.left.arrow.right")
-                                    Text("Switch Account")
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundStyle(BrandColors.textTertiary)
-                                }
-                                .font(Typography.body)
-                                .foregroundStyle(BrandColors.textPrimary)
-                            }
-
-                            Divider()
-
-                            Button {
-                                showingSignOutConfirmation = true
-                            } label: {
-                                HStack {
-                                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    Text("Sign Out")
-                                    Spacer()
-                                }
-                                .font(Typography.body)
-                                .foregroundStyle(BrandColors.destructive)
-                            }
-                        }
-                    }
-                }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.md)
+                .padding(.bottom, Spacing.xl)
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.top, Spacing.md)
-            .padding(.bottom, Spacing.xl)
         }
         .background(BrandColors.background)
         .task { await loadProfile() }

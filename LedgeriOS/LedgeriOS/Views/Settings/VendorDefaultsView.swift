@@ -17,60 +17,62 @@ struct VendorDefaultsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                // Add button
-                Button {
-                    newVendorName = ""
-                    showingAddSheet = true
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Vendor")
-                    }
-                    .font(Typography.button)
-                    .foregroundStyle(BrandColors.primary)
-                }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-
-                if displayVendors.isEmpty {
-                    Text("No vendors configured.")
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .padding(.horizontal, Spacing.screenPadding)
-                } else {
-                    List {
-                        ForEach(Array(displayVendors.enumerated()), id: \.offset) { index, vendor in
-                            HStack {
-                                Text(vendor)
-                                    .font(Typography.body)
-                                    .foregroundStyle(BrandColors.textPrimary)
-
-                                Spacer()
-
-                                Button {
-                                    removeVendor(vendor)
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(BrandColors.destructive)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .padding(.vertical, Spacing.sm)
-                            .listRowInsets(EdgeInsets(top: 0, leading: Spacing.screenPadding, bottom: 0, trailing: Spacing.screenPadding))
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    // Add button
+                    Button {
+                        newVendorName = ""
+                        showingAddSheet = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Vendor")
                         }
-                        .onMove(perform: moveVendors)
+                        .font(Typography.button)
+                        .foregroundStyle(BrandColors.primary)
                     }
-                    .listStyle(.plain)
-                    #if canImport(UIKit)
-                    .environment(\.editMode, .constant(.active))
-                    #endif
-                    .frame(minHeight: CGFloat(displayVendors.count) * 52)
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.top, Spacing.sm)
+
+                    if displayVendors.isEmpty {
+                        Text("No vendors configured.")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .padding(.horizontal, Spacing.screenPadding)
+                    } else {
+                        List {
+                            ForEach(Array(displayVendors.enumerated()), id: \.offset) { index, vendor in
+                                HStack {
+                                    Text(vendor)
+                                        .font(Typography.body)
+                                        .foregroundStyle(BrandColors.textPrimary)
+
+                                    Spacer()
+
+                                    Button {
+                                        removeVendor(vendor)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .foregroundStyle(BrandColors.destructive)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.vertical, Spacing.sm)
+                                .listRowInsets(EdgeInsets(top: 0, leading: Spacing.screenPadding, bottom: 0, trailing: Spacing.screenPadding))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                            .onMove(perform: moveVendors)
+                        }
+                        .listStyle(.plain)
+                        #if canImport(UIKit)
+                        .environment(\.editMode, .constant(.active))
+                        #endif
+                        .frame(minHeight: CGFloat(displayVendors.count) * 52)
+                    }
                 }
+                .padding(.bottom, Spacing.xl)
             }
-            .padding(.bottom, Spacing.xl)
         }
         .background(BrandColors.background)
         .onAppear { startListening() }

@@ -60,20 +60,22 @@ struct SpacesTabView: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    ForEach(filteredSpaces) { space in
-                        NavigationLink(value: space) {
-                            SpaceCard(
-                                space: space,
-                                itemCount: itemCount(for: space),
-                                onPress: {}
-                            )
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.cardListGap) {
+                        ForEach(filteredSpaces) { space in
+                            NavigationLink(value: space) {
+                                SpaceCard(
+                                    space: space,
+                                    itemCount: itemCount(for: space),
+                                    onPress: {}
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
         }
     }

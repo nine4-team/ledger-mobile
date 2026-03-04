@@ -24,67 +24,69 @@ struct BudgetCategoryManagementView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                // Add button
-                Button {
-                    showingCreateSheet = true
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Category")
-                    }
-                    .font(Typography.button)
-                    .foregroundStyle(BrandColors.primary)
-                }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-
-                // Active categories
-                if activeCategories.isEmpty {
-                    Text("No categories yet. Add one to get started.")
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .padding(.horizontal, Spacing.screenPadding)
-                } else {
-                    List {
-                        ForEach(activeCategories) { category in
-                            CategoryManagementRow(
-                                category: category,
-                                onEdit: { editingCategory = category },
-                                onArchive: { archiveTarget = category }
-                            )
-                            .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    // Add button
+                    Button {
+                        showingCreateSheet = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Category")
                         }
-                        .onMove(perform: moveCategories)
+                        .font(Typography.button)
+                        .foregroundStyle(BrandColors.primary)
                     }
-                    .listStyle(.plain)
-                    #if canImport(UIKit)
-                    .environment(\.editMode, .constant(.active))
-                    #endif
-                    .frame(minHeight: CGFloat(activeCategories.count) * 72)
-                }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.top, Spacing.sm)
 
-                // Archived section
-                if !archivedCategories.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.md) {
-                        Text("Archived")
-                            .sectionLabelStyle()
+                    // Active categories
+                    if activeCategories.isEmpty {
+                        Text("No categories yet. Add one to get started.")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
                             .padding(.horizontal, Spacing.screenPadding)
+                    } else {
+                        List {
+                            ForEach(activeCategories) { category in
+                                CategoryManagementRow(
+                                    category: category,
+                                    onEdit: { editingCategory = category },
+                                    onArchive: { archiveTarget = category }
+                                )
+                                .listRowInsets(EdgeInsets(top: Spacing.xs, leading: Spacing.screenPadding, bottom: Spacing.xs, trailing: Spacing.screenPadding))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                            }
+                            .onMove(perform: moveCategories)
+                        }
+                        .listStyle(.plain)
+                        #if canImport(UIKit)
+                        .environment(\.editMode, .constant(.active))
+                        #endif
+                        .frame(minHeight: CGFloat(activeCategories.count) * 72)
+                    }
 
-                        LazyVStack(spacing: Spacing.cardListGap) {
-                            ForEach(archivedCategories) { category in
-                                ArchivedCategoryRow(category: category) {
-                                    unarchiveCategory(category)
+                    // Archived section
+                    if !archivedCategories.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
+                            Text("Archived")
+                                .sectionLabelStyle()
+                                .padding(.horizontal, Spacing.screenPadding)
+
+                            LazyVStack(spacing: Spacing.cardListGap) {
+                                ForEach(archivedCategories) { category in
+                                    ArchivedCategoryRow(category: category) {
+                                        unarchiveCategory(category)
+                                    }
                                 }
                             }
+                            .padding(.horizontal, Spacing.screenPadding)
                         }
-                        .padding(.horizontal, Spacing.screenPadding)
                     }
                 }
+                .padding(.bottom, Spacing.xl)
             }
-            .padding(.bottom, Spacing.xl)
         }
         .background(BrandColors.background)
         .onAppear { startListening() }
