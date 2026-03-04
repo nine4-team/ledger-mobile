@@ -176,32 +176,41 @@ struct ItemDetailView: View {
                 .font(Typography.h2)
                 .foregroundStyle(BrandColors.textPrimary)
 
-            if let quantity = item.quantity, quantity > 0 {
-                Text("Qty: \(quantity)")
-                    .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-
-            HStack(spacing: Spacing.lg) {
-                priceCell(label: "Purchase", cents: item.purchasePriceCents)
-                priceCell(label: "Project", cents: item.projectPriceCents)
-                priceCell(label: "Market", cents: item.marketValueCents)
-            }
+            heroDetailRow(label: "Transaction", value: linkedTransactionLabel)
+            heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
+            heroDetailRow(label: "Space", value: spaceName)
         }
         .cardStyle()
     }
 
     @ViewBuilder
-    private func priceCell(label: String, cents: Int?) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(label)
+    private func heroDetailRow(label: String, value: String) -> some View {
+        HStack(spacing: 0) {
+            Text("\(label): ")
                 .font(Typography.caption)
-                .foregroundStyle(BrandColors.textTertiary)
-            Text(cents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
+                .foregroundStyle(BrandColors.textSecondary)
+            Text(value)
                 .font(Typography.body)
-                .fontWeight(.medium)
                 .foregroundStyle(BrandColors.textPrimary)
         }
+    }
+
+    private var linkedTransactionLabel: String {
+        guard let transactionId = item.transactionId else { return "None" }
+        guard let tx = projectContext.transactions.first(where: { $0.id == transactionId }) else {
+            return "None"
+        }
+        let source = tx.source ?? "Transaction"
+        let amount = TransactionCardCalculations.formattedAmount(
+            amountCents: tx.amountCents,
+            transactionType: tx.transactionType
+        )
+        return "\(source) - \(amount)"
+    }
+
+    private var linkedBudgetCategoryName: String {
+        guard let categoryId = item.budgetCategoryId else { return "None" }
+        return projectContext.budgetCategories.first(where: { $0.id == categoryId })?.name ?? "None"
     }
 
     // MARK: - Collapsible Sections
@@ -271,7 +280,7 @@ struct ItemDetailView: View {
     private var detailsContent: some View {
         VStack(spacing: 0) {
             DetailRow(label: "Status", value: item.status?.capitalized ?? "—")
-            DetailRow(label: "Space", value: spaceName)
+            DetailRow(label: "Space", value: spaceNameForDetails)
             DetailRow(label: "Source", value: item.source ?? "—")
             DetailRow(label: "SKU", value: item.sku ?? "—")
             DetailRow(label: "Purchase Price", value: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
@@ -367,6 +376,11 @@ struct ItemDetailView: View {
     // MARK: - Helpers
 
     private var spaceName: String {
+        guard let spaceId = item.spaceId else { return "None" }
+        return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "None"
+    }
+
+    private var spaceNameForDetails: String {
         guard let spaceId = item.spaceId else { return "—" }
         return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "—"
     }

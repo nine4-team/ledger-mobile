@@ -21,14 +21,14 @@ struct InventorySpacesSubTab: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            NativeListControlBar(
-                searchText: $searchText,
-                searchPlaceholder: "Search spaces...",
-                onAdd: { showNewSpace = true }
-            )
-            content
-        }
+        content
+            .safeAreaInset(edge: .top) {
+                NativeListControlBar(
+                    searchText: $searchText,
+                    searchPlaceholder: "Search spaces...",
+                    onAdd: { showNewSpace = true }
+                )
+            }
         .sheet(isPresented: $showNewSpace) {
             Text("New Space — Coming Soon")
                 .presentationDetents([.medium])

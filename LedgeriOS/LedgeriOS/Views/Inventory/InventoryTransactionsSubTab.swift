@@ -34,8 +34,6 @@ struct InventoryTransactionsSubTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            controlBar
-
             if !selectedIds.isEmpty {
                 ListSelectionInfo(
                     text: SelectionCalculations.selectionLabel(
@@ -48,6 +46,9 @@ struct InventoryTransactionsSubTab: View {
             }
 
             content
+        }
+        .safeAreaInset(edge: .top) {
+            controlBar
         }
         .safeAreaInset(edge: .bottom) {
             if !selectedIds.isEmpty {

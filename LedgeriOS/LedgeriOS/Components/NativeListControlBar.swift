@@ -31,38 +31,44 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             searchField
 
             sortMenu()
+                .imageScale(.large)
                 .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+
             filterMenu()
+                .imageScale(.large)
                 .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
 
             if let onAdd {
                 Button(action: onAdd) {
                     Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 34, height: 34)
-                        .background(BrandColors.primary)
-                        .clipShape(Circle())
+                        .imageScale(.large)
+                        .fontWeight(.medium)
+                        .foregroundStyle(BrandColors.primary)
                 }
-                .buttonStyle(.plain)
                 .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityLabel("Add")
             }
         }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(.bar)
+        .clipShape(Capsule(style: .continuous))
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.xs)
-        .background(.ultraThinMaterial)
-        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+        .padding(.vertical, Spacing.sm)
     }
 
     private var searchField: some View {
         HStack(spacing: Spacing.xs) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-                .font(.system(size: 14))
+                .font(.system(size: 15))
 
             TextField(searchPlaceholder, text: $searchText)
-                .font(Typography.input)
+                .font(.subheadline)
 
             if !searchText.isEmpty {
                 Button {
@@ -70,12 +76,14 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.tertiary)
+                        .font(.system(size: 15))
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, 8)
+        .padding(.vertical, 7)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.tertiarySystemFill))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }

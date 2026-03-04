@@ -45,8 +45,6 @@ struct TransactionsTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            controlBar
-
             if !selectedIds.isEmpty {
                 ListSelectionInfo(
                     text: SelectionCalculations.selectionLabel(
@@ -59,6 +57,9 @@ struct TransactionsTabView: View {
             }
 
             content
+        }
+        .safeAreaInset(edge: .top) {
+            controlBar
         }
         .safeAreaInset(edge: .bottom) {
             if !selectedIds.isEmpty {
