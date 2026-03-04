@@ -56,11 +56,13 @@ struct SpaceDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                sectionsArea
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
+                    sectionsArea
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.sm)
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.sm)
         }
         .navBarTitleDisplayMode(.inline)
         .toolbar {

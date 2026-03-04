@@ -96,13 +96,15 @@ struct TransactionDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Spacing.lg) {
-                heroCard
-                nextStepsCard
-                sectionsContent
+            AdaptiveContentWidth {
+                VStack(spacing: Spacing.lg) {
+                    heroCard
+                    nextStepsCard
+                    sectionsContent
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.lg)
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.lg)
         }
         .background(BrandColors.background)
         .navBarTitleDisplayMode(.inline)

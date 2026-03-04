@@ -59,6 +59,8 @@ struct FormSheet<Content: View>: View {
             }
         }
         .padding(Spacing.screenPadding)
+        .frame(maxWidth: Dimensions.formMaxWidth)
+        .frame(maxWidth: .infinity)
     }
 }
 

@@ -8,6 +8,7 @@ enum ReportType: Hashable {
 
 struct AccountingTabView: View {
     @Environment(ProjectContext.self) private var projectContext
+    @State private var columnCount: Int = 1
 
     private var owedToCompanyCents: Int {
         projectContext.transactions
@@ -23,65 +24,78 @@ struct AccountingTabView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: Spacing.cardListGap) {
-                // Reimbursement summary cards
-                Card {
-                    HStack {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text("Owed to Design Business")
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                            Text(CurrencyFormatting.formatCentsWithDecimals(owedToCompanyCents))
-                                .font(Typography.h2)
-                                .foregroundStyle(BrandColors.textPrimary)
+            AdaptiveContentWidth {
+                VStack(spacing: Spacing.cardListGap) {
+                    // Responsive grid for reimbursement summary cards
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.cardListGap), count: columnCount),
+                        spacing: Spacing.cardListGap
+                    ) {
+                        Card {
+                            HStack {
+                                VStack(alignment: .leading, spacing: Spacing.xs) {
+                                    Text("Owed to Design Business")
+                                        .font(Typography.small)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                    Text(CurrencyFormatting.formatCentsWithDecimals(owedToCompanyCents))
+                                        .font(Typography.h2)
+                                        .foregroundStyle(BrandColors.textPrimary)
+                                }
+                                Spacer()
+                            }
                         }
-                        Spacer()
-                    }
-                }
 
-                Card {
-                    HStack {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text("Owed to Client")
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                            Text(CurrencyFormatting.formatCentsWithDecimals(owedToClientCents))
-                                .font(Typography.h2)
-                                .foregroundStyle(BrandColors.textPrimary)
+                        Card {
+                            HStack {
+                                VStack(alignment: .leading, spacing: Spacing.xs) {
+                                    Text("Owed to Client")
+                                        .font(Typography.small)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                    Text(CurrencyFormatting.formatCentsWithDecimals(owedToClientCents))
+                                        .font(Typography.h2)
+                                        .foregroundStyle(BrandColors.textPrimary)
+                                }
+                                Spacer()
+                            }
                         }
-                        Spacer()
+                    }
+                    .onGeometryChange(for: Int.self) { proxy in
+                        max(1, Int(proxy.size.width / Dimensions.cardMinWidth))
+                    } action: { newCount in
+                        columnCount = newCount
+                    }
+                    .animation(.default, value: columnCount)
+
+                    // Report navigation
+                    VStack(spacing: Spacing.sm) {
+                        Text("Reports")
+                            .sectionLabelStyle()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        NavigationLink(value: ReportType.propertyManagement) {
+                            reportButton(
+                                title: "Property Management Summary",
+                                icon: "building.2"
+                            )
+                        }
+
+                        NavigationLink(value: ReportType.clientSummary) {
+                            reportButton(
+                                title: "Client Summary",
+                                icon: "chart.bar.doc.horizontal"
+                            )
+                        }
+
+                        NavigationLink(value: ReportType.invoice) {
+                            reportButton(
+                                title: "Invoice",
+                                icon: "doc.text"
+                            )
+                        }
                     }
                 }
-
-                // Report navigation
-                VStack(spacing: Spacing.sm) {
-                    Text("Reports")
-                        .sectionLabelStyle()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    NavigationLink(value: ReportType.propertyManagement) {
-                        reportButton(
-                            title: "Property Management Summary",
-                            icon: "building.2"
-                        )
-                    }
-
-                    NavigationLink(value: ReportType.clientSummary) {
-                        reportButton(
-                            title: "Client Summary",
-                            icon: "chart.bar.doc.horizontal"
-                        )
-                    }
-
-                    NavigationLink(value: ReportType.invoice) {
-                        reportButton(
-                            title: "Invoice",
-                            icon: "doc.text"
-                        )
-                    }
-                }
+                .padding(Spacing.screenPadding)
             }
-            .padding(Spacing.screenPadding)
         }
         .navigationDestination(for: ReportType.self) { reportType in
             switch reportType {

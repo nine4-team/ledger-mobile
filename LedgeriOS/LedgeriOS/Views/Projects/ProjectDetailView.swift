@@ -24,26 +24,28 @@ struct ProjectDetailView: View {
         VStack(spacing: 0) {
             ScrollableTabBar(selectedId: $selectedTab, items: tabs)
 
-            Group {
-                switch selectedTab {
-                case "budget":
-                    BudgetTabView()
-                case "items":
-                    ItemsTabView()
-                        .navigationDestination(for: Item.self) { item in
-                            ItemDetailView(item: item)
-                        }
-                case "transactions":
-                    TransactionsTabView()
-                        .navigationDestination(for: Transaction.self) { transaction in
-                            TransactionDetailView(transaction: transaction)
-                        }
-                case "spaces":
-                    SpacesTabView()
-                case "accounting":
-                    AccountingTabView()
-                default:
-                    BudgetTabView()
+            AdaptiveContentWidth {
+                Group {
+                    switch selectedTab {
+                    case "budget":
+                        BudgetTabView()
+                    case "items":
+                        ItemsTabView()
+                            .navigationDestination(for: Item.self) { item in
+                                ItemDetailView(item: item)
+                            }
+                    case "transactions":
+                        TransactionsTabView()
+                            .navigationDestination(for: Transaction.self) { transaction in
+                                TransactionDetailView(transaction: transaction)
+                            }
+                    case "spaces":
+                        SpacesTabView()
+                    case "accounting":
+                        AccountingTabView()
+                    default:
+                        BudgetTabView()
+                    }
                 }
             }
         }

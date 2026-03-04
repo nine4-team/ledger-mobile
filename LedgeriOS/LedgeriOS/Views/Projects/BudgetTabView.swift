@@ -42,27 +42,27 @@ struct BudgetTabView: View {
             )
         } else {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(categories) { category in
-                        BudgetCategoryRow(
-                            category: category,
-                            isPinned: pinnedCategoryIds.contains(category.id),
-                            onTogglePin: { togglePin(category.id) }
-                        )
-                        if category.id != categories.last?.id {
+                AdaptiveContentWidth {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(categories) { category in
+                            BudgetCategoryRow(category: category)
+                            if category.id != categories.last?.id {
+                                Divider()
+                                    .foregroundStyle(BrandColors.borderSecondary)
+                            }
+                        }
+
+                        // Overall Budget row
+                        if overallBudgetCents > 0 {
                             Divider()
-                                .foregroundStyle(BrandColors.borderSecondary)
+                                .padding(.vertical, Spacing.xs)
+
+                            overallBudgetRow
                         }
                     }
-
-                    if overallBudgetCents > 0 {
-                        Divider()
-                            .padding(.vertical, Spacing.xs)
-                        overallBudgetRow
-                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.md)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.md)
             }
         }
     }
