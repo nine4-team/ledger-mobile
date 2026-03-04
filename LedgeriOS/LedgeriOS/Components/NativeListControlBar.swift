@@ -25,34 +25,34 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: Spacing.sm) {
-                selectAll()
+        HStack(spacing: Spacing.sm) {
+            selectAll()
 
-                searchField
+            searchField
 
-                sortMenu()
-                filterMenu()
+            sortMenu()
+                .frame(minWidth: 44, minHeight: 44)
+            filterMenu()
+                .frame(minWidth: 44, minHeight: 44)
 
-                if let onAdd {
-                    Button(action: onAdd) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 34, height: 34)
-                            .background(BrandColors.primary)
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Add")
+            if let onAdd {
+                Button(action: onAdd) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 34, height: 34)
+                        .background(BrandColors.primary)
+                        .clipShape(Circle())
                 }
+                .buttonStyle(.plain)
+                .frame(minWidth: 44, minHeight: 44)
+                .accessibilityLabel("Add")
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.sm)
-
-            Divider()
         }
-        .background(.bar)
+        .padding(.horizontal, Spacing.screenPadding)
+        .padding(.vertical, Spacing.xs)
+        .background(.ultraThinMaterial)
+        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
     }
 
     private var searchField: some View {

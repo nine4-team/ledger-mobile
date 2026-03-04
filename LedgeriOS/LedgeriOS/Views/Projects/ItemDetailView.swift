@@ -41,19 +41,15 @@ struct ItemDetailView: View {
                 .padding(.vertical, Spacing.sm)
             }
         }
-        .navBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(item.displayName.isEmpty ? "Item" : item.displayName)
-                    .font(Typography.h3)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .lineLimit(1)
+            ToolbarItem(placement: .trailingNavBar) {
+                dispositionButton
             }
             ToolbarItem(placement: .trailingNavBar) {
-                HStack(spacing: Spacing.sm) {
-                    bookmarkButton
-                    menuButton
-                }
+                bookmarkButton
+            }
+            ToolbarItem(placement: .trailingNavBar) {
+                menuButton
             }
         }
         // Action menu sheet
@@ -290,11 +286,25 @@ struct ItemDetailView: View {
 
     // MARK: - Toolbar Buttons
 
+    private var dispositionButton: some View {
+        Button {
+            showStatusPicker = true
+        } label: {
+            Text(item.status ?? "No Status")
+                .font(Typography.caption.weight(.semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(BrandColors.primary.opacity(0.15))
+                .foregroundStyle(BrandColors.primary)
+                .clipShape(Capsule())
+        }
+    }
+
     private var bookmarkButton: some View {
         Button {
             toggleBookmark()
         } label: {
-            Image(systemName: item.bookmark == true ? "star.fill" : "star")
+            Image(systemName: item.bookmark == true ? "bookmark.fill" : "bookmark")
                 .foregroundStyle(item.bookmark == true ? BrandColors.primary : BrandColors.textSecondary)
         }
     }

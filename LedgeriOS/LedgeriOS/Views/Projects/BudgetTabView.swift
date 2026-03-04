@@ -45,7 +45,11 @@ struct BudgetTabView: View {
                 AdaptiveContentWidth {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(categories) { category in
-                            BudgetCategoryRow(category: category)
+                            BudgetCategoryRow(
+                                category: category,
+                                isPinned: pinnedCategoryIds.contains(category.id),
+                                onTogglePin: { togglePin(category.id) }
+                            )
                             if category.id != categories.last?.id {
                                 Divider()
                                     .foregroundStyle(BrandColors.borderSecondary)

@@ -19,6 +19,8 @@ struct ItemsTabView: View {
     @State private var showBulkReassign = false
     @State private var showBulkDeleteConfirmation = false
     @State private var showNewItem = false
+    @State private var showFilterMenu = false
+    @State private var showSortMenu = false
 
     // MARK: - Computed
 
