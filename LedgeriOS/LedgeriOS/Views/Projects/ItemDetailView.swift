@@ -176,8 +176,8 @@ struct ItemDetailView: View {
                 .font(Typography.h2)
                 .foregroundStyle(BrandColors.textPrimary)
 
-            heroDetailRow(label: "Transaction", value: linkedTransactionLabel)
             heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
+            heroDetailRow(label: "Transaction", value: linkedTransactionLabel)
             heroDetailRow(label: "Space", value: spaceName)
         }
         .cardStyle()
@@ -185,12 +185,12 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private func heroDetailRow(label: String, value: String) -> some View {
-        HStack(spacing: 0) {
-            Text("\(label): ")
-                .font(Typography.caption)
+        HStack(spacing: Spacing.xs) {
+            Text("\(label):")
+                .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
             Text(value)
-                .font(Typography.body)
+                .font(Typography.small)
                 .foregroundStyle(BrandColors.textPrimary)
         }
     }
