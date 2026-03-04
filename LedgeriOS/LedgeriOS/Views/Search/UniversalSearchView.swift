@@ -107,20 +107,22 @@ struct UniversalSearchView: View {
             ScrollableTabBar(selectedId: $selectedTab, items: tabs)
 
             ScrollView {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    switch selectedTab {
-                    case "items":
-                        itemsTab
-                    case "transactions":
-                        transactionsTab
-                    case "spaces":
-                        spacesTab
-                    default:
-                        itemsTab
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.cardListGap) {
+                        switch selectedTab {
+                        case "items":
+                            itemsTab
+                        case "transactions":
+                            transactionsTab
+                        case "spaces":
+                            spacesTab
+                        default:
+                            itemsTab
+                        }
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.md)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.md)
             }
         }
     }

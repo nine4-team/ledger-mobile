@@ -11,6 +11,7 @@ struct SignInView: View {
     var onSwitchToSignUp: () -> Void
 
     var body: some View {
+        AdaptiveContentWidth(maxWidth: Dimensions.formMaxWidth) {
         VStack(spacing: 24) {
             Spacer()
 
@@ -100,6 +101,7 @@ struct SignInView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
+        }
     }
 
     private var dividerRow: some View {
