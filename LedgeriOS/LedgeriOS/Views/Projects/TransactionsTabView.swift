@@ -71,7 +71,7 @@ struct TransactionsTabView: View {
 
             content
         }
-        .safeAreaInset(edge: .top) {
+        .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }
         .safeAreaInset(edge: .bottom) {
@@ -187,7 +187,7 @@ struct TransactionsTabView: View {
                         }
                     }
                     .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.sm)
+                    .padding(.bottom, Spacing.sm)
                 }
             }
         }

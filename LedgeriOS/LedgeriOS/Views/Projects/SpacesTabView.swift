@@ -22,7 +22,7 @@ struct SpacesTabView: View {
 
     var body: some View {
         content
-            .safeAreaInset(edge: .top) {
+            .safeAreaInset(edge: .top, spacing: 0) {
                 SearchControlBar(
                     searchText: $searchText,
                     searchPlaceholder: "Search spaces...",
