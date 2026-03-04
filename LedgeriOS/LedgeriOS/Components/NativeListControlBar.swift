@@ -10,7 +10,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
     @State private var isSearchExpanded = false
     @State private var isSearchFocused = false
-    @State private var capsuleWidth: CGFloat = 0
 
     init(
         searchText: Binding<String>,
@@ -35,14 +34,17 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
                 Button {
                     withAnimation(.spring(duration: 0.3)) {
-                        isSearchExpanded = true
+                        isSearchExpanded.toggle()
+                        if !isSearchExpanded {
+                            isSearchFocused = false
+                        }
                     }
                 } label: {
                     Image(systemName: "magnifyingglass")
                         .imageScale(.large)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isSearchExpanded ? BrandColors.primary : .secondary)
                 }
-                .tint(.secondary)
+                .tint(isSearchExpanded ? BrandColors.primary : .secondary)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
                 .accessibilityLabel("Search")
@@ -73,16 +75,12 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
             .modifier(CapsuleGlassModifier())
-            .background(GeometryReader { geo in
-                Color.clear.preference(key: CapsuleWidthKey.self, value: geo.size.width)
-            })
 
             if isSearchExpanded {
                 SearchField(
                     text: $searchText,
                     placeholder: searchPlaceholder,
                     isFocused: $isSearchFocused,
-                    style: .overlay,
                     onDismiss: {
                         withAnimation(.spring(duration: 0.3)) {
                             isSearchExpanded = false
@@ -90,10 +88,10 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                         }
                     }
                 )
-                .frame(width: capsuleWidth > 0 ? capsuleWidth : nil)
             }
         }
-        .onPreferenceChange(CapsuleWidthKey.self) { capsuleWidth = $0 }
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
         .onChange(of: isSearchExpanded) { _, expanded in
@@ -106,18 +104,9 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     }
 }
 
-// MARK: - Preference Key
-
-private struct CapsuleWidthKey: PreferenceKey {
-    nonisolated(unsafe) static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 // MARK: - Glass Material
 
-private struct CapsuleGlassModifier: ViewModifier {
+struct CapsuleGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             content.glassEffect(in: .capsule)
@@ -131,14 +120,6 @@ private struct CapsuleGlassModifier: ViewModifier {
 }
 
 // MARK: - Previews
-
-#Preview("Search + Add (Spaces)") {
-    NativeListControlBar(
-        searchText: .constant(""),
-        searchPlaceholder: "Search spaces...",
-        onAdd: {}
-    )
-}
 
 #Preview("Full (Items/Transactions)") {
     @Previewable @State var sort = ItemSortOption.createdDesc
@@ -177,12 +158,4 @@ private struct CapsuleGlassModifier: ViewModifier {
                 .foregroundStyle(filter != .all ? BrandColors.primary : .secondary)
         }
     }
-}
-
-#Preview("With Search Text") {
-    NativeListControlBar(
-        searchText: .constant("Pillow"),
-        searchPlaceholder: "Search items...",
-        onAdd: {}
-    )
 }

@@ -65,9 +65,13 @@ struct SearchField: View {
             }
         }
         .padding(.horizontal, isOverlay ? Spacing.sm : Spacing.md)
-        .padding(.vertical, isOverlay ? 7 : Spacing.sm)
+        .padding(.vertical, isOverlay ? 7 : 10)
         .background(isOverlay ? Color(.tertiarySystemFill) : BrandColors.inputBackground)
-        .clipShape(RoundedRectangle(cornerRadius: isOverlay ? 10 : Dimensions.inputRadius))
+        .clipShape(Capsule(style: .continuous))
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(BrandColors.border, lineWidth: Dimensions.borderWidth)
+        )
         .onChange(of: isFocused) { _, newValue in
             fieldFocused = newValue
         }

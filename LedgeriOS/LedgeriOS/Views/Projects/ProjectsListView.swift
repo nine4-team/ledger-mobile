@@ -5,8 +5,6 @@ struct ProjectsListView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @State private var selectedTab = "active"
-    @State private var searchText = ""
-    @State private var isSearching = false
     @State private var projects: [Project] = []
     @State private var listener: ListenerRegistration?
     @State private var preferencesListener: ListenerRegistration?
@@ -21,10 +19,7 @@ struct ProjectsListView: View {
         let filtered = ProjectListCalculations.filterByArchiveState(
             projects: projects, showArchived: showArchived
         )
-        let searched = ProjectListCalculations.filterBySearch(
-            projects: filtered, query: searchText
-        )
-        return ProjectListCalculations.sortByName(searched)
+        return ProjectListCalculations.sortByName(filtered)
     }
 
     var body: some View {
@@ -71,7 +66,6 @@ struct ProjectsListView: View {
         }
         .navigationTitle("Projects")
         .navBarTitleDisplayMode(.inline)
-        .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search projects")
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {
                 Button {
