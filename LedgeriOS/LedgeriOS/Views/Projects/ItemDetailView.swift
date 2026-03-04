@@ -5,6 +5,7 @@ struct ItemDetailView: View {
 
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
+    @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
     // Collapsible section state
@@ -239,6 +240,15 @@ struct ItemDetailView: View {
         MediaGallerySection(
             title: "",
             attachments: item.images ?? [],
+            onUploadAttachment: { data in
+                try await uploadImage(data)
+            },
+            onRemoveAttachment: { attachment in
+                removeImage(attachment)
+            },
+            onSetPrimary: { attachment in
+                setPrimaryImage(attachment)
+            },
             emptyStateMessage: "No images yet"
         )
         .padding(.top, Spacing.xs)
@@ -347,6 +357,55 @@ struct ItemDetailView: View {
     private var spaceName: String {
         guard let spaceId = item.spaceId else { return "—" }
         return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "—"
+    }
+
+    // MARK: - Image Management
+
+    private func uploadImage(_ data: Data) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = item.id else { return }
+        let filename = "\(UUID().uuidString).jpg"
+        let path = mediaService.uploadPath(
+            accountId: accountId,
+            entityType: "items",
+            entityId: itemId,
+            filename: filename
+        )
+        let url = try await mediaService.uploadImage(data, path: path)
+        var images = item.images ?? []
+        let isPrimary = images.isEmpty
+        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        updateItem(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func removeImage(_ attachment: AttachmentRef) {
+        var images = item.images ?? []
+        images.removeAll { $0.url == attachment.url }
+        updateItem(fields: ["images": images.map(attachmentDict)])
+        Task {
+            try? await mediaService.deleteImage(url: attachment.url)
+        }
+    }
+
+    private func setPrimaryImage(_ attachment: AttachmentRef) {
+        guard var images = item.images else { return }
+        images = images.map { img in
+            var copy = img
+            copy.isPrimary = (img.url == attachment.url)
+            return copy
+        }
+        updateItem(fields: ["images": images.map(attachmentDict)])
+    }
+
+    private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
+        var dict: [String: Any] = [
+            "url": ref.url,
+            "kind": ref.kind.rawValue,
+        ]
+        if let fileName = ref.fileName { dict["fileName"] = fileName }
+        if let contentType = ref.contentType { dict["contentType"] = contentType }
+        if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
+        return dict
     }
 
     // MARK: - Actions

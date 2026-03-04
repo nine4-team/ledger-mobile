@@ -91,6 +91,7 @@ final class ProjectContext {
         // 6. Budget categories (account-level presets)
         listeners.append(
             budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
+                print("[BudgetDebug] budgetCategories subscription fired: \(categories.count) categories")
                 Task { @MainActor in
                     self?.budgetCategories = categories
                     self?.recomputeBudgetProgress()
@@ -104,6 +105,7 @@ final class ProjectContext {
                 accountId: accountId,
                 projectId: projectId
             ) { [weak self] pbc in
+                print("[BudgetDebug] projectBudgetCategories subscription fired: \(pbc.count) categories")
                 Task { @MainActor in
                     self?.projectBudgetCategories = pbc
                     self?.recomputeBudgetProgress()
@@ -145,10 +147,12 @@ final class ProjectContext {
     }
 
     private func recomputeBudgetProgress() {
+        print("[BudgetDebug] recompute: \(transactions.count) txns, \(budgetCategories.count) cats, \(projectBudgetCategories.count) projCats")
         budgetProgress = budgetProgressService.buildBudgetProgress(
             transactions: transactions,
             categories: budgetCategories,
             projectBudgetCategories: projectBudgetCategories
         )
+        print("[BudgetDebug] result: \(budgetProgress?.categories.count ?? -1) categories, total budget=\(budgetProgress?.totalBudgetCents ?? -1)")
     }
 }

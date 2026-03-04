@@ -25,11 +25,8 @@ struct SpaceDetailView: View {
 
     // Items section state
     @State private var searchText = ""
-    @State private var isSearchVisible = false
     @State private var activeFilter: ItemFilterOption = .all
     @State private var activeSort: ItemSortOption = .createdDesc
-    @State private var showFilterMenu = false
-    @State private var showSortMenu = false
 
     // MARK: - Computed
 
@@ -130,21 +127,6 @@ struct SpaceDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .background(FilterMenu(
-            isPresented: $showFilterMenu,
-            filters: FilterMenu.filterMenuItems(
-                activeFilter: activeFilter,
-                onSelect: { activeFilter = $0 }
-            ),
-            closeOnItemPress: true
-        ))
-        .background(SortMenu(
-            isPresented: $showSortMenu,
-            sortOptions: SortMenu.sortMenuItems(
-                activeSort: activeSort,
-                onSelect: { activeSort = $0 }
-            )
-        ))
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
@@ -238,14 +220,34 @@ struct SpaceDetailView: View {
     @ViewBuilder
     private var itemsContent: some View {
         VStack(spacing: 0) {
-            ItemsListControlBar(
+            NativeListControlBar(
                 searchText: $searchText,
-                isSearchVisible: $isSearchVisible,
-                onSort: { showSortMenu = true },
-                onFilter: { showFilterMenu = true },
-                activeFilterCount: activeFilter != .all ? 1 : 0,
-                activeSortLabel: activeSort != .createdDesc ? sortLabel(for: activeSort) : nil
-            )
+                searchPlaceholder: "Search items..."
+            ) {
+                EmptyView()
+            } sortMenu: {
+                Menu {
+                    Picker("Sort", selection: $activeSort) {
+                        ForEach(ItemSortOption.allCases, id: \.self) { option in
+                            Text(ListFilterSortCalculations.sortLabel(for: option)).tag(option)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+                }
+            } filterMenu: {
+                Menu {
+                    Picker("Filter", selection: $activeFilter) {
+                        ForEach(ItemFilterOption.allCases, id: \.self) { option in
+                            Text(ListFilterSortCalculations.filterLabel(for: option)).tag(option)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                }
+            }
 
             if filteredItems.isEmpty {
                 Text(spaceItems.isEmpty ? "No items in this space" : "No items match your filters")
@@ -483,12 +485,4 @@ struct SpaceDetailView: View {
         return nil
     }
 
-    private func sortLabel(for option: ItemSortOption) -> String {
-        switch option {
-        case .createdDesc: return "Newest"
-        case .createdAsc: return "Oldest"
-        case .alphabeticalAsc: return "A-Z"
-        case .alphabeticalDesc: return "Z-A"
-        }
-    }
 }

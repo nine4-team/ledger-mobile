@@ -33,6 +33,7 @@ struct BudgetTabView: View {
     }
 
     var body: some View {
+        let _ = print("[BudgetTab] categories=\(categories.count), budgetProgress=\(projectContext.budgetProgress != nil ? "\(projectContext.budgetProgress!.categories.count) cats" : "nil"), budgetCats=\(projectContext.budgetCategories.count), projBudgetCats=\(projectContext.projectBudgetCategories.count), txns=\(projectContext.transactions.count)")
         if categories.isEmpty {
             ContentUnavailableView(
                 "No Budget Set",
@@ -94,7 +95,7 @@ struct BudgetTabView: View {
 
                 ProgressBar(
                     percentage: pct,
-                    fillColor: isOver ? StatusColors.overflowBar : BrandColors.primary,
+                    fillColor: BrandColors.primary,
                     overflowPercentage: overflow > 0 ? overflow : nil,
                     overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                 )
@@ -180,7 +181,7 @@ private struct BudgetCategoryRow: View {
                 if category.budgetCents > 0 {
                     ProgressBar(
                         percentage: percentage,
-                        fillColor: isOverBudget ? StatusColors.overflowBar : BrandColors.primary,
+                        fillColor: BrandColors.primary,
                         overflowPercentage: overflow > 0 ? overflow : nil,
                         overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                     )

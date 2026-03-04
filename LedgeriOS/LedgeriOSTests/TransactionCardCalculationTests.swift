@@ -67,7 +67,7 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].color == BrandColors.primary)
     }
 
-    @Test("Multiple badges: purchase + reimbursement + receipt + review")
+    @Test("Multiple badges: purchase + reimbursement + review (receipt not badged)")
     func badgeItemsMultiple() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: "purchase",
@@ -77,11 +77,10 @@ struct TransactionCardCalculationTests {
             budgetCategoryName: nil,
             status: nil
         )
-        #expect(badges.count == 4)
+        #expect(badges.count == 3)
         #expect(badges[0].text == "Purchase")
         #expect(badges[1].text == "Owed to Client")
-        #expect(badges[2].text == "Receipt")
-        #expect(badges[3].text == "Needs Review")
+        #expect(badges[2].text == "Needs Review")
     }
 
     @Test("Reimbursement owed to company shows Owed to Business")
@@ -127,7 +126,7 @@ struct TransactionCardCalculationTests {
         #expect(badges.isEmpty)
     }
 
-    @Test("Badge order: type, reimbursement, receipt, review, category")
+    @Test("Badge order: type, reimbursement, review, category (receipt not badged)")
     func badgeItemsOrder() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: "purchase",
@@ -137,12 +136,11 @@ struct TransactionCardCalculationTests {
             budgetCategoryName: "Furnishings",
             status: nil
         )
-        #expect(badges.count == 5)
+        #expect(badges.count == 4)
         #expect(badges[0].text == "Purchase")
         #expect(badges[1].text == "Owed to Client")
-        #expect(badges[2].text == "Receipt")
-        #expect(badges[3].text == "Needs Review")
-        #expect(badges[4].text == "Furnishings")
+        #expect(badges[2].text == "Needs Review")
+        #expect(badges[3].text == "Furnishings")
     }
 
     @Test("Empty budget category name is ignored")

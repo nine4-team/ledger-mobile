@@ -46,7 +46,7 @@ struct BudgetProgressPreview: View {
 
             ProgressBar(
                 percentage: percentage,
-                fillColor: overBudget ? StatusColors.overflowBar : BrandColors.primary,
+                fillColor: BrandColors.primary,
                 height: 4,
                 overflowPercentage: overflow > 0 ? overflow : nil,
                 overflowColor: overflow > 0 ? StatusColors.overflowBar : nil

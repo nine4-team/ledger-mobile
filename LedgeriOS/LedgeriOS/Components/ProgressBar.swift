@@ -27,6 +27,7 @@ struct ProgressBar: View {
                     Capsule()
                         .fill(overflowColor)
                         .frame(width: overflowPercentage / 100 * geometry.size.width, height: height)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
         }

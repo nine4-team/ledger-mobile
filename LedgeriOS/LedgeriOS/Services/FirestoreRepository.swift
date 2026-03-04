@@ -52,9 +52,18 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     // MARK: - Subscribe (real-time, cache-first)
 
     func subscribe(onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
-        collectionRef.addSnapshotListener { snapshot, error in
-            guard let docs = snapshot?.documents else { return }
+        collectionRef.addSnapshotListener { [collectionPath] snapshot, error in
+            if let error {
+                print("[FirestoreRepo] \(collectionPath) snapshot error: \(error)")
+            }
+            guard let docs = snapshot?.documents else {
+                print("[FirestoreRepo] \(collectionPath) snapshot nil")
+                return
+            }
             let items = docs.compactMap { doc in Self.decodeDocument(doc) }
+            if items.count != docs.count {
+                print("[FirestoreRepo] \(collectionPath) decode dropped \(docs.count - items.count)/\(docs.count) docs")
+            }
             onChange(items)
         }
     }

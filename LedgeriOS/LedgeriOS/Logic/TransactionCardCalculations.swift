@@ -50,11 +50,6 @@ enum TransactionCardCalculations {
             }
         }
 
-        // 3. Email receipt badge
-        if hasEmailReceipt {
-            badges.append(BadgeItem(text: "Receipt", color: BrandColors.primary))
-        }
-
         // 4. Needs review badge
         if needsReview {
             badges.append(BadgeItem(text: "Needs Review", color: StatusColors.badgeNeedsReview))

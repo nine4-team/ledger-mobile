@@ -8,10 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		CC01B00100000000000C0001 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01F00100000000000C0001 /* CameraCapture.swift */; };
-		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
 		0491897D47F0AAE29CDD0C50 /* Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923BE246BDFE7441513642E /* Invite.swift */; };
-		09051FE368D342829C6A613C /* ListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74B1815C46547A0B36F00B4 /* ListControlBar.swift */; };
 		0BE4F226EBCD44DAA206A6C5 /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */; };
 		0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */; };
 		10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */; };
@@ -196,7 +194,6 @@
 		FF91DFDBB6CA2A40D621D60B /* InventoryItemsSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2C9EB2F2B72BF798FCD1CD /* InventoryItemsSubTab.swift */; };
 		WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000L0001 /* CurrencyFormatting.swift */; };
 		WP01B00100000000000S0001 /* ActionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0001 /* ActionMenuItem.swift */; };
-		WP01B00100000000000S0002 /* ControlAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0002 /* ControlAction.swift */; };
 		WP01B00100000000000S0003 /* FormSheetAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0003 /* FormSheetAction.swift */; };
 		WP01B00100000000000S0004 /* StatusBannerVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0004 /* StatusBannerVariant.swift */; };
 		WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0005 /* ItemListEnums.swift */; };
@@ -222,11 +219,9 @@
 		WP07B00100000000000C0001 /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000C0001 /* TransactionCard.swift */; };
 		WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000L0001 /* TransactionCardCalculations.swift */; };
 		WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */; };
+		NLCB0001B001 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = NLCB0001F001 /* NativeListControlBar.swift */; };
 		WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0001 /* GroupedItemCard.swift */; };
 		WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0002 /* MediaGallerySection.swift */; };
-		WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0003 /* ItemsListControlBar.swift */; };
-		WP08B00100000000000C0004 /* FilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0004 /* FilterMenu.swift */; };
-		WP08B00100000000000C0005 /* SortMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0005 /* SortMenu.swift */; };
 		WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0006 /* ListSelectAllRow.swift */; };
 		WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000C0007 /* ListSelectionInfo.swift */; };
 		WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP08F00100000000000L0001 /* SelectionCalculations.swift */; };
@@ -264,7 +259,6 @@
 		09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
 		09C1CAA12055806BBD1476BB /* InventoryTransactionsSubTab.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryTransactionsSubTab.swift; sourceTree = "<group>"; };
 		0B2C9EB2F2B72BF798FCD1CD /* InventoryItemsSubTab.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryItemsSubTab.swift; sourceTree = "<group>"; };
-		0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
 		0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCalculationTests.swift; sourceTree = "<group>"; };
 		0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionPickerModal.swift; sourceTree = "<group>"; };
 		1A548983AC0E6196622B4719 /* Space.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Space.swift; sourceTree = "<group>"; };
@@ -419,7 +413,6 @@
 		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
 		E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
 		E6C001C78127D35A8B1050F0 /* VendorDefaultsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaultsService.swift; sourceTree = "<group>"; };
-		E74B1815C46547A0B36F00B4 /* ListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListControlBar.swift; sourceTree = "<group>"; };
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewSpaceView.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
@@ -436,7 +429,6 @@
 		FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
 		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0001 /* ActionMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuItem.swift; sourceTree = "<group>"; };
-		WP01F00100000000000S0002 /* ControlAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlAction.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0003 /* FormSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetAction.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0004 /* StatusBannerVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBannerVariant.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0005 /* ItemListEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemListEnums.swift; sourceTree = "<group>"; };
@@ -457,7 +449,6 @@
 		WP03F00100000000000C0004 /* MultiStepFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiStepFormSheet.swift; sourceTree = "<group>"; };
 		WP03F00100000000000C0005 /* StatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBanner.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0001 /* BulkSelectionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkSelectionBar.swift; sourceTree = "<group>"; };
-		WP04F00100000000000C0002 /* ListStateControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStateControls.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0003 /* ThumbnailGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailGrid.swift; sourceTree = "<group>"; };
 		WP04F00100000000000C0004 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
 		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
@@ -471,11 +462,9 @@
 		WP07F00100000000000C0001 /* TransactionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCard.swift; sourceTree = "<group>"; };
 		WP07F00100000000000L0001 /* TransactionCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculations.swift; sourceTree = "<group>"; };
 		WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionCardCalculationTests.swift; sourceTree = "<group>"; };
+		NLCB0001F001 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0001 /* GroupedItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupedItemCard.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0002 /* MediaGallerySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGallerySection.swift; sourceTree = "<group>"; };
-		WP08F00100000000000C0003 /* ItemsListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListControlBar.swift; sourceTree = "<group>"; };
-		WP08F00100000000000C0004 /* FilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterMenu.swift; sourceTree = "<group>"; };
-		WP08F00100000000000C0005 /* SortMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortMenu.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0006 /* ListSelectAllRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectAllRow.swift; sourceTree = "<group>"; };
 		WP08F00100000000000C0007 /* ListSelectionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionInfo.swift; sourceTree = "<group>"; };
 		WP08F00100000000000L0001 /* SelectionCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionCalculations.swift; sourceTree = "<group>"; };
@@ -828,7 +817,6 @@
 				D5B86A1C58FBF298270046AF /* AttachmentRef.swift */,
 				47370982DDDB5064026D1B45 /* Enums.swift */,
 				WP01F00100000000000S0001 /* ActionMenuItem.swift */,
-				WP01F00100000000000S0002 /* ControlAction.swift */,
 				WP01F00100000000000S0003 /* FormSheetAction.swift */,
 				WP01F00100000000000S0004 /* StatusBannerVariant.swift */,
 				WP01F00100000000000S0005 /* ItemListEnums.swift */,
@@ -845,9 +833,7 @@
 				C5A0020100000000000C0002 /* AppButton.swift */,
 				2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */,
 				200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */,
-				E74B1815C46547A0B36F00B4 /* ListControlBar.swift */,
 				DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */,
-				0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */,
 				F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */,
 				DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */,
 				C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */,
@@ -864,14 +850,11 @@
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
 				WP05F00100000000000C0001 /* ActionMenuSheet.swift */,
 				WP04F00100000000000C0001 /* BulkSelectionBar.swift */,
-				WP04F00100000000000C0002 /* ListStateControls.swift */,
 				WP04F00100000000000C0003 /* ThumbnailGrid.swift */,
 				WP04F00100000000000C0004 /* ImageGallery.swift */,
 				WP08F00100000000000C0001 /* GroupedItemCard.swift */,
+				NLCB0001F001 /* NativeListControlBar.swift */,
 				WP08F00100000000000C0002 /* MediaGallerySection.swift */,
-				WP08F00100000000000C0003 /* ItemsListControlBar.swift */,
-				WP08F00100000000000C0004 /* FilterMenu.swift */,
-				WP08F00100000000000C0005 /* SortMenu.swift */,
 				WP08F00100000000000C0006 /* ListSelectAllRow.swift */,
 				WP08F00100000000000C0007 /* ListSelectionInfo.swift */,
 				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
@@ -1120,11 +1103,9 @@
 				8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */,
 				E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */,
 				D98670FB4B844C34A26042A5 /* BudgetProgressDisplay.swift in Sources */,
-				09051FE368D342829C6A613C /* ListControlBar.swift in Sources */,
 				8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */,
 				7EA0238CE609443FB0E24364 /* ActionMenuCalculations.swift in Sources */,
 				274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */,
-				03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */,
 				BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */,
 				1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */,
 				A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */,
@@ -1152,17 +1133,14 @@
 				BABD6D50486B9B785AA62BFE /* SpacesTabPlaceholder.swift in Sources */,
 				A73CA42760A53C737E57460F /* AccountingTabPlaceholder.swift in Sources */,
 				WP01B00100000000000S0001 /* ActionMenuItem.swift in Sources */,
-				WP01B00100000000000S0002 /* ControlAction.swift in Sources */,
 				WP01B00100000000000S0003 /* FormSheetAction.swift in Sources */,
 				WP01B00100000000000S0004 /* StatusBannerVariant.swift in Sources */,
 				WP01B00100000000000S0005 /* ItemListEnums.swift in Sources */,
 				WP01B00100000000000S0006 /* ItemsListMode.swift in Sources */,
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
 				WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */,
+				NLCB0001B001 /* NativeListControlBar.swift in Sources */,
 				WP08B00100000000000C0002 /* MediaGallerySection.swift in Sources */,
-				WP08B00100000000000C0003 /* ItemsListControlBar.swift in Sources */,
-				WP08B00100000000000C0004 /* FilterMenu.swift in Sources */,
-				WP08B00100000000000C0005 /* SortMenu.swift in Sources */,
 				WP08B00100000000000C0006 /* ListSelectAllRow.swift in Sources */,
 				WP08B00100000000000C0007 /* ListSelectionInfo.swift in Sources */,
 				WP08B00100000000000L0001 /* SelectionCalculations.swift in Sources */,

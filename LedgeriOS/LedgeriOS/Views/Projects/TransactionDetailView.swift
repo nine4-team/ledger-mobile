@@ -7,6 +7,7 @@ struct TransactionDetailView: View {
 
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
+    @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
     // Section expanded states — Receipts expanded by default, all others collapsed
@@ -319,15 +320,21 @@ struct TransactionDetailView: View {
             isExpanded: sectionBinding("receipts"),
             badge: "\(transaction.receiptImages?.count ?? 0)"
         ) {
-            if let images = transaction.receiptImages, !images.isEmpty {
-                ThumbnailGrid(attachments: images)
-                    .padding(.top, Spacing.xs)
-            } else {
-                Text("No receipts yet")
-                    .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .padding(.top, Spacing.xs)
-            }
+            MediaGallerySection(
+                title: "",
+                attachments: transaction.receiptImages ?? [],
+                onUploadAttachment: { data in
+                    try await uploadReceiptImage(data)
+                },
+                onRemoveAttachment: { attachment in
+                    removeReceiptImage(attachment)
+                },
+                onSetPrimary: { attachment in
+                    setReceiptPrimary(attachment)
+                },
+                emptyStateMessage: "No receipts yet"
+            )
+            .padding(.top, Spacing.xs)
         }
     }
 
@@ -338,15 +345,21 @@ struct TransactionDetailView: View {
             isExpanded: sectionBinding("other-images"),
             badge: "\(transaction.otherImages?.count ?? 0)"
         ) {
-            if let images = transaction.otherImages, !images.isEmpty {
-                ThumbnailGrid(attachments: images)
-                    .padding(.top, Spacing.xs)
-            } else {
-                Text("No other images")
-                    .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .padding(.top, Spacing.xs)
-            }
+            MediaGallerySection(
+                title: "",
+                attachments: transaction.otherImages ?? [],
+                onUploadAttachment: { data in
+                    try await uploadOtherImage(data)
+                },
+                onRemoveAttachment: { attachment in
+                    removeOtherImage(attachment)
+                },
+                onSetPrimary: { attachment in
+                    setOtherPrimary(attachment)
+                },
+                emptyStateMessage: "No other images"
+            )
+            .padding(.top, Spacing.xs)
         }
     }
 
@@ -587,6 +600,93 @@ struct TransactionDetailView: View {
         case .incomplete: return StatusColors.missedText
         case .over: return StatusColors.badgeError
         }
+    }
+
+    // MARK: - Image Management (Receipts)
+
+    private func uploadReceiptImage(_ data: Data) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        let filename = "\(UUID().uuidString).jpg"
+        let path = mediaService.uploadPath(
+            accountId: accountId,
+            entityType: "transactions",
+            entityId: transactionId,
+            filename: filename
+        )
+        let url = try await mediaService.uploadImage(data, path: path)
+        var images = transaction.receiptImages ?? []
+        let isPrimary = images.isEmpty
+        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
+    }
+
+    private func removeReceiptImage(_ attachment: AttachmentRef) {
+        var images = transaction.receiptImages ?? []
+        images.removeAll { $0.url == attachment.url }
+        updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
+        Task {
+            try? await mediaService.deleteImage(url: attachment.url)
+        }
+    }
+
+    private func setReceiptPrimary(_ attachment: AttachmentRef) {
+        guard var images = transaction.receiptImages else { return }
+        images = images.map { img in
+            var copy = img
+            copy.isPrimary = (img.url == attachment.url)
+            return copy
+        }
+        updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
+    }
+
+    // MARK: - Image Management (Other Images)
+
+    private func uploadOtherImage(_ data: Data) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        let filename = "\(UUID().uuidString).jpg"
+        let path = mediaService.uploadPath(
+            accountId: accountId,
+            entityType: "transactions",
+            entityId: transactionId,
+            filename: filename
+        )
+        let url = try await mediaService.uploadImage(data, path: path)
+        var images = transaction.otherImages ?? []
+        let isPrimary = images.isEmpty
+        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
+    }
+
+    private func removeOtherImage(_ attachment: AttachmentRef) {
+        var images = transaction.otherImages ?? []
+        images.removeAll { $0.url == attachment.url }
+        updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
+        Task {
+            try? await mediaService.deleteImage(url: attachment.url)
+        }
+    }
+
+    private func setOtherPrimary(_ attachment: AttachmentRef) {
+        guard var images = transaction.otherImages else { return }
+        images = images.map { img in
+            var copy = img
+            copy.isPrimary = (img.url == attachment.url)
+            return copy
+        }
+        updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
+    }
+
+    private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
+        var dict: [String: Any] = [
+            "url": ref.url,
+            "kind": ref.kind.rawValue,
+        ]
+        if let fileName = ref.fileName { dict["fileName"] = fileName }
+        if let contentType = ref.contentType { dict["contentType"] = contentType }
+        if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
+        return dict
     }
 
     // MARK: - Actions

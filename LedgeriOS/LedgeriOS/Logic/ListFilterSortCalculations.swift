@@ -213,6 +213,44 @@ enum ListFilterSortCalculations {
         return true
     }
 
+    // MARK: - Labels
+
+    /// Display label for a filter option.
+    static func filterLabel(for option: ItemFilterOption) -> String {
+        switch option {
+        case .all: return "All"
+        case .bookmarked: return "Bookmarked"
+        case .fromInventory: return "From Inventory"
+        case .toReturn: return "To Return"
+        case .returned: return "Returned"
+        case .noSku: return "No SKU"
+        case .noName: return "No Name"
+        case .noProjectPrice: return "No Project Price"
+        case .noImage: return "No Image"
+        case .noTransaction: return "No Transaction"
+        }
+    }
+
+    /// Display label for a sort option.
+    static func sortLabel(for option: ItemSortOption) -> String {
+        switch option {
+        case .createdDesc: return "Newest First"
+        case .createdAsc: return "Oldest First"
+        case .alphabeticalAsc: return "A to Z"
+        case .alphabeticalDesc: return "Z to A"
+        }
+    }
+
+    /// Short label for active sort indicator.
+    static func sortShortLabel(for option: ItemSortOption) -> String {
+        switch option {
+        case .createdDesc: return "Newest"
+        case .createdAsc: return "Oldest"
+        case .alphabeticalAsc: return "A-Z"
+        case .alphabeticalDesc: return "Z-A"
+        }
+    }
+
     /// Generates a grouping key from name + SKU + source, normalized to lowercase.
     private static func groupKey(for item: Item) -> String {
         let name = item.displayName.trimmingCharacters(in: .whitespaces).lowercased()

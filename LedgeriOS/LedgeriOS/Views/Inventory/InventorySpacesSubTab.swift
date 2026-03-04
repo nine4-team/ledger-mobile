@@ -4,7 +4,6 @@ struct InventorySpacesSubTab: View {
     @Environment(InventoryContext.self) private var inventoryContext
 
     @State private var searchText = ""
-    @State private var isSearchVisible = false
     @State private var showNewSpace = false
 
     // MARK: - Computed
@@ -23,7 +22,11 @@ struct InventorySpacesSubTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            controlBar
+            NativeListControlBar(
+                searchText: $searchText,
+                searchPlaceholder: "Search spaces...",
+                onAdd: { showNewSpace = true }
+            )
             content
         }
         .sheet(isPresented: $showNewSpace) {
@@ -31,39 +34,6 @@ struct InventorySpacesSubTab: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-    }
-
-    // MARK: - Control Bar
-
-    private var controlBar: some View {
-        ListControlBar(
-            searchText: $searchText,
-            isSearchVisible: $isSearchVisible,
-            actions: [
-                ControlAction(
-                    id: "search",
-                    title: "",
-                    icon: "magnifyingglass",
-                    isActive: isSearchVisible,
-                    appearance: .iconOnly
-                ) {
-                    withAnimation {
-                        isSearchVisible.toggle()
-                        if !isSearchVisible { searchText = "" }
-                    }
-                },
-                ControlAction(
-                    id: "add",
-                    title: "",
-                    variant: .primary,
-                    icon: "plus",
-                    appearance: .iconOnly,
-                    action: { showNewSpace = true }
-                ),
-            ],
-            searchPlaceholder: "Search spaces..."
-        )
-        .padding(.horizontal, Spacing.screenPadding)
     }
 
     // MARK: - Content

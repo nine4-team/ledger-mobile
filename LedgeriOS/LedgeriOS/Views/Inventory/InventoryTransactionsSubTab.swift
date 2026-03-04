@@ -5,12 +5,9 @@ struct InventoryTransactionsSubTab: View {
     @Environment(AccountContext.self) private var accountContext
 
     @State private var searchText = ""
-    @State private var isSearchVisible = false
     @State private var activeFilter: TransactionFilterOption = .all
     @State private var activeSort: TransactionSortOption = .dateDesc
     @State private var selectedIds: Set<String> = []
-    @State private var showFilterMenu = false
-    @State private var showSortMenu = false
     @State private var showBulkActionMenu = false
     @State private var showNewTransaction = false
 
@@ -62,8 +59,6 @@ struct InventoryTransactionsSubTab: View {
                 )
             }
         }
-        .background(filterMenuPresenter)
-        .background(sortMenuPresenter)
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
@@ -86,10 +81,10 @@ struct InventoryTransactionsSubTab: View {
     // MARK: - Control Bar
 
     private var controlBar: some View {
-        ListControlBar(
+        NativeListControlBar(
             searchText: $searchText,
-            isSearchVisible: $isSearchVisible,
-            actions: controlActions
+            searchPlaceholder: "Search transactions...",
+            onAdd: { showNewTransaction = true }
         ) {
             if !processedTransactions.isEmpty {
                 Button {
@@ -103,47 +98,29 @@ struct InventoryTransactionsSubTab: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Select all")
             }
-        }
-        .padding(.horizontal, Spacing.screenPadding)
-    }
-
-    private var controlActions: [ControlAction] {
-        [
-            ControlAction(
-                id: "search",
-                title: "",
-                icon: "magnifyingglass",
-                isActive: isSearchVisible,
-                appearance: .iconOnly
-            ) {
-                withAnimation {
-                    isSearchVisible.toggle()
-                    if !isSearchVisible { searchText = "" }
+        } sortMenu: {
+            Menu {
+                Picker("Sort", selection: $activeSort) {
+                    ForEach(TransactionSortOption.allCases, id: \.self) { option in
+                        Text(TransactionFilterSortCalculations.sortLabel(for: option)).tag(option)
+                    }
                 }
-            },
-            ControlAction(
-                id: "sort",
-                title: activeSort != .dateDesc ? TransactionFilterSortCalculations.sortLabel(for: activeSort) : "Sort",
-                icon: "arrow.up.arrow.down",
-                isActive: activeSort != .dateDesc,
-                action: { showSortMenu = true }
-            ),
-            ControlAction(
-                id: "filter",
-                title: activeFilter != .all ? "Filter (1)" : "Filter",
-                icon: "line.3.horizontal.decrease",
-                isActive: activeFilter != .all,
-                action: { showFilterMenu = true }
-            ),
-            ControlAction(
-                id: "add",
-                title: "",
-                variant: .primary,
-                icon: "plus",
-                appearance: .iconOnly,
-                action: { showNewTransaction = true }
-            ),
-        ]
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .secondary)
+            }
+        } filterMenu: {
+            Menu {
+                Picker("Filter", selection: $activeFilter) {
+                    ForEach(TransactionFilterOption.allCases, id: \.self) { option in
+                        Text(TransactionFilterSortCalculations.filterLabel(for: option)).tag(option)
+                    }
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+            }
+        }
     }
 
     // MARK: - Content
@@ -199,56 +176,6 @@ struct InventoryTransactionsSubTab: View {
             status: transaction.status,
             itemCount: transaction.itemIds?.count
         )
-    }
-
-    // MARK: - Filter/Sort Menus
-
-    private var filterMenuPresenter: some View {
-        EmptyView()
-            .sheet(isPresented: $showFilterMenu) {
-                ActionMenuSheet(
-                    title: "Filter",
-                    items: filterMenuItems,
-                    closeOnItemPress: true
-                )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-            }
-    }
-
-    private var sortMenuPresenter: some View {
-        EmptyView()
-            .sheet(isPresented: $showSortMenu) {
-                ActionMenuSheet(
-                    title: "Sort By",
-                    items: sortMenuItems,
-                    closeOnItemPress: true
-                )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-            }
-    }
-
-    private var filterMenuItems: [ActionMenuItem] {
-        TransactionFilterOption.allCases.map { option in
-            ActionMenuItem(
-                id: option.rawValue,
-                label: TransactionFilterSortCalculations.filterLabel(for: option),
-                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
-                onPress: { activeFilter = option }
-            )
-        }
-    }
-
-    private var sortMenuItems: [ActionMenuItem] {
-        TransactionSortOption.allCases.map { option in
-            ActionMenuItem(
-                id: option.rawValue,
-                label: TransactionFilterSortCalculations.sortLabel(for: option),
-                icon: activeSort == option ? "checkmark" : nil,
-                onPress: { activeSort = option }
-            )
-        }
     }
 
     // MARK: - Actions

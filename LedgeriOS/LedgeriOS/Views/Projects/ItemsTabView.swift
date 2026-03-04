@@ -5,12 +5,9 @@ struct ItemsTabView: View {
     @Environment(AccountContext.self) private var accountContext
 
     @State private var searchText = ""
-    @State private var isSearchVisible = false
     @State private var activeFilter: ItemFilterOption = .all
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var selectedItemIds: Set<String> = []
-    @State private var showFilterMenu = false
-    @State private var showSortMenu = false
     @State private var expandedGroups: Set<String> = []
 
     // Bulk action modals
@@ -42,6 +39,14 @@ struct ItemsTabView: View {
         ListFilterSortCalculations.shouldShowGrouped(groups)
     }
 
+    private var allVisibleIds: [String] {
+        processedItems.compactMap(\.id)
+    }
+
+    private var isAllSelected: Bool {
+        SelectionCalculations.isAllSelected(selectedIds: selectedItemIds, allIds: allVisibleIds)
+    }
+
     private var selectedItems: [Item] {
         projectContext.items.filter { item in
             guard let id = item.id else { return false }
@@ -59,6 +64,18 @@ struct ItemsTabView: View {
     var body: some View {
         VStack(spacing: 0) {
             controlBar
+
+            if !selectedItemIds.isEmpty {
+                ListSelectionInfo(
+                    text: SelectionCalculations.selectionLabel(
+                        count: selectedItemIds.count,
+                        total: processedItems.count
+                    )
+                )
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.bottom, Spacing.xs)
+            }
+
             content
         }
         .safeAreaInset(edge: .bottom) {
@@ -71,21 +88,6 @@ struct ItemsTabView: View {
                 )
             }
         }
-        .background(FilterMenu(
-            isPresented: $showFilterMenu,
-            filters: FilterMenu.filterMenuItems(
-                activeFilter: activeFilter,
-                onSelect: { activeFilter = $0 }
-            ),
-            closeOnItemPress: true
-        ))
-        .background(SortMenu(
-            isPresented: $showSortMenu,
-            sortOptions: SortMenu.sortMenuItems(
-                activeSort: activeSort,
-                onSelect: { activeSort = $0 }
-            )
-        ))
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(title: "\(selectedItemIds.count) Items Selected", items: bulkActionMenuItems)
                 .presentationDetents([.medium, .large])
@@ -147,16 +149,46 @@ struct ItemsTabView: View {
     // MARK: - Control Bar
 
     private var controlBar: some View {
-        ItemsListControlBar(
+        NativeListControlBar(
             searchText: $searchText,
-            isSearchVisible: $isSearchVisible,
-            onSort: { showSortMenu = true },
-            onFilter: { showFilterMenu = true },
-            onAdd: { showNewItem = true },
-            activeFilterCount: activeFilter != .all ? 1 : 0,
-            activeSortLabel: activeSort != .createdDesc ? sortLabel(for: activeSort) : nil
-        )
-        .padding(.horizontal, Spacing.screenPadding)
+            searchPlaceholder: "Search items...",
+            onAdd: { showNewItem = true }
+        ) {
+            if !processedItems.isEmpty {
+                Button {
+                    selectedItemIds = SelectionCalculations.selectAllToggle(
+                        selectedIds: selectedItemIds,
+                        allIds: allVisibleIds
+                    )
+                } label: {
+                    SelectorCircle(isSelected: isAllSelected, indicator: .check)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Select all")
+            }
+        } sortMenu: {
+            Menu {
+                Picker("Sort", selection: $activeSort) {
+                    ForEach(ItemSortOption.allCases, id: \.self) { option in
+                        Text(ListFilterSortCalculations.sortLabel(for: option)).tag(option)
+                    }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+            }
+        } filterMenu: {
+            Menu {
+                Picker("Filter", selection: $activeFilter) {
+                    ForEach(ItemFilterOption.allCases, id: \.self) { option in
+                        Text(ListFilterSortCalculations.filterLabel(for: option)).tag(option)
+                    }
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+            }
+        }
     }
 
     // MARK: - Content
@@ -371,14 +403,5 @@ struct ItemsTabView: View {
             return CurrencyFormatting.formatCentsWithDecimals(price)
         }
         return nil
-    }
-
-    private func sortLabel(for option: ItemSortOption) -> String {
-        switch option {
-        case .createdDesc: return "Newest"
-        case .createdAsc: return "Oldest"
-        case .alphabeticalAsc: return "A-Z"
-        case .alphabeticalDesc: return "Z-A"
-        }
     }
 }

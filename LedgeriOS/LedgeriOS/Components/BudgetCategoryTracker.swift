@@ -21,9 +21,7 @@ struct BudgetCategoryTracker: View {
     }
 
     private var fillColor: Color {
-        if overBudget { return StatusColors.overflowBar }
-        if percentage >= 100 { return StatusColors.inProgressBar }
-        return BrandColors.primary
+        BrandColors.primary
     }
 
     var body: some View {
@@ -51,7 +49,7 @@ struct BudgetCategoryTracker: View {
                 spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType
             ))
             .font(Typography.caption)
-            .foregroundStyle(BrandColors.textSecondary)
+            .foregroundStyle(overBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
         }
     }
 }

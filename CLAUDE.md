@@ -11,6 +11,31 @@ Native SwiftUI iOS app, migrating from a React Native (Expo) codebase that lives
   - Firebase Swift SDK (Auth, Firestore, Storage)
   - GoogleSignIn-iOS
 
+## Running the App
+
+```bash
+npm run dev:native
+```
+
+This single command (`scripts/dev-native.mjs`) handles the full dev workflow:
+1. Starts Firebase emulators (Auth, Firestore, Storage) with persistence
+2. Seeds Firestore and Storage with test data
+3. Creates the dev auth user (`team@nine4.co` / `password123`)
+4. Builds the SwiftUI app (`LedgeriOS (Emulator)` scheme)
+5. Boots the iPhone 16e simulator and launches the app
+
+The emulators run in the foreground — Ctrl+C stops everything.
+
+### Build-Only Check
+
+To verify code compiles without restarting emulators or the simulator, use xcodebuild directly:
+
+```bash
+cd LedgeriOS && xcodebuild build -scheme "LedgeriOS (Emulator)" -destination 'platform=iOS Simulator,name=iPhone 16e' -derivedDataPath DerivedData -quiet 2>&1 | tail -5
+```
+
+Use `npm run dev:native` only when you need the full environment (emulators + seed data + simulator launch). For compile checks during iterative development, use the xcodebuild command above.
+
 ## Architecture
 
 ### State Management
