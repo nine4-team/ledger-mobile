@@ -23,7 +23,7 @@ struct SpacesTabView: View {
     var body: some View {
         content
             .safeAreaInset(edge: .top) {
-                NativeListControlBar(
+                SearchControlBar(
                     searchText: $searchText,
                     searchPlaceholder: "Search spaces...",
                     onAdd: { showNewSpace = true }

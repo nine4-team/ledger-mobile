@@ -81,6 +81,7 @@
 		833C5EE78B4597D084EB4D6C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC603170450B281DD69B33BC /* SettingsView.swift */; };
 		83BD186B0686885C821BF8E6 /* EditChecklistModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 619B6C9FECA4E1812986ED09 /* EditChecklistModal.swift */; };
 		84671D35EAAC82C04BEFF3DA /* SearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D5011D0061E31D3876A769 /* SearchField.swift */; };
+		SCB00001B001000000000001 /* SearchControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCB00001F001000000000001 /* SearchControlBar.swift */; };
 		8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */; };
 		8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */; };
 		88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */; };
@@ -195,6 +196,7 @@
 		F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */; };
 		F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */; };
 		F607182A3B4C5D6E7F8091A2 /* FilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* FilterMenu.swift */; };
+		TFM00001B001 /* TransactionFilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFM00001F001 /* TransactionFilterMenu.swift */; };
 		F8CC9F1287A1E194B2B7DC7F /* TransactionPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */; };
 		FA8BBCB00F8B4135B8FDC17E /* InvoiceReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6346A2503E38446BA855C288 /* InvoiceReportView.swift */; };
 		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
@@ -354,6 +356,7 @@
 		A1000201000000000000FF01 /* LedgeriOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LedgeriOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10E0C02000000000000FF01 /* FirebaseEmulatorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseEmulatorConfig.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4B5C /* FilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterMenu.swift; sourceTree = "<group>"; };
+		TFM00001F001 /* TransactionFilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionFilterMenu.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F64A7B8C9D0E1F /* ReportPDFStyles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportPDFStyles.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7089012345601 /* AccountGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountGateView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7089012345603 /* ProjectsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsPlaceholderView.swift; sourceTree = "<group>"; };
@@ -430,6 +433,7 @@
 		E1FA024C7D26993F0325E7C4 /* AccountsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountsService.swift; sourceTree = "<group>"; };
 		E4551FEFFD9F3B79C7DC829B /* NewProjectView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewProjectView.swift; sourceTree = "<group>"; };
 		E5D5011D0061E31D3876A769 /* SearchField.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchField.swift; sourceTree = "<group>"; };
+		SCB00001F001000000000001 /* SearchControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchControlBar.swift; sourceTree = "<group>"; };
 		E5F60718293A4B5C6D7E8F92 /* ControlAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlAction.swift; sourceTree = "<group>"; };
 		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
 		E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
@@ -885,6 +889,7 @@
 				WP08F00100000000000C0001 /* GroupedItemCard.swift */,
 				NLCB0001F001 /* NativeListControlBar.swift */,
 				A1B2C3D4E5F60718293A4B5C /* FilterMenu.swift */,
+				TFM00001F001 /* TransactionFilterMenu.swift */,
 				B2C3D4E5F607182A3B4C5D6E /* SortMenu.swift */,
 				C3D4E5F607182B3C4D5E6F70 /* ListControlBar.swift */,
 				D4E5F6071829304D5E6F7081 /* ItemsListControlBar.swift */,
@@ -914,6 +919,7 @@
 				WP08F00100000000000A0001 /* AccountToolbarMenu.swift */,
 				D2CCDD39E89BE8F8B12864B3 /* Modals */,
 				E5D5011D0061E31D3876A769 /* SearchField.swift */,
+				SCB00001F001000000000001 /* SearchControlBar.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1190,6 +1196,7 @@
 				WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */,
 				NLCB0001B001 /* NativeListControlBar.swift in Sources */,
 				F607182A3B4C5D6E7F8091A2 /* FilterMenu.swift in Sources */,
+				TFM00001B001 /* TransactionFilterMenu.swift in Sources */,
 				071829304D5E6F70818293A4 /* SortMenu.swift in Sources */,
 				182A3B4C5D6E7F8091A2B3C5 /* ListControlBar.swift in Sources */,
 				293B4C5D6E7F8091A2B3C4D6 /* ItemsListControlBar.swift in Sources */,
@@ -1296,6 +1303,7 @@
 				S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */,
 				S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */,
 				84671D35EAAC82C04BEFF3DA /* SearchField.swift in Sources */,
+				SCB00001B001000000000001 /* SearchControlBar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

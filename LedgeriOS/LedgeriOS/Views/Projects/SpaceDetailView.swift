@@ -27,6 +27,8 @@ struct SpaceDetailView: View {
     @State private var searchText = ""
     @State private var activeFilter: ItemFilterOption = .all
     @State private var activeSort: ItemSortOption = .createdDesc
+    @State private var showSortMenu = false
+    @State private var showFilterMenu = false
 
     // MARK: - Computed
 
@@ -129,6 +131,22 @@ struct SpaceDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
+        .background(SortMenu(
+            isPresented: $showSortMenu,
+            sortOptions: SortMenu.itemSortMenuItems(
+                activeSort: activeSort,
+                onSelect: { activeSort = $0 }
+            )
+        ))
+        .background(FilterMenu(
+            isPresented: $showFilterMenu,
+            filters: FilterMenu.filterMenuItems(
+                activeFilter: activeFilter,
+                scope: .spaceDetail,
+                onSelect: { activeFilter = $0 }
+            ),
+            closeOnItemPress: true
+        ))
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
@@ -228,24 +246,12 @@ struct SpaceDetailView: View {
             ) {
                 EmptyView()
             } sortMenu: {
-                Menu {
-                    Picker("Sort", selection: $activeSort) {
-                        ForEach(ItemSortOption.allCases, id: \.self) { option in
-                            Text(ListFilterSortCalculations.sortLabel(for: option)).tag(option)
-                        }
-                    }
-                } label: {
+                Button { showSortMenu = true } label: {
                     Image(systemName: "arrow.up.arrow.down")
                         .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
                 }
             } filterMenu: {
-                Menu {
-                    Picker("Filter", selection: $activeFilter) {
-                        ForEach(ItemFilterOption.allCases, id: \.self) { option in
-                            Text(ListFilterSortCalculations.filterLabel(for: option)).tag(option)
-                        }
-                    }
-                } label: {
+                Button { showFilterMenu = true } label: {
                     Image(systemName: "line.3.horizontal.decrease")
                         .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
                 }

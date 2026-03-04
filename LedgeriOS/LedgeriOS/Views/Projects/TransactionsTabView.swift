@@ -7,21 +7,34 @@ struct TransactionsTabView: View {
     @Environment(AccountContext.self) private var accountContext
 
     @State private var searchText = ""
-    @State private var activeFilter: TransactionFilterOption = .all
+    @State private var activeFilters = TransactionFilterState()
     @State private var activeSort: TransactionSortOption = .dateDesc
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
     @State private var showNewTransaction = false
+    @State private var showSortMenu = false
+    @State private var showFilterMenu = false
 
     // MARK: - Computed
 
     private var processedTransactions: [Transaction] {
-        TransactionFilterSortCalculations.applyAll(
+        TransactionFilterSortCalculations.applyAllGrouped(
             projectContext.transactions,
-            filter: activeFilter,
+            filters: activeFilters,
             sort: activeSort,
             search: searchText
         )
+    }
+
+    private var uniqueSources: [String] {
+        Array(Set(projectContext.transactions.compactMap(\.source).filter { !$0.isEmpty })).sorted()
+    }
+
+    private var budgetCategoryPairs: [(id: String, name: String)] {
+        projectContext.budgetCategories.compactMap { cat in
+            guard let id = cat.id else { return nil }
+            return (id: id, name: cat.name)
+        }
     }
 
     private var categoryLookup: [String: BudgetCategory] {
@@ -90,6 +103,19 @@ struct TransactionsTabView: View {
                     .presentationDragIndicator(.visible)
             }
         }
+        .background(SortMenu(
+            isPresented: $showSortMenu,
+            sortOptions: SortMenu.transactionSortMenuItems(
+                activeSort: activeSort,
+                onSelect: { activeSort = $0 }
+            )
+        ))
+        .background(TransactionFilterMenu(
+            isPresented: $showFilterMenu,
+            filterState: $activeFilters,
+            budgetCategories: budgetCategoryPairs,
+            sources: uniqueSources
+        ))
         .onReceive(NotificationCenter.default.publisher(for: .createTransaction)) { _ in
             showNewTransaction = true
         }
@@ -116,26 +142,14 @@ struct TransactionsTabView: View {
                 .accessibilityLabel("Select all")
             }
         } sortMenu: {
-            Menu {
-                Picker("Sort", selection: $activeSort) {
-                    ForEach(TransactionSortOption.allCases, id: \.self) { option in
-                        Text(TransactionFilterSortCalculations.sortLabel(for: option)).tag(option)
-                    }
-                }
-            } label: {
+            Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
                     .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .secondary)
             }
         } filterMenu: {
-            Menu {
-                Picker("Filter", selection: $activeFilter) {
-                    ForEach(TransactionFilterOption.allCases, id: \.self) { option in
-                        Text(TransactionFilterSortCalculations.filterLabel(for: option)).tag(option)
-                    }
-                }
-            } label: {
+            Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeFilters.isActive ? BrandColors.primary : .secondary)
             }
         }
     }
@@ -147,7 +161,7 @@ struct TransactionsTabView: View {
         if processedTransactions.isEmpty {
             ContentUnavailableView {
                 Label(
-                    activeFilter != .all || !searchText.isEmpty
+                    activeFilters.isActive || !searchText.isEmpty
                         ? "No transactions match your filters"
                         : "No transactions yet",
                     systemImage: "creditcard"

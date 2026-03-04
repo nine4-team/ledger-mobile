@@ -1,5 +1,22 @@
 import SwiftUI
 
+enum ItemFilterScope {
+    case inventory
+    case project
+    case spaceDetail
+
+    var options: [ItemFilterOption] {
+        switch self {
+        case .inventory:
+            return [.all, .bookmarked, .noSku, .noName, .noProjectPrice, .noImage, .noTransaction]
+        case .project:
+            return ItemFilterOption.allCases
+        case .spaceDetail:
+            return [.all, .bookmarked, .noSku, .noImage]
+        }
+    }
+}
+
 struct FilterMenu: View {
     @Binding var isPresented: Bool
     let filters: [ActionMenuItem]
@@ -49,7 +66,23 @@ struct FilterMenu: View {
         }
     }
 
-    private static func filterLabel(for option: ItemFilterOption) -> String {
+    /// Scope-aware single-select filter menu.
+    static func filterMenuItems(
+        activeFilter: ItemFilterOption,
+        scope: ItemFilterScope,
+        onSelect: @escaping (ItemFilterOption) -> Void
+    ) -> [ActionMenuItem] {
+        scope.options.map { option in
+            ActionMenuItem(
+                id: option.rawValue,
+                label: filterLabel(for: option),
+                icon: activeFilter == option ? "checkmark.circle.fill" : "circle",
+                onPress: { onSelect(option) }
+            )
+        }
+    }
+
+    static func filterLabel(for option: ItemFilterOption) -> String {
         switch option {
         case .all: return "All"
         case .bookmarked: return "Bookmarked"

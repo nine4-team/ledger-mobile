@@ -16,6 +16,78 @@ enum TransactionSortOption: String, CaseIterable {
     case dateAsc = "date-asc"
     case amountDesc = "amount-desc"
     case amountAsc = "amount-asc"
+    case createdDesc = "created-desc"
+    case createdAsc = "created-asc"
+    case sourceAsc = "source-asc"
+    case sourceDesc = "source-desc"
+}
+
+// MARK: - Transaction Grouped Filter State
+
+struct TransactionFilterState {
+    var status: Set<String> = []
+    var reimbursementStatus: Set<String> = []
+    var emailReceipt: Set<String> = []
+    var transactionType: Set<String> = []
+    var completeness: Set<String> = []
+    var budgetCategory: Set<String> = []
+    var purchasedBy: Set<String> = []
+    var source: Set<String> = []
+
+    var isActive: Bool {
+        !status.isEmpty || !reimbursementStatus.isEmpty || !emailReceipt.isEmpty
+            || !transactionType.isEmpty || !completeness.isEmpty || !budgetCategory.isEmpty
+            || !purchasedBy.isEmpty || !source.isEmpty
+    }
+
+    enum FilterGroup {
+        case status, reimbursementStatus, emailReceipt, transactionType
+        case completeness, budgetCategory, purchasedBy, source
+    }
+
+    func selections(for group: FilterGroup) -> Set<String> {
+        switch group {
+        case .status: return status
+        case .reimbursementStatus: return reimbursementStatus
+        case .emailReceipt: return emailReceipt
+        case .transactionType: return transactionType
+        case .completeness: return completeness
+        case .budgetCategory: return budgetCategory
+        case .purchasedBy: return purchasedBy
+        case .source: return source
+        }
+    }
+
+    mutating func toggle(group: FilterGroup, value: String) {
+        if value == "all" {
+            clearGroup(group)
+            return
+        }
+        var set = selections(for: group)
+        if set.contains(value) {
+            set.remove(value)
+        } else {
+            set.insert(value)
+        }
+        setGroup(group, to: set)
+    }
+
+    private mutating func clearGroup(_ group: FilterGroup) {
+        setGroup(group, to: [])
+    }
+
+    private mutating func setGroup(_ group: FilterGroup, to value: Set<String>) {
+        switch group {
+        case .status: status = value
+        case .reimbursementStatus: reimbursementStatus = value
+        case .emailReceipt: emailReceipt = value
+        case .transactionType: transactionType = value
+        case .completeness: completeness = value
+        case .budgetCategory: budgetCategory = value
+        case .purchasedBy: purchasedBy = value
+        case .source: source = value
+        }
+    }
 }
 
 // MARK: - Transaction Filter/Sort Calculations
@@ -68,6 +140,64 @@ enum TransactionFilterSortCalculations {
         return applySort(searched, sort: sort)
     }
 
+    static func applyAllGrouped(
+        _ transactions: [Transaction],
+        filters: TransactionFilterState,
+        sort: TransactionSortOption,
+        search: String
+    ) -> [Transaction] {
+        let filtered = applyGroupedFilters(transactions, filters: filters)
+        let searched = applySearch(filtered, query: search)
+        return applySort(searched, sort: sort)
+    }
+
+    static func applyGroupedFilters(_ transactions: [Transaction], filters: TransactionFilterState) -> [Transaction] {
+        guard filters.isActive else { return transactions }
+        return transactions.filter { tx in
+            if !filters.status.isEmpty {
+                let txStatus = transactionStatus(for: tx)
+                guard filters.status.contains(txStatus) else { return false }
+            }
+            if !filters.reimbursementStatus.isEmpty {
+                let reimb = tx.reimbursementType ?? ""
+                guard filters.reimbursementStatus.contains(reimb) else { return false }
+            }
+            if !filters.emailReceipt.isEmpty {
+                let hasReceipt = tx.hasEmailReceipt == true
+                let val = hasReceipt ? "yes" : "no"
+                guard filters.emailReceipt.contains(val) else { return false }
+            }
+            if !filters.transactionType.isEmpty {
+                let txType = tx.transactionType ?? ""
+                guard filters.transactionType.contains(txType) else { return false }
+            }
+            if !filters.completeness.isEmpty {
+                let needsReview = tx.needsReview == true
+                let val = needsReview ? "needs-review" : "complete"
+                guard filters.completeness.contains(val) else { return false }
+            }
+            if !filters.budgetCategory.isEmpty {
+                let catId = tx.budgetCategoryId ?? ""
+                guard filters.budgetCategory.contains(catId) else { return false }
+            }
+            if !filters.purchasedBy.isEmpty {
+                let purchaser = tx.purchasedBy ?? "missing"
+                guard filters.purchasedBy.contains(purchaser) else { return false }
+            }
+            if !filters.source.isEmpty {
+                let src = tx.source ?? ""
+                guard filters.source.contains(src) else { return false }
+            }
+            return true
+        }
+    }
+
+    private static func transactionStatus(for tx: Transaction) -> String {
+        if tx.isCanceled == true { return "canceled" }
+        if tx.status == "completed" { return "completed" }
+        return "pending"
+    }
+
     private static func sortComparator(for option: TransactionSortOption) -> (Transaction, Transaction) -> Bool {
         switch option {
         case .dateDesc:
@@ -98,6 +228,34 @@ enum TransactionFilterSortCalculations {
                 if amtA != amtB { return amtA < amtB }
                 return (a.id ?? "") < (b.id ?? "")
             }
+        case .createdDesc:
+            return { a, b in
+                let dateA = a.createdAt ?? .distantPast
+                let dateB = b.createdAt ?? .distantPast
+                if dateA != dateB { return dateA > dateB }
+                return (a.id ?? "") > (b.id ?? "")
+            }
+        case .createdAsc:
+            return { a, b in
+                let dateA = a.createdAt ?? .distantPast
+                let dateB = b.createdAt ?? .distantPast
+                if dateA != dateB { return dateA < dateB }
+                return (a.id ?? "") < (b.id ?? "")
+            }
+        case .sourceAsc:
+            return { a, b in
+                let srcA = (a.source ?? "").lowercased()
+                let srcB = (b.source ?? "").lowercased()
+                if srcA != srcB { return srcA < srcB }
+                return (a.id ?? "") < (b.id ?? "")
+            }
+        case .sourceDesc:
+            return { a, b in
+                let srcA = (a.source ?? "").lowercased()
+                let srcB = (b.source ?? "").lowercased()
+                if srcA != srcB { return srcA > srcB }
+                return (a.id ?? "") > (b.id ?? "")
+            }
         }
     }
 
@@ -118,6 +276,10 @@ enum TransactionFilterSortCalculations {
         case .dateAsc: return "Oldest"
         case .amountDesc: return "Highest Amount"
         case .amountAsc: return "Lowest Amount"
+        case .createdDesc: return "Created (Newest)"
+        case .createdAsc: return "Created (Oldest)"
+        case .sourceAsc: return "Source (A-Z)"
+        case .sourceDesc: return "Source (Z-A)"
         }
     }
 }

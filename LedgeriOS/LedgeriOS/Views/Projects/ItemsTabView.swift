@@ -95,13 +95,14 @@ struct ItemsTabView: View {
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
                 activeFilter: activeFilter,
+                scope: .project,
                 onSelect: { activeFilter = $0 }
             ),
             closeOnItemPress: true
         ))
         .background(SortMenu(
             isPresented: $showSortMenu,
-            sortOptions: SortMenu.sortMenuItems(
+            sortOptions: SortMenu.itemSortMenuItems(
                 activeSort: activeSort,
                 onSelect: { activeSort = $0 }
             )
@@ -188,24 +189,12 @@ struct ItemsTabView: View {
                 .accessibilityLabel("Select all")
             }
         } sortMenu: {
-            Menu {
-                Picker("Sort", selection: $activeSort) {
-                    ForEach(ItemSortOption.allCases, id: \.self) { option in
-                        Text(ListFilterSortCalculations.sortLabel(for: option)).tag(option)
-                    }
-                }
-            } label: {
+            Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
                     .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
             }
         } filterMenu: {
-            Menu {
-                Picker("Filter", selection: $activeFilter) {
-                    ForEach(ItemFilterOption.allCases, id: \.self) { option in
-                        Text(ListFilterSortCalculations.filterLabel(for: option)).tag(option)
-                    }
-                }
-            } label: {
+            Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
                     .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
             }
