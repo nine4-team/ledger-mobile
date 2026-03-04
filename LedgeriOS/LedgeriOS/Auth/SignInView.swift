@@ -26,17 +26,17 @@ struct SignInView: View {
             VStack(spacing: 16) {
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
+                    .platformKeyboardType(.emailAddress)
                     .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
+                    .platformTextInputAutocapitalization(.never)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.secondarySystemBackground)
                     .cornerRadius(10)
 
                 SecureField("Password", text: $password)
                     .textContentType(.password)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.secondarySystemBackground)
                     .cornerRadius(10)
             }
 
@@ -80,7 +80,7 @@ struct SignInView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color(.secondarySystemBackground))
+                .background(Color.secondarySystemBackground)
                 .foregroundStyle(BrandColors.primary)
                 .cornerRadius(10)
                 .overlay(
@@ -106,13 +106,13 @@ struct SignInView: View {
         HStack {
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color(.separator))
+                .foregroundStyle(Color.platformSeparator)
             Text("or")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Rectangle()
                 .frame(height: 1)
-                .foregroundStyle(Color(.separator))
+                .foregroundStyle(Color.platformSeparator)
         }
     }
 
@@ -137,18 +137,12 @@ struct SignInView: View {
     }
 
     private func signInWithGoogle() {
-        guard let windowScene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first,
-              let rootVC = windowScene.windows.first(where: \.isKeyWindow)?.rootViewController
-        else { return }
-
         isLoading = true
         errorMessage = nil
 
         Task {
             do {
-                try await authManager.signInWithGoogle(presentingViewController: rootVC)
+                try await authManager.signInWithGoogle()
             } catch {
                 errorMessage = error.localizedDescription
             }

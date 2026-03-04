@@ -55,7 +55,9 @@ struct SpaceTemplateManagementView: View {
                         .onMove(perform: moveTemplates)
                     }
                     .listStyle(.plain)
+                    #if canImport(UIKit)
                     .environment(\.editMode, .constant(.active))
+                    #endif
                     .frame(minHeight: CGFloat(sortedTemplates.count) * 72)
                 }
             }

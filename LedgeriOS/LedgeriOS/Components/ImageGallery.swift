@@ -27,7 +27,9 @@ struct ImageGallery: View {
                         .tag(index)
                 }
             }
+            #if canImport(UIKit)
             .tabViewStyle(.page(indexDisplayMode: .never))
+            #endif
             .onChange(of: currentIndex) { _, _ in
                 currentZoom = 1.0
                 resetHideTimer()
@@ -39,7 +41,9 @@ struct ImageGallery: View {
                 .animation(.easeInOut(duration: 0.2), value: controlsVisible)
                 .allowsHitTesting(controlsVisible)
         }
+        #if canImport(UIKit)
         .statusBarHidden()
+        #endif
         .onAppear {
             currentIndex = initialIndex
             resetHideTimer()

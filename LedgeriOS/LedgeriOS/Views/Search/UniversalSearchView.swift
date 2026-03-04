@@ -29,7 +29,7 @@ struct UniversalSearchView: View {
             }
         }
         .navigationTitle("Search")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 searchFocused = true
@@ -60,7 +60,7 @@ struct UniversalSearchView: View {
                 .font(Typography.body)
                 .focused($searchFocused)
                 .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
+                .platformTextInputAutocapitalization(.never)
 
             if !query.isEmpty {
                 Button {

@@ -34,23 +34,23 @@ struct SignUpView: View {
             VStack(spacing: 16) {
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
+                    .platformKeyboardType(.emailAddress)
                     .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
+                    .platformTextInputAutocapitalization(.never)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.secondarySystemBackground)
                     .cornerRadius(10)
 
                 SecureField("Password", text: $password)
                     .textContentType(.newPassword)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.secondarySystemBackground)
                     .cornerRadius(10)
 
                 SecureField("Confirm Password", text: $confirmPassword)
                     .textContentType(.newPassword)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color.secondarySystemBackground)
                     .cornerRadius(10)
             }
 

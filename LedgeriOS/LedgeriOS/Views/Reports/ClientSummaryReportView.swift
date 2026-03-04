@@ -73,9 +73,9 @@ struct ClientSummaryReportView: View {
             .padding(Spacing.screenPadding)
         }
         .navigationTitle("Client Summary")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     sharePDF()
                 } label: {

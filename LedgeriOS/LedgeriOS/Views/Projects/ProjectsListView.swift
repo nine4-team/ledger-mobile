@@ -6,6 +6,7 @@ struct ProjectsListView: View {
     @Environment(AuthManager.self) private var authManager
     @State private var selectedTab = "active"
     @State private var searchText = ""
+    @State private var isSearching = false
     @State private var projects: [Project] = []
     @State private var listener: ListenerRegistration?
     @State private var preferencesListener: ListenerRegistration?
@@ -67,8 +68,9 @@ struct ProjectsListView: View {
             }
         }
         .navigationTitle("Projects")
+        .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search projects")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .leadingNavBar) {
                 Button {
                     // Info button — future: show tooltip
                 } label: {
@@ -76,12 +78,20 @@ struct ProjectsListView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showNewProject = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundStyle(BrandColors.textSecondary)
+            ToolbarItem(placement: .trailingNavBar) {
+                HStack(spacing: Spacing.sm) {
+                    Button {
+                        isSearching = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    Button {
+                        showNewProject = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(BrandColors.primary)
+                    }
                 }
             }
         }

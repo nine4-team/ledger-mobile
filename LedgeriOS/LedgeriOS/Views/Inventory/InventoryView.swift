@@ -6,11 +6,7 @@ struct InventoryView: View {
     @Environment(AuthManager.self) private var authManager
 
     @State private var selectedTab: String
-    @State private var showAddMenu = false
-    @State private var showNewItem = false
-    @State private var showNewTransaction = false
-    @State private var showNewSpace = false
-
+                
     private let tabs = [
         TabBarItem(id: "items", label: "Items"),
         TabBarItem(id: "transactions", label: "Transactions"),
@@ -51,52 +47,7 @@ struct InventoryView: View {
             }
         }
         .navigationTitle("Inventory")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    // Info button — future: show tooltip
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showAddMenu = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-        }
-        .sheet(isPresented: $showAddMenu) {
-            ActionMenuSheet(
-                title: "Add New",
-                items: [
-                    ActionMenuItem(id: "item", label: "Item", icon: "shippingbox", onPress: { showNewItem = true }),
-                    ActionMenuItem(id: "transaction", label: "Transaction", icon: "creditcard", onPress: { showNewTransaction = true }),
-                    ActionMenuItem(id: "space", label: "Space", icon: "mappin.and.ellipse", onPress: { showNewSpace = true }),
-                ]
-            )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showNewItem) {
-            Text("New Item — Coming Soon")
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showNewTransaction) {
-            Text("New Transaction — Coming Soon")
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showNewSpace) {
-            Text("New Space — Coming Soon")
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
+        .navBarTitleDisplayMode(.large)
         .task {
             guard let accountId = accountContext.currentAccountId else { return }
             inventoryContext.activate(accountId: accountId)

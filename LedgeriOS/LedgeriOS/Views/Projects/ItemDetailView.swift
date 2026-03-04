@@ -39,7 +39,7 @@ struct ItemDetailView: View {
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(item.displayName.isEmpty ? "Item" : item.displayName)
@@ -47,7 +47,7 @@ struct ItemDetailView: View {
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 HStack(spacing: Spacing.sm) {
                     bookmarkButton
                     menuButton

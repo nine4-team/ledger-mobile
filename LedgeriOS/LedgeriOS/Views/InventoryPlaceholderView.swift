@@ -24,7 +24,7 @@ struct InventoryPlaceholderView: View {
         )
         .navigationTitle("Inventory")
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showingCreateMenu = true
                 } label: {

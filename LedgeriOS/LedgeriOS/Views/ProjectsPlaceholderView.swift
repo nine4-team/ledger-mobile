@@ -23,7 +23,7 @@ struct ProjectsPlaceholderView: View {
             Text("Project: \(project.name)")
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showingCreateMenu = true
                 } label: {

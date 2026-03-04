@@ -88,6 +88,28 @@ struct ItemsTabView: View {
                 )
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .trailingNavBar) {
+                Button { showNewItem = true } label: {
+                    Image(systemName: "plus").foregroundStyle(BrandColors.primary)
+                }
+            }
+        }
+        .background(FilterMenu(
+            isPresented: $showFilterMenu,
+            filters: FilterMenu.filterMenuItems(
+                activeFilter: activeFilter,
+                onSelect: { activeFilter = $0 }
+            ),
+            closeOnItemPress: true
+        ))
+        .background(SortMenu(
+            isPresented: $showSortMenu,
+            sortOptions: SortMenu.sortMenuItems(
+                activeSort: activeSort,
+                onSelect: { activeSort = $0 }
+            )
+        ))
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(title: "\(selectedItemIds.count) Items Selected", items: bulkActionMenuItems)
                 .presentationDetents([.medium, .large])

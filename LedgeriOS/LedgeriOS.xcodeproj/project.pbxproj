@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		CC01B00100000000000C0001 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01F00100000000000C0001 /* CameraCapture.swift */; };
+		S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0001 /* PlatformPresenting.swift */; };
+		S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0002 /* PlatformModifiers.swift */; };
+		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
 		0491897D47F0AAE29CDD0C50 /* Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923BE246BDFE7441513642E /* Invite.swift */; };
 		0BE4F226EBCD44DAA206A6C5 /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */; };
@@ -245,6 +248,8 @@
 
 /* Begin PBXFileReference section */
 		CC01F00100000000000C0001 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
+		S009WP02F0000000000P0001 /* PlatformPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformPresenting.swift; sourceTree = "<group>"; };
+		S009WP02F0000000000P0002 /* PlatformModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformModifiers.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
@@ -756,6 +761,7 @@
 				5049E7963806A086E13C5318 /* State */,
 				C5A0040100000000000G0001 /* Components */,
 				WP04G00100000000000M0001 /* Modals */,
+				S009WP02G0000000000P0001 /* Platform */,
 			);
 			path = LedgeriOS;
 			sourceTree = "<group>";
@@ -933,6 +939,15 @@
 				0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */,
 			);
 			path = Modals;
+			sourceTree = "<group>";
+		};
+		S009WP02G0000000000P0001 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				S009WP02F0000000000P0002 /* PlatformModifiers.swift */,
+				S009WP02F0000000000P0001 /* PlatformPresenting.swift */,
+			);
+			path = Platform;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1236,6 +1251,8 @@
 				448E17C391B6588513A357F6 /* BusinessProfileService.swift in Sources */,
 				A56BCF3DEFEABFF050700075 /* SettingsServiceProtocols.swift in Sources */,
 				CC01B00100000000000C0001 /* CameraCapture.swift in Sources */,
+				S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */,
+				S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

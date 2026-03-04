@@ -187,7 +187,12 @@ private struct InviteRow: View {
 
                 HStack(spacing: Spacing.md) {
                     Button {
+                        #if canImport(UIKit)
                         UIPasteboard.general.string = invite.email
+                        #elseif canImport(AppKit)
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(invite.email, forType: .string)
+                        #endif
                         showingCopied = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             showingCopied = false

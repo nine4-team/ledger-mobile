@@ -64,7 +64,9 @@ struct VendorDefaultsView: View {
                         .onMove(perform: moveVendors)
                     }
                     .listStyle(.plain)
+                    #if canImport(UIKit)
                     .environment(\.editMode, .constant(.active))
+                    #endif
                     .frame(minHeight: CGFloat(displayVendors.count) * 52)
                 }
             }

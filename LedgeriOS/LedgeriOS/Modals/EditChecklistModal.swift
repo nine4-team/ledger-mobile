@@ -67,8 +67,10 @@ struct EditChecklistModal: View {
                     }
                 }
             }
+            #if canImport(UIKit)
             .listStyle(.insetGrouped)
             .environment(\.editMode, .constant(.active))
+            #endif
 
             // Actions
             VStack(spacing: Spacing.sm) {
