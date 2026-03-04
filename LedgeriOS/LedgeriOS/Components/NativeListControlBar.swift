@@ -9,7 +9,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     @ViewBuilder var filterMenu: () -> FilterContent
 
     @State private var isSearchExpanded = false
-    @FocusState private var isSearchFocused: Bool
+    @State private var isSearchFocused = false
+    @State private var capsuleWidth: CGFloat = 0
 
     init(
         searchText: Binding<String>,
@@ -31,8 +32,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         VStack(spacing: Spacing.sm) {
             HStack(spacing: Spacing.sm) {
                 selectAll()
-
-                Spacer(minLength: 0)
 
                 Button {
                     withAnimation(.spring(duration: 0.3)) {
@@ -74,11 +73,27 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
             .modifier(CapsuleGlassModifier())
+            .background(GeometryReader { geo in
+                Color.clear.preference(key: CapsuleWidthKey.self, value: geo.size.width)
+            })
 
             if isSearchExpanded {
-                searchField
+                SearchField(
+                    text: $searchText,
+                    placeholder: searchPlaceholder,
+                    isFocused: $isSearchFocused,
+                    style: .overlay,
+                    onDismiss: {
+                        withAnimation(.spring(duration: 0.3)) {
+                            isSearchExpanded = false
+                            isSearchFocused = false
+                        }
+                    }
+                )
+                .frame(width: capsuleWidth > 0 ? capsuleWidth : nil)
             }
         }
+        .onPreferenceChange(CapsuleWidthKey.self) { capsuleWidth = $0 }
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
         .onChange(of: isSearchExpanded) { _, expanded in
@@ -89,37 +104,14 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             }
         }
     }
+}
 
-    private var searchField: some View {
-        HStack(spacing: Spacing.xs) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-                .font(.system(size: 15))
+// MARK: - Preference Key
 
-            TextField(searchPlaceholder, text: $searchText)
-                .font(.subheadline)
-                .focused($isSearchFocused)
-
-            Button {
-                if searchText.isEmpty {
-                    withAnimation(.spring(duration: 0.3)) {
-                        isSearchExpanded = false
-                        isSearchFocused = false
-                    }
-                } else {
-                    searchText = ""
-                }
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.tertiary)
-                    .font(.system(size: 15))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, 7)
-        .background(Color(.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+private struct CapsuleWidthKey: PreferenceKey {
+    nonisolated(unsafe) static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

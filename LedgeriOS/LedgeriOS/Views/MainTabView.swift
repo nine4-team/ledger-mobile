@@ -31,6 +31,12 @@ struct MainTabView: View {
                 }
             }
 
+            Tab("Settings", systemImage: "gear", value: .settings) {
+                NavigationStack {
+                    SettingsView()
+                }
+            }
+
             Tab("Search", systemImage: "magnifyingglass", value: .search) {
                 NavigationStack {
                     UniversalSearchView()
@@ -43,12 +49,6 @@ struct MainTabView: View {
                         .navigationDestination(for: Space.self) { space in
                             SpaceSearchDetailView(space: space)
                         }
-                }
-            }
-
-            Tab("Settings", systemImage: "gear", value: .settings) {
-                NavigationStack {
-                    SettingsView()
                 }
             }
         }

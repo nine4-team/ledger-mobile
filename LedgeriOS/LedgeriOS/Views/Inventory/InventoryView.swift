@@ -48,7 +48,7 @@ struct InventoryView: View {
             }
         }
         .navigationTitle("Inventory")
-        .navBarTitleDisplayMode(.large)
+        .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {
                 Button {

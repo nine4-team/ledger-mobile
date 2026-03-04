@@ -3,7 +3,7 @@ import SwiftUI
 struct UniversalSearchView: View {
     @Environment(AccountContext.self) private var accountContext
 
-    @FocusState private var searchFocused: Bool
+    @State private var searchFocused = false
     @State private var query = ""
     @State private var debouncedQuery = ""
     @State private var selectedTab = "items"
@@ -54,36 +54,19 @@ struct UniversalSearchView: View {
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        HStack(spacing: Spacing.sm) {
-            Image(systemName: "magnifyingglass")
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textSecondary)
-
-            TextField("Search items, transactions, spaces...", text: $query)
-                .font(Typography.body)
-                .focused($searchFocused)
-                .autocorrectionDisabled()
-                .platformTextInputAutocapitalization(.never)
-
-            if !query.isEmpty {
-                Button {
-                    query = ""
-                    debouncedQuery = ""
-                    searchResults = SearchCalculations.SearchResults(items: [], transactions: [], spaces: [])
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textTertiary)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, Spacing.md)
-        .padding(.vertical, Spacing.sm)
-        .background(BrandColors.inputBackground)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+        SearchField(
+            text: $query,
+            placeholder: "Search items, transactions, spaces...",
+            isFocused: $searchFocused
+        )
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
+        .onChange(of: query) { _, newValue in
+            if newValue.isEmpty {
+                debouncedQuery = ""
+                searchResults = SearchCalculations.SearchResults(items: [], transactions: [], spaces: [])
+            }
+        }
     }
 
     // MARK: - Initial State

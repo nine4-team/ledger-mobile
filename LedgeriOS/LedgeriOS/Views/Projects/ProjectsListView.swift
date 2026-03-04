@@ -70,6 +70,7 @@ struct ProjectsListView: View {
             }
         }
         .navigationTitle("Projects")
+        .navBarTitleDisplayMode(.inline)
         .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search projects")
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {

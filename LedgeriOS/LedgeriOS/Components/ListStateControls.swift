@@ -7,28 +7,8 @@ struct ListStateControls: View {
 
     var body: some View {
         if isSearchVisible {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                TextField(placeholder, text: $searchText)
-                    .font(Typography.input)
-
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(BrandColors.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
-            .background(BrandColors.inputBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-            .transition(.move(edge: .top).combined(with: .opacity))
+            SearchField(text: $searchText, placeholder: placeholder)
+                .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 }
