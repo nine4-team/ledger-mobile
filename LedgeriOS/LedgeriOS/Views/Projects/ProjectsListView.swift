@@ -3,13 +3,17 @@ import FirebaseFirestore
 
 struct ProjectsListView: View {
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
     @State private var selectedTab = "active"
     @State private var searchText = ""
     @State private var projects: [Project] = []
     @State private var listener: ListenerRegistration?
+    @State private var preferencesListener: ListenerRegistration?
+    @State private var projectPreferences: [String: ProjectPreferences] = [:]
     @State private var showNewProject = false
 
     private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
+    private let preferencesService = ProjectPreferencesService()
 
     private var filteredProjects: [Project] {
         let showArchived = selectedTab == "archived"
@@ -104,16 +108,28 @@ struct ProjectsListView: View {
                 self.projects = newProjects
             }
         }
+
+        if let userId = authManager.currentUser?.uid {
+            preferencesListener = preferencesService.subscribeToAllProjectPreferences(
+                accountId: accountId,
+                userId: userId
+            ) { prefs in
+                Task { @MainActor in
+                    self.projectPreferences = prefs
+                }
+            }
+        }
     }
 
     private func stopListening() {
         listener?.remove()
         listener = nil
+        preferencesListener?.remove()
+        preferencesListener = nil
     }
 
     /// Builds budget preview categories from the project's denormalized budgetSummary.
     /// Shows up to 2 categories ordered by: pinned first, then highest spend percentage.
-    /// Pinning is not available in the list (requires per-project subscription), so pinned IDs are empty.
     private func budgetPreviewFor(_ project: Project) -> [BudgetProgress.CategoryProgress] {
         guard let summary = project.budgetSummary,
               let categories = summary.categories else { return [] }
@@ -130,9 +146,21 @@ struct ProjectsListView: View {
             )
         }
 
-        return Array(ProjectListCalculations.budgetBarCategories(
+        let pinnedIds: [String]
+        if let projectId = project.id {
+            pinnedIds = projectPreferences[projectId]?.pinnedBudgetCategoryIds ?? []
+        } else {
+            pinnedIds = []
+        }
+
+        let sorted = ProjectListCalculations.budgetBarCategories(
             categories: allProgress,
-            pinnedCategoryIds: []
-        ).prefix(2))
+            pinnedCategoryIds: pinnedIds
+        )
+        if pinnedIds.isEmpty {
+            return Array(sorted.prefix(1))
+        }
+        // Show all pinned categories
+        return sorted.filter { pinnedIds.contains($0.id) }
     }
 }
