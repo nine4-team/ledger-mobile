@@ -98,5 +98,8 @@ struct LedgerApp: App {
         .defaultSize(width: 1000, height: 700)
         .windowResizability(.contentMinSize)
         .windowToolbarStyle(.unified)
+        .commands {
+            LedgerCommands()
+        }
     }
 }

@@ -10,6 +10,8 @@
 		CC01B00100000000000C0001 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01F00100000000000C0001 /* CameraCapture.swift */; };
 		S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0001 /* PlatformPresenting.swift */; };
 		S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0002 /* PlatformModifiers.swift */; };
+		S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */; };
+		S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0002 /* LedgerCommands.swift */; };
 		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
 		0491897D47F0AAE29CDD0C50 /* Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923BE246BDFE7441513642E /* Invite.swift */; };
@@ -250,6 +252,8 @@
 		CC01F00100000000000C0001 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0001 /* PlatformPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformPresenting.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0002 /* PlatformModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformModifiers.swift; sourceTree = "<group>"; };
+		S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutNotifications.swift; sourceTree = "<group>"; };
+		S009WP05F0000000000P0002 /* LedgerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerCommands.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
@@ -946,6 +950,8 @@
 			children = (
 				S009WP02F0000000000P0002 /* PlatformModifiers.swift */,
 				S009WP02F0000000000P0001 /* PlatformPresenting.swift */,
+				S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */,
+				S009WP05F0000000000P0002 /* LedgerCommands.swift */,
 			);
 			path = Platform;
 			sourceTree = "<group>";
@@ -1253,6 +1259,8 @@
 				CC01B00100000000000C0001 /* CameraCapture.swift in Sources */,
 				S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */,
 				S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */,
+				S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */,
+				S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

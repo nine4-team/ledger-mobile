@@ -61,6 +61,12 @@ struct MainTabView: View {
             }
         }
         #endif
+        .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
+            selectedTab = .settings
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+            selectedTab = .search
+        }
     }
 }
 
