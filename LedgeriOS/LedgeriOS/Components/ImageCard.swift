@@ -3,7 +3,7 @@ import SwiftUI
 /// Card with async image area and content below. Used by ProjectCard and SpaceCard.
 struct ImageCard<Content: View>: View {
     let imageUrl: String?
-    var aspectRatio: CGFloat = 16 / 9
+    var aspectRatio: CGFloat = 3 / 1
     var onPress: (() -> Void)?
     @ViewBuilder let content: Content
 

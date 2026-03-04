@@ -4,7 +4,7 @@ import SwiftUI
 struct SpaceCard: View {
     let space: Space
     let itemCount: Int
-    var showNotes: Bool = false
+    var showNotes: Bool = true
     let onPress: () -> Void
     var onMenuPress: (() -> Void)?
 
@@ -13,29 +13,38 @@ struct SpaceCard: View {
             ?? space.images?.first?.url
     }
 
-    private var checklistCounts: (checked: Int, total: Int)? {
-        guard let checklists = space.checklists, !checklists.isEmpty else { return nil }
-        let totalItems = checklists.reduce(0) { $0 + $1.items.count }
-        guard totalItems > 0 else { return nil }
-        let checkedItems = checklists.reduce(0) { sum, checklist in
-            sum + checklist.items.filter(\.isChecked).count
-        }
-        return (checkedItems, totalItems)
+    private struct ChecklistRow: Identifiable {
+        let id: String
+        let name: String
+        let checked: Int
+        let total: Int
+        var percentage: Double { total > 0 ? Double(checked) / Double(total) * 100 : 0 }
     }
 
-    private var checklistProgress: Double? {
-        guard let counts = checklistCounts else { return nil }
-        return Double(counts.checked) / Double(counts.total) * 100
+    private var checklistRows: [ChecklistRow]? {
+        guard let checklists = space.checklists, !checklists.isEmpty else { return nil }
+        let rows = checklists
+            .map { cl in
+                ChecklistRow(
+                    id: cl.id,
+                    name: cl.name,
+                    checked: cl.items.filter(\.isChecked).count,
+                    total: cl.items.count
+                )
+            }
+            .filter { $0.total > 0 }
+        return rows.isEmpty ? nil : rows
     }
 
     var body: some View {
         ImageCard(imageUrl: primaryImageUrl, onPress: onPress) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack {
-                    Text(space.name)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .top) {
+                    Text(space.name.trimmingCharacters(in: .whitespaces).isEmpty
+                         ? "Untitled space" : space.name)
                         .font(Typography.h3)
                         .foregroundStyle(BrandColors.textPrimary)
-                        .lineLimit(1)
+                        .lineLimit(2)
 
                     Spacer()
 
@@ -51,29 +60,44 @@ struct SpaceCard: View {
                 }
 
                 Text("\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                    .font(Typography.small)
+                    .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
 
-                if let progress = checklistProgress, let counts = checklistCounts {
-                    HStack(spacing: Spacing.sm) {
-                        ProgressBar(
-                            percentage: progress,
-                            fillColor: BrandColors.primary,
-                            height: 4
-                        )
+                if let rows = checklistRows {
+                    VStack(spacing: 8) {
+                        ForEach(rows) { row in
+                            VStack(spacing: 3) {
+                                HStack {
+                                    Text(row.name)
+                                        .font(Typography.caption)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                        .lineLimit(1)
 
-                        Text("\(counts.checked)/\(counts.total)")
-                            .font(Typography.caption)
-                            .foregroundStyle(BrandColors.textTertiary)
-                            .fixedSize()
+                                    Spacer()
+
+                                    Text("\(row.checked)/\(row.total)")
+                                        .font(Typography.caption)
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                        .fixedSize()
+                                }
+
+                                ProgressBar(
+                                    percentage: row.percentage,
+                                    fillColor: Color(red: 0x22/255, green: 0xC5/255, blue: 0x5E/255),
+                                    height: 5
+                                )
+                            }
+                        }
                     }
+                    .padding(.top, 6)
                 }
 
                 if showNotes, let notes = space.notes, !notes.isEmpty {
                     Text(notes)
-                        .font(Typography.small)
+                        .font(Typography.caption)
                         .foregroundStyle(BrandColors.textSecondary)
                         .lineLimit(2)
+                        .padding(.top, 6)
                 }
             }
         }
@@ -109,6 +133,12 @@ struct SpaceCard: View {
                     ChecklistItem(text: "Shower head", isChecked: true),
                     ChecklistItem(text: "Faucet", isChecked: true),
                     ChecklistItem(text: "Toilet", isChecked: false),
+                ]),
+                Checklist(name: "Finishes", items: [
+                    ChecklistItem(text: "Tile", isChecked: true),
+                    ChecklistItem(text: "Paint", isChecked: false),
+                    ChecklistItem(text: "Grout", isChecked: false),
+                    ChecklistItem(text: "Trim", isChecked: false),
                 ])
             ]
         ),
