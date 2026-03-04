@@ -45,7 +45,7 @@ struct FilterMenu: View {
             return ActionMenuItem(
                 id: option.rawValue,
                 label: filterLabel(for: option),
-                icon: activeFilters.contains(option) ? "checkmark.circle.fill" : "circle",
+                isSelected: activeFilters.contains(option),
                 onPress: { onToggle(option) }
             )
         }
@@ -61,7 +61,7 @@ struct FilterMenu: View {
             ActionMenuItem(
                 id: option.rawValue,
                 label: filterLabel(for: option),
-                icon: activeFilters.contains(option) ? "checkmark.circle.fill" : "circle",
+                isSelected: activeFilters.contains(option),
                 onPress: { onToggle(option) }
             )
         }

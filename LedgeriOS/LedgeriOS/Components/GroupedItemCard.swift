@@ -93,7 +93,7 @@ struct GroupedItemCard: View {
     }
 
     var body: some View {
-        Card(padding: 0) {
+        Card(padding: 0, isSelected: selected) {
             VStack(alignment: .leading, spacing: 0) {
                 Button {
                     if let onPress {
@@ -113,8 +113,7 @@ struct GroupedItemCard: View {
                 .buttonStyle(.plain)
 
                 if expanded && !items.isEmpty {
-                    Divider()
-                        .padding(.horizontal, Spacing.lg)
+                    CardDivider(horizontalPadding: Spacing.lg)
 
                     VStack(spacing: 0) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -134,8 +133,7 @@ struct GroupedItemCard: View {
                             )
 
                             if index < items.count - 1 {
-                                Divider()
-                                    .padding(.horizontal, Spacing.lg)
+                                CardDivider(horizontalPadding: Spacing.lg)
                             }
                         }
                     }
@@ -143,10 +141,6 @@ struct GroupedItemCard: View {
                 }
             }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(selected ? BrandColors.primary : .clear, lineWidth: 2)
-        )
         .animation(.default, value: expanded)
     }
 
@@ -184,8 +178,7 @@ struct GroupedItemCard: View {
         .padding(.horizontal, Spacing.lg)
         .padding(.vertical, Spacing.md)
         .overlay(alignment: .bottom) {
-            Divider()
-                .foregroundStyle(BrandColors.borderSecondary)
+            CardDivider()
         }
     }
 
@@ -248,10 +241,10 @@ struct GroupedItemCard: View {
                 }
             }
             .frame(width: 108, height: 108)
-            .clipShape(RoundedRectangle(cornerRadius: 21))
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .background(BrandColors.surfaceTertiary)
             .overlay(
-                RoundedRectangle(cornerRadius: 21)
+                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                     .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
             )
         } else {
@@ -261,7 +254,7 @@ struct GroupedItemCard: View {
 
     private var thumbnailPlaceholder: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 21)
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .fill(BrandColors.surfaceTertiary)
             Image(systemName: "photo")
                 .font(.system(size: 24))
@@ -269,8 +262,8 @@ struct GroupedItemCard: View {
         }
         .frame(width: 108, height: 108)
         .overlay(
-            RoundedRectangle(cornerRadius: 21)
-                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6, 4]))
         )
     }
 }

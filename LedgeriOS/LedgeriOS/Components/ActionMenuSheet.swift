@@ -10,44 +10,34 @@ struct ActionMenuSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if let title {
-                    Text(title)
-                        .font(Typography.h2)
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.top, Spacing.lg)
-                        .padding(.bottom, Spacing.md)
-
-                    Divider()
-                        .foregroundStyle(BrandColors.border)
-                }
-
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+        NavigationStack {
+            List {
+                ForEach(items) { item in
                     menuItemRow(item)
 
                     if expandedItemKey == item.id, let subactions = item.subactions {
-                        submenuSection(subactions: subactions, parentItem: item)
-                    }
-
-                    if index < items.count - 1 {
-                        Divider()
-                            .padding(.horizontal, Spacing.lg)
+                        ForEach(subactions) { subaction in
+                            submenuRow(subaction, parentItem: item)
+                        }
                     }
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(BrandColors.surface)
+            .navigationTitle(title ?? "")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(title == nil ? .hidden : .automatic, for: .navigationBar)
         }
-        .background(BrandColors.surface)
     }
 
     // MARK: - Menu Item Row
 
     @ViewBuilder
     private func menuItemRow(_ item: ActionMenuItem) -> some View {
-        let isExpanded = expandedItemKey == item.id
         let hasSubmenu = ActionMenuCalculations.hasSubactions(item)
         let isDestructive = ActionMenuCalculations.isDestructiveItem(item)
+        let isExpanded = expandedItemKey == item.id
 
         Button {
             handleItemTap(item)
@@ -62,61 +52,63 @@ struct ActionMenuSheet: View {
 
                 Text(item.label)
                     .font(Typography.body)
-                    .foregroundStyle(isDestructive ? BrandColors.destructive : BrandColors.textPrimary)
+                    .foregroundStyle(
+                        isDestructive ? BrandColors.destructive
+                            : item.isSelected ? BrandColors.primary
+                            : BrandColors.textPrimary
+                    )
 
                 Spacer()
 
-                if hasSubmenu {
+                if item.isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(BrandColors.primary)
+                } else if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14))
                         .foregroundStyle(BrandColors.textTertiary)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
             }
-            .padding(.horizontal, Spacing.lg)
             .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .listRowBackground(BrandColors.surface)
+        .listRowSeparatorTint(BrandColors.border)
+        .listRowInsets(EdgeInsets(top: 0, leading: Spacing.lg, bottom: 0, trailing: Spacing.lg))
     }
 
-    // MARK: - Submenu Section
+    // MARK: - Submenu Row
 
     @ViewBuilder
-    private func submenuSection(subactions: [ActionMenuSubitem], parentItem: ActionMenuItem) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(subactions) { subaction in
-                Button {
-                    handleSubactionTap(subaction)
-                } label: {
-                    HStack(spacing: Spacing.md) {
-                        if let icon = subaction.icon {
-                            Image(systemName: icon)
-                                .font(.system(size: 18))
-                                .foregroundStyle(BrandColors.textSecondary)
-                                .frame(width: 24, alignment: .center)
-                        }
+    private func submenuRow(_ subaction: ActionMenuSubitem, parentItem: ActionMenuItem) -> some View {
+        let isSelected = ActionMenuCalculations.isSubactionSelected(item: parentItem, subactionKey: subaction.id)
 
-                        Text(subaction.label)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
+        Button {
+            handleSubactionTap(subaction)
+        } label: {
+            HStack(spacing: Spacing.md) {
+                Text(subaction.label)
+                    .font(Typography.small)
+                    .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
 
-                        Spacer()
+                Spacer()
 
-                        if ActionMenuCalculations.isSubactionSelected(item: parentItem, subactionKey: subaction.id) {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(BrandColors.primary)
-                        }
-                    }
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.leading, Spacing.xl)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(BrandColors.primary)
                 }
-                .buttonStyle(.plain)
             }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .listRowBackground(BrandColors.surface)
+        .listRowSeparatorTint(BrandColors.border)
+        .listRowInsets(EdgeInsets(top: 0, leading: Spacing.lg + Spacing.xl, bottom: 0, trailing: Spacing.lg))
     }
 
     // MARK: - Actions

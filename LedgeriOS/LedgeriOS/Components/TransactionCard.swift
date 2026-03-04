@@ -122,19 +122,12 @@ struct TransactionCard: View {
 
     @ViewBuilder
     private var cardView: some View {
-        let base = Card(padding: 0) {
+        let base = Card(padding: 0, isSelected: selected) {
             VStack(alignment: .leading, spacing: 0) {
                 headerRow
                 contentSection
             }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(
-                    selected ? BrandColors.primary : Color.clear,
-                    lineWidth: selected ? 2 : 0
-                )
-        )
         .contentShape(Rectangle())
 
         if let onPress {
@@ -170,9 +163,7 @@ struct TransactionCard: View {
         .padding(.horizontal, Spacing.sm)
         .padding(.vertical, Spacing.sm)
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: 1)
+            CardDivider()
         }
     }
 

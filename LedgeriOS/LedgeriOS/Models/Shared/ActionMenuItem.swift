@@ -8,6 +8,7 @@ struct ActionMenuItem: Identifiable {
     var selectedSubactionKey: String?
     var isDestructive: Bool = false
     var isActionOnly: Bool = false
+    var isSelected: Bool = false
     var onPress: (() -> Void)?
 }
 

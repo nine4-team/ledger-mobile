@@ -104,28 +104,20 @@ struct ItemCard: View {
     }
 
     var body: some View {
-        Button {
-            if let onPress {
-                onPress()
+        Card(padding: 0, isSelected: currentSelected) {
+            Button {
+                if let onPress {
+                    onPress()
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 0) {
+                    headerRow
+                    contentArea
+                }
             }
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                headerRow
-                contentArea
-            }
+            .buttonStyle(ItemCardButtonStyle())
+            .disabled(onPress == nil)
         }
-        .buttonStyle(ItemCardButtonStyle())
-        .disabled(onPress == nil)
-        .padding(0)
-        .background(BrandColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(
-                    currentSelected ? BrandColors.primary : BrandColors.border,
-                    lineWidth: Dimensions.borderWidth
-                )
-        )
         .sheet(isPresented: $showMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
@@ -204,8 +196,7 @@ struct ItemCard: View {
         .padding(.horizontal, Spacing.lg)
         .padding(.vertical, Spacing.md)
         .overlay(alignment: .bottom) {
-            Divider()
-                .foregroundStyle(BrandColors.borderSecondary)
+            CardDivider()
         }
     }
 
@@ -279,10 +270,10 @@ struct ItemCard: View {
                 }
             }
             .frame(width: 108, height: 108)
-            .clipShape(RoundedRectangle(cornerRadius: 21))
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .background(BrandColors.surfaceTertiary)
             .overlay(
-                RoundedRectangle(cornerRadius: 21)
+                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                     .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
             )
         } else {
@@ -292,7 +283,7 @@ struct ItemCard: View {
 
     private func placeholderView(icon: String) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 21)
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .fill(BrandColors.surfaceTertiary)
             Image(systemName: icon)
                 .font(.system(size: 24))
@@ -300,8 +291,8 @@ struct ItemCard: View {
         }
         .frame(width: 108, height: 108)
         .overlay(
-            RoundedRectangle(cornerRadius: 21)
-                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6, 4]))
         )
     }
 

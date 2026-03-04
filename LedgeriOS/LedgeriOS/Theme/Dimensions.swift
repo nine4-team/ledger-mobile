@@ -16,6 +16,13 @@ enum Dimensions {
 
     /// Standard border/divider — 1pt
     static let borderWidth: CGFloat = 1
+    /// Selection highlight border — 2pt
+    static let selectionBorderWidth: CGFloat = 2
+
+    // MARK: - Thumbnail
+
+    /// Thumbnail corner radius — 21pt
+    static let thumbnailRadius: CGFloat = 21
 
     // MARK: - Adaptive Layout
 

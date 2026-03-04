@@ -17,8 +17,9 @@ struct ImageCard<Content: View>: View {
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
         )
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
 
         if let onPress {
             Button(action: onPress) {
