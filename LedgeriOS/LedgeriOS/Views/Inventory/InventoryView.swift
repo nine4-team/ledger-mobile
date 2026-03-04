@@ -6,6 +6,7 @@ struct InventoryView: View {
     @Environment(AuthManager.self) private var authManager
 
     @State private var selectedTab: String
+    @State private var showNewItem = false
                 
     private let tabs = [
         TabBarItem(id: "items", label: "Items"),
@@ -48,6 +49,29 @@ struct InventoryView: View {
         }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .leadingNavBar) {
+                Button {
+                    // Info button — future: show tooltip
+                } label: {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+            ToolbarItem(placement: .trailingNavBar) {
+                Button {
+                    showNewItem = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+        }
+        .sheet(isPresented: $showNewItem) {
+            Text("New Item — Coming Soon")
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
         .task {
             guard let accountId = accountContext.currentAccountId else { return }
             inventoryContext.activate(accountId: accountId)

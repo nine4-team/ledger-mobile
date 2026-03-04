@@ -81,19 +81,11 @@ struct ProjectsListView: View {
                 }
             }
             ToolbarItem(placement: .trailingNavBar) {
-                HStack(spacing: Spacing.sm) {
-                    Button {
-                        isSearching = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(BrandColors.textSecondary)
-                    }
-                    Button {
-                        showNewProject = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundStyle(BrandColors.primary)
-                    }
+                Button {
+                    showNewProject = true
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(BrandColors.textSecondary)
                 }
             }
         }

@@ -91,13 +91,6 @@ struct ItemsTabView: View {
                 )
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .trailingNavBar) {
-                Button { showNewItem = true } label: {
-                    Image(systemName: "plus").foregroundStyle(BrandColors.primary)
-                }
-            }
-        }
         .background(FilterMenu(
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
