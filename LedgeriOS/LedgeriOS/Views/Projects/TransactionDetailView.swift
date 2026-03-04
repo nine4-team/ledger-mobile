@@ -441,8 +441,7 @@ struct TransactionDetailView: View {
                 if !filteredSortedItems.isEmpty {
                     ForEach(filteredSortedItems) { item in
                         ItemCard(
-                            name: item.displayName,
-                            sku: item.sku,
+                            item: item,
                             priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) }
                         )
                     }
@@ -468,10 +467,9 @@ struct TransactionDetailView: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     ForEach(returnedItems) { item in
                         ItemCard(
-                            name: item.displayName,
-                            sku: item.sku,
+                            item: item,
                             priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                            statusLabel: "Returned"
+                            statusOverride: "Returned"
                         )
                     }
                 }
@@ -492,10 +490,9 @@ struct TransactionDetailView: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     ForEach(soldItems) { item in
                         ItemCard(
-                            name: item.displayName,
-                            sku: item.sku,
+                            item: item,
                             priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                            statusLabel: "Sold"
+                            statusOverride: "Sold"
                         )
                     }
                 }

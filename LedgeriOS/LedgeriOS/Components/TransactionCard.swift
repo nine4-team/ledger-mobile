@@ -2,24 +2,13 @@ import SwiftUI
 
 struct TransactionCard: View {
     // Core data
-    let id: String
-    let source: String
-    var amountCents: Int?
-    var transactionDate: String?
-    var notes: String?
+    let transaction: Transaction
 
-    // Badge data
+    // Cross-collection lookup — not on Transaction model
     var budgetCategoryName: String?
-    var transactionType: String?
-    var needsReview: Bool = false
-    var reimbursementType: String?
-    var hasEmailReceipt: Bool = false
-    var status: String?
-    var itemCount: Int?
 
-    // Selection
+    // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
-    var defaultSelected: Bool = false
 
     // Actions
     var bookmarked: Bool = false
@@ -27,104 +16,42 @@ struct TransactionCard: View {
     var menuItems: [ActionMenuItem] = []
     var onPress: (() -> Void)?
 
-    @State private var internalSelected: Bool
-    @State private var showMenu = false
-    @State private var menuPendingAction: (() -> Void)?
-
-    init(
-        id: String,
-        source: String,
-        amountCents: Int? = nil,
-        transactionDate: String? = nil,
-        notes: String? = nil,
-        budgetCategoryName: String? = nil,
-        transactionType: String? = nil,
-        needsReview: Bool = false,
-        reimbursementType: String? = nil,
-        hasEmailReceipt: Bool = false,
-        status: String? = nil,
-        itemCount: Int? = nil,
-        isSelected: Binding<Bool>? = nil,
-        defaultSelected: Bool = false,
-        bookmarked: Bool = false,
-        onBookmarkPress: (() -> Void)? = nil,
-        menuItems: [ActionMenuItem] = [],
-        onPress: (() -> Void)? = nil
-    ) {
-        self.id = id
-        self.source = source
-        self.amountCents = amountCents
-        self.transactionDate = transactionDate
-        self.notes = notes
-        self.budgetCategoryName = budgetCategoryName
-        self.transactionType = transactionType
-        self.needsReview = needsReview
-        self.reimbursementType = reimbursementType
-        self.hasEmailReceipt = hasEmailReceipt
-        self.status = status
-        self.itemCount = itemCount
-        self.isSelected = isSelected
-        self.defaultSelected = defaultSelected
-        self.bookmarked = bookmarked
-        self.onBookmarkPress = onBookmarkPress
-        self.menuItems = menuItems
-        self.onPress = onPress
-        self._internalSelected = State(initialValue: defaultSelected)
-    }
-
-    private var selected: Bool {
-        isSelected?.wrappedValue ?? internalSelected
-    }
-
-    private func setSelected(_ value: Bool) {
-        if let binding = isSelected {
-            binding.wrappedValue = value
-        } else {
-            internalSelected = value
-        }
-    }
-
-    private var badges: [TransactionCardCalculations.BadgeItem] {
+    private var badges: [CardBadge] {
         TransactionCardCalculations.badgeItems(
-            transactionType: transactionType,
-            reimbursementType: reimbursementType,
-            hasEmailReceipt: hasEmailReceipt,
-            needsReview: needsReview,
+            transactionType: transaction.transactionType,
+            reimbursementType: transaction.reimbursementType,
+            hasEmailReceipt: transaction.hasEmailReceipt ?? false,
+            needsReview: transaction.needsReview ?? false,
             budgetCategoryName: budgetCategoryName,
-            status: status
+            status: transaction.status
         )
     }
 
-    private var showSelector: Bool {
-        isSelected != nil
+    private var source: String {
+        transaction.source ?? ""
+    }
+
+    private var itemCount: Int? {
+        transaction.itemIds?.count
     }
 
     var body: some View {
         cardView
-            .sheet(isPresented: $showMenu) {
-            ActionMenuSheet(
-                title: source,
-                items: menuItems,
-                onSelectAction: { action in
-                    menuPendingAction = action
-                }
-            )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
-        }
-        .onChange(of: showMenu) { _, isShowing in
-            if !isShowing, let action = menuPendingAction {
-                menuPendingAction = nil
-                action()
-            }
-        }
     }
 
     @ViewBuilder
     private var cardView: some View {
-        let base = Card(padding: 0, isSelected: selected) {
+        let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false) {
             VStack(alignment: .leading, spacing: 0) {
-                headerRow
+                CardHeader(
+                    isSelected: isSelected,
+                    selectionLabel: source,
+                    badges: badges,
+                    bookmarked: bookmarked,
+                    onBookmarkPress: onBookmarkPress,
+                    menuTitle: source,
+                    menuItems: menuItems
+                )
                 contentSection
             }
         }
@@ -137,85 +64,6 @@ struct TransactionCard: View {
         }
     }
 
-    // MARK: - Header
-
-    @ViewBuilder
-    private var headerRow: some View {
-        HStack(spacing: Spacing.sm) {
-            if showSelector {
-                Button {
-                    setSelected(!selected)
-                } label: {
-                    SelectorCircle(isSelected: selected, indicator: .dot)
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                .accessibilityLabel("Select \(source)")
-            }
-
-            if !badges.isEmpty {
-                badgeRow
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-
-            headerActions
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.sm)
-        .overlay(alignment: .bottom) {
-            CardDivider()
-        }
-    }
-
-    @ViewBuilder
-    private var badgeRow: some View {
-        HStack(spacing: Spacing.sm) {
-            ForEach(Array(badges.enumerated()), id: \.offset) { _, badge in
-                Badge(
-                    text: badge.text,
-                    color: badge.color,
-                    backgroundOpacity: badge.backgroundOpacity,
-                    borderOpacity: badge.borderOpacity
-                )
-            }
-        }
-        .fixedSize(horizontal: true, vertical: false)
-    }
-
-    @ViewBuilder
-    private var headerActions: some View {
-        HStack(spacing: Spacing.sm) {
-            if let onBookmarkPress {
-                Button {
-                    onBookmarkPress()
-                } label: {
-                    Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 18))
-                        .foregroundStyle(bookmarked ? StatusColors.badgeError : BrandColors.primary)
-                        .padding(6)
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                .accessibilityLabel(bookmarked ? "Remove bookmark" : "Add bookmark")
-            }
-
-            if !menuItems.isEmpty {
-                Button {
-                    showMenu = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 18))
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .rotationEffect(.degrees(90))
-                        .padding(6)
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                .accessibilityLabel("More options")
-            }
-        }
-    }
-
     // MARK: - Content
 
     @ViewBuilder
@@ -223,14 +71,14 @@ struct TransactionCard: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             // Source + Amount row
             HStack(alignment: .firstTextBaseline) {
-                Text(source.isEmpty ? "Transaction \(id.prefix(6))" : source)
+                Text(source.isEmpty ? "Transaction \((transaction.id ?? "").prefix(6))" : source)
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(2)
 
                 Spacer(minLength: Spacing.md)
 
-                Text(TransactionCardCalculations.formattedAmount(amountCents: amountCents, transactionType: transactionType))
+                Text(TransactionCardCalculations.formattedAmount(amountCents: transaction.amountCents, transactionType: transaction.transactionType))
                     .font(Typography.body.weight(.bold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
@@ -239,12 +87,12 @@ struct TransactionCard: View {
 
             // Date + item count row
             HStack(spacing: 0) {
-                Text(TransactionCardCalculations.formattedDate(transactionDate))
+                Text(TransactionCardCalculations.formattedDate(transaction.transactionDate))
                     .font(Typography.small.weight(.medium))
                     .foregroundStyle(BrandColors.textSecondary)
 
                 if let count = itemCount {
-                    Text(" · ")
+                    Text(" \u{00B7} ")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                     Text("\(count) \(count == 1 ? "item" : "items")")
@@ -254,7 +102,7 @@ struct TransactionCard: View {
             }
 
             // Notes
-            if let truncated = TransactionCardCalculations.truncatedNotes(notes) {
+            if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
                 Text(truncated)
                     .font(Typography.small)
                     .italic()
@@ -326,9 +174,10 @@ private struct FlowLayout: Layout {
 
 #Preview("Minimal") {
     TransactionCard(
-        id: "tx001",
-        source: "Amazon",
-        amountCents: 10012
+        transaction: Transaction(
+            amountCents: 10012,
+            source: "Amazon"
+        )
     )
     .padding(Spacing.screenPadding)
     .preferredColorScheme(.dark)
@@ -336,15 +185,17 @@ private struct FlowLayout: Layout {
 
 #Preview("Full Badges & Notes") {
     TransactionCard(
-        id: "tx002",
-        source: "Wayfair",
-        amountCents: 44620,
-        transactionDate: "2026-02-02",
-        notes: "***REPLACEMENT KING BED FOR MBR- first one came in with wrong piece and couldn't assemble......",
+        transaction: Transaction(
+            transactionDate: "2026-02-02",
+            amountCents: 44620,
+            source: "Wayfair",
+            reimbursementType: nil,
+            notes: "***REPLACEMENT KING BED FOR MBR- first one came in with wrong piece and couldn't assemble......",
+            transactionType: "purchase",
+            hasEmailReceipt: false,
+            needsReview: true
+        ),
         budgetCategoryName: "Furnishings",
-        transactionType: "purchase",
-        needsReview: true,
-        itemCount: 0,
         bookmarked: true,
         onBookmarkPress: {},
         menuItems: [
@@ -360,15 +211,15 @@ private struct FlowLayout: Layout {
     @Previewable @State var selected = true
 
     TransactionCard(
-        id: "tx003",
-        source: "Amazon",
-        amountCents: 14194,
-        transactionDate: "2026-02-02",
-        notes: "1king sham for MBR, ochre king quilt set for green king wingback bed",
+        transaction: Transaction(
+            transactionDate: "2026-02-02",
+            amountCents: 14194,
+            source: "Amazon",
+            notes: "1king sham for MBR, ochre king quilt set for green king wingback bed",
+            transactionType: "purchase",
+            needsReview: true
+        ),
         budgetCategoryName: "Furnishings",
-        transactionType: "purchase",
-        needsReview: true,
-        itemCount: 0,
         isSelected: $selected,
         menuItems: [
             ActionMenuItem(id: "edit", label: "Edit", icon: "pencil"),

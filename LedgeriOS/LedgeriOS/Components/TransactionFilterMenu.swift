@@ -31,7 +31,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "status",
             label: "Status",
-            icon: "circle.fill",
             group: .status,
             options: [
                 ("all", "All"),
@@ -44,7 +43,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "reimbursement",
             label: "Reimbursement Status",
-            icon: "arrow.left.arrow.right",
             group: .reimbursementStatus,
             options: [
                 ("all", "All"),
@@ -56,7 +54,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "receipt",
             label: "Email Receipt",
-            icon: "envelope",
             group: .emailReceipt,
             options: [
                 ("all", "All"),
@@ -68,7 +65,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "type",
             label: "Transaction Type",
-            icon: "tag",
             group: .transactionType,
             options: [
                 ("all", "All"),
@@ -80,7 +76,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "completeness",
             label: "Completeness",
-            icon: "checkmark.circle",
             group: .completeness,
             options: [
                 ("all", "All"),
@@ -95,7 +90,6 @@ struct TransactionFilterMenu: View {
             items.append(filterGroup(
                 id: "budget-category",
                 label: "Budget Category",
-                icon: "folder",
                 group: .budgetCategory,
                 options: catOptions
             ))
@@ -104,7 +98,6 @@ struct TransactionFilterMenu: View {
         items.append(filterGroup(
             id: "purchased-by",
             label: "Purchased By",
-            icon: "person",
             group: .purchasedBy,
             options: [
                 ("all", "All"),
@@ -120,7 +113,6 @@ struct TransactionFilterMenu: View {
             items.append(filterGroup(
                 id: "source",
                 label: "Source",
-                icon: "building.2",
                 group: .source,
                 options: srcOptions
             ))
@@ -132,7 +124,6 @@ struct TransactionFilterMenu: View {
     private func filterGroup(
         id: String,
         label: String,
-        icon: String,
         group: TransactionFilterState.FilterGroup,
         options: [(value: String, label: String)]
     ) -> ActionMenuItem {
@@ -160,7 +151,6 @@ struct TransactionFilterMenu: View {
         return ActionMenuItem(
             id: id,
             label: label,
-            icon: icon,
             subactions: subactions,
             selectedSubactionKey: selectedKey
         )

@@ -254,36 +254,26 @@ struct ItemsTabView: View {
             if selectedItemIds.isEmpty {
                 NavigationLink(value: item) {
                     ItemCard(
-                        name: item.displayName,
-                        sku: item.sku,
-                        sourceLabel: item.source,
+                        item: item,
                         priceLabel: displayPrice(for: item),
-                        statusLabel: item.status,
                         budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                        thumbnailUri: item.images?.first?.url,
                         isSelected: Binding(
                             get: { selectedItemIds.contains(itemId) },
                             set: { if $0 { selectedItemIds.insert(itemId) } else { selectedItemIds.remove(itemId) } }
                         ),
-                        bookmarked: item.bookmark == true,
                         menuItems: singleItemMenuItems(for: item)
                     )
                 }
                 .buttonStyle(.plain)
             } else {
                 ItemCard(
-                    name: item.displayName,
-                    sku: item.sku,
-                    sourceLabel: item.source,
+                    item: item,
                     priceLabel: displayPrice(for: item),
-                    statusLabel: item.status,
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                    thumbnailUri: item.images?.first?.url,
                     isSelected: Binding(
                         get: { selectedItemIds.contains(itemId) },
                         set: { if $0 { selectedItemIds.insert(itemId) } else { selectedItemIds.remove(itemId) } }
-                    ),
-                    bookmarked: item.bookmark == true
+                    )
                 )
                 .onTapGesture { toggleSelection(itemId) }
             }

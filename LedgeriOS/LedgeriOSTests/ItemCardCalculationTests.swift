@@ -237,41 +237,4 @@ struct ItemCardCalculationTests {
         #expect(suffix == nil)
     }
 
-    // MARK: - resolvedSelected
-
-    @Test("External selected overrides internal")
-    func resolvedSelectedExternal() {
-        let result = ItemCardCalculations.resolvedSelected(
-            externalSelected: true,
-            internalSelected: false
-        )
-        #expect(result == true)
-    }
-
-    @Test("External false overrides internal true")
-    func resolvedSelectedExternalFalse() {
-        let result = ItemCardCalculations.resolvedSelected(
-            externalSelected: false,
-            internalSelected: true
-        )
-        #expect(result == false)
-    }
-
-    @Test("No external uses internal state")
-    func resolvedSelectedInternal() {
-        let result = ItemCardCalculations.resolvedSelected(
-            externalSelected: nil,
-            internalSelected: true
-        )
-        #expect(result == true)
-    }
-
-    @Test("No external with false internal")
-    func resolvedSelectedInternalFalse() {
-        let result = ItemCardCalculations.resolvedSelected(
-            externalSelected: nil,
-            internalSelected: false
-        )
-        #expect(result == false)
-    }
 }

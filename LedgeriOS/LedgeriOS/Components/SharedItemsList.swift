@@ -177,12 +177,12 @@ struct SharedItemsList: View {
         } sortMenu: {
             Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .primary)
             }
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .primary)
             }
         }
     }
@@ -245,18 +245,13 @@ struct SharedItemsList: View {
                 pickerItemCard(for: item, itemId: itemId, isItemSelected: isItemSelected)
             } else {
                 ItemCard(
-                    name: item.displayName,
-                    sku: item.sku,
-                    sourceLabel: item.source,
+                    item: item,
                     priceLabel: displayPrice(for: item),
-                    statusLabel: item.status,
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                    thumbnailUri: item.images?.first?.url,
                     isSelected: Binding(
                         get: { selectedIds.contains(itemId) },
                         set: { if $0 { selectedIds.insert(itemId) } else { selectedIds.remove(itemId) } }
                     ),
-                    bookmarked: item.bookmark == true,
                     onPress: { handleItemPress(item) },
                     menuItems: menuItems,
                     warningMessage: warning

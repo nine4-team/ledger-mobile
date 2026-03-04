@@ -274,12 +274,8 @@ struct SpaceDetailView: View {
                     ForEach(filteredItems) { item in
                         NavigationLink(value: item) {
                             ItemCard(
-                                name: item.displayName,
-                                sku: item.sku,
-                                sourceLabel: item.source,
-                                priceLabel: displayPrice(for: item),
-                                thumbnailUri: item.images?.first?.url,
-                                bookmarked: item.bookmark == true
+                                item: item,
+                                priceLabel: displayPrice(for: item)
                             )
                         }
                         .buttonStyle(.plain)

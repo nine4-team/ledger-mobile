@@ -189,3 +189,8 @@ Reusable components in `Components/` that have a non-obvious usage contract.
 | `MultiStepFormSheet` | Multi-step form flow in a sheet | Step navigation, back/next/done |
 | `ActionMenuSheet` | Action menu presented as bottom sheet | Takes `[ActionMenuItem]` |
 | `ListStateControls` | Filter/sort/bulk-select toolbar for lists | Combines FilterMenu, SortMenu, BulkSelectionBar |
+| `CardHeader` | Shared card header with badges, selector, bookmark, kebab menu | Owns menu sheet state. Takes `isSelected`, `badges: [CardBadge]`, `menuItems` |
+| `CardKebabButton` | Vertical ellipsis menu button | 18pt rotated 90°, `.contentShape(Rectangle())`, a11y label |
+| `CardBookmarkButton` | Bookmark toggle button | 18pt, red when filled, a11y label |
+| `CardSelectorButton` | Selection circle button | Wraps `SelectorCircle(indicator: .dot)` with Button + a11y |
+| `CardBadge` | Badge data type for card headers | `text`, `color`, `backgroundOpacity`, `borderOpacity` |

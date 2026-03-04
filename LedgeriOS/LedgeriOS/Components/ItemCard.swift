@@ -1,24 +1,20 @@
 import SwiftUI
 
 struct ItemCard: View {
-    let name: String
-    var sku: String?
-    var sourceLabel: String?
-    var locationLabel: String?
-    var notes: String?
+    let item: Item
+
+    // External context (varies by caller)
     var priceLabel: String?
-    var indexLabel: String?
-    var statusLabel: String?
     var budgetCategoryName: String?
-    var thumbnailUri: String?
+    var locationLabel: String?
+    var indexLabel: String?
+    var statusOverride: String?
     var stackSkuAndSource: Bool = true
 
-    // Selection
+    // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
-    var defaultSelected: Bool = false
 
     // Bookmark
-    var bookmarked: Bool = false
     var onBookmarkPress: (() -> Void)?
 
     // Actions
@@ -28,65 +24,9 @@ struct ItemCard: View {
     // Warning
     var warningMessage: String?
 
-    @State private var internalSelected: Bool
-    @State private var showMenu = false
-    @State private var menuPendingAction: (() -> Void)?
-
-    init(
-        name: String,
-        sku: String? = nil,
-        sourceLabel: String? = nil,
-        locationLabel: String? = nil,
-        notes: String? = nil,
-        priceLabel: String? = nil,
-        indexLabel: String? = nil,
-        statusLabel: String? = nil,
-        budgetCategoryName: String? = nil,
-        thumbnailUri: String? = nil,
-        stackSkuAndSource: Bool = true,
-        isSelected: Binding<Bool>? = nil,
-        defaultSelected: Bool = false,
-        bookmarked: Bool = false,
-        onBookmarkPress: (() -> Void)? = nil,
-        onPress: (() -> Void)? = nil,
-        menuItems: [ActionMenuItem] = [],
-        warningMessage: String? = nil
-    ) {
-        self.name = name
-        self.sku = sku
-        self.sourceLabel = sourceLabel
-        self.locationLabel = locationLabel
-        self.notes = notes
-        self.priceLabel = priceLabel
-        self.indexLabel = indexLabel
-        self.statusLabel = statusLabel
-        self.budgetCategoryName = budgetCategoryName
-        self.thumbnailUri = thumbnailUri
-        self.stackSkuAndSource = stackSkuAndSource
-        self.isSelected = isSelected
-        self.defaultSelected = defaultSelected
-        self.bookmarked = bookmarked
-        self.onBookmarkPress = onBookmarkPress
-        self.onPress = onPress
-        self.menuItems = menuItems
-        self.warningMessage = warningMessage
-        self._internalSelected = State(initialValue: defaultSelected)
-    }
-
-    private var currentSelected: Bool {
-        ItemCardCalculations.resolvedSelected(
-            externalSelected: isSelected?.wrappedValue,
-            internalSelected: internalSelected
-        )
-    }
-
-    private var showSelector: Bool {
-        isSelected != nil
-    }
-
-    private var badges: [ItemCardCalculations.BadgeItem] {
+    private var badges: [CardBadge] {
         ItemCardCalculations.badgeItems(
-            statusLabel: statusLabel,
+            statusLabel: statusOverride ?? item.status,
             budgetCategoryName: budgetCategoryName,
             indexLabel: indexLabel
         )
@@ -94,9 +34,9 @@ struct ItemCard: View {
 
     private var metadata: [String] {
         ItemCardCalculations.metadataLines(
-            name: name,
-            sku: sku,
-            sourceLabel: sourceLabel,
+            name: item.name,
+            sku: item.sku,
+            sourceLabel: item.source,
             locationLabel: locationLabel,
             priceLabel: priceLabel,
             stackSkuAndSource: stackSkuAndSource
@@ -104,99 +44,27 @@ struct ItemCard: View {
     }
 
     var body: some View {
-        Card(padding: 0, isSelected: currentSelected) {
-            Button {
-                if let onPress {
-                    onPress()
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 0) {
-                    headerRow
-                    contentArea
-                }
-            }
-            .buttonStyle(ItemCardButtonStyle())
-            .disabled(onPress == nil)
-        }
-        .sheet(isPresented: $showMenu, onDismiss: {
-            menuPendingAction?()
-            menuPendingAction = nil
-        }) {
-            ActionMenuSheet(
-                title: name,
-                items: menuItems,
-                onSelectAction: { action in
-                    menuPendingAction = action
-                    showMenu = false
-                }
-            )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
-        }
-    }
-
-    // MARK: - Header Row
-
-    private var headerRow: some View {
-        HStack(spacing: Spacing.sm) {
-            if showSelector {
-                Button {
-                    toggleSelection()
-                } label: {
-                    SelectorCircle(isSelected: currentSelected, indicator: .dot)
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer()
-
-            if !badges.isEmpty {
-                HStack(spacing: Spacing.sm) {
-                    ForEach(Array(badges.enumerated()), id: \.offset) { _, badge in
-                        Badge(text: badge.text, color: badge.color)
-                    }
-                }
-            }
-
-            if let warningMessage {
-                Button {
-                    // Could show alert
-                } label: {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(StatusColors.badgeWarning)
-                        .font(.system(size: 18))
-                }
-                .buttonStyle(.plain)
-            }
-
-            if onBookmarkPress != nil {
-                Button {
-                    onBookmarkPress?()
-                } label: {
-                    Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                        .foregroundStyle(bookmarked ? StatusColors.missedText : BrandColors.primary)
-                        .font(.system(size: 18))
-                }
-                .buttonStyle(.plain)
-            }
-
-            if !menuItems.isEmpty {
-                Button {
-                    showMenu = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .font(.system(size: 18))
-                        .frame(width: 32, height: 32)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+        let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false) {
+            VStack(alignment: .leading, spacing: 0) {
+                CardHeader(
+                    isSelected: isSelected,
+                    selectionLabel: item.displayName,
+                    badges: badges,
+                    bookmarked: item.bookmark == true,
+                    onBookmarkPress: onBookmarkPress,
+                    warningMessage: warningMessage,
+                    menuTitle: item.displayName,
+                    menuItems: menuItems
+                )
+                contentArea
             }
         }
-        .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.md)
-        .overlay(alignment: .bottom) {
-            CardDivider()
+        .contentShape(Rectangle())
+
+        if let onPress {
+            base.onTapGesture { onPress() }
+        } else {
+            base
         }
     }
 
@@ -204,7 +72,7 @@ struct ItemCard: View {
 
     private var contentArea: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(name)
+            Text(item.displayName)
                 .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
                 .lineLimit(3)
@@ -226,7 +94,7 @@ struct ItemCard: View {
                         }
                     }
 
-                    if let notes, !notes.isEmpty {
+                    if let notes = item.notes, !notes.isEmpty {
                         Text(notes)
                             .font(Typography.small)
                             .italic()
@@ -253,7 +121,7 @@ struct ItemCard: View {
 
     @ViewBuilder
     private var thumbnailView: some View {
-        if let url = ItemCardCalculations.thumbnailUrl(from: thumbnailUri) {
+        if let url = ItemCardCalculations.thumbnailUrl(from: item.images?.first?.url) {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -295,42 +163,24 @@ struct ItemCard: View {
                 .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6, 4]))
         )
     }
-
-    // MARK: - Selection
-
-    private func toggleSelection() {
-        if let binding = isSelected {
-            binding.wrappedValue.toggle()
-        } else {
-            internalSelected.toggle()
-        }
-    }
-}
-
-// MARK: - Button Style
-
-private struct ItemCardButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.92 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
-    }
 }
 
 // MARK: - Previews
 
 #Preview("Minimal") {
-    ItemCard(name: "Gold metal branch decor")
+    ItemCard(item: Item(name: "Gold metal branch decor"))
         .padding(Spacing.screenPadding)
 }
 
 #Preview("Full Metadata") {
     ItemCard(
-        name: "Gold metal branch decor",
-        sku: "400293670643",
-        sourceLabel: "Ross",
+        item: Item(
+            name: "Gold metal branch decor",
+            source: "Ross",
+            sku: "400293670643",
+            images: [AttachmentRef(url: "https://picsum.photos/200")]
+        ),
         priceLabel: "$10.99",
-        thumbnailUri: "https://picsum.photos/200",
         isSelected: .constant(false),
         onBookmarkPress: {},
         menuItems: [
@@ -343,12 +193,14 @@ private struct ItemCardButtonStyle: ButtonStyle {
 
 #Preview("Selected with Badges") {
     ItemCard(
-        name: "Beige/lime green velvet pillow",
-        sourceLabel: "Joon Loloi",
+        item: Item(
+            name: "Beige/lime green velvet pillow",
+            source: "Joon Loloi"
+        ),
         priceLabel: "$24.00",
-        indexLabel: "1/4",
-        statusLabel: "Purchased",
         budgetCategoryName: "Furnishings",
+        indexLabel: "1/4",
+        statusOverride: "Purchased",
         isSelected: .constant(true),
         onBookmarkPress: {},
         menuItems: [
@@ -360,9 +212,11 @@ private struct ItemCardButtonStyle: ButtonStyle {
 
 #Preview("With Warning") {
     ItemCard(
-        name: "Blue-gray matte pottery vase",
-        sku: "373346",
-        sourceLabel: "Homegoods",
+        item: Item(
+            name: "Blue-gray matte pottery vase",
+            source: "Homegoods",
+            sku: "373346"
+        ),
         priceLabel: "$24.99",
         warningMessage: "Price exceeds budget allocation"
     )
@@ -371,8 +225,10 @@ private struct ItemCardButtonStyle: ButtonStyle {
 
 #Preview("No Image Placeholder") {
     ItemCard(
-        name: "Large area rug 8x10",
-        sourceLabel: "Wayfair",
+        item: Item(
+            name: "Large area rug 8x10",
+            source: "Wayfair"
+        ),
         priceLabel: "$299.00",
         isSelected: .constant(false),
         onBookmarkPress: {},

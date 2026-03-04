@@ -120,13 +120,10 @@ struct UniversalSearchView: View {
                 ForEach(searchResults.items) { item in
                     NavigationLink(value: item) {
                         ItemCard(
-                            name: item.displayName,
-                            sku: item.sku,
-                            sourceLabel: item.source,
+                            item: item,
                             priceLabel: item.purchasePriceCents.map {
                                 CurrencyFormatting.formatCentsWithDecimals($0)
                             },
-                            statusLabel: item.status,
                             budgetCategoryName: categoryName(for: item.budgetCategoryId)
                         )
                     }
@@ -144,17 +141,12 @@ struct UniversalSearchView: View {
                 ForEach(searchResults.transactions) { transaction in
                     NavigationLink(value: transaction) {
                         TransactionCard(
-                            id: transaction.id ?? "",
-                            source: SearchCalculations.transactionDisplayName(for: transaction),
-                            amountCents: transaction.amountCents,
-                            transactionDate: transaction.transactionDate,
-                            notes: transaction.notes,
-                            budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
-                            transactionType: transaction.transactionType,
-                            needsReview: transaction.needsReview ?? false,
-                            reimbursementType: transaction.reimbursementType,
-                            hasEmailReceipt: transaction.hasEmailReceipt ?? false,
-                            status: transaction.status
+                            transaction: {
+                                var tx = transaction
+                                tx.source = SearchCalculations.transactionDisplayName(for: transaction)
+                                return tx
+                            }(),
+                            budgetCategoryName: categoryName(for: transaction.budgetCategoryId)
                         )
                     }
                     .buttonStyle(.plain)

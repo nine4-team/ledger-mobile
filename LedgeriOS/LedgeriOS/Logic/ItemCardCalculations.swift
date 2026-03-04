@@ -2,25 +2,20 @@ import SwiftUI
 
 enum ItemCardCalculations {
 
-    struct BadgeItem {
-        let text: String
-        let color: Color
-    }
-
     static func badgeItems(
         statusLabel: String?,
         budgetCategoryName: String?,
         indexLabel: String?
-    ) -> [BadgeItem] {
-        var badges: [BadgeItem] = []
+    ) -> [CardBadge] {
+        var badges: [CardBadge] = []
         if let index = indexLabel, !index.isEmpty {
-            badges.append(BadgeItem(text: index, color: BrandColors.textSecondary))
+            badges.append(CardBadge(text: index, color: BrandColors.textSecondary))
         }
         if let category = budgetCategoryName, !category.isEmpty {
-            badges.append(BadgeItem(text: category, color: BrandColors.primary))
+            badges.append(CardBadge(text: category, color: BrandColors.primary))
         }
         if let status = statusLabel, !status.isEmpty {
-            badges.append(BadgeItem(text: status, color: BrandColors.primary))
+            badges.append(CardBadge(text: status, color: BrandColors.primary))
         }
         return badges
     }
@@ -64,20 +59,6 @@ enum ItemCardCalculations {
     static func thumbnailUrl(from urlString: String?) -> URL? {
         guard let urlString, !urlString.isEmpty else { return nil }
         return URL(string: urlString)
-    }
-
-    static func isSelectionEnabled(
-        externalSelected: Bool?,
-        onSelectedChange: Bool
-    ) -> Bool {
-        externalSelected != nil || onSelectedChange
-    }
-
-    static func resolvedSelected(
-        externalSelected: Bool?,
-        internalSelected: Bool
-    ) -> Bool {
-        externalSelected ?? internalSelected
     }
 
     /// Determines the display price for a grouped card's collapsed state.

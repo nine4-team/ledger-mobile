@@ -118,16 +118,18 @@ struct GroupedItemCard: View {
                     VStack(spacing: 0) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                             ItemCard(
-                                name: item.name,
-                                sku: item.sku,
-                                sourceLabel: item.sourceLabel,
-                                locationLabel: item.locationLabel,
-                                notes: item.notes,
+                                item: Item(
+                                    name: item.name,
+                                    notes: item.notes,
+                                    source: item.sourceLabel,
+                                    sku: item.sku,
+                                    images: item.thumbnailUri.map { [AttachmentRef(url: $0)] }
+                                ),
                                 priceLabel: item.priceLabel,
-                                indexLabel: item.indexLabel,
-                                statusLabel: item.statusLabel,
                                 budgetCategoryName: item.budgetCategoryName,
-                                thumbnailUri: item.thumbnailUri,
+                                locationLabel: item.locationLabel,
+                                indexLabel: item.indexLabel,
+                                statusOverride: item.statusLabel,
                                 onPress: onItemPress.map { callback in { callback(item) } },
                                 warningMessage: item.warningMessage
                             )
@@ -149,12 +151,15 @@ struct GroupedItemCard: View {
     private var headerRow: some View {
         HStack(spacing: Spacing.sm) {
             if isSelected != nil {
-                SelectorCircle(isSelected: selected, indicator: .dot)
-                    .onTapGesture {
+                CardSelectorButton(
+                    isSelected: selected,
+                    label: name,
+                    action: {
                         let newValue = !selected
                         isSelected?.wrappedValue = newValue
                         onSelectedChange?(newValue)
                     }
+                )
             }
 
             Spacer()

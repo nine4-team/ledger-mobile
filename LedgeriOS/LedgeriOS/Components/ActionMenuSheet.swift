@@ -9,16 +9,41 @@ struct ActionMenuSheet: View {
     @State private var expandedItemKey: String?
     @Environment(\.dismiss) private var dismiss
 
+    // MARK: - Flattened Row Model
+
+    private enum MenuRow: Identifiable {
+        case item(ActionMenuItem)
+        case subaction(ActionMenuSubitem, parent: ActionMenuItem)
+
+        var id: String {
+            switch self {
+            case .item(let item): return item.id
+            case .subaction(let sub, let parent): return "\(parent.id)_\(sub.id)"
+            }
+        }
+    }
+
+    private var flatRows: [MenuRow] {
+        items.flatMap { item -> [MenuRow] in
+            var rows: [MenuRow] = [.item(item)]
+            if expandedItemKey == item.id, let subs = item.subactions {
+                rows += subs.map { .subaction($0, parent: item) }
+            }
+            return rows
+        }
+    }
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             List {
-                ForEach(items) { item in
-                    menuItemRow(item)
-
-                    if expandedItemKey == item.id, let subactions = item.subactions {
-                        ForEach(subactions) { subaction in
-                            submenuRow(subaction, parentItem: item)
-                        }
+                ForEach(flatRows) { row in
+                    switch row {
+                    case .item(let item):
+                        menuItemRow(item)
+                    case .subaction(let sub, let parent):
+                        submenuRow(sub, parentItem: parent)
                     }
                 }
             }
@@ -28,6 +53,16 @@ struct ActionMenuSheet: View {
             .navigationTitle(title ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(title == nil ? .hidden : .automatic, for: .navigationBar)
+            .toolbar {
+                if !closeOnItemPress && hasActiveSelections {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Clear") {
+                            clearAllFilters()
+                        }
+                        .foregroundStyle(BrandColors.primary)
+                    }
+                }
+            }
         }
     }
 
@@ -65,6 +100,8 @@ struct ActionMenuSheet: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(BrandColors.primary)
                 } else if hasSubmenu {
+                    selectionIndicator(for: item)
+
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14))
                         .foregroundStyle(BrandColors.textTertiary)
@@ -80,11 +117,30 @@ struct ActionMenuSheet: View {
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.lg, bottom: 0, trailing: Spacing.lg))
     }
 
+    // MARK: - Selection Indicator
+
+    @ViewBuilder
+    private func selectionIndicator(for item: ActionMenuItem) -> some View {
+        let selectedSubs = item.subactions?.filter { $0.icon == "checkmark.circle.fill" } ?? []
+        let count = selectedSubs.count
+
+        if count == 1, let selected = selectedSubs.first {
+            Text(selected.label)
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.primary)
+        } else if count > 1 {
+            Text("(\(count))")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.primary)
+        }
+    }
+
     // MARK: - Submenu Row
 
     @ViewBuilder
     private func submenuRow(_ subaction: ActionMenuSubitem, parentItem: ActionMenuItem) -> some View {
-        let isSelected = ActionMenuCalculations.isSubactionSelected(item: parentItem, subactionKey: subaction.id)
+        let isSelected = subaction.icon == "checkmark.circle.fill"
+            || ActionMenuCalculations.isSubactionSelected(item: parentItem, subactionKey: subaction.id)
 
         Button {
             handleSubactionTap(subaction)
@@ -109,6 +165,26 @@ struct ActionMenuSheet: View {
         .listRowBackground(BrandColors.surface)
         .listRowSeparatorTint(BrandColors.border)
         .listRowInsets(EdgeInsets(top: 0, leading: Spacing.lg + Spacing.xl, bottom: 0, trailing: Spacing.lg))
+    }
+
+    // MARK: - Clear All
+
+    private var hasActiveSelections: Bool {
+        items.contains { item in
+            item.isSelected ||
+            (item.subactions?.contains { $0.icon == "checkmark.circle.fill" } ?? false)
+        }
+    }
+
+    private func clearAllFilters() {
+        for item in items {
+            if let subactions = item.subactions,
+               let allOption = subactions.first(where: { $0.id == "all" }) {
+                allOption.onPress()
+            } else if item.isSelected, let onPress = item.onPress {
+                onPress()
+            }
+        }
     }
 
     // MARK: - Actions

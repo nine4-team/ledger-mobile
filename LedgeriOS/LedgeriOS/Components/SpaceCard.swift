@@ -49,13 +49,7 @@ struct SpaceCard: View {
                     Spacer()
 
                     if let onMenuPress {
-                        Button(action: onMenuPress) {
-                            Image(systemName: "ellipsis")
-                                .font(Typography.body)
-                                .foregroundStyle(BrandColors.textSecondary)
-                                .padding(Spacing.xs)
-                        }
-                        .buttonStyle(.plain)
+                        CardKebabButton(action: onMenuPress)
                     }
                 }
 

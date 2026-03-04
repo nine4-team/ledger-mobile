@@ -405,7 +405,7 @@ struct SharedTransactionsList: View {
                 }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .primary)
             }
         } filterMenu: {
             Menu {
@@ -416,7 +416,7 @@ struct SharedTransactionsList: View {
                 }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .primary)
             }
         }
     }
@@ -451,18 +451,8 @@ struct SharedTransactionsList: View {
             let menuItems = getMenuItems?(transaction) ?? []
 
             TransactionCard(
-                id: txId,
-                source: transaction.source ?? "",
-                amountCents: transaction.amountCents,
-                transactionDate: transaction.transactionDate,
-                notes: transaction.notes,
+                transaction: transaction,
                 budgetCategoryName: transaction.budgetCategoryId,
-                transactionType: transaction.transactionType,
-                needsReview: transaction.needsReview ?? false,
-                reimbursementType: transaction.reimbursementType,
-                hasEmailReceipt: transaction.hasEmailReceipt ?? false,
-                status: transaction.status,
-                itemCount: transaction.itemIds?.count,
                 isSelected: isSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
                 menuItems: menuItems,
                 onPress: {

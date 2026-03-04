@@ -172,18 +172,7 @@ struct InventoryTransactionsSubTab: View {
     @ViewBuilder
     private func transactionCardContent(for transaction: Transaction, txId: String) -> some View {
         TransactionCard(
-            id: txId,
-            source: transaction.source ?? "",
-            amountCents: transaction.amountCents,
-            transactionDate: transaction.transactionDate,
-            notes: transaction.notes,
-            budgetCategoryName: nil,
-            transactionType: transaction.transactionType,
-            needsReview: transaction.needsReview ?? false,
-            reimbursementType: transaction.reimbursementType,
-            hasEmailReceipt: transaction.hasEmailReceipt ?? false,
-            status: transaction.status,
-            itemCount: transaction.itemIds?.count,
+            transaction: transaction,
             isSelected: Binding(
                 get: { selectedIds.contains(txId) },
                 set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }

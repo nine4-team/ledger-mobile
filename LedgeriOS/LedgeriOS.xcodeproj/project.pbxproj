@@ -82,6 +82,9 @@
 		83BD186B0686885C821BF8E6 /* EditChecklistModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 619B6C9FECA4E1812986ED09 /* EditChecklistModal.swift */; };
 		84671D35EAAC82C04BEFF3DA /* SearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5D5011D0061E31D3876A769 /* SearchField.swift */; };
 		SCB00001B001000000000001 /* SearchControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCB00001F001000000000001 /* SearchControlBar.swift */; };
+		CH01B00100000000000C0001 /* CardBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH01F00100000000000C0001 /* CardBadge.swift */; };
+		CH01B00100000000000C0002 /* CardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH01F00100000000000C0002 /* CardHeader.swift */; };
+		CH01B00100000000000C0003 /* CardActionButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH01F00100000000000C0003 /* CardActionButtons.swift */; };
 		8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */; };
 		8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */; };
 		88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */; };
@@ -505,6 +508,9 @@
 		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
+		CH01F00100000000000C0001 /* CardBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardBadge.swift; sourceTree = "<group>"; };
+		CH01F00100000000000C0002 /* CardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardHeader.swift; sourceTree = "<group>"; };
+		CH01F00100000000000C0003 /* CardActionButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardActionButtons.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -920,6 +926,9 @@
 				D2CCDD39E89BE8F8B12864B3 /* Modals */,
 				E5D5011D0061E31D3876A769 /* SearchField.swift */,
 				SCB00001F001000000000001 /* SearchControlBar.swift */,
+				CH01F00100000000000C0001 /* CardBadge.swift */,
+				CH01F00100000000000C0002 /* CardHeader.swift */,
+				CH01F00100000000000C0003 /* CardActionButtons.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1224,6 +1233,9 @@
 				WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */,
 				WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */,
 				WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */,
+				CH01B00100000000000C0001 /* CardBadge.swift in Sources */,
+				CH01B00100000000000C0002 /* CardHeader.swift in Sources */,
+				CH01B00100000000000C0003 /* CardActionButtons.swift in Sources */,
 				2A07E979DB3CD6B37D0B9B44 /* ProjectPreferences.swift in Sources */,
 				812FF2207D742F67E3870934 /* ProjectPreferencesService.swift in Sources */,
 				D7A04F61BEE513200213BF35 /* TransactionExportCalculations.swift in Sources */,

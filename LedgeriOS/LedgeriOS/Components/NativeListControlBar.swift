@@ -29,51 +29,48 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
     var body: some View {
         VStack(spacing: Spacing.sm) {
-            HStack(spacing: Spacing.sm) {
-                selectAll()
-
-                Button {
-                    withAnimation(.spring(duration: 0.3)) {
-                        isSearchExpanded.toggle()
-                        if !isSearchExpanded {
-                            isSearchFocused = false
-                        }
-                    }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .imageScale(.large)
-                        .foregroundStyle(isSearchExpanded ? BrandColors.primary : .secondary)
+            HStack(spacing: 0) {
+                barItem(label: "Select") {
+                    selectAll()
                 }
-                .tint(isSearchExpanded ? BrandColors.primary : .secondary)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-                .accessibilityLabel("Search")
 
-                sortMenu()
-                    .imageScale(.large)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
+                barItem(label: "Search") {
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) {
+                            isSearchExpanded.toggle()
+                            if !isSearchExpanded {
+                                isSearchFocused = false
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : .primary)
+                    }
+                    .tint(isSearchExpanded ? BrandColors.primary : .primary)
+                    .accessibilityLabel("Search")
+                }
 
-                filterMenu()
-                    .imageScale(.large)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
+                barItem(label: "Sort") {
+                    sortMenu()
+                }
+
+                barItem(label: "Filter") {
+                    filterMenu()
+                }
 
                 if let onAdd {
-                    Button(action: onAdd) {
-                        Image(systemName: "plus")
-                            .imageScale(.large)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
+                    barItem(label: "Add") {
+                        Button(action: onAdd) {
+                            Image(systemName: "plus")
+                                .fontWeight(.medium)
+                                .foregroundStyle(.primary)
+                        }
+                        .tint(.primary)
+                        .accessibilityLabel("Add")
                     }
-                    .tint(.secondary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-                    .accessibilityLabel("Add")
                 }
             }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .modifier(CapsuleGlassModifier())
 
             if isSearchExpanded {
@@ -90,7 +87,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 )
             }
         }
-        .fixedSize(horizontal: true, vertical: false)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
@@ -101,6 +97,20 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 }
             }
         }
+    }
+
+    private func barItem<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 2) {
+            content()
+                .imageScale(.large)
+                .frame(height: 24)
+                .frame(minWidth: 44)
+                .contentShape(Rectangle())
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -144,7 +154,7 @@ struct CapsuleGlassModifier: ViewModifier {
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
-                .foregroundStyle(sort != .createdDesc ? BrandColors.primary : .secondary)
+                .foregroundStyle(sort != .createdDesc ? BrandColors.primary : .primary)
         }
     } filterMenu: {
         Menu {
@@ -155,7 +165,7 @@ struct CapsuleGlassModifier: ViewModifier {
             }
         } label: {
             Image(systemName: "line.3.horizontal.decrease")
-                .foregroundStyle(filter != .all ? BrandColors.primary : .secondary)
+                .foregroundStyle(filter != .all ? BrandColors.primary : .primary)
         }
     }
 }

@@ -4,14 +4,6 @@ import SwiftUI
 /// Badge generation, amount formatting, date formatting, and note truncation.
 enum TransactionCardCalculations {
 
-    /// A badge to display on a transaction card.
-    struct BadgeItem: Equatable {
-        let text: String
-        let color: Color
-        var backgroundOpacity: Double = 0.10
-        var borderOpacity: Double = 0.20
-    }
-
     /// Returns ordered array of badges for a transaction.
     /// Order: needs review → type → category
     static func badgeItems(
@@ -21,12 +13,12 @@ enum TransactionCardCalculations {
         needsReview: Bool,
         budgetCategoryName: String?,
         status: String?
-    ) -> [BadgeItem] {
-        var badges: [BadgeItem] = []
+    ) -> [CardBadge] {
+        var badges: [CardBadge] = []
 
         // 1. Needs review badge (always leftmost)
         if needsReview {
-            badges.append(BadgeItem(
+            badges.append(CardBadge(
                 text: "Needs Review",
                 color: StatusColors.badgeNeedsReview,
                 backgroundOpacity: 0.08,
@@ -38,9 +30,9 @@ enum TransactionCardCalculations {
         if let type = transactionType?.lowercased() {
             switch type {
             case "purchase":
-                badges.append(BadgeItem(text: "Purchase", color: BrandColors.primary))
+                badges.append(CardBadge(text: "Purchase", color: BrandColors.primary))
             case "return":
-                badges.append(BadgeItem(text: "Return", color: BrandColors.primary))
+                badges.append(CardBadge(text: "Return", color: BrandColors.primary))
             default:
                 break
             }
@@ -48,7 +40,7 @@ enum TransactionCardCalculations {
 
         // 3. Budget category badge
         if let category = budgetCategoryName, !category.isEmpty {
-            badges.append(BadgeItem(text: category, color: BrandColors.primary))
+            badges.append(CardBadge(text: category, color: BrandColors.primary))
         }
 
         return badges
