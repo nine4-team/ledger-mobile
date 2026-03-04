@@ -11,6 +11,7 @@ struct Card<Content: View>: View {
 
     var body: some View {
         content
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(padding)
             .background(BrandColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
@@ -30,6 +31,7 @@ struct CardStyle: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(padding)
             .background(BrandColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
