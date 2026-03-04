@@ -54,6 +54,13 @@ struct MainTabView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tint(BrandColors.primary)
+        #if os(macOS)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                AccountToolbarMenu()
+            }
+        }
+        #endif
     }
 }
 
