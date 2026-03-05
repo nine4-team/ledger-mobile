@@ -66,8 +66,7 @@ struct SpacesTabView: View {
                             NavigationLink(value: space) {
                                 SpaceCard(
                                     space: space,
-                                    itemCount: itemCount(for: space),
-                                    onPress: {}
+                                    itemCount: itemCount(for: space)
                                 )
                             }
                             .buttonStyle(.plain)

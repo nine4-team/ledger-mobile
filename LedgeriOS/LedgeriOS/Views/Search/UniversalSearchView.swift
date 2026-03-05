@@ -166,8 +166,7 @@ struct UniversalSearchView: View {
                         SpaceCard(
                             space: space,
                             itemCount: itemCount(for: space),
-                            showNotes: true,
-                            onPress: {}
+                            showNotes: true
                         )
                     }
                     .buttonStyle(.plain)

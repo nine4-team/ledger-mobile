@@ -5,7 +5,7 @@ struct SpaceCard: View {
     let space: Space
     let itemCount: Int
     var showNotes: Bool = true
-    let onPress: () -> Void
+    var onPress: (() -> Void)? = nil
     var onMenuPress: (() -> Void)?
 
     private var primaryImageUrl: String? {
