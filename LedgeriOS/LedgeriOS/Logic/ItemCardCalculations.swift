@@ -9,7 +9,7 @@ enum ItemCardCalculations {
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
         if let index = indexLabel, !index.isEmpty {
-            badges.append(CardBadge(text: index, color: BrandColors.textSecondary))
+            badges.append(CardBadge(text: index, color: BrandColors.primary))
         }
         if let category = budgetCategoryName, !category.isEmpty {
             badges.append(CardBadge(text: category, color: BrandColors.primary))

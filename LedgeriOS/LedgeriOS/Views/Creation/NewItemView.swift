@@ -11,7 +11,7 @@ enum ItemCreationContext {
 struct NewItemView: View {
     let context: ItemCreationContext
 
-    @Environment(ProjectContext.self) private var projectContext
+    @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
@@ -49,11 +49,11 @@ struct NewItemView: View {
     }
 
     private var selectedSpace: Space? {
-        projectContext.spaces.first { $0.id == selectedSpaceId }
+        projectContext?.spaces.first { $0.id == selectedSpaceId }
     }
 
     private var selectedTransaction: Transaction? {
-        projectContext.transactions.first { $0.id == selectedTransactionId }
+        projectContext?.transactions.first { $0.id == selectedTransactionId }
     }
 
     var body: some View {
@@ -178,7 +178,7 @@ struct NewItemView: View {
         }
         .sheet(isPresented: $showSpacePicker) {
             SetSpaceModal(
-                spaces: projectContext.spaces,
+                spaces: projectContext?.spaces ?? [],
                 currentSpaceId: selectedSpaceId,
                 onSelect: { space in selectedSpaceId = space?.id }
             )
@@ -187,7 +187,7 @@ struct NewItemView: View {
         }
         .sheet(isPresented: $showTransactionPicker) {
             TransactionPickerModal(
-                transactions: projectContext.transactions,
+                transactions: projectContext?.transactions ?? [],
                 selectedId: selectedTransactionId,
                 onSelect: { tx in selectedTransactionId = tx.id }
             )

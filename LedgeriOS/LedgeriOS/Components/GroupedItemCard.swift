@@ -15,6 +15,8 @@ struct ItemCardData: Identifiable {
     var budgetCategoryName: String?
     var thumbnailUri: String?
     var warningMessage: String?
+    var isSelected: Bool = false
+    var menuItems: [ActionMenuItem] = []
 }
 
 // MARK: - Grouped Item Card
@@ -36,6 +38,7 @@ struct GroupedItemCard: View {
     var onPress: (() -> Void)?
     var items: [ItemCardData] = []
     var onItemPress: ((ItemCardData) -> Void)?
+    var onItemSelectedChange: ((String, Bool) -> Void)?
 
     @State private var internalExpanded: Bool
 
@@ -55,7 +58,8 @@ struct GroupedItemCard: View {
         onSelectedChange: ((Bool) -> Void)? = nil,
         onPress: (() -> Void)? = nil,
         items: [ItemCardData] = [],
-        onItemPress: ((ItemCardData) -> Void)? = nil
+        onItemPress: ((ItemCardData) -> Void)? = nil,
+        onItemSelectedChange: ((String, Bool) -> Void)? = nil
     ) {
         self.name = name
         self.thumbnailUrl = thumbnailUrl
@@ -73,6 +77,7 @@ struct GroupedItemCard: View {
         self.onPress = onPress
         self.items = items
         self.onItemPress = onItemPress
+        self.onItemSelectedChange = onItemSelectedChange
         self._internalExpanded = State(initialValue: defaultExpanded)
     }
 
@@ -113,10 +118,14 @@ struct GroupedItemCard: View {
                 .buttonStyle(.plain)
 
                 if expanded && !items.isEmpty {
-                    CardDivider(horizontalPadding: Spacing.lg)
-
-                    VStack(spacing: 0) {
+                    VStack(spacing: Spacing.cardListGap) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                            let selectionBinding: Binding<Bool>? = onItemSelectedChange != nil
+                                ? Binding(
+                                    get: { item.isSelected },
+                                    set: { onItemSelectedChange?(item.id, $0) }
+                                )
+                                : nil
                             ItemCard(
                                 item: Item(
                                     name: item.name,
@@ -128,17 +137,16 @@ struct GroupedItemCard: View {
                                 priceLabel: item.priceLabel,
                                 budgetCategoryName: item.budgetCategoryName,
                                 locationLabel: item.locationLabel,
-                                indexLabel: item.indexLabel,
+                                indexLabel: item.indexLabel ?? "\(index + 1)/\(items.count)",
                                 statusOverride: item.statusLabel,
+                                isSelected: selectionBinding,
                                 onPress: onItemPress.map { callback in { callback(item) } },
+                                menuItems: item.menuItems,
                                 warningMessage: item.warningMessage
                             )
-
-                            if index < items.count - 1 {
-                                CardDivider(horizontalPadding: Spacing.lg)
-                            }
                         }
                     }
+                    .padding(.horizontal, Spacing.cardPadding / 2)
                     .padding(.vertical, Spacing.sm)
                 }
             }
@@ -180,8 +188,8 @@ struct GroupedItemCard: View {
                     .foregroundStyle(BrandColors.textTertiary)
             }
         }
-        .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.md)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
         .overlay(alignment: .bottom) {
             CardDivider()
         }

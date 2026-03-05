@@ -53,6 +53,7 @@ struct InventoryTransactionsSubTab: View {
 
             content
         }
+        .scrollTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }
@@ -79,8 +80,8 @@ struct InventoryTransactionsSubTab: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showNewTransaction) {
-            Text("New Transaction — Coming Soon")
-                .presentationDetents([.medium])
+            NewTransactionView(context: .inventory)
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
         .background(SortMenu(

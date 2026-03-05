@@ -7,6 +7,8 @@ struct InventoryView: View {
 
     @State private var selectedTab: String
     @State private var showNewItem = false
+    @State private var showNewTransaction = false
+    @State private var showNewSpace = false
                 
     private let tabs = [
         TabBarItem(id: "items", label: "Items"),
@@ -60,7 +62,11 @@ struct InventoryView: View {
             }
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
-                    showNewItem = true
+                    switch selectedTab {
+                    case "transactions": showNewTransaction = true
+                    case "spaces": showNewSpace = true
+                    default: showNewItem = true
+                    }
                 } label: {
                     Image(systemName: "plus")
                         .foregroundStyle(BrandColors.textSecondary)
@@ -68,8 +74,18 @@ struct InventoryView: View {
             }
         }
         .sheet(isPresented: $showNewItem) {
-            Text("New Item — Coming Soon")
-                .presentationDetents([.medium])
+            NewItemView(context: .inventory)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showNewTransaction) {
+            NewTransactionView(context: .inventory)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showNewSpace) {
+            NewSpaceView(context: .inventory)
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
         .task {

@@ -106,6 +106,7 @@ struct SharedItemsList: View {
             }
 
             content
+                .scrollTopFade()
         }
         .safeAreaInset(edge: .bottom) {
             bottomBar
@@ -177,12 +178,12 @@ struct SharedItemsList: View {
         } sortMenu: {
             Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .primary)
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
             }
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .primary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
             }
         }
     }

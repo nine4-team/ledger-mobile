@@ -32,7 +32,7 @@ struct SelectorCircle: View {
                     .fontWeight(.bold)
             } else {
                 Circle()
-                    .strokeBorder(.primary, lineWidth: Dimensions.borderWidth)
+                    .strokeBorder(.secondary, lineWidth: Dimensions.borderWidth)
                     .frame(width: size, height: size)
                 if isSelected && indicator == .dot {
                     Circle()

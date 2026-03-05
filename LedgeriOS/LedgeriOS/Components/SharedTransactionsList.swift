@@ -359,6 +359,7 @@ struct SharedTransactionsList: View {
             }
 
             content
+                .scrollTopFade()
         }
         .safeAreaInset(edge: .bottom) {
             if !selectedIds.isEmpty {

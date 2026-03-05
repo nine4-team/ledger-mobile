@@ -44,9 +44,9 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                         }
                     } label: {
                         Image(systemName: "magnifyingglass")
-                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : .primary)
+                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : .secondary)
                     }
-                    .tint(isSearchExpanded ? BrandColors.primary : .primary)
+                    .tint(isSearchExpanded ? BrandColors.primary : .secondary)
                     .accessibilityLabel("Search")
                 }
 
@@ -63,14 +63,15 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                         Button(action: onAdd) {
                             Image(systemName: "plus")
                                 .fontWeight(.medium)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(.secondary)
                         }
-                        .tint(.primary)
+                        .tint(.secondary)
                         .accessibilityLabel("Add")
                     }
                 }
             }
-            .padding(.vertical, Spacing.xs)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, 14)
             .modifier(CapsuleGlassModifier())
 
             if isSearchExpanded {
@@ -102,13 +103,14 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     private func barItem<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 2) {
             content()
+                .tint(.secondary)
                 .imageScale(.large)
                 .frame(height: 24)
                 .frame(minWidth: 44)
                 .contentShape(Rectangle())
             Text(label)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.primary)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -154,7 +156,7 @@ struct CapsuleGlassModifier: ViewModifier {
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
-                .foregroundStyle(sort != .createdDesc ? BrandColors.primary : .primary)
+                .foregroundStyle(sort != .createdDesc ? BrandColors.primary : .secondary)
         }
     } filterMenu: {
         Menu {
@@ -165,7 +167,7 @@ struct CapsuleGlassModifier: ViewModifier {
             }
         } label: {
             Image(systemName: "line.3.horizontal.decrease")
-                .foregroundStyle(filter != .all ? BrandColors.primary : .primary)
+                .foregroundStyle(filter != .all ? BrandColors.primary : .secondary)
         }
     }
 }

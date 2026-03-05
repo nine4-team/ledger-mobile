@@ -1,11 +1,17 @@
 import SwiftUI
 
+/// Creation context for transactions — project-scoped or inventory.
+enum TransactionCreationContext {
+    case project(String)
+    case inventory
+}
+
 /// Multi-step bottom sheet form for creating a new transaction.
 /// Step 1: Type selection → Step 2: Destination → Step 3: Details.
 struct NewTransactionView: View {
-    let projectId: String
+    let context: TransactionCreationContext
 
-    @Environment(ProjectContext.self) private var projectContext
+    @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
     @Environment(\.dismiss) private var dismiss
 
@@ -34,12 +40,19 @@ struct NewTransactionView: View {
 
     private let transactionsService = TransactionsService(syncTracker: NoOpSyncTracker())
 
+    private var projectId: String? {
+        switch context {
+        case .project(let id): return id
+        case .inventory: return nil
+        }
+    }
+
     private var isReadyToSubmit: Bool {
         TransactionFormValidation.isTransactionReadyToSubmit(type: transactionType)
     }
 
     private var selectedCategory: BudgetCategory? {
-        projectContext.budgetCategories.first { $0.id == selectedCategoryId }
+        projectContext?.budgetCategories.first { $0.id == selectedCategoryId }
     }
 
     private var isItemizedCategory: Bool {
@@ -56,7 +69,7 @@ struct NewTransactionView: View {
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryPickerList(
-                categories: projectContext.budgetCategories,
+                categories: projectContext?.budgetCategories ?? [],
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
             )
@@ -223,33 +236,35 @@ struct NewTransactionView: View {
                 // Notes
                 FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
 
-                // Budget Category
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Budget Category")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
+                // Budget Category (project context only)
+                if projectId != nil {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Budget Category")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
 
-                    Button {
-                        showCategoryPicker = true
-                    } label: {
-                        HStack {
-                            Text(selectedCategory?.name ?? "Select Category")
-                                .foregroundStyle(
-                                    selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textSecondary
-                                )
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(BrandColors.textSecondary)
+                        Button {
+                            showCategoryPicker = true
+                        } label: {
+                            HStack {
+                                Text(selectedCategory?.name ?? "Select Category")
+                                    .foregroundStyle(
+                                        selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textSecondary
+                                    )
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundStyle(BrandColors.textSecondary)
+                            }
+                            .font(Typography.input)
+                            .padding(.horizontal, Spacing.md)
+                            .frame(height: 44)
+                            .background(BrandColors.inputBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                            )
                         }
-                        .font(Typography.input)
-                        .padding(.horizontal, Spacing.md)
-                        .frame(height: 44)
-                        .background(BrandColors.inputBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                        )
                     }
                 }
 

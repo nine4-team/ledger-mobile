@@ -74,6 +74,7 @@ struct InventoryItemsSubTab: View {
 
             content
         }
+        .scrollTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }
@@ -121,8 +122,8 @@ struct InventoryItemsSubTab: View {
             Text("This action cannot be undone.")
         }
         .sheet(isPresented: $showNewItem) {
-            Text("New Item — Coming Soon")
-                .presentationDetents([.medium])
+            NewItemView(context: .inventory)
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
         .background(SortMenu(

@@ -71,6 +71,7 @@ struct TransactionsTabView: View {
 
             content
         }
+        .scrollTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }
@@ -98,7 +99,7 @@ struct TransactionsTabView: View {
         }
         .sheet(isPresented: $showNewTransaction) {
             if let projectId = projectContext.currentProjectId {
-                NewTransactionView(projectId: projectId)
+                NewTransactionView(context: .project(projectId))
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             }
