@@ -6,22 +6,23 @@ struct ProjectDetailView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(ProjectContext.self) private var projectContext
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedTab = "budget"
+    @State private var selectedTab = "items"
     @State private var showingMenu = false
     @State private var menuPendingAction: (() -> Void)?
     @State private var showingDeleteConfirmation = false
     @State private var errorMessage: String?
 
     private let tabs = [
-        TabBarItem(id: "budget", label: "Budget"),
         TabBarItem(id: "items", label: "Items"),
         TabBarItem(id: "transactions", label: "Transactions"),
         TabBarItem(id: "spaces", label: "Spaces"),
+        TabBarItem(id: "budget", label: "Budget"),
         TabBarItem(id: "accounting", label: "Accounting"),
     ]
 
     var body: some View {
         VStack(spacing: 0) {
+            PinnedBudgetsSection()
             ScrollableTabBar(selectedId: $selectedTab, items: tabs)
 
             AdaptiveContentWidth {

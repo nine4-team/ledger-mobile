@@ -107,6 +107,7 @@ struct UniversalSearchView: View {
                     .padding(.vertical, Spacing.md)
                 }
             }
+            .scrollContentTopFade()
         }
     }
 

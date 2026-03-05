@@ -74,6 +74,7 @@ struct InventoryItemsSubTab: View {
 
             content
         }
+        .scrollContentTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }

@@ -48,7 +48,6 @@ struct InventoryView: View {
                     InventoryItemsSubTab()
                 }
             }
-            .scrollContentTopFade()
         }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.inline)

@@ -110,6 +110,7 @@ struct SharedItemsList: View {
         VStack(spacing: 0) {
             content
         }
+        .scrollContentTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }

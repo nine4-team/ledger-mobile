@@ -109,6 +109,26 @@ enum BudgetTabCalculations {
         return pinned + remaining
     }
 
+    /// Returns only the categories whose IDs appear in `pinnedCategoryIds`,
+    /// preserving the user's pin order. Silently skips IDs that don't match
+    /// any category or categories with zero budget AND zero spending.
+    static func pinnedCategories(
+        allCategories: [BudgetProgress.CategoryProgress],
+        pinnedCategoryIds: [String]
+    ) -> [BudgetProgress.CategoryProgress] {
+        guard !pinnedCategoryIds.isEmpty else { return [] }
+
+        let categoriesById = Dictionary(
+            uniqueKeysWithValues: allCategories.map { ($0.id, $0) }
+        )
+
+        return pinnedCategoryIds.compactMap { id in
+            guard let category = categoriesById[id] else { return nil }
+            guard category.budgetCents > 0 || category.spentCents != 0 else { return nil }
+            return category
+        }
+    }
+
     // MARK: - Transaction-Based Spend Normalization
 
     /// Normalizes a single transaction's contribution to category spend.

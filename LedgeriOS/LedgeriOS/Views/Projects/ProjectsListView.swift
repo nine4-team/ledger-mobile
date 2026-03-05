@@ -62,6 +62,7 @@ struct ProjectsListView: View {
                         .padding(.vertical, Spacing.md)
                     }
                 }
+                .scrollContentTopFade()
             }
         }
         .navigationTitle("Projects")
@@ -86,7 +87,7 @@ struct ProjectsListView: View {
         }
         .sheet(isPresented: $showNewProject) {
             NewProjectView()
-                .presentationDetents([.large])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .task(id: accountContext.currentAccountId) {

@@ -22,6 +22,7 @@ struct InventorySpacesSubTab: View {
 
     var body: some View {
         content
+            .scrollContentTopFade()
             .safeAreaInset(edge: .top, spacing: 0) {
                 SearchControlBar(
                     searchText: $searchText,

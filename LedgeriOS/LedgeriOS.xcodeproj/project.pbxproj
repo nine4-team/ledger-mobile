@@ -205,6 +205,7 @@
 		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
 		FF91DFDBB6CA2A40D621D60B /* InventoryItemsSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2C9EB2F2B72BF798FCD1CD /* InventoryItemsSubTab.swift */; };
 		NLCB0001B001 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = NLCB0001F001 /* NativeListControlBar.swift */; };
+		STF00001B001 /* ScrollTopFade.swift in Sources */ = {isa = PBXBuildFile; fileRef = STF00001F001 /* ScrollTopFade.swift */; };
 		S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0001 /* PlatformPresenting.swift */; };
 		S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0002 /* PlatformModifiers.swift */; };
 		S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */; };
@@ -218,6 +219,7 @@
 		WP01B00100000000000X0001 /* CurrencyFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */; };
 		WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */; };
 		WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0002 /* BudgetProgressPreview.swift */; };
+		PIN00B00100000000000C0001 /* PinnedBudgetsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */; };
 		WP02B00100000000000C0003 /* CategoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0003 /* CategoryRow.swift */; };
 		WP02B00100000000000C0004 /* ImageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0004 /* ImageCard.swift */; };
 		WP02B00100000000000C0005 /* SpaceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP02F00100000000000C0005 /* SpaceCard.swift */; };
@@ -456,6 +458,7 @@
 		FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountPresetsService.swift; sourceTree = "<group>"; };
 		FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
 		NLCB0001F001 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
+		STF00001F001 /* ScrollTopFade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollTopFade.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0001 /* PlatformPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformPresenting.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0002 /* PlatformModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformModifiers.swift; sourceTree = "<group>"; };
 		S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutNotifications.swift; sourceTree = "<group>"; };
@@ -469,6 +472,7 @@
 		WP01F00100000000000X0001 /* CurrencyFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormattingTests.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCategoryTracker.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0002 /* BudgetProgressPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetProgressPreview.swift; sourceTree = "<group>"; };
+		PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedBudgetsSection.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0003 /* CategoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRow.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0004 /* ImageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCard.swift; sourceTree = "<group>"; };
 		WP02F00100000000000C0005 /* SpaceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceCard.swift; sourceTree = "<group>"; };
@@ -894,6 +898,7 @@
 				WP04F00100000000000C0004 /* ImageGallery.swift */,
 				WP08F00100000000000C0001 /* GroupedItemCard.swift */,
 				NLCB0001F001 /* NativeListControlBar.swift */,
+				STF00001F001 /* ScrollTopFade.swift */,
 				A1B2C3D4E5F60718293A4B5C /* FilterMenu.swift */,
 				TFM00001F001 /* TransactionFilterMenu.swift */,
 				B2C3D4E5F607182A3B4C5D6E /* SortMenu.swift */,
@@ -905,6 +910,7 @@
 				WP08F00100000000000C0007 /* ListSelectionInfo.swift */,
 				WP02F00100000000000C0001 /* BudgetCategoryTracker.swift */,
 				WP02F00100000000000C0002 /* BudgetProgressPreview.swift */,
+				PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */,
 				WP02F00100000000000C0003 /* CategoryRow.swift */,
 				WP02F00100000000000C0004 /* ImageCard.swift */,
 				WP02F00100000000000C0005 /* SpaceCard.swift */,
@@ -1204,6 +1210,7 @@
 				WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */,
 				WP08B00100000000000C0001 /* GroupedItemCard.swift in Sources */,
 				NLCB0001B001 /* NativeListControlBar.swift in Sources */,
+				STF00001B001 /* ScrollTopFade.swift in Sources */,
 				F607182A3B4C5D6E7F8091A2 /* FilterMenu.swift in Sources */,
 				TFM00001B001 /* TransactionFilterMenu.swift in Sources */,
 				071829304D5E6F70818293A4 /* SortMenu.swift in Sources */,
@@ -1218,6 +1225,7 @@
 				WP02B00100000000000L0001 /* BudgetTrackerCalculations.swift in Sources */,
 				WP02B00100000000000C0001 /* BudgetCategoryTracker.swift in Sources */,
 				WP02B00100000000000C0002 /* BudgetProgressPreview.swift in Sources */,
+				PIN00B00100000000000C0001 /* PinnedBudgetsSection.swift in Sources */,
 				WP02B00100000000000C0003 /* CategoryRow.swift in Sources */,
 				WP02B00100000000000C0004 /* ImageCard.swift in Sources */,
 				WP02B00100000000000C0005 /* SpaceCard.swift in Sources */,
