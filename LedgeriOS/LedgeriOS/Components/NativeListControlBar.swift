@@ -124,7 +124,7 @@ struct CapsuleGlassModifier: ViewModifier {
             content.glassEffect(in: .capsule)
         } else {
             content
-                .background(.bar)
+                .background(.thickMaterial)
                 .clipShape(Capsule(style: .continuous))
                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         }
