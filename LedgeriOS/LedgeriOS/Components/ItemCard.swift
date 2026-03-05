@@ -94,13 +94,6 @@ struct ItemCard: View {
                         }
                     }
 
-                    if let notes = item.notes, !notes.isEmpty {
-                        Text(notes)
-                            .font(Typography.small)
-                            .italic()
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .lineLimit(2)
-                    }
                 }
             }
 
