@@ -71,24 +71,21 @@ struct ItemDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.selectionMenu)
         }
         // Edit Details
         .sheet(isPresented: $showEditDetails) {
             EditItemDetailsModal(item: liveItem) { fields in
                 updateItem(fields: fields)
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         // Edit Notes
         .sheet(isPresented: $showEditNotes) {
             EditNotesModal(notes: liveItem.notes ?? "") { newNotes in
                 updateItem(fields: ["notes": newNotes])
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         // Set Space
         .sheet(isPresented: $showSetSpace) {
@@ -100,14 +97,12 @@ struct ItemDetailView: View {
                     updateItem(fields: fields)
                 }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         // Reassign
         .sheet(isPresented: $showReassign) {
             ReassignToProjectModal(items: [liveItem]) { }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         // Sell to Business
         .sheet(isPresented: $showSellToBusiness) {
@@ -115,8 +110,7 @@ struct ItemDetailView: View {
                 SellToBusinessModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
             }
         }
         // Sell to Project
@@ -125,8 +119,7 @@ struct ItemDetailView: View {
                 SellToProjectModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
             }
         }
         // Transaction Picker
@@ -137,8 +130,7 @@ struct ItemDetailView: View {
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         // Return Transaction Picker
         .sheet(isPresented: $showReturnTransactionPicker) {
@@ -148,15 +140,13 @@ struct ItemDetailView: View {
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         // Make Copies
         .sheet(isPresented: $showMakeCopies) {
             if let accountId = accountContext.currentAccountId {
                 MakeCopiesModal(item: liveItem, accountId: accountId)
-                    .presentationDetents([.medium])
-                    .presentationDragIndicator(.visible)
+                    .sheetStyle(.quickMenu)
             }
         }
         // Status Picker
@@ -164,8 +154,7 @@ struct ItemDetailView: View {
             StatusPickerModal(currentStatus: liveItem.status) { status in
                 updateItem(fields: ["status": status])
             }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         // Delete confirmation
         .confirmationDialog("Delete Item?", isPresented: $showDeleteConfirmation) {

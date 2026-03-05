@@ -159,6 +159,7 @@
 		C5A0010100000000000T0002 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0002 /* Spacing.swift */; };
 		C5A0010100000000000T0003 /* StatusColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0003 /* StatusColors.swift */; };
 		C5A0010100000000000T0004 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0004 /* Typography.swift */; };
+		C5A0010100000000000T0005 /* SheetStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000T0005 /* SheetStyle.swift */; };
 		C5A0010100000000000X0001 /* BudgetDisplayCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */; };
 		C5A0010100000000000X0002 /* ProgressBarCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */; };
 		C5A0010100000000000X0003 /* SelectorCircleLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */; };
@@ -409,6 +410,7 @@
 		C5A0020100000000000T0002 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
 		C5A0020100000000000T0003 /* StatusColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusColors.swift; sourceTree = "<group>"; };
 		C5A0020100000000000T0004 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		C5A0020100000000000T0005 /* SheetStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetStyle.swift; sourceTree = "<group>"; };
 		C5A0020100000000000X0001 /* BudgetDisplayCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculationTests.swift; sourceTree = "<group>"; };
 		C5A0020100000000000X0002 /* ProgressBarCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarCalculationTests.swift; sourceTree = "<group>"; };
 		C5A0020100000000000X0003 /* SelectorCircleLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectorCircleLayoutTests.swift; sourceTree = "<group>"; };
@@ -831,6 +833,7 @@
 				C5A0020100000000000T0002 /* Spacing.swift */,
 				C5A0020100000000000T0003 /* StatusColors.swift */,
 				C5A0020100000000000T0004 /* Typography.swift */,
+				C5A0020100000000000T0005 /* SheetStyle.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -1166,6 +1169,7 @@
 				C5A0010100000000000T0002 /* Spacing.swift in Sources */,
 				C5A0010100000000000T0003 /* StatusColors.swift in Sources */,
 				C5A0010100000000000T0004 /* Typography.swift in Sources */,
+				C5A0010100000000000T0005 /* SheetStyle.swift in Sources */,
 				A2B3C4D5E6F7089012345602 /* AccountGateView.swift in Sources */,
 				A2B3C4D5E6F7089012345604 /* ProjectsPlaceholderView.swift in Sources */,
 				A2B3C4D5E6F7089012345606 /* InventoryPlaceholderView.swift in Sources */,

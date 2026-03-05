@@ -35,8 +35,7 @@ struct SpacesTabView: View {
         .sheet(isPresented: $showNewSpace) {
             if let projectId = projectContext.currentProjectId {
                 NewSpaceView(context: .project(projectId))
-                    .presentationDetents([.medium, .large])
-                    .presentationDragIndicator(.visible)
+                    .sheetStyle(.form)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .createSpace)) { _ in

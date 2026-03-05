@@ -72,15 +72,13 @@ struct SpaceTemplateManagementView: View {
             TemplateFormSheet(mode: .create) { name, notes, checklists in
                 createTemplate(name: name, notes: notes, checklists: checklists)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(item: $editingTemplate) { template in
             TemplateFormSheet(mode: .edit(template)) { name, notes, checklists in
                 updateTemplate(template, name: name, notes: notes, checklists: checklists)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .confirmationDialog(
             "Delete this template?",

@@ -93,8 +93,7 @@ struct ProjectDetailView: View {
                     menuPendingAction = action
                 }
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {

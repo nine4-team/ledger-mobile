@@ -39,8 +39,7 @@ struct InventoryItemsSubTab: View {
         )
         .sheet(isPresented: $showBulkStatusPicker) {
             StatusPickerModal { status in updateStatusForSelected(status) }
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showBulkSetSpace) {
             SetSpaceModal(
@@ -48,16 +47,14 @@ struct InventoryItemsSubTab: View {
                 currentSpaceId: nil,
                 onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         .sheet(isPresented: $showBulkSellToProject) {
             if let accountId = accountContext.currentAccountId {
                 SellToProjectModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
             }
         }
         .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showBulkDeleteConfirmation) {
@@ -67,8 +64,7 @@ struct InventoryItemsSubTab: View {
         }
         .sheet(isPresented: $showNewItem) {
             NewItemView(context: .inventory)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
     }
 

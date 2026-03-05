@@ -84,8 +84,7 @@ struct UsersView: View {
             InviteUserSheet { email, role in
                 createInvite(email: email, role: role)
             }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .confirmationDialog(
             "Revoke this invitation?",

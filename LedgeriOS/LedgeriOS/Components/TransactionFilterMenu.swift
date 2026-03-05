@@ -18,8 +18,7 @@ struct TransactionFilterMenu: View {
                     items: buildMenuItems(),
                     closeOnItemPress: false
                 )
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.selectionMenu)
             }
     }
 

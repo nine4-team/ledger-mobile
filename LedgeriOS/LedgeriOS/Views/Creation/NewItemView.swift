@@ -77,8 +77,7 @@ struct NewItemView: View {
         }
         .sheet(isPresented: $showStatusPicker) {
             StatusPickerModal(currentStatus: status, onSelect: { newStatus in status = newStatus })
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showSpacePicker) {
             SetSpaceModal(
@@ -86,8 +85,7 @@ struct NewItemView: View {
                 currentSpaceId: selectedSpaceId,
                 onSelect: { space in selectedSpaceId = space?.id }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         .sheet(isPresented: $showTransactionPicker) {
             TransactionPickerModal(
@@ -95,8 +93,7 @@ struct NewItemView: View {
                 selectedId: selectedTransactionId,
                 onSelect: { tx in selectedTransactionId = tx.id }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
     }
 
@@ -265,8 +262,7 @@ struct NewItemView: View {
             imageSourcePendingAction = nil
         }) {
             imageSourceMenu
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraCapture { imageData in

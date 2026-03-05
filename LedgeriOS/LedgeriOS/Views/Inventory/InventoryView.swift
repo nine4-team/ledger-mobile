@@ -75,18 +75,15 @@ struct InventoryView: View {
         }
         .sheet(isPresented: $showNewItem) {
             NewItemView(context: .inventory)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .sheet(isPresented: $showNewTransaction) {
             NewTransactionView(context: .inventory)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .task {
             guard let accountId = accountContext.currentAccountId else { return }

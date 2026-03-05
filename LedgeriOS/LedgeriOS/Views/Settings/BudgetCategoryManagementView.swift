@@ -95,15 +95,13 @@ struct BudgetCategoryManagementView: View {
             CategoryFormModal(mode: .create) { name, categoryType, excludeFromBudget in
                 createCategory(name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(item: $editingCategory) { category in
             CategoryFormModal(mode: .edit(category)) { name, categoryType, excludeFromBudget in
                 updateCategory(category, name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .confirmationDialog(
             "Archive this category?",

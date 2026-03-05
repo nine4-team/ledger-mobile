@@ -73,8 +73,7 @@ struct NewTransactionView: View {
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
     }
 

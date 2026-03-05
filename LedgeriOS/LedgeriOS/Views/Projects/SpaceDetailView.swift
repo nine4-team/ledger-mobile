@@ -85,29 +85,25 @@ struct SpaceDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showEditDetails) {
             EditSpaceDetailsModal(space: liveSpace) { name, notes in
                 updateSpace(fields: ["name": name, "notes": notes ?? NSNull()])
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showEditNotes) {
             EditNotesModal(notes: liveSpace.notes ?? "") { newNotes in
                 updateSpace(fields: ["notes": newNotes])
             }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showEditChecklists) {
             EditChecklistModal(space: liveSpace) { updatedChecklists in
                 saveChecklists(updatedChecklists)
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showAddExistingItems) {
             NavigationStack {
@@ -133,8 +129,7 @@ struct SpaceDetailView: View {
                     }
                 }
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.fullSheet)
         }
         .confirmationDialog("Delete Space?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {

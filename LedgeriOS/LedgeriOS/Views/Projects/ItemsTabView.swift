@@ -40,8 +40,7 @@ struct ItemsTabView: View {
         )
         .sheet(isPresented: $showBulkStatusPicker) {
             StatusPickerModal { status in updateStatusForSelected(status) }
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showBulkSetSpace) {
             SetSpaceModal(
@@ -51,16 +50,14 @@ struct ItemsTabView: View {
                     setSpaceForSelected(spaceId: space?.id)
                 }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
         .sheet(isPresented: $showBulkSellToBusiness) {
             if let accountId = accountContext.currentAccountId {
                 SellToBusinessModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
             }
         }
         .sheet(isPresented: $showBulkSellToProject) {
@@ -68,14 +65,12 @@ struct ItemsTabView: View {
                 SellToProjectModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
             }
         }
         .sheet(isPresented: $showBulkReassign) {
             ReassignToProjectModal(items: selectedItems) { selectedItemIds.removeAll() }
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showBulkDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelected() }
@@ -85,8 +80,7 @@ struct ItemsTabView: View {
         .sheet(isPresented: $showNewItem) {
             if let projectId = projectContext.currentProjectId {
                 NewItemView(context: .project(projectId, spaceId: nil))
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
+                    .sheetStyle(.form)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in

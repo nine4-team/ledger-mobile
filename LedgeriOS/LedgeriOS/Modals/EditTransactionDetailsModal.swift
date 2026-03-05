@@ -178,8 +178,7 @@ struct EditTransactionDetailsModal: View {
                     budgetCategoryId = category?.id
                 }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.picker)
         }
     }
 

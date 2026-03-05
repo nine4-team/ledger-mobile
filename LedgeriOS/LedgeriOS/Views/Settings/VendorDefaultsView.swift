@@ -81,8 +81,7 @@ struct VendorDefaultsView: View {
             AddVendorSheet(vendorName: $newVendorName) {
                 addVendor(newVendorName)
             }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
     }
 

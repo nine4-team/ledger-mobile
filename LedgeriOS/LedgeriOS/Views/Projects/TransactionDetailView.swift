@@ -1,4 +1,3 @@
-import FirebaseFirestore
 import SwiftUI
 
 /// Full transaction detail screen with hero card, Next Steps, 8 collapsible sections,
@@ -27,16 +26,14 @@ struct TransactionDetailView: View {
     @State private var showAddItemMenu = false
     @State private var menuPendingAction: (() -> Void)?
 
-    // Live document subscription
-    @State private var liveTransactionData: Transaction?
-    @State private var transactionListener: ListenerRegistration?
-
     // MARK: - Computed
 
-    private var liveTransaction: Transaction { liveTransactionData ?? transaction }
+    private var currentTransaction: Transaction {
+        projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+    }
 
     private var transactionItems: [Item] {
-        guard let ids = liveTransaction.itemIds, !ids.isEmpty else { return [] }
+        guard let ids = currentTransaction.itemIds, !ids.isEmpty else { return [] }
         let idSet = Set(ids)
         return projectContext.items.filter { idSet.contains($0.id ?? "") }
     }
@@ -63,12 +60,12 @@ struct TransactionDetailView: View {
     }
 
     private var selectedCategory: BudgetCategory? {
-        liveTransaction.budgetCategoryId.flatMap { categoryLookup[$0] }
+        currentTransaction.budgetCategoryId.flatMap { categoryLookup[$0] }
     }
 
     private var nextSteps: [TransactionNextStepsCalculations.NextStep] {
         TransactionNextStepsCalculations.computeNextSteps(
-            transaction: liveTransaction,
+            transaction: currentTransaction,
             itemCount: transactionItems.count,
             budgetCategories: categoryLookup
         )
@@ -80,7 +77,7 @@ struct TransactionDetailView: View {
 
     private var completeness: TransactionCompletenessCalculations.TransactionCompleteness? {
         TransactionCompletenessCalculations.computeCompleteness(
-            transaction: liveTransaction,
+            transaction: currentTransaction,
             items: activeItems,
             returnedItems: returnedItems,
             soldItems: soldItems
@@ -118,12 +115,11 @@ struct TransactionDetailView: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: liveTransaction.source ?? "Transaction",
+                title: currentTransaction.source ?? "Transaction",
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete Transaction?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
@@ -134,34 +130,31 @@ struct TransactionDetailView: View {
         }
         .sheet(isPresented: $showEditDetails) {
             EditTransactionDetailsModal(
-                transaction: liveTransaction,
+                transaction: currentTransaction,
                 budgetCategories: projectContext.budgetCategories,
                 onSave: { fields in
                     updateTransaction(fields: fields)
                 }
             )
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showEditNotes) {
             EditNotesModal(
-                notes: liveTransaction.notes ?? "",
+                notes: currentTransaction.notes ?? "",
                 onSave: { newNotes in
                     updateTransaction(fields: ["notes": newNotes])
                 }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showCreateItemsFromList) {
             CreateItemsFromListModal(
-                transaction: liveTransaction,
+                transaction: currentTransaction,
                 onCreated: { parsedItems in
                     createItemsFromParsed(parsedItems)
                 }
             )
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.form)
         }
         .sheet(isPresented: $showAddItemMenu, onDismiss: {
             menuPendingAction?()
@@ -181,8 +174,7 @@ struct TransactionDetailView: View {
                     menuPendingAction = action
                 }
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showAddExistingItems) {
             NavigationStack {
@@ -191,7 +183,7 @@ struct TransactionDetailView: View {
                         scope: nil,
                         eligibilityCheck: nil,
                         onAddSingle: nil,
-                        addedIds: Set(liveTransaction.itemIds ?? []),
+                        addedIds: Set(currentTransaction.itemIds ?? []),
                         onAddSelected: { addExistingItemsToTransaction() }
                     ),
                     emptyMessage: "No items available",
@@ -200,7 +192,7 @@ struct TransactionDetailView: View {
                     filterScope: .project,
                     pickerItems: projectContext.items.filter { item in
                         guard let id = item.id else { return false }
-                        return !(liveTransaction.itemIds ?? []).contains(id)
+                        return !(currentTransaction.itemIds ?? []).contains(id)
                     }
                 )
                 .navigationTitle("Add Existing Items")
@@ -211,11 +203,8 @@ struct TransactionDetailView: View {
                     }
                 }
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.fullSheet)
         }
-        .onAppear { startTransactionListener() }
-        .onDisappear { transactionListener?.remove() }
     }
 
     // MARK: - Badges
@@ -223,12 +212,12 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var badgesRow: some View {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: liveTransaction.transactionType,
-            reimbursementType: liveTransaction.reimbursementType,
-            hasEmailReceipt: liveTransaction.hasEmailReceipt ?? false,
-            needsReview: liveTransaction.needsReview ?? false,
-            budgetCategoryName: transaction.budgetCategoryId.flatMap { categoryLookup[$0]?.name },
-            status: liveTransaction.status
+            transactionType: currentTransaction.transactionType,
+            reimbursementType: currentTransaction.reimbursementType,
+            hasEmailReceipt: currentTransaction.hasEmailReceipt ?? false,
+            needsReview: currentTransaction.needsReview ?? false,
+            budgetCategoryName: currentTransaction.budgetCategoryId.flatMap { categoryLookup[$0]?.name },
+            status: currentTransaction.status
         )
         if !badges.isEmpty {
             HStack(spacing: Spacing.sm) {
@@ -250,7 +239,7 @@ struct TransactionDetailView: View {
     private var heroCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text(TransactionDisplayCalculations.displayName(for: liveTransaction))
+                Text(TransactionDisplayCalculations.displayName(for: currentTransaction))
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
 
@@ -258,7 +247,7 @@ struct TransactionDetailView: View {
                     Text("Amount:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    Text(TransactionDisplayCalculations.formattedAmount(for: liveTransaction))
+                    Text(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -267,7 +256,7 @@ struct TransactionDetailView: View {
                     Text("Date:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    Text(TransactionDisplayCalculations.formattedDate(for: liveTransaction))
+                    Text(TransactionDisplayCalculations.formattedDate(for: currentTransaction))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -279,7 +268,7 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var nextStepsCard: some View {
-        if liveTransactionData != nil, !allStepsComplete {
+        if !allStepsComplete {
             let completedCount = nextSteps.filter(\.completed).count
             let totalCount = nextSteps.count
             let progress = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0
@@ -378,11 +367,11 @@ struct TransactionDetailView: View {
         CollapsibleSection(
             title: "Receipts",
             isExpanded: sectionBinding("receipts"),
-            badge: "\(liveTransaction.receiptImages?.count ?? 0)"
+            badge: "\(currentTransaction.receiptImages?.count ?? 0)"
         ) {
             MediaGallerySection(
                 title: "",
-                attachments: liveTransaction.receiptImages ?? [],
+                attachments: currentTransaction.receiptImages ?? [],
                 onUploadAttachment: { data in
                     try await uploadReceiptImage(data)
                 },
@@ -403,11 +392,11 @@ struct TransactionDetailView: View {
         CollapsibleSection(
             title: "Other Images",
             isExpanded: sectionBinding("other-images"),
-            badge: "\(liveTransaction.otherImages?.count ?? 0)"
+            badge: "\(currentTransaction.otherImages?.count ?? 0)"
         ) {
             MediaGallerySection(
                 title: "",
-                attachments: liveTransaction.otherImages ?? [],
+                attachments: currentTransaction.otherImages ?? [],
                 onUploadAttachment: { data in
                     try await uploadOtherImage(data)
                 },
@@ -430,7 +419,7 @@ struct TransactionDetailView: View {
             isExpanded: sectionBinding("notes"),
             onEdit: { showEditNotes = true }
         ) {
-            if let notes = liveTransaction.notes, !notes.isEmpty {
+            if let notes = currentTransaction.notes, !notes.isEmpty {
                 Text(notes)
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textPrimary)
@@ -452,30 +441,30 @@ struct TransactionDetailView: View {
             onEdit: { showEditDetails = true }
         ) {
             VStack(spacing: 0) {
-                DetailRow(label: "Vendor / Source", value: liveTransaction.source ?? "—")
+                DetailRow(label: "Vendor / Source", value: currentTransaction.source ?? "—")
                 DetailRow(label: "Amount", value: TransactionCardCalculations.formattedAmount(
-                    amountCents: liveTransaction.amountCents,
-                    transactionType: liveTransaction.transactionType
+                    amountCents: currentTransaction.amountCents,
+                    transactionType: currentTransaction.transactionType
                 ))
-                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(liveTransaction.transactionDate))
-                DetailRow(label: "Status", value: displayStatus(liveTransaction.status))
-                DetailRow(label: "Purchased By", value: displayPurchasedBy(liveTransaction.purchasedBy))
-                DetailRow(label: "Transaction Type", value: displayTransactionType(liveTransaction.transactionType))
-                DetailRow(label: "Reimbursement", value: displayReimbursement(liveTransaction.reimbursementType))
+                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
+                DetailRow(label: "Status", value: displayStatus(currentTransaction.status))
+                DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
+                DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
+                DetailRow(label: "Reimbursement", value: displayReimbursement(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? "—")
                 if selectedCategory?.metadata?.categoryType == .itemized {
-                    DetailRow(label: "Email Receipt", value: (liveTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
+                    DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
                     DetailRow(
                         label: "Subtotal",
-                        value: liveTransaction.subtotalCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—"
+                        value: currentTransaction.subtotalCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—"
                     )
                     DetailRow(
                         label: "Tax Rate",
-                        value: liveTransaction.taxRatePct.map { String(format: "%.2f%%", $0) } ?? "—",
+                        value: currentTransaction.taxRatePct.map { String(format: "%.2f%%", $0) } ?? "—",
                         showDivider: false
                     )
                 } else {
-                    DetailRow(label: "Email Receipt", value: (liveTransaction.hasEmailReceipt ?? false) ? "Yes" : "No", showDivider: false)
+                    DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No", showDivider: false)
                 }
             }
             .padding(.top, Spacing.xs)
@@ -561,7 +550,7 @@ struct TransactionDetailView: View {
             ) {
                 TransactionAuditPanel(
                     completeness: comp,
-                    hasExplicitSubtotal: (liveTransaction.subtotalCents ?? 0) > 0,
+                    hasExplicitSubtotal: (currentTransaction.subtotalCents ?? 0) > 0,
                     itemsMissingPrice: transactionItems.filter { ($0.purchasePriceCents ?? 0) == 0 }
                 )
                 .padding(.top, Spacing.xs)
@@ -660,14 +649,14 @@ struct TransactionDetailView: View {
             filename: filename
         )
         let url = try await mediaService.uploadImage(data, path: path)
-        var images = liveTransaction.receiptImages ?? []
+        var images = currentTransaction.receiptImages ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(url: url, isPrimary: isPrimary))
         updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
     }
 
     private func removeReceiptImage(_ attachment: AttachmentRef) {
-        var images = liveTransaction.receiptImages ?? []
+        var images = currentTransaction.receiptImages ?? []
         images.removeAll { $0.url == attachment.url }
         updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
         Task {
@@ -676,7 +665,7 @@ struct TransactionDetailView: View {
     }
 
     private func setReceiptPrimary(_ attachment: AttachmentRef) {
-        guard var images = liveTransaction.receiptImages else { return }
+        guard var images = currentTransaction.receiptImages else { return }
         images = images.map { img in
             var copy = img
             copy.isPrimary = (img.url == attachment.url)
@@ -698,14 +687,14 @@ struct TransactionDetailView: View {
             filename: filename
         )
         let url = try await mediaService.uploadImage(data, path: path)
-        var images = liveTransaction.otherImages ?? []
+        var images = currentTransaction.otherImages ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(url: url, isPrimary: isPrimary))
         updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
     }
 
     private func removeOtherImage(_ attachment: AttachmentRef) {
-        var images = liveTransaction.otherImages ?? []
+        var images = currentTransaction.otherImages ?? []
         images.removeAll { $0.url == attachment.url }
         updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
         Task {
@@ -714,7 +703,7 @@ struct TransactionDetailView: View {
     }
 
     private func setOtherPrimary(_ attachment: AttachmentRef) {
-        guard var images = liveTransaction.otherImages else { return }
+        guard var images = currentTransaction.otherImages else { return }
         images = images.map { img in
             var copy = img
             copy.isPrimary = (img.url == attachment.url)
@@ -735,17 +724,6 @@ struct TransactionDetailView: View {
     }
 
     // MARK: - Actions
-
-    private func startTransactionListener() {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
-        transactionListener = TransactionsService(syncTracker: NoOpSyncTracker())
-            .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { updatedTransaction in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    self.liveTransactionData = updatedTransaction
-                }
-            }
-    }
 
     private func updateTransaction(fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,
@@ -768,7 +746,7 @@ struct TransactionDetailView: View {
               let transactionId = transaction.id else { return }
         let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
         let newIds = Array(pickerSelectedIds)
-        let budgetCategoryId = liveTransaction.budgetCategoryId
+        let budgetCategoryId = currentTransaction.budgetCategoryId
 
         // Update each item's transactionId (and budgetCategoryId if present)
         for itemId in newIds {
@@ -778,7 +756,7 @@ struct TransactionDetailView: View {
         }
 
         // Update transaction's itemIds array
-        var updatedIds = liveTransaction.itemIds ?? []
+        var updatedIds = currentTransaction.itemIds ?? []
         updatedIds.append(contentsOf: newIds)
         updateTransaction(fields: ["itemIds": updatedIds])
 
@@ -807,8 +785,8 @@ struct TransactionDetailView: View {
             item.name = parsed.name
             item.sku = parsed.sku
             item.purchasePriceCents = parsed.priceCents
-            item.transactionId = liveTransaction.id
-            item.budgetCategoryId = liveTransaction.budgetCategoryId
+            item.transactionId = currentTransaction.id
+            item.budgetCategoryId = currentTransaction.budgetCategoryId
             _ = try? service.createItem(accountId: accountId, item: item)
         }
     }

@@ -98,8 +98,7 @@ struct MediaGallerySection: View {
         }) {
             if let attachment = selectedAttachment {
                 attachmentMenu(for: attachment)
-                    .presentationDetents([.medium])
-                    .presentationDragIndicator(.visible)
+                    .sheetStyle(.quickMenu)
             }
         }
         .sheet(isPresented: $showAddSourceMenu, onDismiss: {
@@ -107,8 +106,7 @@ struct MediaGallerySection: View {
             menuPendingAction = nil
         }) {
             addSourceMenu
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraCapture { imageData in

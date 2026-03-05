@@ -31,8 +31,7 @@ struct FilterMenu: View {
                     items: filters,
                     closeOnItemPress: closeOnItemPress
                 )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.selectionMenu)
             }
     }
 

@@ -88,8 +88,7 @@ struct ProjectsListView: View {
         }
         .sheet(isPresented: $showNewProject) {
             NewProjectView()
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .task(id: accountContext.currentAccountId) {
             startListening()

@@ -37,18 +37,15 @@ struct InventoryPlaceholderView: View {
                 title: "Create New",
                 items: createMenuItems
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showNewItem) {
             NewItemView(context: .inventory)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
     }
 }

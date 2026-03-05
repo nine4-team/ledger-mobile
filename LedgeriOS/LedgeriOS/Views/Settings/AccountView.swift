@@ -91,8 +91,7 @@ struct AccountView: View {
             ) { name in
                 updateProfile(name: name)
             }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .confirmationDialog(
             "Sign out?",

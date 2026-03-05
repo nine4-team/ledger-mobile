@@ -13,8 +13,7 @@ struct SortMenu: View {
                     items: sortOptions,
                     closeOnItemPress: true
                 )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.quickMenu)
             }
     }
 

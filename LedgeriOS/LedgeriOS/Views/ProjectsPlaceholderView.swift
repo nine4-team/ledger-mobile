@@ -42,8 +42,7 @@ struct ProjectsPlaceholderView: View {
                     createMenuPendingAction = action
                 }
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
     }
 }

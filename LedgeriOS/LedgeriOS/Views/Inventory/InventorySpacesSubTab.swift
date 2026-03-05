@@ -32,8 +32,7 @@ struct InventorySpacesSubTab: View {
             }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
     }
 
