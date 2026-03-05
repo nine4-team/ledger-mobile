@@ -47,7 +47,7 @@ struct InventoryPlaceholderView: View {
         }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.large])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
     }

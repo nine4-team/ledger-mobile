@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FormField: View {
-    let label: String
+    var label: String = ""
     @Binding var text: String
     var placeholder: String = ""
     var errorText: String? = nil
@@ -11,9 +11,11 @@ struct FormField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(label)
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
+            if !label.isEmpty {
+                Text(label)
+                    .font(Typography.label)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
 
             TextField(placeholder, text: $text, axis: axis)
                 .font(Typography.input)

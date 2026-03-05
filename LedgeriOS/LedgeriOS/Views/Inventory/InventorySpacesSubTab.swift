@@ -22,7 +22,6 @@ struct InventorySpacesSubTab: View {
 
     var body: some View {
         content
-            .scrollTopFade()
             .safeAreaInset(edge: .top, spacing: 0) {
                 SearchControlBar(
                     searchText: $searchText,
@@ -32,7 +31,7 @@ struct InventorySpacesSubTab: View {
             }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.large])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
     }

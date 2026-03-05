@@ -9,58 +9,64 @@ struct FormSheet<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            // Header
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(title)
-                    .font(Typography.h2)
-                    .foregroundStyle(BrandColors.textPrimary)
-
+        NavigationStack {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                // Description (optional subtitle below nav bar title)
                 if let description {
                     Text(description)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
-            }
 
-            // Content
-            ScrollView {
-                content
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+                // Content
+                ScrollView {
+                    content
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            // Error
-            if let error {
-                Text(error)
-                    .font(Typography.small)
-                    .foregroundStyle(StatusColors.missedText)
-            }
+                // Error
+                if let error {
+                    Text(error)
+                        .font(Typography.small)
+                        .foregroundStyle(StatusColors.missedText)
+                }
 
-            // Actions
-            VStack(spacing: Spacing.sm) {
-                AppButton(
-                    title: primaryAction.title,
-                    isLoading: primaryAction.isLoading,
-                    isDisabled: primaryAction.isDisabled,
-                    action: primaryAction.action
-                )
-
+                // Actions
                 if let secondaryAction {
+                    HStack(spacing: Spacing.sm) {
+                        AppButton(
+                            title: secondaryAction.title,
+                            variant: .secondary,
+                            isLoading: secondaryAction.isLoading,
+                            isDisabled: secondaryAction.isDisabled,
+                            action: secondaryAction.action
+                        )
+                        AppButton(
+                            title: primaryAction.title,
+                            isLoading: primaryAction.isLoading,
+                            isDisabled: primaryAction.isDisabled,
+                            action: primaryAction.action
+                        )
+                    }
+                } else {
                     AppButton(
-                        title: secondaryAction.title,
-                        variant: .secondary,
-                        isLoading: secondaryAction.isLoading,
-                        isDisabled: secondaryAction.isDisabled,
-                        action: secondaryAction.action
+                        title: primaryAction.title,
+                        isLoading: primaryAction.isLoading,
+                        isDisabled: primaryAction.isDisabled,
+                        action: primaryAction.action
                     )
                 }
             }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.top, Spacing.md)
+            .padding(.bottom, Spacing.screenPadding)
+            .frame(maxWidth: Dimensions.formMaxWidth)
+            .frame(maxWidth: .infinity)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .padding(Spacing.screenPadding)
-        .frame(maxWidth: Dimensions.formMaxWidth)
-        .frame(maxWidth: .infinity)
     }
 }
 

@@ -35,7 +35,7 @@ struct SpacesTabView: View {
         .sheet(isPresented: $showNewSpace) {
             if let projectId = projectContext.currentProjectId {
                 NewSpaceView(context: .project(projectId))
-                    .presentationDetents([.large])
+                    .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
             }
         }

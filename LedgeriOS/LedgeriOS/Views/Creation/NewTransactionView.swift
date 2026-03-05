@@ -191,7 +191,7 @@ struct NewTransactionView: View {
                 }
 
                 // Amount
-                FormField(label: "Amount", text: $amount, placeholder: "$0.00")
+                FormField(text: $amount, placeholder: "Amount")
                     .platformKeyboardType(.decimalPad)
 
                 // Status
@@ -234,7 +234,7 @@ struct NewTransactionView: View {
                 }
 
                 // Notes
-                FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
+                FormField(text: $notes, placeholder: "Notes", axis: .vertical)
 
                 // Budget Category (project context only)
                 if projectId != nil {
@@ -276,9 +276,9 @@ struct NewTransactionView: View {
 
                 // Conditional: Itemized category fields
                 if isItemizedCategory {
-                    FormField(label: "Subtotal", text: $subtotal, placeholder: "$0.00")
+                    FormField(text: $subtotal, placeholder: "Subtotal")
                         .platformKeyboardType(.decimalPad)
-                    FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.0")
+                    FormField(text: $taxRate, placeholder: "Tax rate (%)")
                         .platformKeyboardType(.decimalPad)
                 }
             }

@@ -40,8 +40,8 @@ struct NewSpaceView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
-                FormField(label: "Name *", text: $name, placeholder: "Space name")
-                FormField(label: "Notes", text: $notes, placeholder: "Optional notes", axis: .vertical)
+                FormField(text: $name, placeholder: "Space name *")
+                FormField(text: $notes, placeholder: "Notes", axis: .vertical)
 
                 // Template selection — stub (WP13 builds SpaceTemplatesService)
                 VStack(alignment: .leading, spacing: Spacing.xs) {

@@ -18,26 +18,16 @@ struct AppButton: View {
     }
 
     private var backgroundColor: Color {
-        if isInactive {
-            return BrandColors.buttonDisabledBackground
-        }
         switch variant {
-        case .primary:
-            return BrandColors.primary
-        case .secondary:
-            return BrandColors.buttonSecondaryBackground
+        case .primary: return BrandColors.primary
+        case .secondary: return BrandColors.buttonSecondaryBackground
         }
     }
 
     private var foregroundColor: Color {
-        if isInactive {
-            return BrandColors.textDisabled
-        }
         switch variant {
-        case .primary:
-            return .white
-        case .secondary:
-            return BrandColors.textPrimary
+        case .primary: return .white
+        case .secondary: return BrandColors.textPrimary
         }
     }
 
@@ -66,11 +56,12 @@ struct AppButton: View {
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
             .overlay {
-                if variant == .secondary && !isInactive {
+                if variant == .secondary {
                     RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
                         .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
                 }
             }
+            .opacity(isInactive ? 0.45 : 1.0)
         }
         .buttonStyle(AppButtonStyle())
         .disabled(isInactive)

@@ -71,7 +71,6 @@ struct TransactionsTabView: View {
 
             content
         }
-        .scrollTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }

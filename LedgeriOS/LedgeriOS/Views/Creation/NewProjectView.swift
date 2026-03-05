@@ -36,9 +36,9 @@ struct NewProjectView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
-                FormField(label: "Name *", text: $name, placeholder: "Project name")
-                FormField(label: "Client Name *", text: $clientName, placeholder: "Client name")
-                FormField(label: "Description", text: $descriptionText, placeholder: "Optional description", axis: .vertical)
+                FormField(text: $name, placeholder: "Project name *")
+                FormField(text: $clientName, placeholder: "Client name *")
+                FormField(text: $descriptionText, placeholder: "Description", axis: .vertical)
 
                 // Hero Image
                 VStack(alignment: .leading, spacing: Spacing.xs) {

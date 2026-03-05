@@ -48,6 +48,7 @@ struct InventoryView: View {
                     InventoryItemsSubTab()
                 }
             }
+            .scrollContentTopFade()
         }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.inline)
@@ -85,7 +86,7 @@ struct InventoryView: View {
         }
         .sheet(isPresented: $showNewSpace) {
             NewSpaceView(context: .inventory)
-                .presentationDetents([.large])
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
         .task {

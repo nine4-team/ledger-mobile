@@ -67,9 +67,9 @@ struct NewItemView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
-                FormField(label: "Name *", text: $name, placeholder: "Item name")
+                FormField(text: $name, placeholder: "Item name *")
                 VendorPickerField(value: $source)
-                FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
+                FormField(text: $sku, placeholder: "Barcode or SKU number")
 
                 // Status
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -85,11 +85,11 @@ struct NewItemView: View {
                 }
 
                 // Prices
-                FormField(label: "Purchase Price", text: $purchasePrice, placeholder: "$0.00")
+                FormField(text: $purchasePrice, placeholder: "Purchase price")
                     .platformKeyboardType(.decimalPad)
-                FormField(label: "Project Price", text: $projectPrice, placeholder: "$0.00")
+                FormField(text: $projectPrice, placeholder: "Project price")
                     .platformKeyboardType(.decimalPad)
-                FormField(label: "Market Value", text: $marketValue, placeholder: "$0.00")
+                FormField(text: $marketValue, placeholder: "Market value")
                     .platformKeyboardType(.decimalPad)
 
                 // Quantity
