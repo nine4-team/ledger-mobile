@@ -187,7 +187,7 @@ struct SharedItemsList: View {
             searchPlaceholder: "Search items...",
             onAdd: onAdd
         ) {
-            if !processedItems.isEmpty && !isPicker {
+            if !isPicker {
                 Button {
                     resolvedSelectedIds.wrappedValue = SelectionCalculations.selectAllToggle(
                         selectedIds: resolvedSelectedIds.wrappedValue,

@@ -97,6 +97,7 @@ struct TransactionDetailView: View {
                     nextStepsCard
                     sectionsContent
                 }
+                .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.lg)
             }
@@ -300,55 +301,59 @@ struct TransactionDetailView: View {
                         ProgressRing(progress: progress)
                     }
 
-                    // Incomplete steps
                     VStack(spacing: Spacing.xs) {
                         ForEach(incompleteSteps) { step in
-                            HStack(spacing: Spacing.sm) {
-                                Image(systemName: step.sfSymbol)
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(BrandColors.textSecondary)
-                                    .frame(width: 24, height: 24)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(BrandColors.borderSecondary, lineWidth: 1.5)
-                                    )
-
-                                Text(step.label)
-                                    .font(Typography.body)
-                                    .foregroundStyle(BrandColors.textPrimary)
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(BrandColors.textTertiary)
-                            }
-                            .frame(minHeight: 36)
+                            nextStepRow(step)
                         }
-                    }
 
-                    // Completed steps (compact)
-                    if !completedSteps.isEmpty {
-                        Divider()
-                        VStack(spacing: Spacing.xs) {
-                            ForEach(completedSteps) { step in
-                                HStack(spacing: Spacing.sm) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 16))
-                                        .foregroundStyle(BrandColors.primary)
+                        if !completedSteps.isEmpty && !incompleteSteps.isEmpty {
+                            Divider()
+                        }
 
-                                    Text(step.label)
-                                        .font(Typography.caption)
-                                        .foregroundStyle(BrandColors.textSecondary)
-                                        .strikethrough()
-                                }
-                                .frame(minHeight: 24)
-                            }
+                        ForEach(completedSteps) { step in
+                            nextStepRow(step)
                         }
                     }
                 }
             }
+            .transition(.opacity.combined(with: .move(edge: .top)))
         }
+    }
+
+    @ViewBuilder
+    private func nextStepRow(_ step: TransactionNextStepsCalculations.NextStep) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Group {
+                if step.completed {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(BrandColors.primary)
+                } else {
+                    Image(systemName: step.sfSymbol)
+                        .font(.system(size: 14))
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .overlay(
+                            Circle()
+                                .stroke(BrandColors.borderSecondary, lineWidth: 1.5)
+                        )
+                }
+            }
+            .frame(width: 24, height: 24)
+
+            Text(step.label)
+                .font(step.completed ? Typography.caption : Typography.body)
+                .foregroundStyle(step.completed ? BrandColors.textSecondary : BrandColors.textPrimary)
+                .strikethrough(step.completed)
+
+            Spacer()
+
+            if !step.completed {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(BrandColors.textTertiary)
+            }
+        }
+        .frame(minHeight: step.completed ? 28 : 36)
     }
 
     // MARK: - Sections
@@ -735,7 +740,9 @@ struct TransactionDetailView: View {
               let transactionId = transaction.id else { return }
         transactionListener = TransactionsService(syncTracker: NoOpSyncTracker())
             .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { updatedTransaction in
-                self.liveTransactionData = updatedTransaction
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    self.liveTransactionData = updatedTransaction
+                }
             }
     }
 
