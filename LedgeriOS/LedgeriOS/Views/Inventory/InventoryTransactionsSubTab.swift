@@ -76,13 +76,11 @@ struct InventoryTransactionsSubTab: View {
                     }),
                 ]
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showNewTransaction) {
             NewTransactionView(context: .inventory)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+                .sheetStyle(.form)
         }
         .background(SortMenu(
             isPresented: $showSortMenu,
@@ -129,6 +127,7 @@ struct InventoryTransactionsSubTab: View {
                     .foregroundStyle(activeFilters.isActive ? BrandColors.primary : .secondary)
             }
         }
+        .padding(.horizontal, Spacing.screenPadding)
     }
 
     // MARK: - Content

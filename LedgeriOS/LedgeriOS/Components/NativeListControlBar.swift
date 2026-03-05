@@ -1,9 +1,21 @@
 import SwiftUI
 
+/// Toolbar appearance variants. `.card` is the active style.
+/// `.capsule` and `.plain` are kept as backups for comparison.
+enum ControlBarStyle {
+    /// Backup: labeled icons in a glass capsule pill
+    case capsule
+    /// Active: circle glass buttons inside a card container
+    case card
+    /// Backup: circle glass buttons with no background container
+    case plain
+}
+
 struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterContent: View>: View {
     @Binding var searchText: String
     var searchPlaceholder: String = "Search..."
     var onAdd: (() -> Void)?
+    var style: ControlBarStyle
     @ViewBuilder var selectAll: () -> SelectAllContent
     @ViewBuilder var sortMenu: () -> SortContent
     @ViewBuilder var filterMenu: () -> FilterContent
@@ -15,6 +27,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         searchText: Binding<String>,
         searchPlaceholder: String = "Search...",
         onAdd: (() -> Void)? = nil,
+        style: ControlBarStyle = .capsule,
         @ViewBuilder selectAll: @escaping () -> SelectAllContent = { EmptyView() },
         @ViewBuilder sortMenu: @escaping () -> SortContent = { EmptyView() },
         @ViewBuilder filterMenu: @escaping () -> FilterContent = { EmptyView() }
@@ -22,9 +35,14 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         self._searchText = searchText
         self.searchPlaceholder = searchPlaceholder
         self.onAdd = onAdd
+        self.style = style
         self.selectAll = selectAll
         self.sortMenu = sortMenu
         self.filterMenu = filterMenu
+    }
+
+    private var usesCircleButtons: Bool {
+        style == .card || style == .plain
     }
 
     var body: some View {
@@ -70,9 +88,10 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                     }
                 }
             }
-            .padding(.horizontal, Spacing.lg)
-            .padding(.vertical, 14)
-            .modifier(CapsuleGlassModifier())
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, usesCircleButtons ? Spacing.sm : Spacing.lg)
+            .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
+            .modifier(containerModifier)
 
             if isSearchExpanded {
                 SearchField(
@@ -89,7 +108,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
         .onChange(of: isSearchExpanded) { _, expanded in
             if expanded {
@@ -100,7 +118,27 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         }
     }
 
+    private var containerModifier: AnyGlassModifier {
+        switch style {
+        case .capsule:
+            AnyGlassModifier(CapsuleGlassModifier())
+        case .card:
+            AnyGlassModifier(CardGlassModifier())
+        case .plain:
+            AnyGlassModifier(TransparentModifier())
+        }
+    }
+
+    @ViewBuilder
     private func barItem<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        if usesCircleButtons {
+            circleBarItem { content() }
+        } else {
+            labeledBarItem(label: label) { content() }
+        }
+    }
+
+    private func labeledBarItem<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 2) {
             content()
                 .tint(.secondary)
@@ -114,9 +152,32 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         }
         .frame(maxWidth: .infinity)
     }
+
+    private func circleBarItem<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .tint(.secondary)
+            .font(.system(size: 20))
+            .imageScale(.large)
+            .frame(width: 56, height: 56)
+            .contentShape(Circle())
+            .modifier(CircleGlassModifier())
+            .frame(maxWidth: .infinity)
+    }
 }
 
 // MARK: - Glass Material
+
+struct AnyGlassModifier: ViewModifier {
+    private let apply: (Content) -> AnyView
+
+    init<M: ViewModifier>(_ modifier: M) {
+        self.apply = { AnyView($0.modifier(modifier)) }
+    }
+
+    func body(content: Content) -> some View {
+        apply(content)
+    }
+}
 
 struct CapsuleGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
@@ -128,6 +189,36 @@ struct CapsuleGlassModifier: ViewModifier {
                 .clipShape(Capsule(style: .continuous))
                 .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
         }
+    }
+}
+
+struct CircleGlassModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(in: .circle)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Circle())
+        }
+    }
+}
+
+struct TransparentModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+    }
+}
+
+struct CardGlassModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(BrandColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }
 

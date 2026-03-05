@@ -365,8 +365,7 @@ struct SharedTransactionsList: View {
                 title: "\(selectedIds.count) selected",
                 items: bulkActionMenuItems
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
     }
 
@@ -412,6 +411,7 @@ struct SharedTransactionsList: View {
                     .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
             }
         }
+        .padding(.horizontal, Spacing.screenPadding)
     }
 
     // MARK: - Content

@@ -123,6 +123,7 @@ struct SharedItemsList: View {
                 .scrollContentTopFade()
                 .safeAreaInset(edge: .top, spacing: 0) {
                     controlBar
+                        .padding(.horizontal, Spacing.screenPadding)
                 }
                 .safeAreaInset(edge: .bottom) {
                     bottomBar
@@ -151,8 +152,7 @@ struct SharedItemsList: View {
                 title: "\(resolvedSelectedIds.wrappedValue.count) selected",
                 items: bulkActionMenuItems
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .background(SortMenu(
             isPresented: $showSortMenu,
@@ -182,10 +182,18 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private var controlBar: some View {
+        // Backup styles: .capsule (original labeled icons in glass pill),
+        // .plain (circle buttons with no background container)
+        controlBarInstance(style: .card)
+    }
+
+    @ViewBuilder
+    private func controlBarInstance(style: ControlBarStyle) -> some View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search items...",
-            onAdd: onAdd
+            onAdd: onAdd,
+            style: style
         ) {
             if !isPicker {
                 Button {

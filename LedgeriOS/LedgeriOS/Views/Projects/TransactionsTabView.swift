@@ -94,14 +94,12 @@ struct TransactionsTabView: View {
                     }),
                 ]
             )
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showNewTransaction) {
             if let projectId = projectContext.currentProjectId {
                 NewTransactionView(context: .project(projectId))
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
+                    .sheetStyle(.form)
             }
         }
         .background(SortMenu(
@@ -153,6 +151,7 @@ struct TransactionsTabView: View {
                     .foregroundStyle(activeFilters.isActive ? BrandColors.primary : .secondary)
             }
         }
+        .padding(.horizontal, Spacing.screenPadding)
     }
 
     // MARK: - Content
