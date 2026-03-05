@@ -5,6 +5,8 @@ struct CollapsibleSection<Content: View>: View {
     @Binding var isExpanded: Bool
     var badge: String? = nil
     var badgeColor: Color = BrandColors.textSecondary
+    var statusBadge: String? = nil
+    var statusBadgeColor: Color = StatusColors.badgeNeedsReview
     var onEdit: (() -> Void)? = nil
     var onAdd: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
@@ -33,6 +35,10 @@ struct CollapsibleSection<Content: View>: View {
                     }
 
                     Spacer()
+
+                    if let statusBadge {
+                        Badge(text: statusBadge, color: statusBadgeColor)
+                    }
 
                     if let onEdit {
                         Button {

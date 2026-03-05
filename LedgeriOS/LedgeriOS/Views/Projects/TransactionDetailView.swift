@@ -229,7 +229,8 @@ struct TransactionDetailView: View {
             status: liveTransaction.status
         )
         if !badges.isEmpty {
-            HStack(spacing: Spacing.xs) {
+            HStack(spacing: Spacing.sm) {
+                Spacer(minLength: 0)
                 ForEach(badges, id: \.text) { badge in
                     Badge(
                         text: badge.text,
@@ -238,7 +239,6 @@ struct TransactionDetailView: View {
                         borderOpacity: badge.borderOpacity
                     )
                 }
-                Spacer()
             }
         }
     }
@@ -551,8 +551,7 @@ struct TransactionDetailView: View {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),
-                badge: comp.status != .complete ? "Needs Review" : nil,
-                badgeColor: StatusColors.badgeNeedsReview
+                statusBadge: comp.status != .complete ? "Needs Review" : nil
             ) {
                 TransactionAuditPanel(
                     completeness: comp,

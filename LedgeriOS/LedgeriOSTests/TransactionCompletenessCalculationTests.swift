@@ -214,26 +214,6 @@ struct TransactionCompletenessCalculationTests {
         #expect(result?.soldItemsTotalCents == 1000)
     }
 
-    // MARK: - statusLabel
-
-    @Test("statusLabel returns correct strings")
-    func statusLabelCorrect() {
-        #expect(TransactionCompletenessCalculations.statusLabel(.complete) == "Complete")
-        #expect(TransactionCompletenessCalculations.statusLabel(.near) == "Needs Review")
-        #expect(TransactionCompletenessCalculations.statusLabel(.incomplete) == "Needs Review")
-        #expect(TransactionCompletenessCalculations.statusLabel(.over) == "Needs Review")
-    }
-
-    // MARK: - statusIcon
-
-    @Test("statusIcon returns correct SF Symbol names")
-    func statusIconCorrect() {
-        #expect(TransactionCompletenessCalculations.statusIcon(.complete) == "checkmark.circle.fill")
-        #expect(TransactionCompletenessCalculations.statusIcon(.near) == "exclamationmark.triangle.fill")
-        #expect(TransactionCompletenessCalculations.statusIcon(.incomplete) == "exclamationmark.triangle.fill")
-        #expect(TransactionCompletenessCalculations.statusIcon(.over) == "exclamationmark.triangle.fill")
-    }
-
     // MARK: - subtotalLabel
 
     @Test("subtotalLabel reflects explicit vs inferred subtotal")

@@ -1,61 +1,22 @@
 import SwiftUI
 
-/// Audit panel for transaction completeness — matches web app's
-/// TransactionAudit (TransactionCompletenessPanel + MissingPriceList).
+/// Audit panel for transaction completeness.
+/// Status is shown via the "Needs Review" badge on the CollapsibleSection header.
+/// This panel shows the progress bar, detail breakdown, warnings, and missing price list.
 struct TransactionAuditPanel: View {
     let completeness: TransactionCompletenessCalculations.TransactionCompleteness
     let hasExplicitSubtotal: Bool
     let itemsMissingPrice: [Item]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            completenessSection
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            progressSection
+            detailBreakdown
+            missingTaxWarning
 
             if !itemsMissingPrice.isEmpty {
                 missingPriceListSection
             }
-        }
-    }
-
-    // MARK: - Completeness Section
-
-    private var completenessSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            statusHeaderRow
-            progressSection
-
-            if completeness.itemsCount == 0 {
-                Text("No items linked yet")
-                    .font(Typography.caption)
-                    .foregroundStyle(StatusColors.missedText)
-                    .fontWeight(.medium)
-            } else {
-                detailBreakdown
-            }
-
-            missingTaxWarning
-        }
-    }
-
-    // MARK: - Status Header
-
-    private var statusHeaderRow: some View {
-        HStack {
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: TransactionCompletenessCalculations.statusIcon(completeness.status))
-                    .font(.system(size: 18))
-                    .foregroundStyle(statusColor)
-
-                Text(TransactionCompletenessCalculations.statusLabel(completeness.status))
-                    .font(Typography.body.weight(.medium))
-                    .foregroundStyle(BrandColors.textPrimary)
-            }
-
-            Spacer()
-
-            Text("\(CurrencyFormatting.formatCentsWithDecimals(completeness.itemsNetTotalCents)) / \(CurrencyFormatting.formatCentsWithDecimals(completeness.transactionSubtotalCents))")
-                .font(Typography.small)
-                .foregroundStyle(BrandColors.textSecondary)
         }
     }
 
@@ -163,32 +124,23 @@ struct TransactionAuditPanel: View {
 
             // Item rows
             ForEach(itemsMissingPrice) { item in
-                VStack(spacing: 0) {
-                    HStack {
-                        Text(item.displayName)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textPrimary)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Text(item.displayName)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text(item.sku ?? "—")
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .frame(width: 80, alignment: .leading)
-                    }
+                    Text(item.sku ?? "—")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .frame(width: 80, alignment: .leading)
                 }
             }
         }
     }
 
     // MARK: - Color Helpers
-
-    private var statusColor: Color {
-        switch completeness.status {
-        case .complete: return StatusColors.metBarComplete
-        case .near, .incomplete, .over: return StatusColors.inProgressText
-        }
-    }
 
     private var statusBarColor: Color {
         switch completeness.status {
