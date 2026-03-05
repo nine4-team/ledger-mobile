@@ -121,15 +121,21 @@ struct ActionMenuSheet: View {
 
     @ViewBuilder
     private func selectionIndicator(for item: ActionMenuItem) -> some View {
-        let selectedSubs = item.subactions?.filter { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? []
-        let count = selectedSubs.count
+        let iconSelected = item.subactions?.filter { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? []
+        let keySelected = item.selectedSubactionKey.flatMap { key in
+            item.subactions?.first(where: { $0.id == key })
+        }
 
-        if count == 1, let selected = selectedSubs.first {
+        if let keySelected {
+            Text(keySelected.label)
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.primary)
+        } else if iconSelected.count == 1, let selected = iconSelected.first {
             Text(selected.label)
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.primary)
-        } else if count > 1 {
-            Text("(\(count))")
+        } else if iconSelected.count > 1 {
+            Text("(\(iconSelected.count))")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.primary)
         }
@@ -202,8 +208,10 @@ struct ActionMenuSheet: View {
             }
         case .executeAction:
             if closeOnItemPress {
-                if let action = item.onPress {
-                    onSelectAction?(action)
+                if let onSelectAction {
+                    if let action = item.onPress { onSelectAction(action) }
+                } else {
+                    item.onPress?()
                 }
                 dismiss()
             } else {
@@ -214,7 +222,11 @@ struct ActionMenuSheet: View {
 
     private func handleSubactionTap(_ subaction: ActionMenuSubitem) {
         if closeOnItemPress {
-            onSelectAction?(subaction.onPress)
+            if let onSelectAction {
+                onSelectAction(subaction.onPress)
+            } else {
+                subaction.onPress()
+            }
             dismiss()
         } else {
             subaction.onPress()

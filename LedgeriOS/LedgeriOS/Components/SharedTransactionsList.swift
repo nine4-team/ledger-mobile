@@ -285,6 +285,7 @@ enum TransactionFilterSortCalculations {
         case .sourceDesc: return "Source (Z-A)"
         }
     }
+
 }
 
 // MARK: - SharedTransactionsList

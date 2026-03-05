@@ -1,17 +1,18 @@
 import SwiftUI
 
-/// Adds a dark gradient overlay at the top of the content, creating a shadow effect
-/// where cards fade into darkness as they scroll upward beneath a tab bar.
+/// Adds a gradient overlay at the top of the content, creating a shadow effect
+/// where cards fade as they scroll upward beneath a tab bar.
+/// Adapts opacity for light and dark mode automatically.
 ///
 /// Apply this to the content view **below** a `ScrollableTabBar` in a VStack.
 struct ScrollContentTopFadeModifier: ViewModifier {
-    var height: CGFloat = 40
+    var height: CGFloat = 20
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
                 LinearGradient(
-                    colors: [Color.black.opacity(0.55), Color.black.opacity(0)],
+                    colors: [BrandColors.background.opacity(0.55), BrandColors.background.opacity(0)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -23,7 +24,7 @@ struct ScrollContentTopFadeModifier: ViewModifier {
 }
 
 extension View {
-    func scrollContentTopFade(height: CGFloat = 40) -> some View {
+    func scrollContentTopFade(height: CGFloat = 20) -> some View {
         modifier(ScrollContentTopFadeModifier(height: height))
     }
 }

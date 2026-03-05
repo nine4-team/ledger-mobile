@@ -15,6 +15,8 @@ struct SharedItemsList: View {
     var useNavigationLinks: Bool = false
     var useAdaptiveWidth: Bool = false
     var emptyIcon: String = "tray"
+    var filterScope: ItemFilterScope?
+    var inline: Bool = false
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -107,15 +109,24 @@ struct SharedItemsList: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            content
-        }
-        .scrollContentTopFade()
-        .safeAreaInset(edge: .top, spacing: 0) {
-            controlBar
-        }
-        .safeAreaInset(edge: .bottom) {
-            bottomBar
+        Group {
+            if inline {
+                VStack(spacing: 0) {
+                    controlBar
+                    inlineContent
+                }
+            } else {
+                VStack(spacing: 0) {
+                    content
+                }
+                .scrollContentTopFade()
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    controlBar
+                }
+                .safeAreaInset(edge: .bottom) {
+                    bottomBar
+                }
+            }
         }
         .task {
             await setupData()
@@ -148,7 +159,7 @@ struct SharedItemsList: View {
             isPresented: $showFilterMenu,
             filters: FilterMenu.filterMenuItems(
                 activeFilters: activeFilters,
-                scope: isStandalone ? .inventory : .project,
+                scope: filterScope ?? (isStandalone ? .inventory : .project),
                 onToggle: { option in
                     if activeFilters.contains(option) {
                         activeFilters.remove(option)
@@ -214,6 +225,42 @@ struct SharedItemsList: View {
             .frame(maxHeight: .infinity)
         } else {
             itemList
+        }
+    }
+
+    @ViewBuilder
+    private var inlineContent: some View {
+        if isLoading && needsFirestoreData {
+            LoadingScreen(message: "Loading items...")
+        } else if let error {
+            ErrorRetryView(
+                message: error,
+                onRetry: { Task { await setupData() } }
+            )
+        } else if processedItems.isEmpty {
+            let message = !items.isEmpty ? "No items match your filters" : emptyMessage
+            Text(message)
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, Spacing.xl)
+        } else {
+            LazyVStack(spacing: Spacing.cardListGap) {
+                if showGrouped {
+                    ForEach(groups) { group in
+                        if group.count > 1 {
+                            groupedCard(for: group)
+                        } else if let item = group.items.first {
+                            singleItemCard(for: item)
+                        }
+                    }
+                } else {
+                    ForEach(processedItems) { item in
+                        singleItemCard(for: item)
+                    }
+                }
+            }
+            .padding(.top, Spacing.sm)
         }
     }
 
