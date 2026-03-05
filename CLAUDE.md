@@ -76,6 +76,16 @@ struct Item: Codable, Identifiable {
 }
 ```
 
+### Entity Relationships
+
+Cross-entity lookups use the **owner's ID array**, not a back-reference on the child. The canonical direction is documented in `docs/specs/data-model.md`.
+
+| Relationship | Canonical lookup | Field |
+|---|---|---|
+| Transaction → Items | Transaction owns the IDs | `transaction.itemIds: [String]` |
+
+When resolving a transaction's items, filter from the items collection using the transaction's `itemIds` array — **not** by matching `item.transactionId`. The `transactionId` field on Item exists but is not reliably set.
+
 ### Navigation
 
 One `NavigationStack` per tab. Use `NavigationLink(value:)` with `.navigationDestination(for:)` — not the deprecated label-based `NavigationLink`.
@@ -160,6 +170,10 @@ Use **Swift Testing** framework (not XCTest) for all new tests. The global CLAUD
 
 For Firestore service testing, extract business logic into pure functions that can be tested without a live Firestore connection. Mock the Firestore layer at the boundary, not inside the logic.
 
+## Verification After Delegation
+
+Sub-agents fabricate plausible details. When they produce specs, docs, or code that references data model facts (field names, status values, relationships, formulas), spot-check their output against source code before considering the work done.
+
 ## UI Copy
 
 Button labels use title case with lowercase prepositions: `Save to Draft`, `Add New Item`.
@@ -178,6 +192,16 @@ Each feature area gets a doc file at `docs/features/[name].md`. These capture wh
 - New sheet flow → document the trigger, dismissal pattern, and any sequencing with other sheets
 - New Firestore collection or subcollection read/written → add it to the feature's Data section
 - Architectural decision made → record it and the reason, so future work doesn't re-litigate it
+
+## System Design Specs
+
+Platform-agnostic design specs live in `docs/specs/`. These document business rules, entity relationships, data flows, and invariants — not implementation details. They are the source of truth for how the system works, shared across all client platforms.
+
+**When to update a spec:** When a design decision changes — new entity relationships, new business rules, changed data flows, new edge cases. Implementation changes (refactoring, new UI components) don't require spec updates unless the underlying system behavior changes.
+
+**When to create a new spec:** When a new system-level concept is introduced that spans multiple features or affects data model invariants. If it's feature-specific implementation detail, it belongs in `docs/features/` instead.
+
+**Spec vs feature doc:** Specs describe *what the system does* (business rules, data model, invariants). Feature docs describe *how a specific screen/flow is built* (state management, sheet flows, component structure). A feature doc may reference specs but should not duplicate them.
 
 ## Shared Components
 
