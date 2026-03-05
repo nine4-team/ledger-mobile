@@ -1,3 +1,4 @@
+import FirebaseFirestore
 import SwiftUI
 
 struct SpaceDetailView: View {
@@ -27,10 +28,14 @@ struct SpaceDetailView: View {
     @State private var showAddExistingItems = false
     @State private var pickerSelectedIds: Set<String> = []
 
+    // Live document subscription
+    @State private var liveSpaceData: Space?
+    @State private var spaceListener: ListenerRegistration?
+
     // MARK: - Computed
 
     private var liveSpace: Space {
-        projectContext.spaces.first(where: { $0.id == space.id }) ?? space
+        liveSpaceData ?? space
     }
 
     private var spaceItems: [Item] {
@@ -149,6 +154,8 @@ struct SpaceDetailView: View {
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
+        .onAppear { startSpaceListener() }
+        .onDisappear { spaceListener?.remove() }
     }
 
     // MARK: - Collapsible Sections
@@ -177,7 +184,7 @@ struct SpaceDetailView: View {
                 title: "ITEMS",
                 isExpanded: $isItemsExpanded,
                 badge: "\(spaceItems.count)",
-                onAdd: { showAddExistingItems = true }
+                badgeColor: BrandColors.primary
             ) {
                 itemsContent
             }
@@ -242,6 +249,7 @@ struct SpaceDetailView: View {
         SharedItemsList(
             mode: .embedded(items: spaceItems, onItemPress: { _ in }),
             emptyMessage: "No items in this space",
+            onAdd: { showAddExistingItems = true },
             useNavigationLinks: true,
             filterScope: .spaceDetail,
             inline: true
@@ -344,12 +352,28 @@ struct SpaceDetailView: View {
 
     // MARK: - Actions
 
-    private func updateSpace(fields: [String: Any]) {
+    private func startSpaceListener() {
         guard let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
+        spaceListener = SpacesService(syncTracker: NoOpSyncTracker())
+            .subscribeToSpace(accountId: accountId, spaceId: spaceId) { updatedSpace in
+                self.liveSpaceData = updatedSpace
+            }
+    }
+
+    private func updateSpace(fields: [String: Any]) {
+        guard let accountId = accountContext.currentAccountId,
+              let spaceId = space.id else {
+            print("⚠️ updateSpace skipped — missing accountId or spaceId")
+            return
+        }
         let service = SpacesService(syncTracker: NoOpSyncTracker())
         Task {
-            try? await service.updateSpace(accountId: accountId, spaceId: spaceId, fields: fields)
+            do {
+                try await service.updateSpace(accountId: accountId, spaceId: spaceId, fields: fields)
+            } catch {
+                print("🔴 updateSpace failed: \(error)")
+            }
         }
     }
 

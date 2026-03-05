@@ -219,8 +219,46 @@ struct TransactionCompletenessCalculationTests {
     @Test("statusLabel returns correct strings")
     func statusLabelCorrect() {
         #expect(TransactionCompletenessCalculations.statusLabel(.complete) == "Complete")
-        #expect(TransactionCompletenessCalculations.statusLabel(.near) == "Near Complete")
-        #expect(TransactionCompletenessCalculations.statusLabel(.incomplete) == "Incomplete")
-        #expect(TransactionCompletenessCalculations.statusLabel(.over) == "Over")
+        #expect(TransactionCompletenessCalculations.statusLabel(.near) == "Needs Review")
+        #expect(TransactionCompletenessCalculations.statusLabel(.incomplete) == "Needs Review")
+        #expect(TransactionCompletenessCalculations.statusLabel(.over) == "Needs Review")
+    }
+
+    // MARK: - statusIcon
+
+    @Test("statusIcon returns correct SF Symbol names")
+    func statusIconCorrect() {
+        #expect(TransactionCompletenessCalculations.statusIcon(.complete) == "checkmark.circle.fill")
+        #expect(TransactionCompletenessCalculations.statusIcon(.near) == "exclamationmark.triangle.fill")
+        #expect(TransactionCompletenessCalculations.statusIcon(.incomplete) == "exclamationmark.triangle.fill")
+        #expect(TransactionCompletenessCalculations.statusIcon(.over) == "exclamationmark.triangle.fill")
+    }
+
+    // MARK: - subtotalLabel
+
+    @Test("subtotalLabel reflects explicit vs inferred subtotal")
+    func subtotalLabelCorrect() {
+        #expect(TransactionCompletenessCalculations.subtotalLabel(hasExplicitSubtotal: true) == "Subtotal (pre-tax)")
+        #expect(TransactionCompletenessCalculations.subtotalLabel(hasExplicitSubtotal: false) == "Estimated subtotal (pre-tax)")
+    }
+
+    // MARK: - remainingLabel
+
+    @Test("remainingLabel shows remaining when items are under subtotal")
+    func remainingLabelUnder() {
+        let label = TransactionCompletenessCalculations.remainingLabel(varianceCents: -1500)
+        #expect(label.contains("remaining"))
+    }
+
+    @Test("remainingLabel shows over when items exceed subtotal")
+    func remainingLabelOver() {
+        let label = TransactionCompletenessCalculations.remainingLabel(varianceCents: 2000)
+        #expect(label.contains("Over by"))
+    }
+
+    @Test("remainingLabel shows zero remaining at exact match")
+    func remainingLabelExact() {
+        let label = TransactionCompletenessCalculations.remainingLabel(varianceCents: 0)
+        #expect(label.contains("remaining"))
     }
 }

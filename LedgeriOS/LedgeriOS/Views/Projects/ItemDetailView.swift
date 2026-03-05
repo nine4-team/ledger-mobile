@@ -1,3 +1,4 @@
+import FirebaseFirestore
 import SwiftUI
 
 struct ItemDetailView: View {
@@ -12,6 +13,10 @@ struct ItemDetailView: View {
     @State private var isMediaExpanded = true
     @State private var isNotesExpanded = false
     @State private var isDetailsExpanded = false
+
+    // Live document subscription
+    @State private var liveItemData: Item?
+    @State private var itemListener: ListenerRegistration?
 
     // Modal presentation
     @State private var showActionMenu = false
@@ -29,6 +34,10 @@ struct ItemDetailView: View {
 
     // Sheet-on-sheet sequencing
     @State private var menuPendingAction: (() -> Void)?
+
+    // MARK: - Computed
+
+    private var liveItem: Item { liveItemData ?? item }
 
     var body: some View {
         ScrollView {
@@ -58,7 +67,7 @@ struct ItemDetailView: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: item.displayName.isEmpty ? "Item" : item.displayName,
+                title: liveItem.displayName.isEmpty ? "Item" : liveItem.displayName,
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
@@ -67,7 +76,7 @@ struct ItemDetailView: View {
         }
         // Edit Details
         .sheet(isPresented: $showEditDetails) {
-            EditItemDetailsModal(item: item) { fields in
+            EditItemDetailsModal(item: liveItem) { fields in
                 updateItem(fields: fields)
             }
             .presentationDetents([.large])
@@ -75,7 +84,7 @@ struct ItemDetailView: View {
         }
         // Edit Notes
         .sheet(isPresented: $showEditNotes) {
-            EditNotesModal(notes: item.notes ?? "") { newNotes in
+            EditNotesModal(notes: liveItem.notes ?? "") { newNotes in
                 updateItem(fields: ["notes": newNotes])
             }
             .presentationDetents([.medium, .large])
@@ -85,7 +94,7 @@ struct ItemDetailView: View {
         .sheet(isPresented: $showSetSpace) {
             SetSpaceModal(
                 spaces: projectContext.spaces,
-                currentSpaceId: item.spaceId,
+                currentSpaceId: liveItem.spaceId,
                 onSelect: { space in
                     let fields: [String: Any] = space != nil ? ["spaceId": space!.id ?? ""] : ["spaceId": NSNull()]
                     updateItem(fields: fields)
@@ -96,14 +105,14 @@ struct ItemDetailView: View {
         }
         // Reassign
         .sheet(isPresented: $showReassign) {
-            ReassignToProjectModal(items: [item]) { }
+            ReassignToProjectModal(items: [liveItem]) { }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
         // Sell to Business
         .sheet(isPresented: $showSellToBusiness) {
             if let accountId = accountContext.currentAccountId {
-                SellToBusinessModal(items: [item], accountId: accountId) {
+                SellToBusinessModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
                 .presentationDetents([.medium, .large])
@@ -113,7 +122,7 @@ struct ItemDetailView: View {
         // Sell to Project
         .sheet(isPresented: $showSellToProject) {
             if let accountId = accountContext.currentAccountId {
-                SellToProjectModal(items: [item], accountId: accountId) {
+                SellToProjectModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
                 .presentationDetents([.large])
@@ -124,7 +133,7 @@ struct ItemDetailView: View {
         .sheet(isPresented: $showTransactionPicker) {
             TransactionPickerModal(
                 transactions: projectContext.transactions,
-                selectedId: item.transactionId
+                selectedId: liveItem.transactionId
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
@@ -135,7 +144,7 @@ struct ItemDetailView: View {
         .sheet(isPresented: $showReturnTransactionPicker) {
             ReturnTransactionPickerModal(
                 transactions: projectContext.transactions,
-                selectedId: item.transactionId
+                selectedId: liveItem.transactionId
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
@@ -145,14 +154,14 @@ struct ItemDetailView: View {
         // Make Copies
         .sheet(isPresented: $showMakeCopies) {
             if let accountId = accountContext.currentAccountId {
-                MakeCopiesModal(item: item, accountId: accountId)
+                MakeCopiesModal(item: liveItem, accountId: accountId)
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
         }
         // Status Picker
         .sheet(isPresented: $showStatusPicker) {
-            StatusPickerModal(currentStatus: item.status) { status in
+            StatusPickerModal(currentStatus: liveItem.status) { status in
                 updateItem(fields: ["status": status])
             }
             .presentationDetents([.medium])
@@ -166,13 +175,15 @@ struct ItemDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .onAppear { startItemListener() }
+        .onDisappear { itemListener?.remove() }
     }
 
     // MARK: - Hero Card
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(item.displayName.isEmpty ? "Unnamed Item" : item.displayName)
+            Text(liveItem.displayName.isEmpty ? "Unnamed Item" : liveItem.displayName)
                 .font(Typography.h2)
                 .foregroundStyle(BrandColors.textPrimary)
 
@@ -196,7 +207,7 @@ struct ItemDetailView: View {
     }
 
     private var linkedTransactionLabel: String {
-        guard let transactionId = item.transactionId else { return "None" }
+        guard let transactionId = liveItem.transactionId else { return "None" }
         guard let tx = projectContext.transactions.first(where: { $0.id == transactionId }) else {
             return "None"
         }
@@ -209,7 +220,7 @@ struct ItemDetailView: View {
     }
 
     private var linkedBudgetCategoryName: String {
-        guard let categoryId = item.budgetCategoryId else { return "None" }
+        guard let categoryId = liveItem.budgetCategoryId else { return "None" }
         return projectContext.budgetCategories.first(where: { $0.id == categoryId })?.name ?? "None"
     }
 
@@ -246,7 +257,7 @@ struct ItemDetailView: View {
     private var mediaContent: some View {
         MediaGallerySection(
             title: "",
-            attachments: item.images ?? [],
+            attachments: liveItem.images ?? [],
             onUploadAttachment: { data in
                 try await uploadImage(data)
             },
@@ -263,7 +274,7 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var notesContent: some View {
-        if let notes = item.notes, !notes.isEmpty {
+        if let notes = liveItem.notes, !notes.isEmpty {
             Text(notes)
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textPrimary)
@@ -279,14 +290,14 @@ struct ItemDetailView: View {
     @ViewBuilder
     private var detailsContent: some View {
         VStack(spacing: 0) {
-            DetailRow(label: "Status", value: item.status?.capitalized ?? "—")
+            DetailRow(label: "Status", value: liveItem.status?.capitalized ?? "—")
             DetailRow(label: "Space", value: spaceNameForDetails)
-            DetailRow(label: "Source", value: item.source ?? "—")
-            DetailRow(label: "SKU", value: item.sku ?? "—")
-            DetailRow(label: "Purchase Price", value: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
-            DetailRow(label: "Project Price", value: item.projectPriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
-            DetailRow(label: "Market Value", value: item.marketValueCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
-            if let date = item.createdAt {
+            DetailRow(label: "Source", value: liveItem.source ?? "—")
+            DetailRow(label: "SKU", value: liveItem.sku ?? "—")
+            DetailRow(label: "Purchase Price", value: liveItem.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
+            DetailRow(label: "Project Price", value: liveItem.projectPriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
+            DetailRow(label: "Market Value", value: liveItem.marketValueCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
+            if let date = liveItem.createdAt {
                 DetailRow(label: "Created", value: DateFormatter.shortDate.string(from: date), showDivider: false)
             }
         }
@@ -299,7 +310,7 @@ struct ItemDetailView: View {
         Button {
             showStatusPicker = true
         } label: {
-            Text(item.status ?? "No Status")
+            Text(liveItem.status ?? "No Status")
                 .font(Typography.caption.weight(.semibold))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
@@ -313,8 +324,8 @@ struct ItemDetailView: View {
         Button {
             toggleBookmark()
         } label: {
-            Image(systemName: item.bookmark == true ? "bookmark.fill" : "bookmark")
-                .foregroundStyle(item.bookmark == true ? BrandColors.primary : BrandColors.textSecondary)
+            Image(systemName: liveItem.bookmark == true ? "bookmark.fill" : "bookmark")
+                .foregroundStyle(liveItem.bookmark == true ? BrandColors.primary : BrandColors.textSecondary)
         }
     }
 
@@ -360,7 +371,7 @@ struct ItemDetailView: View {
             }),
         ]
 
-        if item.status == "to return" || item.status == "returned" {
+        if liveItem.status == "to return" || liveItem.status == "returned" {
             items.append(ActionMenuItem(id: "return-tx", label: "Link Return Transaction", icon: "arrow.uturn.left", onPress: {
                 showReturnTransactionPicker = true
             }))
@@ -376,12 +387,12 @@ struct ItemDetailView: View {
     // MARK: - Helpers
 
     private var spaceName: String {
-        guard let spaceId = item.spaceId else { return "None" }
+        guard let spaceId = liveItem.spaceId else { return "None" }
         return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "None"
     }
 
     private var spaceNameForDetails: String {
-        guard let spaceId = item.spaceId else { return "—" }
+        guard let spaceId = liveItem.spaceId else { return "—" }
         return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "—"
     }
 
@@ -398,14 +409,14 @@ struct ItemDetailView: View {
             filename: filename
         )
         let url = try await mediaService.uploadImage(data, path: path)
-        var images = item.images ?? []
+        var images = liveItem.images ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(url: url, isPrimary: isPrimary))
         updateItem(fields: ["images": images.map(attachmentDict)])
     }
 
     private func removeImage(_ attachment: AttachmentRef) {
-        var images = item.images ?? []
+        var images = liveItem.images ?? []
         images.removeAll { $0.url == attachment.url }
         updateItem(fields: ["images": images.map(attachmentDict)])
         Task {
@@ -414,7 +425,7 @@ struct ItemDetailView: View {
     }
 
     private func setPrimaryImage(_ attachment: AttachmentRef) {
-        guard var images = item.images else { return }
+        guard var images = liveItem.images else { return }
         images = images.map { img in
             var copy = img
             copy.isPrimary = (img.url == attachment.url)
@@ -436,17 +447,33 @@ struct ItemDetailView: View {
 
     // MARK: - Actions
 
-    private func updateItem(fields: [String: Any]) {
+    private func startItemListener() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item.id else { return }
+        itemListener = ItemsService(syncTracker: NoOpSyncTracker())
+            .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
+                self.liveItemData = updatedItem
+            }
+    }
+
+    private func updateItem(fields: [String: Any]) {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = item.id else {
+            print("⚠️ updateItem skipped — missing accountId or itemId")
+            return
+        }
         let service = ItemsService(syncTracker: NoOpSyncTracker())
         Task {
-            try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields)
+            do {
+                try await service.updateItem(accountId: accountId, itemId: itemId, fields: fields)
+            } catch {
+                print("🔴 updateItem failed: \(error)")
+            }
         }
     }
 
     private func toggleBookmark() {
-        updateItem(fields: ["bookmark": !(item.bookmark ?? false)])
+        updateItem(fields: ["bookmark": !(liveItem.bookmark ?? false)])
     }
 
     private func deleteItem() {

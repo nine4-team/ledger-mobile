@@ -13,6 +13,7 @@
 		071829304D5E6F70818293A4 /* SortMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F607182A3B4C5D6E /* SortMenu.swift */; };
 		0BE4F226EBCD44DAA206A6C5 /* MediaServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */; };
 		0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */; };
+		E0BE95446978433A05EC0C69 /* TransactionAuditPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */; };
 		10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */; };
 		12A676B63F549896773CA41F /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873F47E2A621690D041C7170 /* Project.swift */; };
 		177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */; };
@@ -451,6 +452,7 @@
 		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
 		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
 		F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
+		9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionAuditPanel.swift; sourceTree = "<group>"; };
 		F89888110732C2D81B903322 /* SyncTracking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTracking.swift; sourceTree = "<group>"; };
 		F923BE246BDFE7441513642E /* Invite.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Invite.swift; sourceTree = "<group>"; };
 		FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
@@ -576,6 +578,7 @@
 				8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */,
 				1D4EEAD965745C023A6670C1 /* TransactionsTabView.swift */,
 				F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */,
+				9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */,
 				AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */,
 				7BF4222455FCC3471031DA93 /* SpacesTabView.swift */,
 				4745C15BA2924A183A82E249 /* ItemsTabView.swift */,
@@ -1249,6 +1252,7 @@
 				D7A04F61BEE513200213BF35 /* TransactionExportCalculations.swift in Sources */,
 				7EF3313AC9CDE6AEB528A13A /* TransactionsTabView.swift in Sources */,
 				0C41C14D26B64FBED5BF0988 /* TransactionDetailView.swift in Sources */,
+				E0BE95446978433A05EC0C69 /* TransactionAuditPanel.swift in Sources */,
 				71B016DAAEC7FD2AAB300A0E /* EditTransactionDetailsModal.swift in Sources */,
 				E81C9960E9EDAD6E5C83C411 /* EditNotesModal.swift in Sources */,
 				E95BEA371D8AB6BB4EC53141 /* CategoryPickerList.swift in Sources */,

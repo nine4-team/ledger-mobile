@@ -96,12 +96,33 @@ enum TransactionCompletenessCalculations {
     }
 
     /// Display label for a completeness status.
+    /// Only two user-facing labels: "Complete" (within tolerance) or "Needs Review" (everything else).
     static func statusLabel(_ status: CompletenessStatus) -> String {
         switch status {
         case .complete: return "Complete"
-        case .near: return "Near Complete"
-        case .incomplete: return "Incomplete"
-        case .over: return "Over"
+        case .near, .incomplete, .over: return "Needs Review"
+        }
+    }
+
+    /// SF Symbol name for a completeness status icon.
+    static func statusIcon(_ status: CompletenessStatus) -> String {
+        switch status {
+        case .complete: return "checkmark.circle.fill"
+        case .near, .incomplete, .over: return "exclamationmark.triangle.fill"
+        }
+    }
+
+    /// Subtotal label depending on whether an explicit subtotal exists.
+    static func subtotalLabel(hasExplicitSubtotal: Bool) -> String {
+        hasExplicitSubtotal ? "Subtotal (pre-tax)" : "Estimated subtotal (pre-tax)"
+    }
+
+    /// Remaining/over label for progress bar annotation.
+    static func remainingLabel(varianceCents: Int) -> String {
+        if varianceCents <= 0 {
+            return "\(CurrencyFormatting.formatCentsWithDecimals(-varianceCents)) remaining"
+        } else {
+            return "Over by \(CurrencyFormatting.formatCentsWithDecimals(varianceCents))"
         }
     }
 }

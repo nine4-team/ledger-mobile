@@ -4,6 +4,7 @@ struct CollapsibleSection<Content: View>: View {
     let title: String
     @Binding var isExpanded: Bool
     var badge: String? = nil
+    var badgeColor: Color = BrandColors.textSecondary
     var onEdit: (() -> Void)? = nil
     var onAdd: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
@@ -28,7 +29,7 @@ struct CollapsibleSection<Content: View>: View {
                     if let badge {
                         Text(badge)
                             .font(Typography.caption)
-                            .foregroundStyle(BrandColors.textSecondary)
+                            .foregroundStyle(badgeColor)
                     }
 
                     Spacer()
