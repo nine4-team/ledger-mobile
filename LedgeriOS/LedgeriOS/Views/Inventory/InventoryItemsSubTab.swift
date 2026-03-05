@@ -74,7 +74,6 @@ struct InventoryItemsSubTab: View {
 
             content
         }
-        .scrollTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
         }
@@ -258,51 +257,60 @@ struct InventoryItemsSubTab: View {
 
     @ViewBuilder
     private func expandableGroupCard(for group: ItemGroup) -> some View {
-        let isExpanded = expandedGroups.contains(group.id)
+        let validItems = group.items.filter { $0.id != nil }
+        let groupSelected = !validItems.isEmpty && validItems.allSatisfy { selectedItemIds.contains($0.id!) }
         let totalLabel = group.totalCents > 0
             ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
         let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
 
-        VStack(spacing: Spacing.xs) {
-            GroupedItemCard(
-                name: group.name,
-                thumbnailUrl: summaryItem?.images?.first?.url,
-                countLabel: "×\(group.count)",
-                totalLabel: totalLabel,
-                sku: summaryItem?.sku,
-                sourceLabel: summaryItem?.source,
-                priceLabel: totalLabel,
-                isSelected: .constant(false),
-                onSelectedChange: { _ in },
-                items: group.items.compactMap { item in
-                    guard let id = item.id else { return nil }
-                    return ItemCardData(
-                        id: id,
-                        name: item.displayName,
-                        sku: item.sku,
-                        sourceLabel: item.source,
-                        priceLabel: displayPrice(for: item),
-                        statusLabel: item.status,
-                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                        thumbnailUri: item.images?.first?.url
-                    )
-                },
-                onItemPress: { _ in }
-            )
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    if isExpanded { expandedGroups.remove(group.id) }
-                    else { expandedGroups.insert(group.id) }
+        GroupedItemCard(
+            name: group.name,
+            thumbnailUrl: summaryItem?.images?.first?.url,
+            countLabel: "×\(group.count)",
+            totalLabel: totalLabel,
+            sku: summaryItem?.sku,
+            sourceLabel: summaryItem?.source,
+            priceLabel: totalLabel,
+            isExpanded: Binding(
+                get: { expandedGroups.contains(group.id) },
+                set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
+            ),
+            isSelected: Binding(
+                get: { groupSelected },
+                set: { selected in
+                    for item in group.items {
+                        if let id = item.id {
+                            if selected { selectedItemIds.insert(id) } else { selectedItemIds.remove(id) }
+                        }
+                    }
                 }
-            }
-
-            if isExpanded {
-                ForEach(group.items) { item in
-                    itemRow(for: item)
-                        .padding(.leading, Spacing.md)
+            ),
+            items: group.items.compactMap { item in
+                guard let id = item.id else { return nil }
+                return ItemCardData(
+                    id: id,
+                    name: item.displayName,
+                    sku: item.sku,
+                    sourceLabel: item.source,
+                    priceLabel: displayPrice(for: item),
+                    statusLabel: item.status,
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                    thumbnailUri: item.images?.first?.url,
+                    isSelected: selectedItemIds.contains(id),
+                    menuItems: singleItemMenuItems(for: item)
+                )
+            },
+            onItemPress: { cardData in
+                if let item = group.items.first(where: { $0.id == cardData.id }) {
+                    if !selectedItemIds.isEmpty, let id = item.id {
+                        toggleSelection(id)
+                    }
                 }
+            },
+            onItemSelectedChange: { id, selected in
+                if selected { selectedItemIds.insert(id) } else { selectedItemIds.remove(id) }
             }
-        }
+        )
     }
 
     // MARK: - Menu Items

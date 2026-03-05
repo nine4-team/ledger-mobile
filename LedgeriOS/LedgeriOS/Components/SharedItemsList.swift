@@ -106,7 +106,6 @@ struct SharedItemsList: View {
             }
 
             content
-                .scrollTopFade()
         }
         .safeAreaInset(edge: .bottom) {
             bottomBar
@@ -371,13 +370,18 @@ struct SharedItemsList: View {
                     statusLabel: item.status,
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     thumbnailUri: item.images?.first?.url,
-                    warningMessage: getWarning?(item)
+                    warningMessage: getWarning?(item),
+                    isSelected: selectedIds.contains(id),
+                    menuItems: getMenuItems?(item) ?? []
                 )
             },
             onItemPress: { cardData in
                 if let item = group.items.first(where: { $0.id == cardData.id }) {
                     handleItemPress(item)
                 }
+            },
+            onItemSelectedChange: { id, selected in
+                if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
             }
         )
     }

@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Item Card Data
 
-struct ItemCardData: Identifiable {
+struct ItemCardData: Identifiable, Sendable {
     let id: String
     let name: String
     var sku: String?
