@@ -5,25 +5,39 @@ import Testing
 @Suite("Item Form Validation Tests")
 struct ItemFormValidationTests {
 
-    // MARK: - validateItem
+    // MARK: - validateItem — OR condition (name OR images)
 
-    @Test("Empty name fails validation")
-    func emptyNameFails() {
-        let errors = ItemFormValidation.validateItem(name: "")
-        #expect(errors.contains(ValidationError(field: "name", message: "Name is required")))
+    @Test("Empty name with no images fails validation")
+    func emptyNameNoImagesFails() {
+        let errors = ItemFormValidation.validateItem(name: "", imageCount: 0)
+        #expect(errors.contains(ValidationError(field: "name", message: "Add a name or at least one image")))
     }
 
-    @Test("Whitespace-only name fails validation")
-    func whitespaceOnlyNameFails() {
-        let errors = ItemFormValidation.validateItem(name: "   ")
-        #expect(errors.contains(ValidationError(field: "name", message: "Name is required")))
+    @Test("Whitespace-only name with no images fails validation")
+    func whitespaceOnlyNameNoImagesFails() {
+        let errors = ItemFormValidation.validateItem(name: "   ", imageCount: 0)
+        #expect(errors.contains(ValidationError(field: "name", message: "Add a name or at least one image")))
     }
 
-    @Test("Valid name passes with no errors")
-    func validItemPasses() {
-        let errors = ItemFormValidation.validateItem(name: "Marble Countertop")
+    @Test("Valid name with no images passes validation")
+    func validNameNoImagesPasses() {
+        let errors = ItemFormValidation.validateItem(name: "Marble Countertop", imageCount: 0)
+        #expect(!errors.contains { $0.field == "name" })
+    }
+
+    @Test("Empty name with images passes validation")
+    func emptyNameWithImagesPasses() {
+        let errors = ItemFormValidation.validateItem(name: "", imageCount: 1)
+        #expect(!errors.contains { $0.field == "name" })
+    }
+
+    @Test("Both name and images passes validation")
+    func bothNameAndImagesPasses() {
+        let errors = ItemFormValidation.validateItem(name: "Tile", imageCount: 3)
         #expect(errors.isEmpty)
     }
+
+    // MARK: - validateItem — price validation
 
     @Test("Negative purchase price fails validation")
     func negativePurchasePriceFails() {
@@ -74,26 +88,42 @@ struct ItemFormValidationTests {
         #expect(errors.isEmpty)
     }
 
-    @Test("Multiple errors returned for name and price")
+    @Test("Multiple errors returned for no name/images and negative price")
     func multipleErrors() {
-        let errors = ItemFormValidation.validateItem(name: "", purchasePriceCents: -100)
+        let errors = ItemFormValidation.validateItem(name: "", imageCount: 0, purchasePriceCents: -100)
         #expect(errors.count == 2)
     }
 
-    // MARK: - isValidItem
+    // MARK: - isValidItem — OR condition
 
-    @Test("isValidItem returns true for valid name")
-    func isValidItemTrue() {
-        #expect(ItemFormValidation.isValidItem(name: "Marble Countertop"))
+    @Test("isValidItem true with name only")
+    func isValidItemNameOnly() {
+        #expect(ItemFormValidation.isValidItem(name: "Marble Countertop", imageCount: 0))
     }
 
-    @Test("isValidItem returns false for empty name")
-    func isValidItemEmpty() {
+    @Test("isValidItem true with images only")
+    func isValidItemImagesOnly() {
+        #expect(ItemFormValidation.isValidItem(name: "", imageCount: 2))
+    }
+
+    @Test("isValidItem true with both name and images")
+    func isValidItemBoth() {
+        #expect(ItemFormValidation.isValidItem(name: "Tile", imageCount: 1))
+    }
+
+    @Test("isValidItem false with neither name nor images")
+    func isValidItemNeither() {
+        #expect(!ItemFormValidation.isValidItem(name: "", imageCount: 0))
+    }
+
+    @Test("isValidItem false with whitespace name and no images")
+    func isValidItemWhitespaceNoImages() {
+        #expect(!ItemFormValidation.isValidItem(name: "   ", imageCount: 0))
+    }
+
+    @Test("isValidItem with default imageCount (backward compat)")
+    func isValidItemDefaultImageCount() {
+        #expect(ItemFormValidation.isValidItem(name: "Tile"))
         #expect(!ItemFormValidation.isValidItem(name: ""))
-    }
-
-    @Test("isValidItem returns false for whitespace-only name")
-    func isValidItemWhitespace() {
-        #expect(!ItemFormValidation.isValidItem(name: "  "))
     }
 }

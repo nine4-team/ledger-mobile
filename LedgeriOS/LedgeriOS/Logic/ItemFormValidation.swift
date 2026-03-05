@@ -7,14 +7,15 @@ enum ItemFormValidation {
     /// Returns an array of validation errors (empty if valid).
     static func validateItem(
         name: String,
+        imageCount: Int = 0,
         purchasePriceCents: Int? = nil,
         projectPriceCents: Int? = nil,
         marketValueCents: Int? = nil
     ) -> [ValidationError] {
         var errors: [ValidationError] = []
 
-        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errors.append(ValidationError(field: "name", message: "Name is required"))
+        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && imageCount == 0 {
+            errors.append(ValidationError(field: "name", message: "Add a name or at least one image"))
         }
 
         if let price = purchasePriceCents, price < 0 {
@@ -42,7 +43,8 @@ enum ItemFormValidation {
     }
 
     /// Quick check whether an item has the minimum required fields.
-    static func isValidItem(name: String) -> Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    /// Requires either a non-empty name or at least one image.
+    static func isValidItem(name: String, imageCount: Int = 0) -> Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || imageCount > 0
     }
 }

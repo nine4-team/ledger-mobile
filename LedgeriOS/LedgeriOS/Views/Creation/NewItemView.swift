@@ -7,7 +7,7 @@ enum ItemCreationContext {
     case inventory
 }
 
-/// Bottom-sheet form for creating a new item.
+/// Two-step bottom-sheet form for creating a new item.
 struct NewItemView: View {
     let context: ItemCreationContext
 
@@ -16,29 +16,35 @@ struct NewItemView: View {
     @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
-    // Fields
+    // Step
+    @State private var currentStep = 1
+
+    // Step 1 fields
     @State private var name = ""
-    @State private var source = ""
     @State private var sku = ""
-    @State private var status = "to-purchase"
+    @State private var source = ""
+    @State private var notes = ""
+    @State private var imageItems: [PhotosPickerItem] = []
+    @State private var imageDatas: [Data] = []
+
+    // Step 2 fields
+    @State private var selectedTransactionId: String?
+    @State private var selectedSpaceId: String?
     @State private var purchasePrice = ""
     @State private var projectPrice = ""
     @State private var marketValue = ""
     @State private var quantity = 1
-    @State private var selectedSpaceId: String?
-    @State private var selectedTransactionId: String?
-    @State private var imageItem: PhotosPickerItem?
-    @State private var imageData: Data?
+    @State private var status = "purchased"
 
     // Pickers
-    @State private var showSpacePicker = false
     @State private var showTransactionPicker = false
+    @State private var showSpacePicker = false
     @State private var showStatusPicker = false
 
     private let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
 
     private var isValid: Bool {
-        ItemFormValidation.isValidItem(name: name)
+        ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
     }
 
     private var projectId: String? {
@@ -57,118 +63,10 @@ struct NewItemView: View {
     }
 
     var body: some View {
-        FormSheet(
-            title: "New Item",
-            primaryAction: FormSheetAction(title: "Create Item", isDisabled: !isValid) {
-                createItem()
-            },
-            secondaryAction: FormSheetAction(title: "Cancel") {
-                dismiss()
-            }
-        ) {
-            VStack(spacing: Spacing.md) {
-                FormField(text: $name, placeholder: "Item name *")
-                VendorPickerField(value: $source)
-                FormField(text: $sku, placeholder: "Barcode or SKU number")
-
-                // Status
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Status")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-
-                    Button {
-                        showStatusPicker = true
-                    } label: {
-                        pickerButton(label: statusDisplayLabel(status))
-                    }
-                }
-
-                // Prices
-                FormField(text: $purchasePrice, placeholder: "Purchase price")
-                    .platformKeyboardType(.decimalPad)
-                FormField(text: $projectPrice, placeholder: "Project price")
-                    .platformKeyboardType(.decimalPad)
-                FormField(text: $marketValue, placeholder: "Market value")
-                    .platformKeyboardType(.decimalPad)
-
-                // Quantity
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Quantity")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-
-                    Stepper("\(quantity)", value: $quantity, in: 1...9999)
-                        .font(Typography.input)
-                }
-
-                // Space picker (project context only)
-                if projectId != nil {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Space")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
-
-                        Button { showSpacePicker = true } label: {
-                            pickerButton(label: selectedSpace?.name ?? "Select Space")
-                        }
-                    }
-
-                    // Transaction picker
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Transaction")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
-
-                        Button { showTransactionPicker = true } label: {
-                            pickerButton(label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction")
-                        }
-                    }
-                }
-
-                // Image
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Image")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-
-                    PhotosPicker(selection: $imageItem, matching: .images) {
-                        if let imageData {
-                            platformImage(from: imageData)
-                                .scaledToFill()
-                                .frame(height: 100)
-                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                        } else {
-                            HStack {
-                                Image(systemName: "photo")
-                                Text("Select Image")
-                            }
-                            .font(Typography.input)
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(BrandColors.inputBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                            )
-                        }
-                    }
-                }
-                .onChange(of: imageItem) { _, newItem in
-                    Task {
-                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                            imageData = data
-                        }
-                    }
-                }
-            }
-        }
-        .onAppear {
-            // Pre-select space if provided
-            if case .project(_, let spaceId) = context {
-                selectedSpaceId = spaceId
+        Group {
+            switch currentStep {
+            case 1: step1Essentials
+            default: step2Details
             }
         }
         .sheet(isPresented: $showStatusPicker) {
@@ -193,6 +91,180 @@ struct NewItemView: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
+        }
+    }
+
+    // MARK: - Step 1: Essentials
+
+    private var step1Essentials: some View {
+        MultiStepFormSheet(
+            title: "New Item",
+            description: "Add a name or at least one image to create an item.",
+            currentStep: 1,
+            totalSteps: 2,
+            primaryAction: FormSheetAction(title: "Next") {
+                currentStep = 2
+            },
+            secondaryAction: FormSheetAction(title: "Cancel") {
+                dismiss()
+            }
+        ) {
+            VStack(spacing: Spacing.md) {
+                imagesSection
+                FormField(label: "Name", text: $name, placeholder: "Item name")
+                FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
+                VendorPickerField(value: $source)
+                FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
+            }
+        }
+    }
+
+    // MARK: - Step 2: Details
+
+    private var step2Details: some View {
+        FormSheet(
+            title: "New Item",
+            primaryAction: FormSheetAction(title: "Create Item", isDisabled: !isValid) {
+                createItem()
+            },
+            secondaryAction: FormSheetAction(title: "Back") {
+                currentStep = 1
+            }
+        ) {
+            VStack(spacing: Spacing.md) {
+                Text("Step 2 of 2")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+
+                // Transaction picker (project context only) — before Space
+                if projectId != nil {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Transaction")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+
+                        Button { showTransactionPicker = true } label: {
+                            pickerButton(label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction")
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Space")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+
+                        Button { showSpacePicker = true } label: {
+                            pickerButton(label: selectedSpace?.name ?? "Select Space")
+                        }
+                    }
+                }
+
+                // Prices
+                FormField(text: $purchasePrice, placeholder: "Purchase price")
+                    .platformKeyboardType(.decimalPad)
+                FormField(text: $projectPrice, placeholder: "Project price")
+                    .platformKeyboardType(.decimalPad)
+                FormField(text: $marketValue, placeholder: "Market value")
+                    .platformKeyboardType(.decimalPad)
+
+                // Quantity
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Quantity")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+
+                    Stepper("\(quantity)", value: $quantity, in: 1...9999)
+                        .font(Typography.input)
+                }
+
+                // Status
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Status")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+
+                    Button {
+                        showStatusPicker = true
+                    } label: {
+                        pickerButton(label: statusDisplayLabel(status))
+                    }
+                }
+            }
+        }
+        .onAppear {
+            if case .project(_, let spaceId) = context {
+                selectedSpaceId = spaceId
+            }
+        }
+    }
+
+    // MARK: - Images Section
+
+    private var imagesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Images")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            if !imageDatas.isEmpty {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
+                    ForEach(Array(imageDatas.enumerated()), id: \.offset) { index, data in
+                        ZStack(alignment: .topTrailing) {
+                            platformImage(from: data)
+                                .scaledToFill()
+                                .frame(width: 70, height: 70)
+                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+
+                            Button {
+                                imageDatas.remove(at: index)
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(.white)
+                                    .shadow(radius: 2)
+                            }
+                            .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+            }
+
+            if imageDatas.count < 5 {
+                PhotosPicker(
+                    selection: $imageItems,
+                    maxSelectionCount: 5 - imageDatas.count,
+                    matching: .images
+                ) {
+                    HStack {
+                        Image(systemName: "photo.on.rectangle")
+                        Text(imageDatas.isEmpty ? "Select Images" : "Add More Images")
+                    }
+                    .font(Typography.input)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(BrandColors.inputBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
+                }
+            }
+
+            Text("\(imageDatas.count)/5 images")
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+        }
+        .onChange(of: imageItems) { _, newItems in
+            Task {
+                for item in newItems {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        imageDatas.append(data)
+                    }
+                }
+                imageItems = []
+            }
         }
     }
 
@@ -230,6 +302,8 @@ struct NewItemView: View {
             ? nil : source.trimmingCharacters(in: .whitespacesAndNewlines)
         item.sku = sku.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : sku.trimmingCharacters(in: .whitespacesAndNewlines)
+        item.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
         item.status = status
         item.purchasePriceCents = parseCents(purchasePrice)
         item.projectPriceCents = parseCents(projectPrice)
@@ -242,18 +316,27 @@ struct NewItemView: View {
             let itemId = try itemsService.createItem(accountId: accountId, item: item)
             dismiss()
 
-            // Background: upload image if selected
-            if let imageData {
+            // Background: upload images if selected
+            if !imageDatas.isEmpty {
+                let datasToUpload = imageDatas
                 Task {
-                    let path = mediaService.uploadPath(
-                        accountId: accountId, entityType: "items",
-                        entityId: itemId, filename: "image.jpg"
-                    )
-                    if let url = try? await mediaService.uploadImage(imageData, path: path) {
-                        let imageEntry: [String: Any] = ["url": url, "kind": "image"]
+                    var imageEntries: [[String: Any]] = []
+                    for (index, data) in datasToUpload.enumerated() {
+                        let filename = "image_\(index).jpg"
+                        let path = mediaService.uploadPath(
+                            accountId: accountId, entityType: "items",
+                            entityId: itemId, filename: filename
+                        )
+                        if let url = try? await mediaService.uploadImage(data, path: path) {
+                            var entry: [String: Any] = ["url": url, "kind": "image"]
+                            if index == 0 { entry["isPrimary"] = true }
+                            imageEntries.append(entry)
+                        }
+                    }
+                    if !imageEntries.isEmpty {
                         try? await itemsService.updateItem(
                             accountId: accountId, itemId: itemId,
-                            fields: ["images": [imageEntry]]
+                            fields: ["images": imageEntries]
                         )
                     }
                 }
