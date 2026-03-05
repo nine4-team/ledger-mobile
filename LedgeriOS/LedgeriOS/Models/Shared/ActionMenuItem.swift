@@ -1,6 +1,6 @@
 import Foundation
 
-struct ActionMenuItem: Identifiable {
+struct ActionMenuItem: Identifiable, @unchecked Sendable {
     let id: String
     let label: String
     var icon: String?
@@ -12,7 +12,7 @@ struct ActionMenuItem: Identifiable {
     var onPress: (() -> Void)?
 }
 
-struct ActionMenuSubitem: Identifiable {
+struct ActionMenuSubitem: Identifiable, @unchecked Sendable {
     let id: String
     let label: String
     var icon: String?
