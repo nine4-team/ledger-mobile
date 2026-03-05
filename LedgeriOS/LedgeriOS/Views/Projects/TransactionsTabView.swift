@@ -188,7 +188,7 @@ struct TransactionsTabView: View {
                         }
                     }
                     .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.bottom, Spacing.sm)
+                    .padding(.vertical, Spacing.sm)
                 }
             }
         }
