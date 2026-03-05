@@ -58,7 +58,7 @@ struct TransactionFilterState {
         }
     }
 
-    mutating func toggle(group: FilterGroup, value: String) {
+    mutating func toggle(group: FilterGroup, value: String, optionCount: Int = 0) {
         if value == "all" {
             clearGroup(group)
             return
@@ -68,6 +68,9 @@ struct TransactionFilterState {
             set.remove(value)
         } else {
             set.insert(value)
+        }
+        if optionCount > 0 && set.count >= optionCount {
+            set = []
         }
         setGroup(group, to: set)
     }
@@ -405,7 +408,7 @@ struct SharedTransactionsList: View {
                 }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .primary)
+                    .foregroundStyle(activeSort != .dateDesc ? BrandColors.primary : .secondary)
             }
         } filterMenu: {
             Menu {
@@ -416,7 +419,7 @@ struct SharedTransactionsList: View {
                 }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .primary)
+                    .foregroundStyle(activeFilter != .all ? BrandColors.primary : .secondary)
             }
         }
     }

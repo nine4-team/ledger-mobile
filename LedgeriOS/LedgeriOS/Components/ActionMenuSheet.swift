@@ -121,7 +121,7 @@ struct ActionMenuSheet: View {
 
     @ViewBuilder
     private func selectionIndicator(for item: ActionMenuItem) -> some View {
-        let selectedSubs = item.subactions?.filter { $0.icon == "checkmark.circle.fill" } ?? []
+        let selectedSubs = item.subactions?.filter { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? []
         let count = selectedSubs.count
 
         if count == 1, let selected = selectedSubs.first {
@@ -172,7 +172,7 @@ struct ActionMenuSheet: View {
     private var hasActiveSelections: Bool {
         items.contains { item in
             item.isSelected ||
-            (item.subactions?.contains { $0.icon == "checkmark.circle.fill" } ?? false)
+            (item.subactions?.contains { $0.id != "all" && $0.icon == "checkmark.circle.fill" } ?? false)
         }
     }
 

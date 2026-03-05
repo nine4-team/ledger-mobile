@@ -128,6 +128,7 @@ struct TransactionFilterMenu: View {
         options: [(value: String, label: String)]
     ) -> ActionMenuItem {
         let activeSelections = filterState.selections(for: group)
+        let nonAllCount = options.filter { $0.value != "all" }.count
 
         let subactions = options.map { (value, optLabel) in
             let isSelected: Bool
@@ -141,7 +142,7 @@ struct TransactionFilterMenu: View {
                 label: optLabel,
                 icon: isSelected ? "checkmark.circle.fill" : "circle"
             ) {
-                filterState.toggle(group: group, value: value)
+                filterState.toggle(group: group, value: value, optionCount: nonAllCount)
             }
         }
 
