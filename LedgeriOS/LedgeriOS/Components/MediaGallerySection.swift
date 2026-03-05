@@ -4,7 +4,7 @@ import PhotosUI
 struct MediaGallerySection: View {
     let title: String
     let attachments: [AttachmentRef]
-    var maxAttachments: Int = 10
+    var maxAttachments: Int = 50
     var allowedKinds: [AttachmentKind] = [.image]
     /// Called when the user confirms image selection. Receives JPEG data; caller should upload
     /// via MediaService and append the resulting AttachmentRef to the entity's images array.

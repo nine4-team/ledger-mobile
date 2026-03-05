@@ -6,13 +6,13 @@ import SwiftUI
 ///
 /// Apply this to the content view **below** a `ScrollableTabBar` in a VStack.
 struct ScrollContentTopFadeModifier: ViewModifier {
-    var height: CGFloat = 20
+    var height: CGFloat = 28
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
                 LinearGradient(
-                    colors: [BrandColors.background.opacity(0.55), BrandColors.background.opacity(0)],
+                    colors: [Color(.systemBackground), Color(.systemBackground).opacity(0)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -24,7 +24,7 @@ struct ScrollContentTopFadeModifier: ViewModifier {
 }
 
 extension View {
-    func scrollContentTopFade(height: CGFloat = 20) -> some View {
+    func scrollContentTopFade(height: CGFloat = 28) -> some View {
         modifier(ScrollContentTopFadeModifier(height: height))
     }
 }

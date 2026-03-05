@@ -41,6 +41,12 @@ struct NewItemView: View {
     @State private var showSpacePicker = false
     @State private var showStatusPicker = false
 
+    // Image source
+    @State private var showImageSourceMenu = false
+    @State private var imageSourcePendingAction: (() -> Void)?
+    @State private var showCamera = false
+    @State private var showPhotoPicker = false
+
     private let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
 
     private var isValid: Bool {
@@ -229,33 +235,52 @@ struct NewItemView: View {
                 }
             }
 
-            if imageDatas.count < 5 {
-                PhotosPicker(
-                    selection: $imageItems,
-                    maxSelectionCount: 5 - imageDatas.count,
-                    matching: .images
-                ) {
-                    HStack {
-                        Image(systemName: "photo.on.rectangle")
-                        Text(imageDatas.isEmpty ? "Select Images" : "Add More Images")
-                    }
-                    .font(Typography.input)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(BrandColors.inputBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                    )
+            Button {
+                showImageSourceMenu = true
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle")
+                    Text(imageDatas.isEmpty ? "Add Images" : "Add More Images")
                 }
+                .font(Typography.input)
+                .foregroundStyle(BrandColors.textSecondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(BrandColors.inputBackground)
+                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                )
             }
 
-            Text("\(imageDatas.count)/5 images")
-                .font(Typography.caption)
-                .foregroundStyle(BrandColors.textSecondary)
+            if !imageDatas.isEmpty {
+                Text("\(imageDatas.count) \(imageDatas.count == 1 ? "image" : "images")")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
         }
+        .sheet(isPresented: $showImageSourceMenu, onDismiss: {
+            imageSourcePendingAction?()
+            imageSourcePendingAction = nil
+        }) {
+            imageSourceMenu
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraCapture { imageData in
+                imageDatas.append(imageData)
+            } onDismiss: {
+                showCamera = false
+            }
+        }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: $imageItems,
+            matching: .images,
+            photoLibrary: .shared()
+        )
         .onChange(of: imageItems) { _, newItems in
             Task {
                 for item in newItems {
@@ -266,6 +291,33 @@ struct NewItemView: View {
                 imageItems = []
             }
         }
+    }
+
+    private var imageSourceMenu: some View {
+        ActionMenuSheet(
+            title: "Add Image",
+            items: [
+                ActionMenuItem(
+                    id: "camera",
+                    label: "Camera",
+                    icon: "camera.fill",
+                    onPress: {
+                        showCamera = true
+                    }
+                ),
+                ActionMenuItem(
+                    id: "photo-library",
+                    label: "Photo Library",
+                    icon: "photo.on.rectangle",
+                    onPress: {
+                        showPhotoPicker = true
+                    }
+                ),
+            ],
+            onSelectAction: { action in
+                imageSourcePendingAction = action
+            }
+        )
     }
 
     // MARK: - Shared Picker Button

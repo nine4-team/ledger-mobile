@@ -17,6 +17,7 @@ struct SharedItemsList: View {
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
     var inline: Bool = false
+    var pickerItems: [Item]?
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -133,6 +134,11 @@ struct SharedItemsList: View {
         }
         .onChange(of: embeddedSourceItems) { _, newItems in
             if !newItems.isEmpty || !isStandalone {
+                items = newItems
+            }
+        }
+        .onChange(of: pickerItems ?? []) { _, newItems in
+            if isPicker {
                 items = newItems
             }
         }
@@ -518,8 +524,10 @@ struct SharedItemsList: View {
             items = providedItems
             isLoading = false
         case .picker(let scope, _, _, _, _):
-            // Issue 1: Picker with scope fetches from Firestore
-            if let scope {
+            if let pickerItems {
+                items = pickerItems
+                isLoading = false
+            } else if let scope {
                 await setupStandaloneListener(scope: scope)
             } else {
                 isLoading = false

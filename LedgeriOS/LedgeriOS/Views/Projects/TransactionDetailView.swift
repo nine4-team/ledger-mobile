@@ -13,9 +13,9 @@ struct TransactionDetailView: View {
     // Section expanded states — Receipts expanded by default, all others collapsed
     @State private var expandedSections: Set<String> = ["receipts"]
 
-    // Item list local sort/filter (independent of main transaction list)
-    @State private var itemSort: ItemSortOption = .createdDesc
-    @State private var itemFilter: ItemFilterOption = .all
+    // Items picker
+    @State private var showAddExistingItems = false
+    @State private var pickerSelectedIds: Set<String> = []
 
     // Modal presentation
     @State private var showEditDetails = false
@@ -47,15 +47,6 @@ struct TransactionDetailView: View {
 
     private var soldItems: [Item] {
         transactionItems.filter { $0.status == "sold" }
-    }
-
-    private var filteredSortedItems: [Item] {
-        ListFilterSortCalculations.applyAllFilters(
-            activeItems,
-            filter: itemFilter,
-            sort: itemSort,
-            search: ""
-        )
     }
 
     private var categoryLookup: [String: BudgetCategory] {
@@ -168,6 +159,9 @@ struct TransactionDetailView: View {
             ActionMenuSheet(
                 title: "Add Items",
                 items: [
+                    ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
+                        showAddExistingItems = true
+                    }),
                     ActionMenuItem(id: "create-from-list", label: "Create from List", icon: "doc.text", onPress: {
                         showCreateItemsFromList = true
                     }),
@@ -177,6 +171,36 @@ struct TransactionDetailView: View {
                 }
             )
             .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAddExistingItems) {
+            NavigationStack {
+                SharedItemsList(
+                    mode: .picker(
+                        scope: nil,
+                        eligibilityCheck: nil,
+                        onAddSingle: nil,
+                        addedIds: Set(transaction.itemIds ?? []),
+                        onAddSelected: { addExistingItemsToTransaction() }
+                    ),
+                    emptyMessage: "No items available",
+                    selectedIds: $pickerSelectedIds,
+                    emptyIcon: "shippingbox",
+                    filterScope: .project,
+                    pickerItems: projectContext.items.filter { item in
+                        guard let id = item.id else { return false }
+                        return !(transaction.itemIds ?? []).contains(id)
+                    }
+                )
+                .navigationTitle("Add Existing Items")
+                .navBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showAddExistingItems = false }
+                    }
+                }
+            }
+            .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
     }
@@ -437,20 +461,13 @@ struct TransactionDetailView: View {
             badge: "\(activeItems.count)",
             onAdd: { showAddItemMenu = true }
         ) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                if !filteredSortedItems.isEmpty {
-                    ForEach(filteredSortedItems) { item in
-                        ItemCard(
-                            item: item,
-                            priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) }
-                        )
-                    }
-                } else {
-                    Text("No items yet")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
+            SharedItemsList(
+                mode: .embedded(items: activeItems, onItemPress: { _ in }),
+                emptyMessage: "No items yet",
+                useNavigationLinks: true,
+                filterScope: .project,
+                inline: true
+            )
             .padding(.top, Spacing.xs)
         }
     }
@@ -702,6 +719,29 @@ struct TransactionDetailView: View {
             try? await TransactionsService(syncTracker: NoOpSyncTracker())
                 .updateTransaction(accountId: accountId, transactionId: transactionId, fields: fields)
         }
+    }
+
+    private func addExistingItemsToTransaction() {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
+        let newIds = Array(pickerSelectedIds)
+        let budgetCategoryId = transaction.budgetCategoryId
+
+        // Update each item's transactionId (and budgetCategoryId if present)
+        for itemId in newIds {
+            var fields: [String: String] = ["transactionId": transactionId]
+            if let budgetCategoryId { fields["budgetCategoryId"] = budgetCategoryId }
+            Task { try? await itemsService.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        }
+
+        // Update transaction's itemIds array
+        var updatedIds = transaction.itemIds ?? []
+        updatedIds.append(contentsOf: newIds)
+        updateTransaction(fields: ["itemIds": updatedIds])
+
+        pickerSelectedIds.removeAll()
+        showAddExistingItems = false
     }
 
     private func deleteTransaction() {

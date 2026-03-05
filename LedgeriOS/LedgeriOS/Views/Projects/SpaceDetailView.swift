@@ -23,12 +23,9 @@ struct SpaceDetailView: View {
     @State private var menuPendingAction: (() -> Void)?
     @State private var errorMessage: String?
 
-    // Items section state
-    @State private var searchText = ""
-    @State private var activeFilters: Set<ItemFilterOption> = []
-    @State private var activeSort: ItemSortOption = .createdDesc
-    @State private var showSortMenu = false
-    @State private var showFilterMenu = false
+    // Items picker
+    @State private var showAddExistingItems = false
+    @State private var pickerSelectedIds: Set<String> = []
 
     // MARK: - Computed
 
@@ -38,15 +35,6 @@ struct SpaceDetailView: View {
 
     private var spaceItems: [Item] {
         projectContext.items.filter { $0.spaceId == space.id }
-    }
-
-    private var filteredItems: [Item] {
-        ListFilterSortCalculations.applyAllMultiFilters(
-            spaceItems,
-            filters: activeFilters,
-            sort: activeSort,
-            search: searchText
-        )
     }
 
     private var canSaveAsTemplate: Bool {
@@ -116,6 +104,33 @@ struct SpaceDetailView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showAddExistingItems) {
+            NavigationStack {
+                SharedItemsList(
+                    mode: .picker(
+                        scope: nil,
+                        eligibilityCheck: nil,
+                        onAddSingle: nil,
+                        addedIds: Set(spaceItems.compactMap(\.id)),
+                        onAddSelected: { addSelectedItemsToSpace() }
+                    ),
+                    emptyMessage: "No items available",
+                    selectedIds: $pickerSelectedIds,
+                    emptyIcon: "cube.box",
+                    filterScope: .project,
+                    pickerItems: projectContext.items.filter { $0.spaceId != space.id }
+                )
+                .navigationTitle("Add Items to Space")
+                .navBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showAddExistingItems = false }
+                    }
+                }
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
         .confirmationDialog("Delete Space?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 deleteSpace()
@@ -131,28 +146,6 @@ struct SpaceDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .background(SortMenu(
-            isPresented: $showSortMenu,
-            sortOptions: SortMenu.itemSortMenuItems(
-                activeSort: activeSort,
-                onSelect: { activeSort = $0 }
-            )
-        ))
-        .background(FilterMenu(
-            isPresented: $showFilterMenu,
-            filters: FilterMenu.filterMenuItems(
-                activeFilters: activeFilters,
-                scope: .spaceDetail,
-                onToggle: { option in
-                    if activeFilters.contains(option) {
-                        activeFilters.remove(option)
-                    } else {
-                        activeFilters.insert(option)
-                    }
-                }
-            ),
-            closeOnItemPress: false
-        ))
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
@@ -183,7 +176,8 @@ struct SpaceDetailView: View {
             CollapsibleSection(
                 title: "ITEMS",
                 isExpanded: $isItemsExpanded,
-                badge: "\(spaceItems.count)"
+                badge: "\(spaceItems.count)",
+                onAdd: { showAddExistingItems = true }
             ) {
                 itemsContent
             }
@@ -245,45 +239,13 @@ struct SpaceDetailView: View {
 
     @ViewBuilder
     private var itemsContent: some View {
-        VStack(spacing: 0) {
-            NativeListControlBar(
-                searchText: $searchText,
-                searchPlaceholder: "Search items..."
-            ) {
-                EmptyView()
-            } sortMenu: {
-                Button { showSortMenu = true } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                        .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
-                }
-            } filterMenu: {
-                Button { showFilterMenu = true } label: {
-                    Image(systemName: "line.3.horizontal.decrease")
-                        .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
-                }
-            }
-
-            if filteredItems.isEmpty {
-                Text(spaceItems.isEmpty ? "No items in this space" : "No items match your filters")
-                    .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, Spacing.xl)
-            } else {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    ForEach(filteredItems) { item in
-                        NavigationLink(value: item) {
-                            ItemCard(
-                                item: item,
-                                priceLabel: displayPrice(for: item)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.top, Spacing.sm)
-            }
-        }
+        SharedItemsList(
+            mode: .embedded(items: spaceItems, onItemPress: { _ in }),
+            emptyMessage: "No items in this space",
+            useNavigationLinks: true,
+            filterScope: .spaceDetail,
+            inline: true
+        )
         .padding(.top, Spacing.xs)
     }
 
@@ -468,6 +430,17 @@ struct SpaceDetailView: View {
         errorMessage = "Template saved! (Template service coming soon)"
     }
 
+    private func addSelectedItemsToSpace() {
+        guard let accountId = accountContext.currentAccountId,
+              let spaceId = space.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for itemId in pickerSelectedIds {
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": spaceId]) }
+        }
+        pickerSelectedIds.removeAll()
+        showAddExistingItems = false
+    }
+
     private func deleteSpace() {
         guard let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
@@ -480,19 +453,6 @@ struct SpaceDetailView: View {
                 await MainActor.run { errorMessage = "Failed to delete space." }
             }
         }
-    }
-
-    // MARK: - Helpers
-
-    private func displayPrice(for item: Item) -> String? {
-        if let price = item.projectPriceCents, price != item.purchasePriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        } else if let price = item.purchasePriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        } else if let price = item.projectPriceCents {
-            return CurrencyFormatting.formatCentsWithDecimals(price)
-        }
-        return nil
     }
 
 }
