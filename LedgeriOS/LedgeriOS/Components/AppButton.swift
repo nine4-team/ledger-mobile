@@ -51,7 +51,6 @@ struct AppButton: View {
             .foregroundStyle(foregroundColor)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 44)
-            .padding(.vertical, 10)
             .padding(.horizontal, 16)
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))

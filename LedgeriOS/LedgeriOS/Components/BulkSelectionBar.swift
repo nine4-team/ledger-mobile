@@ -38,12 +38,6 @@ struct BulkSelectionBar: View {
         }
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
-        .background(BrandColors.surface)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(BrandColors.border)
-                .frame(height: Dimensions.borderWidth)
-        }
     }
 }
 

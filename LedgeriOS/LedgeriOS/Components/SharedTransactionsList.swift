@@ -347,19 +347,7 @@ struct SharedTransactionsList: View {
         VStack(spacing: 0) {
             controlBar
 
-            if !selectedIds.isEmpty {
-                ListSelectionInfo(
-                    text: SelectionCalculations.selectionLabel(
-                        count: selectedIds.count,
-                        total: processedTransactions.count
-                    )
-                )
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.bottom, Spacing.xs)
-            }
-
             content
-                .scrollTopFade()
         }
         .safeAreaInset(edge: .bottom) {
             if !selectedIds.isEmpty {

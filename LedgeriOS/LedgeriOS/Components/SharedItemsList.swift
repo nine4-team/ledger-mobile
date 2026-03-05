@@ -108,17 +108,6 @@ struct SharedItemsList: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !resolvedSelectedIds.wrappedValue.isEmpty {
-                ListSelectionInfo(
-                    text: SelectionCalculations.selectionLabel(
-                        count: resolvedSelectedIds.wrappedValue.count,
-                        total: processedItems.count
-                    )
-                )
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.bottom, Spacing.xs)
-            }
-
             content
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -255,7 +244,6 @@ struct SharedItemsList: View {
                 listContent
             }
         }
-        .scrollContentTopFade()
     }
 
     // MARK: - Item Cards
@@ -469,12 +457,6 @@ struct SharedItemsList: View {
             }
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
-            .background(BrandColors.surface)
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(BrandColors.border)
-                    .frame(height: Dimensions.borderWidth)
-            }
         }
     }
 
