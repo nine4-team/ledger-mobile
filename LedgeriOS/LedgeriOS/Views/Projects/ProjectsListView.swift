@@ -59,7 +59,8 @@ struct ProjectsListView: View {
                             }
                         }
                         .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.vertical, Spacing.md)
+                        .padding(.top, Spacing.xl)
+                        .padding(.bottom, Spacing.md)
                     }
                 }
                 .scrollContentTopFade()
