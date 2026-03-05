@@ -8,6 +8,14 @@ struct SharedItemsList: View {
     var emptyMessage: String = "No items yet"
     var getWarning: ((Item) -> String?)?
 
+    // New capabilities
+    var onAdd: (() -> Void)?
+    var getBulkMenuItems: (() -> [ActionMenuItem])?
+    var selectedIds: Binding<Set<String>>?
+    var useNavigationLinks: Bool = false
+    var useAdaptiveWidth: Bool = false
+    var emptyIcon: String = "tray"
+
     // Firestore (standalone / picker mode)
     var accountId: String?
 
@@ -17,13 +25,20 @@ struct SharedItemsList: View {
     @State private var searchText = ""
     @State private var activeFilters: Set<ItemFilterOption> = []
     @State private var activeSort: ItemSortOption = .createdDesc
-    @State private var selectedIds: Set<String> = []
+    @State private var internalSelectedIds: Set<String> = []
+    @State private var expandedGroups: Set<String> = []
     @State private var showBulkActionMenu = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
     @State private var isLoading = true
     @State private var error: String?
     @State private var listener: ListenerRegistration?
+
+    // MARK: - Resolved Selection Binding
+
+    private var resolvedSelectedIds: Binding<Set<String>> {
+        selectedIds ?? $internalSelectedIds
+    }
 
     // MARK: - Computed
 
@@ -55,15 +70,16 @@ struct SharedItemsList: View {
     }
 
     private var isAllSelected: Bool {
-        SelectionCalculations.isAllSelected(selectedIds: selectedIds, allIds: allVisibleIds)
+        SelectionCalculations.isAllSelected(selectedIds: resolvedSelectedIds.wrappedValue, allIds: allVisibleIds)
     }
 
     private var selectedTotalCents: Int? {
+        let ids = resolvedSelectedIds.wrappedValue
         let pairs = processedItems.compactMap { item -> (id: String, cents: Int)? in
             guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
             return (id: id, cents: cents)
         }
-        let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedIds, items: pairs)
+        let total = SelectionCalculations.totalCentsForSelected(selectedIds: ids, items: pairs)
         return total > 0 ? total : nil
     }
 
@@ -92,12 +108,10 @@ struct SharedItemsList: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            controlBar
-
-            if !selectedIds.isEmpty {
+            if !resolvedSelectedIds.wrappedValue.isEmpty {
                 ListSelectionInfo(
                     text: SelectionCalculations.selectionLabel(
-                        count: selectedIds.count,
+                        count: resolvedSelectedIds.wrappedValue.count,
                         total: processedItems.count
                     )
                 )
@@ -106,6 +120,9 @@ struct SharedItemsList: View {
             }
 
             content
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            controlBar
         }
         .safeAreaInset(edge: .bottom) {
             bottomBar
@@ -124,10 +141,10 @@ struct SharedItemsList: View {
         }
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(
-                title: "\(selectedIds.count) selected",
+                title: "\(resolvedSelectedIds.wrappedValue.count) selected",
                 items: bulkActionMenuItems
             )
-            .presentationDetents([.medium])
+            .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
         .background(SortMenu(
@@ -160,12 +177,13 @@ struct SharedItemsList: View {
     private var controlBar: some View {
         NativeListControlBar(
             searchText: $searchText,
-            searchPlaceholder: "Search items..."
+            searchPlaceholder: "Search items...",
+            onAdd: onAdd
         ) {
             if !processedItems.isEmpty && !isPicker {
                 Button {
-                    selectedIds = SelectionCalculations.selectAllToggle(
-                        selectedIds: selectedIds,
+                    resolvedSelectedIds.wrappedValue = SelectionCalculations.selectAllToggle(
+                        selectedIds: resolvedSelectedIds.wrappedValue,
                         allIds: allVisibleIds
                     )
                 } label: {
@@ -199,8 +217,9 @@ struct SharedItemsList: View {
                 onRetry: { Task { await setupData() } }
             )
         } else if processedItems.isEmpty {
+            let message = !items.isEmpty ? "No items match your filters" : emptyMessage
             ContentUnavailableView {
-                Label(emptyMessage, systemImage: "tray")
+                Label(message, systemImage: emptyIcon)
             }
             .frame(maxHeight: .infinity)
         } else {
@@ -211,7 +230,8 @@ struct SharedItemsList: View {
     @ViewBuilder
     private var itemList: some View {
         ScrollView {
-            LazyVStack(spacing: Spacing.cardListGap) {
+            let listContent = LazyVStack(spacing: Spacing.cardListGap) {
+
                 if showGrouped {
                     ForEach(groups) { group in
                         if group.count > 1 {
@@ -228,7 +248,14 @@ struct SharedItemsList: View {
             }
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
+
+            if useAdaptiveWidth {
+                AdaptiveContentWidth { listContent }
+            } else {
+                listContent
+            }
         }
+        .scrollContentTopFade()
     }
 
     // MARK: - Item Cards
@@ -237,27 +264,42 @@ struct SharedItemsList: View {
     private func singleItemCard(for item: Item) -> some View {
         // Issue 5: Skip items with nil IDs entirely
         if let itemId = item.id {
-            let isItemSelected = selectedIds.contains(itemId)
+            let ids = resolvedSelectedIds.wrappedValue
             let menuItems = getMenuItems?(item) ?? []
             let warning = getWarning?(item)
 
             if isPicker {
-                pickerItemCard(for: item, itemId: itemId, isItemSelected: isItemSelected)
+                pickerItemCard(for: item, itemId: itemId, isItemSelected: ids.contains(itemId))
+            } else if useNavigationLinks && ids.isEmpty {
+                NavigationLink(value: item) {
+                    ItemCard(
+                        item: item,
+                        priceLabel: displayPrice(for: item),
+                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                        isSelected: Binding(
+                            get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
+                            set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
+                        ),
+                        menuItems: menuItems,
+                        warningMessage: warning
+                    )
+                }
+                .buttonStyle(.plain)
             } else {
                 ItemCard(
                     item: item,
                     priceLabel: displayPrice(for: item),
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     isSelected: Binding(
-                        get: { selectedIds.contains(itemId) },
-                        set: { if $0 { selectedIds.insert(itemId) } else { selectedIds.remove(itemId) } }
+                        get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
+                        set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
                     ),
                     onPress: { handleItemPress(item) },
                     menuItems: menuItems,
                     warningMessage: warning
                 )
                 .onTapGesture {
-                    if !selectedIds.isEmpty {
+                    if !ids.isEmpty {
                         toggleSelection(itemId)
                     }
                 }
@@ -327,8 +369,9 @@ struct SharedItemsList: View {
     @ViewBuilder
     private func groupedCard(for group: ItemGroup) -> some View {
         // Issue 4: Use compactMap to only include items with valid IDs
+        let ids = resolvedSelectedIds.wrappedValue
         let validItems = group.items.filter { $0.id != nil }
-        let groupSelected = !validItems.isEmpty && validItems.allSatisfy { selectedIds.contains($0.id!) }
+        let groupSelected = !validItems.isEmpty && validItems.allSatisfy { ids.contains($0.id!) }
         let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
 
         let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
@@ -341,12 +384,16 @@ struct SharedItemsList: View {
             sku: summaryItem?.sku,
             sourceLabel: summaryItem?.source,
             priceLabel: totalLabel,
+            isExpanded: Binding(
+                get: { expandedGroups.contains(group.id) },
+                set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
+            ),
             isSelected: Binding(
                 get: { groupSelected },
                 set: { selected in
                     for item in group.items {
                         if let id = item.id {
-                            if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
+                            if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
                         }
                     }
                 }
@@ -354,7 +401,7 @@ struct SharedItemsList: View {
             onSelectedChange: { selected in
                 for item in group.items {
                     if let id = item.id {
-                        if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
+                        if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
                     }
                 }
             },
@@ -371,7 +418,7 @@ struct SharedItemsList: View {
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
                     thumbnailUri: item.images?.first?.url,
                     warningMessage: getWarning?(item),
-                    isSelected: selectedIds.contains(id),
+                    isSelected: ids.contains(id),
                     menuItems: getMenuItems?(item) ?? []
                 )
             },
@@ -381,7 +428,7 @@ struct SharedItemsList: View {
                 }
             },
             onItemSelectedChange: { id, selected in
-                if selected { selectedIds.insert(id) } else { selectedIds.remove(id) }
+                if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
             }
         )
     }
@@ -392,21 +439,21 @@ struct SharedItemsList: View {
     private var bottomBar: some View {
         if isPicker {
             pickerBottomBar
-        } else if !selectedIds.isEmpty {
+        } else if !resolvedSelectedIds.wrappedValue.isEmpty {
             BulkSelectionBar(
-                selectedCount: selectedIds.count,
+                selectedCount: resolvedSelectedIds.wrappedValue.count,
                 totalCents: selectedTotalCents,
                 onBulkActions: { showBulkActionMenu = true },
-                onClear: { selectedIds.removeAll() }
+                onClear: { resolvedSelectedIds.wrappedValue.removeAll() }
             )
         }
     }
 
     @ViewBuilder
     private var pickerBottomBar: some View {
-        if case .picker(_, _, _, _, let onAddSelected) = mode, !selectedIds.isEmpty {
+        if case .picker(_, _, _, _, let onAddSelected) = mode, !resolvedSelectedIds.wrappedValue.isEmpty {
             HStack {
-                Text("\(selectedIds.count) selected")
+                Text("\(resolvedSelectedIds.wrappedValue.count) selected")
                     .font(Typography.body)
                     .fontWeight(.bold)
                     .foregroundStyle(BrandColors.textPrimary)
@@ -416,7 +463,7 @@ struct SharedItemsList: View {
                 // Issue 3: Clear selection after adding
                 AppButton(title: "Add Selected") {
                     onAddSelected?()
-                    selectedIds.removeAll()
+                    resolvedSelectedIds.wrappedValue.removeAll()
                 }
                 .fixedSize()
             }
@@ -475,7 +522,7 @@ struct SharedItemsList: View {
     private func handleItemPress(_ item: Item) {
         guard let itemId = item.id else { return }
 
-        if !selectedIds.isEmpty && !isPicker {
+        if !resolvedSelectedIds.wrappedValue.isEmpty && !isPicker {
             toggleSelection(itemId)
             return
         }
@@ -489,19 +536,21 @@ struct SharedItemsList: View {
     }
 
     private func toggleSelection(_ itemId: String) {
-        if selectedIds.contains(itemId) {
-            selectedIds.remove(itemId)
+        if resolvedSelectedIds.wrappedValue.contains(itemId) {
+            resolvedSelectedIds.wrappedValue.remove(itemId)
         } else {
-            selectedIds.insert(itemId)
+            resolvedSelectedIds.wrappedValue.insert(itemId)
         }
     }
 
     private var bulkActionMenuItems: [ActionMenuItem] {
-        [
+        var items = getBulkMenuItems?() ?? []
+        items.append(
             ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
-                selectedIds.removeAll()
-            }),
-        ]
+                resolvedSelectedIds.wrappedValue.removeAll()
+            })
+        )
+        return items
     }
 
     // MARK: - Helpers
