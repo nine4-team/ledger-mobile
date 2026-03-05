@@ -36,8 +36,9 @@ struct TransactionDetailView: View {
     private var liveTransaction: Transaction { liveTransactionData ?? transaction }
 
     private var transactionItems: [Item] {
-        let txnId = transaction.id
-        return projectContext.items.filter { $0.transactionId == txnId }
+        guard let ids = liveTransaction.itemIds, !ids.isEmpty else { return [] }
+        let idSet = Set(ids)
+        return projectContext.items.filter { idSet.contains($0.id ?? "") }
     }
 
     private var activeItems: [Item] {
@@ -226,7 +227,7 @@ struct TransactionDetailView: View {
             reimbursementType: liveTransaction.reimbursementType,
             hasEmailReceipt: liveTransaction.hasEmailReceipt ?? false,
             needsReview: liveTransaction.needsReview ?? false,
-            budgetCategoryName: selectedCategory?.name,
+            budgetCategoryName: transaction.budgetCategoryId.flatMap { categoryLookup[$0]?.name },
             status: liveTransaction.status
         )
         if !badges.isEmpty {
@@ -278,7 +279,7 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var nextStepsCard: some View {
-        if !allStepsComplete {
+        if liveTransactionData != nil, !allStepsComplete {
             let completedCount = nextSteps.filter(\.completed).count
             let totalCount = nextSteps.count
             let progress = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0
