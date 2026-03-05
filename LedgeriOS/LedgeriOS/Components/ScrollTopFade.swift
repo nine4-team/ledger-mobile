@@ -10,10 +10,14 @@ struct ScrollContentTopFadeModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .top) {
-                BrandColors.primary
-                    .frame(height: height)
-                    .ignoresSafeArea(edges: .top)
-                    .allowsHitTesting(false)
+                LinearGradient(
+                    colors: [Color.black.opacity(0.55), Color.black.opacity(0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: height)
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
             }
     }
 }
