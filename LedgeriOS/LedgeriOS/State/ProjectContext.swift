@@ -47,7 +47,11 @@ final class ProjectContext {
     /// Activate subscriptions for a project. Call from `.task(id: projectId)` —
     /// SwiftUI auto-cancels on disappear or ID change.
     func activate(accountId: String, projectId: String, userId: String? = nil) {
-        deactivate()
+        let isNewProject = currentProjectId != projectId
+        stopListeners()
+        if isNewProject {
+            clearData()
+        }
         currentProjectId = projectId
 
         // 1. Project detail
@@ -91,7 +95,6 @@ final class ProjectContext {
         // 6. Budget categories (account-level presets)
         listeners.append(
             budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
-                print("[BudgetDebug] budgetCategories subscription fired: \(categories.count) categories")
                 Task { @MainActor in
                     self?.budgetCategories = categories
                     self?.recomputeBudgetProgress()
@@ -105,7 +108,6 @@ final class ProjectContext {
                 accountId: accountId,
                 projectId: projectId
             ) { [weak self] pbc in
-                print("[BudgetDebug] projectBudgetCategories subscription fired: \(pbc.count) categories")
                 Task { @MainActor in
                     self?.projectBudgetCategories = pbc
                     self?.recomputeBudgetProgress()
@@ -131,9 +133,12 @@ final class ProjectContext {
         try await projectService.deleteProject(accountId: accountId, projectId: projectId)
     }
 
-    func deactivate() {
+    func stopListeners() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()
+    }
+
+    private func clearData() {
         currentProjectId = nil
         project = nil
         projects = []
@@ -147,12 +152,10 @@ final class ProjectContext {
     }
 
     private func recomputeBudgetProgress() {
-        print("[BudgetDebug] recompute: \(transactions.count) txns, \(budgetCategories.count) cats, \(projectBudgetCategories.count) projCats")
         budgetProgress = budgetProgressService.buildBudgetProgress(
             transactions: transactions,
             categories: budgetCategories,
             projectBudgetCategories: projectBudgetCategories
         )
-        print("[BudgetDebug] result: \(budgetProgress?.categories.count ?? -1) categories, total budget=\(budgetProgress?.totalBudgetCents ?? -1)")
     }
 }

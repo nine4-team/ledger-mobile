@@ -121,7 +121,7 @@ struct ProjectDetailView: View {
             )
         }
         .onDisappear {
-            projectContext.deactivate()
+            projectContext.stopListeners()
         }
     }
 
