@@ -59,7 +59,7 @@ struct ProjectsListView: View {
                             }
                         }
                         .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.top, Spacing.xl)
+                        .padding(.top, 56)
                         .padding(.bottom, Spacing.md)
                     }
                 }
@@ -132,7 +132,7 @@ struct ProjectsListView: View {
     }
 
     /// Builds budget preview categories from the project's denormalized budgetSummary.
-    /// Shows up to 2 categories ordered by: pinned first, then highest spend percentage.
+    /// Fallback chain: (1) pinned categories, (2) top 2 by spend%, (3) Overall Budget.
     private func budgetPreviewFor(_ project: Project) -> [BudgetProgress.CategoryProgress] {
         guard let summary = project.budgetSummary,
               let categories = summary.categories else { return [] }
@@ -160,8 +160,24 @@ struct ProjectsListView: View {
             categories: allProgress,
             pinnedCategoryIds: pinnedIds
         )
+
+        // Fallback: Overall Budget when no categories have activity
+        if sorted.isEmpty {
+            let totalBudget = summary.totalBudgetCents ?? 0
+            let totalSpent = summary.spentCents ?? 0
+            guard totalBudget > 0 || totalSpent != 0 else { return [] }
+            return [BudgetProgress.CategoryProgress(
+                id: "overall",
+                name: "Overall Budget",
+                budgetCents: totalBudget,
+                spentCents: totalSpent,
+                categoryType: .general,
+                excludeFromOverallBudget: false
+            )]
+        }
+
         if pinnedIds.isEmpty {
-            return Array(sorted.prefix(1))
+            return Array(sorted.prefix(2))
         }
         // Show all pinned categories
         return sorted.filter { pinnedIds.contains($0.id) }

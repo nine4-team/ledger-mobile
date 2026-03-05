@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// Apply this to the content view **below** a `ScrollableTabBar` in a VStack.
 struct ScrollContentTopFadeModifier: ViewModifier {
-    var height: CGFloat = 112
+    var height: CGFloat = 84
 
     func body(content: Content) -> some View {
         content
@@ -24,7 +24,7 @@ struct ScrollContentTopFadeModifier: ViewModifier {
 }
 
 extension View {
-    func scrollContentTopFade(height: CGFloat = 112) -> some View {
+    func scrollContentTopFade(height: CGFloat = 84) -> some View {
         modifier(ScrollContentTopFadeModifier(height: height))
     }
 }
