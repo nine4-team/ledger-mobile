@@ -226,4 +226,108 @@ struct MediaGalleryCalculationTests {
     func uploadIconForFailed() {
         #expect(MediaGalleryCalculations.uploadOverlayIcon(status: .failed) == "icloud.slash")
     }
+
+    // MARK: - previousIndex / nextIndex
+
+    @Test("Previous index wraps from first to last")
+    func previousIndexWraps() {
+        #expect(MediaGalleryCalculations.previousIndex(current: 0, total: 5) == 4)
+    }
+
+    @Test("Previous index decrements normally")
+    func previousIndexDecrements() {
+        #expect(MediaGalleryCalculations.previousIndex(current: 3, total: 5) == 2)
+    }
+
+    @Test("Previous index returns 0 for single item")
+    func previousIndexSingleItem() {
+        #expect(MediaGalleryCalculations.previousIndex(current: 0, total: 1) == 0)
+    }
+
+    @Test("Previous index returns 0 for empty gallery")
+    func previousIndexEmpty() {
+        #expect(MediaGalleryCalculations.previousIndex(current: 0, total: 0) == 0)
+    }
+
+    @Test("Next index wraps from last to first")
+    func nextIndexWraps() {
+        #expect(MediaGalleryCalculations.nextIndex(current: 4, total: 5) == 0)
+    }
+
+    @Test("Next index increments normally")
+    func nextIndexIncrements() {
+        #expect(MediaGalleryCalculations.nextIndex(current: 1, total: 5) == 2)
+    }
+
+    @Test("Next index returns 0 for single item")
+    func nextIndexSingleItem() {
+        #expect(MediaGalleryCalculations.nextIndex(current: 0, total: 1) == 0)
+    }
+
+    @Test("Next index returns 0 for empty gallery")
+    func nextIndexEmpty() {
+        #expect(MediaGalleryCalculations.nextIndex(current: 0, total: 0) == 0)
+    }
+
+    // MARK: - dismissProgress
+
+    @Test("Dismiss progress is 0 at zero translation")
+    func dismissProgressZero() {
+        #expect(MediaGalleryCalculations.dismissProgress(translation: 0, threshold: 300) == 0)
+    }
+
+    @Test("Dismiss progress is 1 at threshold")
+    func dismissProgressAtThreshold() {
+        #expect(MediaGalleryCalculations.dismissProgress(translation: 300, threshold: 300) == 1)
+    }
+
+    @Test("Dismiss progress caps at 1 past threshold")
+    func dismissProgressCaps() {
+        #expect(MediaGalleryCalculations.dismissProgress(translation: 500, threshold: 300) == 1)
+    }
+
+    @Test("Dismiss progress works with negative translation (upward drag)")
+    func dismissProgressNegative() {
+        let progress = MediaGalleryCalculations.dismissProgress(translation: -150, threshold: 300)
+        #expect(progress == 0.5)
+    }
+
+    @Test("Dismiss progress is 0 with zero threshold")
+    func dismissProgressZeroThreshold() {
+        #expect(MediaGalleryCalculations.dismissProgress(translation: 100, threshold: 0) == 0)
+    }
+
+    // MARK: - dismissScale
+
+    @Test("Dismiss scale is 1.0 at zero progress")
+    func dismissScaleAtRest() {
+        #expect(MediaGalleryCalculations.dismissScale(progress: 0) == 1.0)
+    }
+
+    @Test("Dismiss scale is 0.7 at full progress")
+    func dismissScaleAtFull() {
+        #expect(MediaGalleryCalculations.dismissScale(progress: 1.0) == 0.7)
+    }
+
+    @Test("Dismiss scale at half progress")
+    func dismissScaleAtHalf() {
+        #expect(MediaGalleryCalculations.dismissScale(progress: 0.5) == 0.85)
+    }
+
+    // MARK: - dismissOpacity
+
+    @Test("Dismiss opacity is 1.0 at zero progress")
+    func dismissOpacityAtRest() {
+        #expect(MediaGalleryCalculations.dismissOpacity(progress: 0) == 1.0)
+    }
+
+    @Test("Dismiss opacity is 0.0 at full progress")
+    func dismissOpacityAtFull() {
+        #expect(MediaGalleryCalculations.dismissOpacity(progress: 1.0) == 0.0)
+    }
+
+    @Test("Dismiss opacity at half progress")
+    func dismissOpacityAtHalf() {
+        #expect(MediaGalleryCalculations.dismissOpacity(progress: 0.5) == 0.5)
+    }
 }

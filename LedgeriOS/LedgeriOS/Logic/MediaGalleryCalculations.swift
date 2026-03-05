@@ -64,6 +64,38 @@ enum MediaGalleryCalculations {
         currentZoom > 1.01
     }
 
+    // MARK: - Navigation
+
+    /// Returns the previous image index, wrapping to the end.
+    static func previousIndex(current: Int, total: Int) -> Int {
+        guard total > 0 else { return 0 }
+        return current > 0 ? current - 1 : total - 1
+    }
+
+    /// Returns the next image index, wrapping to the beginning.
+    static func nextIndex(current: Int, total: Int) -> Int {
+        guard total > 0 else { return 0 }
+        return current < total - 1 ? current + 1 : 0
+    }
+
+    // MARK: - Swipe-to-Dismiss
+
+    /// Maps vertical drag translation to a 0…1 dismiss progress.
+    static func dismissProgress(translation: CGFloat, threshold: CGFloat) -> CGFloat {
+        guard threshold > 0 else { return 0 }
+        return min(1, abs(translation) / threshold)
+    }
+
+    /// Maps dismiss progress to image scale (1.0 at rest, 0.7 at full threshold).
+    static func dismissScale(progress: CGFloat) -> CGFloat {
+        1.0 - (progress * 0.3)
+    }
+
+    /// Maps dismiss progress to background opacity (1.0 at rest, 0.0 at full threshold).
+    static func dismissOpacity(progress: CGFloat) -> CGFloat {
+        1.0 - progress
+    }
+
     // MARK: - Add Tile
 
     /// Whether the add tile should appear in the thumbnail grid.
