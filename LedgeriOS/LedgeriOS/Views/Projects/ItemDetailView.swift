@@ -397,11 +397,26 @@ struct ItemDetailView: View {
             entityId: itemId,
             filename: filename
         )
-        let url = try await mediaService.uploadImage(data, path: path)
+
+        // H7: Write placeholder first so the Firestore record survives upload failures
         var images = liveItem.images ?? []
         let isPrimary = images.isEmpty
-        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        images.append(AttachmentRef(url: "", fileName: filename, isPrimary: isPrimary, isUploading: true))
         updateItem(fields: ["images": images.map(attachmentDict)])
+
+        // Upload bytes (H8: MediaService retries on transient failures)
+        let url = try await mediaService.uploadImage(data, path: path)
+
+        // Replace placeholder with real URL
+        var updatedImages = liveItem.images ?? []
+        if let idx = updatedImages.firstIndex(where: { $0.fileName == filename }) {
+            updatedImages[idx].url = url
+            updatedImages[idx].isUploading = nil
+        } else {
+            // Listener hasn't reflected the placeholder yet — append the resolved ref directly
+            updatedImages.append(AttachmentRef(url: url, fileName: filename, isPrimary: isPrimary))
+        }
+        updateItem(fields: ["images": updatedImages.map(attachmentDict)])
     }
 
     private func removeImage(_ attachment: AttachmentRef) {
@@ -431,6 +446,7 @@ struct ItemDetailView: View {
         if let fileName = ref.fileName { dict["fileName"] = fileName }
         if let contentType = ref.contentType { dict["contentType"] = contentType }
         if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
+        if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
         return dict
     }
 

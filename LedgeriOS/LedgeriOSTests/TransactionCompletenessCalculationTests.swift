@@ -79,11 +79,42 @@ struct TransactionCompletenessCalculationTests {
         #expect(result?.inferredTax == nil)
     }
 
-    @Test("Falls back to amount when tax rate is zero")
-    func fallbackToAmountWhenTaxRateZero() {
+    @Test("Zero tax rate is not missing tax data (M8: taxRatePct != nil not > 0)")
+    func zeroTaxRateIsNotMissingData() {
+        // taxRatePct = 0 means user explicitly set a 0% rate — not the same as unknown tax.
+        // M8 spec: missingTaxData condition is taxRatePct == nil, not taxRatePct == 0.
         let tx = makeTransaction(amountCents: 5000, taxRatePct: 0)
         let result = TransactionCompletenessCalculations.computeCompleteness(transaction: tx, items: [])
         #expect(result?.transactionSubtotalCents == 5000)
+        #expect(result?.missingTaxData == false)
+        #expect(result?.inferredTax == 0)
+    }
+
+    // MARK: - taxAmount (M7)
+
+    @Test("taxAmount computed when both amountCents and subtotalCents are set")
+    func taxAmountExplicit() {
+        // amountCents = 10800, subtotalCents = 10000 → taxAmount = 800
+        let tx = makeTransaction(amountCents: 10800, subtotalCents: 10000)
+        let result = TransactionCompletenessCalculations.computeCompleteness(transaction: tx, items: [])
+        #expect(result?.transactionSubtotalCents == 10000)
+        #expect(result?.taxAmount == 800)
+        #expect(result?.inferredTax == nil)
+        #expect(result?.missingTaxData == false)
+    }
+
+    @Test("taxAmount is nil when amountCents equals subtotalCents (no tax)")
+    func taxAmountNilWhenNoTax() {
+        let tx = makeTransaction(amountCents: 10000, subtotalCents: 10000)
+        let result = TransactionCompletenessCalculations.computeCompleteness(transaction: tx, items: [])
+        #expect(result?.taxAmount == nil)
+    }
+
+    @Test("taxAmount is nil when only amountCents is set")
+    func taxAmountNilWhenNoSubtotal() {
+        let tx = makeTransaction(amountCents: 10000)
+        let result = TransactionCompletenessCalculations.computeCompleteness(transaction: tx, items: [])
+        #expect(result?.taxAmount == nil)
         #expect(result?.missingTaxData == true)
     }
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseFirestore
 
 /// Full transaction detail screen with hero card, Next Steps, 8 collapsible sections,
 /// Moved Items, and delete action.
@@ -26,6 +27,14 @@ struct TransactionDetailView: View {
     @State private var showAddItemMenu = false
     @State private var menuPendingAction: (() -> Void)?
 
+    // Items section filter/sort/search
+    @State private var itemsSearchText = ""
+    @State private var itemsActiveFilters: Set<ItemFilterOption> = []
+    @State private var itemsActiveSort: ItemSortOption = .createdDesc
+    @State private var itemsSelectedIds: Set<String> = []
+    @State private var itemsShowSortMenu = false
+    @State private var itemsShowFilterMenu = false
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
@@ -48,6 +57,15 @@ struct TransactionDetailView: View {
 
     private var soldItems: [Item] {
         transactionItems.filter { $0.status == "sold" }
+    }
+
+    private var processedActiveItems: [Item] {
+        ListFilterSortCalculations.applyAllMultiFilters(
+            activeItems,
+            filters: itemsActiveFilters,
+            sort: itemsActiveSort,
+            search: itemsSearchText
+        )
     }
 
     private var categoryLookup: [String: BudgetCategory] {
@@ -89,18 +107,45 @@ struct TransactionDetailView: View {
     var body: some View {
         ScrollView {
             AdaptiveContentWidth {
-                VStack(spacing: Spacing.lg) {
-                    badgesRow
-                    heroCard
-                    nextStepsCard
-                    sectionsContent
+                LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                    VStack(spacing: Spacing.lg) {
+                        badgesRow
+                        heroCard
+                        nextStepsCard
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
+                    .padding(.bottom, Spacing.xs)
+                    receiptsSection
+                    otherImagesSection
+                    notesSection
+                    detailsSection
+                    itemsSection
+                    returnedItemsSection
+                    soldItemsSection
+                    transactionAuditSection
+                    movedItemsSection
                 }
-                .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.lg)
             }
         }
         .background(BrandColors.background)
+        .background(SortMenu(
+            isPresented: $itemsShowSortMenu,
+            sortOptions: SortMenu.itemSortMenuItems(activeSort: itemsActiveSort, onSelect: { itemsActiveSort = $0 })
+        ))
+        .background(FilterMenu(
+            isPresented: $itemsShowFilterMenu,
+            filters: FilterMenu.filterMenuItems(
+                activeFilters: itemsActiveFilters,
+                scope: .project,
+                onToggle: { option in
+                    if itemsActiveFilters.contains(option) { itemsActiveFilters.remove(option) }
+                    else { itemsActiveFilters.insert(option) }
+                }
+            ),
+            closeOnItemPress: false
+        ))
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
@@ -348,20 +393,6 @@ struct TransactionDetailView: View {
 
     // MARK: - Sections
 
-    private var sectionsContent: some View {
-        VStack(spacing: Spacing.md) {
-            receiptsSection
-            otherImagesSection
-            notesSection
-            detailsSection
-            itemsSection
-            returnedItemsSection
-            soldItemsSection
-            transactionAuditSection
-            movedItemsSection
-        }
-    }
-
     // 1. Receipts (default expanded)
     private var receiptsSection: some View {
         CollapsibleSection(
@@ -471,24 +502,109 @@ struct TransactionDetailView: View {
         }
     }
 
-    // 5. Items (collapsed)
+    // 5. Items — Section with pinned composite header (collapse toggle + control bar)
     private var itemsSection: some View {
-        CollapsibleSection(
-            title: "Items",
-            isExpanded: sectionBinding("items"),
-            badge: "\(activeItems.count)",
-            badgeColor: BrandColors.primary
-        ) {
-            SharedItemsList(
-                mode: .embedded(items: activeItems, onItemPress: { _ in }),
-                emptyMessage: "No items yet",
-                onAdd: { showAddItemMenu = true },
-                useNavigationLinks: true,
-                filterScope: .project,
-                inline: true
-            )
-            .padding(.top, Spacing.xs)
+        Section {
+            if expandedSections.contains("items") {
+                if processedActiveItems.isEmpty {
+                    Text(activeItems.isEmpty ? "No items yet" : "No items match your filters")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, Spacing.xl)
+                } else {
+                    ForEach(processedActiveItems) { item in
+                        if let itemId = item.id {
+                            if itemsSelectedIds.isEmpty {
+                                NavigationLink(value: item) {
+                                    ItemCard(
+                                        item: item,
+                                        priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
+                                        isSelected: Binding(
+                                            get: { itemsSelectedIds.contains(itemId) },
+                                            set: { if $0 { itemsSelectedIds.insert(itemId) } else { itemsSelectedIds.remove(itemId) } }
+                                        )
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                ItemCard(
+                                    item: item,
+                                    priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
+                                    isSelected: Binding(
+                                        get: { itemsSelectedIds.contains(itemId) },
+                                        set: { if $0 { itemsSelectedIds.insert(itemId) } else { itemsSelectedIds.remove(itemId) } }
+                                    ),
+                                    onPress: {
+                                        if itemsSelectedIds.contains(itemId) { itemsSelectedIds.remove(itemId) }
+                                        else { itemsSelectedIds.insert(itemId) }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } header: {
+            itemsSectionHeader
         }
+    }
+
+    private var itemsSectionHeader: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    sectionBinding("items").wrappedValue.toggle()
+                }
+            } label: {
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12))
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
+                        .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
+                    Text("Items")
+                        .sectionLabelStyle()
+                    Text("\(activeItems.count)")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.primary)
+                    Spacer()
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if expandedSections.contains("items") {
+                let allIds = processedActiveItems.compactMap(\.id)
+                let isAllSelected = !allIds.isEmpty && allIds.allSatisfy { itemsSelectedIds.contains($0) }
+                NativeListControlBar(
+                    searchText: $itemsSearchText,
+                    searchPlaceholder: "Search items...",
+                    onAdd: { showAddItemMenu = true },
+                    style: .card
+                ) {
+                    Button {
+                        itemsSelectedIds = isAllSelected ? [] : Set(allIds)
+                    } label: {
+                        SelectorCircle(isSelected: isAllSelected, indicator: .check)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Select all")
+                } sortMenu: {
+                    Button { itemsShowSortMenu = true } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .foregroundStyle(itemsActiveSort != .createdDesc ? BrandColors.primary : .secondary)
+                    }
+                } filterMenu: {
+                    Button { itemsShowFilterMenu = true } label: {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .foregroundStyle(!itemsActiveFilters.isEmpty ? BrandColors.primary : .secondary)
+                    }
+                }
+            }
+        }
+        .background(BrandColors.background)
     }
 
     // 6. Returned Items (collapsed, conditional)
@@ -540,9 +656,12 @@ struct TransactionDetailView: View {
     }
 
     // 8. Transaction Audit (collapsed, conditional)
+    // H17: Only show for itemized categories — audit tracks item price completeness against receipt,
+    // which is only meaningful when the transaction has itemized items with individual prices.
     @ViewBuilder
     private var transactionAuditSection: some View {
-        if let comp = completeness {
+        if let comp = completeness,
+           selectedCategory?.metadata?.categoryType == .itemized {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),
@@ -569,18 +688,22 @@ struct TransactionDetailView: View {
     // MARK: - Action Menu
 
     private var actionMenuItems: [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
+        // H10: Canonical inventory sale transactions are system-generated and must not be edited.
+        let isCanonicalSale = currentTransaction.isCanonicalInventorySale == true
+        var items: [ActionMenuItem] = []
+        if !isCanonicalSale {
+            items.append(ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
                 showEditDetails = true
-            }),
-            ActionMenuItem(id: "notes", label: "Edit Notes", icon: "note.text", onPress: {
+            }))
+            items.append(ActionMenuItem(id: "notes", label: "Edit Notes", icon: "note.text", onPress: {
                 showEditNotes = true
-            }),
-            ActionMenuItem(id: "delete", label: "Delete Transaction", icon: "trash",
-                           isDestructive: true, onPress: {
-                showDeleteConfirmation = true
-            }),
-        ]
+            }))
+        }
+        items.append(ActionMenuItem(id: "delete", label: "Delete Transaction", icon: "trash",
+                                    isDestructive: true, onPress: {
+            showDeleteConfirmation = true
+        }))
+        return items
     }
 
     // MARK: - Helpers
@@ -744,24 +867,51 @@ struct TransactionDetailView: View {
     private func addExistingItemsToTransaction() {
         guard let accountId = accountContext.currentAccountId,
               let transactionId = transaction.id else { return }
-        let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
-        let newIds = Array(pickerSelectedIds)
-        let budgetCategoryId = currentTransaction.budgetCategoryId
 
-        // Update each item's transactionId (and budgetCategoryId if present)
-        for itemId in newIds {
-            var fields: [String: String] = ["transactionId": transactionId]
-            if let budgetCategoryId { fields["budgetCategoryId"] = budgetCategoryId }
-            Task { try? await itemsService.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        let newIds = Array(pickerSelectedIds)
+        guard !newIds.isEmpty else {
+            showAddExistingItems = false
+            return
         }
 
-        // Update transaction's itemIds array
-        var updatedIds = currentTransaction.itemIds ?? []
-        updatedIds.append(contentsOf: newIds)
-        updateTransaction(fields: ["itemIds": updatedIds])
+        let budgetCategoryId = currentTransaction.budgetCategoryId
+        let db = Firestore.firestore()
+        let batch = db.batch()
+        let itemsRef = db.collection("accounts/\(accountId)/items")
+        let txRef = db.collection("accounts/\(accountId)/transactions")
+
+        // C8: Use a single WriteBatch so all item updates + transaction itemIds are atomic.
+        for itemId in newIds {
+            var fields: [String: Any] = [
+                "transactionId": transactionId,
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let budgetCategoryId { fields["budgetCategoryId"] = budgetCategoryId }
+            // Backfill projectPriceCents for legacy items missing it
+            if let item = projectContext.items.first(where: { $0.id == itemId }),
+               item.projectPriceCents == nil,
+               let purchasePrice = item.purchasePriceCents {
+                fields["projectPriceCents"] = purchasePrice
+            }
+            batch.updateData(fields, forDocument: itemsRef.document(itemId))
+        }
+
+        // Atomically add all new itemIds to the transaction
+        batch.updateData(
+            ["itemIds": FieldValue.arrayUnion(newIds), "updatedAt": FieldValue.serverTimestamp()],
+            forDocument: txRef.document(transactionId)
+        )
 
         pickerSelectedIds.removeAll()
         showAddExistingItems = false
+
+        Task {
+            do {
+                try await batch.commit()
+            } catch {
+                print("🔴 addExistingItemsToTransaction batch failed: \(error)")
+            }
+        }
     }
 
     private func deleteTransaction() {
@@ -785,6 +935,7 @@ struct TransactionDetailView: View {
             item.name = parsed.name
             item.sku = parsed.sku
             item.purchasePriceCents = parsed.priceCents
+            item.projectPriceCents = parsed.priceCents
             item.transactionId = currentTransaction.id
             item.budgetCategoryId = currentTransaction.budgetCategoryId
             _ = try? service.createItem(accountId: accountId, item: item)

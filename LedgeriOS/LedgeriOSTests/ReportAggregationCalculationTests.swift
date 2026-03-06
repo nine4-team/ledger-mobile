@@ -66,10 +66,17 @@ struct ReportAggregationCalculationTests {
         return space
     }
 
-    private func makeCategory(id: String = "cat1", name: String = "Furniture") -> BudgetCategory {
+    private func makeCategory(
+        id: String = "cat1",
+        name: String = "Furniture",
+        categoryType: BudgetCategoryType? = nil
+    ) -> BudgetCategory {
         var cat = BudgetCategory()
         cat.id = id
         cat.name = name
+        if let categoryType {
+            cat.metadata = BudgetCategoryMetadata(categoryType: categoryType, excludeFromOverallBudget: nil)
+        }
         return cat
     }
 

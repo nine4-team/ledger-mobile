@@ -92,13 +92,19 @@ struct BudgetCategoryManagementView: View {
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
         .sheet(isPresented: $showingCreateSheet) {
-            CategoryFormModal(mode: .create) { name, categoryType, excludeFromBudget in
+            CategoryFormModal(
+                mode: .create,
+                existingNames: activeCategories.map(\.name)
+            ) { name, categoryType, excludeFromBudget in
                 createCategory(name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
             .sheetStyle(.form)
         }
         .sheet(item: $editingCategory) { category in
-            CategoryFormModal(mode: .edit(category)) { name, categoryType, excludeFromBudget in
+            CategoryFormModal(
+                mode: .edit(category),
+                existingNames: activeCategories.filter { $0.id != category.id }.map(\.name)
+            ) { name, categoryType, excludeFromBudget in
                 updateCategory(category, name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
             .sheetStyle(.form)

@@ -133,6 +133,15 @@ final class ProjectContext {
         try await projectService.deleteProject(accountId: accountId, projectId: projectId)
     }
 
+    /// Archive or unarchive a project. Preferred over deletion (H2).
+    func archiveProject(accountId: String, projectId: String, isArchived: Bool) async throws {
+        try await projectService.updateProject(
+            accountId: accountId,
+            projectId: projectId,
+            fields: ["isArchived": isArchived]
+        )
+    }
+
     func stopListeners() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()

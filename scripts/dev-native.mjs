@@ -97,20 +97,16 @@ async function main() {
 
   // 3. Seed Firestore
   log('Seeding Firestore...');
-  try {
-    run('node', [
-      'firebase/functions/scripts/seed-firestore-emulator.mjs',
-      BUNDLE_PATH,
-      '--project', PROJECT_ID,
-      '--firestore-host', 'localhost',
-      '--firestore-port', String(FIRESTORE_PORT),
-    ], {
-      FIRESTORE_EMULATOR_HOST: `localhost:${FIRESTORE_PORT}`,
-      FIREBASE_PROJECT_ID: PROJECT_ID,
-    });
-  } catch (err) {
-    logError(`Firestore seed failed: ${err.message}`);
-  }
+  run('node', [
+    'firebase/functions/scripts/seed-firestore-emulator.mjs',
+    BUNDLE_PATH,
+    '--project', PROJECT_ID,
+    '--firestore-host', 'localhost',
+    '--firestore-port', String(FIRESTORE_PORT),
+  ], {
+    FIRESTORE_EMULATOR_HOST: `localhost:${FIRESTORE_PORT}`,
+    FIREBASE_PROJECT_ID: PROJECT_ID,
+  });
 
   // 3b. Backfill budget summaries (seed uses bulkWriter which bypasses triggers)
   log('Backfilling budget summaries...');

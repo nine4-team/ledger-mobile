@@ -10,6 +10,7 @@ struct SellToProjectModal: View {
     let onComplete: () -> Void
 
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var step = 1
@@ -170,6 +171,14 @@ struct SellToProjectModal: View {
 
     private func performSale() {
         guard let project = destinationProject, let projectId = project.id else { return }
+
+        // L16: If any item lacks its own budgetCategoryId, a destination category must be selected
+        // so the items can be properly tracked in the destination project's budget.
+        let hasUncategorizedItems = items.contains { $0.budgetCategoryId == nil || ($0.budgetCategoryId?.isEmpty == true) }
+        if hasUncategorizedItems && destinationCategoryId == nil {
+            errorMessage = "Select a destination category — some items don't have a budget category assigned."
+            return
+        }
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
@@ -183,6 +192,7 @@ struct SellToProjectModal: View {
                     items: itemsToSell,
                     destinationProjectId: projectId,
                     accountId: acctId,
+                    userId: authManager.currentUser?.uid,
                     sourceCategoryId: srcCatId,
                     destinationCategoryId: destCatId
                 )

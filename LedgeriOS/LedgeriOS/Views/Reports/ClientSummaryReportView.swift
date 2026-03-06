@@ -3,8 +3,13 @@ import SwiftUI
 struct ClientSummaryReportView: View {
     let data: ClientSummaryData
     let projectName: String
+    var businessName: String?
 
     var body: some View {
+        Group {
+        if data.items.isEmpty {
+            ContentUnavailableView("No Items", systemImage: "doc.text", description: Text("No items available for this report."))
+        } else {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -74,6 +79,8 @@ struct ClientSummaryReportView: View {
             .padding(Spacing.screenPadding)
             }
         }
+        } // else
+        } // Group
         .navigationTitle("Client Summary")
         .navBarTitleDisplayMode(.inline)
         .toolbar {
@@ -124,7 +131,7 @@ struct ClientSummaryReportView: View {
     // MARK: - PDF Sharing
 
     private func sharePDF() {
-        let pdfContent = ClientSummaryPDFContent(data: data, projectName: projectName)
+        let pdfContent = ClientSummaryPDFContent(data: data, projectName: projectName, businessName: businessName)
         ReportPDFSharing.sharePDF(
             content: pdfContent,
             fileName: "client-summary-\(projectName).pdf"
@@ -137,6 +144,7 @@ struct ClientSummaryReportView: View {
 private struct ClientSummaryPDFContent: View {
     let data: ClientSummaryData
     let projectName: String
+    var businessName: String?
 
     private typealias S = ReportPDFStyles
 
@@ -262,6 +270,11 @@ private struct ClientSummaryPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let businessName, !businessName.isEmpty {
+                Text(businessName)
+                    .font(S.subtitleFont)
+                    .foregroundStyle(S.textDark)
+            }
             Text(projectName)
                 .font(S.titleFont)
                 .foregroundStyle(S.brand)

@@ -8,7 +8,11 @@ enum ReportType: Hashable {
 
 struct AccountingTabView: View {
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(AccountContext.self) private var accountContext
     @State private var columnCount: Int = 1
+    @State private var businessProfile: BusinessProfile?
+
+    private let profileService = BusinessProfileService(syncTracker: NoOpSyncTracker())
 
     private var owedToCompanyCents: Int {
         projectContext.transactions
@@ -107,7 +111,8 @@ struct AccountingTabView: View {
                         categories: projectContext.budgetCategories
                     ),
                     projectName: projectContext.project?.name ?? "",
-                    clientName: projectContext.project?.clientName ?? ""
+                    clientName: projectContext.project?.clientName ?? "",
+                    businessName: businessProfile?.name
                 )
             case .clientSummary:
                 ClientSummaryReportView(
@@ -117,7 +122,8 @@ struct AccountingTabView: View {
                         spaces: projectContext.spaces,
                         categories: projectContext.budgetCategories
                     ),
-                    projectName: projectContext.project?.name ?? ""
+                    projectName: projectContext.project?.name ?? "",
+                    businessName: businessProfile?.name
                 )
             case .propertyManagement:
                 PropertyManagementReportView(
@@ -127,6 +133,11 @@ struct AccountingTabView: View {
                     ),
                     projectName: projectContext.project?.name ?? ""
                 )
+            }
+        }
+        .task {
+            if let accountId = accountContext.currentAccountId {
+                businessProfile = try? await profileService.fetch(accountId: accountId)
             }
         }
     }

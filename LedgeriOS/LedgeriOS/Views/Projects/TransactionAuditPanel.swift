@@ -58,9 +58,14 @@ struct TransactionAuditPanel: View {
                 value: CurrencyFormatting.formatCentsWithDecimals(completeness.itemsNetTotalCents)
             )
 
-            if let inferredTax = completeness.inferredTax {
+            if let taxAmount = completeness.taxAmount {
                 detailLine(
-                    label: "Calculated tax",
+                    label: "Tax",
+                    value: CurrencyFormatting.formatCentsWithDecimals(taxAmount)
+                )
+            } else if let inferredTax = completeness.inferredTax {
+                detailLine(
+                    label: "Calculated tax (from rate)",
                     value: CurrencyFormatting.formatCentsWithDecimals(inferredTax)
                 )
             }

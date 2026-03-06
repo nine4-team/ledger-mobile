@@ -9,6 +9,7 @@ struct LedgerApp: App {
     @State private var projectContext: ProjectContext
     @State private var inventoryContext: InventoryContext
     @State private var mediaService = MediaService()
+    @State private var networkMonitor = NetworkMonitor()
 
     init() {
         FirebaseApp.configure()
@@ -76,6 +77,7 @@ struct LedgerApp: App {
                 .environment(projectContext)
                 .environment(inventoryContext)
                 .environment(mediaService)
+                .environment(networkMonitor)
                 .preferredColorScheme(resolvedColorScheme)
                 #if DEBUG
                 .overlay(alignment: .top) {

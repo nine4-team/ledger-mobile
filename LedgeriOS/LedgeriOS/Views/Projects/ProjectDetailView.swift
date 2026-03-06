@@ -10,6 +10,7 @@ struct ProjectDetailView: View {
     @State private var showingMenu = false
     @State private var menuPendingAction: (() -> Void)?
     @State private var showingDeleteConfirmation = false
+    @State private var showingArchiveConfirmation = false
     @State private var errorMessage: String?
 
     private let tabs = [
@@ -83,6 +84,13 @@ struct ProjectDetailView: View {
                         id: "export", label: "Export Transactions", icon: "square.and.arrow.up",
                         onPress: { exportTransactionsCSV() }
                     ),
+                    // H2: Archive is preferred over deletion — keeps data intact
+                    ActionMenuItem(
+                        id: "archive",
+                        label: project.isArchived == true ? "Unarchive Project" : "Archive Project",
+                        icon: project.isArchived == true ? "arrow.uturn.up.circle" : "archivebox",
+                        onPress: { showingArchiveConfirmation = true }
+                    ),
                     ActionMenuItem(
                         id: "delete", label: "Delete Project", icon: "trash",
                         isDestructive: true,
@@ -100,7 +108,27 @@ struct ProjectDetailView: View {
                 deleteProject()
             }
         } message: {
-            Text("This action cannot be undone.")
+            // H22: Warn about orphaned items when project has data
+            let itemCount = projectContext.items.count
+            if itemCount > 0 {
+                Text("This will delete the project and orphan \(itemCount) item\(itemCount == 1 ? "" : "s"). Consider archiving instead to preserve data.")
+            } else {
+                Text("This action cannot be undone.")
+            }
+        }
+        .confirmationDialog(
+            project.isArchived == true ? "Unarchive Project?" : "Archive Project?",
+            isPresented: $showingArchiveConfirmation
+        ) {
+            Button(project.isArchived == true ? "Unarchive" : "Archive") {
+                toggleArchive()
+            }
+        } message: {
+            if project.isArchived == true {
+                Text("This project will be restored to active status.")
+            } else {
+                Text("Archived projects are hidden from the main list but all data is preserved.")
+            }
         }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },
@@ -135,6 +163,24 @@ struct ProjectDetailView: View {
                 dismiss()
             } catch {
                 errorMessage = "Failed to delete project. Please try again."
+            }
+        }
+    }
+
+    private func toggleArchive() {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = project.id else { return }
+        let nextArchived = !(project.isArchived == true)
+        Task {
+            do {
+                try await projectContext.archiveProject(
+                    accountId: accountId,
+                    projectId: projectId,
+                    isArchived: nextArchived
+                )
+                if nextArchived { dismiss() }
+            } catch {
+                errorMessage = "Failed to \(nextArchived ? "archive" : "unarchive") project. Please try again."
             }
         }
     }

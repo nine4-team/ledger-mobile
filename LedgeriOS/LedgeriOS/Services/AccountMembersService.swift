@@ -10,19 +10,22 @@ struct AccountMembersService: AccountMembersServiceProtocol {
 
     func listMembershipsForUser(userId: String) async throws -> [AccountMember] {
         let db = Firestore.firestore()
-        print("🟡 Firestore settings — host: \(db.settings.host), ssl: \(db.settings.isSSLEnabled)")
-        let snapshot = try await db.collectionGroup("users")
-            .whereField("uid", isEqualTo: userId)
-            .getDocuments()
-        print("🟡 collectionGroup query returned \(snapshot.documents.count) docs")
-        for doc in snapshot.documents {
-            print("🟡   doc path: \(doc.reference.path), data: \(doc.data())")
+        let query = db.collectionGroup("users").whereField("uid", isEqualTo: userId)
+
+        // H9: Try cache first for immediate cache-first reads (offline-first principle).
+        // Returns cached data instantly if available; falls back to server on cache miss.
+        if let cached = try? await query.getDocuments(source: .cache), !cached.documents.isEmpty {
+            return parseMembers(cached.documents)
         }
 
-        return snapshot.documents.compactMap { doc in
+        let snapshot = try await query.getDocuments()
+        return parseMembers(snapshot.documents)
+    }
+
+    private func parseMembers(_ documents: [QueryDocumentSnapshot]) -> [AccountMember] {
+        documents.compactMap { doc in
             do {
                 var member = try doc.data(as: AccountMember.self)
-                // Populate accountId from parent path if nil on the doc
                 if member.accountId == nil {
                     member.accountId = doc.reference.parent.parent?.documentID
                 }

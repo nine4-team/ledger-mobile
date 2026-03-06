@@ -8,6 +8,7 @@ struct SellToBusinessModal: View {
     let onComplete: () -> Void
 
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var isSaving = false
@@ -67,7 +68,12 @@ struct SellToBusinessModal: View {
         let acctId = accountId
         Task {
             do {
-                try await service.sellToBusiness(items: itemsToSell, accountId: acctId)
+                try await service.sellToBusiness(
+                    items: itemsToSell,
+                    accountId: acctId,
+                    userId: authManager.currentUser?.uid,
+                    overrideCategoryId: selectedCategoryId
+                )
                 await MainActor.run {
                     onComplete()
                     dismiss()

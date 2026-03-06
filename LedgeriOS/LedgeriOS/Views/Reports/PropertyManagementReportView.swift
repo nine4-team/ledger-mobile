@@ -5,6 +5,10 @@ struct PropertyManagementReportView: View {
     let projectName: String
 
     var body: some View {
+        Group {
+        if data.spaceGroups.isEmpty && data.noSpaceItems.isEmpty {
+            ContentUnavailableView("No Items", systemImage: "house", description: Text("No items assigned to spaces yet."))
+        } else {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -53,6 +57,8 @@ struct PropertyManagementReportView: View {
             .padding(Spacing.screenPadding)
             }
         }
+        } // else
+        } // Group
         .navigationTitle("Property Management")
         .navBarTitleDisplayMode(.inline)
         .toolbar {

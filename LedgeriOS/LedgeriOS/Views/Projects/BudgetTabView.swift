@@ -6,6 +6,8 @@ struct BudgetTabView: View {
     @Environment(AuthManager.self) private var authManager
 
     private let preferencesService = ProjectPreferencesService()
+    /// Tracks whether auto-pin has been attempted this session to avoid re-pinning on every view update.
+    @State private var didAutoPin = false
 
     private var pinnedCategoryIds: [String] {
         projectContext.projectPreferences?.pinnedBudgetCategoryIds ?? []
@@ -34,40 +36,51 @@ struct BudgetTabView: View {
 
     var body: some View {
         let _ = print("[BudgetTab] categories=\(categories.count), budgetProgress=\(projectContext.budgetProgress != nil ? "\(projectContext.budgetProgress!.categories.count) cats" : "nil"), budgetCats=\(projectContext.budgetCategories.count), projBudgetCats=\(projectContext.projectBudgetCategories.count), txns=\(projectContext.transactions.count)")
-        if categories.isEmpty {
-            ContentUnavailableView(
-                "No Budget Set",
-                systemImage: "chart.bar",
-                description: Text("Budget categories will appear here once configured.")
-            )
-        } else {
-            ScrollView {
-                AdaptiveContentWidth {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(categories) { category in
-                            BudgetCategoryRow(
-                                category: category,
-                                isPinned: pinnedCategoryIds.contains(category.id),
-                                onTogglePin: { togglePin(category.id) }
-                            )
-                            if category.id != categories.last?.id {
+        Group {
+            if categories.isEmpty {
+                ContentUnavailableView(
+                    "No Budget Set",
+                    systemImage: "chart.bar",
+                    description: Text("Budget categories will appear here once configured.")
+                )
+            } else {
+                ScrollView {
+                    AdaptiveContentWidth {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(categories) { category in
+                                BudgetCategoryRow(
+                                    category: category,
+                                    isPinned: pinnedCategoryIds.contains(category.id),
+                                    onTogglePin: { togglePin(category.id) }
+                                )
+                                if category.id != categories.last?.id {
+                                    Divider()
+                                        .foregroundStyle(BrandColors.borderSecondary)
+                                }
+                            }
+
+                            // Overall Budget row
+                            if overallBudgetCents > 0 {
                                 Divider()
-                                    .foregroundStyle(BrandColors.borderSecondary)
+                                    .padding(.vertical, Spacing.xs)
+
+                                overallBudgetRow
                             }
                         }
-
-                        // Overall Budget row
-                        if overallBudgetCents > 0 {
-                            Divider()
-                                .padding(.vertical, Spacing.xs)
-
-                            overallBudgetRow
-                        }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.md)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.md)
                 }
             }
+        }
+        // M13: Reset auto-pin flag when project changes, then auto-pin Furnishings on first view
+        .task(id: projectContext.currentProjectId) {
+            didAutoPin = false
+        }
+        .onChange(of: categories.count) { _, newCount in
+            guard newCount > 0, !didAutoPin, pinnedCategoryIds.isEmpty else { return }
+            didAutoPin = true
+            autoPickFurnishingsIfNeeded()
         }
     }
 
@@ -109,6 +122,21 @@ struct BudgetTabView: View {
             Color.clear.frame(width: 20)
         }
         .padding(.vertical, Spacing.sm)
+    }
+
+    private func autoPickFurnishingsIfNeeded() {
+        guard let furnishings = categories.first(where: { $0.name.lowercased().contains("furnishing") }),
+              let accountId = accountContext.currentAccountId,
+              let userId = authManager.currentUser?.uid,
+              let projectId = projectContext.currentProjectId else { return }
+        Task {
+            try? await preferencesService.updatePinnedCategories(
+                accountId: accountId,
+                userId: userId,
+                projectId: projectId,
+                pinnedIds: [furnishings.id]
+            )
+        }
     }
 
     private func togglePin(_ categoryId: String) {

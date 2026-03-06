@@ -89,7 +89,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, usesCircleButtons ? Spacing.sm : Spacing.lg)
+            .padding(.horizontal, usesCircleButtons ? Spacing.xl : Spacing.lg)
             .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
             .modifier(containerModifier)
 
@@ -155,13 +155,22 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
     private func circleBarItem<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
+            .buttonStyle(CircleBarButtonStyle())
             .tint(.secondary)
-            .font(.system(size: 20))
-            .imageScale(.large)
-            .frame(width: 56, height: 56)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .frame(width: 44, height: 44)
             .contentShape(Circle())
-            .modifier(CircleGlassModifier())
+            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
             .frame(maxWidth: .infinity)
+    }
+}
+
+private struct CircleBarButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 

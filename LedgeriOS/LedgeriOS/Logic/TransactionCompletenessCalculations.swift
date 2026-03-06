@@ -16,7 +16,10 @@ enum TransactionCompletenessCalculations {
         let completenessRatio: Double
         let status: CompletenessStatus
         let missingTaxData: Bool
+        /// Tax computed from taxRatePct when only amountCents is available (no explicit subtotal).
         let inferredTax: Int?
+        /// Explicit tax: amountCents - subtotalCents when both fields are set in Firestore.
+        let taxAmount: Int?
         let varianceCents: Int
         let variancePercent: Double
         let returnedItemsCount: Int
@@ -38,11 +41,16 @@ enum TransactionCompletenessCalculations {
         var transactionSubtotalCents: Int
         var missingTaxData = false
         var inferredTax: Int?
+        var taxAmount: Int?  // M7: explicit tax when both amountCents and subtotalCents are set
 
         if let subtotal = transaction.subtotalCents, subtotal > 0 {
             transactionSubtotalCents = subtotal
+            // Compute explicit tax if we also have amountCents (amountCents = subtotal + tax)
+            if let amount = transaction.amountCents, amount > subtotal {
+                taxAmount = amount - subtotal
+            }
         } else if let amount = transaction.amountCents, amount > 0,
-                  let taxRate = transaction.taxRatePct, taxRate > 0 {
+                  let taxRate = transaction.taxRatePct {
             transactionSubtotalCents = Int((Double(amount) / (1.0 + taxRate / 100.0)).rounded())
             inferredTax = amount - transactionSubtotalCents
         } else if let amount = transaction.amountCents, amount > 0 {
@@ -86,6 +94,7 @@ enum TransactionCompletenessCalculations {
             status: status,
             missingTaxData: missingTaxData,
             inferredTax: inferredTax,
+            taxAmount: taxAmount,
             varianceCents: varianceCents,
             variancePercent: variancePercent,
             returnedItemsCount: returnedItemsCount,

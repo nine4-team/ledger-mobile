@@ -1,12 +1,15 @@
 import SwiftUI
 
-/// Wraps ProjectPickerList to reassign items to a different project.
-/// No financial records created — this corrects misallocations.
+/// Moves items to a different project.
+/// Per spec (reassign-vs-sell.md), moving between projects is always a cross-scope SELL
+/// (project → inventory → project). This modal delegates to `sellToProject` accordingly.
+/// Items use their own `budgetCategoryId` — no category selection step is shown here.
 struct ReassignToProjectModal: View {
     let items: [Item]
     let onComplete: () -> Void
 
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var isSaving = false
@@ -15,7 +18,7 @@ struct ReassignToProjectModal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Reassign to Project")
+                Text("Move to Project")
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
@@ -39,24 +42,27 @@ struct ReassignToProjectModal: View {
             }
 
             ProjectPickerList { project in
-                reassign(to: project)
+                move(to: project)
             }
         }
         .disabled(isSaving)
     }
 
-    private func reassign(to project: Project) {
+    private func move(to project: Project) {
         guard let accountId = accountContext.currentAccountId,
               let projectId = project.id else { return }
         isSaving = true
         let service = InventoryOperationsService()
-        let itemsToReassign = items
+        let itemsToSell = items
         Task {
             do {
-                try await service.reassignToProject(
-                    items: itemsToReassign,
+                // Moving to a different project is a sell (cross-scope), not a reassign.
+                // See reassign-vs-sell.md: reassign = same scope, sell = different scope.
+                try await service.sellToProject(
+                    items: itemsToSell,
                     destinationProjectId: projectId,
-                    accountId: accountId
+                    accountId: accountId,
+                    userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {
                     onComplete()
@@ -64,7 +70,7 @@ struct ReassignToProjectModal: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to reassign. Please try again."
+                    errorMessage = "Failed to move items. Please try again."
                     isSaving = false
                 }
             }

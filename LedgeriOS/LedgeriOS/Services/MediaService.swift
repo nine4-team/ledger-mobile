@@ -50,13 +50,26 @@ final class MediaService {
     // MARK: - Upload
 
     /// Uploads JPEG data to Firebase Storage and returns the public download URL.
+    /// H8: Retries up to 3 times with exponential backoff (1s, 2s) to handle transient failures.
     /// - Parameters:
     ///   - data: JPEG image data (use `UIImage.jpegData(compressionQuality: 0.8)` to produce this).
     ///   - path: Storage path produced by `uploadPath(...)`.
     /// - Returns: Download URL string.
-    /// - Throws: `StorageErrorCode` on upload or URL fetch failure.
+    /// - Throws: `StorageErrorCode` on upload or URL fetch failure after all retries are exhausted.
     func uploadImage(_ data: Data, path: String) async throws -> String {
-        try await uploader.putData(data, path: path, contentType: "image/jpeg")
+        var lastError: Error?
+        for attempt in 0..<3 {
+            do {
+                return try await uploader.putData(data, path: path, contentType: "image/jpeg")
+            } catch {
+                lastError = error
+                if attempt < 2 {
+                    let delaySeconds = Double(1 << attempt) // 1s, 2s
+                    try? await Task.sleep(for: .seconds(delaySeconds))
+                }
+            }
+        }
+        throw lastError!
     }
 
     // MARK: - Delete

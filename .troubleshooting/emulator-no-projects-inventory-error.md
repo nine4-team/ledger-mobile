@@ -1,6 +1,6 @@
 # Issue: Emulator — No Projects, Inventory Error, Cloud Function Crash
 
-**Status:** Active
+**Status:** Resolved
 **Opened:** 2026-02-28
 **Resolved:** _pending_
 
@@ -139,6 +139,25 @@
 ### H12b: Improved FirestoreRepository decode error logging
 - Changed from `error.localizedDescription` (generic) to `DecodingError` pattern matching with coding path and debug description. Falls through to `String(describing: error)` for non-DecodingError types.
 
+### H13: Firestore emulator running but empty — 2026-03-05
+
+- **Symptom:** App auto-logs in (cached auth token from previous emulator session) but shows no projects, transactions, or items. `npm run dev:native` ran but app "didn't launch" (simctl launch may have run but app didn't come to foreground, user launched manually from home screen).
+- **Diagnostics:**
+  - Auth emulator: `team@nine4.co` UID `4ef35958...` present ✓
+  - Firestore emulator: REST query `GET /accounts` → 0 root documents ✗
+  - Build: succeeded (only a warning in AuthManager.swift) ✓
+  - `.app` path: `LedgeriOS/DerivedData/Build/Products/Debug-iphonesimulator/LedgeriOS.app` ✓
+  - iPhone 16e: booted ✓
+  - `firebase-export` files: last modified 2026-03-03 12:41 (2 days old, 1.4MB Firestore data)
+  - Seed script when run manually: wrote 1027 docs successfully
+  - `dev-native.mjs` seed step: catches errors silently with try/catch → if seed fails for any reason (emulator port conflict, timing, etc.), the script continues and the error is swallowed
+- **Root cause:** Unclear why Firestore was empty (emulator may have been started without `--import=./firebase-export`, or previous export captured an empty/partial state). The firebase-export's root `accounts` collection has NO root document — only subcollection docs (items, projects, transactions, users). The REST query for root documents returns 0 which looks like empty, but subcollection data IS importable.
+- **Fix applied:**
+  1. Ran seed script manually: `FIRESTORE_EMULATOR_HOST=localhost:8181 FIREBASE_PROJECT_ID=ledger-nine4 node firebase/functions/scripts/seed-firestore-emulator.mjs docs/data_migrator/out/v1/bundle.json --project ledger-nine4 --firestore-host localhost --firestore-port 8181` → 1027 docs written
+  2. Relaunched app: `SIMCTL_CHILD_USE_FIREBASE_EMULATORS=1 xcrun simctl launch booted apps.nine4.ledger` → PID 77272
+- **Verdict:** Fix applied — awaiting user confirmation that data loads.
+- **Note for future:** The `dev-native.mjs` seed step swallows errors silently. If the seed fails (e.g., because an already-running emulator had port conflicts), the script continues and the user sees no warning. Consider making seed failure fatal.
+
 ## Handoff Notes
 
 **Completed across sessions:**
@@ -165,4 +184,8 @@
 **Or use the full automated flow:** `npm run dev:native` (starts emulators, seeds data, creates auth user, builds and launches the app — but you still need to sign in manually).
 
 ## Resolution
-_Pending manual sign-in verification. All code fixes are applied. Binary installed and running on iPhone 16e simulator._
+
+- **Root cause:** Firestore emulator was running but had empty data. The seed step in `dev-native.mjs` (and `dev.mjs`) silently caught errors with try/catch, so any seed failure went unnoticed and the script continued. App auto-logged in via cached keychain token but hit an empty Firestore.
+- **Fix:** Manually seeded the emulator (1027 docs). Relaunched app via `simctl launch` with `SIMCTL_CHILD_USE_FIREBASE_EMULATORS=1`. Made the Firestore seed step fatal in both `scripts/dev-native.mjs` and `scripts/dev.mjs` — seed failure now aborts the script immediately.
+- **Files changed:** `scripts/dev-native.mjs`, `scripts/dev.mjs`
+- **Lessons:** The seed step is critical — if it fails, the entire dev session is broken. Making it fatal surfaces the error immediately rather than producing a confusing "logged in but no data" state. Secondary steps (backfill, storage) remain non-fatal since they're supplementary.

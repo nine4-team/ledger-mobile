@@ -4,13 +4,23 @@ struct InvoiceReportView: View {
     let data: InvoiceReportData
     let projectName: String
     let clientName: String
+    var businessName: String?
 
     var body: some View {
+        Group {
+        if data.chargeLines.isEmpty && data.creditLines.isEmpty {
+            ContentUnavailableView("No Invoice Data", systemImage: "doc.text", description: Text("No transactions available for this report."))
+        } else {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 // Header
                 VStack(alignment: .leading, spacing: Spacing.xs) {
+                    if let businessName, !businessName.isEmpty {
+                        Text(businessName)
+                            .font(Typography.h2)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
                     Text(projectName)
                         .font(Typography.h1)
                         .foregroundStyle(BrandColors.textPrimary)
@@ -41,12 +51,22 @@ struct InvoiceReportView: View {
 
                 // Charges section
                 if !data.chargeLines.isEmpty {
-                    invoiceSection(title: "Charges", lines: data.chargeLines)
+                    Text("Charges")
+                        .sectionLabelStyle()
+                    let grouped = ReportAggregationCalculations.groupLinesByCategory(data.chargeLines)
+                    ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
+                        invoiceSection(title: group.categoryName, lines: group.lines)
+                    }
                 }
 
                 // Credits section
                 if !data.creditLines.isEmpty {
-                    invoiceSection(title: "Credits", lines: data.creditLines)
+                    Text("Credits")
+                        .sectionLabelStyle()
+                    let grouped = ReportAggregationCalculations.groupLinesByCategory(data.creditLines)
+                    ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
+                        invoiceSection(title: group.categoryName, lines: group.lines)
+                    }
                 }
 
                 // Summary
@@ -74,6 +94,8 @@ struct InvoiceReportView: View {
             .padding(Spacing.screenPadding)
             }
         }
+        } // else
+        } // Group
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
         .toolbar {
@@ -185,7 +207,8 @@ struct InvoiceReportView: View {
         let pdfContent = InvoiceReportPDFContent(
             data: data,
             projectName: projectName,
-            clientName: clientName
+            clientName: clientName,
+            businessName: businessName
         )
         ReportPDFSharing.sharePDF(
             content: pdfContent,
@@ -200,6 +223,7 @@ private struct InvoiceReportPDFContent: View {
     let data: InvoiceReportData
     let projectName: String
     let clientName: String
+    var businessName: String?
 
     private typealias S = ReportPDFStyles
 
@@ -212,7 +236,7 @@ private struct InvoiceReportPDFContent: View {
             if data.chargeLines.contains(where: \.isMissingProjectPrices)
                 || data.creditLines.contains(where: \.isMissingProjectPrices) {
                 HStack(spacing: 6) {
-                    Text("⚠")
+                    Text("\u{26A0}")
                         .font(S.bodyFont)
                     Text("Some items are missing project prices. Totals may be incomplete.")
                         .font(S.subItemFont)
@@ -224,12 +248,26 @@ private struct InvoiceReportPDFContent: View {
 
             // Charges section
             if !data.chargeLines.isEmpty {
-                invoiceLinesSection(title: "Charges", lines: data.chargeLines)
+                Text("Charges")
+                    .font(S.sectionHeaderFont)
+                    .foregroundStyle(S.brand)
+                    .padding(.top, 28)
+                let grouped = ReportAggregationCalculations.groupLinesByCategory(data.chargeLines)
+                ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
+                    invoiceLinesSection(title: group.categoryName, lines: group.lines)
+                }
             }
 
             // Credits section
             if !data.creditLines.isEmpty {
-                invoiceLinesSection(title: "Credits", lines: data.creditLines)
+                Text("Credits")
+                    .font(S.sectionHeaderFont)
+                    .foregroundStyle(S.brand)
+                    .padding(.top, 28)
+                let grouped = ReportAggregationCalculations.groupLinesByCategory(data.creditLines)
+                ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
+                    invoiceLinesSection(title: group.categoryName, lines: group.lines)
+                }
             }
 
             // Totals
@@ -272,6 +310,11 @@ private struct InvoiceReportPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let businessName, !businessName.isEmpty {
+                Text(businessName)
+                    .font(S.subtitleFont)
+                    .foregroundStyle(S.textDark)
+            }
             Text(projectName)
                 .font(S.titleFont)
                 .foregroundStyle(S.brand)
@@ -363,7 +406,7 @@ private struct InvoiceReportPDFContent: View {
                             ForEach(Array(line.linkedItems.enumerated()), id: \.offset) { _, item in
                                 HStack(spacing: 4) {
                                     Text(item.name ?? "Unnamed Item")
-                                    Text("—")
+                                    Text("\u{2014}")
                                     if item.isMissingPrice {
                                         Text("\(CurrencyFormatting.formatCentsWithDecimals(item.projectPriceCents ?? 0)) (missing price)")
                                             .foregroundStyle(S.error)

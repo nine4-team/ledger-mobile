@@ -8,6 +8,8 @@ struct CategoryFormModal: View {
 
     let mode: Mode
     let onSave: (String, BudgetCategoryType, Bool) -> Void
+    /// Names of existing categories (excluding the one being edited) for uniqueness validation (L14).
+    let existingNames: [String]
 
     @Environment(\.dismiss) private var dismiss
 
@@ -18,8 +20,13 @@ struct CategoryFormModal: View {
     @State private var validationError: String?
     @State private var hasSubmitted = false
 
-    init(mode: Mode, onSave: @escaping (String, BudgetCategoryType, Bool) -> Void) {
+    init(
+        mode: Mode,
+        existingNames: [String] = [],
+        onSave: @escaping (String, BudgetCategoryType, Bool) -> Void
+    ) {
         self.mode = mode
+        self.existingNames = existingNames
         self.onSave = onSave
 
         switch mode {
@@ -95,11 +102,21 @@ struct CategoryFormModal: View {
     // MARK: - Validation
 
     private var nameError: String? {
-        if name.trimmingCharacters(in: .whitespaces).isEmpty {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
             return "Name is required"
         }
-        if name.count > 100 {
+        if trimmed.count > 100 {
             return "Category name must be 100 characters or less"
+        }
+        // L13: Block control characters (newlines, tabs, etc.) in names
+        if trimmed.unicodeScalars.contains(where: { $0.value < 32 }) {
+            return "Category name cannot contain control characters"
+        }
+        // L14: Uniqueness check — case-insensitive, per-account
+        let lowered = trimmed.lowercased()
+        if existingNames.contains(where: { $0.lowercased() == lowered }) {
+            return "A category with this name already exists"
         }
         return nil
     }

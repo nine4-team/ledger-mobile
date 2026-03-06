@@ -75,6 +75,17 @@ enum ReportAggregationCalculations {
 
     // MARK: - Invoice Report
 
+    static func groupLinesByCategory(_ lines: [InvoiceLineItem]) -> [(categoryName: String, lines: [InvoiceLineItem])] {
+        let grouped = Dictionary(grouping: lines) { $0.categoryName ?? "Uncategorized" }
+        return grouped
+            .map { (categoryName: $0.key, lines: $0.value) }
+            .sorted { a, b in
+                if a.categoryName == "Uncategorized" { return false }
+                if b.categoryName == "Uncategorized" { return true }
+                return a.categoryName < b.categoryName
+            }
+    }
+
     static func computeInvoiceReport(
         transactions: [Transaction],
         items: [Item],
@@ -88,7 +99,20 @@ enum ReportAggregationCalculations {
             uniquingKeysWith: { first, _ in first }
         )
 
-        let active = transactions.filter { $0.isCanceled != true }
+        // Fee categories (categoryType == .fee) represent income received from the client,
+        // not charges passed through to them. They are intentionally excluded from the invoice.
+        let feeCategoryIds = Set(
+            categories.compactMap { cat -> String? in
+                guard cat.metadata?.categoryType == .fee, let id = cat.id else { return nil }
+                return id
+            }
+        )
+
+        let active = transactions.filter { tx in
+            guard tx.isCanceled != true else { return false }
+            if let catId = tx.budgetCategoryId, feeCategoryIds.contains(catId) { return false }
+            return true
+        }
 
         let charges = active
             .filter { $0.reimbursementType == "owed-to-company" }

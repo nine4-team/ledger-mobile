@@ -41,11 +41,19 @@ enum ItemDetailCalculations {
             actions.append(.clearTransaction)
         }
 
-        // Sale and reassign operations
-        actions.append(.sellToBusiness)
-        actions.append(.sellToProject)
-        actions.append(.reassignToProject)
-        actions.append(.reassignToInventory)
+        // Sale and reassign operations — visibility depends on scope (H21)
+        // Items in a project can be sold out or reassigned within the project.
+        // Items in inventory (no projectId) can only be sold into a project.
+        let inProject = item.projectId != nil
+        if inProject {
+            actions.append(.sellToBusiness)
+            actions.append(.sellToProject)
+            actions.append(.reassignToProject)
+            actions.append(.reassignToInventory)
+        } else {
+            // Inventory item: can only move into a project (sell to project)
+            actions.append(.sellToProject)
+        }
         actions.append(.moveToReturn)
         actions.append(.makeCopies)
 
