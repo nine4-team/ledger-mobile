@@ -24,7 +24,7 @@ struct ScrollContentTopFadeModifier: ViewModifier {
 }
 
 extension View {
-    func scrollContentTopFade(height: CGFloat = 84) -> some View {
+    func scrollContentTopFade(height: CGFloat = 42) -> some View {
         modifier(ScrollContentTopFadeModifier(height: height))
     }
 }
