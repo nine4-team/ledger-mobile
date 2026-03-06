@@ -99,6 +99,7 @@ struct ProjectsListView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createProject)) { _ in
             showNewProject = true
         }
+        .background(BrandColors.background)
     }
 
     // MARK: - Data

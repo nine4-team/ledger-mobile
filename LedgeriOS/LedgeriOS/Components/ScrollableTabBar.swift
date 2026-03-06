@@ -37,6 +37,7 @@ struct ScrollableTabBar: View {
             }
             .padding(.horizontal, Spacing.screenPadding)
         }
+        .background(BrandColors.background)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(BrandColors.borderSecondary)

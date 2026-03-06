@@ -50,6 +50,7 @@ struct ItemDetailView: View {
                 .padding(.vertical, Spacing.sm)
             }
         }
+        .background(BrandColors.background)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
                 dispositionButton

@@ -49,6 +49,7 @@ struct UniversalSearchView: View {
         .onChange(of: debouncedQuery) { _, newValue in
             performSearch(query: newValue)
         }
+        .background(BrandColors.background)
     }
 
     // MARK: - Search Bar

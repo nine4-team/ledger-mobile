@@ -150,6 +150,7 @@ struct ProjectDetailView: View {
         .onDisappear {
             projectContext.stopListeners()
         }
+        .background(BrandColors.background)
     }
 
     // MARK: - Actions

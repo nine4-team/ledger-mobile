@@ -98,5 +98,6 @@ struct InventoryView: View {
                 inventoryContext.lastSelectedTab = index
             }
         }
+        .background(BrandColors.background)
     }
 }

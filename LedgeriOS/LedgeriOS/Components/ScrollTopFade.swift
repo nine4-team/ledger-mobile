@@ -12,7 +12,7 @@ struct ScrollContentTopFadeModifier: ViewModifier {
         content
             .overlay(alignment: .top) {
                 LinearGradient(
-                    colors: [Color(.systemBackground), Color(.systemBackground).opacity(0)],
+                    colors: [BrandColors.background, BrandColors.background.opacity(0)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
