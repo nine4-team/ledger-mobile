@@ -19,19 +19,22 @@ struct SearchControlBar: View {
             if let onAdd {
                 Button(action: onAdd) {
                     Image(systemName: "plus")
-                        .imageScale(.large)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
                 }
+                .buttonStyle(CircleBarButtonStyle())
                 .tint(.secondary)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
+                .font(.system(size: 16))
+                .imageScale(.medium)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+                .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
                 .accessibilityLabel("Add")
             }
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
-        .modifier(CapsuleGlassModifier())
+        .modifier(CardGlassModifier())
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)

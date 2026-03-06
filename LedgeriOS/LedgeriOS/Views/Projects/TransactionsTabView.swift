@@ -126,7 +126,8 @@ struct TransactionsTabView: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            onAdd: { showNewTransaction = true }
+            onAdd: { showNewTransaction = true },
+            style: .card
         ) {
             if !processedTransactions.isEmpty {
                 Button {

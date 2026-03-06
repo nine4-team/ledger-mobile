@@ -166,7 +166,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     }
 }
 
-private struct CircleBarButtonStyle: ButtonStyle {
+struct CircleBarButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
