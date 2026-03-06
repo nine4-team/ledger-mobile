@@ -146,6 +146,8 @@ struct TransactionDetailView: View {
             ),
             closeOnItemPress: false
         ))
+        .toolbarBackground(BrandColors.background, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
@@ -604,7 +606,8 @@ struct TransactionDetailView: View {
                 }
             }
         }
-        .background(BrandColors.background)
+        .background(BrandColors.background
+            .padding(.horizontal, -Spacing.screenPadding))
     }
 
     // 6. Returned Items (collapsed, conditional)
