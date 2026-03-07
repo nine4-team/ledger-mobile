@@ -486,6 +486,7 @@ struct SharedItemsList: View {
         } else if !resolvedSelectedIds.wrappedValue.isEmpty {
             BulkSelectionBar(
                 selectedCount: resolvedSelectedIds.wrappedValue.count,
+                totalCount: processedItems.count,
                 totalCents: selectedTotalCents,
                 onBulkActions: { showBulkActionMenu = true },
                 onClear: { resolvedSelectedIds.wrappedValue.removeAll() }

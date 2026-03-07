@@ -36,21 +36,19 @@ struct InventoryTransactionsSubTab: View {
         SelectionCalculations.isAllSelected(selectedIds: selectedIds, allIds: allVisibleIds)
     }
 
+    private var selectedTransactionTotalCents: Int? {
+        let tuples = processedTransactions.compactMap { tx -> (id: String, cents: Int, type: String?)? in
+            guard let id = tx.id, let cents = tx.amountCents else { return nil }
+            return (id: id, cents: cents, type: tx.transactionType)
+        }
+        let total = SelectionCalculations.totalCentsForSelectedTransactions(selectedIds: selectedIds, transactions: tuples)
+        return total != 0 ? total : nil
+    }
+
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
-            if !selectedIds.isEmpty {
-                ListSelectionInfo(
-                    text: SelectionCalculations.selectionLabel(
-                        count: selectedIds.count,
-                        total: processedTransactions.count
-                    )
-                )
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.bottom, Spacing.xs)
-            }
-
             content
         }
         .scrollContentTopFade()
@@ -61,7 +59,8 @@ struct InventoryTransactionsSubTab: View {
             if !selectedIds.isEmpty {
                 BulkSelectionBar(
                     selectedCount: selectedIds.count,
-                    totalCents: nil,
+                    totalCount: processedTransactions.count,
+                    totalCents: selectedTransactionTotalCents,
                     onBulkActions: { showBulkActionMenu = true },
                     onClear: { selectedIds.removeAll() }
                 )
