@@ -16,16 +16,8 @@ struct EditChecklistModal: View {
     }
 
     var body: some View {
+        NavigationStack {
         VStack(spacing: 0) {
-            // Header
-            Text("Edit Checklists")
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.screenPadding)
-                .padding(.bottom, Spacing.sm)
-
             // List with reorder support
             List {
                 ForEach(localChecklists.indices, id: \.self) { checklistIndex in
@@ -73,17 +65,20 @@ struct EditChecklistModal: View {
             #endif
 
             // Actions
-            VStack(spacing: Spacing.sm) {
+            HStack(spacing: Spacing.sm) {
+                AppButton(title: "Cancel", variant: .secondary) {
+                    dismiss()
+                }
+
                 AppButton(title: "Save") {
                     onSave(localChecklists)
                     dismiss()
                 }
-
-                AppButton(title: "Cancel", variant: .secondary) {
-                    dismiss()
-                }
             }
             .padding(Spacing.screenPadding)
+        }
+        .navigationTitle("Edit Checklists")
+        .navigationBarTitleDisplayMode(.inline)
         }
     }
 
@@ -104,7 +99,7 @@ struct EditChecklistModal: View {
             } label: {
                 Image(systemName: "trash")
                     .font(Typography.small)
-                    .foregroundStyle(BrandColors.destructive)
+                    .foregroundStyle(BrandColors.textSecondary)
             }
             .buttonStyle(.plain)
         }

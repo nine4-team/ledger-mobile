@@ -16,12 +16,7 @@ struct SpacePickerList: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            Text("Set Space")
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
-                .padding(.horizontal, Spacing.screenPadding)
-
+        NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     // "No Space" option
@@ -42,8 +37,9 @@ struct SpacePickerList: View {
                     }
                 }
             }
+            .navigationTitle("Set Space")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .padding(.top, Spacing.screenPadding)
     }
 
     @ViewBuilder

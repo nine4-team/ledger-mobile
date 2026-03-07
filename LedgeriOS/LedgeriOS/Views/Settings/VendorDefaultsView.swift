@@ -53,7 +53,7 @@ struct VendorDefaultsView: View {
                                         removeVendor(vendor)
                                     } label: {
                                         Image(systemName: "trash")
-                                            .foregroundStyle(BrandColors.destructive)
+                                            .foregroundStyle(BrandColors.textSecondary)
                                     }
                                     .buttonStyle(.plain)
                                 }

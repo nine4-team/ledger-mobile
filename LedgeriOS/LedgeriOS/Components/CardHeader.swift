@@ -24,44 +24,50 @@ struct CardHeader: View {
         isSelected != nil
     }
 
+    private var hasContent: Bool {
+        showSelector || !badges.isEmpty || !(warningMessage?.isEmpty ?? true) || onBookmarkPress != nil || !menuItems.isEmpty
+    }
+
+    @ViewBuilder
     var body: some View {
-        HStack(spacing: Spacing.sm) {
-            if showSelector, let binding = isSelected {
-                CardSelectorButton(
-                    isSelected: binding.wrappedValue,
-                    label: selectionLabel,
-                    action: { binding.wrappedValue.toggle() }
-                )
-            }
-
-            Spacer(minLength: 0)
-
-            if !badges.isEmpty {
-                badgeRow
-            }
-
-            headerActions
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.sm)
-        .overlay(alignment: .bottom) {
-            CardDivider()
-        }
-        .sheet(isPresented: $showMenu) {
-            ActionMenuSheet(
-                title: menuTitle,
-                items: menuItems,
-                onSelectAction: { action in
-                    menuPendingAction = action
+        if hasContent {
+            HStack(spacing: Spacing.sm) {
+                if showSelector, let binding = isSelected {
+                    CardSelectorButton(
+                        isSelected: binding.wrappedValue,
+                        label: selectionLabel,
+                        action: { binding.wrappedValue.toggle() }
+                    )
                 }
-            )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
-        }
-        .onChange(of: showMenu) { _, isShowing in
-            if !isShowing, let action = menuPendingAction {
-                menuPendingAction = nil
-                action()
+
+                Spacer(minLength: 0)
+
+                if !badges.isEmpty {
+                    badgeRow
+                }
+
+                headerActions
+            }
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.sm)
+            .overlay(alignment: .bottom) {
+                CardDivider()
+            }
+            .sheet(isPresented: $showMenu) {
+                ActionMenuSheet(
+                    title: menuTitle,
+                    items: menuItems,
+                    onSelectAction: { action in
+                        menuPendingAction = action
+                    }
+                )
+                .sheetStyle(.selectionMenu)
+            }
+            .onChange(of: showMenu) { _, isShowing in
+                if !isShowing, let action = menuPendingAction {
+                    menuPendingAction = nil
+                    action()
+                }
             }
         }
     }

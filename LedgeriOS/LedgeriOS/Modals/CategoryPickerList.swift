@@ -15,12 +15,7 @@ struct CategoryPickerList: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            Text("Budget Category")
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
-                .padding(.horizontal, Spacing.screenPadding)
-
+        NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     // "No Category" option
@@ -40,8 +35,9 @@ struct CategoryPickerList: View {
                     }
                 }
             }
+            .navigationTitle("Budget Category")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .padding(.top, Spacing.screenPadding)
     }
 
     @ViewBuilder

@@ -206,7 +206,7 @@ private struct InviteRow: View {
 
                     Button("Revoke") { onRevoke() }
                         .font(Typography.buttonSmall)
-                        .foregroundStyle(BrandColors.destructive)
+                        .foregroundStyle(BrandColors.textPrimary)
                 }
             }
         }

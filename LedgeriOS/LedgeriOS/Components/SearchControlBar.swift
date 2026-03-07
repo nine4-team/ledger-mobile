@@ -32,10 +32,10 @@ struct SearchControlBar: View {
                 .accessibilityLabel("Add")
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
         .modifier(CardGlassModifier())
-        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
     }

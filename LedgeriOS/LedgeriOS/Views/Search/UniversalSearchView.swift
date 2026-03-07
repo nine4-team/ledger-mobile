@@ -1,7 +1,9 @@
 import SwiftUI
+import FirebaseFirestore
 
 struct UniversalSearchView: View {
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
 
     @State private var searchFocused = false
     @State private var query = ""
@@ -10,12 +12,34 @@ struct UniversalSearchView: View {
     @State private var debounceTask: Task<Void, Never>?
     @State private var searchResults = SearchCalculations.SearchResults(items: [], transactions: [], spaces: [])
 
+    // Item selection
+    @State private var selectedItemIds: Set<String> = []
+    @State private var showItemBulkActions = false
+    @State private var showItemSetSpace = false
+    @State private var showItemStatusPicker = false
+    @State private var showItemLinkTransaction = false
+    @State private var showItemMoveToProject = false
+    @State private var showItemDeleteConfirmation = false
+
+    // Transaction selection
+    @State private var selectedTransactionIds: Set<String> = []
+    @State private var showTransactionBulkActions = false
+    @State private var showTransactionDeleteConfirmation = false
+
     private var tabs: [TabBarItem] {
         [
             TabBarItem(id: "items", label: "Items (\(searchResults.items.count))"),
             TabBarItem(id: "transactions", label: "Transactions (\(searchResults.transactions.count))"),
             TabBarItem(id: "spaces", label: "Spaces (\(searchResults.spaces.count))"),
         ]
+    }
+
+    private var selectedItems: [Item] {
+        searchResults.items.filter { selectedItemIds.contains($0.id ?? "") }
+    }
+
+    private var selectedTransactions: [Transaction] {
+        searchResults.transactions.filter { selectedTransactionIds.contains($0.id ?? "") }
     }
 
     var body: some View {
@@ -30,6 +54,21 @@ struct UniversalSearchView: View {
         }
         .navigationTitle("Search")
         .navBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            if !selectedItemIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedItemIds.count,
+                    onBulkActions: { showItemBulkActions = true },
+                    onClear: { selectedItemIds.removeAll() }
+                )
+            } else if !selectedTransactionIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedTransactionIds.count,
+                    onBulkActions: { showTransactionBulkActions = true },
+                    onClear: { selectedTransactionIds.removeAll() }
+                )
+            }
+        }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 searchFocused = true
@@ -49,7 +88,63 @@ struct UniversalSearchView: View {
         .onChange(of: debouncedQuery) { _, newValue in
             performSearch(query: newValue)
         }
+        .onChange(of: selectedTab) { _, _ in
+            selectedItemIds.removeAll()
+            selectedTransactionIds.removeAll()
+        }
         .background(BrandColors.background)
+        // Item bulk action sheets
+        .sheet(isPresented: $showItemBulkActions) {
+            ActionMenuSheet(
+                title: "\(selectedItemIds.count) Items",
+                items: itemBulkActionMenuItems,
+                onSelectAction: { action in action() }
+            )
+            .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showItemSetSpace) {
+            SetSpaceModal(
+                spaces: accountContext.allSpaces,
+                currentSpaceId: nil,
+                onSelect: { space in setSpaceForSelectedItems(spaceId: space?.id) }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showItemStatusPicker) {
+            StatusPickerModal { status in setStatusForSelectedItems(status) }
+                .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showItemLinkTransaction) {
+            TransactionPickerModal(
+                transactions: accountContext.allTransactions,
+                selectedId: nil,
+                onSelect: { transaction in linkSelectedItemsToTransaction(transaction) }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showItemMoveToProject) {
+            ReassignToProjectModal(items: selectedItems) { selectedItemIds.removeAll() }
+                .sheetStyle(.form)
+        }
+        .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showItemDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSelectedItems() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        // Transaction bulk action sheets
+        .sheet(isPresented: $showTransactionBulkActions) {
+            ActionMenuSheet(
+                title: "\(selectedTransactionIds.count) Transactions",
+                items: transactionBulkActionMenuItems,
+                onSelectAction: { action in action() }
+            )
+            .sheetStyle(.quickMenu)
+        }
+        .confirmationDialog("Delete \(selectedTransactionIds.count) transactions?", isPresented: $showTransactionDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSelectedTransactions() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
     }
 
     // MARK: - Search Bar
@@ -119,14 +214,31 @@ struct UniversalSearchView: View {
             if searchResults.items.isEmpty {
                 emptyState(message: "No items found")
             } else {
+                if !selectedItemIds.isEmpty {
+                    ListSelectionInfo(
+                        text: SelectionCalculations.selectionLabel(
+                            count: selectedItemIds.count,
+                            total: searchResults.items.count
+                        )
+                    )
+                }
+
                 ForEach(searchResults.items) { item in
+                    let itemId = item.id ?? ""
                     NavigationLink(value: item) {
                         ItemCard(
                             item: item,
                             priceLabel: item.purchasePriceCents.map {
                                 CurrencyFormatting.formatCentsWithDecimals($0)
                             },
-                            budgetCategoryName: categoryName(for: item.budgetCategoryId)
+                            budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                            isSelected: Binding(
+                                get: { selectedItemIds.contains(itemId) },
+                                set: { selected in
+                                    if selected { selectedItemIds.insert(itemId) }
+                                    else { selectedItemIds.remove(itemId) }
+                                }
+                            )
                         )
                     }
                     .buttonStyle(.plain)
@@ -140,7 +252,17 @@ struct UniversalSearchView: View {
             if searchResults.transactions.isEmpty {
                 emptyState(message: "No transactions found")
             } else {
+                if !selectedTransactionIds.isEmpty {
+                    ListSelectionInfo(
+                        text: SelectionCalculations.selectionLabel(
+                            count: selectedTransactionIds.count,
+                            total: searchResults.transactions.count
+                        )
+                    )
+                }
+
                 ForEach(searchResults.transactions) { transaction in
+                    let txId = transaction.id ?? ""
                     NavigationLink(value: transaction) {
                         TransactionCard(
                             transaction: {
@@ -148,7 +270,14 @@ struct UniversalSearchView: View {
                                 tx.source = SearchCalculations.transactionDisplayName(for: transaction)
                                 return tx
                             }(),
-                            budgetCategoryName: categoryName(for: transaction.budgetCategoryId)
+                            budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
+                            isSelected: Binding(
+                                get: { selectedTransactionIds.contains(txId) },
+                                set: { selected in
+                                    if selected { selectedTransactionIds.insert(txId) }
+                                    else { selectedTransactionIds.remove(txId) }
+                                }
+                            )
                         )
                     }
                     .buttonStyle(.plain)
@@ -189,6 +318,102 @@ struct UniversalSearchView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, Spacing.xxxl)
+    }
+
+    // MARK: - Bulk Action Menus
+
+    private var itemBulkActionMenuItems: [ActionMenuItem] {
+        [
+            ActionMenuItem(id: "link-transaction", label: "Link to Transaction", icon: "link",
+                           onPress: { showItemLinkTransaction = true }),
+            ActionMenuItem(id: "set-space", label: "Set Space", icon: "mappin.and.ellipse",
+                           onPress: { showItemSetSpace = true }),
+            ActionMenuItem(id: "status", label: "Change Status", icon: "flag",
+                           onPress: { showItemStatusPicker = true }),
+            ActionMenuItem(id: "move-project", label: "Move to Project", icon: "arrow.triangle.2.circlepath",
+                           onPress: { showItemMoveToProject = true }),
+            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
+                           onPress: { showItemDeleteConfirmation = true }),
+        ]
+    }
+
+    private var transactionBulkActionMenuItems: [ActionMenuItem] {
+        [
+            ActionMenuItem(id: "mark-reviewed", label: "Mark as Reviewed", icon: "checkmark.circle",
+                           onPress: { markSelectedTransactionsReviewed() }),
+            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
+                           onPress: { showTransactionDeleteConfirmation = true }),
+        ]
+    }
+
+    // MARK: - Item Bulk Actions
+
+    private func setSpaceForSelectedItems(spaceId: String?) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setStatusForSelectedItems(_ status: String) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func linkSelectedItemsToTransaction(_ transaction: Transaction) {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        let itemIds = selectedItems.compactMap(\.id)
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        Task {
+            try? await service.updateTransaction(
+                accountId: accountId,
+                transactionId: transactionId,
+                fields: ["itemIds": FieldValue.arrayUnion(itemIds), "updatedAt": FieldValue.serverTimestamp()]
+            )
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func deleteSelectedItems() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    // MARK: - Transaction Bulk Actions
+
+    private func markSelectedTransactionsReviewed() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        for tx in selectedTransactions {
+            guard let txId = tx.id else { continue }
+            Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": false]) }
+        }
+        selectedTransactionIds.removeAll()
+    }
+
+    private func deleteSelectedTransactions() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        for tx in selectedTransactions {
+            guard let txId = tx.id else { continue }
+            Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        }
+        selectedTransactionIds.removeAll()
     }
 
     // MARK: - Helpers

@@ -72,7 +72,7 @@ struct AccountView: View {
                                         Spacer()
                                     }
                                     .font(Typography.body)
-                                    .foregroundStyle(BrandColors.destructive)
+                                    .foregroundStyle(BrandColors.textPrimary)
                                 }
                             }
                         }

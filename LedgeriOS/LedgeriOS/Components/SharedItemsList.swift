@@ -13,7 +13,6 @@ struct SharedItemsList: View {
     var getBulkMenuItems: (() -> [ActionMenuItem])?
     var selectedIds: Binding<Set<String>>?
     var useNavigationLinks: Bool = false
-    var useAdaptiveWidth: Bool = false
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
     var inline: Bool = false
@@ -281,29 +280,24 @@ struct SharedItemsList: View {
     @ViewBuilder
     private var itemList: some View {
         ScrollView {
-            let listContent = LazyVStack(spacing: Spacing.cardListGap) {
-
-                if showGrouped {
-                    ForEach(groups) { group in
-                        if group.count > 1 {
-                            groupedCard(for: group)
-                        } else if let item = group.items.first {
+            AdaptiveContentWidth {
+                LazyVStack(spacing: Spacing.cardListGap) {
+                    if showGrouped {
+                        ForEach(groups) { group in
+                            if group.count > 1 {
+                                groupedCard(for: group)
+                            } else if let item = group.items.first {
+                                singleItemCard(for: item)
+                            }
+                        }
+                    } else {
+                        ForEach(processedItems) { item in
                             singleItemCard(for: item)
                         }
                     }
-                } else {
-                    ForEach(processedItems) { item in
-                        singleItemCard(for: item)
-                    }
                 }
-            }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.sm)
-
-            if useAdaptiveWidth {
-                AdaptiveContentWidth { listContent }
-            } else {
-                listContent
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.sm)
             }
         }
     }

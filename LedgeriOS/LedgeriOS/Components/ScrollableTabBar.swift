@@ -11,23 +11,23 @@ struct ScrollableTabBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
+            HStack(spacing: Spacing.xs) {
                 ForEach(items) { item in
                     let isSelected = item.id == selectedId
                     Button {
-                        selectedId = item.id
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedId = item.id
+                        }
                     } label: {
                         Text(item.label)
-                            .font(isSelected ? Typography.button : Typography.body)
-                            .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
-                            .padding(.horizontal, 10)
-                            .padding(.top, Spacing.sm)
-                            .padding(.bottom, 10)
-                            .overlay(alignment: .bottom) {
+                            .font(Typography.button)
+                            .foregroundStyle(isSelected ? Color.white : BrandColors.textSecondary)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.sm)
+                            .background {
                                 if isSelected {
-                                    Rectangle()
+                                    Capsule()
                                         .fill(BrandColors.primary)
-                                        .frame(height: 3)
                                 }
                             }
                     }
@@ -36,12 +36,7 @@ struct ScrollableTabBar: View {
                 }
             }
             .padding(.horizontal, Spacing.screenPadding)
-        }
-        .background(BrandColors.background)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: Dimensions.borderWidth)
+            .padding(.vertical, Spacing.sm)
         }
     }
 }

@@ -81,15 +81,14 @@ struct ActionMenuSheet: View {
                 if let icon = item.icon {
                     Image(systemName: icon)
                         .font(.system(size: 20))
-                        .foregroundStyle(isDestructive ? BrandColors.destructive : BrandColors.primary)
+                        .foregroundStyle(BrandColors.primary)
                         .frame(width: 24, alignment: .center)
                 }
 
                 Text(item.label)
                     .font(Typography.body)
                     .foregroundStyle(
-                        isDestructive ? BrandColors.destructive
-                            : item.isSelected ? BrandColors.primary
+                        item.isSelected ? BrandColors.primary
                             : BrandColors.textPrimary
                     )
 

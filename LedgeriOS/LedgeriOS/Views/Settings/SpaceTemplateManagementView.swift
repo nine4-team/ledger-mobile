@@ -194,7 +194,7 @@ private struct TemplateRow: View {
 
                     Button { onDelete() } label: {
                         Image(systemName: "trash")
-                            .foregroundStyle(BrandColors.destructive)
+                            .foregroundStyle(BrandColors.textSecondary)
                     }
                 }
             }
@@ -333,7 +333,7 @@ private struct ChecklistEditor: View {
 
                 Button { onDelete() } label: {
                     Image(systemName: "trash")
-                        .foregroundStyle(BrandColors.destructive)
+                        .foregroundStyle(BrandColors.textSecondary)
                         .font(Typography.small)
                 }
                 .buttonStyle(.plain)

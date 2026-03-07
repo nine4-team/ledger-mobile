@@ -12,20 +12,24 @@ struct ProjectPickerList: View {
     @State private var listener: ListenerRegistration?
 
     var body: some View {
-        Group {
-            if isLoading {
-                LoadingScreen(message: "Loading projects...")
-            } else if projects.isEmpty {
-                ContentUnavailableView("No projects", systemImage: "folder")
-                    .frame(maxHeight: .infinity)
-            } else {
-                projectList
+        NavigationStack {
+            Group {
+                if isLoading {
+                    LoadingScreen(message: "Loading projects...")
+                } else if projects.isEmpty {
+                    ContentUnavailableView("No projects", systemImage: "folder")
+                        .frame(maxHeight: .infinity)
+                } else {
+                    projectList
+                }
             }
-        }
-        .task { await setupListener() }
-        .onDisappear {
-            listener?.remove()
-            listener = nil
+            .task { await setupListener() }
+            .onDisappear {
+                listener?.remove()
+                listener = nil
+            }
+            .navigationTitle("Select Project")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
