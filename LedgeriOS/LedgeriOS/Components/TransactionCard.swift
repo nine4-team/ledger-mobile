@@ -22,7 +22,6 @@ struct TransactionCard: View {
             reimbursementType: transaction.reimbursementType,
             hasEmailReceipt: transaction.hasEmailReceipt ?? false,
             needsReview: transaction.needsReview ?? false,
-            budgetCategoryName: budgetCategoryName,
             status: transaction.status
         )
     }
@@ -87,8 +86,11 @@ struct TransactionCard: View {
 
             // Date + item count row
             HStack(spacing: 0) {
+                Text("Date: ")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
                 Text(TransactionCardCalculations.formattedDate(transaction.transactionDate))
-                    .font(Typography.small.weight(.medium))
+                    .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
                 if let count = itemCount {
@@ -96,7 +98,19 @@ struct TransactionCard: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                     Text("\(count) \(count == 1 ? "item" : "items")")
-                        .font(Typography.small.weight(.medium))
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+
+            // Budget category
+            if let category = budgetCategoryName, !category.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    Text("Budget Category:")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    Text(category)
+                        .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }

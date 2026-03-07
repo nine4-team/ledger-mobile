@@ -14,7 +14,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.count == 1)
@@ -31,7 +30,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.count == 1)
@@ -48,7 +46,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -61,7 +58,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -74,7 +70,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: "owed-to-client",
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -87,7 +82,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: true,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.count == 1)
@@ -97,21 +91,16 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].borderOpacity == 0.20)
     }
 
-    @Test("Budget category adds primary-colored badge")
+    @Test("Budget category is not shown as a badge")
     func badgeItemsWithCategory() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: "Furnishings",
             status: nil
         )
-        #expect(badges.count == 1)
-        #expect(badges[0].text == "Furnishings")
-        #expect(badges[0].color == BrandColors.primary)
-        #expect(badges[0].backgroundOpacity == 0.10)
-        #expect(badges[0].borderOpacity == 0.20)
+        #expect(badges.isEmpty)
     }
 
     @Test("All nil/false produces empty badges")
@@ -121,26 +110,23 @@ struct TransactionCardCalculationTests {
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.isEmpty)
     }
 
-    @Test("Badge order: needs review first, then type, then category")
+    @Test("Badge order: needs review first, then type")
     func badgeItemsOrder() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: "purchase",
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
             needsReview: true,
-            budgetCategoryName: "Furnishings",
             status: nil
         )
-        #expect(badges.count == 3)
+        #expect(badges.count == 2)
         #expect(badges[0].text == "Needs Review")
         #expect(badges[1].text == "Purchase")
-        #expect(badges[2].text == "Furnishings")
     }
 
     @Test("Multiple badges: purchase + review (reimbursement excluded)")
@@ -150,7 +136,6 @@ struct TransactionCardCalculationTests {
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
             needsReview: true,
-            budgetCategoryName: nil,
             status: nil
         )
         #expect(badges.count == 2)
@@ -158,14 +143,13 @@ struct TransactionCardCalculationTests {
         #expect(badges[1].text == "Purchase")
     }
 
-    @Test("Empty budget category name is ignored")
+    @Test("No type and no review produces empty badges")
     func badgeItemsEmptyCategory() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
             needsReview: false,
-            budgetCategoryName: "",
             status: nil
         )
         #expect(badges.isEmpty)

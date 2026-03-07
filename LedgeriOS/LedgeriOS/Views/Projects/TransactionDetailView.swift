@@ -263,7 +263,6 @@ struct TransactionDetailView: View {
             reimbursementType: currentTransaction.reimbursementType,
             hasEmailReceipt: currentTransaction.hasEmailReceipt ?? false,
             needsReview: currentTransaction.needsReview ?? false,
-            budgetCategoryName: currentTransaction.budgetCategoryId.flatMap { categoryLookup[$0]?.name },
             status: currentTransaction.status
         )
         if !badges.isEmpty {
@@ -306,6 +305,17 @@ struct TransactionDetailView: View {
                     Text(TransactionDisplayCalculations.formattedDate(for: currentTransaction))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
+                }
+
+                if let categoryName = selectedCategory?.name, !categoryName.isEmpty {
+                    HStack(spacing: Spacing.xs) {
+                        Text("Budget Category:")
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        Text(categoryName)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
                 }
             }
         }

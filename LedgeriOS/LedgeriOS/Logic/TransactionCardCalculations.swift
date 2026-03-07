@@ -5,13 +5,12 @@ import SwiftUI
 enum TransactionCardCalculations {
 
     /// Returns ordered array of badges for a transaction.
-    /// Order: needs review → type → category
+    /// Order: needs review → type
     static func badgeItems(
         transactionType: String?,
         reimbursementType: String?,
         hasEmailReceipt: Bool,
         needsReview: Bool,
-        budgetCategoryName: String?,
         status: String?
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
@@ -36,11 +35,6 @@ enum TransactionCardCalculations {
             default:
                 break
             }
-        }
-
-        // 3. Budget category badge
-        if let category = budgetCategoryName, !category.isEmpty {
-            badges.append(CardBadge(text: category, color: BrandColors.primary))
         }
 
         return badges
