@@ -426,13 +426,15 @@ struct SharedTransactionsList: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    ForEach(processedTransactions) { transaction in
-                        transactionCard(for: transaction)
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.cardListGap) {
+                        ForEach(processedTransactions) { transaction in
+                            transactionCard(for: transaction)
+                        }
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
         }
     }

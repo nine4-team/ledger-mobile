@@ -11,7 +11,7 @@ struct ScrollableTabBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.xs) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(items) { item in
                     let isSelected = item.id == selectedId
                     Button {
@@ -20,14 +20,14 @@ struct ScrollableTabBar: View {
                         }
                     } label: {
                         Text(item.label)
-                            .font(Typography.button)
-                            .foregroundStyle(isSelected ? Color.white : BrandColors.textSecondary)
+                            .font(isSelected ? Typography.button : Typography.body)
+                            .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
                             .padding(.horizontal, Spacing.md)
                             .padding(.vertical, Spacing.sm)
                             .background {
                                 if isSelected {
                                     Capsule()
-                                        .fill(BrandColors.primary)
+                                        .fill(BrandColors.primary.opacity(0.15))
                                 }
                             }
                     }
@@ -37,6 +37,12 @@ struct ScrollableTabBar: View {
             }
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
+        }
+        .background(.thinMaterial)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: Dimensions.borderWidth)
         }
     }
 }

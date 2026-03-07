@@ -42,6 +42,15 @@ struct UniversalSearchView: View {
         searchResults.transactions.filter { selectedTransactionIds.contains($0.id ?? "") }
     }
 
+    private var selectedItemTotalCents: Int? {
+        let pairs = searchResults.items.compactMap { item -> (id: String, cents: Int)? in
+            guard let id = item.id, let cents = ItemDetailCalculations.displayPrice(for: item) else { return nil }
+            return (id: id, cents: cents)
+        }
+        let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)
+        return total > 0 ? total : nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             searchBar
@@ -58,6 +67,7 @@ struct UniversalSearchView: View {
             if !selectedItemIds.isEmpty {
                 BulkSelectionBar(
                     selectedCount: selectedItemIds.count,
+                    totalCents: selectedItemTotalCents,
                     onBulkActions: { showItemBulkActions = true },
                     onClear: { selectedItemIds.removeAll() }
                 )
@@ -214,34 +224,32 @@ struct UniversalSearchView: View {
             if searchResults.items.isEmpty {
                 emptyState(message: "No items found")
             } else {
-                if !selectedItemIds.isEmpty {
-                    ListSelectionInfo(
-                        text: SelectionCalculations.selectionLabel(
-                            count: selectedItemIds.count,
-                            total: searchResults.items.count
-                        )
-                    )
-                }
-
                 ForEach(searchResults.items) { item in
                     let itemId = item.id ?? ""
-                    NavigationLink(value: item) {
-                        ItemCard(
-                            item: item,
-                            priceLabel: item.purchasePriceCents.map {
-                                CurrencyFormatting.formatCentsWithDecimals($0)
-                            },
-                            budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                            isSelected: Binding(
-                                get: { selectedItemIds.contains(itemId) },
-                                set: { selected in
-                                    if selected { selectedItemIds.insert(itemId) }
-                                    else { selectedItemIds.remove(itemId) }
-                                }
-                            )
-                        )
+                    let isSelected = Binding(
+                        get: { selectedItemIds.contains(itemId) },
+                        set: { selected in
+                            if selected { selectedItemIds.insert(itemId) }
+                            else { selectedItemIds.remove(itemId) }
+                        }
+                    )
+                    let card = ItemCard(
+                        item: item,
+                        priceLabel: ItemDetailCalculations.displayPrice(for: item).map {
+                            CurrencyFormatting.formatCentsWithDecimals($0)
+                        },
+                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                        isSelected: isSelected,
+                        menuItems: selectedItemIds.isEmpty ? singleItemMenuItems(for: itemId) : []
+                    )
+
+                    if selectedItemIds.isEmpty {
+                        NavigationLink(value: item) { card }
+                            .buttonStyle(.plain)
+                    } else {
+                        card
+                            .onTapGesture { isSelected.wrappedValue.toggle() }
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -252,35 +260,34 @@ struct UniversalSearchView: View {
             if searchResults.transactions.isEmpty {
                 emptyState(message: "No transactions found")
             } else {
-                if !selectedTransactionIds.isEmpty {
-                    ListSelectionInfo(
-                        text: SelectionCalculations.selectionLabel(
-                            count: selectedTransactionIds.count,
-                            total: searchResults.transactions.count
-                        )
-                    )
-                }
-
                 ForEach(searchResults.transactions) { transaction in
                     let txId = transaction.id ?? ""
-                    NavigationLink(value: transaction) {
-                        TransactionCard(
-                            transaction: {
-                                var tx = transaction
-                                tx.source = SearchCalculations.transactionDisplayName(for: transaction)
-                                return tx
-                            }(),
-                            budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
-                            isSelected: Binding(
-                                get: { selectedTransactionIds.contains(txId) },
-                                set: { selected in
-                                    if selected { selectedTransactionIds.insert(txId) }
-                                    else { selectedTransactionIds.remove(txId) }
-                                }
-                            )
-                        )
+                    let isSelected = Binding(
+                        get: { selectedTransactionIds.contains(txId) },
+                        set: { selected in
+                            if selected { selectedTransactionIds.insert(txId) }
+                            else { selectedTransactionIds.remove(txId) }
+                        }
+                    )
+                    let displayTransaction: Transaction = {
+                        var tx = transaction
+                        tx.source = SearchCalculations.transactionDisplayName(for: transaction)
+                        return tx
+                    }()
+                    let card = TransactionCard(
+                        transaction: displayTransaction,
+                        budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
+                        isSelected: isSelected,
+                        menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: txId) : []
+                    )
+
+                    if selectedTransactionIds.isEmpty {
+                        NavigationLink(value: transaction) { card }
+                            .buttonStyle(.plain)
+                    } else {
+                        card
+                            .onTapGesture { isSelected.wrappedValue.toggle() }
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -318,6 +325,20 @@ struct UniversalSearchView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, Spacing.xxxl)
+    }
+
+    // MARK: - Single Item Menu Items
+
+    private func singleItemMenuItems(for itemId: String) -> [ActionMenuItem] {
+        [ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
+            selectedItemIds.insert(itemId)
+        })]
+    }
+
+    private func singleTransactionMenuItems(for txId: String) -> [ActionMenuItem] {
+        [ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
+            selectedTransactionIds.insert(txId)
+        })]
     }
 
     // MARK: - Bulk Action Menus

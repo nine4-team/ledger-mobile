@@ -33,7 +33,6 @@ struct InventoryItemsSubTab: View {
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
-            useAdaptiveWidth: true,
             emptyIcon: "shippingbox",
             filterScope: .inventory
         )

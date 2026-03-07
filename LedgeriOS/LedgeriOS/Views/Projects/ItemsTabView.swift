@@ -35,7 +35,6 @@ struct ItemsTabView: View {
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
-            useAdaptiveWidth: true,
             emptyIcon: "cube.box"
         )
         .sheet(isPresented: $showBulkStatusPicker) {
