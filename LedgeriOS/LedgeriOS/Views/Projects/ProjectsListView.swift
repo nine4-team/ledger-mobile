@@ -59,7 +59,7 @@ struct ProjectsListView: View {
                             }
                         }
                         .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.top, 56)
+                        .padding(.top, Spacing.md)
                         .padding(.bottom, Spacing.md)
                     }
                 }
