@@ -42,6 +42,15 @@ struct UniversalSearchView: View {
         searchResults.transactions.filter { selectedTransactionIds.contains($0.id ?? "") }
     }
 
+    private var selectedTransactionTotalCents: Int? {
+        let tuples = searchResults.transactions.compactMap { tx -> (id: String, cents: Int, type: String?)? in
+            guard let id = tx.id, let cents = tx.amountCents else { return nil }
+            return (id: id, cents: cents, type: tx.transactionType)
+        }
+        let total = SelectionCalculations.totalCentsForSelectedTransactions(selectedIds: selectedTransactionIds, transactions: tuples)
+        return total != 0 ? total : nil
+    }
+
     private var selectedItemTotalCents: Int? {
         let pairs = searchResults.items.compactMap { item -> (id: String, cents: Int)? in
             guard let id = item.id, let cents = ItemDetailCalculations.displayPrice(for: item) else { return nil }
@@ -67,6 +76,7 @@ struct UniversalSearchView: View {
             if !selectedItemIds.isEmpty {
                 BulkSelectionBar(
                     selectedCount: selectedItemIds.count,
+                    totalCount: searchResults.items.count,
                     totalCents: selectedItemTotalCents,
                     onBulkActions: { showItemBulkActions = true },
                     onClear: { selectedItemIds.removeAll() }
@@ -74,6 +84,8 @@ struct UniversalSearchView: View {
             } else if !selectedTransactionIds.isEmpty {
                 BulkSelectionBar(
                     selectedCount: selectedTransactionIds.count,
+                    totalCount: searchResults.transactions.count,
+                    totalCents: selectedTransactionTotalCents,
                     onBulkActions: { showTransactionBulkActions = true },
                     onClear: { selectedTransactionIds.removeAll() }
                 )

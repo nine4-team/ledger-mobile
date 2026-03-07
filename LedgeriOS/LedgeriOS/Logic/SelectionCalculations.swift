@@ -20,6 +20,20 @@ enum SelectionCalculations {
         items.filter { selectedIds.contains($0.id) }.reduce(0) { $0 + $1.cents }
     }
 
+    /// Sums transaction amounts for selected IDs with sign-aware logic.
+    /// `return` and `sale` types count as negative; all others are positive.
+    static func totalCentsForSelectedTransactions(
+        selectedIds: Set<String>,
+        transactions: [(id: String, cents: Int, type: String?)]
+    ) -> Int {
+        transactions
+            .filter { selectedIds.contains($0.id) }
+            .reduce(0) { sum, tx in
+                let isNegative = tx.type?.lowercased() == "return" || tx.type?.lowercased() == "sale"
+                return sum + (isNegative ? -tx.cents : tx.cents)
+            }
+    }
+
     static func selectionLabel(count: Int, total: Int) -> String {
         "\(count) of \(total) selected"
     }

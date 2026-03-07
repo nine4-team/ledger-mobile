@@ -2,16 +2,24 @@ import SwiftUI
 
 struct BulkSelectionBar: View {
     let selectedCount: Int
+    var totalCount: Int?
     var totalCents: Int?
     var actionLabel: String = "Actions"
     let onBulkActions: () -> Void
     let onClear: () -> Void
 
+    private var selectionText: String {
+        if let totalCount {
+            return "\(selectedCount) of \(totalCount) selected"
+        }
+        return "\(selectedCount) selected"
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("\(selectedCount) selected")
-                    .font(Typography.body)
+                Text(selectionText)
+                    .font(Typography.small)
                     .fontWeight(.bold)
                     .foregroundStyle(BrandColors.textPrimary)
 
@@ -38,6 +46,7 @@ struct BulkSelectionBar: View {
         }
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
+        .background(BrandColors.background)
     }
 }
 
