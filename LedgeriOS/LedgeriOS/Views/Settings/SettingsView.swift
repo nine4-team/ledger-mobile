@@ -12,23 +12,21 @@ struct SettingsView: View {
         accountContext.member?.role == .owner
     }
 
-    private var tabs: [TabBarItem] {
-        var items = [
-            TabBarItem(id: "general", label: "General"),
-            TabBarItem(id: "presets", label: "Presets"),
-        ]
-        if isAdmin {
-            items.append(TabBarItem(id: "users", label: "Users"))
-        }
-        if isOwner {
-            items.append(TabBarItem(id: "account", label: "Account"))
-        }
-        return items
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            ScrollableTabBar(selectedId: $selectedTab, items: tabs)
+            Picker("Settings", selection: $selectedTab) {
+                Text("General").tag("general")
+                Text("Presets").tag("presets")
+                if isAdmin {
+                    Text("Users").tag("users")
+                }
+                if isOwner {
+                    Text("Account").tag("account")
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
             Group {
                 switch selectedTab {

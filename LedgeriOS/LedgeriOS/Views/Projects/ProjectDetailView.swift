@@ -13,24 +13,22 @@ struct ProjectDetailView: View {
     @State private var showingArchiveConfirmation = false
     @State private var errorMessage: String?
 
-    private let tabs = [
-        TabBarItem(id: "items", label: "Items"),
-        TabBarItem(id: "transactions", label: "Transactions"),
-        TabBarItem(id: "spaces", label: "Spaces"),
-        TabBarItem(id: "budget", label: "Budget"),
-        TabBarItem(id: "accounting", label: "Accounting"),
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             PinnedBudgetsSection()
-            ScrollableTabBar(selectedId: $selectedTab, items: tabs)
+            Picker("Section", selection: $selectedTab) {
+                Text("Items").tag("items")
+                Text("Transactions").tag("transactions")
+                Text("Spaces").tag("spaces")
+                Text("Finances").tag("finances")
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
             AdaptiveContentWidth {
                 Group {
                     switch selectedTab {
-                    case "budget":
-                        BudgetTabView()
                     case "items":
                         ItemsTabView()
                             .navigationDestination(for: Item.self) { item in
@@ -43,10 +41,10 @@ struct ProjectDetailView: View {
                             }
                     case "spaces":
                         SpacesTabView()
-                    case "accounting":
-                        AccountingTabView()
+                    case "finances":
+                        FinancesTabView()
                     default:
-                        BudgetTabView()
+                        ItemsTabView()
                     }
                 }
             }

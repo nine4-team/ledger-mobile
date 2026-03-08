@@ -26,13 +26,9 @@ struct UniversalSearchView: View {
     @State private var showTransactionBulkActions = false
     @State private var showTransactionDeleteConfirmation = false
 
-    private var tabs: [TabBarItem] {
-        [
-            TabBarItem(id: "items", label: "Items (\(searchResults.items.count))"),
-            TabBarItem(id: "transactions", label: "Transactions (\(searchResults.transactions.count))"),
-            TabBarItem(id: "spaces", label: "Spaces (\(searchResults.spaces.count))"),
-        ]
-    }
+    private var itemsCount: Int { searchResults.items.count }
+    private var transactionsCount: Int { searchResults.transactions.count }
+    private var spacesCount: Int { searchResults.spaces.count }
 
     private var selectedItems: [Item] {
         searchResults.items.filter { selectedItemIds.contains($0.id ?? "") }
@@ -205,7 +201,14 @@ struct UniversalSearchView: View {
 
     private var resultsView: some View {
         VStack(spacing: 0) {
-            ScrollableTabBar(selectedId: $selectedTab, items: tabs)
+            Picker("Search", selection: $selectedTab) {
+                Text("Items (\(itemsCount))").tag("items")
+                Text("Txns (\(transactionsCount))").tag("transactions")
+                Text("Spaces (\(spacesCount))").tag("spaces")
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
             ScrollView {
                 AdaptiveContentWidth {

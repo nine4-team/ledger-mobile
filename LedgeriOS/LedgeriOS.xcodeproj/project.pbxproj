@@ -31,6 +31,7 @@
 		2A07E979DB3CD6B37D0B9B44 /* ProjectPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */; };
 		2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */; };
 		2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */; };
+		06546175DE8D4D61A06A6768 /* FinancesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B811FD8239474CAE880515 /* FinancesTabView.swift */; };
 		2EB56A038F955DDA41E7244C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03AED92E32EB085437B6F76 /* Item.swift */; };
 		31D8FBEE0A5ED549A350D7D4 /* SpaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F74BE7B5D06201352DB914C /* SpaceDetailView.swift */; };
 		32E5DED81173DDDE282CC643 /* ProjectListCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */; };
@@ -303,6 +304,7 @@
 		453BAC1E5197316576CCE8E1 /* InventoryContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryContext.swift; sourceTree = "<group>"; };
 		46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditSpaceDetailsModal.swift; sourceTree = "<group>"; };
 		47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountingTabView.swift; sourceTree = "<group>"; };
+		01B811FD8239474CAE880515 /* FinancesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FinancesTabView.swift; sourceTree = "<group>"; };
 		47370982DDDB5064026D1B45 /* Enums.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		4745C15BA2924A183A82E249 /* ItemsTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabView.swift; sourceTree = "<group>"; };
 		49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryPickerList.swift; sourceTree = "<group>"; };
@@ -573,6 +575,7 @@
 			isa = PBXGroup;
 			children = (
 				47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */,
+				01B811FD8239474CAE880515 /* FinancesTabView.swift */,
 				4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */,
 				D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */,
 				5DD203EAE8B8232355376751 /* BudgetTabView.swift */,
@@ -1121,6 +1124,7 @@
 			files = (
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
 				2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */,
+				06546175DE8D4D61A06A6768 /* FinancesTabView.swift in Sources */,
 				BE98ABCF37AE4A6CA0CD7FEE /* ReportPDFSharing.swift in Sources */,
 				F1E2D3C4B5A647B89C0D1E2F /* ReportPDFStyles.swift in Sources */,
 				FA8BBCB00F8B4135B8FDC17E /* InvoiceReportView.swift in Sources */,

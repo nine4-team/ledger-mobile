@@ -14,6 +14,9 @@ struct LedgerApp: App {
     init() {
         FirebaseApp.configure()
 
+        // Global segmented control styling — gold selection tint
+        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(BrandColors.primary)
+
         #if DEBUG
         FirebaseEmulatorConfig.configureIfEnabled()
         #endif

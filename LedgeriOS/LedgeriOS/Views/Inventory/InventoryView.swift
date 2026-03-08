@@ -10,12 +10,6 @@ struct InventoryView: View {
     @State private var showNewTransaction = false
     @State private var showNewSpace = false
                 
-    private let tabs = [
-        TabBarItem(id: "items", label: "Items"),
-        TabBarItem(id: "transactions", label: "Transactions"),
-        TabBarItem(id: "spaces", label: "Spaces"),
-    ]
-
     init() {
         let saved = UserDefaults.standard.integer(forKey: "inventorySelectedTab")
         let tabIds = ["items", "transactions", "spaces"]
@@ -25,7 +19,14 @@ struct InventoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollableTabBar(selectedId: $selectedTab, items: tabs)
+            Picker("Inventory", selection: $selectedTab) {
+                Text("Items").tag("items")
+                Text("Transactions").tag("transactions")
+                Text("Spaces").tag("spaces")
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
             Group {
                 switch selectedTab {

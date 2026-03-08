@@ -24,13 +24,13 @@ struct ProjectsListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollableTabBar(
-                selectedId: $selectedTab,
-                items: [
-                    TabBarItem(id: "active", label: "Active"),
-                    TabBarItem(id: "archived", label: "Archived"),
-                ]
-            )
+            Picker("Projects", selection: $selectedTab) {
+                Text("Active").tag("active")
+                Text("Archived").tag("archived")
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
             if filteredProjects.isEmpty {
                 ContentUnavailableView(
