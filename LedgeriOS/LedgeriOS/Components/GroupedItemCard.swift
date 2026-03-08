@@ -21,7 +21,7 @@ struct ItemCardData: Identifiable, Sendable {
 
 // MARK: - Grouped Item Card
 
-struct GroupedItemCard: View {
+struct GroupedItemCard<ExpandedContent: View>: View {
     let name: String
     var thumbnailUrl: String?
     var countLabel: String?
@@ -36,9 +36,8 @@ struct GroupedItemCard: View {
     var isSelected: Binding<Bool>?
     var onSelectedChange: ((Bool) -> Void)?
     var onPress: (() -> Void)?
-    var items: [ItemCardData] = []
-    var onItemPress: ((ItemCardData) -> Void)?
-    var onItemSelectedChange: ((String, Bool) -> Void)?
+    var itemCount: Int = 0
+    @ViewBuilder var expandedContent: () -> ExpandedContent
 
     @State private var internalExpanded: Bool
 
@@ -57,9 +56,8 @@ struct GroupedItemCard: View {
         isSelected: Binding<Bool>? = nil,
         onSelectedChange: ((Bool) -> Void)? = nil,
         onPress: (() -> Void)? = nil,
-        items: [ItemCardData] = [],
-        onItemPress: ((ItemCardData) -> Void)? = nil,
-        onItemSelectedChange: ((String, Bool) -> Void)? = nil
+        itemCount: Int = 0,
+        @ViewBuilder expandedContent: @escaping () -> ExpandedContent
     ) {
         self.name = name
         self.thumbnailUrl = thumbnailUrl
@@ -75,10 +73,9 @@ struct GroupedItemCard: View {
         self.isSelected = isSelected
         self.onSelectedChange = onSelectedChange
         self.onPress = onPress
-        self.items = items
-        self.onItemPress = onItemPress
-        self.onItemSelectedChange = onItemSelectedChange
+        self.itemCount = itemCount
         self._internalExpanded = State(initialValue: defaultExpanded)
+        self.expandedContent = expandedContent
     }
 
     private var expanded: Bool {
@@ -117,34 +114,9 @@ struct GroupedItemCard: View {
                 }
                 .buttonStyle(.plain)
 
-                if expanded && !items.isEmpty {
+                if expanded && itemCount > 0 {
                     VStack(spacing: Spacing.cardListGap) {
-                        ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                            let selectionBinding: Binding<Bool>? = onItemSelectedChange != nil
-                                ? Binding(
-                                    get: { item.isSelected },
-                                    set: { onItemSelectedChange?(item.id, $0) }
-                                )
-                                : nil
-                            ItemCard(
-                                item: Item(
-                                    name: item.name,
-                                    notes: item.notes,
-                                    source: item.sourceLabel,
-                                    sku: item.sku,
-                                    images: item.thumbnailUri.map { [AttachmentRef(url: $0)] }
-                                ),
-                                priceLabel: item.priceLabel,
-                                budgetCategoryName: item.budgetCategoryName,
-                                locationLabel: item.locationLabel,
-                                indexLabel: item.indexLabel ?? "\(index + 1)/\(items.count)",
-                                statusOverride: item.statusLabel,
-                                isSelected: selectionBinding,
-                                onPress: onItemPress.map { callback in { callback(item) } },
-                                menuItems: item.menuItems,
-                                warningMessage: item.warningMessage
-                            )
-                        }
+                        expandedContent()
                     }
                     .padding(.horizontal, Spacing.cardPadding / 2)
                     .padding(.vertical, Spacing.sm)
@@ -255,7 +227,7 @@ struct GroupedItemCard: View {
             }
             .frame(width: 108, height: 108)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
-            .background(BrandColors.surfaceTertiary)
+            .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                     .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
@@ -276,18 +248,12 @@ struct GroupedItemCard: View {
         .frame(width: 108, height: 108)
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6, 4]))
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
         )
     }
 }
 
 // MARK: - Previews
-
-private let previewItems: [ItemCardData] = [
-    ItemCardData(id: "1", name: "Sofa", sku: "SF-001", sourceLabel: "West Elm", priceLabel: "$899"),
-    ItemCardData(id: "2", name: "Coffee Table", sourceLabel: "CB2", priceLabel: "$350"),
-    ItemCardData(id: "3", name: "Floor Lamp", sku: "FL-042", priceLabel: "$201"),
-]
 
 #Preview("Collapsed") {
     GroupedItemCard(
@@ -298,8 +264,10 @@ private let previewItems: [ItemCardData] = [
         sku: "SF-001",
         sourceLabel: "West Elm",
         priceLabel: "$1,450",
-        items: previewItems
-    )
+        itemCount: 3
+    ) {
+        Text("Items go here")
+    }
     .padding(Spacing.screenPadding)
 }
 
@@ -310,8 +278,10 @@ private let previewItems: [ItemCardData] = [
         totalLabel: "$1,450",
         sourceLabel: "West Elm",
         priceLabel: "$1,450",
-        items: previewItems
-    )
+        itemCount: 3
+    ) {
+        Text("Items go here")
+    }
     .padding(Spacing.screenPadding)
 }
 
@@ -325,9 +295,15 @@ private let previewItems: [ItemCardData] = [
         totalLabel: "$1,450",
         priceLabel: "$1,450",
         isExpanded: $expanded,
-        items: previewItems,
-        onItemPress: { item in print("Tapped \(item.name)") }
-    )
+        itemCount: 3
+    ) {
+        ForEach(["Blender", "Toaster", "Mixer"], id: \.self) { name in
+            ItemCard(
+                item: Item(name: name),
+                priceLabel: "$99"
+            )
+        }
+    }
     .padding(Spacing.screenPadding)
 }
 
@@ -340,7 +316,9 @@ private let previewItems: [ItemCardData] = [
         totalLabel: "$1,450",
         priceLabel: "$1,450",
         isSelected: $selected,
-        items: previewItems
-    )
+        itemCount: 3
+    ) {
+        Text("Items go here")
+    }
     .padding(Spacing.screenPadding)
 }

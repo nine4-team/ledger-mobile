@@ -449,32 +449,37 @@ struct SharedItemsList: View {
                     }
                 }
             },
-            items: group.items.compactMap { item in
-                // Issue 4: Skip items with nil IDs instead of UUID fallback
-                guard let id = item.id else { return nil }
-                return ItemCardData(
-                    id: id,
-                    name: item.displayName,
-                    sku: item.sku,
-                    sourceLabel: item.source,
-                    priceLabel: displayPrice(for: item),
-                    statusLabel: item.status,
-                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                    thumbnailUri: item.images?.first?.url,
-                    warningMessage: getWarning?(item),
-                    isSelected: ids.contains(id),
-                    menuItems: getMenuItems?(item) ?? []
-                )
-            },
-            onItemPress: { cardData in
-                if let item = group.items.first(where: { $0.id == cardData.id }) {
-                    handleItemPress(item)
+            itemCount: validItems.count
+        ) {
+            ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+                if let itemId = item.id {
+                    let selectionBinding = Binding(
+                        get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
+                        set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
+                    )
+                    let card = ItemCard(
+                        item: item,
+                        priceLabel: displayPrice(for: item),
+                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                        indexLabel: "\(index + 1)/\(group.items.count)",
+                        statusOverride: item.status,
+                        isSelected: selectionBinding,
+                        onPress: useNavigationLinks && ids.isEmpty ? nil : { handleItemPress(item) },
+                        menuItems: getMenuItems?(item) ?? [],
+                        warningMessage: getWarning?(item)
+                    )
+
+                    if useNavigationLinks && ids.isEmpty {
+                        NavigationLink(value: item) {
+                            card
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        card
+                    }
                 }
-            },
-            onItemSelectedChange: { id, selected in
-                if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
             }
-        )
+        }
     }
 
     // MARK: - Bottom Bar
