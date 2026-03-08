@@ -6,65 +6,56 @@ enum BrandColors {
     /// Brand primary — #987e55 (taupe/brown). Same in both light and dark modes.
     static let primary = Color(red: 152/255, green: 126/255, blue: 85/255)
 
-    // MARK: - Adaptive Backgrounds (auto-switch light/dark)
+    // MARK: - Adaptive Backgrounds (grouped hierarchy — card-based layout)
 
-    /// Screen background — light: #f7f8fa, dark: #1E1E1E
-    static let background = Color("background")
-    /// Elevated surface (cards, sheets) — light: #FFFFFF, dark: #2E2E2E
-    static let surface = Color("surface")
-    /// Tertiary surface — light: #fafafa, dark: #323232
-    static let surfaceTertiary = Color("surfaceTertiary")
+    /// Screen background — light: #F2F2F7 (subtle gray), dark: #000000
+    static let background = Color(.systemGroupedBackground)
+    /// Elevated surface (cards, sheets) — light: white, dark: #1C1C1E
+    static let surface = Color(.secondarySystemGroupedBackground)
+    /// Tertiary surface — light: #F2F2F7, dark: #2C2C2E
+    static let surfaceTertiary = Color(.tertiarySystemGroupedBackground)
 
     // MARK: - Adaptive Text
 
-    /// Primary text — light: #111827, dark: #E0E0E0
-    static let textPrimary = Color("textPrimary")
-    /// Secondary text — light: #6B7280, dark: #B0B0B0
-    static let textSecondary = Color("textSecondary")
-    /// Tertiary text — light: #9CA3AF, dark: #888888
-    static let textTertiary = Color("textTertiary")
-    /// Disabled text — light: #CCCCCC, dark: #666666
-    static let textDisabled = Color("textDisabled")
+    /// Primary text
+    static let textPrimary = Color(.label)
+    /// Secondary text
+    static let textSecondary = Color(.secondaryLabel)
+    /// Tertiary text
+    static let textTertiary = Color(.tertiaryLabel)
+    /// Disabled text
+    static let textDisabled = Color(.quaternaryLabel)
 
     // MARK: - Adaptive Borders
 
-    /// Primary border — light: #C7CBD4, dark: #4A4A4C
-    static let border = Color("borderPrimary")
-    /// Secondary border (subtle dividers) — light: #E5E7EB, dark: #4A4A4C
-    static let borderSecondary = Color("borderSecondary")
+    /// Primary border
+    static let border = Color(.separator)
+    /// Secondary border (subtle dividers)
+    static let borderSecondary = Color(.separator)
 
     // MARK: - Adaptive Buttons
 
-    /// Secondary button background — light: #FFFFFF, dark: #333333
-    static let buttonSecondaryBackground = Color("buttonSecondaryBg")
-    /// Icon button background — light: #F3F4F6, dark: #3D3224
-    static let iconButtonBackground = Color("iconButtonBg")
-    /// Disabled button background — light: #CCCCCC, dark: #666666
-    static let buttonDisabledBackground = Color("buttonDisabledBg")
+    /// Secondary button background
+    static let buttonSecondaryBackground = Color(.secondarySystemFill)
+    /// Icon button background
+    static let iconButtonBackground = Color(.tertiarySystemFill)
+    /// Disabled button background
+    static let buttonDisabledBackground = Color(.quaternarySystemFill)
 
     // MARK: - Adaptive Input
 
-    /// Input background — light: #FFFFFF, dark: #2E2E2E
-    static let inputBackground = Color("inputBackground")
+    /// Input field background — subtle recessed fill inside cards
+    static let inputBackground = Color(.tertiarySystemFill)
 
     // MARK: - Destructive
 
-    /// Destructive text — light: #d32f2f, dark: #EF5350
-    static let destructive = Color("destructive")
-    /// Destructive background — light: #ffebee, dark: #3E1E1E
-    static let destructiveBackground = Color("destructiveBg")
+    /// Destructive text
+    static let destructive = Color(.systemRed)
+    /// Destructive background — red tint at low opacity
+    static let destructiveBackground = Color(.systemRed).opacity(0.12)
 
     // MARK: - Progress
 
-    /// Progress track background — light: system, dark: #3A3A3C
-    static let progressTrack = Color("progressTrack")
-
-    // MARK: - Legacy Direct Colors (use adaptive versions above in new code)
-
-    static let darkBackground = Color(red: 30/255, green: 30/255, blue: 30/255)
-    static let darkSurface = Color(red: 46/255, green: 46/255, blue: 46/255)
-    static let darkText = Color(red: 224/255, green: 224/255, blue: 224/255)
-    static let darkTextSecondary = Color(red: 176/255, green: 176/255, blue: 176/255)
-    static let darkBorder = Color(red: 74/255, green: 74/255, blue: 76/255)
-    static let darkProgressTrack = Color(red: 58/255, green: 58/255, blue: 60/255)
+    /// Progress track background
+    static let progressTrack = Color(.tertiarySystemFill)
 }

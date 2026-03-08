@@ -132,13 +132,13 @@ struct ItemCard: View {
             }
             .frame(width: 108, height: 108)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
-            .background(BrandColors.surfaceTertiary)
+            .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                     .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
             )
         } else {
-            placeholderView(icon: "camera.fill")
+            placeholderView(icon: "photo")
         }
     }
 
@@ -153,7 +153,7 @@ struct ItemCard: View {
         .frame(width: 108, height: 108)
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                .stroke(BrandColors.borderSecondary, style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6, 4]))
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
         )
     }
 }

@@ -151,6 +151,7 @@ struct SpaceDetailView: View {
         }
         .onAppear { startSpaceListener() }
         .onDisappear { spaceListener?.remove() }
+        .background(BrandColors.background)
     }
 
     // MARK: - Collapsible Sections

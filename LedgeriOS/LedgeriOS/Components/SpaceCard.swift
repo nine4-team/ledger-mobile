@@ -77,7 +77,7 @@ struct SpaceCard: View {
 
                                 ProgressBar(
                                     percentage: row.percentage,
-                                    fillColor: Color(red: 0x22/255, green: 0xC5/255, blue: 0x5E/255),
+                                    fillColor: Color(.systemGreen),
                                     height: 5
                                 )
                             }
