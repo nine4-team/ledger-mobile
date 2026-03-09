@@ -18,6 +18,7 @@ struct Transaction: Codable, Identifiable, Hashable {
     var transactionType: String?
     var isCanceled: Bool?
     var budgetCategoryId: String?
+    var paymentMethod: String?
     var hasEmailReceipt: Bool?
     var receiptImages: [AttachmentRef]?
     var otherImages: [AttachmentRef]?
@@ -32,7 +33,7 @@ struct Transaction: Codable, Identifiable, Hashable {
         case id, projectId, transactionDate, amountCents, source,
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes, isCanceled,
-             budgetCategoryId, receiptImages, otherImages, transactionImages,
+             budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
              needsReview, taxRatePct, subtotalCents
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"

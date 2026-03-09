@@ -25,6 +25,7 @@ struct TransactionDetailView: View {
     @State private var showCreateItemsFromList = false
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
+    @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
 
     // Items section filter/sort/search
@@ -191,6 +192,13 @@ struct TransactionDetailView: View {
                 onSave: { newNotes in
                     updateTransaction(fields: ["notes": newNotes])
                 }
+            )
+            .sheetStyle(.form)
+        }
+        .sheet(isPresented: $showReassign) {
+            ReassignTransactionToProjectModal(
+                transaction: currentTransaction,
+                onComplete: { dismiss() }
             )
             .sheetStyle(.form)
         }
@@ -701,22 +709,14 @@ struct TransactionDetailView: View {
     // MARK: - Action Menu
 
     private var actionMenuItems: [ActionMenuItem] {
-        // H10: Canonical inventory sale transactions are system-generated and must not be edited.
-        let isCanonicalSale = currentTransaction.isCanonicalInventorySale == true
-        var items: [ActionMenuItem] = []
-        if !isCanonicalSale {
-            items.append(ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
-                showEditDetails = true
-            }))
-            items.append(ActionMenuItem(id: "notes", label: "Edit Notes", icon: "note.text", onPress: {
-                showEditNotes = true
-            }))
-        }
-        items.append(ActionMenuItem(id: "delete", label: "Delete Transaction", icon: "trash",
-                                    isDestructive: true, onPress: {
-            showDeleteConfirmation = true
-        }))
-        return items
+        TransactionMenuBuilder.buildDetailMenu(
+            transaction: currentTransaction,
+            callbacks: SingleTransactionMenuCallbacks(
+                onReassignToInventory: { reassignToInventory() },
+                onReassignToProject: { showReassign = true },
+                onDelete: { showDeleteConfirmation = true }
+            )
+        )
     }
 
     // MARK: - Helpers
@@ -860,6 +860,20 @@ struct TransactionDetailView: View {
     }
 
     // MARK: - Actions
+
+    private func reassignToInventory() {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        Task {
+            do {
+                try await TransactionsService(syncTracker: NoOpSyncTracker())
+                    .updateTransaction(accountId: accountId, transactionId: transactionId, fields: ["projectId": NSNull()])
+                await MainActor.run { dismiss() }
+            } catch {
+                print("🔴 reassignToInventory failed: \(error)")
+            }
+        }
+    }
 
     private func updateTransaction(fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,

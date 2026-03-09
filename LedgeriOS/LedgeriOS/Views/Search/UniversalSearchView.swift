@@ -34,6 +34,10 @@ struct UniversalSearchView: View {
     @State private var showTransactionBulkActions = false
     @State private var showTransactionDeleteConfirmation = false
 
+    // Single-transaction actions
+    @State private var actionTargetTransactionId: String?
+    @State private var showSingleTransactionDeleteConfirmation = false
+
     private var itemsCount: Int { searchResults.items.count }
     private var transactionsCount: Int { searchResults.transactions.count }
     private var spacesCount: Int { searchResults.spaces.count }
@@ -168,6 +172,11 @@ struct UniversalSearchView: View {
         }
         .confirmationDialog("Delete \(selectedTransactionIds.count) transactions?", isPresented: $showTransactionDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        .confirmationDialog("Delete transaction?", isPresented: $showSingleTransactionDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSingleTransaction() }
         } message: {
             Text("This action cannot be undone.")
         }
@@ -342,7 +351,7 @@ struct UniversalSearchView: View {
                         transaction: displayTransaction,
                         budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
                         isSelected: isSelected,
-                        menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: txId) : []
+                        menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : []
                     )
 
                     if selectedTransactionIds.isEmpty {
@@ -414,10 +423,16 @@ struct UniversalSearchView: View {
         )
     }
 
-    private func singleTransactionMenuItems(for txId: String) -> [ActionMenuItem] {
-        [ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
-            selectedTransactionIds.insert(txId)
-        })]
+    private func singleTransactionMenuItems(for transaction: Transaction, txId: String) -> [ActionMenuItem] {
+        TransactionMenuBuilder.buildCardMenu(
+            transaction: transaction,
+            callbacks: SingleTransactionMenuCallbacks(
+                onDelete: {
+                    actionTargetTransactionId = txId
+                    showSingleTransactionDeleteConfirmation = true
+                }
+            )
+        )
     }
 
     // MARK: - Bulk Action Menus
@@ -438,12 +453,11 @@ struct UniversalSearchView: View {
     }
 
     private var transactionBulkActionMenuItems: [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "mark-reviewed", label: "Mark as Reviewed", icon: "checkmark.circle",
-                           onPress: { markSelectedTransactionsReviewed() }),
-            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
-                           onPress: { showTransactionDeleteConfirmation = true }),
-        ]
+        TransactionMenuBuilder.buildBulkMenu(
+            callbacks: BulkTransactionMenuCallbacks(
+                onDelete: { showTransactionDeleteConfirmation = true }
+            )
+        )
     }
 
     // MARK: - Item Bulk Actions
@@ -530,16 +544,13 @@ struct UniversalSearchView: View {
         selectedItemIds.removeAll()
     }
 
-    // MARK: - Transaction Bulk Actions
+    // MARK: - Transaction Actions
 
-    private func markSelectedTransactionsReviewed() {
-        guard let accountId = accountContext.currentAccountId else { return }
+    private func deleteSingleTransaction() {
+        guard let accountId = accountContext.currentAccountId,
+              let txId = actionTargetTransactionId else { return }
         let service = TransactionsService(syncTracker: NoOpSyncTracker())
-        for tx in selectedTransactions {
-            guard let txId = tx.id else { continue }
-            Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": false]) }
-        }
-        selectedTransactionIds.removeAll()
+        Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
     }
 
     private func deleteSelectedTransactions() {

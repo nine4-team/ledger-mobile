@@ -232,41 +232,23 @@ struct TransactionsTabView: View {
     // MARK: - Menu Items
 
     private func singleTransactionMenuItems(for transaction: Transaction, txId: String) -> [ActionMenuItem] {
-        var items: [ActionMenuItem] = [
-            ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
-                selectedIds.insert(txId)
-            }),
-        ]
-
-        let needsReview = transaction.needsReview == true
-        items.append(ActionMenuItem(
-            id: "toggle-review",
-            label: needsReview ? "Mark as Reviewed" : "Mark for Review",
-            icon: needsReview ? "checkmark.circle" : "exclamationmark.circle",
-            onPress: {
-                toggleReviewStatus(txId: txId, currentlyNeedsReview: needsReview)
-            }
-        ))
-
-        items.append(ActionMenuItem(
-            id: "delete", label: "Delete", icon: "trash",
-            isDestructive: true,
-            onPress: {
-                actionTargetTransactionId = txId
-                showSingleDeleteConfirmation = true
-            }
-        ))
-
-        return items
+        TransactionMenuBuilder.buildCardMenu(
+            transaction: transaction,
+            callbacks: SingleTransactionMenuCallbacks(
+                onDelete: {
+                    actionTargetTransactionId = txId
+                    showSingleDeleteConfirmation = true
+                }
+            )
+        )
     }
 
     private var bulkActionMenuItems: [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "mark-reviewed", label: "Mark as Reviewed", icon: "checkmark.circle",
-                           onPress: { markSelectedTransactionsReviewed() }),
-            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
-                           onPress: { showBulkDeleteConfirmation = true }),
-        ]
+        TransactionMenuBuilder.buildBulkMenu(
+            callbacks: BulkTransactionMenuCallbacks(
+                onDelete: { showBulkDeleteConfirmation = true }
+            )
+        )
     }
 
     // MARK: - Actions
@@ -277,22 +259,6 @@ struct TransactionsTabView: View {
         } else {
             selectedIds.insert(txId)
         }
-    }
-
-    private func toggleReviewStatus(txId: String, currentlyNeedsReview: Bool) {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let service = TransactionsService(syncTracker: NoOpSyncTracker())
-        Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": !currentlyNeedsReview]) }
-    }
-
-    private func markSelectedTransactionsReviewed() {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let service = TransactionsService(syncTracker: NoOpSyncTracker())
-        for tx in selectedTransactions {
-            guard let txId = tx.id else { continue }
-            Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": false]) }
-        }
-        selectedIds.removeAll()
     }
 
     private func deleteSingleTransaction() {
