@@ -169,9 +169,9 @@ enum SearchCalculations {
             if let direction = transaction.inventorySaleDirection {
                 switch direction {
                 case .businessToProject:
-                    return "To Inventory"
+                    return "Purchase from Inventory"
                 case .projectToBusiness:
-                    return "From Inventory"
+                    return "Sale to Inventory"
                 }
             }
             return "Inventory Transfer"

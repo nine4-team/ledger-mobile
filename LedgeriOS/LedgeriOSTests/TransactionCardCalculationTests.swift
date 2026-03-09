@@ -39,8 +39,8 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].borderOpacity == 0.20)
     }
 
-    @Test("Sale produces no badge")
-    func badgeItemsSaleRemoved() {
+    @Test("Sale produces subtle brand-primary badge")
+    func badgeItemsSale() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: "sale",
             reimbursementType: nil,
@@ -48,7 +48,9 @@ struct TransactionCardCalculationTests {
             needsReview: false,
             status: nil
         )
-        #expect(badges.isEmpty)
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Sale")
+        #expect(badges[0].color == BrandColors.primary)
     }
 
     @Test("To-inventory produces no badge")

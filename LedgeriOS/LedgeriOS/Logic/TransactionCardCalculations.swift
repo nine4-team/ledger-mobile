@@ -25,11 +25,13 @@ enum TransactionCardCalculations {
             ))
         }
 
-        // 2. Transaction type badge (purchase/return only)
+        // 2. Transaction type badge
         if let type = transactionType?.lowercased() {
             switch type {
             case "purchase":
                 badges.append(CardBadge(text: "Purchase", color: BrandColors.primary))
+            case "sale":
+                badges.append(CardBadge(text: "Sale", color: BrandColors.primary))
             case "return":
                 badges.append(CardBadge(text: "Return", color: BrandColors.primary))
             default:

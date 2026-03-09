@@ -498,22 +498,22 @@ struct TransactionDisplayNameTests {
 
     // Priority 2: Canonical inventory sale label
 
-    @Test("Canonical inventory sale with businessToProject → To Inventory")
+    @Test("Canonical inventory sale with businessToProject → Purchase from Inventory")
     func canonicalBusinessToProject() {
         let tx = makeTransaction(
             isCanonicalInventorySale: true,
             inventorySaleDirection: .businessToProject
         )
-        #expect(SearchCalculations.transactionDisplayName(for: tx) == "To Inventory")
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "Purchase from Inventory")
     }
 
-    @Test("Canonical inventory sale with projectToBusiness → From Inventory")
+    @Test("Canonical inventory sale with projectToBusiness → Sale to Inventory")
     func canonicalProjectToBusiness() {
         let tx = makeTransaction(
             isCanonicalInventorySale: true,
             inventorySaleDirection: .projectToBusiness
         )
-        #expect(SearchCalculations.transactionDisplayName(for: tx) == "From Inventory")
+        #expect(SearchCalculations.transactionDisplayName(for: tx) == "Sale to Inventory")
     }
 
     @Test("Canonical inventory sale with no direction → Inventory Transfer")
@@ -573,13 +573,13 @@ struct TransactionDisplayNameTests {
         #expect(result == true)
     }
 
-    @Test("Search matches From Inventory label")
-    func searchMatchesFromInventory() {
+    @Test("Search matches Sale to Inventory label")
+    func searchMatchesSaleToInventory() {
         let tx = makeTransaction(
             isCanonicalInventorySale: true,
             inventorySaleDirection: .projectToBusiness
         )
-        let result = SearchCalculations.transactionMatches(transaction: tx, query: "from inv", categories: [])
+        let result = SearchCalculations.transactionMatches(transaction: tx, query: "sale to", categories: [])
         #expect(result == true)
     }
 

@@ -149,6 +149,6 @@ Example: Selling 5 items where 3 have category "Furnishings" and 2 have category
 Canonical sale transactions appear in the transaction list like regular transactions but with distinctive visual treatment:
 
 - Badge: "Sale"
-- Display name: Derived from the sale direction and context (e.g., "From Business Inventory" or "To Business Inventory")
+- Display name: "Sale to Inventory" (project_to_business) or "Purchase from Inventory" (business_to_project). Labels read from the project's perspective — the project is the subject.
 - Amount: Shows the computed total from all linked item prices
 - They are NOT editable by users (system-generated)

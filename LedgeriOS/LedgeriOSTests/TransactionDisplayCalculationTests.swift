@@ -67,7 +67,7 @@ struct TransactionDisplayCalculationTests {
             isCanonicalInventorySale: true,
             inventorySaleDirection: .businessToProject
         )
-        #expect(TransactionDisplayCalculations.displayName(for: txn) == "To Inventory")
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Purchase from Inventory")
     }
 
     @Test("Display name uses canonical inventory sale label - projectToBusiness")
@@ -76,7 +76,7 @@ struct TransactionDisplayCalculationTests {
             isCanonicalInventorySale: true,
             inventorySaleDirection: .projectToBusiness
         )
-        #expect(TransactionDisplayCalculations.displayName(for: txn) == "From Inventory")
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Inventory")
     }
 
     @Test("Display name falls back to ID prefix")
@@ -93,46 +93,46 @@ struct TransactionDisplayCalculationTests {
 
     // MARK: - badgeConfigs
 
-    @Test("Purchase type produces green badge")
+    @Test("Purchase type produces brand-primary badge")
     func badgePurchase() {
         let txn = makeTransaction(transactionType: "purchase")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Purchase")
-        #expect(badges[0].color == StatusColors.badgeSuccess)
-    }
-
-    @Test("Sale type produces blue badge")
-    func badgeSale() {
-        let txn = makeTransaction(transactionType: "sale")
-        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges[0].text == "Sale")
-        #expect(badges[0].color == StatusColors.badgeInfo)
-    }
-
-    @Test("Return type produces red badge")
-    func badgeReturn() {
-        let txn = makeTransaction(transactionType: "return")
-        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges[0].text == "Return")
-        #expect(badges[0].color == StatusColors.badgeError)
-    }
-
-    @Test("To-inventory type produces primary badge")
-    func badgeToInventory() {
-        let txn = makeTransaction(transactionType: "to-inventory")
-        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges[0].text == "To Inventory")
         #expect(badges[0].color == BrandColors.primary)
     }
 
-    @Test("Reimbursement badge when owed-to-client")
+    @Test("Sale type produces brand-primary badge")
+    func badgeSale() {
+        let txn = makeTransaction(transactionType: "sale")
+        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Sale")
+        #expect(badges[0].color == BrandColors.primary)
+    }
+
+    @Test("Return type produces brand-primary badge")
+    func badgeReturn() {
+        let txn = makeTransaction(transactionType: "return")
+        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Return")
+        #expect(badges[0].color == BrandColors.primary)
+    }
+
+    @Test("To-inventory type produces no badge")
+    func badgeToInventory() {
+        let txn = makeTransaction(transactionType: "to-inventory")
+        let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
+        #expect(badges.isEmpty)
+    }
+
+    @Test("Reimbursement type does not produce a badge")
     func badgeReimbursementClient() {
         let txn = makeTransaction(transactionType: "purchase", reimbursementType: "owed-to-client")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges.count == 2)
-        #expect(badges[1].text == "Owed to Client")
-        #expect(badges[1].color == StatusColors.badgeWarning)
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
     }
 
     @Test("No reimbursement badge when type is none")
@@ -142,30 +142,31 @@ struct TransactionDisplayCalculationTests {
         #expect(badges.count == 1) // Only the type badge
     }
 
-    @Test("Receipt badge when has receipt images")
+    @Test("Receipt images do not produce a badge")
     func badgeReceiptImages() {
         let ref = AttachmentRef(url: "https://example.com/receipt.jpg")
         let txn = makeTransaction(transactionType: "purchase", receiptImages: [ref])
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges.count == 2)
-        #expect(badges[1].text == "Receipt")
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
     }
 
-    @Test("Receipt badge when has email receipt")
+    @Test("Email receipt does not produce a badge")
     func badgeEmailReceipt() {
         let txn = makeTransaction(transactionType: "purchase", hasEmailReceipt: true)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
-        #expect(badges.count == 2)
-        #expect(badges[1].text == "Receipt")
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
     }
 
-    @Test("Needs review badge")
+    @Test("Needs review badge appears first")
     func badgeNeedsReview() {
         let txn = makeTransaction(transactionType: "purchase", needsReview: true)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 2)
-        #expect(badges[1].text == "Needs Review")
-        #expect(badges[1].color == StatusColors.badgeNeedsReview)
+        #expect(badges[0].text == "Needs Review")
+        #expect(badges[0].color == StatusColors.badgeNeedsReview)
+        #expect(badges[1].text == "Purchase")
     }
 
     @Test("Category badge when category present")
@@ -178,23 +179,18 @@ struct TransactionDisplayCalculationTests {
         #expect(badges[1].color == BrandColors.primary)
     }
 
-    @Test("All badge types present in correct order")
+    @Test("All badge types present in correct order: needs review, type, category")
     func badgeAllTypes() {
-        let ref = AttachmentRef(url: "https://example.com/receipt.jpg")
         let txn = makeTransaction(
             transactionType: "purchase",
-            reimbursementType: "owed-to-client",
-            receiptImages: [ref],
             needsReview: true
         )
         let cat = makeCategory(id: "cat1", name: "Decor")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: cat)
-        #expect(badges.count == 5)
-        #expect(badges[0].text == "Purchase")
-        #expect(badges[1].text == "Owed to Client")
-        #expect(badges[2].text == "Receipt")
-        #expect(badges[3].text == "Needs Review")
-        #expect(badges[4].text == "Decor")
+        #expect(badges.count == 3)
+        #expect(badges[0].text == "Needs Review")
+        #expect(badges[1].text == "Purchase")
+        #expect(badges[2].text == "Decor")
     }
 
     // MARK: - formattedAmount

@@ -30,9 +30,9 @@ enum TransactionDisplayCalculations {
             if let direction = transaction.inventorySaleDirection {
                 switch direction {
                 case .businessToProject:
-                    return "To Inventory"
+                    return "Purchase from Inventory"
                 case .projectToBusiness:
-                    return "From Inventory"
+                    return "Sale to Inventory"
                 }
             }
             return "Inventory Transfer"
@@ -64,11 +64,13 @@ enum TransactionDisplayCalculations {
             ))
         }
 
-        // 2. Type badge (purchase/return only)
+        // 2. Type badge
         if let type = transaction.transactionType?.lowercased() {
             switch type {
             case "purchase":
                 badges.append(BadgeConfig(text: "Purchase", color: BrandColors.primary))
+            case "sale":
+                badges.append(BadgeConfig(text: "Sale", color: BrandColors.primary))
             case "return":
                 badges.append(BadgeConfig(text: "Return", color: BrandColors.primary))
             default:

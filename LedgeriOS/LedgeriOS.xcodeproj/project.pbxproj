@@ -224,6 +224,8 @@
 		TFM00001B001 /* TransactionFilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFM00001F001 /* TransactionFilterMenu.swift */; };
 		TMB00200000000000L0001 /* TransactionMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = TMB00100000000000L0001 /* TransactionMenuBuilder.swift */; };
 		TMB00400000000000T0001 /* TransactionMenuBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TMB00300000000000T0001 /* TransactionMenuBuilderTests.swift */; };
+		TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */; };
+		SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCT00F00100000000T0001 /* SearchCalculationsTests.swift */; };
 		WP01B00100000000000L0001 /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000L0001 /* CurrencyFormatting.swift */; };
 		WP01B00100000000000S0001 /* ActionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0001 /* ActionMenuItem.swift */; };
 		WP01B00100000000000S0003 /* FormSheetAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP01F00100000000000S0003 /* FormSheetAction.swift */; };
@@ -493,6 +495,8 @@
 		TFM00001F001 /* TransactionFilterMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionFilterMenu.swift; sourceTree = "<group>"; };
 		TMB00100000000000L0001 /* TransactionMenuBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Logic/TransactionMenuBuilder.swift; sourceTree = SOURCE_ROOT; };
 		TMB00300000000000T0001 /* TransactionMenuBuilderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionMenuBuilderTests.swift; sourceTree = "<group>"; };
+		TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDisplayCalculationTests.swift; sourceTree = "<group>"; };
+		SCT00F00100000000T0001 /* SearchCalculationsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchCalculationsTests.swift; sourceTree = "<group>"; };
 		WP01F00100000000000L0001 /* CurrencyFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormatting.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0001 /* ActionMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuItem.swift; sourceTree = "<group>"; };
 		WP01F00100000000000S0003 /* FormSheetAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetAction.swift; sourceTree = "<group>"; };
@@ -770,6 +774,8 @@
 				WP04F00100000000002X0001 /* TransactionCompletenessCalculationTests.swift */,
 				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
 				C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */,
+				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
+				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -1405,6 +1411,8 @@
 				WP04B00100000000002X0001 /* TransactionCompletenessCalculationTests.swift in Sources */,
 				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
 				770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */,
+				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
+				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
