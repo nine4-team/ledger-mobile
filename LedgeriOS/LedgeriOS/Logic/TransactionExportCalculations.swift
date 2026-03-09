@@ -3,7 +3,32 @@ import Foundation
 /// Pure functions for generating CSV exports of transaction data.
 enum TransactionExportCalculations {
 
-    /// Generates a CSV string from transactions with the specified column order.
+    /// Generates a CSV string using the selected field configuration.
+    static func exportTransactionsCSV(
+        transactions: [Transaction],
+        categories: [BudgetCategory],
+        items: [Item],
+        selectedFields: [ExportFieldConfig]
+    ) -> String {
+        guard !selectedFields.isEmpty else { return "" }
+
+        var lines: [String] = []
+
+        // Header row
+        lines.append(selectedFields.map { escapeCSV($0.label) }.joined(separator: ","))
+
+        // Data rows
+        for transaction in transactions {
+            let values = selectedFields.map { field in
+                escapeCSV(field.getValue(transaction, categories, items))
+            }
+            lines.append(values.joined(separator: ","))
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    /// Backward-compatible overload using the legacy hardcoded column order.
     ///
     /// Columns: id, date, source, amount, categoryName, budgetCategoryId,
     /// inventorySaleDirection, itemCategories

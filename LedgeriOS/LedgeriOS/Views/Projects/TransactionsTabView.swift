@@ -3,6 +3,7 @@ import SwiftUI
 /// Data-driven transaction list replacing `TransactionsTabPlaceholder`.
 /// Shows real transactions sorted date-desc with search/sort/filter toolbar.
 struct TransactionsTabView: View {
+    @Binding var showExportSheet: Bool
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
 
@@ -137,6 +138,15 @@ struct TransactionsTabView: View {
         ))
         .onReceive(NotificationCenter.default.publisher(for: .createTransaction)) { _ in
             showNewTransaction = true
+        }
+        .sheet(isPresented: $showExportSheet) {
+            ExportTransactionsModal(
+                transactions: processedTransactions,
+                categories: projectContext.budgetCategories,
+                items: projectContext.items,
+                projectId: projectContext.currentProjectId
+            )
+            .sheetStyle(.selectionMenu)
         }
     }
 

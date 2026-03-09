@@ -12,6 +12,8 @@ struct ProjectDetailView: View {
     @State private var showingDeleteConfirmation = false
     @State private var showingArchiveConfirmation = false
     @State private var showingEditProject = false
+    @State private var showExportSheet = false
+    @State private var showExportSheetAllTransactions = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -39,7 +41,7 @@ struct ProjectDetailView: View {
                                 ItemDetailView(item: item)
                             }
                     case "transactions":
-                        TransactionsTabView()
+                        TransactionsTabView(showExportSheet: $showExportSheet)
                             .navigationDestination(for: Transaction.self) { transaction in
                                 TransactionDetailView(transaction: transaction)
                             }
@@ -86,7 +88,13 @@ struct ProjectDetailView: View {
                     }),
                     ActionMenuItem(
                         id: "export", label: "Export Transactions", icon: "square.and.arrow.up",
-                        onPress: { exportTransactionsCSV() }
+                        onPress: {
+                            if selectedTab == "transactions" {
+                                showExportSheet = true
+                            } else {
+                                showExportSheetAllTransactions = true
+                            }
+                        }
                     ),
                     // H2: Archive is preferred over deletion — keeps data intact
                     ActionMenuItem(
@@ -113,6 +121,15 @@ struct ProjectDetailView: View {
                 existingBudgetCategories: projectContext.projectBudgetCategories
             )
             .sheetStyle(.form)
+        }
+        .sheet(isPresented: $showExportSheetAllTransactions) {
+            ExportTransactionsModal(
+                transactions: projectContext.transactions,
+                categories: projectContext.budgetCategories,
+                items: projectContext.items,
+                projectId: projectContext.currentProjectId
+            )
+            .sheetStyle(.selectionMenu)
         }
         .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
@@ -197,36 +214,4 @@ struct ProjectDetailView: View {
         }
     }
 
-    private func exportTransactionsCSV() {
-        let csv = TransactionExportCalculations.exportTransactionsCSV(
-            transactions: projectContext.transactions,
-            categories: projectContext.budgetCategories,
-            items: projectContext.items
-        )
-
-        let fileName = "transactions-\(project.id ?? "export").csv"
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-        do {
-            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
-        } catch {
-            errorMessage = "Failed to export transactions."
-            return
-        }
-
-        #if canImport(UIKit)
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = scene.windows.first?.rootViewController else { return }
-
-        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-        rootVC.present(activityVC, animated: true)
-        #elseif canImport(AppKit)
-        let savePanel = NSSavePanel()
-        savePanel.nameFieldStringValue = fileName
-        savePanel.begin { response in
-            guard response == .OK, let destinationURL = savePanel.url else { return }
-            try? FileManager.default.copyItem(at: tempURL, to: destinationURL)
-        }
-        #endif
-    }
 }
