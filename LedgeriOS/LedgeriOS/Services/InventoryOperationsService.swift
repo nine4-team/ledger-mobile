@@ -22,7 +22,11 @@ enum InventoryOperationError: Error {
 /// - Items WITH a projectId → moving OUT of a project → direction: `project_to_business`
 /// - Items WITHOUT a projectId → moving INTO a project → direction: `business_to_project`
 struct InventoryOperationsService {
-    private let db = Firestore.firestore()
+    private let makeBatch: @Sendable () -> any BatchWriting
+
+    init(makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() }) {
+        self.makeBatch = makeBatch
+    }
 
     // MARK: - Sell to Business
 
@@ -37,10 +41,10 @@ struct InventoryOperationsService {
     ) async throws {
         guard !items.isEmpty else { return }
 
-        let batch = db.batch()
-        let itemsRef = db.collection("accounts/\(accountId)/items")
-        let txRef = db.collection("accounts/\(accountId)/transactions")
-        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
 
         // Group items by (projectId, resolvedCategoryId) so each group
         // maps to exactly one canonical sale transaction (H12).
@@ -52,7 +56,6 @@ struct InventoryOperationsService {
                 direction: "project_to_business",
                 categoryId: groupKey.categoryId
             )
-            let saleDocRef = txRef.document(saleId)
             let amountDelta = Self.amountDelta(for: groupItems) // H11
             // setData(merge:true) creates doc if missing, updates fields if exists.
             // FieldValue.arrayUnion + increment handle idempotent accumulation.
@@ -66,7 +69,7 @@ struct InventoryOperationsService {
                 "amountCents": FieldValue.increment(Int64(amountDelta)),  // H11
                 "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp(),
-            ] as [String: Any], forDocument: saleDocRef, merge: true)
+            ] as [String: Any], forDocumentAt: "\(txPath)/\(saleId)", merge: true)
         }
 
         for item in items {
@@ -87,13 +90,13 @@ struct InventoryOperationsService {
                 "status": "purchased",
                 "transactionId": saleId,
                 "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocument: itemsRef.document(itemId))
+            ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // Remove item from its source transaction's itemIds (C5)
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocument: txRef.document(fromTxId)
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
                 )
             }
 
@@ -109,7 +112,7 @@ struct InventoryOperationsService {
             ]
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }  // M2
             if let userId { edge["createdBy"] = userId }                                    // M3
-            batch.setData(edge, forDocument: edgesRef.document())
+            batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
         try await batch.commit()
@@ -132,11 +135,11 @@ struct InventoryOperationsService {
     ) async throws {
         guard !items.isEmpty else { return }
 
-        let batch = db.batch()
-        let itemsRef = db.collection("accounts/\(accountId)/items")
-        let txRef = db.collection("accounts/\(accountId)/transactions")
-        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
-        let pbcRef = db.collection("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories")
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
+        let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
         // Collect unique destination category IDs for auto-enable
         var destinationCategoryIds: Set<String> = []
@@ -167,7 +170,7 @@ struct InventoryOperationsService {
                     "amountCents": FieldValue.increment(Int64(amountDelta)),
                     "createdAt": FieldValue.serverTimestamp(),
                     "updatedAt": FieldValue.serverTimestamp(),
-                ] as [String: Any], forDocument: txRef.document(srcSaleId), merge: true)
+                ] as [String: Any], forDocumentAt: "\(txPath)/\(srcSaleId)", merge: true)
             }
 
             // Hop 2: business inventory → destination project
@@ -186,7 +189,7 @@ struct InventoryOperationsService {
                 "amountCents": FieldValue.increment(Int64(amountDelta)),
                 "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp(),
-            ] as [String: Any], forDocument: txRef.document(dstSaleId), merge: true)
+            ] as [String: Any], forDocumentAt: "\(txPath)/\(dstSaleId)", merge: true)
 
             // Update item: move to destination, link to destination canonical sale
             var itemUpdate: [String: Any] = [
@@ -199,13 +202,13 @@ struct InventoryOperationsService {
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
                 itemUpdate["projectPriceCents"] = purchasePrice
             }
-            batch.updateData(itemUpdate, forDocument: itemsRef.document(itemId))
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // Remove item from its source transaction's itemIds (C5)
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocument: txRef.document(fromTxId)
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
                 )
             }
 
@@ -222,7 +225,7 @@ struct InventoryOperationsService {
             if let srcProjectId = item.projectId { edge["fromProjectId"] = srcProjectId }
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }  // M2
             if let userId { edge["createdBy"] = userId }                                    // M3
-            batch.setData(edge, forDocument: edgesRef.document())
+            batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
         // Auto-enable: ensure ProjectBudgetCategory docs exist for all destination categories.
@@ -232,7 +235,7 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
             if let userId { fields["updatedBy"] = userId }
-            batch.setData(fields, forDocument: pbcRef.document(catId), merge: true)
+            batch.setData(fields, forDocumentAt: "\(pbcPath)/\(catId)", merge: true)
         }
 
         try await batch.commit()
@@ -258,10 +261,10 @@ struct InventoryOperationsService {
         let crossScope = items.contains { $0.projectId != destinationProjectId }
         if crossScope { throw InventoryOperationError.crossScopeReassign }
 
-        let batch = db.batch()
-        let itemsRef = db.collection("accounts/\(accountId)/items")
-        let txRef = db.collection("accounts/\(accountId)/transactions")
-        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
 
         for item in items {
             guard let itemId = item.id else { continue }
@@ -274,18 +277,18 @@ struct InventoryOperationsService {
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
                 itemUpdate["projectPriceCents"] = purchasePrice
             }
-            batch.updateData(itemUpdate, forDocument: itemsRef.document(itemId))
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // C5: Move item between transaction itemIds arrays
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocument: txRef.document(fromTxId)
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
                 )
             }
             batch.updateData(
                 ["itemIds": FieldValue.arrayUnion([itemId])],
-                forDocument: txRef.document(destinationTransactionId)
+                forDocumentAt: "\(txPath)/\(destinationTransactionId)"
             )
 
             // Correction intent edge (audit association edge is created server-side
@@ -303,7 +306,7 @@ struct InventoryOperationsService {
             ]
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
             if let userId { edge["createdBy"] = userId }
-            batch.setData(edge, forDocument: edgesRef.document())
+            batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
         try await batch.commit()
@@ -315,23 +318,23 @@ struct InventoryOperationsService {
     func reassignToInventory(items: [Item], accountId: String, userId: String? = nil) async throws {
         guard !items.isEmpty else { return }
 
-        let batch = db.batch()
-        let itemsRef = db.collection("accounts/\(accountId)/items")
-        let txRef = db.collection("accounts/\(accountId)/transactions")
-        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
 
         for item in items {
             guard let itemId = item.id else { continue }
             batch.updateData([
                 "projectId": NSNull(),
                 "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocument: itemsRef.document(itemId))
+            ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // C5: Remove item from its source transaction's itemIds
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocument: txRef.document(fromTxId)
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
                 )
             }
 
@@ -348,7 +351,7 @@ struct InventoryOperationsService {
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
             if let projectId = item.projectId { edge["fromProjectId"] = projectId }
             if let userId { edge["createdBy"] = userId }
-            batch.setData(edge, forDocument: edgesRef.document())
+            batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
         try await batch.commit()

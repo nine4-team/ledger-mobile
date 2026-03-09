@@ -67,6 +67,7 @@
 		5E5F53EA937468D990B8E42F /* SpaceTemplateManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0FBA594B36A6B1037EA47B /* SpaceTemplateManagementView.swift */; };
 		5E935CB0BD60643258398CF9 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4551FEFFD9F3B79C7DC829B /* NewProjectView.swift */; };
 		5FFCCF119D1AFDE04768B6FD /* InvoiceDateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CA5CA236FBB37B8B4ED80C /* InvoiceDateParsing.swift */; };
+		6013465FFB8316F5C15E9838 /* InventoryOperationsExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B090A11277DE4908909DB8F9 /* InventoryOperationsExecutionTests.swift */; };
 		65F1A00A24D917B71321D40A /* BudgetServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */; };
 		661C747700264DC9DD1F1728 /* NewSpaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */; };
 		6802FB1D167B91F91372B029 /* TransactionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FF345E9378E3C5FA9416FB /* TransactionsService.swift */; };
@@ -98,14 +99,13 @@
 		8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */; };
 		8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */; };
 		88772B4F5BE64E24BB202980 /* MediaGalleryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */; };
-		PIN00004000000000000B001 /* PinnedImageCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */; };
 		89093C53EC106057286750CB /* ExportTransactionsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A42382CD300502891CBCC6A1 /* ExportTransactionsModal.swift */; };
 		89B7DA9202AD40FE7C087A39 /* SpaceSearchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30214FADBE63EDDE57E62712 /* SpaceSearchDetailView.swift */; };
 		8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */; };
-		PIN00003000000000000B001 /* PinnedImageCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00003000000000000F001 /* PinnedImageCalculations.swift */; };
 		8C022C22D824861D91971EF3 /* EditProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */; };
 		8E2660D3F9C826B26BFF25EE /* ProjectFormValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */; };
 		91546636B6396B2F37B01783 /* EditSpaceDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */; };
+		938E5EF58A1ACE61DCC97776 /* BatchWriting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF876F4BCCF157A3367AC517 /* BatchWriting.swift */; };
 		9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */; };
 		949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */; };
 		95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4222455FCC3471031DA93 /* SpacesTabView.swift */; };
@@ -134,6 +134,7 @@
 		A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */; };
 		A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */; };
 		A56BCF3DEFEABFF050700075 /* SettingsServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD603C3D64F77EC36777BED8 /* SettingsServiceProtocols.swift */; };
+		A5EF3AB43B882AF00C1BB869 /* RecordingBatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ED28AB40430692CD05FE9A /* RecordingBatch.swift */; };
 		A73CA42760A53C737E57460F /* AccountingTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */; };
 		A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */; };
 		AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89888110732C2D81B903322 /* SyncTracking.swift */; };
@@ -146,9 +147,6 @@
 		B6E0ED19457893CB889A0B25 /* BudgetTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD203EAE8B8232355376751 /* BudgetTabView.swift */; };
 		B8D7F0C660F65A3B0C78B656 /* InventorySpacesSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2538F854507B4CA8A499223E /* InventorySpacesSubTab.swift */; };
 		BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */; };
-		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
-		PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00001000000000000F001 /* PinnedImagePanel.swift */; };
-		PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00002000000000000F001 /* PinnedImageLayout.swift */; };
 		BABD6D50486B9B785AA62BFE /* SpacesTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A32986DD6B2D33762465CCB /* SpacesTabPlaceholder.swift */; };
 		BAE5B2B58298E2EBC4B92BF9 /* NewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 217E428E23D79EDE3C0AA4A2 /* NewItemView.swift */; };
 		BC4CEA43F71F3BBFDFC2F676 /* ImportInvoiceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BB32983141825212E261CC /* ImportInvoiceModal.swift */; };
@@ -233,6 +231,10 @@
 		IMB00200000000000L0001 /* ItemMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMB00100000000000L0001 /* ItemMenuBuilder.swift */; };
 		IMB00400000000000T0001 /* ItemMenuBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMB00300000000000T0001 /* ItemMenuBuilderTests.swift */; };
 		NLCB0001B001 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = NLCB0001F001 /* NativeListControlBar.swift */; };
+		PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00001000000000000F001 /* PinnedImagePanel.swift */; };
+		PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00002000000000000F001 /* PinnedImageLayout.swift */; };
+		PIN00003000000000000B001 /* PinnedImageCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00003000000000000F001 /* PinnedImageCalculations.swift */; };
+		PIN00004000000000000B001 /* PinnedImageCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */; };
 		PIN00B00100000000000C0001 /* PinnedBudgetsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */; };
 		RTPM000200000000000M0001 /* ReassignTransactionToProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = RTPM000100000000000M0001 /* ReassignTransactionToProjectModal.swift */; };
 		S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0001 /* PlatformPresenting.swift */; };
@@ -286,6 +288,7 @@
 		WP10B00100000000000C0001 /* SharedItemsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0001 /* SharedItemsList.swift */; };
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
+		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -335,6 +338,7 @@
 		30214FADBE63EDDE57E62712 /* SpaceSearchDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceSearchDetailView.swift; sourceTree = "<group>"; };
 		32ACD82A9DF546FF9DBB2323 /* ItemCardCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardCalculations.swift; sourceTree = "<group>"; };
 		34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectFormValidation.swift; sourceTree = "<group>"; };
+		34ED28AB40430692CD05FE9A /* RecordingBatch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordingBatch.swift; sourceTree = "<group>"; };
 		35948E498E737612AB645098 /* TransactionExportCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Logic/TransactionExportCalculations.swift; sourceTree = SOURCE_ROOT; };
 		3ABCD43FEF0DA13B89E84ACA /* DraftItemRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DraftItemRow.swift; sourceTree = "<group>"; };
 		3CB6C2207DB245C7B6FE8828 /* ClientSummaryReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientSummaryReportView.swift; sourceTree = "<group>"; };
@@ -424,9 +428,11 @@
 		A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Models/ProjectPreferences.swift; sourceTree = SOURCE_ROOT; };
 		A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacePickerList.swift; sourceTree = "<group>"; };
 		AAE5748E2943183F32FE6124 /* UsersView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsersView.swift; sourceTree = "<group>"; };
+		AF876F4BCCF157A3367AC517 /* BatchWriting.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatchWriting.swift; sourceTree = "<group>"; };
 		AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategoriesService.swift; sourceTree = "<group>"; };
 		B03AED92E32EB085437B6F76 /* Item.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		B090A11277DE4908909DB8F9 /* InventoryOperationsExecutionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsExecutionTests.swift; sourceTree = "<group>"; };
 		B2A62391566C00DD3400BFD5 /* Account.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
 		B2C3D4E5F607182A3B4C5D6E /* SortMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortMenu.swift; sourceTree = "<group>"; };
 		B4E7ECCE7343406FCE2B6C74 /* ProjectService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectService.swift; sourceTree = "<group>"; };
@@ -499,7 +505,6 @@
 		E5F60718293A4B5C6D7E8F92 /* ControlAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlAction.swift; sourceTree = "<group>"; };
 		E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsServiceProtocol.swift; sourceTree = "<group>"; };
 		E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
-		PIN00003000000000000F001 /* PinnedImageCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculations.swift; sourceTree = "<group>"; };
 		E6C001C78127D35A8B1050F0 /* VendorDefaultsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaultsService.swift; sourceTree = "<group>"; };
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewSpaceView.swift; sourceTree = "<group>"; };
@@ -507,9 +512,6 @@
 		F0DB6D4C81937205D1F35C0F /* SpaceListCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceListCalculations.swift; sourceTree = "<group>"; };
 		F46635D3BC4F27F91DEDDE73 /* UniversalSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UniversalSearchView.swift; sourceTree = "<group>"; };
 		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
-		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
-		PIN00001000000000000F001 /* PinnedImagePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImagePanel.swift; sourceTree = "<group>"; };
-		PIN00002000000000000F001 /* PinnedImageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageLayout.swift; sourceTree = "<group>"; };
 		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
 		F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		F89888110732C2D81B903322 /* SyncTracking.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTracking.swift; sourceTree = "<group>"; };
@@ -517,13 +519,16 @@
 		FA74C8175BF6BF8D7C5B2D81 /* DraftItemsList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DraftItemsList.swift; sourceTree = "<group>"; };
 		FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditProjectModal.swift; sourceTree = "<group>"; };
 		FCBBDD3D7BF1438588AA16B2 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
-		PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculationTests.swift; sourceTree = "<group>"; };
 		FE2DEE2253E6548620BEA565 /* AccountView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
 		FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountPresetsService.swift; sourceTree = "<group>"; };
 		FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
 		IMB00100000000000L0001 /* ItemMenuBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Logic/ItemMenuBuilder.swift; sourceTree = SOURCE_ROOT; };
 		IMB00300000000000T0001 /* ItemMenuBuilderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemMenuBuilderTests.swift; sourceTree = "<group>"; };
 		NLCB0001F001 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
+		PIN00001000000000000F001 /* PinnedImagePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImagePanel.swift; sourceTree = "<group>"; };
+		PIN00002000000000000F001 /* PinnedImageLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageLayout.swift; sourceTree = "<group>"; };
+		PIN00003000000000000F001 /* PinnedImageCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculations.swift; sourceTree = "<group>"; };
+		PIN00004000000000000F001 /* PinnedImageCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImageCalculationTests.swift; sourceTree = "<group>"; };
 		PIN00F00100000000000C0001 /* PinnedBudgetsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedBudgetsSection.swift; sourceTree = "<group>"; };
 		RTPM000100000000000M0001 /* ReassignTransactionToProjectModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReassignTransactionToProjectModal.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0001 /* PlatformPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformPresenting.swift; sourceTree = "<group>"; };
@@ -585,6 +590,7 @@
 		WP10F00100000000000C0001 /* SharedItemsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedItemsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
+		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -784,6 +790,15 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		60D3AB5696530B5D8E14D18D /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				34ED28AB40430692CD05FE9A /* RecordingBatch.swift */,
+			);
+			name = Helpers;
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 		700A8D21EA3D1A74ECBC7A9B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -839,6 +854,8 @@
 				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
 				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
 				862F852843A06A4E1AD326AF /* IncompleteReturnDetectionTests.swift */,
+				60D3AB5696530B5D8E14D18D /* Helpers */,
+				B090A11277DE4908909DB8F9 /* InventoryOperationsExecutionTests.swift */,
 			);
 			name = LedgeriOSTests;
 			path = LedgeriOSTests;
@@ -854,6 +871,7 @@
 				CD524C3A177A74084F555003 /* SpacesServiceProtocol.swift */,
 				1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */,
 				CD603C3D64F77EC36777BED8 /* SettingsServiceProtocols.swift */,
+				AF876F4BCCF157A3367AC517 /* BatchWriting.swift */,
 			);
 			name = Protocols;
 			path = Protocols;
@@ -1465,6 +1483,7 @@
 				CD7A164FABC536432CB432E1 /* DraftItemsList.swift in Sources */,
 				3D556AFB25C9F91C3E0284CA /* InvoiceParseSummary.swift in Sources */,
 				488DB893D93ABE7780F286DA /* ParseDebugReport.swift in Sources */,
+				938E5EF58A1ACE61DCC97776 /* BatchWriting.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1502,6 +1521,8 @@
 				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
 				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,
 				41228B2CE8BCF5256643BCDA /* IncompleteReturnDetectionTests.swift in Sources */,
+				A5EF3AB43B882AF00C1BB869 /* RecordingBatch.swift in Sources */,
+				6013465FFB8316F5C15E9838 /* InventoryOperationsExecutionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
