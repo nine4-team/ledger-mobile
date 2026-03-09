@@ -1,0 +1,328 @@
+import Foundation
+
+// MARK: - Types
+
+/// Where the menu is being shown.
+enum ItemMenuContext {
+    case list        // Item card in a list view
+    case detail      // Item detail toolbar menu
+    case space       // Item within a SpaceDetailView
+    case transaction // Item within TransactionDetailView
+}
+
+/// What scope the view is operating in.
+enum ItemScope {
+    case project
+    case inventory
+    case search // Cross-scope — shows all options
+}
+
+/// Callbacks for single-item menu actions. All optional so callers only wire what they need.
+struct SingleItemMenuCallbacks {
+    // Navigation
+    var onOpen: (() -> Void)?
+    var onSelect: (() -> Void)?
+    // Status
+    var onStatusChange: ((String) -> Void)?
+    var onClearStatus: (() -> Void)?
+    // Transaction
+    var onSetTransaction: (() -> Void)?
+    var onClearTransaction: (() -> Void)?
+    var onMoveToReturnTransaction: (() -> Void)?
+    // Space
+    var onSetSpace: (() -> Void)?
+    var onClearSpace: (() -> Void)?
+    // Sell
+    var onSellToBusiness: (() -> Void)?
+    var onSellToProject: (() -> Void)?
+    // Reassign
+    var onReassignToInventory: (() -> Void)?
+    var onReassignToProject: (() -> Void)?
+    // Copies
+    var onMakeCopies: (() -> Void)?
+    // Delete
+    var onDelete: (() -> Void)?
+}
+
+/// Callbacks for bulk item menu actions.
+struct BulkItemMenuCallbacks {
+    var onStatusChange: ((String) -> Void)?
+    var onSetTransaction: (() -> Void)?
+    var onClearTransaction: (() -> Void)?
+    var onMoveToReturnTransaction: (() -> Void)?
+    var onSetSpace: (() -> Void)?
+    var onClearSpace: (() -> Void)?
+    var onSellToBusiness: (() -> Void)?
+    var onSellToProject: (() -> Void)?
+    var onReassignToInventory: (() -> Void)?
+    var onReassignToProject: (() -> Void)?
+    var onDelete: (() -> Void)?
+}
+
+// MARK: - Item Statuses
+
+private let itemStatuses: [(key: String, label: String)] = [
+    ("to-purchase", "To Purchase"),
+    ("purchased", "Purchased"),
+    ("to return", "To Return"),
+    ("returned", "Returned"),
+]
+
+// MARK: - Builder
+
+enum ItemMenuBuilder {
+
+    // MARK: Single-Item Menu
+
+    static func buildSingleItemMenu(
+        context: ItemMenuContext,
+        scope: ItemScope,
+        callbacks: SingleItemMenuCallbacks,
+        currentStatus: String? = nil
+    ) -> [ActionMenuItem] {
+        var items: [ActionMenuItem] = []
+
+        // --- First items: Open/Select ---
+        switch context {
+        case .list:
+            if let onOpen = callbacks.onOpen {
+                items.append(ActionMenuItem(id: "open", label: "Open", icon: "arrow.up.right.square", onPress: onOpen))
+            }
+            if let onSelect = callbacks.onSelect {
+                items.append(ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: onSelect))
+            }
+        case .space:
+            if let onOpen = callbacks.onOpen {
+                items.append(ActionMenuItem(id: "open", label: "Open", icon: "arrow.up.right.square", onPress: onOpen))
+            }
+        case .transaction:
+            if let onOpen = callbacks.onOpen {
+                items.append(ActionMenuItem(id: "open", label: "Open Item", icon: "arrow.up.right.square", onPress: onOpen))
+            }
+            if let onMakeCopies = callbacks.onMakeCopies {
+                items.append(ActionMenuItem(id: "make-copies", label: "Make Copies", icon: "doc.on.doc", onPress: onMakeCopies))
+            }
+        case .detail:
+            break // No Open/Select in detail view
+        }
+
+        // --- Status submenu ---
+        var statusSubactions: [ActionMenuSubitem] = itemStatuses.map { status in
+            ActionMenuSubitem(id: status.key, label: status.label, onPress: {
+                callbacks.onStatusChange?(status.key)
+            })
+        }
+        if context == .detail || context == .transaction {
+            if let onClearStatus = callbacks.onClearStatus {
+                statusSubactions.append(ActionMenuSubitem(id: "clear-status", label: "Clear Status", onPress: onClearStatus))
+            }
+        }
+        items.append(ActionMenuItem(
+            id: "status", label: "Status", icon: "flag",
+            subactions: statusSubactions,
+            selectedSubactionKey: currentStatus,
+            isActionOnly: true
+        ))
+
+        // --- Transaction submenu ---
+        if context == .transaction {
+            // In transaction context, item is already linked — only offer clear/move
+            var txnSubactions: [ActionMenuSubitem] = []
+            if let onClear = callbacks.onClearTransaction {
+                txnSubactions.append(ActionMenuSubitem(id: "clear-transaction", label: "Clear Transaction", icon: "link.badge.plus", onPress: onClear))
+            }
+            if let onMove = callbacks.onMoveToReturnTransaction {
+                txnSubactions.append(ActionMenuSubitem(id: "move-return-tx", label: "Move to Return Transaction", icon: "arrow.uturn.left", onPress: onMove))
+            }
+            if !txnSubactions.isEmpty {
+                items.append(ActionMenuItem(
+                    id: "transaction", label: "Transaction", icon: "arrow.left.arrow.right",
+                    subactions: txnSubactions,
+                    isActionOnly: true
+                ))
+            }
+        } else {
+            var txnSubactions: [ActionMenuSubitem] = []
+            if let onSet = callbacks.onSetTransaction {
+                txnSubactions.append(ActionMenuSubitem(id: "set-transaction", label: "Set Transaction", icon: "link", onPress: onSet))
+            }
+            if let onClear = callbacks.onClearTransaction {
+                txnSubactions.append(ActionMenuSubitem(id: "clear-transaction", label: "Clear Transaction", icon: "link.badge.plus", onPress: onClear))
+            }
+            if let onMove = callbacks.onMoveToReturnTransaction {
+                txnSubactions.append(ActionMenuSubitem(id: "move-return-tx", label: "Move to Return Transaction", icon: "arrow.uturn.left", onPress: onMove))
+            }
+            if !txnSubactions.isEmpty {
+                items.append(ActionMenuItem(
+                    id: "transaction", label: "Transaction", icon: "arrow.left.arrow.right",
+                    subactions: txnSubactions,
+                    isActionOnly: true
+                ))
+            }
+        }
+
+        // --- Space submenu ---
+        let spaceSetLabel = context == .space ? "Move to Space" : "Set Space"
+        let spaceClearLabel = context == .space ? "Remove from Space" : "Clear Space"
+        var spaceSubactions: [ActionMenuSubitem] = []
+        if let onSet = callbacks.onSetSpace {
+            spaceSubactions.append(ActionMenuSubitem(id: "set-space", label: spaceSetLabel, icon: "mappin.and.ellipse", onPress: onSet))
+        }
+        if let onClear = callbacks.onClearSpace {
+            spaceSubactions.append(ActionMenuSubitem(id: "clear-space", label: spaceClearLabel, icon: "xmark.circle", onPress: onClear))
+        }
+        if !spaceSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "space", label: "Space", icon: "mappin.and.ellipse",
+                subactions: spaceSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // --- Sell submenu (scope-dependent) ---
+        var sellSubactions: [ActionMenuSubitem] = []
+        if scope == .project || scope == .search {
+            if let onSellToBusiness = callbacks.onSellToBusiness {
+                sellSubactions.append(ActionMenuSubitem(id: "sell-to-business", label: "Sell to Business", icon: "building.2", onPress: onSellToBusiness))
+            }
+        }
+        if let onSellToProject = callbacks.onSellToProject {
+            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: onSellToProject))
+        }
+        if !sellSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "sell", label: "Sell", icon: "dollarsign.circle",
+                subactions: sellSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // --- Reassign submenu (scope-dependent) ---
+        var reassignSubactions: [ActionMenuSubitem] = []
+        if scope == .project || scope == .search {
+            if let onReassignToInventory = callbacks.onReassignToInventory {
+                reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-inventory", label: "Reassign to Inventory", icon: "shippingbox", onPress: onReassignToInventory))
+            }
+        }
+        if let onReassignToProject = callbacks.onReassignToProject {
+            reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-project", label: "Reassign to Project", icon: "arrow.triangle.2.circlepath", onPress: onReassignToProject))
+        }
+        if !reassignSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath",
+                subactions: reassignSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // --- Delete (always last) ---
+        if let onDelete = callbacks.onDelete {
+            items.append(ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true, onPress: onDelete))
+        }
+
+        return items
+    }
+
+    // MARK: Bulk Menu
+
+    static func buildBulkMenu(
+        context: ItemMenuContext = .list,
+        scope: ItemScope,
+        callbacks: BulkItemMenuCallbacks
+    ) -> [ActionMenuItem] {
+        var items: [ActionMenuItem] = []
+
+        // Status submenu
+        if let onStatusChange = callbacks.onStatusChange {
+            items.append(ActionMenuItem(
+                id: "status", label: "Change Status", icon: "flag",
+                subactions: itemStatuses.map { status in
+                    ActionMenuSubitem(id: status.key, label: status.label, onPress: {
+                        onStatusChange(status.key)
+                    })
+                },
+                isActionOnly: true
+            ))
+        }
+
+        // Transaction submenu
+        var txnSubactions: [ActionMenuSubitem] = []
+        if let onSet = callbacks.onSetTransaction {
+            txnSubactions.append(ActionMenuSubitem(id: "set-transaction", label: "Set Transaction", icon: "link", onPress: onSet))
+        }
+        if let onClear = callbacks.onClearTransaction {
+            txnSubactions.append(ActionMenuSubitem(id: "clear-transaction", label: "Clear Transaction", icon: "link.badge.plus", onPress: onClear))
+        }
+        if let onMove = callbacks.onMoveToReturnTransaction {
+            txnSubactions.append(ActionMenuSubitem(id: "move-return-tx", label: "Move to Return Transaction", icon: "arrow.uturn.left", onPress: onMove))
+        }
+        if !txnSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "transaction", label: "Transaction", icon: "arrow.left.arrow.right",
+                subactions: txnSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // Space submenu
+        let spaceSetLabel = context == .space ? "Move to Another Space" : "Set Space"
+        let spaceClearLabel = context == .space ? "Remove from Space" : "Clear Space"
+        var spaceSubactions: [ActionMenuSubitem] = []
+        if let onSet = callbacks.onSetSpace {
+            spaceSubactions.append(ActionMenuSubitem(id: "set-space", label: spaceSetLabel, icon: "mappin.and.ellipse", onPress: onSet))
+        }
+        if let onClear = callbacks.onClearSpace {
+            spaceSubactions.append(ActionMenuSubitem(id: "clear-space", label: spaceClearLabel, icon: "xmark.circle", onPress: onClear))
+        }
+        if !spaceSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "space", label: "Space", icon: "mappin.and.ellipse",
+                subactions: spaceSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // Sell submenu (scope-dependent)
+        var sellSubactions: [ActionMenuSubitem] = []
+        if scope == .project || scope == .search {
+            if let onSellToBusiness = callbacks.onSellToBusiness {
+                sellSubactions.append(ActionMenuSubitem(id: "sell-to-business", label: "Sell to Business", icon: "building.2", onPress: onSellToBusiness))
+            }
+        }
+        if let onSellToProject = callbacks.onSellToProject {
+            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: onSellToProject))
+        }
+        if !sellSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "sell", label: "Sell", icon: "dollarsign.circle",
+                subactions: sellSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // Reassign submenu (scope-dependent)
+        var reassignSubactions: [ActionMenuSubitem] = []
+        if scope == .project || scope == .search {
+            if let onReassignToInventory = callbacks.onReassignToInventory {
+                reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-inventory", label: "Reassign to Inventory", icon: "shippingbox", onPress: onReassignToInventory))
+            }
+        }
+        if let onReassignToProject = callbacks.onReassignToProject {
+            reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-project", label: "Reassign to Project", icon: "arrow.triangle.2.circlepath", onPress: onReassignToProject))
+        }
+        if !reassignSubactions.isEmpty {
+            items.append(ActionMenuItem(
+                id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath",
+                subactions: reassignSubactions,
+                isActionOnly: true
+            ))
+        }
+
+        // Delete (always last)
+        if let onDelete = callbacks.onDelete {
+            items.append(ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true, onPress: onDelete))
+        }
+
+        return items
+    }
+}

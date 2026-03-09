@@ -21,6 +21,14 @@ struct UniversalSearchView: View {
     @State private var showItemMoveToProject = false
     @State private var showItemDeleteConfirmation = false
 
+    // Single-item action target
+    @State private var actionTargetItem: Item?
+    @State private var showSingleStatusPicker = false
+    @State private var showSingleSetSpace = false
+    @State private var showSingleTransactionPicker = false
+    @State private var showSingleReassign = false
+    @State private var showSingleDeleteConfirmation = false
+
     // Transaction selection
     @State private var selectedTransactionIds: Set<String> = []
     @State private var showTransactionBulkActions = false
@@ -160,6 +168,47 @@ struct UniversalSearchView: View {
         }
         .confirmationDialog("Delete \(selectedTransactionIds.count) transactions?", isPresented: $showTransactionDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        // Single-item action sheets
+        .sheet(isPresented: $showSingleStatusPicker) {
+            StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
+                updateItemField(actionTargetItem, fields: ["status": status])
+            }
+            .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showSingleSetSpace) {
+            SetSpaceModal(
+                spaces: accountContext.allSpaces,
+                currentSpaceId: actionTargetItem?.spaceId,
+                onSelect: { space in
+                    let fields: [String: Any] = space?.id != nil ? ["spaceId": space!.id!] : ["spaceId": NSNull()]
+                    updateItemField(actionTargetItem, fields: fields)
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showSingleTransactionPicker) {
+            TransactionPickerModal(
+                transactions: accountContext.allTransactions,
+                selectedId: actionTargetItem?.transactionId,
+                onSelect: { tx in
+                    if let txId = tx.id {
+                        updateItemField(actionTargetItem, fields: ["transactionId": txId])
+                    }
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showSingleReassign) {
+            if let item = actionTargetItem {
+                ReassignToProjectModal(items: [item]) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSingleItem() }
         } message: {
             Text("This action cannot be undone.")
         }
@@ -345,9 +394,24 @@ struct UniversalSearchView: View {
     // MARK: - Single Item Menu Items
 
     private func singleItemMenuItems(for itemId: String) -> [ActionMenuItem] {
-        [ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
-            selectedItemIds.insert(itemId)
-        })]
+        guard let item = searchResults.items.first(where: { $0.id == itemId }) else { return [] }
+        // Search scope — sell modals need ProjectContext which isn't available here,
+        // so we omit sell callbacks. Reassign to Project works via AccountContext.
+        return ItemMenuBuilder.buildSingleItemMenu(
+            context: .list,
+            scope: .search,
+            callbacks: SingleItemMenuCallbacks(
+                onSelect: { selectedItemIds.insert(itemId) },
+                onStatusChange: { _ in actionTargetItem = item; showSingleStatusPicker = true },
+                onSetTransaction: { actionTargetItem = item; showSingleTransactionPicker = true },
+                onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
+                onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
+                onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
+                onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
+                onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
+            ),
+            currentStatus: item.status
+        )
     }
 
     private func singleTransactionMenuItems(for txId: String) -> [ActionMenuItem] {
@@ -359,18 +423,18 @@ struct UniversalSearchView: View {
     // MARK: - Bulk Action Menus
 
     private var itemBulkActionMenuItems: [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "link-transaction", label: "Link to Transaction", icon: "link",
-                           onPress: { showItemLinkTransaction = true }),
-            ActionMenuItem(id: "set-space", label: "Set Space", icon: "mappin.and.ellipse",
-                           onPress: { showItemSetSpace = true }),
-            ActionMenuItem(id: "status", label: "Change Status", icon: "flag",
-                           onPress: { showItemStatusPicker = true }),
-            ActionMenuItem(id: "move-project", label: "Move to Project", icon: "arrow.triangle.2.circlepath",
-                           onPress: { showItemMoveToProject = true }),
-            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
-                           onPress: { showItemDeleteConfirmation = true }),
-        ]
+        ItemMenuBuilder.buildBulkMenu(
+            scope: .search,
+            callbacks: BulkItemMenuCallbacks(
+                onStatusChange: { _ in showItemStatusPicker = true },
+                onSetTransaction: { showItemLinkTransaction = true },
+                onClearTransaction: { clearTransactionForSelectedItems() },
+                onSetSpace: { showItemSetSpace = true },
+                onClearSpace: { clearSpaceForSelectedItems() },
+                onReassignToProject: { showItemMoveToProject = true },
+                onDelete: { showItemDeleteConfirmation = true }
+            )
+        )
     }
 
     private var transactionBulkActionMenuItems: [ActionMenuItem] {
@@ -426,6 +490,42 @@ struct UniversalSearchView: View {
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    // MARK: - Single-Item Actions
+
+    private func updateItemField(_ item: Item?, fields: [String: Any]) {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = item?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+    }
+
+    private func deleteSingleItem() {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = actionTargetItem?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
+    }
+
+    private func clearSpaceForSelectedItems() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearTransactionForSelectedItems() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
         }
         selectedItemIds.removeAll()
     }

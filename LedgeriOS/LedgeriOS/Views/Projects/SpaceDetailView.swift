@@ -28,6 +28,16 @@ struct SpaceDetailView: View {
     @State private var showAddExistingItems = false
     @State private var pickerSelectedIds: Set<String> = []
 
+    // Single-item actions (from item kebab within space)
+    @State private var actionTargetItem: Item?
+    @State private var showItemStatusPicker = false
+    @State private var showItemSetSpace = false
+    @State private var showItemTransactionPicker = false
+    @State private var showItemSellToBusiness = false
+    @State private var showItemSellToProject = false
+    @State private var showItemReassign = false
+    @State private var showItemDeleteConfirmation = false
+
     // Live document subscription
     @State private var liveSpaceData: Space?
     @State private var spaceListener: ListenerRegistration?
@@ -138,6 +148,59 @@ struct SpaceDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        // Item action sheets (from item kebab within space)
+        .sheet(isPresented: $showItemStatusPicker) {
+            StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
+                updateItemField(actionTargetItem, fields: ["status": status])
+            }
+            .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showItemSetSpace) {
+            SetSpaceModal(
+                spaces: projectContext.spaces,
+                currentSpaceId: actionTargetItem?.spaceId,
+                onSelect: { s in
+                    let fields: [String: Any] = s?.id != nil ? ["spaceId": s!.id!] : ["spaceId": NSNull()]
+                    updateItemField(actionTargetItem, fields: fields)
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showItemTransactionPicker) {
+            TransactionPickerModal(
+                transactions: projectContext.transactions,
+                selectedId: actionTargetItem?.transactionId,
+                onSelect: { tx in
+                    if let txId = tx.id {
+                        updateItemField(actionTargetItem, fields: ["transactionId": txId])
+                    }
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showItemSellToBusiness) {
+            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
+                SellToBusinessModal(items: [item], accountId: accountId) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .sheet(isPresented: $showItemSellToProject) {
+            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
+                SellToProjectModal(items: [item], accountId: accountId) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .sheet(isPresented: $showItemReassign) {
+            if let item = actionTargetItem {
+                ReassignToProjectModal(items: [item]) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .confirmationDialog("Delete item?", isPresented: $showItemDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteActionTargetItem() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
@@ -244,6 +307,7 @@ struct SpaceDetailView: View {
     private var itemsContent: some View {
         SharedItemsList(
             mode: .embedded(items: spaceItems, onItemPress: { _ in }),
+            getMenuItems: { spaceItemMenuItems(for: $0) },
             emptyMessage: "No items in this space",
             onAdd: { showAddExistingItems = true },
             useNavigationLinks: true,
@@ -251,6 +315,26 @@ struct SpaceDetailView: View {
             inline: true
         )
         .padding(.top, Spacing.xs)
+    }
+
+    private func spaceItemMenuItems(for item: Item) -> [ActionMenuItem] {
+        guard item.id != nil else { return [] }
+        return ItemMenuBuilder.buildSingleItemMenu(
+            context: .space,
+            scope: .project,
+            callbacks: SingleItemMenuCallbacks(
+                onStatusChange: { _ in actionTargetItem = item; showItemStatusPicker = true },
+                onSetTransaction: { actionTargetItem = item; showItemTransactionPicker = true },
+                onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
+                onSetSpace: { actionTargetItem = item; showItemSetSpace = true },
+                onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
+                onSellToBusiness: { actionTargetItem = item; showItemSellToBusiness = true },
+                onSellToProject: { actionTargetItem = item; showItemSellToProject = true },
+                onReassignToProject: { actionTargetItem = item; showItemReassign = true },
+                onDelete: { actionTargetItem = item; showItemDeleteConfirmation = true }
+            ),
+            currentStatus: item.status
+        )
     }
 
     // MARK: - Checklists
@@ -475,6 +559,20 @@ struct SpaceDetailView: View {
         }
         pickerSelectedIds.removeAll()
         showAddExistingItems = false
+    }
+
+    private func updateItemField(_ item: Item?, fields: [String: Any]) {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = item?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+    }
+
+    private func deleteActionTargetItem() {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = actionTargetItem?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
     }
 
     private func deleteSpace() {

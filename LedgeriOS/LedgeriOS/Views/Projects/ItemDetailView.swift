@@ -330,6 +330,11 @@ struct ItemDetailView: View {
 
     // MARK: - Action Menu
 
+    /// Scope derived from whether item belongs to a project or business inventory.
+    private var itemScope: ItemScope {
+        liveItem.projectId != nil ? .project : .inventory
+    }
+
     private var actionMenuItems: [ActionMenuItem] {
         var items: [ActionMenuItem] = [
             ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
@@ -338,28 +343,56 @@ struct ItemDetailView: View {
             ActionMenuItem(id: "notes", label: "Edit Notes", icon: "note.text", onPress: {
                 showEditNotes = true
             }),
-            ActionMenuItem(id: "space", label: "Set Space", icon: "mappin.and.ellipse", onPress: {
-                showSetSpace = true
-            }),
-            ActionMenuItem(id: "status", label: "Change Status", icon: "flag", onPress: {
-                showStatusPicker = true
-            }),
-            ActionMenuItem(id: "transaction", label: "Link Transaction", icon: "arrow.left.arrow.right", onPress: {
-                showTransactionPicker = true
-            }),
-            ActionMenuItem(id: "copies", label: "Make Copies", icon: "doc.on.doc", onPress: {
-                showMakeCopies = true
-            }),
-            ActionMenuItem(id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath", onPress: {
-                showReassign = true
-            }),
-            ActionMenuItem(id: "sell-business", label: "Sell to Business", icon: "building.2", onPress: {
-                showSellToBusiness = true
-            }),
-            ActionMenuItem(id: "sell-project", label: "Sell to Project", icon: "arrow.right.square", onPress: {
-                showSellToProject = true
-            }),
         ]
+
+        // Space: Set + Clear
+        items.append(ActionMenuItem(id: "space", label: "Set Space", icon: "mappin.and.ellipse", onPress: {
+            showSetSpace = true
+        }))
+        if liveItem.spaceId != nil {
+            items.append(ActionMenuItem(id: "clear-space", label: "Clear Space", icon: "xmark.circle", onPress: {
+                clearItemField("spaceId")
+            }))
+        }
+
+        // Status: Change + Clear
+        items.append(ActionMenuItem(id: "status", label: "Change Status", icon: "flag", onPress: {
+            showStatusPicker = true
+        }))
+        if liveItem.status != nil && !liveItem.status!.isEmpty {
+            items.append(ActionMenuItem(id: "clear-status", label: "Clear Status", icon: "flag.slash", onPress: {
+                clearItemField("status")
+            }))
+        }
+
+        // Transaction: Link + Clear
+        items.append(ActionMenuItem(id: "transaction", label: "Link Transaction", icon: "arrow.left.arrow.right", onPress: {
+            showTransactionPicker = true
+        }))
+        if liveItem.transactionId != nil {
+            items.append(ActionMenuItem(id: "clear-transaction", label: "Clear Transaction", icon: "link.badge.plus", onPress: {
+                clearItemField("transactionId")
+            }))
+        }
+
+        items.append(ActionMenuItem(id: "copies", label: "Make Copies", icon: "doc.on.doc", onPress: {
+            showMakeCopies = true
+        }))
+
+        // Sell (scope-dependent)
+        if itemScope == .project {
+            items.append(ActionMenuItem(id: "sell-business", label: "Sell to Business", icon: "building.2", onPress: {
+                showSellToBusiness = true
+            }))
+        }
+        items.append(ActionMenuItem(id: "sell-project", label: "Sell to Project", icon: "arrow.right.square", onPress: {
+            showSellToProject = true
+        }))
+
+        // Reassign (scope-dependent)
+        items.append(ActionMenuItem(id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath", onPress: {
+            showReassign = true
+        }))
 
         if liveItem.status == "to return" || liveItem.status == "returned" {
             items.append(ActionMenuItem(id: "return-tx", label: "Link Return Transaction", icon: "arrow.uturn.left", onPress: {
@@ -460,6 +493,10 @@ struct ItemDetailView: View {
             .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
                 self.liveItemData = updatedItem
             }
+    }
+
+    private func clearItemField(_ fieldName: String) {
+        updateItem(fields: [fieldName: NSNull()])
     }
 
     private func updateItem(fields: [String: Any]) {

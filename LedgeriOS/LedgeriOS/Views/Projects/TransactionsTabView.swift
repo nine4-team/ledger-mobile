@@ -15,6 +15,13 @@ struct TransactionsTabView: View {
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
 
+    // Bulk actions
+    @State private var showBulkDeleteConfirmation = false
+
+    // Single-transaction actions
+    @State private var actionTargetTransactionId: String?
+    @State private var showSingleDeleteConfirmation = false
+
     // MARK: - Computed
 
     private var processedTransactions: [Transaction] {
@@ -63,6 +70,13 @@ struct TransactionsTabView: View {
         return total != 0 ? total : nil
     }
 
+    private var selectedTransactions: [Transaction] {
+        processedTransactions.filter { tx in
+            guard let id = tx.id else { return false }
+            return selectedIds.contains(id)
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -87,13 +101,20 @@ struct TransactionsTabView: View {
         .sheet(isPresented: $showBulkActionMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
-                items: [
-                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
-                        selectedIds.removeAll()
-                    }),
-                ]
+                items: bulkActionMenuItems,
+                onSelectAction: { action in action() }
             )
             .sheetStyle(.quickMenu)
+        }
+        .confirmationDialog("Delete \(selectedIds.count) transactions?", isPresented: $showBulkDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSelectedTransactions() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        .confirmationDialog("Delete transaction?", isPresented: $showSingleDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSingleTransaction() }
+        } message: {
+            Text("This action cannot be undone.")
         }
         .sheet(isPresented: $showNewTransaction) {
             if let projectId = projectContext.currentProjectId {
@@ -204,8 +225,48 @@ struct TransactionsTabView: View {
                 get: { selectedIds.contains(txId) },
                 set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }
             ),
-            menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: txId) : []
+            menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : []
         )
+    }
+
+    // MARK: - Menu Items
+
+    private func singleTransactionMenuItems(for transaction: Transaction, txId: String) -> [ActionMenuItem] {
+        var items: [ActionMenuItem] = [
+            ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
+                selectedIds.insert(txId)
+            }),
+        ]
+
+        let needsReview = transaction.needsReview == true
+        items.append(ActionMenuItem(
+            id: "toggle-review",
+            label: needsReview ? "Mark as Reviewed" : "Mark for Review",
+            icon: needsReview ? "checkmark.circle" : "exclamationmark.circle",
+            onPress: {
+                toggleReviewStatus(txId: txId, currentlyNeedsReview: needsReview)
+            }
+        ))
+
+        items.append(ActionMenuItem(
+            id: "delete", label: "Delete", icon: "trash",
+            isDestructive: true,
+            onPress: {
+                actionTargetTransactionId = txId
+                showSingleDeleteConfirmation = true
+            }
+        ))
+
+        return items
+    }
+
+    private var bulkActionMenuItems: [ActionMenuItem] {
+        [
+            ActionMenuItem(id: "mark-reviewed", label: "Mark as Reviewed", icon: "checkmark.circle",
+                           onPress: { markSelectedTransactionsReviewed() }),
+            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
+                           onPress: { showBulkDeleteConfirmation = true }),
+        ]
     }
 
     // MARK: - Actions
@@ -218,11 +279,36 @@ struct TransactionsTabView: View {
         }
     }
 
-    private func singleTransactionMenuItems(for txId: String) -> [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
-                selectedIds.insert(txId)
-            }),
-        ]
+    private func toggleReviewStatus(txId: String, currentlyNeedsReview: Bool) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": !currentlyNeedsReview]) }
+    }
+
+    private func markSelectedTransactionsReviewed() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        for tx in selectedTransactions {
+            guard let txId = tx.id else { continue }
+            Task { try? await service.updateTransaction(accountId: accountId, transactionId: txId, fields: ["needsReview": false]) }
+        }
+        selectedIds.removeAll()
+    }
+
+    private func deleteSingleTransaction() {
+        guard let accountId = accountContext.currentAccountId,
+              let txId = actionTargetTransactionId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+    }
+
+    private func deleteSelectedTransactions() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        for tx in selectedTransactions {
+            guard let txId = tx.id else { continue }
+            Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
+        }
+        selectedIds.removeAll()
     }
 }

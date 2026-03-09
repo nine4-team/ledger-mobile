@@ -6,12 +6,25 @@ struct ItemsTabView: View {
 
     @State private var selectedItemIds: Set<String> = []
 
+    // Single-item action target
+    @State private var actionTargetItem: Item?
+
+    // Single-item action modals
+    @State private var showSingleStatusPicker = false
+    @State private var showSingleSetSpace = false
+    @State private var showSingleTransactionPicker = false
+    @State private var showSingleSellToBusiness = false
+    @State private var showSingleSellToProject = false
+    @State private var showSingleReassign = false
+    @State private var showSingleDeleteConfirmation = false
+
     // Bulk action modals
     @State private var showBulkStatusPicker = false
     @State private var showBulkSetSpace = false
     @State private var showBulkSellToBusiness = false
     @State private var showBulkSellToProject = false
     @State private var showBulkReassign = false
+    @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
     @State private var showNewItem = false
 
@@ -37,6 +50,60 @@ struct ItemsTabView: View {
             useNavigationLinks: true,
             emptyIcon: "cube.box"
         )
+        // Single-item action sheets
+        .sheet(isPresented: $showSingleStatusPicker) {
+            StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
+                updateItemField(actionTargetItem, fields: ["status": status])
+            }
+            .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showSingleSetSpace) {
+            SetSpaceModal(
+                spaces: projectContext.spaces,
+                currentSpaceId: actionTargetItem?.spaceId,
+                onSelect: { space in
+                    let fields: [String: Any] = space?.id != nil ? ["spaceId": space!.id!] : ["spaceId": NSNull()]
+                    updateItemField(actionTargetItem, fields: fields)
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showSingleTransactionPicker) {
+            TransactionPickerModal(
+                transactions: projectContext.transactions,
+                selectedId: actionTargetItem?.transactionId,
+                onSelect: { tx in
+                    if let txId = tx.id {
+                        updateItemField(actionTargetItem, fields: ["transactionId": txId])
+                    }
+                }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showSingleSellToBusiness) {
+            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
+                SellToBusinessModal(items: [item], accountId: accountId) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .sheet(isPresented: $showSingleSellToProject) {
+            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
+                SellToProjectModal(items: [item], accountId: accountId) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .sheet(isPresented: $showSingleReassign) {
+            if let item = actionTargetItem {
+                ReassignToProjectModal(items: [item]) {}
+                    .sheetStyle(.form)
+            }
+        }
+        .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSingleItem() }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        // Bulk action sheets
         .sheet(isPresented: $showBulkStatusPicker) {
             StatusPickerModal { status in updateStatusForSelected(status) }
                 .sheetStyle(.quickMenu)
@@ -45,8 +112,16 @@ struct ItemsTabView: View {
             SetSpaceModal(
                 spaces: projectContext.spaces,
                 currentSpaceId: nil,
-                onSelect: { space in
-                    setSpaceForSelected(spaceId: space?.id)
+                onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
+            )
+            .sheetStyle(.picker)
+        }
+        .sheet(isPresented: $showBulkTransactionPicker) {
+            TransactionPickerModal(
+                transactions: projectContext.transactions,
+                selectedId: nil,
+                onSelect: { tx in
+                    if let txId = tx.id { setTransactionForSelected(transactionId: txId) }
                 }
             )
             .sheetStyle(.picker)
@@ -87,32 +162,62 @@ struct ItemsTabView: View {
         }
     }
 
-    // MARK: - Menu Items
+    // MARK: - Single-Item Menu
 
     private func singleItemMenuItems(for item: Item) -> [ActionMenuItem] {
         guard let itemId = item.id else { return [] }
-        return [
-            ActionMenuItem(id: "select", label: "Select", icon: "checkmark.circle", onPress: {
-                selectedItemIds.insert(itemId)
-            }),
-        ]
+        return ItemMenuBuilder.buildSingleItemMenu(
+            context: .list,
+            scope: .project,
+            callbacks: SingleItemMenuCallbacks(
+                onSelect: { selectedItemIds.insert(itemId) },
+                onStatusChange: { _ in actionTargetItem = item; showSingleStatusPicker = true },
+                onSetTransaction: { actionTargetItem = item; showSingleTransactionPicker = true },
+                onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
+                onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
+                onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
+                onSellToBusiness: { actionTargetItem = item; showSingleSellToBusiness = true },
+                onSellToProject: { actionTargetItem = item; showSingleSellToProject = true },
+                onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
+                onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
+            ),
+            currentStatus: item.status
+        )
     }
 
+    // MARK: - Bulk Menu
+
     private var bulkActionMenuItems: [ActionMenuItem] {
-        [
-            ActionMenuItem(id: "status", label: "Change Status", icon: "flag",
-                           onPress: { showBulkStatusPicker = true }),
-            ActionMenuItem(id: "space", label: "Set Space", icon: "mappin.and.ellipse",
-                           onPress: { showBulkSetSpace = true }),
-            ActionMenuItem(id: "sell-business", label: "Sell to Business", icon: "building.2",
-                           onPress: { showBulkSellToBusiness = true }),
-            ActionMenuItem(id: "sell-project", label: "Sell to Project", icon: "arrow.right.square",
-                           onPress: { showBulkSellToProject = true }),
-            ActionMenuItem(id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath",
-                           onPress: { showBulkReassign = true }),
-            ActionMenuItem(id: "delete", label: "Delete", icon: "trash", isDestructive: true,
-                           onPress: { showBulkDeleteConfirmation = true }),
-        ]
+        ItemMenuBuilder.buildBulkMenu(
+            scope: .project,
+            callbacks: BulkItemMenuCallbacks(
+                onStatusChange: { _ in showBulkStatusPicker = true },
+                onSetTransaction: { showBulkTransactionPicker = true },
+                onClearTransaction: { clearTransactionForSelected() },
+                onSetSpace: { showBulkSetSpace = true },
+                onClearSpace: { clearSpaceForSelected() },
+                onSellToBusiness: { showBulkSellToBusiness = true },
+                onSellToProject: { showBulkSellToProject = true },
+                onReassignToProject: { showBulkReassign = true },
+                onDelete: { showBulkDeleteConfirmation = true }
+            )
+        )
+    }
+
+    // MARK: - Single-Item Actions
+
+    private func updateItemField(_ item: Item?, fields: [String: Any]) {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = item?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+    }
+
+    private func deleteSingleItem() {
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = actionTargetItem?.id else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
     }
 
     // MARK: - Bulk Actions
@@ -134,6 +239,36 @@ struct ItemsTabView: View {
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearSpaceForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setTransactionForSelected(transactionId: String) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": transactionId]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearTransactionForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
         }
         selectedItemIds.removeAll()
     }
