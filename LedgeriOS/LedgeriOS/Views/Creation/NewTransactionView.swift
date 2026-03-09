@@ -52,7 +52,7 @@ struct NewTransactionView: View {
     }
 
     private var selectedCategory: BudgetCategory? {
-        projectContext?.budgetCategories.first { $0.id == selectedCategoryId }
+        projectContext?.enabledBudgetCategories.first { $0.id == selectedCategoryId }
     }
 
     private var isItemizedCategory: Bool {
@@ -69,7 +69,7 @@ struct NewTransactionView: View {
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryPickerList(
-                categories: projectContext?.budgetCategories ?? [],
+                categories: projectContext?.enabledBudgetCategories ?? [],
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
             )

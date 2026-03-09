@@ -178,7 +178,7 @@ struct TransactionDetailView: View {
         .sheet(isPresented: $showEditDetails) {
             EditTransactionDetailsModal(
                 transaction: currentTransaction,
-                budgetCategories: projectContext.budgetCategories,
+                budgetCategories: projectContext.enabledBudgetCategories,
                 onSave: { fields in
                     updateTransaction(fields: fields)
                 }

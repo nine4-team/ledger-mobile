@@ -136,6 +136,10 @@ struct InventoryOperationsService {
         let itemsRef = db.collection("accounts/\(accountId)/items")
         let txRef = db.collection("accounts/\(accountId)/transactions")
         let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
+        let pbcRef = db.collection("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories")
+
+        // Collect unique destination category IDs for auto-enable
+        var destinationCategoryIds: Set<String> = []
 
         for item in items {
             guard let itemId = item.id else { continue }
@@ -143,6 +147,8 @@ struct InventoryOperationsService {
             let srcCatId = item.budgetCategoryId ?? sourceCategoryId ?? "uncategorized"
             let dstCatId = item.budgetCategoryId ?? destinationCategoryId ?? "uncategorized"
             let amountDelta = item.purchasePriceCents ?? 0
+
+            destinationCategoryIds.insert(dstCatId)
 
             // Hop 1: source project → business inventory (only if item was in a project)
             if let srcProjectId = item.projectId {
@@ -217,6 +223,16 @@ struct InventoryOperationsService {
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }  // M2
             if let userId { edge["createdBy"] = userId }                                    // M3
             batch.setData(edge, forDocument: edgesRef.document())
+        }
+
+        // Auto-enable: ensure ProjectBudgetCategory docs exist for all destination categories.
+        // Uses setData(merge:true) so existing docs (with budget amounts) are untouched.
+        for catId in destinationCategoryIds where catId != "uncategorized" {
+            var fields: [String: Any] = [
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let userId { fields["updatedBy"] = userId }
+            batch.setData(fields, forDocument: pbcRef.document(catId), merge: true)
         }
 
         try await batch.commit()

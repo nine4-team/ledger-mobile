@@ -21,6 +21,7 @@ protocol BudgetCategoriesServiceProtocol: Sendable {
 protocol ProjectBudgetCategoriesServiceProtocol: Sendable {
     func subscribeToProjectBudgetCategories(accountId: String, projectId: String, onChange: @escaping ([ProjectBudgetCategory]) -> Void) -> ListenerRegistration
     func setProjectBudgetCategory(accountId: String, projectId: String, categoryId: String, budgetCents: Int, userId: String?) async throws
+    func deleteProjectBudgetCategory(accountId: String, projectId: String, categoryId: String) async throws
 }
 
 // MARK: - AccountMembersService

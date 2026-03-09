@@ -40,4 +40,14 @@ struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
         try await docRef.setData(fields, merge: true)
         syncTracker.trackPendingWrite()
     }
+
+    func deleteProjectBudgetCategory(
+        accountId: String,
+        projectId: String,
+        categoryId: String
+    ) async throws {
+        let docRef = collectionRef(accountId: accountId, projectId: projectId).document(categoryId)
+        try await docRef.delete()
+        syncTracker.trackPendingWrite()
+    }
 }

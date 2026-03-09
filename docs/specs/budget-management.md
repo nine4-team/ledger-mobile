@@ -244,7 +244,7 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 ## Transaction Budget Attribution
 
-- **Non-canonical transactions**: Category selected by user via form (pre-filled from account default).
+- **Non-canonical transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
 - **Canonical inventory sales**: Category derived from the item's `budgetCategoryId`, not from user selection. This is what makes canonical sale grouping deterministic.
 
 ## Item Budget Category Attribution
@@ -256,18 +256,19 @@ Items carry a persistent `budgetCategoryId` field. Once set, this field stays wi
 1. When linking an item to a transaction: `item.budgetCategoryId = transaction.budgetCategoryId`
 2. When moving to a different scope: if item has no category or category is not enabled in destination, prompt user to select. Note: "enabled in destination" only applies to project destinations — business inventory doesn't have per-project enabled categories, so only "missing" is checked.
 
+**Auto-enable on transfer:** When items or transactions are moved to a destination project, the system automatically creates `ProjectBudgetCategory` documents for any budget category IDs that don't already have one in the destination (using `setData(merge: true)` to avoid overwriting existing budget amounts). This applies to:
+- `sellToProject` — auto-enables categories for all destination category IDs in the item batch
+- `reassignTransactionToProject` — auto-enables the transaction's `budgetCategoryId` in the destination project
+
+This ensures transferred spend always appears in the destination project's budget display without requiring manual category setup.
+
 **Why persistent:** This enables deterministic canonical sale grouping — the system always knows which sale transaction an item belongs to without prompting the user again.
 
 ## Enabled Categories Determination
 
-A category appears in the budget display when:
+A category appears in a project's budget display when it has a `ProjectBudgetCategory` document (i.e., it was explicitly enabled for this project). Budget amount and spend are irrelevant — a category with `budgetCents: 0` and no spend still appears if it has been enabled. Categories without a `ProjectBudgetCategory` document are hidden regardless of spend.
 
-1. It has a non-zero budget allocation (`budgetCents > 0`), OR
-2. It has non-zero attributed spend (transactions exist for it)
-
-AND it is not archived.
-
-Categories with `budgetCents: 0` and no spend are hidden to prevent clutter.
+This ensures the budget tab only shows categories the user intentionally selected during project creation or later enabled via the category selection sheet.
 
 ## Offline and Conflict Behavior
 
