@@ -36,6 +36,10 @@ struct TransactionDetailView: View {
     @State private var itemsShowSortMenu = false
     @State private var itemsShowFilterMenu = false
 
+    // Image pinning
+    @State private var pinnedAttachment: AttachmentRef?
+    @State private var pinnedImageSource: [AttachmentRef] = []
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
@@ -106,28 +110,35 @@ struct TransactionDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                    VStack(spacing: Spacing.lg) {
-                        badgesRow
-                        heroCard
-                        nextStepsCard
+        PinnedImageLayout(
+            pinnedAttachment: pinnedAttachment,
+            allImages: pinnedImageSource,
+            onClose: { pinnedAttachment = nil },
+            onChangeImage: { pinnedAttachment = $0 }
+        ) {
+            ScrollView {
+                AdaptiveContentWidth {
+                    LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                        VStack(spacing: Spacing.lg) {
+                            badgesRow
+                            heroCard
+                            nextStepsCard
+                        }
+                        .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
+                        .padding(.bottom, Spacing.xs)
+                        receiptsSection
+                        otherImagesSection
+                        notesSection
+                        detailsSection
+                        itemsSection
+                        returnedItemsSection
+                        soldItemsSection
+                        transactionAuditSection
+                        movedItemsSection
                     }
-                    .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
-                    .padding(.bottom, Spacing.xs)
-                    receiptsSection
-                    otherImagesSection
-                    notesSection
-                    detailsSection
-                    itemsSection
-                    returnedItemsSection
-                    soldItemsSection
-                    transactionAuditSection
-                    movedItemsSection
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.lg)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.lg)
             }
         }
         .background(BrandColors.background)
@@ -432,6 +443,9 @@ struct TransactionDetailView: View {
                 onSetPrimary: { attachment in
                     setReceiptPrimary(attachment)
                 },
+                onPinImage: { attachment in
+                    pinImage(attachment, from: currentTransaction.receiptImages ?? [])
+                },
                 emptyStateMessage: "No receipts yet"
             )
             .padding(.top, Spacing.xs)
@@ -456,6 +470,9 @@ struct TransactionDetailView: View {
                 },
                 onSetPrimary: { attachment in
                     setOtherPrimary(attachment)
+                },
+                onPinImage: { attachment in
+                    pinImage(attachment, from: currentTransaction.otherImages ?? [])
                 },
                 emptyStateMessage: "No other images"
             )
@@ -770,6 +787,13 @@ struct TransactionDetailView: View {
         case "none": return "None"
         default: return "—"
         }
+    }
+
+    // MARK: - Image Pinning
+
+    private func pinImage(_ attachment: AttachmentRef, from source: [AttachmentRef]) {
+        pinnedAttachment = attachment
+        pinnedImageSource = source.filter { $0.kind == .image }
     }
 
     // MARK: - Image Management (Receipts)

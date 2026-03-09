@@ -34,4 +34,9 @@ enum Dimensions {
 
     /// Minimum card width for responsive grid calculation
     static let cardMinWidth: CGFloat = 320
+
+    // MARK: - Pinned Image
+
+    /// Width of the pinned image sidebar on regular-width displays (iPad)
+    static let pinnedSidebarWidth: CGFloat = 384
 }

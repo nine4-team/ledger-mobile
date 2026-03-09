@@ -35,19 +35,29 @@ struct ItemDetailView: View {
     // Sheet-on-sheet sequencing
     @State private var menuPendingAction: (() -> Void)?
 
+    // Image pinning
+    @State private var pinnedAttachment: AttachmentRef?
+
     // MARK: - Computed
 
     private var liveItem: Item { liveItemData ?? item }
 
     var body: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    heroCard
-                    sectionsArea
+        PinnedImageLayout(
+            pinnedAttachment: pinnedAttachment,
+            allImages: (liveItem.images ?? []).filter { $0.kind == .image },
+            onClose: { pinnedAttachment = nil },
+            onChangeImage: { pinnedAttachment = $0 }
+        ) {
+            ScrollView {
+                AdaptiveContentWidth {
+                    VStack(alignment: .leading, spacing: Spacing.lg) {
+                        heroCard
+                        sectionsArea
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
         }
         .background(BrandColors.background)
@@ -292,6 +302,9 @@ struct ItemDetailView: View {
             },
             onSetPrimary: { attachment in
                 setPrimaryImage(attachment)
+            },
+            onPinImage: { attachment in
+                pinnedAttachment = attachment
             },
             emptyStateMessage: "No images yet"
         )

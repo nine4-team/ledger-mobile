@@ -11,6 +11,7 @@ struct MediaGallerySection: View {
     var onUploadAttachment: ((Data) async throws -> Void)?
     var onRemoveAttachment: ((AttachmentRef) -> Void)?
     var onSetPrimary: ((AttachmentRef) -> Void)?
+    var onPinImage: ((AttachmentRef) -> Void)?
     var emptyStateMessage: String = "No images yet"
 
     @State private var showGallery = false
@@ -79,7 +80,8 @@ struct MediaGallerySection: View {
             ImageGallery(
                 images: imageAttachments,
                 initialIndex: galleryIndex,
-                isPresented: $showGallery
+                isPresented: $showGallery,
+                onPinImage: onPinImage
             )
         }
         #else
@@ -87,7 +89,8 @@ struct MediaGallerySection: View {
             ImageGallery(
                 images: imageAttachments,
                 initialIndex: galleryIndex,
-                isPresented: $showGallery
+                isPresented: $showGallery,
+                onPinImage: onPinImage
             )
         }
         #endif
@@ -247,6 +250,17 @@ struct MediaGallerySection: View {
                 icon: "star",
                 onPress: { [onSetPrimary] in
                     onSetPrimary?(attachment)
+                }
+            ))
+        }
+
+        if let onPinImage, PinnedImageCalculations.canPin(attachment) {
+            items.append(ActionMenuItem(
+                id: "pin",
+                label: "Pin Image",
+                icon: "pin",
+                onPress: {
+                    onPinImage(attachment)
                 }
             ))
         }
