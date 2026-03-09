@@ -12,19 +12,8 @@ enum ItemDetailCalculations {
     }
 
     /// Returns the available actions for an item based on its current state.
-    /// Active items (to-purchase, purchased, to return) get full actions.
-    /// Terminal items (returned) get limited actions (bookmark/unbookmark + delete only).
+    /// All statuses get the full action menu — no status is terminal so users can correct mistakes.
     static func availableActions(for item: Item) -> [ItemAction] {
-        // Terminal statuses: only bookmark/unbookmark + delete
-        let terminalStatuses: Set<String> = ["returned"]
-        if let status = item.status, terminalStatuses.contains(status) {
-            var actions: [ItemAction] = []
-            actions.append(item.bookmark == true ? .unbookmark : .bookmark)
-            actions.append(.delete)
-            return actions
-        }
-
-        // Active items: full menu
         var actions: [ItemAction] = [.changeStatus]
 
         // Space: set or clear based on current state

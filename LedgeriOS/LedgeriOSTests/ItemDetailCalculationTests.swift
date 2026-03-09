@@ -77,14 +77,15 @@ struct ItemDetailCalculationTests {
         #expect(actions.contains(.delete))
     }
 
-    @Test("returned item gets only bookmark and delete")
+    @Test("returned item gets full actions (no status is terminal)")
     func availableActionsReturned() {
         let item = makeItem(status: "returned")
         let actions = ItemDetailCalculations.availableActions(for: item)
 
-        #expect(actions.count == 2)
-        #expect(actions.contains(.bookmark))
+        #expect(actions.contains(.changeStatus))
+        #expect(actions.contains(.sellToBusiness))
         #expect(actions.contains(.delete))
+        #expect(actions.count > 2)
     }
 
     @Test("nil status item gets full actions (treated as active)")
@@ -160,24 +161,26 @@ struct ItemDetailCalculationTests {
 
     // MARK: - availableActions: returned item bookmark variants
 
-    @Test("returned bookmarked item gets unbookmark and delete")
+    @Test("returned bookmarked item gets full actions with unbookmark")
     func availableActionsReturnedBookmarked() {
         let item = makeItem(status: "returned", bookmark: true)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
-        #expect(actions.count == 2)
-        #expect(actions[0] == .unbookmark)
-        #expect(actions[1] == .delete)
+        #expect(actions.contains(.changeStatus))
+        #expect(actions.contains(.unbookmark))
+        #expect(!actions.contains(.bookmark))
+        #expect(actions.contains(.delete))
     }
 
-    @Test("returned non-bookmarked item gets bookmark and delete")
+    @Test("returned non-bookmarked item gets full actions with bookmark")
     func availableActionsReturnedNotBookmarked() {
         let item = makeItem(status: "returned", bookmark: false)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
-        #expect(actions.count == 2)
-        #expect(actions[0] == .bookmark)
-        #expect(actions[1] == .delete)
+        #expect(actions.contains(.changeStatus))
+        #expect(actions.contains(.bookmark))
+        #expect(!actions.contains(.unbookmark))
+        #expect(actions.contains(.delete))
     }
 
     // MARK: - displayPrice
