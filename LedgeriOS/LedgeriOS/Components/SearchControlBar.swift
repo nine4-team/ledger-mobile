@@ -13,7 +13,8 @@ struct SearchControlBar: View {
         HStack(spacing: Spacing.sm) {
             SearchField(
                 text: $searchText,
-                placeholder: searchPlaceholder
+                placeholder: searchPlaceholder,
+                style: .overlay
             )
 
             if let onAdd {

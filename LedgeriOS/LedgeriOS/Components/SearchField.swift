@@ -66,7 +66,7 @@ struct SearchField: View {
         }
         .padding(.horizontal, isOverlay ? Spacing.sm : Spacing.md)
         .padding(.vertical, isOverlay ? 7 : 10)
-        .background(isOverlay ? Color(.tertiarySystemFill) : BrandColors.inputBackground)
+        .background(isOverlay ? Color.black.opacity(0.12) : BrandColors.inputBackground)
         .clipShape(Capsule(style: .continuous))
         .overlay(
             Capsule(style: .continuous)
