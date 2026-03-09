@@ -165,6 +165,12 @@ struct ItemDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .navigationDestination(for: Transaction.self) { transaction in
+            TransactionDetailView(transaction: transaction)
+        }
+        .navigationDestination(for: Space.self) { space in
+            SpaceDetailView(space: space)
+        }
         .onAppear { startItemListener() }
         .onDisappear { itemListener?.remove() }
     }
@@ -178,8 +184,38 @@ struct ItemDetailView: View {
                 .foregroundStyle(BrandColors.textPrimary)
 
             heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
-            heroDetailRow(label: "Transaction", value: linkedTransactionLabel)
-            heroDetailRow(label: "Space", value: spaceName)
+            HStack(spacing: Spacing.xs) {
+                Text("Transaction:")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+                if let tx = linkedTransaction {
+                    NavigationLink(value: tx) {
+                        Text(linkedTransactionLabel)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.primary)
+                    }
+                } else {
+                    Text("None")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                }
+            }
+            HStack(spacing: Spacing.xs) {
+                Text("Space:")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+                if let space = linkedSpace {
+                    NavigationLink(value: space) {
+                        Text(space.name)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.primary)
+                    }
+                } else {
+                    Text("None")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                }
+            }
         }
         .cardStyle()
     }
@@ -377,6 +413,16 @@ struct ItemDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private var linkedTransaction: Transaction? {
+        guard let transactionId = liveItem.transactionId else { return nil }
+        return projectContext.transactions.first(where: { $0.id == transactionId })
+    }
+
+    private var linkedSpace: Space? {
+        guard let spaceId = liveItem.spaceId else { return nil }
+        return projectContext.spaces.first(where: { $0.id == spaceId })
+    }
 
     private var spaceName: String {
         guard let spaceId = liveItem.spaceId else { return "None" }
