@@ -13,12 +13,14 @@ struct BudgetTabCalculationTests {
         budgetCents: Int = 0,
         spentCents: Int = 0,
         categoryType: BudgetCategoryType = .general,
-        excludeFromOverallBudget: Bool = false
+        excludeFromOverallBudget: Bool = false,
+        isEnabled: Bool = true
     ) -> BudgetProgress.CategoryProgress {
         BudgetProgress.CategoryProgress(
             id: id, name: name, budgetCents: budgetCents,
             spentCents: spentCents, categoryType: categoryType,
-            excludeFromOverallBudget: excludeFromOverallBudget
+            excludeFromOverallBudget: excludeFromOverallBudget,
+            isEnabled: isEnabled
         )
     }
 
@@ -84,11 +86,18 @@ struct BudgetTabCalculationTests {
         #expect(result.count == 1)
     }
 
-    @Test("Filters out zero-budget zero-spend categories")
+    @Test("Filters out non-enabled zero-budget zero-spend categories")
     func enabledFiltersZeroBudgetZeroSpend() {
-        let categories = [makeCategoryProgress(budgetCents: 0, spentCents: 0)]
+        let categories = [makeCategoryProgress(budgetCents: 0, spentCents: 0, isEnabled: false)]
         let result = BudgetTabCalculations.enabledCategories(allCategories: categories)
         #expect(result.isEmpty)
+    }
+
+    @Test("Keeps enabled categories even with zero budget and zero spend")
+    func enabledKeepsExplicitlyEnabledCategories() {
+        let categories = [makeCategoryProgress(budgetCents: 0, spentCents: 0, isEnabled: true)]
+        let result = BudgetTabCalculations.enabledCategories(allCategories: categories)
+        #expect(result.count == 1)
     }
 
     @Test("Empty input returns empty")

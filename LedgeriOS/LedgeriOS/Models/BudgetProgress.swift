@@ -12,5 +12,7 @@ struct BudgetProgress {
         let spentCents: Int
         let categoryType: BudgetCategoryType
         let excludeFromOverallBudget: Bool
+        /// True when a ProjectBudgetCategory document exists (user explicitly enabled this category).
+        var isEnabled: Bool = true
     }
 }

@@ -30,6 +30,9 @@ struct BudgetProgressService {
         var totalBudget = 0
         var totalSpent = 0
 
+        // IDs of categories explicitly enabled for this project (have a ProjectBudgetCategory doc)
+        let enabledCategoryIds = Set(projectBudgetCategories.compactMap(\.id))
+
         for category in activeCategories {
             guard let id = category.id else { continue }
             let budget = budgetByCategoryId[id] ?? 0
@@ -43,7 +46,8 @@ struct BudgetProgressService {
                 budgetCents: budget,
                 spentCents: spent,
                 categoryType: catType,
-                excludeFromOverallBudget: exclude
+                excludeFromOverallBudget: exclude,
+                isEnabled: enabledCategoryIds.contains(id)
             ))
 
             if !exclude {

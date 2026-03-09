@@ -17,12 +17,12 @@ enum BudgetTabCalculations {
 
     // MARK: - CategoryProgress-Based Functions (existing)
 
-    /// Keeps categories that have a nonzero budget OR nonzero spending.
-    /// Filters out categories with zero budget AND zero spending.
+    /// Keeps categories that the user explicitly enabled for this project,
+    /// OR that have a nonzero budget or spending.
     static func enabledCategories(
         allCategories: [BudgetProgress.CategoryProgress]
     ) -> [BudgetProgress.CategoryProgress] {
-        allCategories.filter { $0.budgetCents > 0 || $0.spentCents != 0 }
+        allCategories.filter { $0.isEnabled || $0.budgetCents > 0 || $0.spentCents != 0 }
     }
 
     /// Sorts categories with fee categories last.
