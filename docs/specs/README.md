@@ -18,7 +18,6 @@ Platform-agnostic design specs documenting business rules, entity relationships,
 | [reassign-vs-sell.md](reassign-vs-sell.md) | When to reassign (no financial impact) vs sell (scope change with budget impact) |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |
 | [invoice-import.md](invoice-import.md) | PDF/image extraction, vendor parsing, and draft transaction creation |
-| [project-lifecycle.md](project-lifecycle.md) | Project CRUD, archiving, budget allocation, and data scope |
 
 ## Conventions
 
