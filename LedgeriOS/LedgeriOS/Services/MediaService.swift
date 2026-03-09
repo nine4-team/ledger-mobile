@@ -72,6 +72,24 @@ final class MediaService {
         throw lastError!
     }
 
+    /// Uploads arbitrary data to Firebase Storage with a specified content type.
+    /// Same retry logic as `uploadImage`. Use for PDFs, PNGs, etc.
+    func uploadData(_ data: Data, path: String, contentType: String) async throws -> String {
+        var lastError: Error?
+        for attempt in 0..<3 {
+            do {
+                return try await uploader.putData(data, path: path, contentType: contentType)
+            } catch {
+                lastError = error
+                if attempt < 2 {
+                    let delaySeconds = Double(1 << attempt)
+                    try? await Task.sleep(for: .seconds(delaySeconds))
+                }
+            }
+        }
+        throw lastError!
+    }
+
     // MARK: - Delete
 
     /// Deletes the file at the given download URL from Firebase Storage.

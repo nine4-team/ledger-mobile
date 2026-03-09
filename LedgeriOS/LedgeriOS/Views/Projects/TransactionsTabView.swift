@@ -13,6 +13,8 @@ struct TransactionsTabView: View {
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
     @State private var showNewTransaction = false
+    @State private var showAddMenu = false
+    @State private var showInvoiceImport = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
 
@@ -123,6 +125,27 @@ struct TransactionsTabView: View {
                     .sheetStyle(.form)
             }
         }
+        .sheet(isPresented: $showAddMenu) {
+            ActionMenuSheet(
+                title: "Add Transaction",
+                items: [
+                    ActionMenuItem(id: "new-transaction", label: "New Transaction", icon: "plus", onPress: {
+                        showNewTransaction = true
+                    }),
+                    ActionMenuItem(id: "import-invoice", label: "Import Invoice", icon: "doc.text.viewfinder", onPress: {
+                        showInvoiceImport = true
+                    }),
+                ],
+                onSelectAction: { action in action() }
+            )
+            .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showInvoiceImport) {
+            if let projectId = projectContext.currentProjectId {
+                ImportInvoiceModal(projectId: projectId)
+                    .sheetStyle(.fullSheet)
+            }
+        }
         .background(SortMenu(
             isPresented: $showSortMenu,
             sortOptions: SortMenu.transactionSortMenuItems(
@@ -156,7 +179,7 @@ struct TransactionsTabView: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            onAdd: { showNewTransaction = true },
+            onAdd: { showAddMenu = true },
             style: .card
         ) {
             if !processedTransactions.isEmpty {
