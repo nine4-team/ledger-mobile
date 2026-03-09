@@ -137,6 +137,12 @@ All sheets use the `SheetStyle` system — never set detents inline. Full spec: 
 
 Think before acting. Consider multiple approaches and propose the most appropriate one — not just the first one that comes to mind.
 
+Do the right thing, not the easy thing. Never rationalize a shortcut as a pragmatic decision. If the correct approach requires more work, that's the work.
+
+## Communication
+
+Never use the AskUserQuestion tool. Ask questions as plain text in your response and wait for the user to reply.
+
 ## Axiom Skills
 
 This is a SwiftUI/iOS project. **Use Axiom skills for architecture decisions and best practices before writing code.** Key domains:

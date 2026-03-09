@@ -89,9 +89,23 @@ Lineage tracking maintains a complete audit trail of item movements across trans
 - Admin manually re-links an item to a different transaction to fix a data error
 - Rarely used -- exists for data integrity
 
-## Creation Rules
+## Two-Layer Architecture
 
-Lineage edges are created server-side as part of request-doc processing (see write-tiers.md, Tier 2). They are never created directly by client code.
+Lineage edges serve two distinct purposes, created by different layers:
+
+### Audit layer: `"association"` edges
+
+Created **server-side** by the `onItemTransactionIdChanged` cloud function (see `firebase/functions/src/index.ts`). Fires automatically whenever an item's `transactionId` field changes, regardless of the operation that caused it. Records **what happened** — the item moved from transaction A to transaction B.
+
+### Intent layer: `"sold"` / `"returned"` / `"correction"` edges
+
+Created **client-side** by the operation that caused the move. Records **why it happened** — was it a sale, a return, or a data correction?
+
+### Both layers can fire for the same move
+
+A single item move can produce both an association edge (audit) and an intent edge (sold/returned/correction). They are not mutually exclusive. For example, a sell operation creates a `"sold"` edge client-side, and the server creates an `"association"` edge when the item's `transactionId` changes.
+
+## Creation Rules
 
 **Invariants:**
 

@@ -15,7 +15,8 @@ Reassign moves an item from one transaction to another **within the same scope**
 - `item.transactionId` is updated to the new transaction
 - The item is removed from the old transaction's `itemIds` array
 - The item is added to the new transaction's `itemIds` array
-- A lineage edge of type `"association"` is created
+- A `"correction"` intent edge is created client-side (records that this was a data fix)
+- An `"association"` audit edge is created server-side by `onItemTransactionIdChanged` (records the transactionId change)
 
 ### What Does NOT Change
 

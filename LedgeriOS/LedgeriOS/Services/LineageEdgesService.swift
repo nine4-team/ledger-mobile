@@ -23,7 +23,8 @@ struct LineageEdgesService {
         db.collection("accounts/\(accountId)/lineageEdges")
     }
 
-    /// Fetches edges where the given transaction is either the source or destination.
+    /// Fetches edges where the given transaction is either the source or destination,
+    /// ordered by `createdAt` ascending.
     func edges(forTransaction transactionId: String, accountId: String) async throws -> [LineageEdge] {
         let col = collection(accountId: accountId)
         async let fromEdges = col
@@ -38,10 +39,22 @@ struct LineageEdgesService {
         let toParsed = toSnapshot.documents.compactMap { try? $0.data(as: LineageEdge.self) }
 
         var seen = Set<String>()
-        return (fromParsed + toParsed).filter { edge in
-            guard let id = edge.id else { return false }
-            return seen.insert(id).inserted
-        }
+        return (fromParsed + toParsed)
+            .filter { edge in
+                guard let id = edge.id else { return false }
+                return seen.insert(id).inserted
+            }
+            .sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
+    }
+
+    /// Fetches the full movement history for an item, ordered by `createdAt` ascending.
+    func edges(forItem itemId: String, accountId: String) async throws -> [LineageEdge] {
+        let snapshot = try await collection(accountId: accountId)
+            .whereField("itemId", isEqualTo: itemId)
+            .getDocuments()
+        return snapshot.documents
+            .compactMap { try? $0.data(as: LineageEdge.self) }
+            .sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
     }
 
     /// Creates a new lineage edge document.

@@ -249,7 +249,8 @@ struct InventoryOperationsService {
         items: [Item],
         destinationTransactionId: String,
         destinationProjectId: String,
-        accountId: String
+        accountId: String,
+        userId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
 
@@ -260,6 +261,7 @@ struct InventoryOperationsService {
         let batch = db.batch()
         let itemsRef = db.collection("accounts/\(accountId)/items")
         let txRef = db.collection("accounts/\(accountId)/transactions")
+        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
 
         for item in items {
             guard let itemId = item.id else { continue }
@@ -285,6 +287,23 @@ struct InventoryOperationsService {
                 ["itemIds": FieldValue.arrayUnion([itemId])],
                 forDocument: txRef.document(destinationTransactionId)
             )
+
+            // Correction intent edge (audit association edge is created server-side
+            // by onItemTransactionIdChanged when the item's transactionId changes)
+            var edge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "toTransactionId": destinationTransactionId,
+                "fromProjectId": destinationProjectId,
+                "toProjectId": destinationProjectId,
+                "movementKind": "correction",
+                "source": "app",
+                "note": "Reassigned to transaction",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            if let userId { edge["createdBy"] = userId }
+            batch.setData(edge, forDocument: edgesRef.document())
         }
 
         try await batch.commit()
@@ -293,12 +312,13 @@ struct InventoryOperationsService {
     // MARK: - Reassign to Inventory
 
     /// Moves items back to business inventory without financial records.
-    func reassignToInventory(items: [Item], accountId: String) async throws {
+    func reassignToInventory(items: [Item], accountId: String, userId: String? = nil) async throws {
         guard !items.isEmpty else { return }
 
         let batch = db.batch()
         let itemsRef = db.collection("accounts/\(accountId)/items")
         let txRef = db.collection("accounts/\(accountId)/transactions")
+        let edgesRef = db.collection("accounts/\(accountId)/lineageEdges")
 
         for item in items {
             guard let itemId = item.id else { continue }
@@ -314,6 +334,21 @@ struct InventoryOperationsService {
                     forDocument: txRef.document(fromTxId)
                 )
             }
+
+            // Correction intent edge (audit association edge is created server-side
+            // by onItemTransactionIdChanged when the item's transactionId changes)
+            var edge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "movementKind": "correction",
+                "source": "app",
+                "note": "Reassigned to inventory",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            if let projectId = item.projectId { edge["fromProjectId"] = projectId }
+            if let userId { edge["createdBy"] = userId }
+            batch.setData(edge, forDocument: edgesRef.document())
         }
 
         try await batch.commit()
