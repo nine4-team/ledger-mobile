@@ -11,6 +11,7 @@ struct ProjectDetailView: View {
     @State private var menuPendingAction: (() -> Void)?
     @State private var showingDeleteConfirmation = false
     @State private var showingArchiveConfirmation = false
+    @State private var showingEditProject = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -77,7 +78,9 @@ struct ProjectDetailView: View {
             ActionMenuSheet(
                 title: "Project Options",
                 items: [
-                    ActionMenuItem(id: "edit", label: "Edit Project", icon: "pencil"),
+                    ActionMenuItem(id: "edit", label: "Edit Project", icon: "pencil", onPress: {
+                        showingEditProject = true
+                    }),
                     ActionMenuItem(
                         id: "export", label: "Export Transactions", icon: "square.and.arrow.up",
                         onPress: { exportTransactionsCSV() }
@@ -100,6 +103,13 @@ struct ProjectDetailView: View {
                 }
             )
             .sheetStyle(.quickMenu)
+        }
+        .sheet(isPresented: $showingEditProject) {
+            EditProjectModal(
+                project: project,
+                existingBudgetCategories: projectContext.projectBudgetCategories
+            )
+            .sheetStyle(.form)
         }
         .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
