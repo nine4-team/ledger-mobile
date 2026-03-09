@@ -133,6 +133,10 @@ Use these constants instead of inline magic numbers. Adaptive colors auto-switch
 
 All sheets use the `SheetStyle` system — never set detents inline. Full spec: `docs/specs/ui/sheet-styles.md`. Implementation: `LedgeriOS/LedgeriOS/Theme/SheetStyle.swift`.
 
+## Problem-Solving Discipline
+
+Think before acting. Consider multiple approaches and propose the most appropriate one — not just the first one that comes to mind.
+
 ## Axiom Skills
 
 This is a SwiftUI/iOS project. **Use Axiom skills for architecture decisions and best practices before writing code.** Key domains:
