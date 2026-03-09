@@ -91,6 +91,14 @@ struct ItemMenuBuilderTests {
         #expect(!ids(menu).contains("select"))
     }
 
+    @Test("Detail context includes Make Copies")
+    func detailContextMakeCopies() {
+        let menu = ItemMenuBuilder.buildSingleItemMenu(
+            context: .detail, scope: .project, callbacks: allCallbacks()
+        )
+        #expect(ids(menu).contains("make-copies"))
+    }
+
     @Test("Detail context includes Clear Status in status submenu")
     func detailContextClearStatus() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(

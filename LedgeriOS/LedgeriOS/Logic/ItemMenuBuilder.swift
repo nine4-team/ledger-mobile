@@ -103,7 +103,9 @@ enum ItemMenuBuilder {
                 items.append(ActionMenuItem(id: "make-copies", label: "Make Copies", icon: "doc.on.doc", onPress: onMakeCopies))
             }
         case .detail:
-            break // No Open/Select in detail view
+            if let onMakeCopies = callbacks.onMakeCopies {
+                items.append(ActionMenuItem(id: "make-copies", label: "Make Copies", icon: "doc.on.doc", onPress: onMakeCopies))
+            }
         }
 
         // --- Status submenu ---

@@ -336,6 +336,7 @@ struct ItemDetailView: View {
     }
 
     private var actionMenuItems: [ActionMenuItem] {
+        // Detail-specific actions first
         var items: [ActionMenuItem] = [
             ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
                 showEditDetails = true
@@ -345,64 +346,32 @@ struct ItemDetailView: View {
             }),
         ]
 
-        // Space: Set + Clear
-        items.append(ActionMenuItem(id: "space", label: "Set Space", icon: "mappin.and.ellipse", onPress: {
-            showSetSpace = true
-        }))
-        if liveItem.spaceId != nil {
-            items.append(ActionMenuItem(id: "clear-space", label: "Clear Space", icon: "xmark.circle", onPress: {
-                clearItemField("spaceId")
-            }))
-        }
+        // Shared actions via builder (Status, Transaction, Space, Sell, Reassign, Delete)
+        let hasStatus = liveItem.status != nil && !liveItem.status!.isEmpty
+        let hasTx = liveItem.transactionId != nil
+        let hasSpace = liveItem.spaceId != nil
+        let isReturnStatus = liveItem.status == "to return" || liveItem.status == "returned"
 
-        // Status: Change + Clear
-        items.append(ActionMenuItem(id: "status", label: "Change Status", icon: "flag", onPress: {
-            showStatusPicker = true
-        }))
-        if liveItem.status != nil && !liveItem.status!.isEmpty {
-            items.append(ActionMenuItem(id: "clear-status", label: "Clear Status", icon: "flag.slash", onPress: {
-                clearItemField("status")
-            }))
-        }
-
-        // Transaction: Link + Clear
-        items.append(ActionMenuItem(id: "transaction", label: "Link Transaction", icon: "arrow.left.arrow.right", onPress: {
-            showTransactionPicker = true
-        }))
-        if liveItem.transactionId != nil {
-            items.append(ActionMenuItem(id: "clear-transaction", label: "Clear Transaction", icon: "link.badge.plus", onPress: {
-                clearItemField("transactionId")
-            }))
-        }
-
-        items.append(ActionMenuItem(id: "copies", label: "Make Copies", icon: "doc.on.doc", onPress: {
-            showMakeCopies = true
-        }))
-
-        // Sell (scope-dependent)
-        if itemScope == .project {
-            items.append(ActionMenuItem(id: "sell-business", label: "Sell to Business", icon: "building.2", onPress: {
-                showSellToBusiness = true
-            }))
-        }
-        items.append(ActionMenuItem(id: "sell-project", label: "Sell to Project", icon: "arrow.right.square", onPress: {
-            showSellToProject = true
-        }))
-
-        // Reassign (scope-dependent)
-        items.append(ActionMenuItem(id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath", onPress: {
-            showReassign = true
-        }))
-
-        if liveItem.status == "to return" || liveItem.status == "returned" {
-            items.append(ActionMenuItem(id: "return-tx", label: "Link Return Transaction", icon: "arrow.uturn.left", onPress: {
-                showReturnTransactionPicker = true
-            }))
-        }
-
-        items.append(ActionMenuItem(id: "delete", label: "Delete Item", icon: "trash", isDestructive: true, onPress: {
-            showDeleteConfirmation = true
-        }))
+        items += ItemMenuBuilder.buildSingleItemMenu(
+            context: .detail,
+            scope: itemScope,
+            callbacks: SingleItemMenuCallbacks(
+                onStatusChange: { _ in showStatusPicker = true },
+                onClearStatus: hasStatus ? { clearItemField("status") } : nil,
+                onSetTransaction: { showTransactionPicker = true },
+                onClearTransaction: hasTx ? { clearItemField("transactionId") } : nil,
+                onMoveToReturnTransaction: isReturnStatus ? { showReturnTransactionPicker = true } : nil,
+                onSetSpace: { showSetSpace = true },
+                onClearSpace: hasSpace ? { clearItemField("spaceId") } : nil,
+                onSellToBusiness: itemScope == .project ? { showSellToBusiness = true } : nil,
+                onSellToProject: { showSellToProject = true },
+                onReassignToInventory: itemScope == .project ? { showReassign = true } : nil,
+                onReassignToProject: { showReassign = true },
+                onMakeCopies: { showMakeCopies = true },
+                onDelete: { showDeleteConfirmation = true }
+            ),
+            currentStatus: liveItem.status
+        )
 
         return items
     }
