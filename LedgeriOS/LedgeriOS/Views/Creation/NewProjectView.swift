@@ -1,135 +1,308 @@
 import SwiftUI
 import PhotosUI
 
-/// Bottom-sheet form for creating a new project.
+/// Multi-step bottom sheet form for creating a new project.
+/// Step 1: Basic info → Step 2: Category selection → Step 3: Budget amounts.
 struct NewProjectView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
+    // Step management
+    @State private var currentStep = 1
+
+    // Step 1 — basic info
     @State private var name = ""
     @State private var clientName = ""
     @State private var descriptionText = ""
     @State private var heroImageItem: PhotosPickerItem?
     @State private var heroImageData: Data?
+
+    // Step 2 — category selection
+    @State private var selectedCategoryIds: Set<String> = []
+    @State private var showCategoryForm = false
+    @State private var didPreSelect = false
+
+    // Step 3 — budget amounts
     @State private var budgetAllocations: [String: String] = [:]
-    @State private var budgetCategories: [BudgetCategory] = []
-    @State private var listener: (any NSObjectProtocol)?
 
     private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
     private let budgetCategoriesService = BudgetCategoriesService(syncTracker: NoOpSyncTracker())
     private let projectBudgetCategoriesService = ProjectBudgetCategoriesService(syncTracker: NoOpSyncTracker())
 
-    private var isValid: Bool {
+    private var isStep1Valid: Bool {
         ProjectFormValidation.isValidProject(name: name, clientName: clientName)
     }
 
+    private var activeBudgetCategories: [BudgetCategory] {
+        accountContext.allBudgetCategories
+            .filter { $0.isArchived != true }
+            .sorted { ($0.order ?? 0) < ($1.order ?? 0) }
+    }
+
+    private var selectedCategories: [BudgetCategory] {
+        activeBudgetCategories.filter { cat in
+            guard let id = cat.id else { return false }
+            return selectedCategoryIds.contains(id)
+        }
+    }
+
     var body: some View {
-        FormSheet(
-            title: "New Project",
-            primaryAction: FormSheetAction(title: "Create Project", isDisabled: !isValid) {
-                createProject()
-            },
-            secondaryAction: FormSheetAction(title: "Cancel") {
-                dismiss()
+        Group {
+            switch currentStep {
+            case 1: step1BasicInfo
+            case 2: step2CategorySelection
+            default: step3BudgetAmounts
             }
+        }
+        .sheet(isPresented: $showCategoryForm) {
+            CategoryFormModal(
+                mode: .create,
+                existingNames: activeBudgetCategories.map(\.name)
+            ) { name, categoryType, excludeFromBudget in
+                createCategoryOnTheFly(
+                    name: name,
+                    categoryType: categoryType,
+                    excludeFromBudget: excludeFromBudget
+                )
+            }
+            .sheetStyle(.form)
+        }
+        .onChange(of: activeBudgetCategories.count) {
+            preSelectAllIfNeeded()
+        }
+        .onAppear {
+            preSelectAllIfNeeded()
+        }
+    }
+
+    // MARK: - Step 1: Basic Info
+
+    private var step1BasicInfo: some View {
+        MultiStepFormSheet(
+            title: "New Project",
+            description: "Basic information",
+            currentStep: 1,
+            totalSteps: 3,
+            primaryAction: FormSheetAction(
+                title: "Next",
+                isDisabled: !isStep1Valid
+            ) {
+                currentStep = 2
+            },
+            secondaryAction: FormSheetAction(title: "Cancel") { dismiss() }
         ) {
             VStack(spacing: Spacing.md) {
                 FormField(text: $name, placeholder: "Project name *")
                 FormField(text: $clientName, placeholder: "Client name *")
                 FormField(text: $descriptionText, placeholder: "Description", axis: .vertical)
 
-                // Hero Image
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Hero Image")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-
-                    PhotosPicker(selection: $heroImageItem, matching: .images) {
-                        if let heroImageData {
-                            platformImage(from: heroImageData)
-                                .scaledToFill()
-                                .frame(height: 120)
-                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                        } else {
-                            HStack {
-                                Image(systemName: "photo")
-                                Text("Select Image")
-                            }
-                            .font(Typography.input)
-                            .foregroundStyle(BrandColors.textSecondary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(BrandColors.inputBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                            )
-                        }
-                    }
-                }
-                .onChange(of: heroImageItem) { _, newItem in
-                    Task {
-                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                            heroImageData = data
-                        }
-                    }
-                }
-
-                // Budget Allocations
-                if !budgetCategories.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.sm) {
-                        Text("Budget Allocations")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
-
-                        ForEach(budgetCategories) { category in
-                            if let catId = category.id {
-                                HStack {
-                                    Text(category.name)
-                                        .font(Typography.body)
-                                        .foregroundStyle(BrandColors.textPrimary)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                                    TextField("$0", text: budgetBinding(for: catId))
-                                        .platformKeyboardType(.numberPad)
-                                        .font(Typography.input)
-                                        .multilineTextAlignment(.trailing)
-                                        .frame(width: 100)
-                                        .padding(.horizontal, Spacing.sm)
-                                        .frame(height: 36)
-                                        .background(BrandColors.inputBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                                        )
-                                }
-                            }
-                        }
-                    }
-                }
+                heroImageSection
             }
-        }
-        .task {
-            loadBudgetCategories()
         }
     }
 
-    // MARK: - Data Loading
+    // MARK: - Step 2: Category Selection
 
-    private func loadBudgetCategories() {
-        guard let accountId = accountContext.currentAccountId else { return }
-        let reg = budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { categories in
-            Task { @MainActor in
-                self.budgetCategories = categories.filter { $0.isArchived != true }
-                    .sorted { ($0.order ?? 0) < ($1.order ?? 0) }
+    private var step2CategorySelection: some View {
+        MultiStepFormSheet(
+            title: "New Project",
+            description: "Select budget categories",
+            currentStep: 2,
+            totalSteps: 3,
+            primaryAction: FormSheetAction(
+                title: "Next",
+                isDisabled: selectedCategoryIds.isEmpty
+            ) {
+                currentStep = 3
+            },
+            secondaryAction: FormSheetAction(title: "Back") { currentStep = 1 }
+        ) {
+            VStack(spacing: Spacing.md) {
+                Button {
+                    showCategoryForm = true
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Category")
+                    }
+                    .font(Typography.button)
+                    .foregroundStyle(BrandColors.primary)
+                }
+                .buttonStyle(.plain)
+
+                if activeBudgetCategories.isEmpty {
+                    Text("No budget categories yet. Tap above to create one.")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, Spacing.lg)
+                } else {
+                    ForEach(activeBudgetCategories) { category in
+                        if let catId = category.id {
+                            categorySelectionRow(category: category, id: catId)
+                        }
+                    }
+                }
             }
         }
-        // Store as opaque to avoid type issues; won't remove since view lifetime is short
-        _ = reg
+    }
+
+    // MARK: - Step 3: Budget Amounts
+
+    private var step3BudgetAmounts: some View {
+        MultiStepFormSheet(
+            title: "New Project",
+            description: "Set budget amounts",
+            currentStep: 3,
+            totalSteps: 3,
+            primaryAction: FormSheetAction(title: "Create Project") {
+                createProject()
+            },
+            secondaryAction: FormSheetAction(title: "Back") { currentStep = 2 }
+        ) {
+            VStack(spacing: Spacing.md) {
+                if selectedCategories.isEmpty {
+                    Text("No categories selected.")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textTertiary)
+                } else {
+                    ForEach(selectedCategories) { category in
+                        if let catId = category.id {
+                            HStack {
+                                Text(category.name)
+                                    .font(Typography.body)
+                                    .foregroundStyle(BrandColors.textPrimary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                TextField("$0", text: budgetBinding(for: catId))
+                                    .platformKeyboardType(.numberPad)
+                                    .font(Typography.input)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 100)
+                                    .padding(.horizontal, Spacing.sm)
+                                    .frame(height: 36)
+                                    .background(BrandColors.inputBackground)
+                                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                                    )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var heroImageSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Hero Image")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            PhotosPicker(selection: $heroImageItem, matching: .images) {
+                if let heroImageData {
+                    platformImage(from: heroImageData)
+                        .scaledToFill()
+                        .frame(height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                } else {
+                    HStack {
+                        Image(systemName: "photo")
+                        Text("Select Image")
+                    }
+                    .font(Typography.input)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(BrandColors.inputBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
+                }
+            }
+        }
+        .onChange(of: heroImageItem) { _, newItem in
+            Task {
+                if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                    heroImageData = data
+                }
+            }
+        }
+    }
+
+    private func categorySelectionRow(category: BudgetCategory, id: String) -> some View {
+        Button {
+            if selectedCategoryIds.contains(id) {
+                selectedCategoryIds.remove(id)
+                budgetAllocations.removeValue(forKey: id)
+            } else {
+                selectedCategoryIds.insert(id)
+            }
+        } label: {
+            HStack(spacing: Spacing.md) {
+                SelectorCircle(isSelected: selectedCategoryIds.contains(id), indicator: .check)
+
+                Text(category.name)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+
+                if let type = category.metadata?.categoryType, type != .general {
+                    Badge(
+                        text: type == .itemized ? "Itemized" : "Fee",
+                        color: type == .itemized ? StatusColors.badgeInfo : StatusColors.badgeWarning
+                    )
+                }
+
+                Spacer()
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Pre-selection
+
+    private func preSelectAllIfNeeded() {
+        guard !didPreSelect else { return }
+        let ids = activeBudgetCategories.compactMap(\.id)
+        guard !ids.isEmpty else { return }
+        selectedCategoryIds = Set(ids)
+        didPreSelect = true
+    }
+
+    // MARK: - On-the-fly Category Creation
+
+    private func createCategoryOnTheFly(
+        name: String,
+        categoryType: BudgetCategoryType,
+        excludeFromBudget: Bool
+    ) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        var category = BudgetCategory()
+        category.accountId = accountId
+        category.name = name
+        category.slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
+        category.order = (activeBudgetCategories.last?.order ?? 0) + 1
+        category.metadata = BudgetCategoryMetadata(
+            categoryType: categoryType,
+            excludeFromOverallBudget: excludeFromBudget
+        )
+
+        do {
+            let newCategoryId = try budgetCategoriesService.createBudgetCategory(
+                accountId: accountId, category: category
+            )
+            selectedCategoryIds.insert(newCategoryId)
+        } catch {
+            // Offline-first: should not fail in practice
+        }
     }
 
     // MARK: - Budget Binding
@@ -141,7 +314,7 @@ struct NewProjectView: View {
         )
     }
 
-    // MARK: - Actions
+    // MARK: - Project Creation
 
     private func createProject() {
         guard let accountId = accountContext.currentAccountId else { return }
@@ -159,20 +332,19 @@ struct NewProjectView: View {
 
             dismiss()
 
-            // Background: set budget allocations
+            // Background: create project budget categories for all selected categories
             Task {
                 let userId = authManager.currentUser?.uid
-                for (catId, amountStr) in budgetAllocations {
+                for catId in selectedCategoryIds {
+                    let amountStr = budgetAllocations[catId] ?? ""
                     let cents = parseDollarsToCents(amountStr)
-                    if cents > 0 {
-                        try? await projectBudgetCategoriesService.setProjectBudgetCategory(
-                            accountId: accountId,
-                            projectId: projectId,
-                            categoryId: catId,
-                            budgetCents: cents,
-                            userId: userId
-                        )
-                    }
+                    try? await projectBudgetCategoriesService.setProjectBudgetCategory(
+                        accountId: accountId,
+                        projectId: projectId,
+                        categoryId: catId,
+                        budgetCents: cents,
+                        userId: userId
+                    )
                 }
             }
 

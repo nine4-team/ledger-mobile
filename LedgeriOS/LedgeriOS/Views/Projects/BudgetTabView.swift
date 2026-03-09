@@ -76,6 +76,7 @@ struct BudgetTabView: View {
         // M13: Reset auto-pin flag when project changes, then auto-pin Furnishings on first view
         .task(id: projectContext.currentProjectId) {
             didAutoPin = false
+            cleanUpStalePins()
         }
         .onChange(of: categories.count) { _, newCount in
             guard newCount > 0, !didAutoPin, pinnedCategoryIds.isEmpty else { return }
@@ -122,6 +123,31 @@ struct BudgetTabView: View {
             Color.clear.frame(width: 20)
         }
         .padding(.vertical, Spacing.sm)
+    }
+
+    /// Remove pinned IDs for categories that have been deleted (no longer exist at account level).
+    /// Archived categories are kept in the array per spec (restored if unarchived).
+    private func cleanUpStalePins() {
+        let currentPins = pinnedCategoryIds
+        guard !currentPins.isEmpty else { return }
+
+        // All account-level category IDs (including archived)
+        let allCategoryIds = Set(accountContext.allBudgetCategories.compactMap(\.id))
+        let validPins = currentPins.filter { allCategoryIds.contains($0) }
+
+        guard validPins.count < currentPins.count,
+              let accountId = accountContext.currentAccountId,
+              let userId = authManager.currentUser?.uid,
+              let projectId = projectContext.currentProjectId else { return }
+
+        Task {
+            try? await preferencesService.updatePinnedCategories(
+                accountId: accountId,
+                userId: userId,
+                projectId: projectId,
+                pinnedIds: validPins
+            )
+        }
     }
 
     private func autoPickFurnishingsIfNeeded() {

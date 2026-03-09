@@ -74,6 +74,38 @@ The document ID matches the budget category ID (1:1 relationship).
 
 **Total Budget:** The overall project budget is the sum of all enabled category `budgetCents` (treating null as 0). This is read-only and updates live as individual category amounts change.
 
+## Project Creation Flow
+
+Project creation uses a 3-step form:
+
+### Step 1: Basic Info
+
+- Project name (required)
+- Client name (required)
+- Description (optional)
+- Hero image (optional)
+
+### Step 2: Category Selection
+
+- Shows all active (non-archived) account-level budget categories
+- All categories are pre-selected by default; user unchecks any they don't need
+- Each row shows category name and type badge (Itemized / Fee) where applicable
+- "Add Category" button opens a create form for a new budget category
+- **On-the-fly category creation:** Creates the category at account level (`accounts/{accountId}/presets/default/budgetCategories`), making it available in Settings and all future projects. The new category is auto-selected for the current project.
+- At least one category must be selected to proceed
+
+### Step 3: Budget Amounts
+
+- Shows only the categories selected in Step 2
+- Currency input per category for budget allocation
+- Budget amounts are optional (categories can be enabled with no budget set)
+
+### On Create
+
+1. Project document created at `accounts/{accountId}/projects/{projectId}`
+2. For each selected category, a `ProjectBudgetCategory` document is created (using `setData(merge: true)`) with the entered `budgetCents` (0 if left empty)
+3. Hero image uploaded in background if provided
+
 ## Budget Progress Calculation
 
 ### Per-Category Spent
@@ -145,14 +177,16 @@ Fee categories use inverted semantics:
 
 ## Color Thresholds
 
-### Standard/Itemized Categories
+**Current implementation:** Uses brand primary color for all progress bars, with red for overage/overflow. The graduated color system below is preserved for potential future use.
+
+### Standard/Itemized Categories (future)
 
 - 0-49% spent: Green (healthy)
 - 50-74% spent: Yellow (warning)
 - 75-99% spent: Red (critical)
 - 100%+ spent: Red with overflow indicator
 
-### Fee Categories (Inverted)
+### Fee Categories (Inverted, future)
 
 - 75%+ received: Green (good)
 - 50-74% received: Yellow (partial)

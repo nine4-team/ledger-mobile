@@ -9,6 +9,11 @@ struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
         )
     }
 
+    private func collectionRef(accountId: String, projectId: String) -> CollectionReference {
+        Firestore.firestore()
+            .collection("accounts/\(accountId)/projects/\(projectId)/budgetCategories")
+    }
+
     func subscribeToProjectBudgetCategories(
         accountId: String,
         projectId: String,
@@ -24,12 +29,15 @@ struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
         budgetCents: Int,
         userId: String?
     ) async throws {
-        let r = repo(accountId: accountId, projectId: projectId)
-        var fields: [String: Any] = ["budgetCents": budgetCents]
+        let docRef = collectionRef(accountId: accountId, projectId: projectId).document(categoryId)
+        var fields: [String: Any] = [
+            "budgetCents": budgetCents,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
         if let userId {
             fields["updatedBy"] = userId
         }
-        try await r.update(id: categoryId, fields: fields)
+        try await docRef.setData(fields, merge: true)
         syncTracker.trackPendingWrite()
     }
 }

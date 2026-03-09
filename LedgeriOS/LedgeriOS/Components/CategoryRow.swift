@@ -8,7 +8,7 @@ struct CategoryRow: View {
 
     private var typeLabel: String {
         switch categoryType {
-        case .general, .standard: "General"
+        case .general: "General"
         case .itemized: "Itemized"
         case .fee: "Fee"
         }
@@ -16,7 +16,7 @@ struct CategoryRow: View {
 
     private var typeColor: Color {
         switch categoryType {
-        case .general, .standard: BrandColors.primary
+        case .general: BrandColors.primary
         case .itemized: StatusColors.badgeInfo
         case .fee: StatusColors.badgeWarning
         }

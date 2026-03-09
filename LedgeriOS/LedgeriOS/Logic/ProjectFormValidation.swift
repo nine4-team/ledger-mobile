@@ -42,4 +42,9 @@ enum ProjectFormValidation {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !clientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
+
+    /// Step 2: At least one budget category must be selected.
+    static func isStep2Valid(selectedCategoryIds: Set<String>) -> Bool {
+        !selectedCategoryIds.isEmpty
+    }
 }
