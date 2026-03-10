@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { initFirebase } from "./firebase.js";
+import { registerProjectTools } from "./tools/projects.js";
+import { registerTransactionTools } from "./tools/transactions.js";
+import { registerItemTools } from "./tools/items.js";
+import { registerSpaceTools } from "./tools/spaces.js";
+import { registerBudgetTools } from "./tools/budget.js";
+import { registerLineageTools } from "./tools/lineage.js";
+import { registerAnalyticsTools } from "./tools/analytics.js";
+import { registerResources } from "./resources/index.js";
+
+const db = initFirebase();
+
+const server = new McpServer({
+  name: "ledger",
+  version: "1.0.0",
+});
+
+registerProjectTools(server, db);
+registerTransactionTools(server, db);
+registerItemTools(server, db);
+registerSpaceTools(server, db);
+registerBudgetTools(server, db);
+registerLineageTools(server, db);
+registerAnalyticsTools(server, db);
+registerResources(server, db);
+
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("[ledger-mcp] Server running on stdio");
+}
+
+main().catch((error) => {
+  console.error("[ledger-mcp] Fatal error:", error);
+  process.exit(1);
+});

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ledger": {
+      "command": "node",
+      "args": ["mcp-server/build/index.js"],
+      "env": {
+        "FIRESTORE_EMULATOR_HOST": "localhost:8181",
+        "FIREBASE_PROJECT_ID": "ledger-nine4",
+        "LEDGER_ACCOUNT_ID": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94"
+      }
+    }
+  }
+}
