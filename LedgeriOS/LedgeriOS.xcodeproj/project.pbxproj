@@ -114,8 +114,6 @@
 		A1000101000000000000AA03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA03 /* Assets.xcassets */; };
 		A1000101000000000000AA04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA04 /* GoogleService-Info.plist */; };
 		A1000101000000000000AA05 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA05 /* AuthManager.swift */; };
-		A1000101000000000000AA06 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA06 /* SignInView.swift */; };
-		A1000101000000000000AA07 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA07 /* SignUpView.swift */; };
 		A1000101000000000000AA08 /* BrandColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA08 /* BrandColors.swift */; };
 		A1000101000000000000AA09 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA09 /* AuthView.swift */; };
 		A1000101000000000000AA0A /* FirestoreTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA0A /* FirestoreTestView.swift */; };
@@ -404,8 +402,6 @@
 		A1000201000000000000AA03 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1000201000000000000AA04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A1000201000000000000AA05 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
-		A1000201000000000000AA06 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
-		A1000201000000000000AA07 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA08 /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA09 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA0A /* FirestoreTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreTestView.swift; sourceTree = "<group>"; };
@@ -936,8 +932,6 @@
 			isa = PBXGroup;
 			children = (
 				A1000201000000000000AA05 /* AuthManager.swift */,
-				A1000201000000000000AA06 /* SignInView.swift */,
-				A1000201000000000000AA07 /* SignUpView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -1253,8 +1247,6 @@
 				A1000101000000000000AA01 /* LedgerApp.swift in Sources */,
 				A10E0C01000000000000FF01 /* FirebaseEmulatorConfig.swift in Sources */,
 				A1000101000000000000AA05 /* AuthManager.swift in Sources */,
-				A1000101000000000000AA06 /* SignInView.swift in Sources */,
-				A1000101000000000000AA07 /* SignUpView.swift in Sources */,
 				A1000101000000000000AA08 /* BrandColors.swift in Sources */,
 				A1000101000000000000AA09 /* AuthView.swift in Sources */,
 				A1000101000000000000AA0A /* FirestoreTestView.swift in Sources */,
