@@ -25,21 +25,18 @@ struct BudgetProgressPreview: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(categoryName)
-                .font(Typography.small)
-                .fontWeight(.medium)
+                .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
-                .lineLimit(1)
-                .truncationMode(.tail)
 
             HStack {
                 Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, categoryType: categoryType))
-                    .font(Typography.caption)
+                    .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                 Spacer()
                 Text(remainingLabel)
-                    .font(Typography.caption)
+                    .font(Typography.small)
                     .fontWeight(overBudget ? .bold : .regular)
                     .foregroundStyle(overBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
             }
@@ -47,7 +44,6 @@ struct BudgetProgressPreview: View {
             ProgressBar(
                 percentage: percentage,
                 fillColor: BrandColors.primary,
-                height: 4,
                 overflowPercentage: overflow > 0 ? overflow : nil,
                 overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
             )
