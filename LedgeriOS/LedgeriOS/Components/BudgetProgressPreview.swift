@@ -38,12 +38,12 @@ struct BudgetProgressPreview: View {
                 Text(remainingLabel)
                     .font(Typography.small)
                     .fontWeight(overBudget ? .bold : .regular)
-                    .foregroundStyle(overBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: categoryType))
             }
 
             ProgressBar(
                 percentage: percentage,
-                fillColor: BrandColors.primary,
+                fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: categoryType),
                 overflowPercentage: overflow > 0 ? overflow : nil,
                 overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
             )
@@ -51,8 +51,20 @@ struct BudgetProgressPreview: View {
     }
 }
 
-#Preview("Normal (50%)") {
-    BudgetProgressPreview(categoryName: "Furnishings", spentCents: 10_093_600, budgetCents: 10_320_000)
+#Preview("Green (< 50%)") {
+    BudgetProgressPreview(categoryName: "Furnishings", spentCents: 20000, budgetCents: 50000)
+        .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Yellow (50–74%)") {
+    BudgetProgressPreview(categoryName: "Furnishings", spentCents: 30000, budgetCents: 50000)
+        .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Red (≥ 75%)") {
+    BudgetProgressPreview(categoryName: "Furnishings", spentCents: 40000, budgetCents: 50000)
         .padding(Spacing.screenPadding)
         .preferredColorScheme(.dark)
 }
@@ -63,8 +75,14 @@ struct BudgetProgressPreview: View {
         .preferredColorScheme(.dark)
 }
 
-#Preview("Fee Category") {
-    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 30000, budgetCents: 50000, categoryType: .fee)
+#Preview("Fee — Green (≥ 75%)") {
+    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 40000, budgetCents: 50000, categoryType: .fee)
+        .padding(Spacing.screenPadding)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Fee — Red (< 50%)") {
+    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 20000, budgetCents: 50000, categoryType: .fee)
         .padding(Spacing.screenPadding)
         .preferredColorScheme(.dark)
 }

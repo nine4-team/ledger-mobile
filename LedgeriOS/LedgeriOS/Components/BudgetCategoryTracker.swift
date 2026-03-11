@@ -21,7 +21,11 @@ struct BudgetCategoryTracker: View {
     }
 
     private var fillColor: Color {
-        BrandColors.primary
+        BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: categoryType)
+    }
+
+    private var remainingColor: Color {
+        BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: categoryType)
     }
 
     var body: some View {
@@ -42,7 +46,7 @@ struct BudgetCategoryTracker: View {
                 ))
                 .font(Typography.small)
                 .fontWeight(overBudget ? .bold : .regular)
-                .foregroundStyle(overBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
+                .foregroundStyle(remainingColor)
             }
 
             ProgressBar(
@@ -55,13 +59,18 @@ struct BudgetCategoryTracker: View {
     }
 }
 
-#Preview("Under Budget (50%)") {
-    BudgetCategoryTracker(name: "Materials", spentCents: 25000, budgetCents: 50000)
+#Preview("Green (< 50%)") {
+    BudgetCategoryTracker(name: "Materials", spentCents: 20000, budgetCents: 50000)
         .padding(Spacing.screenPadding)
 }
 
-#Preview("At Budget (100%)") {
-    BudgetCategoryTracker(name: "Lumber", spentCents: 50000, budgetCents: 50000)
+#Preview("Yellow (50–74%)") {
+    BudgetCategoryTracker(name: "Lumber", spentCents: 30000, budgetCents: 50000)
+        .padding(Spacing.screenPadding)
+}
+
+#Preview("Red (≥ 75%)") {
+    BudgetCategoryTracker(name: "Appliances", spentCents: 40000, budgetCents: 50000)
         .padding(Spacing.screenPadding)
 }
 
@@ -70,8 +79,18 @@ struct BudgetCategoryTracker: View {
         .padding(Spacing.screenPadding)
 }
 
-#Preview("Fee Category") {
+#Preview("Fee — Green (≥ 75%)") {
+    BudgetCategoryTracker(name: "Architect Fee", spentCents: 40000, budgetCents: 50000, categoryType: .fee)
+        .padding(Spacing.screenPadding)
+}
+
+#Preview("Fee — Yellow (50–74%)") {
     BudgetCategoryTracker(name: "Architect Fee", spentCents: 30000, budgetCents: 50000, categoryType: .fee)
+        .padding(Spacing.screenPadding)
+}
+
+#Preview("Fee — Red (< 50%)") {
+    BudgetCategoryTracker(name: "Architect Fee", spentCents: 20000, budgetCents: 50000, categoryType: .fee)
         .padding(Spacing.screenPadding)
 }
 

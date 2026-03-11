@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Pure formatting and calculation functions for BudgetCategoryTracker
 /// and BudgetProgressPreview. Delegates to existing utilities where possible.
@@ -36,5 +37,34 @@ enum BudgetTrackerCalculations {
     /// Returns 0 when not over budget.
     static func overflowPercentage(spentCents: Int, budgetCents: Int) -> Double {
         ProgressBarCalculations.overflowPercentage(spent: spentCents, budget: budgetCents)
+    }
+
+    // MARK: - Threshold Colors
+
+    /// Progress bar fill color based on spend percentage and category type.
+    /// Normal budgets: green < 50%, yellow 50–74%, red ≥ 75%.
+    /// Fee categories: reversed — green ≥ 75%, yellow 50–74%, red < 50%.
+    static func progressColor(percentage: Double, categoryType: BudgetCategoryType) -> Color {
+        if categoryType == .fee {
+            if percentage >= 75 { return StatusColors.metBarComplete }
+            if percentage >= 50 { return StatusColors.inProgressBar }
+            return StatusColors.overflowBar
+        }
+        if percentage >= 75 { return StatusColors.overflowBar }
+        if percentage >= 50 { return StatusColors.inProgressBar }
+        return StatusColors.metBarComplete
+    }
+
+    /// Remaining-label text color based on spend percentage and category type.
+    /// Same thresholds as progressColor.
+    static func remainingTextColor(percentage: Double, categoryType: BudgetCategoryType) -> Color {
+        if categoryType == .fee {
+            if percentage >= 75 { return StatusColors.metBarComplete }
+            if percentage >= 50 { return StatusColors.inProgressBar }
+            return StatusColors.overflowBar
+        }
+        if percentage >= 75 { return StatusColors.overflowBar }
+        if percentage >= 50 { return StatusColors.inProgressBar }
+        return StatusColors.metBarComplete
     }
 }
