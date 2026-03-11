@@ -33,30 +33,14 @@ struct ImageCard<Content: View>: View {
 
     @ViewBuilder
     private var imageArea: some View {
-        if let imageUrl, let url = URL(string: imageUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    placeholder
-                        .overlay { ProgressView() }
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: .infinity)
-                        .aspectRatio(aspectRatio, contentMode: .fit)
-                        .clipped()
-                case .failure:
-                    placeholder
-                        .overlay {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(Typography.h2)
-                                .foregroundStyle(BrandColors.textTertiary)
-                        }
-                @unknown default:
-                    placeholder
-                }
+        if let imageUrl, !imageUrl.isEmpty {
+            FirebaseImage(url: imageUrl, contentMode: .fill) {
+                placeholder
+                    .overlay { ProgressView() }
             }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(aspectRatio, contentMode: .fit)
+            .clipped()
         } else {
             placeholder
         }

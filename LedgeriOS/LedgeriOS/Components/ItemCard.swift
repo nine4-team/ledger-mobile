@@ -114,21 +114,10 @@ struct ItemCard: View {
 
     @ViewBuilder
     private var thumbnailView: some View {
-        if let url = ItemCardCalculations.thumbnailUrl(from: item.images?.first?.url) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    placeholderView(icon: "photo.badge.exclamationmark")
-                case .empty:
-                    ProgressView()
-                        .frame(width: 108, height: 108)
-                @unknown default:
-                    placeholderView(icon: "photo")
-                }
+        if let urlString = item.images?.first?.url, !urlString.isEmpty {
+            FirebaseImage(url: urlString, contentMode: .fill) {
+                ProgressView()
+                    .frame(width: 108, height: 108)
             }
             .frame(width: 108, height: 108)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))

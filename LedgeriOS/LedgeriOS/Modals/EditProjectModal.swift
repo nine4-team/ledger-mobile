@@ -245,16 +245,10 @@ struct EditProjectModal: View {
                         .scaledToFill()
                         .frame(height: 120)
                         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                } else if let existingUrl = existingImageUrl, !existingUrl.isEmpty,
-                          let url = URL(string: existingUrl) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        default:
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        }
+                } else if let existingUrl = existingImageUrl, !existingUrl.isEmpty {
+                    FirebaseImage(url: existingUrl, contentMode: .fill) {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
                     }
                     .frame(height: 120)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))

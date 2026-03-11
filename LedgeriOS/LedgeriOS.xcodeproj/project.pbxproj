@@ -290,6 +290,8 @@
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
+		E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */; };
+		1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3A6EEC5D83249A09BCD35F /* FirebaseImage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -593,6 +595,8 @@
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
+		E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageURLResolver.swift; sourceTree = "<group>"; };
+		1A3A6EEC5D83249A09BCD35F /* FirebaseImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -787,6 +791,7 @@
 				FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */,
 				5A3F64AA8C3DC7C81C205AD0 /* InventoryOperationsService.swift */,
 				CE15679FD9BACDA17AA3D152 /* BusinessProfileService.swift */,
+				E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */,
 			);
 			name = Services;
 			path = Services;
@@ -1063,6 +1068,7 @@
 				CH01F00100000000000C0003 /* CardActionButtons.swift */,
 				83B035C5F6843F54D353A518 /* DocumentPicker.swift */,
 				75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */,
+				1A3A6EEC5D83249A09BCD35F /* FirebaseImage.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1245,6 +1251,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */,
+				1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */,
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
 				2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */,
 				06546175DE8D4D61A06A6768 /* FinancesTabView.swift in Sources */,

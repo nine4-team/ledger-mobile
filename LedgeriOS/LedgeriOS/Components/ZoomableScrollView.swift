@@ -193,7 +193,19 @@ struct ZoomableScrollView: UIViewRepresentable {
 
             loadTask = Task { [weak self] in
                 do {
-                    let (data, _) = try await URLSession.shared.data(from: url)
+                    // Resolve gs:// URLs to HTTPS download URLs
+                    let loadableURL: URL
+                    if url.scheme == "gs" {
+                        guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
+                            await self?.showError()
+                            return
+                        }
+                        loadableURL = resolved
+                    } else {
+                        loadableURL = url
+                    }
+
+                    let (data, _) = try await URLSession.shared.data(from: loadableURL)
                     guard !Task.isCancelled else { return }
                     guard let image = UIImage(data: data) else {
                         await self?.showError()

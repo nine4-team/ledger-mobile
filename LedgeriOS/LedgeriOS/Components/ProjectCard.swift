@@ -40,15 +40,10 @@ struct ProjectCard: View {
     @ViewBuilder
     private var heroImage: some View {
         if let url = project.mainImageUrl, !url.isEmpty {
-            AsyncImage(url: URL(string: url)) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
-                        .frame(height: 140).clipped()
-                default:
-                    imagePlaceholder
-                }
+            FirebaseImage(url: url, contentMode: .fill) {
+                imagePlaceholder
             }
+            .frame(height: 140).clipped()
         } else {
             imagePlaceholder
         }

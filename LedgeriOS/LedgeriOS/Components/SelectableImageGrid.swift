@@ -26,21 +26,8 @@ struct SelectableImageGrid: View {
         Color(BrandColors.surfaceTertiary)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                AsyncImage(url: URL(string: attachment.url)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        Image(systemName: "exclamationmark.triangle")
-                            .foregroundStyle(BrandColors.textTertiary)
-                    case .empty:
-                        ProgressView()
-                    @unknown default:
-                        Image(systemName: "photo")
-                            .foregroundStyle(BrandColors.textTertiary)
-                    }
+                FirebaseImage(url: attachment.url, contentMode: .fill) {
+                    ProgressView()
                 }
             }
             .clipped()

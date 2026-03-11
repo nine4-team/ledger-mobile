@@ -1,0 +1,20 @@
+{
+  "name": "ledger-migration",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate:emulator": "tsx src/cli.ts --target emulator",
+    "migrate:production": "tsx src/cli.ts --target production"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.80.0",
+    "firebase-admin": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

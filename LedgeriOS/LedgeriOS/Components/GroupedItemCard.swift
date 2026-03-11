@@ -211,19 +211,10 @@ struct GroupedItemCard<ExpandedContent: View>: View {
 
     @ViewBuilder
     private var thumbnail: some View {
-        if let thumbnailUrl, let url = URL(string: thumbnailUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .empty:
-                    ProgressView()
-                        .frame(width: 108, height: 108)
-                default:
-                    thumbnailPlaceholder
-                }
+        if let thumbnailUrl, !thumbnailUrl.isEmpty {
+            FirebaseImage(url: thumbnailUrl, contentMode: .fill) {
+                ProgressView()
+                    .frame(width: 108, height: 108)
             }
             .frame(width: 108, height: 108)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))

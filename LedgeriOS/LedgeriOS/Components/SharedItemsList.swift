@@ -389,13 +389,9 @@ struct SharedItemsList: View {
 
                     Spacer()
 
-                    if let url = item.images?.first?.url, let imageUrl = URL(string: url) {
-                        AsyncImage(url: imageUrl) { phase in
-                            if case .success(let image) = phase {
-                                image.resizable().scaledToFill()
-                            } else {
-                                Color(BrandColors.surfaceTertiary)
-                            }
+                    if let url = item.images?.first?.url {
+                        FirebaseImage(url: url, contentMode: .fill) {
+                            Color(BrandColors.surfaceTertiary)
                         }
                         .frame(width: 44, height: 44)
                         .clipShape(RoundedRectangle(cornerRadius: 8))

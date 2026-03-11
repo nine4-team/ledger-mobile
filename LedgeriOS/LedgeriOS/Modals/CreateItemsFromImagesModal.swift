@@ -89,12 +89,8 @@ struct CreateItemsFromImagesModal: View {
                         Color(BrandColors.surfaceTertiary)
                             .frame(width: 56, height: 56)
                             .overlay {
-                                AsyncImage(url: URL(string: attachment.url)) { phase in
-                                    if case .success(let image) = phase {
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    }
+                                FirebaseImage(url: attachment.url, contentMode: .fill) {
+                                    Color.clear
                                 }
                             }
                             .clipped()
