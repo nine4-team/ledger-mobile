@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "target": "production",
+    "dryRun": false,
+    "migratedAt": "2026-03-11T21:54:52.274Z",
+    "type": "media-only"
+  },
+  "media": {
+    "uploaded": 0,
+    "skipped": 1571,
+    "failed": 0
+  },
+  "patch": {
+    "patched": 329,
+    "skipped": 975,
+    "failed": 0
+  },
+  "mediaErrors": []
+}

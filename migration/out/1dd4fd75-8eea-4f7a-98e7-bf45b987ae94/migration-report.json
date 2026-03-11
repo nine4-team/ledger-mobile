@@ -3,7 +3,7 @@
     "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
     "target": "production",
     "dryRun": false,
-    "migratedAt": "2026-03-11T05:13:16.877Z"
+    "migratedAt": "2026-03-11T06:09:50.342Z"
   },
   "totals": {
     "documents": 1447,
@@ -14,9 +14,9 @@
     "authFailed": 0,
     "mediaRefs": 1569,
     "mediaUploaded": 0,
-    "mediaSkipped": 1569,
+    "mediaSkipped": 0,
     "mediaFailed": 0,
-    "backfilled": 0,
+    "backfilled": 5,
     "backfillFailed": 0,
     "warnings": 15,
     "errors": 0
