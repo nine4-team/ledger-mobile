@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
     @State private var selectedTab = "general"
 
@@ -45,6 +46,17 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .navBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    authManager.signOut()
+                } label: {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .foregroundStyle(BrandColors.primary)
+                }
+                .accessibilityLabel("Sign Out")
+            }
+        }
     }
 }
 
