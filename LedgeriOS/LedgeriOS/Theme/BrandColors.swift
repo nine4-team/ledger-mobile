@@ -57,5 +57,5 @@ enum BrandColors {
     // MARK: - Progress
 
     /// Progress track background
-    static let progressTrack = Color(.tertiarySystemFill)
+    static let progressTrack = Color(.secondarySystemFill)
 }

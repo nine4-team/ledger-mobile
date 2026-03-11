@@ -107,8 +107,8 @@ struct BudgetTabView: View {
                         categoryType: .general
                     ))
                     .font(Typography.small)
-                    .fontWeight(isOver ? .bold : .regular)
-                    .foregroundStyle(isOver ? StatusColors.overflowBar : BrandColors.textSecondary)
+                    .fontWeight(.regular)
+                    .foregroundStyle(isOver ? Color(.systemRed) : BrandColors.textSecondary)
                 }
 
                 ProgressBar(
@@ -232,8 +232,8 @@ private struct BudgetCategoryRow: View {
                         categoryType: category.categoryType
                     ))
                     .font(Typography.small)
-                    .fontWeight(isOverBudget ? .bold : .regular)
-                    .foregroundStyle(isOverBudget ? StatusColors.overflowBar : BrandColors.textSecondary)
+                    .fontWeight(.regular)
+                    .foregroundStyle(isOverBudget ? Color(.systemRed) : BrandColors.textSecondary)
                 }
 
                 if category.budgetCents > 0 {

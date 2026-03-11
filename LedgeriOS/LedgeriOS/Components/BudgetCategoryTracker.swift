@@ -45,7 +45,7 @@ struct BudgetCategoryTracker: View {
                     spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType
                 ))
                 .font(Typography.small)
-                .fontWeight(overBudget ? .bold : .regular)
+                .fontWeight(.regular)
                 .foregroundStyle(remainingColor)
             }
 

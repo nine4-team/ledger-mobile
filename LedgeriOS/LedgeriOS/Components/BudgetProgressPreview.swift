@@ -37,7 +37,7 @@ struct BudgetProgressPreview: View {
                 Spacer()
                 Text(remainingLabel)
                     .font(Typography.small)
-                    .fontWeight(overBudget ? .bold : .regular)
+                    .fontWeight(.regular)
                     .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: categoryType))
             }
 

@@ -20,8 +20,8 @@ enum StatusColors {
     static let inProgressBackground = Color("statusInProgressBg")
     /// In-progress text — light: #B06E00, dark: #FFC107
     static let inProgressText = Color("statusInProgressText")
-    /// In-progress bar — light: #F4B400, dark: #FFC107
-    static let inProgressBar = Color("statusInProgressBar")
+    /// In-progress bar — #C4911E darker amber/gold (same both modes)
+    static let inProgressBar = Color(red: 0.769, green: 0.569, blue: 0.118)
 
     // MARK: - Missed / Error
 
@@ -30,10 +30,12 @@ enum StatusColors {
     /// Missed text — light: #C5221F, dark: #EF5350
     static let missedText = Color("statusMissedText")
 
-    // MARK: - Overflow
+    // MARK: - At Risk / Overflow
 
-    /// Overflow bar — light: #DC2626, dark: #F87171
-    static let overflowBar = Color("statusOverflowBar")
+    /// At-risk bar — #9E3B2F darker red for >= 75% fill (same both modes)
+    static let atRiskBar = Color(red: 0.620, green: 0.231, blue: 0.184)
+    /// Overflow bar — #D4574A brighter red for the over-budget segment (same both modes)
+    static let overflowBar = Color(red: 0.831, green: 0.341, blue: 0.290)
 
     // MARK: - Transaction Badge Semantic Colors
 

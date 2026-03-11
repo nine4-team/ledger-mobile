@@ -48,22 +48,24 @@ enum BudgetTrackerCalculations {
         if categoryType == .fee {
             if percentage >= 75 { return StatusColors.metBarComplete }
             if percentage >= 50 { return StatusColors.inProgressBar }
-            return StatusColors.overflowBar
+            return StatusColors.atRiskBar
         }
-        if percentage >= 75 { return StatusColors.overflowBar }
+        if percentage >= 75 { return StatusColors.atRiskBar }
         if percentage >= 50 { return StatusColors.inProgressBar }
         return StatusColors.metBarComplete
     }
 
     /// Remaining-label text color based on spend percentage and category type.
-    /// Same thresholds as progressColor.
+    /// Same thresholds as progressColor, but uses systemRed when actually over budget
+    /// for better text legibility in both light and dark modes.
     static func remainingTextColor(percentage: Double, categoryType: BudgetCategoryType) -> Color {
         if categoryType == .fee {
             if percentage >= 75 { return StatusColors.metBarComplete }
             if percentage >= 50 { return StatusColors.inProgressBar }
-            return StatusColors.overflowBar
+            return percentage > 100 ? Color(.systemRed) : StatusColors.atRiskBar
         }
-        if percentage >= 75 { return StatusColors.overflowBar }
+        if percentage > 100 { return Color(.systemRed) }
+        if percentage >= 75 { return StatusColors.atRiskBar }
         if percentage >= 50 { return StatusColors.inProgressBar }
         return StatusColors.metBarComplete
     }
