@@ -137,7 +137,7 @@ All sheets use the `SheetStyle` system — never set detents inline. Full spec: 
 
 Think before acting. Consider multiple approaches and propose the most appropriate one — not just the first one that comes to mind.
 
-Do the right thing, not the easy thing. Never rationalize a shortcut as a pragmatic decision. If the correct approach requires more work, that's the work.
+Do the right thing, not the easy thing. Never rationalize a shortcut as a pragmatic decision. If the correct approach requires more work, that's the work. Before proposing any fix, ask yourself: "is this the best practice, or a workaround?" If you'd change your answer when challenged, change it now.
 
 ## Communication
 
