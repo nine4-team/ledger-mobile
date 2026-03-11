@@ -9,7 +9,7 @@ struct VendorDefaultsView: View {
     @State private var showingAddSheet = false
     @State private var newVendorName = ""
 
-    private let service = VendorDefaultsService(syncTracker: NoOpSyncTracker())
+    private let service = VendorDefaultsService()
 
     private var displayVendors: [String] {
         vendors.filter { !$0.isEmpty }

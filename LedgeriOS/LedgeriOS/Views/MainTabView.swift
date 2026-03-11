@@ -74,7 +74,7 @@ struct MainTabView: View {
     MainTabView()
         .environment(AuthManager())
         .environment(AccountContext(
-            accountsService: AccountsService(syncTracker: NoOpSyncTracker()),
-            membersService: AccountMembersService(syncTracker: NoOpSyncTracker())
+            accountsService: AccountsService(),
+            membersService: AccountMembersService()
         ))
 }

@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct BusinessProfileService: BusinessProfileServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func documentRef(accountId: String) -> DocumentReference {
         Firestore.firestore().document("accounts/\(accountId)")
     }
@@ -36,6 +34,5 @@ struct BusinessProfileService: BusinessProfileServiceProtocol {
         }
 
         try await documentRef(accountId: accountId).updateData(fields)
-        syncTracker.trackPendingWrite()
     }
 }

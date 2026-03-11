@@ -45,8 +45,8 @@ struct SettingsPlaceholderView: View {
         SettingsPlaceholderView()
             .environment(AuthManager())
             .environment(AccountContext(
-                accountsService: AccountsService(syncTracker: NoOpSyncTracker()),
-                membersService: AccountMembersService(syncTracker: NoOpSyncTracker())
+                accountsService: AccountsService(),
+                membersService: AccountMembersService()
             ))
     }
 }

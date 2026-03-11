@@ -11,7 +11,7 @@ struct ProjectsListView: View {
     @State private var projectPreferences: [String: ProjectPreferences] = [:]
     @State private var showNewProject = false
 
-    private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
+    private let projectService = ProjectService()
     private let preferencesService = ProjectPreferencesService()
 
     private var filteredProjects: [Project] {

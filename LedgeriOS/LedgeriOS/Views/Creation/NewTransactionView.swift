@@ -38,7 +38,7 @@ struct NewTransactionView: View {
     // Pickers
     @State private var showCategoryPicker = false
 
-    private let transactionsService = TransactionsService(syncTracker: NoOpSyncTracker())
+    private let transactionsService = TransactionsService()
 
     private var projectId: String? {
         switch context {

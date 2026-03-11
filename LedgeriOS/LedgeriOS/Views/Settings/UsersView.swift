@@ -12,8 +12,8 @@ struct UsersView: View {
     @State private var showingInviteSheet = false
     @State private var revokeTarget: Invite?
 
-    private let membersService = AccountMembersService(syncTracker: NoOpSyncTracker())
-    private let invitesService = InvitesService(syncTracker: NoOpSyncTracker())
+    private let membersService = AccountMembersService()
+    private let invitesService = InvitesService()
 
     var body: some View {
         ScrollView {

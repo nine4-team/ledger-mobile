@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct VendorDefaultsService: VendorDefaultsServiceProtocol {
-    let syncTracker: SyncTracking
-
     static let defaultVendors: [String] = [
         "Homegoods", "Amazon", "Wayfair", "Target", "Ross",
         "Arhaus", "Pottery Barn", "Crate & Barrel", "West Elm",
@@ -30,7 +28,6 @@ struct VendorDefaultsService: VendorDefaultsServiceProtocol {
             "updatedAt": FieldValue.serverTimestamp()
         ]
         documentRef(accountId: accountId).setData(data, merge: true)
-        syncTracker.trackPendingWrite()
     }
 
     func initializeDefaults(accountId: String) async throws {

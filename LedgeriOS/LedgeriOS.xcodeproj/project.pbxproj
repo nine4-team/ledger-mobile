@@ -112,6 +112,7 @@
 		949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */; };
 		95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4222455FCC3471031DA93 /* SpacesTabView.swift */; };
 		96212F452F89463B9E156E3D /* MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63426CD1523A4E8D9D239F04 /* MediaService.swift */; };
+		0C26D013CD6F6E91B9C48801 /* MediaUploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14005C8A1EDDA8F13A7415F6 /* MediaUploadQueue.swift */; };
 		A1000101000000000000AA01 /* LedgerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA01 /* LedgerApp.swift */; };
 		A1000101000000000000AA03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA03 /* Assets.xcassets */; };
 		A1000101000000000000AA04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA04 /* GoogleService-Info.plist */; };
@@ -291,6 +292,7 @@
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
 		E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */; };
+		7BB72213AC112E76A44E9F5E /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A074B54DC26CF87DC9E20BE /* ImageCache.swift */; };
 		1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3A6EEC5D83249A09BCD35F /* FirebaseImage.swift */; };
 /* End PBXBuildFile section */
 
@@ -372,6 +374,7 @@
 		62F10424F269D790584E21BB /* CategoryFormModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CategoryFormModal.swift; sourceTree = "<group>"; };
 		63330FD2D2071D0BB5A3DC63 /* TransactionsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsServiceProtocol.swift; sourceTree = "<group>"; };
 		63426CD1523A4E8D9D239F04 /* MediaService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaService.swift; sourceTree = "<group>"; };
+		14005C8A1EDDA8F13A7415F6 /* MediaUploadQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaUploadQueue.swift; sourceTree = "<group>"; };
 		6346A2503E38446BA855C288 /* InvoiceReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceReportView.swift; sourceTree = "<group>"; };
 		6581F7C294AB1E18E8D8BAB4 /* ProgressRing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
 		6DC6F116D54531636D87F2F9 /* Transaction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
@@ -596,6 +599,7 @@
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
 		E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageURLResolver.swift; sourceTree = "<group>"; };
+		5A074B54DC26CF87DC9E20BE /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		1A3A6EEC5D83249A09BCD35F /* FirebaseImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseImage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -771,6 +775,7 @@
 			isa = PBXGroup;
 			children = (
 				63426CD1523A4E8D9D239F04 /* MediaService.swift */,
+				14005C8A1EDDA8F13A7415F6 /* MediaUploadQueue.swift */,
 				7B8257583360A8F2FA7FE7FD /* Protocols */,
 				CAC6CAA659769069DED37219 /* FirestoreRepository.swift */,
 				A10E0C02000000000000FF01 /* FirebaseEmulatorConfig.swift */,
@@ -792,6 +797,7 @@
 				5A3F64AA8C3DC7C81C205AD0 /* InventoryOperationsService.swift */,
 				CE15679FD9BACDA17AA3D152 /* BusinessProfileService.swift */,
 				E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */,
+				5A074B54DC26CF87DC9E20BE /* ImageCache.swift */,
 			);
 			name = Services;
 			path = Services;
@@ -1252,6 +1258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */,
+				7BB72213AC112E76A44E9F5E /* ImageCache.swift in Sources */,
 				1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */,
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
 				2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */,
@@ -1292,6 +1299,7 @@
 				6802FB1D167B91F91372B029 /* TransactionsService.swift in Sources */,
 				51A5F6D3829C766680F9178A /* ItemsService.swift in Sources */,
 				96212F452F89463B9E156E3D /* MediaService.swift in Sources */,
+				0C26D013CD6F6E91B9C48801 /* MediaUploadQueue.swift in Sources */,
 				E0C8E2D81869D3725ED4AD47 /* SpacesService.swift in Sources */,
 				2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */,
 				3A8B8DAC00216F5F5F3B1FE0 /* ProjectBudgetCategoriesService.swift in Sources */,

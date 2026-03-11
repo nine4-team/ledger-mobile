@@ -930,7 +930,7 @@ struct TransactionDetailView: View {
               let transactionId = transaction.id else { return }
         Task {
             do {
-                try await TransactionsService(syncTracker: NoOpSyncTracker())
+                try await TransactionsService()
                     .updateTransaction(accountId: accountId, transactionId: transactionId, fields: ["projectId": NSNull()])
                 await MainActor.run { dismiss() }
             } catch {
@@ -947,7 +947,7 @@ struct TransactionDetailView: View {
         }
         Task {
             do {
-                try await TransactionsService(syncTracker: NoOpSyncTracker())
+                try await TransactionsService()
                     .updateTransaction(accountId: accountId, transactionId: transactionId, fields: fields)
             } catch {
                 print("🔴 updateTransaction failed: \(error)")
@@ -1009,7 +1009,7 @@ struct TransactionDetailView: View {
         guard let accountId = accountContext.currentAccountId,
               let transactionId = transaction.id else { return }
         Task {
-            try? await TransactionsService(syncTracker: NoOpSyncTracker())
+            try? await TransactionsService()
                 .deleteTransaction(accountId: accountId, transactionId: transactionId)
             dismiss()
         }
@@ -1058,7 +1058,7 @@ struct TransactionDetailView: View {
     private func createItemsFromParsed(_ parsedItems: [ReceiptListParser.ParsedItem]) {
         guard let accountId = accountContext.currentAccountId,
               let projectId = projectContext.currentProjectId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for parsed in parsedItems {
             var item = Item()
             item.accountId = accountId

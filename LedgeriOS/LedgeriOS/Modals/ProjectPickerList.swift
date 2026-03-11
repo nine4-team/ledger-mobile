@@ -79,7 +79,7 @@ struct ProjectPickerList: View {
         }
 
         listener?.remove()
-        let service = ProjectService(syncTracker: NoOpSyncTracker())
+        let service = ProjectService()
         listener = service.subscribeToProjects(accountId: accountId) { newProjects in
             Task { @MainActor in
                 self.projects = newProjects.sorted {

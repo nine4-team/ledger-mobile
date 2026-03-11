@@ -14,6 +14,7 @@ struct NewItemView: View {
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
+    @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(\.dismiss) private var dismiss
 
     // Step
@@ -47,7 +48,7 @@ struct NewItemView: View {
     @State private var showCamera = false
     @State private var showPhotoPicker = false
 
-    private let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
+    private let itemsService = ItemsService()
 
     private var isValid: Bool {
         ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
@@ -364,31 +365,23 @@ struct NewItemView: View {
             let itemId = try itemsService.createItem(accountId: accountId, item: item)
             dismiss()
 
-            // Background: upload images if selected
-            if !imageDatas.isEmpty {
-                let datasToUpload = imageDatas
-                Task {
-                    var imageEntries: [[String: Any]] = []
-                    for (index, data) in datasToUpload.enumerated() {
-                        let filename = "image_\(index).jpg"
-                        let path = mediaService.uploadPath(
-                            accountId: accountId, entityType: "items",
-                            entityId: itemId, filename: filename
-                        )
-                        if let url = try? await mediaService.uploadImage(data, path: path) {
-                            var entry: [String: Any] = ["url": url, "kind": "image"]
-                            if index == 0 { entry["isPrimary"] = true }
-                            imageEntries.append(entry)
-                        }
-                    }
-                    if !imageEntries.isEmpty {
-                        try? await itemsService.updateItem(
-                            accountId: accountId, itemId: itemId,
-                            fields: ["images": imageEntries]
-                        )
-                    }
-                }
+            // Enqueue images for persistent upload — survives app restart
+            for (index, data) in imageDatas.enumerated() {
+                let filename = "image_\(index).jpg"
+                let path = mediaService.uploadPath(
+                    accountId: accountId, entityType: "items",
+                    entityId: itemId, filename: filename
+                )
+                mediaUploadQueue.enqueue(
+                    imageData: data,
+                    metadata: UploadMetadata(
+                        accountId: accountId, entityType: "items", entityId: itemId,
+                        storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
+                        fileName: filename
+                    )
+                )
             }
+            mediaUploadQueue.processQueue()
         } catch {
             // Offline-first: should not fail
         }

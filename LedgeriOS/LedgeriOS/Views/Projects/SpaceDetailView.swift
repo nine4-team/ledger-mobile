@@ -435,7 +435,7 @@ struct SpaceDetailView: View {
     private func startSpaceListener() {
         guard let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
-        spaceListener = SpacesService(syncTracker: NoOpSyncTracker())
+        spaceListener = SpacesService()
             .subscribeToSpace(accountId: accountId, spaceId: spaceId) { updatedSpace in
                 self.liveSpaceData = updatedSpace
             }
@@ -447,7 +447,7 @@ struct SpaceDetailView: View {
             print("⚠️ updateSpace skipped — missing accountId or spaceId")
             return
         }
-        let service = SpacesService(syncTracker: NoOpSyncTracker())
+        let service = SpacesService()
         Task {
             do {
                 try await service.updateSpace(accountId: accountId, spaceId: spaceId, fields: fields)
@@ -553,7 +553,7 @@ struct SpaceDetailView: View {
     private func addSelectedItemsToSpace() {
         guard let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for itemId in pickerSelectedIds {
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": spaceId]) }
         }
@@ -564,21 +564,21 @@ struct SpaceDetailView: View {
     private func updateItemField(_ item: Item?, fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item?.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
     }
 
     private func deleteActionTargetItem() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = actionTargetItem?.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
     }
 
     private func deleteSpace() {
         guard let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
-        let service = SpacesService(syncTracker: NoOpSyncTracker())
+        let service = SpacesService()
         Task {
             do {
                 try await service.deleteSpace(accountId: accountId, spaceId: spaceId)

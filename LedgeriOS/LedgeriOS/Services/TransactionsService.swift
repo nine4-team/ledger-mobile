@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct TransactionsService: TransactionsServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func repo(accountId: String) -> FirestoreRepository<Transaction> {
         FirestoreRepository<Transaction>(path: "accounts/\(accountId)/transactions")
     }
@@ -13,18 +11,15 @@ struct TransactionsService: TransactionsServiceProtocol {
 
     func createTransaction(accountId: String, transaction: Transaction) throws -> String {
         let id = try repo(accountId: accountId).create(transaction)
-        syncTracker.trackPendingWrite()
         return id
     }
 
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws {
         try await repo(accountId: accountId).update(id: transactionId, fields: fields)
-        syncTracker.trackPendingWrite()
     }
 
     func deleteTransaction(accountId: String, transactionId: String) async throws {
         try await repo(accountId: accountId).delete(id: transactionId)
-        syncTracker.trackPendingWrite()
     }
 
     func subscribeToTransactions(accountId: String, scope: ListScope, onChange: @escaping ([Transaction]) -> Void) -> ListenerRegistration {

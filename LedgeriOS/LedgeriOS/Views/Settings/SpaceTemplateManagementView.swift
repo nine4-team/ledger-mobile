@@ -10,7 +10,7 @@ struct SpaceTemplateManagementView: View {
     @State private var editingTemplate: SpaceTemplate?
     @State private var deleteTarget: SpaceTemplate?
 
-    private let service = SpaceTemplatesService(syncTracker: NoOpSyncTracker())
+    private let service = SpaceTemplatesService()
 
     private var sortedTemplates: [SpaceTemplate] {
         templates

@@ -1,16 +1,14 @@
 import SwiftUI
 
 /// Drop-in replacement for `AsyncImage` that also handles Firebase Storage `gs://` URLs.
-/// For `https://` URLs, behaves identically to `AsyncImage`. For `gs://` URLs, resolves
-/// the download URL via `StorageURLResolver` before loading.
+/// Uses a shared `ImageCache` so images survive view destruction/recreation without flashing.
 struct FirebaseImage<Placeholder: View>: View {
     let urlString: String?
     let contentMode: ContentMode
     @ViewBuilder let placeholder: () -> Placeholder
 
-    @State private var resolvedURL: URL?
-    @State private var isResolving = true
-    @State private var resolveFailed = false
+    @State private var loadedImage: UIImage?
+    @State private var loadFailed = false
 
     init(
         url urlString: String?,
@@ -24,31 +22,18 @@ struct FirebaseImage<Placeholder: View>: View {
 
     var body: some View {
         Group {
-            if resolveFailed {
+            if let loadedImage {
+                Image(uiImage: loadedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
+            } else if loadFailed {
                 failureView
-            } else if isResolving {
-                placeholder()
-            } else if let resolvedURL {
-                AsyncImage(url: resolvedURL) { phase in
-                    switch phase {
-                    case .empty:
-                        placeholder()
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: contentMode)
-                    case .failure:
-                        failureView
-                    @unknown default:
-                        placeholder()
-                    }
-                }
             } else {
-                failureView
+                placeholder()
             }
         }
         .task(id: urlString) {
-            await resolveURL()
+            await resolveAndLoad()
         }
     }
 
@@ -57,28 +42,55 @@ struct FirebaseImage<Placeholder: View>: View {
             .foregroundStyle(BrandColors.textTertiary)
     }
 
-    private func resolveURL() async {
+    private func resolveAndLoad() async {
+        // Reset state for new URL
+        loadedImage = nil
+        loadFailed = false
+
         guard let urlString, !urlString.isEmpty else {
-            isResolving = false
-            resolveFailed = true
+            loadFailed = true
             return
         }
 
-        // Fast path: HTTP(S) URLs don't need resolution
+        // Synchronous cache check — before any await, so no placeholder frame is rendered
+        if let cached = ImageCache.image(for: urlString) {
+            loadedImage = cached
+            return
+        }
+
+        // Resolve URL (gs:// needs async resolution, https:// is immediate)
+        let url: URL?
         if urlString.hasPrefix("http://") || urlString.hasPrefix("https://") {
-            resolvedURL = URL(string: urlString)
-            isResolving = false
-            resolveFailed = resolvedURL == nil
+            url = URL(string: urlString)
+        } else {
+            url = await StorageURLResolver.resolve(urlString)
+        }
+
+        guard let url else {
+            loadFailed = true
             return
         }
 
-        // Resolve gs:// URLs
-        if let url = await StorageURLResolver.resolve(urlString) {
-            resolvedURL = url
-            isResolving = false
-        } else {
-            isResolving = false
-            resolveFailed = true
+        // Download image bytes
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard !Task.isCancelled else { return }
+
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                loadFailed = true
+                return
+            }
+
+            guard let image = UIImage(data: data) else {
+                loadFailed = true
+                return
+            }
+            ImageCache.store(image, for: urlString, cost: data.count)
+            loadedImage = image
+        } catch {
+            if !Task.isCancelled {
+                loadFailed = true
+            }
         }
     }
 }

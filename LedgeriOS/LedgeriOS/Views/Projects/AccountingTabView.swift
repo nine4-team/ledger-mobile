@@ -12,7 +12,7 @@ struct AccountingTabView: View {
     @State private var columnCount: Int = 1
     @State private var businessProfile: BusinessProfile?
 
-    private let profileService = BusinessProfileService(syncTracker: NoOpSyncTracker())
+    private let profileService = BusinessProfileService()
 
     private var owedToCompanyCents: Int {
         projectContext.transactions

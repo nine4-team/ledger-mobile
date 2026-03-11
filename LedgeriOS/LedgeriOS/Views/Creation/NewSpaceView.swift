@@ -16,7 +16,7 @@ struct NewSpaceView: View {
     @State private var name = ""
     @State private var notes = ""
 
-    private let spacesService = SpacesService(syncTracker: NoOpSyncTracker())
+    private let spacesService = SpacesService()
 
     private var isValid: Bool {
         SpaceFormValidation.isValidSpace(name: name)

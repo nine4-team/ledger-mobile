@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct SpacesService: SpacesServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func repo(accountId: String) -> FirestoreRepository<Space> {
         FirestoreRepository<Space>(path: "accounts/\(accountId)/spaces")
     }
@@ -13,18 +11,15 @@ struct SpacesService: SpacesServiceProtocol {
 
     func createSpace(accountId: String, space: Space) throws -> String {
         let id = try repo(accountId: accountId).create(space)
-        syncTracker.trackPendingWrite()
         return id
     }
 
     func updateSpace(accountId: String, spaceId: String, fields: [String: Any]) async throws {
         try await repo(accountId: accountId).update(id: spaceId, fields: fields)
-        syncTracker.trackPendingWrite()
     }
 
     func deleteSpace(accountId: String, spaceId: String) async throws {
         try await repo(accountId: accountId).delete(id: spaceId)
-        syncTracker.trackPendingWrite()
     }
 
     func subscribeToSpaces(accountId: String, scope: ListScope, onChange: @escaping ([Space]) -> Void) -> ListenerRegistration {

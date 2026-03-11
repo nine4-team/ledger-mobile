@@ -66,7 +66,7 @@ struct MakeCopiesModal: View {
     private func createCopies() {
         isSaving = true
         errorMessage = nil
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         // Build copy with nil id so Firestore auto-assigns a new document ID
         var copyItem = item
         copyItem.id = nil

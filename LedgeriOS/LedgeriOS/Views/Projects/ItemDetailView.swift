@@ -517,7 +517,7 @@ struct ItemDetailView: View {
     private func startItemListener() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item.id else { return }
-        itemListener = ItemsService(syncTracker: NoOpSyncTracker())
+        itemListener = ItemsService()
             .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
                 self.liveItemData = updatedItem
             }
@@ -533,7 +533,7 @@ struct ItemDetailView: View {
             print("⚠️ updateItem skipped — missing accountId or itemId")
             return
         }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task {
             do {
                 try await service.updateItem(accountId: accountId, itemId: itemId, fields: fields)
@@ -550,7 +550,7 @@ struct ItemDetailView: View {
     private func deleteItem() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task {
             try? await service.deleteItem(accountId: accountId, itemId: itemId)
             await MainActor.run { dismiss() }

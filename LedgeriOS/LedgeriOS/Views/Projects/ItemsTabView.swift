@@ -209,14 +209,14 @@ struct ItemsTabView: View {
     private func updateItemField(_ item: Item?, fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item?.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
     }
 
     private func deleteSingleItem() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = actionTargetItem?.id else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
     }
 
@@ -224,7 +224,7 @@ struct ItemsTabView: View {
 
     private func updateStatusForSelected(_ status: String) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status]) }
@@ -234,7 +234,7 @@ struct ItemsTabView: View {
 
     private func setSpaceForSelected(spaceId: String?) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
         for item in selectedItems {
             guard let itemId = item.id else { continue }
@@ -245,7 +245,7 @@ struct ItemsTabView: View {
 
     private func clearSpaceForSelected() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
@@ -255,7 +255,7 @@ struct ItemsTabView: View {
 
     private func setTransactionForSelected(transactionId: String) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": transactionId]) }
@@ -265,7 +265,7 @@ struct ItemsTabView: View {
 
     private func clearTransactionForSelected() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
@@ -275,7 +275,7 @@ struct ItemsTabView: View {
 
     private func deleteSelected() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }

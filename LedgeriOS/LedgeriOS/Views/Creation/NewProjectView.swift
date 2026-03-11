@@ -7,6 +7,7 @@ struct NewProjectView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
+    @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(\.dismiss) private var dismiss
 
     // Step management
@@ -27,9 +28,9 @@ struct NewProjectView: View {
     // Step 3 — budget amounts
     @State private var budgetAllocations: [String: String] = [:]
 
-    private let projectService = ProjectService(syncTracker: NoOpSyncTracker())
-    private let budgetCategoriesService = BudgetCategoriesService(syncTracker: NoOpSyncTracker())
-    private let projectBudgetCategoriesService = ProjectBudgetCategoriesService(syncTracker: NoOpSyncTracker())
+    private let projectService = ProjectService()
+    private let budgetCategoriesService = BudgetCategoriesService()
+    private let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
 
     private var isStep1Valid: Bool {
         ProjectFormValidation.isValidProject(name: name, clientName: clientName)
@@ -348,20 +349,21 @@ struct NewProjectView: View {
                 }
             }
 
-            // Background: upload hero image
+            // Enqueue hero image for persistent upload — survives app restart
             if let heroImageData {
-                Task {
-                    let path = mediaService.uploadPath(
-                        accountId: accountId, entityType: "projects",
-                        entityId: projectId, filename: "hero.jpg"
+                let path = mediaService.uploadPath(
+                    accountId: accountId, entityType: "projects",
+                    entityId: projectId, filename: "hero.jpg"
+                )
+                mediaUploadQueue.enqueue(
+                    imageData: heroImageData,
+                    metadata: UploadMetadata(
+                        accountId: accountId, entityType: "projects", entityId: projectId,
+                        storagePath: path, updateType: .setField("mainImageUrl"),
+                        fileName: "hero.jpg"
                     )
-                    if let url = try? await mediaService.uploadImage(heroImageData, path: path) {
-                        try? await projectService.updateProject(
-                            accountId: accountId, projectId: projectId,
-                            fields: ["mainImageUrl": url]
-                        )
-                    }
-                }
+                )
+                mediaUploadQueue.processQueue()
             }
         } catch {
             // Offline-first: creation should not fail in practice

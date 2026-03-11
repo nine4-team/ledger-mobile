@@ -10,9 +10,17 @@ struct LedgerApp: App {
     @State private var inventoryContext: InventoryContext
     @State private var mediaService = MediaService()
     @State private var networkMonitor = NetworkMonitor()
+    @State private var mediaUploadQueue: MediaUploadQueue
 
     init() {
         FirebaseApp.configure()
+
+        // Disk cache for images — FirebaseImage uses URLSession.shared which respects this.
+        // L1 = ImageCache (NSCache, in-session). L2 = URLCache (disk, survives restarts).
+        URLCache.shared = URLCache(
+            memoryCapacity: 50 * 1024 * 1024,   // 50 MB memory
+            diskCapacity: 200 * 1024 * 1024      // 200 MB disk
+        )
 
         // Global segmented control styling — gold selection tint, white text
         UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(BrandColors.primary)
@@ -30,16 +38,14 @@ struct LedgerApp: App {
         )
         _authManager = State(initialValue: AuthManager())
 
-        let syncTracker: SyncTracking = NoOpSyncTracker()
-
-        let accountsService = AccountsService(syncTracker: syncTracker)
-        let membersService = AccountMembersService(syncTracker: syncTracker)
-        let projectService = ProjectService(syncTracker: syncTracker)
-        let transactionsService = TransactionsService(syncTracker: syncTracker)
-        let itemsService = ItemsService(syncTracker: syncTracker)
-        let spacesService = SpacesService(syncTracker: syncTracker)
-        let budgetCategoriesService = BudgetCategoriesService(syncTracker: syncTracker)
-        let projectBudgetCategoriesService = ProjectBudgetCategoriesService(syncTracker: syncTracker)
+        let accountsService = AccountsService()
+        let membersService = AccountMembersService()
+        let projectService = ProjectService()
+        let transactionsService = TransactionsService()
+        let itemsService = ItemsService()
+        let spacesService = SpacesService()
+        let budgetCategoriesService = BudgetCategoriesService()
+        let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
 
         _accountContext = State(initialValue: AccountContext(
             accountsService: accountsService,
@@ -64,6 +70,11 @@ struct LedgerApp: App {
             transactionsService: transactionsService,
             spacesService: spacesService
         ))
+
+        // Persistent media upload queue — survives app restarts.
+        // Processes pending image uploads on launch and when connectivity is restored.
+        let queue = MediaUploadQueue(mediaService: MediaService())
+        _mediaUploadQueue = State(initialValue: queue)
     }
 
     @AppStorage("colorSchemePreference") private var colorSchemePreference = "system"
@@ -84,6 +95,7 @@ struct LedgerApp: App {
                 .environment(projectContext)
                 .environment(inventoryContext)
                 .environment(mediaService)
+                .environment(mediaUploadQueue)
                 .environment(networkMonitor)
                 .preferredColorScheme(resolvedColorScheme)
                 #if DEBUG
@@ -102,6 +114,12 @@ struct LedgerApp: App {
                 #endif
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
+                }
+                .task {
+                    networkMonitor.onConnectivityRestored = { [mediaUploadQueue] in
+                        mediaUploadQueue.processQueue()
+                    }
+                    mediaUploadQueue.processQueue()
                 }
         }
         #if os(macOS)

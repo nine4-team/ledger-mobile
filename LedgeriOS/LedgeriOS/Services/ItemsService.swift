@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct ItemsService: ItemsServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func repo(accountId: String) -> FirestoreRepository<Item> {
         FirestoreRepository<Item>(path: "accounts/\(accountId)/items")
     }
@@ -13,18 +11,15 @@ struct ItemsService: ItemsServiceProtocol {
 
     func createItem(accountId: String, item: Item) throws -> String {
         let id = try repo(accountId: accountId).create(item)
-        syncTracker.trackPendingWrite()
         return id
     }
 
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {
         try await repo(accountId: accountId).update(id: itemId, fields: fields)
-        syncTracker.trackPendingWrite()
     }
 
     func deleteItem(accountId: String, itemId: String) async throws {
         try await repo(accountId: accountId).delete(id: itemId)
-        syncTracker.trackPendingWrite()
     }
 
     func subscribeToItems(accountId: String, scope: ListScope, onChange: @escaping ([Item]) -> Void) -> ListenerRegistration {

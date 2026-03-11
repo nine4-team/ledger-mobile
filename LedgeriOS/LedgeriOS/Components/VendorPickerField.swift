@@ -17,7 +17,7 @@ struct VendorPickerField: View {
     @State private var listener: ListenerRegistration?
     @FocusState private var otherFieldFocused: Bool
 
-    private let service = VendorDefaultsService(syncTracker: NoOpSyncTracker())
+    private let service = VendorDefaultsService()
 
     /// Filtered vendor list (no empty strings, deduplicated).
     private var displayVendors: [String] {

@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct InvitesService: InvitesServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func repo(accountId: String) -> FirestoreRepository<Invite> {
         FirestoreRepository<Invite>(path: "accounts/\(accountId)/invites")
     }
@@ -26,7 +24,6 @@ struct InvitesService: InvitesServiceProtocol {
         invite.token = UUID().uuidString
         invite.createdByUid = createdByUid
         let id = try repo(accountId: accountId).create(invite)
-        syncTracker.trackPendingWrite()
         return id
     }
 
@@ -34,6 +31,5 @@ struct InvitesService: InvitesServiceProtocol {
         try await repo(accountId: accountId).update(id: inviteId, fields: [
             "revokedAt": FieldValue.serverTimestamp()
         ])
-        syncTracker.trackPendingWrite()
     }
 }

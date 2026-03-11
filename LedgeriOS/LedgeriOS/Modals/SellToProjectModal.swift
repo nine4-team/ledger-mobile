@@ -211,7 +211,7 @@ struct SellToProjectModal: View {
 
     private func loadAccountCategories() {
         categoriesListener?.remove()
-        let service = BudgetCategoriesService(syncTracker: NoOpSyncTracker())
+        let service = BudgetCategoriesService()
         categoriesListener = service.subscribeToBudgetCategories(accountId: accountId) { categories in
             Task { @MainActor in
                 accountCategories = categories

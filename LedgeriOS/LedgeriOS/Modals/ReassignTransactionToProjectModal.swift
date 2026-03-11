@@ -50,7 +50,7 @@ struct ReassignTransactionToProjectModal: View {
               let transactionId = transaction.id,
               let projectId = project.id else { return }
         isSaving = true
-        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        let service = TransactionsService()
         Task {
             do {
                 try await service.updateTransaction(

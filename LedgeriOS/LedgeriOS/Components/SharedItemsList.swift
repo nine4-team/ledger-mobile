@@ -550,7 +550,7 @@ struct SharedItemsList: View {
         isLoading = true
         error = nil
 
-        let service = ItemsService(syncTracker: NoOpSyncTracker())
+        let service = ItemsService()
         listener = service.subscribeToItems(accountId: accountId, scope: scope) { [self] newItems in
             Task { @MainActor in
                 self.items = newItems

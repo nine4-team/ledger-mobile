@@ -10,7 +10,7 @@ struct BudgetCategoryManagementView: View {
     @State private var editingCategory: BudgetCategory?
     @State private var archiveTarget: BudgetCategory?
 
-    private let service = BudgetCategoriesService(syncTracker: NoOpSyncTracker())
+    private let service = BudgetCategoriesService()
 
     private var activeCategories: [BudgetCategory] {
         categories

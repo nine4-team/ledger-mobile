@@ -297,13 +297,13 @@ struct TransactionsTabView: View {
     private func deleteSingleTransaction() {
         guard let accountId = accountContext.currentAccountId,
               let txId = actionTargetTransactionId else { return }
-        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        let service = TransactionsService()
         Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }
     }
 
     private func deleteSelectedTransactions() {
         guard let accountId = accountContext.currentAccountId else { return }
-        let service = TransactionsService(syncTracker: NoOpSyncTracker())
+        let service = TransactionsService()
         for tx in selectedTransactions {
             guard let txId = tx.id else { continue }
             Task { try? await service.deleteTransaction(accountId: accountId, transactionId: txId) }

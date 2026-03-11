@@ -8,7 +8,7 @@ struct AccountView: View {
     @State private var showingEditProfile = false
     @State private var showingSignOutConfirmation = false
 
-    private let profileService = BusinessProfileService(syncTracker: NoOpSyncTracker())
+    private let profileService = BusinessProfileService()
 
     var body: some View {
         ScrollView {

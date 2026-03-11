@@ -9,6 +9,7 @@ struct ImportInvoiceModal: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(ProjectContext.self) private var projectContext
     @Environment(MediaService.self) private var mediaService
+    @Environment(MediaUploadQueue.self) private var mediaUploadQueue
 
     // MARK: - State
 
@@ -333,8 +334,8 @@ struct ImportInvoiceModal: View {
         isCreating = true
         errorMessage = nil
 
-        let transactionsService = TransactionsService(syncTracker: NoOpSyncTracker())
-        let itemsService = ItemsService(syncTracker: NoOpSyncTracker())
+        let transactionsService = TransactionsService()
+        let itemsService = ItemsService()
 
         let source = InvoiceImportCalculations.sourceString(
             vendor: detectedVendor,
@@ -396,57 +397,47 @@ struct ImportInvoiceModal: View {
             // Dismiss immediately (optimistic UI)
             dismiss()
 
-            // 3. Background: Upload receipt PDF
+            // 3. Enqueue receipt PDF for persistent upload
             if let fileData = selectedFileData {
-                Task {
-                    do {
-                        let filename = "\(UUID().uuidString).pdf"
-                        let path = mediaService.uploadPath(
-                            accountId: accountId,
-                            entityType: "transactions",
-                            entityId: txId,
-                            filename: filename
+                let filename = "\(UUID().uuidString).pdf"
+                let path = mediaService.uploadPath(
+                    accountId: accountId, entityType: "transactions",
+                    entityId: txId, filename: filename
+                )
+                mediaUploadQueue.enqueue(
+                    imageData: fileData,
+                    metadata: UploadMetadata(
+                        accountId: accountId, entityType: "transactions", entityId: txId,
+                        storagePath: path, contentType: "application/pdf",
+                        updateType: .appendToArray(field: "receiptImages", kind: "pdf", isPrimary: true),
+                        fileName: filename
+                    )
+                )
+            }
+
+            // 4. Enqueue Wayfair thumbnails for persistent upload (max 4)
+            if detectedVendor == .wayfair, !extractedThumbnails.isEmpty {
+                let thumbnailsToUpload = Array(zip(createdItemIds, extractedThumbnails).prefix(4))
+                for (itemId, placement) in thumbnailsToUpload {
+                    guard let pngData = UIImage(cgImage: placement.image).pngData() else { continue }
+                    let filename = "\(UUID().uuidString).png"
+                    let path = mediaService.uploadPath(
+                        accountId: accountId, entityType: "items",
+                        entityId: itemId, filename: filename
+                    )
+                    mediaUploadQueue.enqueue(
+                        imageData: pngData,
+                        metadata: UploadMetadata(
+                            accountId: accountId, entityType: "items", entityId: itemId,
+                            storagePath: path, contentType: "image/png",
+                            updateType: .appendToArray(field: "images", kind: "image", isPrimary: true),
+                            fileName: filename
                         )
-                        let url = try await mediaService.uploadData(fileData, path: path, contentType: "application/pdf")
-                        let fields: [String: Any] = ["receiptImages": [["url": url, "kind": "pdf", "isPrimary": true] as [String: Any]]]
-                        try await transactionsService.updateTransaction(
-                            accountId: accountId,
-                            transactionId: txId,
-                            fields: fields
-                        )
-                    } catch {
-                        // Non-critical: receipt upload failure doesn't block import
-                    }
+                    )
                 }
             }
 
-            // 4. Background: Upload Wayfair thumbnails (max 4)
-            if detectedVendor == .wayfair, !extractedThumbnails.isEmpty {
-                let thumbnailsToUpload = Array(zip(createdItemIds, extractedThumbnails).prefix(4))
-                Task {
-                    for (itemId, placement) in thumbnailsToUpload {
-                        guard let pngData = UIImage(cgImage: placement.image).pngData() else { continue }
-                        do {
-                            let filename = "\(UUID().uuidString).png"
-                            let path = mediaService.uploadPath(
-                                accountId: accountId,
-                                entityType: "items",
-                                entityId: itemId,
-                                filename: filename
-                            )
-                            let url = try await mediaService.uploadData(pngData, path: path, contentType: "image/png")
-                            let fields: [String: Any] = ["images": [["url": url, "kind": "image", "isPrimary": true] as [String: Any]]]
-                            try await itemsService.updateItem(
-                                accountId: accountId,
-                                itemId: itemId,
-                                fields: fields
-                            )
-                        } catch {
-                            // Non-critical
-                        }
-                    }
-                }
-            }
+            mediaUploadQueue.processQueue()
         } catch {
             isCreating = false
             errorMessage = "Failed to create transaction: \(error.localizedDescription)"

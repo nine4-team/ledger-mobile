@@ -1,8 +1,6 @@
 import FirebaseFirestore
 
 struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
-    let syncTracker: SyncTracking
-
     private func repo(accountId: String, projectId: String) -> FirestoreRepository<ProjectBudgetCategory> {
         FirestoreRepository<ProjectBudgetCategory>(
             path: "accounts/\(accountId)/projects/\(projectId)/budgetCategories"
@@ -38,7 +36,6 @@ struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
             fields["updatedBy"] = userId
         }
         try await docRef.setData(fields, merge: true)
-        syncTracker.trackPendingWrite()
     }
 
     func deleteProjectBudgetCategory(
@@ -48,6 +45,5 @@ struct ProjectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol {
     ) async throws {
         let docRef = collectionRef(accountId: accountId, projectId: projectId).document(categoryId)
         try await docRef.delete()
-        syncTracker.trackPendingWrite()
     }
 }
