@@ -19,6 +19,9 @@ struct Item: Codable, Identifiable, Hashable {
     var bookmark: Bool?
     var budgetCategoryId: String?
     var quantity: Int?
+    var taxRatePct: Double?
+    var taxAmountPurchasePriceCents: Int?
+    var taxAmountProjectPriceCents: Int?
     var images: [AttachmentRef]?
     var createdBy: String?
     var updatedBy: String?
@@ -33,6 +36,8 @@ struct Item: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, spaceId, name, description, notes, status, source, sku,
              transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
-             purchasedBy, bookmark, budgetCategoryId, quantity, images, createdBy, updatedBy
+             purchasedBy, bookmark, budgetCategoryId, quantity,
+             taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,
+             images, createdBy, updatedBy
     }
 }

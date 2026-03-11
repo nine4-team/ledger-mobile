@@ -23,6 +23,7 @@ struct TransactionDetailView: View {
     @State private var showEditDetails = false
     @State private var showEditNotes = false
     @State private var showCreateItemsFromList = false
+    @State private var showCreateItemsFromImages = false
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
     @State private var showReassign = false
@@ -222,20 +223,40 @@ struct TransactionDetailView: View {
             )
             .sheetStyle(.form)
         }
+        .sheet(isPresented: $showCreateItemsFromImages) {
+            CreateItemsFromImagesModal(
+                transaction: currentTransaction,
+                onCreated: { groups in
+                    createItemsFromImageGroups(groups)
+                }
+            )
+            .sheetStyle(.fullSheet)
+        }
         .sheet(isPresented: $showAddItemMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
                 title: "Add Items",
-                items: [
-                    ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
-                        showAddExistingItems = true
-                    }),
-                    ActionMenuItem(id: "create-from-list", label: "Create from List", icon: "doc.text", onPress: {
-                        showCreateItemsFromList = true
-                    }),
-                ],
+                items: {
+                    var items = [
+                        ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
+                            showAddExistingItems = true
+                        }),
+                        ActionMenuItem(id: "create-from-list", label: "Create from List", icon: "doc.text", onPress: {
+                            showCreateItemsFromList = true
+                        }),
+                    ]
+                    let hasImages = !(currentTransaction.receiptImages ?? []).isEmpty
+                        || !(currentTransaction.otherImages ?? []).isEmpty
+                        || !(currentTransaction.transactionImages ?? []).isEmpty
+                    if hasImages {
+                        items.append(ActionMenuItem(id: "create-from-images", label: "Create from Images", icon: "photo.on.rectangle.angled", onPress: {
+                            showCreateItemsFromImages = true
+                        }))
+                    }
+                    return items
+                }(),
                 onSelectAction: { action in
                     menuPendingAction = action
                 }
@@ -972,6 +993,46 @@ struct TransactionDetailView: View {
             try? await TransactionsService(syncTracker: NoOpSyncTracker())
                 .deleteTransaction(accountId: accountId, transactionId: transactionId)
             dismiss()
+        }
+    }
+
+    private func createItemsFromImageGroups(_ groups: [ImageGroup]) {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = projectContext.currentProjectId,
+              let transactionId = transaction.id else { return }
+
+        let db = Firestore.firestore()
+        let batch = db.batch()
+        var newItemIds: [String] = []
+
+        for group in groups {
+            var images = group.images
+            if !images.isEmpty { images[0].isPrimary = true }
+
+            let ref = db.collection("accounts/\(accountId)/items").document()
+            var item = Item()
+            item.accountId = accountId
+            item.projectId = projectId
+            item.status = "purchased"
+            item.transactionId = transactionId
+            item.budgetCategoryId = currentTransaction.budgetCategoryId
+            item.images = images
+            try? batch.setData(from: item, forDocument: ref)
+            newItemIds.append(ref.documentID)
+        }
+
+        let txRef = db.collection("accounts/\(accountId)/transactions").document(transactionId)
+        batch.updateData([
+            "itemIds": FieldValue.arrayUnion(newItemIds),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ], forDocument: txRef)
+
+        Task {
+            do {
+                try await batch.commit()
+            } catch {
+                print("🔴 createItemsFromImageGroups batch failed: \(error)")
+            }
         }
     }
 

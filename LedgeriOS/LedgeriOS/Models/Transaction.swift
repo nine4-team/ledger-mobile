@@ -26,6 +26,7 @@ struct Transaction: Codable, Identifiable, Hashable {
     var needsReview: Bool?
     var taxRatePct: Double?
     var subtotalCents: Int?
+    var triggerEvent: String?
     var createdAt: Date?
     var updatedAt: Date?
 
@@ -34,7 +35,7 @@ struct Transaction: Codable, Identifiable, Hashable {
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes, isCanceled,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
-             needsReview, taxRatePct, subtotalCents
+             needsReview, taxRatePct, subtotalCents, triggerEvent
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"
     }

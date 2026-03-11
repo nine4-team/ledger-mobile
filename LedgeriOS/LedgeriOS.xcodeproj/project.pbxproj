@@ -30,6 +30,7 @@
 		1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011B2B991C66CB99379D3F13 /* ScopeFilters.swift */; };
 		259D7CEA6457EFEFF3466975 /* TransactionDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551A176F41B9F7E76B0124BA /* TransactionDisplayCalculations.swift */; };
 		274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */; };
+		28F12CF6BE4EF259ADA07BB8 /* CreateItemsFromImagesModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0885214210ED3FFF5F74AB7C /* CreateItemsFromImagesModal.swift */; };
 		293B4C5D6E7F8091A2B3C4D6 /* ItemsListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6071829304D5E6F7081 /* ItemsListControlBar.swift */; };
 		2A07E979DB3CD6B37D0B9B44 /* ProjectPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */; };
 		2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */; };
@@ -92,6 +93,7 @@
 		812FF2207D742F67E3870934 /* ProjectPreferencesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE461E5CE01EC26784E658E /* ProjectPreferencesService.swift */; };
 		828FD8B1F71867C487CF442D /* AmazonInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A77552797A86EF385887EC1 /* AmazonInvoiceParser.swift */; };
 		82E2369EAFDA2C4773AF0CC0 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */; };
+		830E8B9FF4788FC87716BD3A /* SelectableImageGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */; };
 		833C5EE78B4597D084EB4D6C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC603170450B281DD69B33BC /* SettingsView.swift */; };
 		83BD186B0686885C821BF8E6 /* EditChecklistModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 619B6C9FECA4E1812986ED09 /* EditChecklistModal.swift */; };
 		842010C52C027C93097171CD /* PdfTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD312026960C03CC6B34CB6 /* PdfTextExtractor.swift */; };
@@ -132,6 +134,7 @@
 		A2B3C4D5E6F708901234560A /* SettingsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */; };
 		A2B3C4D5E6F708901234560C /* AccountDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */; };
 		A56BCF3DEFEABFF050700075 /* SettingsServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD603C3D64F77EC36777BED8 /* SettingsServiceProtocols.swift */; };
+		A5B368320AD853EE476074D8 /* ImageGroupingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */; };
 		A5EF3AB43B882AF00C1BB869 /* RecordingBatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34ED28AB40430692CD05FE9A /* RecordingBatch.swift */; };
 		A73CA42760A53C737E57460F /* AccountingTabPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */; };
 		A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */; };
@@ -314,6 +317,7 @@
 		0756B26E39032364A86F74DD /* PdfImageExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PdfImageExtractor.swift; sourceTree = "<group>"; };
 		082B142DF68203AFD6FBA3DE /* SetSpaceModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetSpaceModal.swift; sourceTree = "<group>"; };
 		0830037BA7D2372C6ABB41EA /* ItemsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabPlaceholder.swift; sourceTree = "<group>"; };
+		0885214210ED3FFF5F74AB7C /* CreateItemsFromImagesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromImagesModal.swift; sourceTree = "<group>"; };
 		090384A47EBFBA9FB0BA599D /* ExportFieldConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExportFieldConfig.swift; sourceTree = "<group>"; };
 		09B9CC1081A94753AD758B05 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
 		09C1CAA12055806BBD1476BB /* InventoryTransactionsSubTab.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryTransactionsSubTab.swift; sourceTree = "<group>"; };
@@ -373,6 +377,7 @@
 		72FB2AE7B011092E46E9D316 /* SpaceDetailCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceDetailCalculations.swift; sourceTree = "<group>"; };
 		735D35058B9B023DFF14D776 /* ProjectPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectPickerList.swift; sourceTree = "<group>"; };
 		74D430C4EF4DEF29859EE5D0 /* SpaceTemplatesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceTemplatesService.swift; sourceTree = "<group>"; };
+		75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SelectableImageGrid.swift; sourceTree = "<group>"; };
 		76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RepositoryProtocol.swift; sourceTree = "<group>"; };
 		7698CDEC62AC82AB04FE5656 /* ItemDetailCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailCalculations.swift; sourceTree = "<group>"; };
 		785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModelCodableTests.swift; sourceTree = "<group>"; };
@@ -506,6 +511,7 @@
 		EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewSpaceView.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
 		F0DB6D4C81937205D1F35C0F /* SpaceListCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceListCalculations.swift; sourceTree = "<group>"; };
+		F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageGroupingState.swift; sourceTree = "<group>"; };
 		F46635D3BC4F27F91DEDDE73 /* UniversalSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UniversalSearchView.swift; sourceTree = "<group>"; };
 		F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGallery.swift; sourceTree = "<group>"; };
 		F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
@@ -1056,6 +1062,7 @@
 				CH01F00100000000000C0002 /* CardHeader.swift */,
 				CH01F00100000000000C0003 /* CardActionButtons.swift */,
 				83B035C5F6843F54D353A518 /* DocumentPicker.swift */,
+				75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1125,6 +1132,8 @@
 				A42382CD300502891CBCC6A1 /* ExportTransactionsModal.swift */,
 				E2BB32983141825212E261CC /* ImportInvoiceModal.swift */,
 				4345945CDC8AC06527EB5A60 /* InvoiceImport */,
+				F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */,
+				0885214210ED3FFF5F74AB7C /* CreateItemsFromImagesModal.swift */,
 			);
 			path = Modals;
 			sourceTree = "<group>";
@@ -1476,6 +1485,9 @@
 				3D556AFB25C9F91C3E0284CA /* InvoiceParseSummary.swift in Sources */,
 				488DB893D93ABE7780F286DA /* ParseDebugReport.swift in Sources */,
 				938E5EF58A1ACE61DCC97776 /* BatchWriting.swift in Sources */,
+				A5B368320AD853EE476074D8 /* ImageGroupingState.swift in Sources */,
+				28F12CF6BE4EF259ADA07BB8 /* CreateItemsFromImagesModal.swift in Sources */,
+				830E8B9FF4788FC87716BD3A /* SelectableImageGrid.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
