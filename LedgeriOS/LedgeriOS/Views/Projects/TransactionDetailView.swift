@@ -409,7 +409,7 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private func nextStepRow(_ step: TransactionNextStepsCalculations.NextStep) -> some View {
-        HStack(spacing: Spacing.sm) {
+        let content = HStack(spacing: Spacing.sm) {
             Group {
                 if step.completed {
                     Image(systemName: "checkmark.circle.fill")
@@ -441,6 +441,25 @@ struct TransactionDetailView: View {
             }
         }
         .frame(minHeight: step.completed ? 28 : 36)
+
+        if step.completed {
+            content
+        } else {
+            Button { handleNextStepTap(step) } label: { content }
+                .buttonStyle(.plain)
+        }
+    }
+
+    private func handleNextStepTap(_ step: TransactionNextStepsCalculations.NextStep) {
+        switch step.id {
+        case "items":
+            showAddItemMenu = true
+        case "receipt":
+            expandedSections.insert("receipts")
+        default:
+            // budget-category, amount, purchased-by, tax-rate all edit via details modal
+            showEditDetails = true
+        }
     }
 
     // MARK: - Sections
