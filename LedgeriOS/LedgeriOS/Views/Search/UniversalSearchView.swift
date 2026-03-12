@@ -231,13 +231,11 @@ struct UniversalSearchView: View {
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        SearchField(
-            text: $query,
-            placeholder: "Search items, transactions, spaces...",
+        SearchControlBar(
+            searchText: $query,
+            searchPlaceholder: "Search items, transactions, spaces...",
             isFocused: $searchFocused
         )
-        .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.sm)
         .onChange(of: query) { _, newValue in
             if newValue.isEmpty {
                 debouncedQuery = ""

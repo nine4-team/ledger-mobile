@@ -44,7 +44,11 @@ struct SettingsView: View {
                 }
             }
         }
+        #if os(macOS)
+        .navigationTitle("")
+        #else
         .navigationTitle("Settings")
+        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {

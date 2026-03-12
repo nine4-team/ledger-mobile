@@ -19,41 +19,44 @@ struct ProjectDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             PinnedBudgetsSection()
-            Picker("Section", selection: $selectedTab) {
+                .frame(maxWidth: Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+            Picker("", selection: $selectedTab) {
                 Text("Items").tag("items")
                 Text("Transactions").tag("transactions")
                 Text("Spaces").tag("spaces")
                 Text("Finances").tag("finances")
             }
+            .labelsHidden()
             .pickerStyle(.segmented)
             #if canImport(UIKit)
             .onAppear {
                 UISegmentedControl.appearance().apportionsSegmentWidthsByContent = true
             }
             #endif
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
-            AdaptiveContentWidth {
-                Group {
-                    switch selectedTab {
-                    case "items":
-                        ItemsTabView()
-                            .navigationDestination(for: Item.self) { item in
-                                ItemDetailView(item: item)
-                            }
-                    case "transactions":
-                        TransactionsTabView(showExportSheet: $showExportSheet)
-                            .navigationDestination(for: Transaction.self) { transaction in
-                                TransactionDetailView(transaction: transaction)
-                            }
-                    case "spaces":
-                        SpacesTabView()
-                    case "finances":
-                        FinancesTabView()
-                    default:
-                        ItemsTabView()
-                    }
+            Group {
+                switch selectedTab {
+                case "items":
+                    ItemsTabView()
+                        .navigationDestination(for: Item.self) { item in
+                            ItemDetailView(item: item)
+                        }
+                case "transactions":
+                    TransactionsTabView(showExportSheet: $showExportSheet)
+                        .navigationDestination(for: Transaction.self) { transaction in
+                            TransactionDetailView(transaction: transaction)
+                        }
+                case "spaces":
+                    SpacesTabView()
+                case "finances":
+                    FinancesTabView()
+                default:
+                    ItemsTabView()
                 }
             }
         }

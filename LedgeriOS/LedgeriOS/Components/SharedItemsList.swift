@@ -29,6 +29,9 @@ struct SharedItemsList: View {
     @State private var activeSort: ItemSortOption = .createdDesc
     @State private var internalSelectedIds: Set<String> = []
     @State private var expandedGroups: Set<String> = []
+    #if os(macOS)
+    @State private var macOSExpandedGroup: ItemGroup?
+    #endif
     @State private var showBulkActionMenu = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
@@ -129,6 +132,13 @@ struct SharedItemsList: View {
                 }
             }
         }
+        #if os(macOS)
+        .overlay {
+            if let group = macOSExpandedGroup {
+                groupExpandedOverlay(for: group)
+            }
+        }
+        #endif
         .task {
             await setupData()
         }
@@ -308,6 +318,92 @@ struct SharedItemsList: View {
         }
     }
 
+    // MARK: - macOS Group Overlay
+
+    #if os(macOS)
+    @ViewBuilder
+    private func groupExpandedOverlay(for group: ItemGroup) -> some View {
+        ZStack {
+            // Dimmed background — tap to dismiss
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation { macOSExpandedGroup = nil }
+                }
+
+            // Centered card panel
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text(group.name)
+                        .font(Typography.h2)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Spacer()
+                    Text("×\(group.count)")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    Button {
+                        withAnimation { macOSExpandedGroup = nil }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(Spacing.md)
+
+                CardDivider()
+
+                // Scrollable item cards
+                ScrollView {
+                    VStack(spacing: Spacing.cardListGap) {
+                        ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+                            if let itemId = item.id {
+                                let selectionBinding = Binding(
+                                    get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
+                                    set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
+                                )
+                                let card = ItemCard(
+                                    item: item,
+                                    priceLabel: displayPrice(for: item),
+                                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                                    indexLabel: "\(index + 1)/\(group.items.count)",
+                                    statusOverride: item.status,
+                                    isSelected: selectionBinding,
+                                    onPress: { handleItemPress(item) },
+                                    menuItems: getMenuItems?(item) ?? [],
+                                    warningMessage: getWarning?(item)
+                                )
+
+                                if useNavigationLinks && resolvedSelectedIds.wrappedValue.isEmpty {
+                                    NavigationLink(value: item) {
+                                        card
+                                    }
+                                    .buttonStyle(.plain)
+                                } else {
+                                    card
+                                }
+                            }
+                        }
+                    }
+                    .padding(Spacing.md)
+                }
+            }
+            .frame(width: 480)
+            .frame(maxHeight: 600)
+            .background(BrandColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
+            .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 8)
+        }
+        .transition(.opacity)
+    }
+    #endif
+
     // MARK: - Item Cards
 
     @ViewBuilder
@@ -422,6 +518,42 @@ struct SharedItemsList: View {
 
         let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
 
+        let selectionBinding = Binding(
+            get: { groupSelected },
+            set: { selected in
+                for item in group.items {
+                    if let id = item.id {
+                        if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
+                    }
+                }
+            }
+        )
+        let onSelectedChange: (Bool) -> Void = { selected in
+            for item in group.items {
+                if let id = item.id {
+                    if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
+                }
+            }
+        }
+
+        #if os(macOS)
+        // macOS: tap opens centered overlay instead of inline expansion
+        GroupedItemCard(
+            name: group.name,
+            thumbnailUrl: summaryItem?.images?.first?.url,
+            countLabel: "×\(group.count)",
+            totalLabel: totalLabel,
+            sku: summaryItem?.sku,
+            sourceLabel: summaryItem?.source,
+            priceLabel: totalLabel,
+            isSelected: selectionBinding,
+            onSelectedChange: onSelectedChange,
+            onPress: { withAnimation { macOSExpandedGroup = group } },
+            itemCount: validItems.count
+        ) {
+            EmptyView()
+        }
+        #else
         GroupedItemCard(
             name: group.name,
             thumbnailUrl: summaryItem?.images?.first?.url,
@@ -434,51 +566,43 @@ struct SharedItemsList: View {
                 get: { expandedGroups.contains(group.id) },
                 set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
             ),
-            isSelected: Binding(
-                get: { groupSelected },
-                set: { selected in
-                    for item in group.items {
-                        if let id = item.id {
-                            if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
-                        }
-                    }
-                }
-            ),
-            onSelectedChange: { selected in
-                for item in group.items {
-                    if let id = item.id {
-                        if selected { resolvedSelectedIds.wrappedValue.insert(id) } else { resolvedSelectedIds.wrappedValue.remove(id) }
-                    }
-                }
-            },
+            isSelected: selectionBinding,
+            onSelectedChange: onSelectedChange,
             itemCount: validItems.count
         ) {
-            ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
-                if let itemId = item.id {
-                    let selectionBinding = Binding(
-                        get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
-                        set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
-                    )
-                    let card = ItemCard(
-                        item: item,
-                        priceLabel: displayPrice(for: item),
-                        budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                        indexLabel: "\(index + 1)/\(group.items.count)",
-                        statusOverride: item.status,
-                        isSelected: selectionBinding,
-                        onPress: useNavigationLinks && ids.isEmpty ? nil : { handleItemPress(item) },
-                        menuItems: getMenuItems?(item) ?? [],
-                        warningMessage: getWarning?(item)
-                    )
+            groupedCardExpandedContent(for: group)
+        }
+        #endif
+    }
 
-                    if useNavigationLinks && ids.isEmpty {
-                        NavigationLink(value: item) {
-                            card
-                        }
-                        .buttonStyle(.plain)
-                    } else {
+    @ViewBuilder
+    private func groupedCardExpandedContent(for group: ItemGroup) -> some View {
+        let ids = resolvedSelectedIds.wrappedValue
+        ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+            if let itemId = item.id {
+                let selectionBinding = Binding(
+                    get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
+                    set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
+                )
+                let card = ItemCard(
+                    item: item,
+                    priceLabel: displayPrice(for: item),
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                    indexLabel: "\(index + 1)/\(group.items.count)",
+                    statusOverride: item.status,
+                    isSelected: selectionBinding,
+                    onPress: useNavigationLinks && ids.isEmpty ? nil : { handleItemPress(item) },
+                    menuItems: getMenuItems?(item) ?? [],
+                    warningMessage: getWarning?(item)
+                )
+
+                if useNavigationLinks && ids.isEmpty {
+                    NavigationLink(value: item) {
                         card
                     }
+                    .buttonStyle(.plain)
+                } else {
+                    card
                 }
             }
         }

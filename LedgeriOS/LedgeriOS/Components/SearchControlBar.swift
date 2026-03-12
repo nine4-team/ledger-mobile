@@ -7,13 +7,27 @@ import SwiftUI
 struct SearchControlBar: View {
     @Binding var searchText: String
     var searchPlaceholder: String = "Search..."
+    @Binding var isFocused: Bool
     var onAdd: (() -> Void)?
+
+    init(
+        searchText: Binding<String>,
+        searchPlaceholder: String = "Search...",
+        isFocused: Binding<Bool> = .constant(false),
+        onAdd: (() -> Void)? = nil
+    ) {
+        self._searchText = searchText
+        self.searchPlaceholder = searchPlaceholder
+        self._isFocused = isFocused
+        self.onAdd = onAdd
+    }
 
     var body: some View {
         HStack(spacing: Spacing.sm) {
             SearchField(
                 text: $searchText,
                 placeholder: searchPlaceholder,
+                isFocused: $isFocused,
                 style: .overlay
             )
 
@@ -33,10 +47,11 @@ struct SearchControlBar: View {
                 .accessibilityLabel("Add")
             }
         }
-        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
         .modifier(CardGlassModifier())
+        .frame(maxWidth: Dimensions.contentMaxWidth)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.vertical, Spacing.sm)
     }

@@ -15,12 +15,15 @@ struct InventoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Inventory", selection: $selectedTab) {
+            Picker("", selection: $selectedTab) {
                 Text("Items").tag("items")
                 Text("Transactions").tag("transactions")
                 Text("Spaces").tag("spaces")
             }
+            .labelsHidden()
             .pickerStyle(.segmented)
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
@@ -46,7 +49,11 @@ struct InventoryView: View {
                 }
             }
         }
+        #if os(macOS)
+        .navigationTitle("")
+        #else
         .navigationTitle("Inventory")
+        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {

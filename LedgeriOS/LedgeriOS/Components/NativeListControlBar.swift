@@ -47,7 +47,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 
     var body: some View {
         VStack(spacing: Spacing.sm) {
-            HStack(spacing: 0) {
+            HStack(spacing: usesCircleButtons ? Spacing.lg : 0) {
                 barItem(label: "Select") {
                     selectAll()
                 }
@@ -88,7 +88,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                     }
                 }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: usesCircleButtons ? nil : .infinity)
             .padding(.horizontal, usesCircleButtons ? Spacing.xl : Spacing.lg)
             .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
             .modifier(containerModifier)
@@ -163,7 +163,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .frame(width: 44, height: 44)
             .contentShape(Circle())
             .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
-            .frame(maxWidth: .infinity)
     }
 }
 
