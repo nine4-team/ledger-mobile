@@ -26,8 +26,6 @@ struct SpaceDetailView: View {
 
     // Items picker
     @State private var showAddExistingItems = false
-    @State private var pickerSelectedIds: Set<String> = []
-
     // Single-item actions (from item kebab within space)
     @State private var actionTargetItem: Item?
     @State private var showItemStatusPicker = false
@@ -116,29 +114,11 @@ struct SpaceDetailView: View {
             .sheetStyle(.form)
         }
         .sheet(isPresented: $showAddExistingItems) {
-            NavigationStack {
-                SharedItemsList(
-                    mode: .picker(
-                        scope: nil,
-                        eligibilityCheck: nil,
-                        onAddSingle: nil,
-                        addedIds: Set(spaceItems.compactMap(\.id)),
-                        onAddSelected: { addSelectedItemsToSpace() }
-                    ),
-                    emptyMessage: "No items available",
-                    selectedIds: $pickerSelectedIds,
-                    emptyIcon: "cube.box",
-                    filterScope: .project,
-                    pickerItems: projectContext.items.filter { $0.spaceId != space.id }
-                )
-                .navigationTitle("Add Items to Space")
-                .navBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { showAddExistingItems = false }
-                    }
-                }
-            }
+            AddExistingItemsPicker(
+                context: .space(liveSpace),
+                projectId: projectContext.project?.id,
+                onDismiss: { showAddExistingItems = false }
+            )
             .sheetStyle(.fullSheet)
         }
         .confirmationDialog("Delete Space?", isPresented: $showDeleteConfirmation) {
@@ -550,16 +530,6 @@ struct SpaceDetailView: View {
         errorMessage = "Template saved! (Template service coming soon)"
     }
 
-    private func addSelectedItemsToSpace() {
-        guard let accountId = accountContext.currentAccountId,
-              let spaceId = space.id else { return }
-        let service = ItemsService()
-        for itemId in pickerSelectedIds {
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": spaceId]) }
-        }
-        pickerSelectedIds.removeAll()
-        showAddExistingItems = false
-    }
 
     private func updateItemField(_ item: Item?, fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,

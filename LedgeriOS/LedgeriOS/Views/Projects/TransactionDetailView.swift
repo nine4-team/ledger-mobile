@@ -16,8 +16,6 @@ struct TransactionDetailView: View {
 
     // Items picker
     @State private var showAddExistingItems = false
-    @State private var pickerSelectedIds: Set<String> = []
-
     // Modal presentation
     @State private var showActionMenu = false
     @State private var showEditDetails = false
@@ -264,32 +262,11 @@ struct TransactionDetailView: View {
             .sheetStyle(.quickMenu)
         }
         .sheet(isPresented: $showAddExistingItems) {
-            NavigationStack {
-                SharedItemsList(
-                    mode: .picker(
-                        scope: nil,
-                        eligibilityCheck: nil,
-                        onAddSingle: nil,
-                        addedIds: Set(currentTransaction.itemIds ?? []),
-                        onAddSelected: { addExistingItemsToTransaction() }
-                    ),
-                    emptyMessage: "No items available",
-                    selectedIds: $pickerSelectedIds,
-                    emptyIcon: "shippingbox",
-                    filterScope: .project,
-                    pickerItems: projectContext.items.filter { item in
-                        guard let id = item.id else { return false }
-                        return !(currentTransaction.itemIds ?? []).contains(id)
-                    }
-                )
-                .navigationTitle("Add Existing Items")
-                .navBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { showAddExistingItems = false }
-                    }
-                }
-            }
+            AddExistingItemsPicker(
+                context: .transaction(currentTransaction),
+                projectId: projectContext.project?.id,
+                onDismiss: { showAddExistingItems = false }
+            )
             .sheetStyle(.fullSheet)
         }
     }
@@ -955,55 +932,6 @@ struct TransactionDetailView: View {
         }
     }
 
-    private func addExistingItemsToTransaction() {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
-
-        let newIds = Array(pickerSelectedIds)
-        guard !newIds.isEmpty else {
-            showAddExistingItems = false
-            return
-        }
-
-        let budgetCategoryId = currentTransaction.budgetCategoryId
-        let db = Firestore.firestore()
-        let batch = db.batch()
-        let itemsRef = db.collection("accounts/\(accountId)/items")
-        let txRef = db.collection("accounts/\(accountId)/transactions")
-
-        // C8: Use a single WriteBatch so all item updates + transaction itemIds are atomic.
-        for itemId in newIds {
-            var fields: [String: Any] = [
-                "transactionId": transactionId,
-                "updatedAt": FieldValue.serverTimestamp(),
-            ]
-            if let budgetCategoryId { fields["budgetCategoryId"] = budgetCategoryId }
-            // Backfill projectPriceCents for legacy items missing it
-            if let item = projectContext.items.first(where: { $0.id == itemId }),
-               item.projectPriceCents == nil,
-               let purchasePrice = item.purchasePriceCents {
-                fields["projectPriceCents"] = purchasePrice
-            }
-            batch.updateData(fields, forDocument: itemsRef.document(itemId))
-        }
-
-        // Atomically add all new itemIds to the transaction
-        batch.updateData(
-            ["itemIds": FieldValue.arrayUnion(newIds), "updatedAt": FieldValue.serverTimestamp()],
-            forDocument: txRef.document(transactionId)
-        )
-
-        pickerSelectedIds.removeAll()
-        showAddExistingItems = false
-
-        Task {
-            do {
-                try await batch.commit()
-            } catch {
-                print("🔴 addExistingItemsToTransaction batch failed: \(error)")
-            }
-        }
-    }
 
     private func deleteTransaction() {
         guard let accountId = accountContext.currentAccountId,

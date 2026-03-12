@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3ADAFC69F4DA9C2E1954EA9D /* AddExistingItemsCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049F6C9A5256A2B0805DBF29 /* AddExistingItemsCalculations.swift */; };
+		F9A66300C9ADB6E421932898 /* ItemConflictSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1567D5D59CAEAEAD4DEEAB39 /* ItemConflictSheet.swift */; };
+		166C487782D681880459F253 /* AddExistingItemsPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B74CC761A05322C4486E9543 /* AddExistingItemsPicker.swift */; };
 		01261AFE5A0846848B96077B /* InventoryOperationsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */; };
 		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
@@ -307,6 +310,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		049F6C9A5256A2B0805DBF29 /* AddExistingItemsCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddExistingItemsCalculations.swift; sourceTree = "<group>"; };
+		1567D5D59CAEAEAD4DEEAB39 /* ItemConflictSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemConflictSheet.swift; sourceTree = "<group>"; };
+		B74CC761A05322C4486E9543 /* AddExistingItemsPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddExistingItemsPicker.swift; sourceTree = "<group>"; };
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
 		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
@@ -719,6 +725,7 @@
 				1A77552797A86EF385887EC1 /* AmazonInvoiceParser.swift */,
 				0EECF2A67A81E01B540E043A /* WayfairInvoiceParser.swift */,
 				049A65317E23565736557A3D /* InvoiceImportCalculations.swift */,
+				049F6C9A5256A2B0805DBF29 /* AddExistingItemsCalculations.swift */,
 			);
 			name = Logic;
 			path = Logic;
@@ -984,6 +991,7 @@
 				17AE39323F1646F389AD54BC /* Search */,
 				FC6978CF1A2079A4B58B1609 /* Creation */,
 				730F407722CD5B5B815A8CB2 /* Inventory */,
+				B74CC761A05322C4486E9543 /* AddExistingItemsPicker.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1146,6 +1154,7 @@
 				4345945CDC8AC06527EB5A60 /* InvoiceImport */,
 				F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */,
 				0885214210ED3FFF5F74AB7C /* CreateItemsFromImagesModal.swift */,
+				1567D5D59CAEAEAD4DEEAB39 /* ItemConflictSheet.swift */,
 			);
 			path = Modals;
 			sourceTree = "<group>";
@@ -1258,6 +1267,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */,
+				3ADAFC69F4DA9C2E1954EA9D /* AddExistingItemsCalculations.swift in Sources */,
+				F9A66300C9ADB6E421932898 /* ItemConflictSheet.swift in Sources */,
+				166C487782D681880459F253 /* AddExistingItemsPicker.swift in Sources */,
 				7BB72213AC112E76A44E9F5E /* ImageCache.swift in Sources */,
 				1A3A6EEC5D83249A09BCD35E /* FirebaseImage.swift in Sources */,
 				42D4041D5E1741A1B60AE5DB /* ReportAggregationCalculations.swift in Sources */,
