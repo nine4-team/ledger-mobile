@@ -80,15 +80,22 @@ struct ClientSummaryReportView: View {
                                     Text(clientItem.item.displayName)
                                         .font(Typography.body)
                                         .foregroundStyle(BrandColors.textPrimary)
-                                    if let spaceName = clientItem.spaceName {
-                                        Text(spaceName)
-                                            .font(Typography.caption)
-                                            .foregroundStyle(BrandColors.textTertiary)
+                                    HStack(spacing: Spacing.sm) {
+                                        if let source = clientItem.item.source, !source.isEmpty {
+                                            Text(source)
+                                                .font(Typography.caption)
+                                                .foregroundStyle(BrandColors.textTertiary)
+                                        }
+                                        if let spaceName = clientItem.spaceName {
+                                            Text(spaceName)
+                                                .font(Typography.caption)
+                                                .foregroundStyle(BrandColors.textTertiary)
+                                        }
                                     }
                                 }
                                 Spacer()
                                 HStack(spacing: Spacing.sm) {
-                                    receiptLinkIcon(clientItem.receiptLink)
+                                    receiptLinkView(clientItem.receiptLink)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(
                                         clientItem.item.projectPriceCents ?? 0
                                     ))
@@ -100,6 +107,20 @@ struct ClientSummaryReportView: View {
 
                             Divider()
                         }
+
+                        // Items total
+                        HStack {
+                            Text("Total")
+                                .font(Typography.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(BrandColors.textPrimary)
+                            Spacer()
+                            Text(CurrencyFormatting.formatCentsWithDecimals(data.totalSpentCents))
+                                .font(Typography.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(BrandColors.textPrimary)
+                        }
+                        .padding(.top, Spacing.sm)
                     }
                 }
             }
@@ -148,16 +169,28 @@ struct ClientSummaryReportView: View {
     }
 
     @ViewBuilder
-    private func receiptLinkIcon(_ link: ReceiptLink) -> some View {
+    private func receiptLinkView(_ link: ReceiptLink) -> some View {
         switch link {
         case .invoice:
-            Image(systemName: "doc.text")
+            NavigationLink(value: ReportType.invoice) {
+                HStack(spacing: 4) {
+                    Image(systemName: "doc.text")
+                    Text("View Receipt")
+                }
                 .font(Typography.caption)
                 .foregroundStyle(BrandColors.primary)
-        case .receiptURL:
-            Image(systemName: "photo")
-                .font(Typography.caption)
-                .foregroundStyle(BrandColors.primary)
+            }
+        case .receiptURL(let urlString):
+            if let url = URL(string: urlString) {
+                Link(destination: url) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "photo")
+                        Text("View Receipt")
+                    }
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+                }
+            }
         case .none:
             EmptyView()
         }

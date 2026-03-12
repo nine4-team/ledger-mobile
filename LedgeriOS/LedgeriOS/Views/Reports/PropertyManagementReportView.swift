@@ -89,6 +89,14 @@ struct PropertyManagementReportView: View {
         } // Group
         .navigationTitle("Property Management")
         .navBarTitleDisplayMode(.inline)
+        .task {
+            if let urlString = businessLogoUrl, let url = URL(string: urlString) {
+                if let (data, _) = try? await URLSession.shared.data(from: url),
+                   let image = UIImage(data: data) {
+                    logoImage = image
+                }
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
@@ -133,9 +141,16 @@ struct PropertyManagementReportView: View {
                         }
                     }
                     Spacer()
-                    Text(CurrencyFormatting.formatCentsWithDecimals(item.marketValueCents ?? 0))
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textSecondary)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(CurrencyFormatting.formatCentsWithDecimals(item.marketValueCents ?? 0))
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        if item.marketValueCents == nil || item.marketValueCents == 0 {
+                            Text("No market value")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textTertiary)
+                        }
+                    }
                 }
                 .padding(.vertical, Spacing.xs)
 
@@ -147,7 +162,7 @@ struct PropertyManagementReportView: View {
     // MARK: - PDF Sharing
 
     private func sharePDF() {
-        let pdfContent = PropertyManagementPDFContent(data: data, projectName: projectName, clientName: clientName, businessName: businessName)
+        let pdfContent = PropertyManagementPDFContent(data: data, projectName: projectName, clientName: clientName, businessName: businessName, logoImage: logoImage)
         ReportPDFSharing.sharePDF(
             content: pdfContent,
             fileName: "property-management-\(projectName).pdf"
@@ -162,6 +177,7 @@ private struct PropertyManagementPDFContent: View {
     let projectName: String
     var clientName: String?
     var businessName: String?
+    var logoImage: UIImage?
 
     private typealias S = ReportPDFStyles
 
@@ -260,6 +276,13 @@ private struct PropertyManagementPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let logoImage {
+                Image(uiImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .padding(.bottom, 8)
+            }
             if let businessName, !businessName.isEmpty {
                 Text(businessName)
                     .font(S.subtitleFont)
@@ -329,7 +352,7 @@ private struct PropertyManagementPDFContent: View {
                 .frame(width: 120, alignment: .leading)
             Text(item.sku ?? "")
                 .frame(width: 110, alignment: .leading)
-            if item.marketValueCents == nil {
+            if item.marketValueCents == nil || item.marketValueCents == 0 {
                 Text("No market value")
                     .font(S.missingPriceFont)
                     .foregroundStyle(S.error)
