@@ -25,6 +25,8 @@ struct AddExistingItemsPicker: View {
     @State private var conflictMessage = ""
     @State private var conflictItemNames: [String] = []
     @State private var pendingItems: [Item] = []
+    @State private var showCategoryPicker = false
+    @State private var itemsAwaitingCategory: [Item] = []
 
     // MARK: - Computed
 
@@ -33,7 +35,8 @@ struct AddExistingItemsPicker: View {
         case .transaction(let tx):
             return AddExistingItemsCalculations.availableTabs(
                 transaction: tx,
-                projectItems: projectContext.items
+                projectItems: projectContext.items,
+                allItems: accountContext.allItems
             )
         case .space:
             return AddExistingItemsCalculations.spaceAvailableTabs()
@@ -49,6 +52,10 @@ struct AddExistingItemsPicker: View {
                 SegmentOption(id: tab, label: "Project", icon: Image(systemName: "folder"))
             case .outside:
                 SegmentOption(id: tab, label: "Outside", icon: Image(systemName: "arrow.right.circle"))
+            case .inventory:
+                SegmentOption(id: tab, label: "Inventory", icon: Image(systemName: "shippingbox"))
+            case .projects:
+                SegmentOption(id: tab, label: "Projects", icon: Image(systemName: "folder"))
             }
         }
     }
@@ -120,7 +127,7 @@ struct AddExistingItemsPicker: View {
                     emptyMessage: emptyMessageForTab,
                     selectedIds: $selectedIds,
                     emptyIcon: "shippingbox",
-                    filterScope: activeTab == .outside ? nil : .project,
+                    filterScope: (activeTab == .outside || activeTab == .projects) ? nil : (activeTab == .inventory ? .inventory : .project),
                     pickerItems: pickerItems
                 )
             }
@@ -152,6 +159,26 @@ struct AddExistingItemsPicker: View {
             )
             .sheetStyle(.quickMenu)
         }
+        .sheet(isPresented: $showCategoryPicker) {
+            CategoryPickerList(
+                categories: accountContext.allBudgetCategories,
+                selectedId: nil,
+                onSelect: { category in
+                    guard let categoryId = category?.id else { return }
+                    // Apply chosen category to items that were missing one, then proceed
+                    let updatedItems = pendingItems.map { item -> Item in
+                        if item.budgetCategoryId == nil {
+                            var updated = item
+                            updated.budgetCategoryId = categoryId
+                            return updated
+                        }
+                        return item
+                    }
+                    executeAdd(items: updatedItems)
+                }
+            )
+            .sheetStyle(.form)
+        }
     }
 
     private var emptyMessageForTab: String {
@@ -159,6 +186,8 @@ struct AddExistingItemsPicker: View {
         case .suggested: "No vendor-matched items"
         case .project: "No items available"
         case .outside: "No items outside this project"
+        case .inventory: "No inventory items available"
+        case .projects: "No project items available"
         }
     }
 
@@ -211,6 +240,36 @@ struct AddExistingItemsPicker: View {
     }
 
     private func executeAdd(items: [Item]) {
+        // Check if cross-scope items need a budget category before proceeding
+        let destinationProjectId: String?
+        let destinationCategoryId: String?
+
+        switch context {
+        case .transaction(let tx):
+            let liveTx = projectContext.transactions.first(where: { $0.id == tx.id }) ?? tx
+            destinationProjectId = liveTx.projectId
+            destinationCategoryId = liveTx.budgetCategoryId
+        case .space:
+            destinationProjectId = projectId
+            destinationCategoryId = nil
+        }
+
+        let routing = AddExistingItemsCalculations.routeByScope(
+            items: items,
+            destinationProjectId: destinationProjectId
+        )
+
+        let needCategory = AddExistingItemsCalculations.itemsNeedingCategory(
+            crossScopeItems: routing.crossScope,
+            destinationCategoryId: destinationCategoryId
+        )
+
+        if !needCategory.isEmpty {
+            pendingItems = items
+            showCategoryPicker = true
+            return
+        }
+
         switch context {
         case .transaction(let tx):
             addItemsToTransaction(items: items, transaction: tx)

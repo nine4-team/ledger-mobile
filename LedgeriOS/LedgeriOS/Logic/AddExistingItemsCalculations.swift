@@ -6,8 +6,8 @@ enum PickerTab: String, CaseIterable, Hashable {
     case suggested
     case project
     case outside
-    // Inventory-scope (deferred — future PR)
-    // case inventory, projects
+    case inventory   // business inventory items (for inventory-scope transactions)
+    case projects    // project items (for inventory-scope transactions)
 }
 
 struct ItemConflict {
@@ -27,31 +27,49 @@ struct ScopeRoutingResult {
 enum AddExistingItemsCalculations {
 
     /// Returns the visible tabs for a transaction-context picker.
+    /// For project-scoped transactions: Suggested (if vendor match) / Project / Outside
+    /// For inventory-scope transactions: Suggested (if vendor match) / Inventory / Projects
     static func availableTabs(
         transaction: Transaction,
-        projectItems: [Item]
+        projectItems: [Item],
+        allItems: [Item]
     ) -> [PickerTab] {
         var tabs: [PickerTab] = []
+        let alreadyLinked = Set(transaction.itemIds ?? [])
 
-        // Suggested: only if transaction has a source AND there's at least one matching item
-        if let source = transaction.source, !source.isEmpty {
-            let alreadyLinked = Set(transaction.itemIds ?? [])
-            let hasMatch = projectItems.contains { item in
-                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
-                return item.source == source
-            }
-            if hasMatch {
-                tabs.append(.suggested)
-            }
-        }
-
-        // Project tab: always shown for project-scoped transactions
         if transaction.projectId != nil {
-            tabs.append(.project)
-        }
+            // Project-scoped transaction
 
-        // Outside: always shown
-        tabs.append(.outside)
+            // Suggested: vendor-match within same project
+            if let source = transaction.source, !source.isEmpty {
+                let hasMatch = projectItems.contains { item in
+                    guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                    return item.source == source
+                }
+                if hasMatch {
+                    tabs.append(.suggested)
+                }
+            }
+
+            tabs.append(.project)
+            tabs.append(.outside)
+        } else {
+            // Inventory-scope transaction
+
+            // Suggested: vendor-match within inventory items
+            if let source = transaction.source, !source.isEmpty {
+                let hasMatch = allItems.contains { item in
+                    guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                    return item.projectId == nil && item.source == source
+                }
+                if hasMatch {
+                    tabs.append(.suggested)
+                }
+            }
+
+            tabs.append(.inventory)
+            tabs.append(.projects)
+        }
 
         return tabs
     }
@@ -75,9 +93,18 @@ enum AddExistingItemsCalculations {
         switch tab {
         case .suggested:
             guard let source = transaction.source else { return [] }
-            return projectItems.filter { item in
-                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
-                return item.source == source
+            if transaction.projectId != nil {
+                // Project-scoped: match vendor within project items
+                return projectItems.filter { item in
+                    guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                    return item.source == source
+                }
+            } else {
+                // Inventory-scoped: match vendor within inventory items
+                return allItems.filter { item in
+                    guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                    return item.projectId == nil && item.source == source
+                }
             }
         case .project:
             return projectItems.filter { item in
@@ -89,6 +116,18 @@ enum AddExistingItemsCalculations {
             return allItems.filter { item in
                 guard let id = item.id, !alreadyLinked.contains(id) else { return false }
                 return item.projectId != projectId
+            }
+        case .inventory:
+            // Business inventory items (no projectId)
+            return allItems.filter { item in
+                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                return item.projectId == nil
+            }
+        case .projects:
+            // Items from any project
+            return allItems.filter { item in
+                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                return item.projectId != nil
             }
         }
     }
@@ -114,7 +153,7 @@ enum AddExistingItemsCalculations {
                 guard item.id != nil else { return false }
                 return item.projectId != projectId
             }
-        case .suggested:
+        case .suggested, .inventory, .projects:
             return []
         }
     }
@@ -167,6 +206,19 @@ enum AddExistingItemsCalculations {
         }
 
         return (message, names)
+    }
+
+    // MARK: - Category Resolution
+
+    /// Returns cross-scope items that lack a `budgetCategoryId` and can't fall back
+    /// to a destination transaction category. These need a user prompt before proceeding.
+    static func itemsNeedingCategory(
+        crossScopeItems: [Item],
+        destinationCategoryId: String?
+    ) -> [Item] {
+        // If the destination has a category, all items can fall back to it
+        if destinationCategoryId != nil { return [] }
+        return crossScopeItems.filter { $0.budgetCategoryId == nil }
     }
 
     // MARK: - Scope Routing
