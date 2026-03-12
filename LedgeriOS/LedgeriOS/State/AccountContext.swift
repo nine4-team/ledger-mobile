@@ -99,7 +99,17 @@ final class AccountContext {
     }
 
     func activate(accountId: String, userId: String) {
-        deactivate()
+        // Stop listeners and clear data without touching currentAccountId/discoveredAccounts
+        // to avoid triggering a RootView re-render back to AccountGateView.
+        listeners.forEach { $0.remove() }
+        listeners.removeAll()
+        account = nil
+        member = nil
+        allItems = []
+        allTransactions = []
+        allSpaces = []
+        allBudgetCategories = []
+
         currentAccountId = accountId
 
         let accountListener = accountsService.subscribeToAccount(accountId: accountId) { [weak self] account in

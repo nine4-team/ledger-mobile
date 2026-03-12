@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseFirestore
 import GoogleSignIn
 
 @main
@@ -29,6 +30,15 @@ struct LedgerApp: App {
             [.foregroundColor: UIColor.white],
             for: .selected
         )
+        #endif
+
+        // macOS + App Sandbox: use memory-only cache to avoid gRPC/persistence deadlocks.
+        // Emulator config handles its own cache settings when active.
+        #if os(macOS)
+        let firestoreSettings = Firestore.firestore().settings
+        firestoreSettings.cacheSettings = MemoryCacheSettings()
+        Firestore.firestore().settings = firestoreSettings
+        print("[Firebase] macOS: configured Firestore with memory-only cache")
         #endif
 
         #if DEBUG

@@ -83,6 +83,6 @@ extension NSColor {
     static var secondarySystemFill: NSColor { .controlColor }
     static var tertiarySystemFill: NSColor { .unemphasizedSelectedContentBackgroundColor }
     static var quaternarySystemFill: NSColor { .quaternaryLabelColor }
-    static var systemRed: NSColor { .systemRed }
+    // NSColor.systemRed already exists natively — no mapping needed.
 }
 #endif
