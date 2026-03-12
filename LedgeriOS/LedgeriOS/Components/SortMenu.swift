@@ -7,13 +7,12 @@ struct SortMenu: View {
 
     var body: some View {
         EmptyView()
-            .sheet(isPresented: $isPresented) {
+            .adaptivePresentation(isPresented: $isPresented, style: .quickMenu) {
                 ActionMenuSheet(
                     title: title,
                     items: sortOptions,
                     closeOnItemPress: true
                 )
-                .sheetStyle(.quickMenu)
             }
     }
 

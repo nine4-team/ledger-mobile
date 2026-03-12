@@ -31,7 +31,7 @@ struct ProjectsPlaceholderView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingCreateMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showingCreateMenu, style: .quickMenu, onDismiss: {
             createMenuPendingAction?()
             createMenuPendingAction = nil
         }) {
@@ -42,7 +42,6 @@ struct ProjectsPlaceholderView: View {
                     createMenuPendingAction = action
                 }
             )
-            .sheetStyle(.quickMenu)
         }
     }
 }

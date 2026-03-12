@@ -150,16 +150,15 @@ struct AddExistingItemsPicker: View {
                 }
             }
         }
-        .sheet(isPresented: $showConflictSheet) {
+        .adaptivePresentation(isPresented: $showConflictSheet, style: .quickMenu) {
             ItemConflictSheet(
                 message: conflictMessage,
                 itemNames: conflictItemNames,
                 onConfirm: { executeAdd(items: pendingItems) },
                 onCancel: { pendingItems.removeAll() }
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showCategoryPicker) {
+        .adaptivePresentation(isPresented: $showCategoryPicker, style: .form) {
             CategoryPickerList(
                 categories: accountContext.allBudgetCategories,
                 selectedId: nil,
@@ -177,7 +176,6 @@ struct AddExistingItemsPicker: View {
                     executeAdd(items: updatedItems)
                 }
             )
-            .sheetStyle(.form)
         }
     }
 

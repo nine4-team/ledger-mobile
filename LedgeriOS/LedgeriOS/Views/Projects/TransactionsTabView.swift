@@ -101,13 +101,12 @@ struct TransactionsTabView: View {
                 )
             }
         }
-        .sheet(isPresented: $showBulkActionMenu) {
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
                 items: bulkActionMenuItems,
                 onSelectAction: { action in action() }
             )
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete \(selectedIds.count) transactions?", isPresented: $showBulkDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
@@ -119,13 +118,12 @@ struct TransactionsTabView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .sheet(isPresented: $showNewTransaction) {
+        .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 NewTransactionView(context: .project(projectId))
-                    .sheetStyle(.form)
             }
         }
-        .sheet(isPresented: $showAddMenu) {
+        .adaptivePresentation(isPresented: $showAddMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "Add Transaction",
                 items: [
@@ -138,13 +136,11 @@ struct TransactionsTabView: View {
                 ],
                 onSelectAction: { action in action() }
             )
-            .sheetStyle(.quickMenu)
         }
         #if canImport(UIKit)
-        .sheet(isPresented: $showInvoiceImport) {
+        .adaptivePresentation(isPresented: $showInvoiceImport, style: .fullSheet) {
             if let projectId = projectContext.currentProjectId {
                 ImportInvoiceModal(projectId: projectId)
-                    .sheetStyle(.fullSheet)
             }
         }
         #endif
@@ -164,14 +160,13 @@ struct TransactionsTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createTransaction)) { _ in
             showNewTransaction = true
         }
-        .sheet(isPresented: $showExportSheet) {
+        .adaptivePresentation(isPresented: $showExportSheet, style: .selectionMenu) {
             ExportTransactionsModal(
                 transactions: processedTransactions,
                 categories: projectContext.budgetCategories,
                 items: projectContext.items,
                 projectId: projectContext.currentProjectId
             )
-            .sheetStyle(.selectionMenu)
         }
     }
 

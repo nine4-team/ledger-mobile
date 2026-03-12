@@ -170,7 +170,7 @@ struct TransactionDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showActionMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showActionMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
@@ -179,7 +179,6 @@ struct TransactionDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete Transaction?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
@@ -188,7 +187,7 @@ struct TransactionDetailView: View {
         } message: {
             Text("This action cannot be undone. All linked items will be unlinked.")
         }
-        .sheet(isPresented: $showEditDetails) {
+        .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditTransactionDetailsModal(
                 transaction: currentTransaction,
                 budgetCategories: projectContext.enabledBudgetCategories,
@@ -196,43 +195,38 @@ struct TransactionDetailView: View {
                     updateTransaction(fields: fields)
                 }
             )
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showEditNotes) {
+        .adaptivePresentation(isPresented: $showEditNotes, style: .form) {
             EditNotesModal(
                 notes: currentTransaction.notes ?? "",
                 onSave: { newNotes in
                     updateTransaction(fields: ["notes": newNotes])
                 }
             )
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showReassign) {
+        .adaptivePresentation(isPresented: $showReassign, style: .form) {
             ReassignTransactionToProjectModal(
                 transaction: currentTransaction,
                 onComplete: { dismiss() }
             )
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showCreateItemsFromList) {
+        .adaptivePresentation(isPresented: $showCreateItemsFromList, style: .form) {
             CreateItemsFromListModal(
                 transaction: currentTransaction,
                 onCreated: { parsedItems in
                     createItemsFromParsed(parsedItems)
                 }
             )
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showCreateItemsFromImages) {
+        .adaptivePresentation(isPresented: $showCreateItemsFromImages, style: .fullSheet) {
             CreateItemsFromImagesModal(
                 transaction: currentTransaction,
                 onCreated: { groups in
                     createItemsFromImageGroups(groups)
                 }
             )
-            .sheetStyle(.fullSheet)
         }
-        .sheet(isPresented: $showAddItemMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showAddItemMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
@@ -261,15 +255,13 @@ struct TransactionDetailView: View {
                     menuPendingAction = action
                 }
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showAddExistingItems) {
+        .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
                 context: .transaction(currentTransaction),
                 projectId: projectContext.project?.id,
                 onDismiss: { showAddExistingItems = false }
             )
-            .sheetStyle(.fullSheet)
         }
     }
 

@@ -83,13 +83,12 @@ struct ImportInvoiceModal: View {
                 showDocumentPicker = false
             }
         }
-        .sheet(isPresented: $showCategoryPicker) {
+        .adaptivePresentation(isPresented: $showCategoryPicker, style: .picker) {
             CategoryPickerList(
                 categories: projectContext.budgetCategories,
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
             )
-            .sheetStyle(.picker)
         }
     }
 

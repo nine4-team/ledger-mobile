@@ -81,7 +81,7 @@ struct ProjectDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showingMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
@@ -118,23 +118,20 @@ struct ProjectDetailView: View {
                     menuPendingAction = action
                 }
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showingEditProject) {
+        .adaptivePresentation(isPresented: $showingEditProject, style: .form) {
             EditProjectModal(
                 project: project,
                 existingBudgetCategories: projectContext.projectBudgetCategories
             )
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showExportSheetAllTransactions) {
+        .adaptivePresentation(isPresented: $showExportSheetAllTransactions, style: .selectionMenu) {
             ExportTransactionsModal(
                 transactions: projectContext.transactions,
                 categories: projectContext.budgetCategories,
                 items: projectContext.items,
                 projectId: projectContext.currentProjectId
             )
-            .sheetStyle(.selectionMenu)
         }
         .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {

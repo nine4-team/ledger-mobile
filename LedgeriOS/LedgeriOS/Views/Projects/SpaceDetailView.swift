@@ -84,7 +84,7 @@ struct SpaceDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showActionMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showActionMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
@@ -93,33 +93,28 @@ struct SpaceDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showEditDetails) {
+        .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditSpaceDetailsModal(space: liveSpace) { name, notes in
                 updateSpace(fields: ["name": name, "notes": notes ?? NSNull()])
             }
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showEditNotes) {
+        .adaptivePresentation(isPresented: $showEditNotes, style: .form) {
             EditNotesModal(notes: liveSpace.notes ?? "") { newNotes in
                 updateSpace(fields: ["notes": newNotes])
             }
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showEditChecklists) {
+        .adaptivePresentation(isPresented: $showEditChecklists, style: .form) {
             EditChecklistModal(space: liveSpace) { updatedChecklists in
                 saveChecklists(updatedChecklists)
             }
-            .sheetStyle(.form)
         }
-        .sheet(isPresented: $showAddExistingItems) {
+        .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
                 context: .space(liveSpace),
                 projectId: projectContext.project?.id,
                 onDismiss: { showAddExistingItems = false }
             )
-            .sheetStyle(.fullSheet)
         }
         .confirmationDialog("Delete Space?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
@@ -129,13 +124,12 @@ struct SpaceDetailView: View {
             Text("This action cannot be undone.")
         }
         // Item action sheets (from item kebab within space)
-        .sheet(isPresented: $showItemStatusPicker) {
+        .adaptivePresentation(isPresented: $showItemStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
                 updateItemField(actionTargetItem, fields: ["status": status])
             }
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showItemSetSpace) {
+        .adaptivePresentation(isPresented: $showItemSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: projectContext.spaces,
                 currentSpaceId: actionTargetItem?.spaceId,
@@ -144,9 +138,8 @@ struct SpaceDetailView: View {
                     updateItemField(actionTargetItem, fields: fields)
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showItemTransactionPicker) {
+        .adaptivePresentation(isPresented: $showItemTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: projectContext.transactions,
                 selectedId: actionTargetItem?.transactionId,
@@ -156,24 +149,20 @@ struct SpaceDetailView: View {
                     }
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showItemSellToBusiness) {
+        .adaptivePresentation(isPresented: $showItemSellToBusiness, style: .form) {
             if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
                 SellToBusinessModal(items: [item], accountId: accountId) {}
-                    .sheetStyle(.form)
             }
         }
-        .sheet(isPresented: $showItemSellToProject) {
+        .adaptivePresentation(isPresented: $showItemSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
                 SellToProjectModal(items: [item], accountId: accountId) {}
-                    .sheetStyle(.form)
             }
         }
-        .sheet(isPresented: $showItemReassign) {
+        .adaptivePresentation(isPresented: $showItemReassign, style: .form) {
             if let item = actionTargetItem {
                 ReassignToProjectModal(items: [item]) {}
-                    .sheetStyle(.form)
             }
         }
         .confirmationDialog("Delete item?", isPresented: $showItemDeleteConfirmation) {

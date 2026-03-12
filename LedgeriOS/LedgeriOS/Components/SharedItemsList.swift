@@ -156,12 +156,11 @@ struct SharedItemsList: View {
             listener?.remove()
             listener = nil
         }
-        .sheet(isPresented: $showBulkActionMenu) {
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(resolvedSelectedIds.wrappedValue.count) selected",
                 items: bulkActionMenuItems
             )
-            .sheetStyle(.quickMenu)
         }
         .background(SortMenu(
             isPresented: $showSortMenu,

@@ -32,20 +32,17 @@ struct InventoryPlaceholderView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingCreateMenu) {
+        .adaptivePresentation(isPresented: $showingCreateMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "Create New",
                 items: createMenuItems
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showNewItem) {
+        .adaptivePresentation(isPresented: $showNewItem, style: .form) {
             NewItemView(context: .inventory)
-                .sheetStyle(.form)
         }
-        .sheet(isPresented: $showNewSpace) {
+        .adaptivePresentation(isPresented: $showNewSpace, style: .form) {
             NewSpaceView(context: .inventory)
-                .sheetStyle(.form)
         }
     }
 }

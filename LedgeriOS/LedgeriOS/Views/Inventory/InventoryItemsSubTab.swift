@@ -50,13 +50,12 @@ struct InventoryItemsSubTab: View {
             filterScope: .inventory
         )
         // Single-item action sheets
-        .sheet(isPresented: $showSingleStatusPicker) {
+        .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
                 updateItemField(actionTargetItem, fields: ["status": status])
             }
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showSingleSetSpace) {
+        .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: inventoryContext.spaces,
                 currentSpaceId: actionTargetItem?.spaceId,
@@ -65,9 +64,8 @@ struct InventoryItemsSubTab: View {
                     updateItemField(actionTargetItem, fields: fields)
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showSingleTransactionPicker) {
+        .adaptivePresentation(isPresented: $showSingleTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: inventoryContext.transactions,
                 selectedId: actionTargetItem?.transactionId,
@@ -77,18 +75,15 @@ struct InventoryItemsSubTab: View {
                     }
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showSingleSellToProject) {
+        .adaptivePresentation(isPresented: $showSingleSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
                 SellToProjectModal(items: [item], accountId: accountId) {}
-                    .sheetStyle(.form)
             }
         }
-        .sheet(isPresented: $showSingleReassign) {
+        .adaptivePresentation(isPresented: $showSingleReassign, style: .form) {
             if let item = actionTargetItem {
                 ReassignToProjectModal(items: [item]) {}
-                    .sheetStyle(.form)
             }
         }
         .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {
@@ -97,19 +92,17 @@ struct InventoryItemsSubTab: View {
             Text("This action cannot be undone.")
         }
         // Bulk action sheets
-        .sheet(isPresented: $showBulkStatusPicker) {
+        .adaptivePresentation(isPresented: $showBulkStatusPicker, style: .quickMenu) {
             StatusPickerModal { status in updateStatusForSelected(status) }
-                .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showBulkSetSpace) {
+        .adaptivePresentation(isPresented: $showBulkSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: inventoryContext.spaces,
                 currentSpaceId: nil,
                 onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showBulkTransactionPicker) {
+        .adaptivePresentation(isPresented: $showBulkTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: inventoryContext.transactions,
                 selectedId: nil,
@@ -117,28 +110,24 @@ struct InventoryItemsSubTab: View {
                     if let txId = tx.id { setTransactionForSelected(transactionId: txId) }
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showBulkSellToProject) {
+        .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 SellToProjectModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
-                .sheetStyle(.form)
             }
         }
-        .sheet(isPresented: $showBulkReassign) {
+        .adaptivePresentation(isPresented: $showBulkReassign, style: .form) {
             ReassignToProjectModal(items: selectedItems) { selectedItemIds.removeAll() }
-                .sheetStyle(.form)
         }
         .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showBulkDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelected() }
         } message: {
             Text("This action cannot be undone.")
         }
-        .sheet(isPresented: $showNewItem) {
+        .adaptivePresentation(isPresented: $showNewItem, style: .form) {
             NewItemView(context: .inventory)
-                .sheetStyle(.form)
         }
     }
 

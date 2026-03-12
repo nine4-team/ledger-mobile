@@ -25,13 +25,12 @@ struct FilterMenu: View {
 
     var body: some View {
         EmptyView()
-            .sheet(isPresented: $isPresented) {
+            .adaptivePresentation(isPresented: $isPresented, style: .selectionMenu) {
                 ActionMenuSheet(
                     title: title,
                     items: filters,
                     closeOnItemPress: closeOnItemPress
                 )
-                .sheetStyle(.selectionMenu)
             }
     }
 

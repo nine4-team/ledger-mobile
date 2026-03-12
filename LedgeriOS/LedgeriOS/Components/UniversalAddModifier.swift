@@ -41,17 +41,14 @@ struct UniversalAddModifier: ViewModifier {
                     .accessibilityLabel("Create new")
                 }
             }
-            .sheet(isPresented: $showNewProject) {
+            .adaptivePresentation(isPresented: $showNewProject, style: .form) {
                 NewProjectView()
-                    .sheetStyle(.form)
             }
-            .sheet(isPresented: $showNewItem) {
+            .adaptivePresentation(isPresented: $showNewItem, style: .form) {
                 NewItemView(context: .inventory)
-                    .sheetStyle(.form)
             }
-            .sheet(isPresented: $showNewTransaction) {
+            .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 NewTransactionView(context: .inventory)
-                    .sheetStyle(.form)
             }
     }
 }
@@ -84,7 +81,7 @@ struct UniversalAddSheetModifier: ViewModifier {
                     .accessibilityLabel("Create new")
                 }
             }
-            .sheet(isPresented: $showAddMenu, onDismiss: {
+            .adaptivePresentation(isPresented: $showAddMenu, style: .quickMenu, onDismiss: {
                 pendingCreationAction?()
                 pendingCreationAction = nil
             }) {
@@ -114,19 +111,15 @@ struct UniversalAddSheetModifier: ViewModifier {
                         pendingCreationAction = action
                     }
                 )
-                .sheetStyle(.quickMenu)
             }
-            .sheet(isPresented: $showNewProject) {
+            .adaptivePresentation(isPresented: $showNewProject, style: .form) {
                 NewProjectView()
-                    .sheetStyle(.form)
             }
-            .sheet(isPresented: $showNewItem) {
+            .adaptivePresentation(isPresented: $showNewItem, style: .form) {
                 NewItemView(context: .inventory)
-                    .sheetStyle(.form)
             }
-            .sheet(isPresented: $showNewTransaction) {
+            .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 NewTransactionView(context: .inventory)
-                    .sheetStyle(.form)
             }
     }
 }

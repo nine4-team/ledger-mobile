@@ -97,7 +97,7 @@ struct EditProjectModal: View {
             default: step3BudgetAmounts
             }
         }
-        .sheet(isPresented: $showCategoryForm) {
+        .adaptivePresentation(isPresented: $showCategoryForm, style: .form) {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeBudgetCategories.map(\.name)
@@ -108,7 +108,6 @@ struct EditProjectModal: View {
                     excludeFromBudget: excludeFromBudget
                 )
             }
-            .sheetStyle(.form)
         }
     }
 

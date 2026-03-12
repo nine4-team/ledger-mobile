@@ -94,22 +94,20 @@ struct MediaGallerySection: View {
             )
         }
         #endif
-        .sheet(isPresented: $showAttachmentMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showAttachmentMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
             selectedAttachment = nil
         }) {
             if let attachment = selectedAttachment {
                 attachmentMenu(for: attachment)
-                    .sheetStyle(.quickMenu)
             }
         }
-        .sheet(isPresented: $showAddSourceMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showAddSourceMenu, style: .quickMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
             addSourceMenu
-                .sheetStyle(.quickMenu)
         }
         #if canImport(UIKit)
         .fullScreenCover(isPresented: $showCamera) {

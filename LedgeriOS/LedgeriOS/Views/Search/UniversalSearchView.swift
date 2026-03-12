@@ -129,37 +129,32 @@ struct UniversalSearchView: View {
         .universalAddButton()
         .background(BrandColors.background)
         // Item bulk action sheets
-        .sheet(isPresented: $showItemBulkActions) {
+        .adaptivePresentation(isPresented: $showItemBulkActions, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedItemIds.count) Items",
                 items: itemBulkActionMenuItems,
                 onSelectAction: { action in action() }
             )
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showItemSetSpace) {
+        .adaptivePresentation(isPresented: $showItemSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: accountContext.allSpaces,
                 currentSpaceId: nil,
                 onSelect: { space in setSpaceForSelectedItems(spaceId: space?.id) }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showItemStatusPicker) {
+        .adaptivePresentation(isPresented: $showItemStatusPicker, style: .quickMenu) {
             StatusPickerModal { status in setStatusForSelectedItems(status) }
-                .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showItemLinkTransaction) {
+        .adaptivePresentation(isPresented: $showItemLinkTransaction, style: .picker) {
             TransactionPickerModal(
                 transactions: accountContext.allTransactions,
                 selectedId: nil,
                 onSelect: { transaction in linkSelectedItemsToTransaction(transaction) }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showItemMoveToProject) {
+        .adaptivePresentation(isPresented: $showItemMoveToProject, style: .form) {
             ReassignToProjectModal(items: selectedItems) { selectedItemIds.removeAll() }
-                .sheetStyle(.form)
         }
         .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showItemDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedItems() }
@@ -167,13 +162,12 @@ struct UniversalSearchView: View {
             Text("This action cannot be undone.")
         }
         // Transaction bulk action sheets
-        .sheet(isPresented: $showTransactionBulkActions) {
+        .adaptivePresentation(isPresented: $showTransactionBulkActions, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedTransactionIds.count) Transactions",
                 items: transactionBulkActionMenuItems,
                 onSelectAction: { action in action() }
             )
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete \(selectedTransactionIds.count) transactions?", isPresented: $showTransactionDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
@@ -186,13 +180,12 @@ struct UniversalSearchView: View {
             Text("This action cannot be undone.")
         }
         // Single-item action sheets
-        .sheet(isPresented: $showSingleStatusPicker) {
+        .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
                 updateItemField(actionTargetItem, fields: ["status": status])
             }
-            .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showSingleSetSpace) {
+        .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: accountContext.allSpaces,
                 currentSpaceId: actionTargetItem?.spaceId,
@@ -201,9 +194,8 @@ struct UniversalSearchView: View {
                     updateItemField(actionTargetItem, fields: fields)
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showSingleTransactionPicker) {
+        .adaptivePresentation(isPresented: $showSingleTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: accountContext.allTransactions,
                 selectedId: actionTargetItem?.transactionId,
@@ -213,12 +205,10 @@ struct UniversalSearchView: View {
                     }
                 }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showSingleReassign) {
+        .adaptivePresentation(isPresented: $showSingleReassign, style: .form) {
             if let item = actionTargetItem {
                 ReassignToProjectModal(items: [item]) {}
-                    .sheetStyle(.form)
             }
         }
         .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {

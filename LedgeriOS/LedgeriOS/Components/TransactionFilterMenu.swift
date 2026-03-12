@@ -12,13 +12,12 @@ struct TransactionFilterMenu: View {
 
     var body: some View {
         EmptyView()
-            .sheet(isPresented: $isPresented) {
+            .adaptivePresentation(isPresented: $isPresented, style: .selectionMenu) {
                 ActionMenuSheet(
                     title: "Filter",
                     items: buildMenuItems(),
                     closeOnItemPress: false
                 )
-                .sheetStyle(.selectionMenu)
             }
     }
 

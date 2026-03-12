@@ -170,7 +170,7 @@ struct EditTransactionDetailsModal: View {
                 }
             }
         }
-        .sheet(isPresented: $showCategoryPicker) {
+        .adaptivePresentation(isPresented: $showCategoryPicker, style: .picker) {
             CategoryPickerList(
                 categories: budgetCategories,
                 selectedId: budgetCategoryId,
@@ -178,7 +178,6 @@ struct EditTransactionDetailsModal: View {
                     budgetCategoryId = category?.id
                 }
             )
-            .sheetStyle(.picker)
         }
     }
 

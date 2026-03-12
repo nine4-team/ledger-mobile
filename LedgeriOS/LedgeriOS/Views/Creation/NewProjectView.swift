@@ -57,7 +57,7 @@ struct NewProjectView: View {
             default: step3BudgetAmounts
             }
         }
-        .sheet(isPresented: $showCategoryForm) {
+        .adaptivePresentation(isPresented: $showCategoryForm, style: .form) {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeBudgetCategories.map(\.name)
@@ -68,7 +68,6 @@ struct NewProjectView: View {
                     excludeFromBudget: excludeFromBudget
                 )
             }
-            .sheetStyle(.form)
         }
         .onChange(of: activeBudgetCategories.count) {
             preSelectAllIfNeeded()

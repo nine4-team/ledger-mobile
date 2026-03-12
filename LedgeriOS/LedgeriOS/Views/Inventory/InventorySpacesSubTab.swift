@@ -30,9 +30,8 @@ struct InventorySpacesSubTab: View {
                     onAdd: { showNewSpace = true }
                 )
             }
-        .sheet(isPresented: $showNewSpace) {
+        .adaptivePresentation(isPresented: $showNewSpace, style: .form) {
             NewSpaceView(context: .inventory)
-                .sheetStyle(.form)
         }
     }
 

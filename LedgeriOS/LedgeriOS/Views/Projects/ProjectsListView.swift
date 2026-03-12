@@ -84,9 +84,8 @@ struct ProjectsListView: View {
                 }
             }
         }
-        .sheet(isPresented: $showNewProject) {
+        .adaptivePresentation(isPresented: $showNewProject, style: .form) {
             NewProjectView()
-                .sheetStyle(.form)
         }
         .task(id: accountContext.currentAccountId) {
             startListening()

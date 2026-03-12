@@ -360,12 +360,11 @@ struct SharedTransactionsList: View {
                 )
             }
         }
-        .sheet(isPresented: $showBulkActionMenu) {
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
                 items: bulkActionMenuItems
             )
-            .sheetStyle(.quickMenu)
         }
     }
 

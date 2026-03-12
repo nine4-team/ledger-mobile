@@ -80,11 +80,10 @@ struct UsersView: View {
         .background(BrandColors.background)
         .onAppear { startListening() }
         .onDisappear { stopListening() }
-        .sheet(isPresented: $showingInviteSheet) {
+        .adaptivePresentation(isPresented: $showingInviteSheet, style: .quickMenu) {
             InviteUserSheet { email, role in
                 createInvite(email: email, role: role)
             }
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog(
             "Revoke this invitation?",

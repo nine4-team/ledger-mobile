@@ -67,13 +67,12 @@ struct NewTransactionView: View {
             default: step3Details
             }
         }
-        .sheet(isPresented: $showCategoryPicker) {
+        .adaptivePresentation(isPresented: $showCategoryPicker, style: .picker) {
             CategoryPickerList(
                 categories: projectContext?.enabledBudgetCategories ?? [],
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
             )
-            .sheetStyle(.picker)
         }
     }
 

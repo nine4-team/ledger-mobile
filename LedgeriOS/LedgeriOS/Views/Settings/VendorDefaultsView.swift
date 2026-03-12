@@ -77,11 +77,10 @@ struct VendorDefaultsView: View {
         .background(BrandColors.background)
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
-        .sheet(isPresented: $showingAddSheet) {
+        .adaptivePresentation(isPresented: $showingAddSheet, style: .quickMenu) {
             AddVendorSheet(vendorName: $newVendorName) {
                 addVendor(newVendorName)
             }
-            .sheetStyle(.quickMenu)
         }
     }
 

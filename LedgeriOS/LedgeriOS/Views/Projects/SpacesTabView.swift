@@ -32,10 +32,9 @@ struct SpacesTabView: View {
         .navigationDestination(for: Space.self) { space in
             SpaceDetailView(space: space)
         }
-        .sheet(isPresented: $showNewSpace) {
+        .adaptivePresentation(isPresented: $showNewSpace, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 NewSpaceView(context: .project(projectId))
-                    .sheetStyle(.form)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .createSpace)) { _ in

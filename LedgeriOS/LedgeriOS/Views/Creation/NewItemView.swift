@@ -76,25 +76,22 @@ struct NewItemView: View {
             default: step2Details
             }
         }
-        .sheet(isPresented: $showStatusPicker) {
+        .adaptivePresentation(isPresented: $showStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: status, onSelect: { newStatus in status = newStatus })
-                .sheetStyle(.quickMenu)
         }
-        .sheet(isPresented: $showSpacePicker) {
+        .adaptivePresentation(isPresented: $showSpacePicker, style: .picker) {
             SetSpaceModal(
                 spaces: projectContext?.spaces ?? [],
                 currentSpaceId: selectedSpaceId,
                 onSelect: { space in selectedSpaceId = space?.id }
             )
-            .sheetStyle(.picker)
         }
-        .sheet(isPresented: $showTransactionPicker) {
+        .adaptivePresentation(isPresented: $showTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: projectContext?.transactions ?? [],
                 selectedId: selectedTransactionId,
                 onSelect: { tx in selectedTransactionId = tx.id }
             )
-            .sheetStyle(.picker)
         }
     }
 
@@ -258,12 +255,11 @@ struct NewItemView: View {
                     .foregroundStyle(BrandColors.textSecondary)
             }
         }
-        .sheet(isPresented: $showImageSourceMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showImageSourceMenu, style: .quickMenu, onDismiss: {
             imageSourcePendingAction?()
             imageSourcePendingAction = nil
         }) {
             imageSourceMenu
-                .sheetStyle(.quickMenu)
         }
         #if canImport(UIKit)
         .fullScreenCover(isPresented: $showCamera) {

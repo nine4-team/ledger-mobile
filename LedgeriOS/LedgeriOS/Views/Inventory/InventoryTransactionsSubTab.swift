@@ -80,13 +80,12 @@ struct InventoryTransactionsSubTab: View {
                 )
             }
         }
-        .sheet(isPresented: $showBulkActionMenu) {
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedIds.count) selected",
                 items: bulkActionMenuItems,
                 onSelectAction: { action in action() }
             )
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog("Delete \(selectedIds.count) transactions?", isPresented: $showBulkDeleteConfirmation) {
             Button("Delete", role: .destructive) { deleteSelectedTransactions() }
@@ -98,9 +97,8 @@ struct InventoryTransactionsSubTab: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .sheet(isPresented: $showNewTransaction) {
+        .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
             NewTransactionView(context: .inventory)
-                .sheetStyle(.form)
         }
         .background(SortMenu(
             isPresented: $showSortMenu,

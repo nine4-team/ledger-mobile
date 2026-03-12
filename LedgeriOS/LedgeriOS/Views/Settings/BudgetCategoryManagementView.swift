@@ -91,23 +91,21 @@ struct BudgetCategoryManagementView: View {
         .background(BrandColors.background)
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
-        .sheet(isPresented: $showingCreateSheet) {
+        .adaptivePresentation(isPresented: $showingCreateSheet, style: .form) {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeCategories.map(\.name)
             ) { name, categoryType, excludeFromBudget in
                 createCategory(name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
-            .sheetStyle(.form)
         }
-        .sheet(item: $editingCategory) { category in
+        .adaptivePresentation(item: $editingCategory, style: .form) { category in
             CategoryFormModal(
                 mode: .edit(category),
                 existingNames: activeCategories.filter { $0.id != category.id }.map(\.name)
             ) { name, categoryType, excludeFromBudget in
                 updateCategory(category, name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
             }
-            .sheetStyle(.form)
         }
         .confirmationDialog(
             "Archive this category?",

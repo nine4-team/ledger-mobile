@@ -73,7 +73,7 @@ struct ItemDetailView: View {
             }
         }
         // Action menu sheet
-        .sheet(isPresented: $showActionMenu, onDismiss: {
+        .adaptivePresentation(isPresented: $showActionMenu, style: .selectionMenu, onDismiss: {
             menuPendingAction?()
             menuPendingAction = nil
         }) {
@@ -82,24 +82,21 @@ struct ItemDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
-            .sheetStyle(.selectionMenu)
         }
         // Edit Details
-        .sheet(isPresented: $showEditDetails) {
+        .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditItemDetailsModal(item: liveItem) { fields in
                 updateItem(fields: fields)
             }
-            .sheetStyle(.form)
         }
         // Edit Notes
-        .sheet(isPresented: $showEditNotes) {
+        .adaptivePresentation(isPresented: $showEditNotes, style: .form) {
             EditNotesModal(notes: liveItem.notes ?? "") { newNotes in
                 updateItem(fields: ["notes": newNotes])
             }
-            .sheetStyle(.form)
         }
         // Set Space
-        .sheet(isPresented: $showSetSpace) {
+        .adaptivePresentation(isPresented: $showSetSpace, style: .picker) {
             SetSpaceModal(
                 spaces: projectContext.spaces,
                 currentSpaceId: liveItem.spaceId,
@@ -108,64 +105,56 @@ struct ItemDetailView: View {
                     updateItem(fields: fields)
                 }
             )
-            .sheetStyle(.picker)
         }
         // Reassign
-        .sheet(isPresented: $showReassign) {
+        .adaptivePresentation(isPresented: $showReassign, style: .form) {
             ReassignToProjectModal(items: [liveItem]) { }
-            .sheetStyle(.form)
         }
         // Sell to Business
-        .sheet(isPresented: $showSellToBusiness) {
+        .adaptivePresentation(isPresented: $showSellToBusiness, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 SellToBusinessModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
-                .sheetStyle(.form)
             }
         }
         // Sell to Project
-        .sheet(isPresented: $showSellToProject) {
+        .adaptivePresentation(isPresented: $showSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
                 SellToProjectModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
-                .sheetStyle(.form)
             }
         }
         // Transaction Picker
-        .sheet(isPresented: $showTransactionPicker) {
+        .adaptivePresentation(isPresented: $showTransactionPicker, style: .picker) {
             TransactionPickerModal(
                 transactions: projectContext.transactions,
                 selectedId: liveItem.transactionId
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
-            .sheetStyle(.picker)
         }
         // Return Transaction Picker
-        .sheet(isPresented: $showReturnTransactionPicker) {
+        .adaptivePresentation(isPresented: $showReturnTransactionPicker, style: .picker) {
             ReturnTransactionPickerModal(
                 transactions: projectContext.transactions,
                 selectedId: liveItem.transactionId
             ) { transaction in
                 updateItem(fields: ["transactionId": transaction.id ?? ""])
             }
-            .sheetStyle(.picker)
         }
         // Make Copies
-        .sheet(isPresented: $showMakeCopies) {
+        .adaptivePresentation(isPresented: $showMakeCopies, style: .quickMenu) {
             if let accountId = accountContext.currentAccountId {
                 MakeCopiesModal(item: liveItem, accountId: accountId)
-                    .sheetStyle(.quickMenu)
             }
         }
         // Status Picker
-        .sheet(isPresented: $showStatusPicker) {
+        .adaptivePresentation(isPresented: $showStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: liveItem.status) { status in
                 updateItem(fields: ["status": status])
             }
-            .sheetStyle(.quickMenu)
         }
         // Delete confirmation
         .confirmationDialog("Delete Item?", isPresented: $showDeleteConfirmation) {

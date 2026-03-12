@@ -85,13 +85,12 @@ struct AccountView: View {
         }
         .background(BrandColors.background)
         .task { await loadProfile() }
-        .sheet(isPresented: $showingEditProfile) {
+        .adaptivePresentation(isPresented: $showingEditProfile, style: .quickMenu) {
             EditProfileSheet(
                 currentName: businessProfile?.name ?? accountContext.account?.name ?? ""
             ) { name in
                 updateProfile(name: name)
             }
-            .sheetStyle(.quickMenu)
         }
         .confirmationDialog(
             "Sign out?",

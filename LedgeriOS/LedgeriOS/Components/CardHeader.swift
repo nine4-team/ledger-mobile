@@ -53,7 +53,7 @@ struct CardHeader: View {
             .overlay(alignment: .bottom) {
                 CardDivider()
             }
-            .sheet(isPresented: $showMenu) {
+            .adaptivePresentation(isPresented: $showMenu, style: .selectionMenu) {
                 ActionMenuSheet(
                     title: menuTitle,
                     items: menuItems,
@@ -61,7 +61,6 @@ struct CardHeader: View {
                         menuPendingAction = action
                     }
                 )
-                .sheetStyle(.selectionMenu)
             }
             .onChange(of: showMenu) { _, isShowing in
                 if !isShowing, let action = menuPendingAction {

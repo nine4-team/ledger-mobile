@@ -68,17 +68,15 @@ struct SpaceTemplateManagementView: View {
         .background(BrandColors.background)
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
-        .sheet(isPresented: $showingCreateSheet) {
+        .adaptivePresentation(isPresented: $showingCreateSheet, style: .form) {
             TemplateFormSheet(mode: .create) { name, notes, checklists in
                 createTemplate(name: name, notes: notes, checklists: checklists)
             }
-            .sheetStyle(.form)
         }
-        .sheet(item: $editingTemplate) { template in
+        .adaptivePresentation(item: $editingTemplate, style: .form) { template in
             TemplateFormSheet(mode: .edit(template)) { name, notes, checklists in
                 updateTemplate(template, name: name, notes: notes, checklists: checklists)
             }
-            .sheetStyle(.form)
         }
         .confirmationDialog(
             "Delete this template?",
