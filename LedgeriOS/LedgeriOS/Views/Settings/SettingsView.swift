@@ -47,7 +47,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .navBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     authManager.signOut()
                 } label: {

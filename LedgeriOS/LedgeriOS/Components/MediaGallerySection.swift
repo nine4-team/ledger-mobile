@@ -111,6 +111,7 @@ struct MediaGallerySection: View {
             addSourceMenu
                 .sheetStyle(.quickMenu)
         }
+        #if canImport(UIKit)
         .fullScreenCover(isPresented: $showCamera) {
             CameraCapture { imageData in
                 Task {
@@ -120,6 +121,7 @@ struct MediaGallerySection: View {
                 showCamera = false
             }
         }
+        #endif
         .photosPicker(
             isPresented: $showPhotoPicker,
             selection: $pickerItems,

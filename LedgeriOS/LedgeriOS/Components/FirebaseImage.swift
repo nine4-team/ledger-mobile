@@ -7,7 +7,7 @@ struct FirebaseImage<Placeholder: View>: View {
     let contentMode: ContentMode
     @ViewBuilder let placeholder: () -> Placeholder
 
-    @State private var loadedImage: UIImage?
+    @State private var loadedImage: PlatformImage?
     @State private var loadFailed = false
 
     init(
@@ -23,9 +23,15 @@ struct FirebaseImage<Placeholder: View>: View {
     var body: some View {
         Group {
             if let loadedImage {
+                #if canImport(UIKit)
                 Image(uiImage: loadedImage)
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
+                #elseif canImport(AppKit)
+                Image(nsImage: loadedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
+                #endif
             } else if loadFailed {
                 failureView
             } else {
@@ -81,7 +87,7 @@ struct FirebaseImage<Placeholder: View>: View {
                 return
             }
 
-            guard let image = UIImage(data: data) else {
+            guard let image = PlatformImage(data: data) else {
                 loadFailed = true
                 return
             }

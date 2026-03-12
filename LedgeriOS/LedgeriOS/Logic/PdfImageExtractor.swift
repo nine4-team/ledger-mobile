@@ -1,7 +1,6 @@
 import Foundation
 import PDFKit
 import CoreGraphics
-import UIKit
 
 /// Extracts product thumbnail images from Wayfair invoice PDFs.
 /// Port of `src/utils/pdfEmbeddedImageExtraction.ts`.
@@ -163,7 +162,7 @@ enum PdfImageExtractor {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return nil }
 
-        context.setFillColor(UIColor.white.cgColor)
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
         context.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
         context.scaleBy(x: scale, y: scale)

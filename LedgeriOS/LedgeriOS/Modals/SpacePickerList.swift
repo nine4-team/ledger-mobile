@@ -38,7 +38,7 @@ struct SpacePickerList: View {
                 }
             }
             .navigationTitle("Set Space")
-            .navigationBarTitleDisplayMode(.inline)
+            .navBarTitleDisplayMode(.inline)
         }
     }
 

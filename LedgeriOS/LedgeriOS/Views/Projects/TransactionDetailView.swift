@@ -157,8 +157,10 @@ struct TransactionDetailView: View {
             ),
             closeOnItemPress: false
         ))
+        #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
+        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {

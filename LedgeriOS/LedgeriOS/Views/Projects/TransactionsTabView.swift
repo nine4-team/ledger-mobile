@@ -140,12 +140,14 @@ struct TransactionsTabView: View {
             )
             .sheetStyle(.quickMenu)
         }
+        #if canImport(UIKit)
         .sheet(isPresented: $showInvoiceImport) {
             if let projectId = projectContext.currentProjectId {
                 ImportInvoiceModal(projectId: projectId)
                     .sheetStyle(.fullSheet)
             }
         }
+        #endif
         .background(SortMenu(
             isPresented: $showSortMenu,
             sortOptions: SortMenu.transactionSortMenuItems(

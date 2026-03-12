@@ -119,7 +119,12 @@ struct ParseDebugReport: View {
 
         if let jsonData = try? JSONSerialization.data(withJSONObject: debugData, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
+            #if canImport(UIKit)
             UIPasteboard.general.string = jsonString
+            #elseif canImport(AppKit)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(jsonString, forType: .string)
+            #endif
         }
 
         showCopied = true

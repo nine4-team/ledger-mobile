@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import SwiftUI
 import UIKit
 
@@ -478,3 +479,4 @@ struct ImportInvoiceModal: View {
         return String(data: data, encoding: .utf8) ?? "{}"
     }
 }
+#endif

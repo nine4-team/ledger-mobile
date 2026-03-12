@@ -265,6 +265,7 @@ struct NewItemView: View {
             imageSourceMenu
                 .sheetStyle(.quickMenu)
         }
+        #if canImport(UIKit)
         .fullScreenCover(isPresented: $showCamera) {
             CameraCapture { imageData in
                 imageDatas.append(imageData)
@@ -272,6 +273,7 @@ struct NewItemView: View {
                 showCamera = false
             }
         }
+        #endif
         .photosPicker(
             isPresented: $showPhotoPicker,
             selection: $imageItems,

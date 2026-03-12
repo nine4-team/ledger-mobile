@@ -3,7 +3,11 @@ import SwiftUI
 struct ClientSummaryReportView: View {
     let data: ClientSummaryData
     let projectName: String
+    var clientName: String?
     var businessName: String?
+    var businessLogoUrl: String?
+
+    @State private var logoImage: UIImage?
 
     var body: some View {
         Group {
@@ -13,6 +17,29 @@ struct ClientSummaryReportView: View {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
+                // Header
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    if let logoImage {
+                        Image(uiImage: logoImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 48)
+                    }
+                    if let businessName, !businessName.isEmpty {
+                        Text(businessName)
+                            .font(Typography.h2)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
+                    Text(projectName)
+                        .font(Typography.h1)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    if let clientName, !clientName.isEmpty {
+                        Text(clientName)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                }
+
                 // Summary cards
                 VStack(spacing: Spacing.cardListGap) {
                     summaryCard(label: "Total Spent", cents: data.totalSpentCents)
@@ -83,6 +110,14 @@ struct ClientSummaryReportView: View {
         } // Group
         .navigationTitle("Client Summary")
         .navBarTitleDisplayMode(.inline)
+        .task {
+            if let urlString = businessLogoUrl, let url = URL(string: urlString) {
+                if let (data, _) = try? await URLSession.shared.data(from: url),
+                   let image = UIImage(data: data) {
+                    logoImage = image
+                }
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
@@ -131,7 +166,7 @@ struct ClientSummaryReportView: View {
     // MARK: - PDF Sharing
 
     private func sharePDF() {
-        let pdfContent = ClientSummaryPDFContent(data: data, projectName: projectName, businessName: businessName)
+        let pdfContent = ClientSummaryPDFContent(data: data, projectName: projectName, clientName: clientName, businessName: businessName, logoImage: logoImage)
         ReportPDFSharing.sharePDF(
             content: pdfContent,
             fileName: "client-summary-\(projectName).pdf"
@@ -144,7 +179,9 @@ struct ClientSummaryReportView: View {
 private struct ClientSummaryPDFContent: View {
     let data: ClientSummaryData
     let projectName: String
+    var clientName: String?
     var businessName: String?
+    var logoImage: UIImage?
 
     private typealias S = ReportPDFStyles
 
@@ -270,6 +307,13 @@ private struct ClientSummaryPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let logoImage {
+                Image(uiImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .padding(.bottom, 8)
+            }
             if let businessName, !businessName.isEmpty {
                 Text(businessName)
                     .font(S.subtitleFont)
@@ -281,11 +325,21 @@ private struct ClientSummaryPDFContent: View {
             Text(title)
                 .font(S.subtitleFont)
                 .foregroundStyle(S.textDark)
-            HStack(spacing: 4) {
-                Text("Date:")
-                    .font(S.metaLabelFont)
-                Text(currentDateFormatted)
-                    .font(S.metaFont)
+            VStack(alignment: .leading, spacing: 2) {
+                if let clientName, !clientName.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Client:")
+                            .font(S.metaLabelFont)
+                        Text(clientName)
+                            .font(S.metaFont)
+                    }
+                }
+                HStack(spacing: 4) {
+                    Text("Date:")
+                        .font(S.metaLabelFont)
+                    Text(currentDateFormatted)
+                        .font(S.metaFont)
+                }
             }
             .foregroundStyle(S.textSecondary)
             .padding(.top, 4)

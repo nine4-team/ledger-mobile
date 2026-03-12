@@ -36,7 +36,7 @@ struct CategoryPickerList: View {
                 }
             }
             .navigationTitle("Budget Category")
-            .navigationBarTitleDisplayMode(.inline)
+            .navBarTitleDisplayMode(.inline)
         }
     }
 

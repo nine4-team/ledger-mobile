@@ -65,7 +65,7 @@ struct FormSheet<Content: View>: View {
             .frame(maxWidth: Dimensions.formMaxWidth)
             .frame(maxWidth: .infinity)
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .navBarTitleDisplayMode(.inline)
         }
     }
 }

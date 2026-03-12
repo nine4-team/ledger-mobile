@@ -51,11 +51,13 @@ struct ActionMenuSheet: View {
             .scrollContentBackground(.hidden)
             .background(BrandColors.surface)
             .navigationTitle(title ?? "")
-            .navigationBarTitleDisplayMode(.inline)
+            .navBarTitleDisplayMode(.inline)
+            #if canImport(UIKit)
             .toolbar(title == nil ? .hidden : .automatic, for: .navigationBar)
+            #endif
             .toolbar {
                 if !closeOnItemPress && hasActiveSelections {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .trailingNavBar) {
                         Button("Clear") {
                             clearAllFilters()
                         }

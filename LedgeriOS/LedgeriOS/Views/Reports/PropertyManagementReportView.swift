@@ -3,6 +3,11 @@ import SwiftUI
 struct PropertyManagementReportView: View {
     let data: PropertyManagementData
     let projectName: String
+    var clientName: String?
+    var businessName: String?
+    var businessLogoUrl: String?
+
+    @State private var logoImage: UIImage?
 
     var body: some View {
         Group {
@@ -12,6 +17,29 @@ struct PropertyManagementReportView: View {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
+                // Header
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    if let logoImage {
+                        Image(uiImage: logoImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 48)
+                    }
+                    if let businessName, !businessName.isEmpty {
+                        Text(businessName)
+                            .font(Typography.h2)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
+                    Text(projectName)
+                        .font(Typography.h1)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    if let clientName, !clientName.isEmpty {
+                        Text(clientName)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                }
+
                 // Space groups
                 ForEach(Array(data.spaceGroups.enumerated()), id: \.offset) { _, group in
                     spaceSection(
@@ -119,7 +147,7 @@ struct PropertyManagementReportView: View {
     // MARK: - PDF Sharing
 
     private func sharePDF() {
-        let pdfContent = PropertyManagementPDFContent(data: data, projectName: projectName)
+        let pdfContent = PropertyManagementPDFContent(data: data, projectName: projectName, clientName: clientName, businessName: businessName)
         ReportPDFSharing.sharePDF(
             content: pdfContent,
             fileName: "property-management-\(projectName).pdf"
@@ -132,6 +160,8 @@ struct PropertyManagementReportView: View {
 private struct PropertyManagementPDFContent: View {
     let data: PropertyManagementData
     let projectName: String
+    var clientName: String?
+    var businessName: String?
 
     private typealias S = ReportPDFStyles
 
@@ -230,17 +260,32 @@ private struct PropertyManagementPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let businessName, !businessName.isEmpty {
+                Text(businessName)
+                    .font(S.subtitleFont)
+                    .foregroundStyle(S.textDark)
+            }
             Text(projectName)
                 .font(S.titleFont)
                 .foregroundStyle(S.brand)
             Text(title)
                 .font(S.subtitleFont)
                 .foregroundStyle(S.textDark)
-            HStack(spacing: 4) {
-                Text("Date:")
-                    .font(S.metaLabelFont)
-                Text(currentDateFormatted)
-                    .font(S.metaFont)
+            VStack(alignment: .leading, spacing: 2) {
+                if let clientName, !clientName.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Client:")
+                            .font(S.metaLabelFont)
+                        Text(clientName)
+                            .font(S.metaFont)
+                    }
+                }
+                HStack(spacing: 4) {
+                    Text("Date:")
+                        .font(S.metaLabelFont)
+                    Text(currentDateFormatted)
+                        .font(S.metaFont)
+                }
             }
             .foregroundStyle(S.textSecondary)
             .padding(.top, 4)

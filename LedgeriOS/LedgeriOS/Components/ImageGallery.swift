@@ -57,7 +57,9 @@ struct ImageGallery: View {
                 Spacer()
             }
         }
+        #if canImport(UIKit)
         .statusBarHidden()
+        #endif
         .gesture(dismissGesture)
         .onAppear {
             currentIndex = initialIndex
@@ -81,7 +83,9 @@ struct ImageGallery: View {
                 .tag(index)
             }
         }
+        #if canImport(UIKit)
         .tabViewStyle(.page(indexDisplayMode: .never))
+        #endif
         .onChange(of: currentIndex) { _, _ in
             currentZoom = 1.0
             resetHideTimer()

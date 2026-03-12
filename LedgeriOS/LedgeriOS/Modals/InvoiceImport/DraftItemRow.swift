@@ -64,7 +64,7 @@ struct DraftItemRow: View {
                         TextField("1", value: $item.qty, format: .number)
                             .font(Typography.caption)
                             .foregroundStyle(BrandColors.textPrimary)
-                            .keyboardType(.numberPad)
+                            .platformKeyboardType(.numberPad)
                             .frame(width: 30)
                     }
 
@@ -75,7 +75,7 @@ struct DraftItemRow: View {
                         TextField("0.00", text: $item.unitPrice)
                             .font(Typography.caption)
                             .foregroundStyle(BrandColors.textPrimary)
-                            .keyboardType(.decimalPad)
+                            .platformKeyboardType(.decimalPad)
                             .frame(width: 60)
                     }
 

@@ -26,9 +26,11 @@ struct ProjectDetailView: View {
                 Text("Finances").tag("finances")
             }
             .pickerStyle(.segmented)
+            #if canImport(UIKit)
             .onAppear {
                 UISegmentedControl.appearance().apportionsSegmentWidthsByContent = true
             }
+            #endif
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

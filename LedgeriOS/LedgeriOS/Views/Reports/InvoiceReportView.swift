@@ -5,6 +5,9 @@ struct InvoiceReportView: View {
     let projectName: String
     let clientName: String
     var businessName: String?
+    var businessLogoUrl: String?
+
+    @State private var logoImage: UIImage?
 
     var body: some View {
         Group {
@@ -16,6 +19,12 @@ struct InvoiceReportView: View {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 // Header
                 VStack(alignment: .leading, spacing: Spacing.xs) {
+                    if let logoImage {
+                        Image(uiImage: logoImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 48)
+                    }
                     if let businessName, !businessName.isEmpty {
                         Text(businessName)
                             .font(Typography.h2)
@@ -98,6 +107,14 @@ struct InvoiceReportView: View {
         } // Group
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
+        .task {
+            if let urlString = businessLogoUrl, let url = URL(string: urlString) {
+                if let (data, _) = try? await URLSession.shared.data(from: url),
+                   let image = UIImage(data: data) {
+                    logoImage = image
+                }
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
@@ -208,7 +225,8 @@ struct InvoiceReportView: View {
             data: data,
             projectName: projectName,
             clientName: clientName,
-            businessName: businessName
+            businessName: businessName,
+            logoImage: logoImage
         )
         ReportPDFSharing.sharePDF(
             content: pdfContent,
@@ -224,6 +242,7 @@ private struct InvoiceReportPDFContent: View {
     let projectName: String
     let clientName: String
     var businessName: String?
+    var logoImage: UIImage?
 
     private typealias S = ReportPDFStyles
 
@@ -310,6 +329,13 @@ private struct InvoiceReportPDFContent: View {
 
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
+            if let logoImage {
+                Image(uiImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .padding(.bottom, 8)
+            }
             if let businessName, !businessName.isEmpty {
                 Text(businessName)
                     .font(S.subtitleFont)

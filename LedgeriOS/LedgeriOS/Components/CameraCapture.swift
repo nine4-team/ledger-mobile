@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import AVFoundation
 import SwiftUI
 
@@ -327,3 +328,4 @@ private struct ShutterButtonStyle: ButtonStyle {
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
+#endif

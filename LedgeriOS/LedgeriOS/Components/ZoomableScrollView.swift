@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import SwiftUI
 import UIKit
 
@@ -274,3 +275,44 @@ struct ZoomableScrollView: UIViewRepresentable {
         coordinator.loadTask?.cancel()
     }
 }
+#elseif canImport(AppKit)
+import SwiftUI
+
+/// macOS fallback — simple async image viewer without UIScrollView zoom.
+struct ZoomableScrollView: View {
+    let url: URL?
+    @Binding var zoomScale: CGFloat
+    var onSingleTap: (() -> Void)?
+
+    var body: some View {
+        Group {
+            if let url {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(zoomScale)
+                    case .failure:
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundStyle(.white.opacity(0.5))
+                            .font(.system(size: 36))
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
+                Image(systemName: "exclamationmark.triangle")
+                    .foregroundStyle(.white.opacity(0.5))
+                    .font(.system(size: 36))
+            }
+        }
+        .onTapGesture {
+            onSingleTap?()
+        }
+    }
+}
+#endif

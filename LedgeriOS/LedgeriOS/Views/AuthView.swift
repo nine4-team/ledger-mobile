@@ -175,6 +175,7 @@ struct AuthView: View {
 
     @ViewBuilder
     private var googleLogo: some View {
+        #if canImport(UIKit)
         if let bundle = googleSignInBundle,
            let uiImage = UIImage(named: "google", in: bundle, compatibleWith: nil) {
             Image(uiImage: uiImage)
@@ -185,6 +186,11 @@ struct AuthView: View {
                 .font(.title3)
                 .foregroundStyle(BrandColors.primary)
         }
+        #else
+        Image(systemName: "g.circle.fill")
+            .font(.title3)
+            .foregroundStyle(BrandColors.primary)
+        #endif
     }
 
     private var googleSignInBundle: Bundle? {

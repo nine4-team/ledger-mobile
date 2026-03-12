@@ -29,7 +29,7 @@ struct ProjectPickerList: View {
                 listener = nil
             }
             .navigationTitle("Select Project")
-            .navigationBarTitleDisplayMode(.inline)
+            .navBarTitleDisplayMode(.inline)
         }
     }
 

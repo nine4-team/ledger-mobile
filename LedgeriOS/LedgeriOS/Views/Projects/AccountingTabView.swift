@@ -112,7 +112,8 @@ struct AccountingTabView: View {
                     ),
                     projectName: projectContext.project?.name ?? "",
                     clientName: projectContext.project?.clientName ?? "",
-                    businessName: businessProfile?.name
+                    businessName: businessProfile?.name,
+                    businessLogoUrl: businessProfile?.logoUrl
                 )
             case .clientSummary:
                 ClientSummaryReportView(
@@ -123,7 +124,9 @@ struct AccountingTabView: View {
                         categories: projectContext.budgetCategories
                     ),
                     projectName: projectContext.project?.name ?? "",
-                    businessName: businessProfile?.name
+                    clientName: projectContext.project?.clientName,
+                    businessName: businessProfile?.name,
+                    businessLogoUrl: businessProfile?.logoUrl
                 )
             case .propertyManagement:
                 PropertyManagementReportView(
@@ -131,7 +134,10 @@ struct AccountingTabView: View {
                         items: projectContext.items,
                         spaces: projectContext.spaces
                     ),
-                    projectName: projectContext.project?.name ?? ""
+                    projectName: projectContext.project?.name ?? "",
+                    clientName: projectContext.project?.clientName,
+                    businessName: businessProfile?.name,
+                    businessLogoUrl: businessProfile?.logoUrl
                 )
             }
         }

@@ -23,11 +23,13 @@ struct LedgerApp: App {
         )
 
         // Global segmented control styling — gold selection tint, white text
+        #if canImport(UIKit)
         UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(BrandColors.primary)
         UISegmentedControl.appearance().setTitleTextAttributes(
             [.foregroundColor: UIColor.white],
             for: .selected
         )
+        #endif
 
         #if DEBUG
         FirebaseEmulatorConfig.configureIfEnabled()

@@ -78,7 +78,7 @@ struct EditChecklistModal: View {
             .padding(Spacing.screenPadding)
         }
         .navigationTitle("Edit Checklists")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         }
     }
 

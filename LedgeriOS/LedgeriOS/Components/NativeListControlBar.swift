@@ -190,7 +190,7 @@ struct AnyGlassModifier: ViewModifier {
 
 struct CapsuleGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, macOS 26.0, *) {
             content.glassEffect(in: .capsule)
         } else {
             content
@@ -203,7 +203,7 @@ struct CapsuleGlassModifier: ViewModifier {
 
 struct CircleGlassModifier: ViewModifier {
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, macOS 26.0, *) {
             content.glassEffect(in: .circle)
         } else {
             content
