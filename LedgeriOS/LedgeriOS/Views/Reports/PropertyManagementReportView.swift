@@ -7,7 +7,7 @@ struct PropertyManagementReportView: View {
     var businessName: String?
     var businessLogoUrl: String?
 
-    @State private var logoImage: UIImage?
+    @State private var logoImage: PlatformImage?
 
     var body: some View {
         Group {
@@ -20,10 +20,17 @@ struct PropertyManagementReportView: View {
                 // Header
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     if let logoImage {
+                        #if canImport(UIKit)
                         Image(uiImage: logoImage)
                             .resizable()
                             .scaledToFit()
                             .frame(height: 48)
+                        #elseif canImport(AppKit)
+                        Image(nsImage: logoImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 48)
+                        #endif
                     }
                     if let businessName, !businessName.isEmpty {
                         Text(businessName)
@@ -92,7 +99,7 @@ struct PropertyManagementReportView: View {
         .task {
             if let urlString = businessLogoUrl, let url = URL(string: urlString) {
                 if let (data, _) = try? await URLSession.shared.data(from: url),
-                   let image = UIImage(data: data) {
+                   let image = PlatformImage(data: data) {
                     logoImage = image
                 }
             }
@@ -177,7 +184,7 @@ private struct PropertyManagementPDFContent: View {
     let projectName: String
     var clientName: String?
     var businessName: String?
-    var logoImage: UIImage?
+    var logoImage: PlatformImage?
 
     private typealias S = ReportPDFStyles
 
@@ -277,11 +284,19 @@ private struct PropertyManagementPDFContent: View {
     private func pdfHeader(title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             if let logoImage {
+                #if canImport(UIKit)
                 Image(uiImage: logoImage)
                     .resizable()
                     .scaledToFit()
                     .frame(height: 60)
                     .padding(.bottom, 8)
+                #elseif canImport(AppKit)
+                Image(nsImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .padding(.bottom, 8)
+                #endif
             }
             if let businessName, !businessName.isEmpty {
                 Text(businessName)
