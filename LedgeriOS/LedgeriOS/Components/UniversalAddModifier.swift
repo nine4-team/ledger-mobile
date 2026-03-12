@@ -2,10 +2,65 @@ import SwiftUI
 
 // MARK: - Universal Add Modifier
 
-/// Adds a branded "+" toolbar button that presents a "Create New" menu
+/// Adds a branded "+" toolbar button that presents a native Menu dropdown
 /// with options to create a project, item, or transaction.
-/// Uses deferred-action pattern to sequence menu → creation form sheets.
+/// Uses native Menu for instant response — no intermediate sheet animation.
 struct UniversalAddModifier: ViewModifier {
+    @State private var showNewProject = false
+    @State private var showNewItem = false
+    @State private var showNewTransaction = false
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItem(placement: .trailingNavBar) {
+                    Menu {
+                        Button {
+                            showNewProject = true
+                        } label: {
+                            Label("New Project", systemImage: "folder.badge.plus")
+                        }
+                        Button {
+                            showNewItem = true
+                        } label: {
+                            Label("New Item", systemImage: "shippingbox")
+                        }
+                        Button {
+                            showNewTransaction = true
+                        } label: {
+                            Label("New Transaction", systemImage: "creditcard")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 28, height: 28)
+                            .background(BrandColors.primary)
+                            .clipShape(Circle())
+                    }
+                    .accessibilityLabel("Create new")
+                }
+            }
+            .sheet(isPresented: $showNewProject) {
+                NewProjectView()
+                    .sheetStyle(.form)
+            }
+            .sheet(isPresented: $showNewItem) {
+                NewItemView(context: .inventory)
+                    .sheetStyle(.form)
+            }
+            .sheet(isPresented: $showNewTransaction) {
+                NewTransactionView(context: .inventory)
+                    .sheetStyle(.form)
+            }
+    }
+}
+
+// MARK: - Sheet-Based Universal Add Modifier (preserved for fallback)
+
+/// Alternative version using ActionMenuSheet for richer styling.
+/// Trade-off: has a dismiss animation delay before the creation form appears.
+struct UniversalAddSheetModifier: ViewModifier {
     @State private var showAddMenu = false
     @State private var pendingCreationAction: (() -> Void)?
     @State private var showNewProject = false
@@ -77,7 +132,13 @@ struct UniversalAddModifier: ViewModifier {
 }
 
 extension View {
+    /// Universal add button using native Menu (fast, no intermediate animation).
     func universalAddButton() -> some View {
         modifier(UniversalAddModifier())
+    }
+
+    /// Universal add button using ActionMenuSheet (richer styling, slower transition).
+    func universalAddButtonSheet() -> some View {
+        modifier(UniversalAddSheetModifier())
     }
 }
