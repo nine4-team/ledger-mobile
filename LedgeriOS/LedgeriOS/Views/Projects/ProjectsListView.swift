@@ -77,14 +77,6 @@ struct ProjectsListView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            ToolbarItem(placement: .trailingNavBar) {
-                Button {
-                    showNewProject = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
         }
         .sheet(isPresented: $showNewProject) {
             NewProjectView()
@@ -99,6 +91,7 @@ struct ProjectsListView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createProject)) { _ in
             showNewProject = true
         }
+        .universalAddButton()
         .background(BrandColors.background)
     }
 

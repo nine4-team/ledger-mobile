@@ -6,10 +6,6 @@ struct InventoryView: View {
     @Environment(AuthManager.self) private var authManager
 
     @State private var selectedTab: String
-    @State private var showNewItem = false
-    @State private var showNewTransaction = false
-    @State private var showNewSpace = false
-                
     init() {
         let saved = UserDefaults.standard.integer(forKey: "inventorySelectedTab")
         let tabIds = ["items", "transactions", "spaces"]
@@ -61,30 +57,6 @@ struct InventoryView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            ToolbarItem(placement: .trailingNavBar) {
-                Button {
-                    switch selectedTab {
-                    case "transactions": showNewTransaction = true
-                    case "spaces": showNewSpace = true
-                    default: showNewItem = true
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-        }
-        .sheet(isPresented: $showNewItem) {
-            NewItemView(context: .inventory)
-                .sheetStyle(.form)
-        }
-        .sheet(isPresented: $showNewTransaction) {
-            NewTransactionView(context: .inventory)
-                .sheetStyle(.form)
-        }
-        .sheet(isPresented: $showNewSpace) {
-            NewSpaceView(context: .inventory)
-                .sheetStyle(.form)
         }
         .task {
             guard let accountId = accountContext.currentAccountId else { return }
@@ -99,6 +71,7 @@ struct InventoryView: View {
                 inventoryContext.lastSelectedTab = index
             }
         }
+        .universalAddButton()
         .background(BrandColors.background)
     }
 }

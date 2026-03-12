@@ -122,6 +122,7 @@ struct UniversalSearchView: View {
             selectedItemIds.removeAll()
             selectedTransactionIds.removeAll()
         }
+        .universalAddButton()
         .background(BrandColors.background)
         // Item bulk action sheets
         .sheet(isPresented: $showItemBulkActions) {
