@@ -258,7 +258,11 @@ struct SharedItemsList: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xl)
         } else {
-            LazyVStack(spacing: Spacing.cardListGap) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                alignment: .leading,
+                spacing: Spacing.cardListGap
+            ) {
                 if showGrouped {
                     ForEach(groups) { group in
                         if group.count > 1 {
@@ -280,25 +284,27 @@ struct SharedItemsList: View {
     @ViewBuilder
     private var itemList: some View {
         ScrollView {
-            AdaptiveContentWidth {
-                LazyVStack(spacing: Spacing.cardListGap) {
-                    if showGrouped {
-                        ForEach(groups) { group in
-                            if group.count > 1 {
-                                groupedCard(for: group)
-                            } else if let item = group.items.first {
-                                singleItemCard(for: item)
-                            }
-                        }
-                    } else {
-                        ForEach(processedItems) { item in
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                alignment: .leading,
+                spacing: Spacing.cardListGap
+            ) {
+                if showGrouped {
+                    ForEach(groups) { group in
+                        if group.count > 1 {
+                            groupedCard(for: group)
+                        } else if let item = group.items.first {
                             singleItemCard(for: item)
                         }
                     }
+                } else {
+                    ForEach(processedItems) { item in
+                        singleItemCard(for: item)
+                    }
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
             }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
         }
     }
 

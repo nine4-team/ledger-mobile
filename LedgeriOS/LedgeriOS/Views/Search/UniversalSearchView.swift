@@ -78,7 +78,11 @@ struct UniversalSearchView: View {
                 resultsView
             }
         }
+        #if os(macOS)
+        .navigationTitle("")
+        #else
         .navigationTitle("Search")
+        #endif
         .navBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if !selectedItemIds.isEmpty {
@@ -270,22 +274,24 @@ struct UniversalSearchView: View {
             .padding(.vertical, Spacing.sm)
 
             ScrollView {
-                AdaptiveContentWidth {
-                    LazyVStack(spacing: Spacing.cardListGap) {
-                        switch selectedTab {
-                        case "items":
-                            itemsTab
-                        case "transactions":
-                            transactionsTab
-                        case "spaces":
-                            spacesTab
-                        default:
-                            itemsTab
-                        }
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                    alignment: .leading,
+                    spacing: Spacing.cardListGap
+                ) {
+                    switch selectedTab {
+                    case "items":
+                        itemsTab
+                    case "transactions":
+                        transactionsTab
+                    case "spaces":
+                        spacesTab
+                    default:
+                        itemsTab
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.md)
                 }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.md)
             }
             .scrollContentTopFade()
         }

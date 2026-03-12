@@ -46,27 +46,33 @@ struct ProjectsListView: View {
                 )
             } else {
                 ScrollView {
-                    AdaptiveContentWidth {
-                        LazyVStack(spacing: Spacing.cardListGap) {
-                            ForEach(filteredProjects) { project in
-                                NavigationLink(value: project) {
-                                    ProjectCard(
-                                        project: project,
-                                        budgetPreview: budgetPreviewFor(project)
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                        alignment: .leading,
+                        spacing: Spacing.cardListGap
+                    ) {
+                        ForEach(filteredProjects) { project in
+                            NavigationLink(value: project) {
+                                ProjectCard(
+                                    project: project,
+                                    budgetPreview: budgetPreviewFor(project)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.top, Spacing.md)
-                        .padding(.bottom, Spacing.md)
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.top, Spacing.md)
+                    .padding(.bottom, Spacing.md)
                 }
                 .scrollContentTopFade()
             }
         }
+        #if os(macOS)
+        .navigationTitle("")
+        #else
         .navigationTitle("Projects")
+        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {

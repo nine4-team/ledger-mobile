@@ -52,21 +52,23 @@ struct InventorySpacesSubTab: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                AdaptiveContentWidth {
-                    LazyVStack(spacing: Spacing.cardListGap) {
-                        ForEach(filteredSpaces) { space in
-                            NavigationLink(value: space) {
-                                SpaceCard(
-                                    space: space,
-                                    itemCount: itemCount(for: space)
-                                )
-                            }
-                            .buttonStyle(.plain)
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                    alignment: .leading,
+                    spacing: Spacing.cardListGap
+                ) {
+                    ForEach(filteredSpaces) { space in
+                        NavigationLink(value: space) {
+                            SpaceCard(
+                                space: space,
+                                itemCount: itemCount(for: space)
+                            )
                         }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.bottom, Spacing.sm)
                 }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.bottom, Spacing.sm)
             }
         }
     }

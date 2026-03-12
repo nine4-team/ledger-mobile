@@ -167,25 +167,27 @@ struct InventoryTransactionsSubTab: View {
             .frame(maxHeight: .infinity)
         } else {
             ScrollView {
-                AdaptiveContentWidth {
-                    LazyVStack(spacing: Spacing.cardListGap) {
-                        ForEach(processedTransactions) { transaction in
-                            if let txId = transaction.id {
-                                if selectedIds.isEmpty {
-                                    NavigationLink(value: transaction) {
-                                        transactionCardContent(for: transaction, txId: txId)
-                                    }
-                                    .buttonStyle(.plain)
-                                } else {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                    alignment: .leading,
+                    spacing: Spacing.cardListGap
+                ) {
+                    ForEach(processedTransactions) { transaction in
+                        if let txId = transaction.id {
+                            if selectedIds.isEmpty {
+                                NavigationLink(value: transaction) {
                                     transactionCardContent(for: transaction, txId: txId)
-                                        .onTapGesture { toggleSelection(txId) }
                                 }
+                                .buttonStyle(.plain)
+                            } else {
+                                transactionCardContent(for: transaction, txId: txId)
+                                    .onTapGesture { toggleSelection(txId) }
                             }
                         }
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.bottom, Spacing.sm)
                 }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.bottom, Spacing.sm)
             }
         }
     }
