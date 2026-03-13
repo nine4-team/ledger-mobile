@@ -56,6 +56,11 @@ struct ActionMenuSheet: View {
             .toolbar(title == nil ? .hidden : .automatic, for: .navigationBar)
             #endif
             .toolbar {
+                #if os(macOS)
+                ToolbarItem(placement: .cancellationAction) {
+                    EmptyView()
+                }
+                #endif
                 if !closeOnItemPress && hasActiveSelections {
                     ToolbarItem(placement: .trailingNavBar) {
                         Button("Clear") {

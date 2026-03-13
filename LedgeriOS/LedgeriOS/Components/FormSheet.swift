@@ -69,20 +69,6 @@ struct FormSheet<Content: View>: View {
             .background(BrandColors.surface)
             .navigationTitle(title)
             .navBarTitleDisplayMode(.inline)
-            #if !os(macOS)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(BrandColors.textSecondary)
-                    }
-                    .accessibilityLabel("Close")
-                }
-            }
-            #endif
         }
     }
 }
