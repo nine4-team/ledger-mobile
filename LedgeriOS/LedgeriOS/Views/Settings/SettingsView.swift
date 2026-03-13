@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
     @State private var selectedTab = "general"
 
@@ -50,23 +49,13 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         #endif
         .navBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .trailingNavBar) {
-                Button {
-                    authManager.signOut()
-                } label: {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                        .foregroundStyle(BrandColors.primary)
-                }
-                .accessibilityLabel("Sign Out")
-            }
-        }
     }
 }
 
 // MARK: - General Settings
 
 private struct GeneralSettingsView: View {
+    @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
     @AppStorage("colorSchemePreference") private var colorSchemePreference = "system"
 
@@ -112,6 +101,13 @@ private struct GeneralSettingsView: View {
                     // Debug
                     NavigationLink("Firestore Test") {
                         FirestoreTestView()
+                    }
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.primary)
+
+                    // Sign Out
+                    Button("Sign Out") {
+                        authManager.signOut()
                     }
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.primary)
