@@ -54,6 +54,7 @@ struct AppButton: View {
             .padding(.horizontal, 16)
             .background(backgroundColor)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+            .contentShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
             .overlay {
                 if variant == .secondary {
                     RoundedRectangle(cornerRadius: Dimensions.buttonRadius)

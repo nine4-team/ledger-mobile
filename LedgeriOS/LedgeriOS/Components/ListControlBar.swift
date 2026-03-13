@@ -77,6 +77,7 @@ struct ListControlBar<LeftElement: View>: View {
                     : BrandColors.buttonSecondaryBackground
             )
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+            .contentShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
                     .stroke(
@@ -106,6 +107,7 @@ struct ListControlBar<LeftElement: View>: View {
                         : BrandColors.buttonSecondaryBackground
                 )
                 .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                .contentShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
                         .stroke(
@@ -127,6 +129,7 @@ struct ListControlBar<LeftElement: View>: View {
                 .font(.system(size: 16))
                 .foregroundStyle(BrandColors.textSecondary)
                 .frame(width: 40, height: 40)
+                .contentShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                         .stroke(

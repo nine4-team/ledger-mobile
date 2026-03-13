@@ -22,10 +22,10 @@ struct DetailRow<Value: View>: View {
         if let onTap {
             Button(action: onTap) {
                 rowContent
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .contentShape(Rectangle())
-            .frame(minHeight: 44)
         } else {
             rowContent
         }

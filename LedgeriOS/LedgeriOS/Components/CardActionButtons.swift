@@ -14,9 +14,9 @@ struct CardKebabButton: View {
                 .foregroundStyle(BrandColors.textSecondary)
                 .rotationEffect(.degrees(90))
                 .padding(6)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
         .accessibilityLabel("More options")
     }
 }
@@ -34,9 +34,9 @@ struct CardBookmarkButton: View {
                 .font(.system(size: 18))
                 .foregroundStyle(isBookmarked ? StatusColors.badgeError : BrandColors.primary)
                 .padding(6)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
         .accessibilityLabel(isBookmarked ? "Remove bookmark" : "Add bookmark")
     }
 }
@@ -53,9 +53,9 @@ struct CardSelectorButton: View {
     var body: some View {
         Button(action: action) {
             SelectorCircle(isSelected: isSelected, indicator: .dot)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
         .accessibilityLabel("Select \(label)")
     }
 }

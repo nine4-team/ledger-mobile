@@ -160,8 +160,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .tint(.secondary)
             .font(.system(size: 16))
             .imageScale(.medium)
-            .frame(width: 44, height: 44)
-            .contentShape(Circle())
             .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
     }
 }
@@ -169,6 +167,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
 struct CircleBarButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
             .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }

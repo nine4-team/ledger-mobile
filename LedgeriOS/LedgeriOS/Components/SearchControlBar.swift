@@ -41,8 +41,6 @@ struct SearchControlBar: View {
                 .tint(.secondary)
                 .font(.system(size: 16))
                 .imageScale(.medium)
-                .frame(width: 44, height: 44)
-                .contentShape(Circle())
                 .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
                 .accessibilityLabel("Add")
             }
