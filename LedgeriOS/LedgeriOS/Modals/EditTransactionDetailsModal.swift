@@ -141,7 +141,7 @@ struct EditTransactionDetailsModal: View {
                         }
                         .padding(.horizontal, Spacing.md)
                         .frame(minHeight: 44)
-                        .background(BrandColors.inputBackground)
+                        .contentShape(Rectangle())
                         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                         .overlay(
                             RoundedRectangle(cornerRadius: Dimensions.inputRadius)

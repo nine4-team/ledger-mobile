@@ -57,7 +57,6 @@ struct NewSpaceView: View {
                     .font(Typography.input)
                     .padding(.horizontal, Spacing.md)
                     .frame(height: 44)
-                    .background(BrandColors.inputBackground)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: Dimensions.inputRadius)

@@ -183,7 +183,6 @@ struct NewProjectView: View {
                                     .frame(width: 100)
                                     .padding(.horizontal, Spacing.sm)
                                     .frame(height: 36)
-                                    .background(BrandColors.inputBackground)
                                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: Dimensions.inputRadius)
@@ -220,7 +219,6 @@ struct NewProjectView: View {
                     .foregroundStyle(BrandColors.textSecondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(BrandColors.inputBackground)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: Dimensions.inputRadius)
@@ -228,6 +226,7 @@ struct NewProjectView: View {
                     )
                 }
             }
+            .buttonStyle(.plain)
         }
         .onChange(of: heroImageItem) { _, newItem in
             Task {

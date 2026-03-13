@@ -37,6 +37,7 @@ struct NewTransactionView: View {
 
     // Pickers
     @State private var showCategoryPicker = false
+    @State private var showVendorPicker = false
 
     private let transactionsService = TransactionsService()
 
@@ -72,6 +73,18 @@ struct NewTransactionView: View {
                 categories: projectContext?.enabledBudgetCategories ?? [],
                 selectedId: selectedCategoryId,
                 onSelect: { cat in selectedCategoryId = cat?.id }
+            )
+        }
+        .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
+            VendorPickerModal(
+                selectedValue: destination.isEmpty ? source : destination,
+                onSelect: { newValue in
+                    if currentStep == 2 || !destination.isEmpty {
+                        destination = newValue
+                    } else {
+                        source = newValue
+                    }
+                }
             )
         }
     }
@@ -116,7 +129,7 @@ struct NewTransactionView: View {
                     .foregroundStyle(BrandColors.textSecondary)
             }
             .padding(Spacing.md)
-            .background(BrandColors.inputBackground)
+            .contentShape(Rectangle())
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
@@ -142,7 +155,7 @@ struct NewTransactionView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
-                VendorPickerField(value: $destination, label: "Source / Vendor")
+                VendorPickerField(value: $destination, label: "Source / Vendor", showPicker: $showVendorPicker)
             }
         }
     }
@@ -174,9 +187,9 @@ struct NewTransactionView: View {
                     .foregroundStyle(BrandColors.textSecondary)
 
                 if !destination.isEmpty {
-                    VendorPickerField(value: $destination, label: "Source / Vendor")
+                    VendorPickerField(value: $destination, label: "Source / Vendor", showPicker: $showVendorPicker)
                 } else {
-                    VendorPickerField(value: $source, label: "Source / Vendor")
+                    VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
                 }
 
                 // Date
@@ -256,13 +269,14 @@ struct NewTransactionView: View {
                             .font(Typography.input)
                             .padding(.horizontal, Spacing.md)
                             .frame(height: 44)
-                            .background(BrandColors.inputBackground)
+                            .contentShape(Rectangle())
                             .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                             .overlay(
                                 RoundedRectangle(cornerRadius: Dimensions.inputRadius)
                                     .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
                             )
                         }
+                        .buttonStyle(.plain)
                     }
                 }
 

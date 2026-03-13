@@ -24,6 +24,7 @@ struct DetailRow<Value: View>: View {
                 rowContent
             }
             .buttonStyle(.plain)
+            .contentShape(Rectangle())
             .frame(minHeight: 44)
         } else {
             rowContent

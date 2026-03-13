@@ -41,6 +41,7 @@ struct NewItemView: View {
     @State private var showTransactionPicker = false
     @State private var showSpacePicker = false
     @State private var showStatusPicker = false
+    @State private var showVendorPicker = false
 
     // Image source
     @State private var showImageSourceMenu = false
@@ -93,6 +94,9 @@ struct NewItemView: View {
                 onSelect: { tx in selectedTransactionId = tx.id }
             )
         }
+        .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
+            VendorPickerModal(selectedValue: source, onSelect: { source = $0 })
+        }
     }
 
     // MARK: - Step 1: Essentials
@@ -114,7 +118,7 @@ struct NewItemView: View {
                 imagesSection
                 FormField(label: "Name", text: $name, placeholder: "Item name")
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
-                VendorPickerField(value: $source)
+                VendorPickerField(value: $source, showPicker: $showVendorPicker)
                 FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
             }
         }
@@ -147,6 +151,7 @@ struct NewItemView: View {
                         Button { showTransactionPicker = true } label: {
                             pickerButton(label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction")
                         }
+                        .buttonStyle(.plain)
                     }
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -157,6 +162,7 @@ struct NewItemView: View {
                         Button { showSpacePicker = true } label: {
                             pickerButton(label: selectedSpace?.name ?? "Select Space")
                         }
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -174,8 +180,42 @@ struct NewItemView: View {
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
 
-                    Stepper("\(quantity)", value: $quantity, in: 1...9999)
-                        .font(Typography.input)
+                    HStack {
+                        Button {
+                            if quantity > 1 { quantity -= 1 }
+                        } label: {
+                            Image(systemName: "minus")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(quantity > 1 ? BrandColors.textPrimary : BrandColors.textDisabled)
+                                .frame(width: 44, height: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(quantity <= 1)
+
+                        Spacer()
+
+                        Text("\(quantity)")
+                            .font(Typography.input)
+                            .foregroundStyle(BrandColors.textPrimary)
+
+                        Spacer()
+
+                        Button {
+                            if quantity < 9999 { quantity += 1 }
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(BrandColors.textPrimary)
+                                .frame(width: 44, height: 44)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .frame(height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
                 }
 
                 // Status
@@ -189,6 +229,7 @@ struct NewItemView: View {
                     } label: {
                         pickerButton(label: statusDisplayLabel(status))
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -241,13 +282,13 @@ struct NewItemView: View {
                 .foregroundStyle(BrandColors.textSecondary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(BrandColors.inputBackground)
                 .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.inputRadius)
                         .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
                 )
             }
+            .buttonStyle(.plain)
 
             if !imageDatas.isEmpty {
                 Text("\(imageDatas.count) \(imageDatas.count == 1 ? "image" : "images")")
@@ -328,7 +369,7 @@ struct NewItemView: View {
         .font(Typography.input)
         .padding(.horizontal, Spacing.md)
         .frame(height: 44)
-        .background(BrandColors.inputBackground)
+        .contentShape(Rectangle())
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.inputRadius)

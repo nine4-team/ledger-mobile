@@ -10,6 +10,7 @@ struct EditItemDetailsModal: View {
 
     @State private var name: String
     @State private var source: String
+    @State private var showVendorPicker = false
     @State private var sku: String
     @State private var purchasePrice: String
     @State private var projectPrice: String
@@ -38,7 +39,7 @@ struct EditItemDetailsModal: View {
         ) {
             VStack(spacing: Spacing.md) {
                 FormField(label: "Name", text: $name, placeholder: "Item name")
-                VendorPickerField(value: $source)
+                VendorPickerField(value: $source, showPicker: $showVendorPicker)
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
                 FormField(label: "Purchase Price", text: $purchasePrice, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
@@ -47,6 +48,9 @@ struct EditItemDetailsModal: View {
                 FormField(label: "Market Value", text: $marketValue, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
             }
+        }
+        .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
+            VendorPickerModal(selectedValue: source, onSelect: { source = $0 })
         }
     }
 

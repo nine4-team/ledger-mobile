@@ -32,7 +32,6 @@ struct EditNotesModal: View {
                 .scrollContentBackground(.hidden)
                 .padding(Spacing.md)
                 .frame(minHeight: 200)
-                .background(BrandColors.inputBackground)
                 .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.inputRadius)

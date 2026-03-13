@@ -219,7 +219,7 @@ struct ImportInvoiceModal: View {
                                     .foregroundStyle(BrandColors.textTertiary)
                             }
                             .padding(Spacing.sm)
-                            .background(BrandColors.inputBackground)
+                            .contentShape(Rectangle())
                             .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                             .overlay(
                                 RoundedRectangle(cornerRadius: Dimensions.inputRadius)

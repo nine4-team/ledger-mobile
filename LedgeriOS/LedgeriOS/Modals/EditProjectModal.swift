@@ -217,7 +217,6 @@ struct EditProjectModal: View {
                                     .frame(width: 100)
                                     .padding(.horizontal, Spacing.sm)
                                     .frame(height: 36)
-                                    .background(BrandColors.inputBackground)
                                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: Dimensions.inputRadius)
@@ -261,7 +260,6 @@ struct EditProjectModal: View {
                     .foregroundStyle(BrandColors.textSecondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(BrandColors.inputBackground)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: Dimensions.inputRadius)
@@ -269,6 +267,7 @@ struct EditProjectModal: View {
                     )
                 }
             }
+            .buttonStyle(.plain)
         }
         .onChange(of: heroImageItem) { _, newItem in
             Task {

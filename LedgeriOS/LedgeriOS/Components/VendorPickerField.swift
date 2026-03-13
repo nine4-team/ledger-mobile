@@ -1,21 +1,23 @@
 import SwiftUI
 import FirebaseFirestore
 
-/// Inline vendor/source picker that replaces a plain text FormField.
+/// Picker-button for vendor/source selection.
 ///
-/// Shows a scrollable list of preset vendors (from VendorDefaults) with radio-button
-/// selection, plus an "Other" option for free-text entry. Falls back to a plain
-/// FormField when no vendor presets are configured.
+/// Displays as a tappable row (like transaction/space pickers) showing the current
+/// vendor value with a chevron. Tapping sets `showPicker` to true — the parent view
+/// must attach `.adaptivePresentation(isPresented:style:.picker)` with a
+/// `VendorPickerModal` at the top level of its body.
+///
+/// Falls back to a plain FormField when no vendor presets are configured.
 struct VendorPickerField: View {
     @Binding var value: String
     var label: String = "Source"
+    @Binding var showPicker: Bool
 
     @Environment(AccountContext.self) private var accountContext
 
     @State private var vendors: [String] = []
-    @State private var otherMode = false
     @State private var listener: ListenerRegistration?
-    @FocusState private var otherFieldFocused: Bool
 
     private let service = VendorDefaultsService()
 
@@ -40,42 +42,123 @@ struct VendorPickerField: View {
                     .font(Typography.label)
                     .foregroundStyle(BrandColors.textSecondary)
 
-                Divider()
-
-                ScrollView {
-                    VStack(spacing: Spacing.xs) {
-                        ForEach(displayVendors, id: \.self) { vendor in
-                            vendorOption(vendor, isSelected: !otherMode && value == vendor) {
-                                otherMode = false
-                                otherFieldFocused = false
-                                value = vendor
-                            }
-                        }
-
-                        vendorOption("Other", isSelected: otherMode) {
-                            otherMode = true
-                            value = ""
-                            otherFieldFocused = true
-                        }
+                Button { showPicker = true } label: {
+                    HStack {
+                        Text(value.isEmpty ? "Select Source" : value)
+                            .foregroundStyle(value.isEmpty ? BrandColors.textSecondary : BrandColors.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(BrandColors.textSecondary)
                     }
-                    .padding(.vertical, Spacing.xs)
+                    .font(Typography.input)
+                    .padding(.horizontal, Spacing.md)
+                    .frame(height: 44)
+                    .contentShape(Rectangle())
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
                 }
-                .frame(maxHeight: 200)
+                .buttonStyle(.plain)
+            }
+        }
+        .onAppear { startListening() }
+        .onDisappear { listener?.remove() }
+    }
 
-                Divider()
+    // MARK: - Data
+
+    private func startListening() {
+        guard let accountId = accountContext.currentAccountId else { return }
+
+        Task { try? await service.initializeDefaults(accountId: accountId) }
+
+        listener = service.subscribe(accountId: accountId) { defaults in
+            vendors = defaults?.vendors ?? []
+        }
+    }
+}
+
+// MARK: - Vendor Picker Modal
+
+/// Sheet modal presenting vendor radio options + "Other" free-text entry.
+/// Loads its own vendor data from Firestore.
+struct VendorPickerModal: View {
+    let selectedValue: String
+    let onSelect: (String) -> Void
+
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var vendors: [String] = []
+    @State private var listener: ListenerRegistration?
+    @State private var otherMode: Bool
+    @State private var otherText: String
+    @FocusState private var otherFieldFocused: Bool
+
+    private let service = VendorDefaultsService()
+
+    init(selectedValue: String, onSelect: @escaping (String) -> Void) {
+        self.selectedValue = selectedValue
+        self.onSelect = onSelect
+        // Other mode will be resolved once vendors load
+        _otherMode = State(initialValue: false)
+        _otherText = State(initialValue: "")
+    }
+
+    /// Filtered vendor list (no empty strings, deduplicated).
+    private var displayVendors: [String] {
+        var seen = Set<String>()
+        return vendors.filter { v in
+            let trimmed = v.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
+            seen.insert(trimmed)
+            return true
+        }
+    }
+
+    var body: some View {
+        FormSheet(
+            title: "Select Source",
+            primaryAction: FormSheetAction(title: "Done") {
+                if otherMode {
+                    onSelect(otherText)
+                }
+                dismiss()
+            },
+            secondaryAction: FormSheetAction(title: "Clear") {
+                onSelect("")
+                dismiss()
+            }
+        ) {
+            VStack(spacing: Spacing.xs) {
+                ForEach(displayVendors, id: \.self) { vendor in
+                    vendorOption(vendor, isSelected: !otherMode && selectedValue == vendor) {
+                        otherMode = false
+                        otherFieldFocused = false
+                        onSelect(vendor)
+                    }
+                }
+
+                vendorOption("Other", isSelected: otherMode) {
+                    otherMode = true
+                    otherText = ""
+                    otherFieldFocused = true
+                }
 
                 if otherMode {
-                    TextField("e.g. Home Depot, Amazon", text: $value)
+                    TextField("e.g. Home Depot, Amazon", text: $otherText)
                         .font(Typography.input)
                         .padding(.horizontal, Spacing.md)
                         .frame(minHeight: 44)
-                        .background(BrandColors.inputBackground)
                         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                         .overlay(
                             RoundedRectangle(cornerRadius: Dimensions.inputRadius)
                                 .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
                         )
                         .focused($otherFieldFocused)
+                        .padding(.top, Spacing.xs)
                 }
             }
         }
@@ -83,13 +166,10 @@ struct VendorPickerField: View {
         .onDisappear { listener?.remove() }
     }
 
-    // MARK: - Vendor Option Row
-
     @ViewBuilder
     private func vendorOption(_ name: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Spacing.md) {
-                // Radio circle
                 Circle()
                     .strokeBorder(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: 2)
                     .frame(width: 20, height: 20)
@@ -124,15 +204,14 @@ struct VendorPickerField: View {
     private func startListening() {
         guard let accountId = accountContext.currentAccountId else { return }
 
-        Task { try? await service.initializeDefaults(accountId: accountId) }
-
         listener = service.subscribe(accountId: accountId) { defaults in
             vendors = defaults?.vendors ?? []
 
             // Auto-enable "Other" mode if current value doesn't match any preset
             let available = displayVendors
-            if !available.isEmpty && !value.isEmpty && !available.contains(value) {
+            if !available.isEmpty && !selectedValue.isEmpty && !available.contains(selectedValue) {
                 otherMode = true
+                otherText = selectedValue
             }
         }
     }
@@ -140,12 +219,14 @@ struct VendorPickerField: View {
 
 #Preview("With Vendors") {
     @Previewable @State var source = "Amazon"
-    VendorPickerField(value: $source)
+    @Previewable @State var showPicker = false
+    VendorPickerField(value: $source, showPicker: $showPicker)
         .padding()
 }
 
 #Preview("Empty Value") {
     @Previewable @State var source = ""
-    VendorPickerField(value: $source)
+    @Previewable @State var showPicker = false
+    VendorPickerField(value: $source, showPicker: $showPicker)
         .padding()
 }
