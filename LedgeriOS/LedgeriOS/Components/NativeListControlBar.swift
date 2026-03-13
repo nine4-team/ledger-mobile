@@ -89,7 +89,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 }
             }
             .frame(maxWidth: usesCircleButtons ? nil : .infinity)
-            .padding(.horizontal, Spacing.lg)
+            .padding(.horizontal, usesCircleButtons ? Spacing.xl : Spacing.lg)
             .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
             .modifier(containerModifier)
 
@@ -144,7 +144,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             content()
                 .tint(.secondary)
                 .imageScale(.large)
-                .frame(height: Dimensions.smallIconButtonSize)
+                .frame(height: 24)
                 .frame(minWidth: 44)
                 .contentShape(Rectangle())
             Text(label)

@@ -13,7 +13,7 @@ struct CardKebabButton: View {
                 .font(.system(size: 18))
                 .foregroundStyle(BrandColors.textSecondary)
                 .rotationEffect(.degrees(90))
-                .frame(minWidth: Dimensions.smallIconButtonSize, minHeight: Dimensions.smallIconButtonSize)
+                .padding(6)
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
@@ -33,7 +33,7 @@ struct CardBookmarkButton: View {
             Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 18))
                 .foregroundStyle(isBookmarked ? StatusColors.badgeError : BrandColors.primary)
-                .frame(minWidth: Dimensions.smallIconButtonSize, minHeight: Dimensions.smallIconButtonSize)
+                .padding(6)
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())

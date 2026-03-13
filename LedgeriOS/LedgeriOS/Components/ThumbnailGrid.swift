@@ -91,7 +91,7 @@ struct ThumbnailGrid: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
-                        .frame(width: Dimensions.smallIconButtonSize, height: Dimensions.smallIconButtonSize)
+                        .frame(width: 28, height: 28)
                         .background(BrandColors.primary.opacity(0.6))
                         .clipShape(Circle())
                 }
