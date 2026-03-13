@@ -35,6 +35,20 @@ enum Dimensions {
     /// Minimum card width for responsive grid calculation
     static let cardMinWidth: CGFloat = 320
 
+    // MARK: - Tap Targets
+
+    /// Minimum tap/click target for interactive elements (Apple HIG: 44pt)
+    #if os(macOS)
+    static let minTapTarget: CGFloat = 44
+    static let smallIconButtonSize: CGFloat = 36
+    #else
+    static let minTapTarget: CGFloat = 44
+    static let smallIconButtonSize: CGFloat = 34
+    #endif
+
+    /// Minimum padding around icon-only buttons to meet tap target minimums
+    static let iconButtonPadding: CGFloat = 10
+
     // MARK: - Pinned Image
 
     /// Width of the pinned image sidebar on regular-width displays (iPad)

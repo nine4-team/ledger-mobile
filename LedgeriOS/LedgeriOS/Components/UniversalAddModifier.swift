@@ -34,7 +34,7 @@ struct UniversalAddModifier: ViewModifier {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
+                            .frame(width: Dimensions.smallIconButtonSize, height: Dimensions.smallIconButtonSize)
                             .background(BrandColors.primary)
                             .clipShape(Circle())
                     }
@@ -74,7 +74,7 @@ struct UniversalAddSheetModifier: ViewModifier {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
+                            .frame(width: Dimensions.smallIconButtonSize, height: Dimensions.smallIconButtonSize)
                             .background(BrandColors.primary)
                             .clipShape(Circle())
                     }
