@@ -25,6 +25,9 @@ struct SettingsView: View {
                 }
             }
             .pickerStyle(.segmented)
+            #if os(macOS)
+            .labelsHidden()
+            #endif
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
@@ -43,11 +46,7 @@ struct SettingsView: View {
                 }
             }
         }
-        #if os(macOS)
-        .navigationTitle("")
-        #else
         .navigationTitle("Settings")
-        #endif
         .navBarTitleDisplayMode(.inline)
     }
 }
@@ -134,6 +133,9 @@ private struct PresetsSettingsView: View {
                     Text("Vendors").tag("vendors")
                 }
                 .pickerStyle(.segmented)
+                #if os(macOS)
+                .labelsHidden()
+                #endif
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.sm)
 

@@ -37,7 +37,7 @@ struct MainTabView: View {
                 Label("Search", systemImage: "magnifyingglass").tag(AppSection.search)
                 Label("Settings", systemImage: "gear").tag(AppSection.settings)
             }
-            .navigationTitle("Ledger")
+            .navigationTitle("")
         } detail: {
             NavigationStack {
                 switch selectedTab {

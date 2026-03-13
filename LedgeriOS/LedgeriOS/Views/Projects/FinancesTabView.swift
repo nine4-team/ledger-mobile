@@ -10,6 +10,9 @@ struct FinancesTabView: View {
                 Text("Reports").tag("reports")
             }
             .pickerStyle(.segmented)
+            #if os(macOS)
+            .labelsHidden()
+            #endif
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

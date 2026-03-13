@@ -78,11 +78,7 @@ struct UniversalSearchView: View {
                 resultsView
             }
         }
-        #if os(macOS)
-        .navigationTitle("")
-        #else
         .navigationTitle("Search")
-        #endif
         .navBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if !selectedItemIds.isEmpty {
@@ -258,6 +254,9 @@ struct UniversalSearchView: View {
                 Text("Spaces (\(spacesCount))").tag("spaces")
             }
             .pickerStyle(.segmented)
+            #if os(macOS)
+            .labelsHidden()
+            #endif
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

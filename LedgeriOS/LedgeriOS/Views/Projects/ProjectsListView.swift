@@ -29,6 +29,9 @@ struct ProjectsListView: View {
                 Text("Archived").tag("archived")
             }
             .pickerStyle(.segmented)
+            #if os(macOS)
+            .labelsHidden()
+            #endif
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
@@ -68,11 +71,7 @@ struct ProjectsListView: View {
                 .scrollContentTopFade()
             }
         }
-        #if os(macOS)
-        .navigationTitle("")
-        #else
         .navigationTitle("Projects")
-        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {
@@ -131,7 +130,7 @@ struct ProjectsListView: View {
     }
 
     /// Builds budget preview categories from the project's denormalized budgetSummary.
-    /// Fallback chain: (1) pinned categories, (2) top 2 by spend%, (3) Overall Budget.
+    /// Fallback chain: (1) pinned categories, (2) Furnishings only, (3) Overall Budget.
     private func budgetPreviewFor(_ project: Project) -> [BudgetProgress.CategoryProgress] {
         guard let summary = project.budgetSummary,
               let categories = summary.categories else { return [] }
@@ -160,7 +159,7 @@ struct ProjectsListView: View {
             pinnedCategoryIds: pinnedIds
         )
 
-        // Fallback: Overall Budget when no categories have activity
+        // No categories with activity → show Overall Budget
         if sorted.isEmpty {
             let totalBudget = summary.totalBudgetCents ?? 0
             let totalSpent = summary.spentCents ?? 0
@@ -175,10 +174,17 @@ struct ProjectsListView: View {
             )]
         }
 
-        if pinnedIds.isEmpty {
-            return Array(sorted.prefix(2))
+        // Has pinned categories → show only those
+        if !pinnedIds.isEmpty {
+            return sorted.filter { pinnedIds.contains($0.id) }
         }
-        // Show all pinned categories
-        return sorted.filter { pinnedIds.contains($0.id) }
+
+        // Nothing pinned → fall back to Furnishings only
+        if let furnishings = sorted.first(where: { $0.name.localizedCaseInsensitiveCompare("Furnishings") == .orderedSame }) {
+            return [furnishings]
+        }
+
+        // No Furnishings category → show nothing
+        return []
     }
 }

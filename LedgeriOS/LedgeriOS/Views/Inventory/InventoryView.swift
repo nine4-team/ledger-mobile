@@ -49,11 +49,7 @@ struct InventoryView: View {
                 }
             }
         }
-        #if os(macOS)
-        .navigationTitle("")
-        #else
         .navigationTitle("Inventory")
-        #endif
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .leadingNavBar) {
