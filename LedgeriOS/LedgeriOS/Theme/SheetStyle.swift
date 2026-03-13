@@ -19,11 +19,11 @@ enum SheetStyle {
     /// Full-height sheet for complex content (item browsers with search/filter).
     case fullSheet
 
-    /// On macOS, menus should use popover; forms/full sheets stay as sheets.
+    /// On macOS, use popover (click outside to dismiss) for most styles.
     var usesPopoverOnMac: Bool {
         switch self {
-        case .quickMenu, .selectionMenu, .picker: return true
-        case .form, .fullSheet: return false
+        case .quickMenu, .selectionMenu, .picker, .form: return true
+        case .fullSheet: return false
         }
     }
 }

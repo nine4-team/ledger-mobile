@@ -8,6 +8,8 @@ struct FormSheet<Content: View>: View {
     var error: String? = nil
     @ViewBuilder let content: Content
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -64,8 +66,23 @@ struct FormSheet<Content: View>: View {
             .padding(.bottom, Spacing.screenPadding)
             .frame(maxWidth: Dimensions.formMaxWidth)
             .frame(maxWidth: .infinity)
+            .background(BrandColors.surface)
             .navigationTitle(title)
             .navBarTitleDisplayMode(.inline)
+            #if !os(macOS)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
+                    .accessibilityLabel("Close")
+                }
+            }
+            #endif
         }
     }
 }
