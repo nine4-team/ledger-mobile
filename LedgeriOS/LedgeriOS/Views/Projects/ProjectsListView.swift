@@ -184,7 +184,17 @@ struct ProjectsListView: View {
             return [furnishings]
         }
 
-        // No Furnishings category → show nothing
-        return []
+        // No Furnishings category → fall back to Overall Budget
+        let totalBudget = summary.totalBudgetCents ?? 0
+        let totalSpent = summary.spentCents ?? 0
+        guard totalBudget > 0 || totalSpent != 0 else { return [] }
+        return [BudgetProgress.CategoryProgress(
+            id: "overall",
+            name: "Overall Budget",
+            budgetCents: totalBudget,
+            spentCents: totalSpent,
+            categoryType: .general,
+            excludeFromOverallBudget: false
+        )]
     }
 }

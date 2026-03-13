@@ -75,9 +75,9 @@ enum ProjectListCalculations {
     // MARK: - Budget Bar Categories
 
     /// Returns ordered categories for the project card budget bar preview.
-    /// Priority: (1) pinned categories in pinnedCategoryIds order,
-    /// (2) remaining sorted by spend percentage descending,
-    /// (3) if no category has any activity, returns empty (caller shows Overall Budget).
+    /// Pinned categories appear first (in pinnedCategoryIds order),
+    /// followed by remaining categories sorted by spend percentage descending.
+    /// Returns empty when no categories have activity (caller handles fallback).
     static func budgetBarCategories(
         categories: [BudgetProgress.CategoryProgress],
         pinnedCategoryIds: [String]
