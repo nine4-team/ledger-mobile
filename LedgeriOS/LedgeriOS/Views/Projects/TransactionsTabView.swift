@@ -89,6 +89,7 @@ struct TransactionsTabView: View {
         .scrollContentTopFade()
         .safeAreaInset(edge: .top, spacing: 0) {
             controlBar
+                .background(BrandColors.background)
         }
         .safeAreaInset(edge: .bottom) {
             if !selectedIds.isEmpty {

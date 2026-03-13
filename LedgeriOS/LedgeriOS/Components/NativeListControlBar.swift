@@ -88,7 +88,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                     }
                 }
             }
-            .frame(maxWidth: usesCircleButtons ? nil : .infinity)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, usesCircleButtons ? Spacing.xl : Spacing.lg)
             .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
             .modifier(containerModifier)
