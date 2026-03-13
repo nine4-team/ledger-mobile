@@ -180,35 +180,38 @@ struct NewItemView: View {
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
 
-                    HStack {
-                        Button {
-                            if quantity > 1 { quantity -= 1 }
-                        } label: {
-                            Image(systemName: "minus")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(quantity > 1 ? BrandColors.textPrimary : BrandColors.textDisabled)
-                                .frame(width: 44, height: 44)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(quantity <= 1)
-
-                        Spacer()
-
+                    HStack(spacing: 0) {
                         Text("\(quantity)")
                             .font(Typography.input)
                             .foregroundStyle(BrandColors.textPrimary)
+                            .padding(.leading, Spacing.sm)
 
                         Spacer()
 
-                        Button {
-                            if quantity < 9999 { quantity += 1 }
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(BrandColors.textPrimary)
-                                .frame(width: 44, height: 44)
+                        VStack(spacing: 0) {
+                            Button {
+                                if quantity < 9999 { quantity += 1 }
+                            } label: {
+                                Image(systemName: "chevron.up")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(BrandColors.textPrimary)
+                                    .frame(width: 36, height: 22)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                if quantity > 1 { quantity -= 1 }
+                            } label: {
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(quantity > 1 ? BrandColors.textPrimary : BrandColors.textDisabled)
+                                    .frame(width: 36, height: 22)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(quantity <= 1)
                         }
-                        .buttonStyle(.plain)
                     }
                     .frame(height: 44)
                     .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
