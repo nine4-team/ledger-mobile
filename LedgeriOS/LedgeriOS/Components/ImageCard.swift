@@ -34,13 +34,15 @@ struct ImageCard<Content: View>: View {
     @ViewBuilder
     private var imageArea: some View {
         if let imageUrl, !imageUrl.isEmpty {
-            FirebaseImage(url: imageUrl, contentMode: .fill) {
-                placeholder
-                    .overlay { ProgressView() }
-            }
-            .frame(maxWidth: .infinity)
-            .aspectRatio(aspectRatio, contentMode: .fit)
-            .clipped()
+            Color.clear
+                .aspectRatio(aspectRatio, contentMode: .fit)
+                .overlay {
+                    FirebaseImage(url: imageUrl, contentMode: .fill) {
+                        placeholder
+                            .overlay { ProgressView() }
+                    }
+                }
+                .clipped()
         } else {
             placeholder
         }
