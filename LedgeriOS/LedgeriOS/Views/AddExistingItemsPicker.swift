@@ -43,20 +43,13 @@ struct AddExistingItemsPicker: View {
         }
     }
 
-    private var tabOptions: [SegmentOption<PickerTab>] {
-        tabs.map { tab in
-            switch tab {
-            case .suggested:
-                SegmentOption(id: tab, label: "Suggested", icon: Image(systemName: "sparkles"))
-            case .project:
-                SegmentOption(id: tab, label: "Project", icon: Image(systemName: "folder"))
-            case .outside:
-                SegmentOption(id: tab, label: "Outside", icon: Image(systemName: "arrow.right.circle"))
-            case .inventory:
-                SegmentOption(id: tab, label: "Inventory", icon: Image(systemName: "shippingbox"))
-            case .projects:
-                SegmentOption(id: tab, label: "Projects", icon: Image(systemName: "folder"))
-            }
+    private func tabLabel(_ tab: PickerTab) -> String {
+        switch tab {
+        case .suggested: "Suggested"
+        case .project: "Project"
+        case .outside: "Outside"
+        case .inventory: "Inventory"
+        case .projects: "Projects"
         }
     }
 
@@ -111,9 +104,14 @@ struct AddExistingItemsPicker: View {
         NavigationStack {
             VStack(spacing: 0) {
                 if tabs.count > 1 {
-                    SegmentedControl(selection: $activeTab, options: tabOptions)
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.vertical, Spacing.sm)
+                    Picker("", selection: $activeTab) {
+                        ForEach(tabs, id: \.self) { tab in
+                            Text(tabLabel(tab)).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
 
                 SharedItemsList(
