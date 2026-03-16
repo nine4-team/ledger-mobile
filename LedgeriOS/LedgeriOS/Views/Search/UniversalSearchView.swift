@@ -369,8 +369,7 @@ struct UniversalSearchView: View {
                     NavigationLink(value: space) {
                         SpaceCard(
                             space: space,
-                            itemCount: itemCount(for: space),
-                            showNotes: true
+                            itemCount: itemCount(for: space)
                         )
                     }
                     .buttonStyle(.plain)

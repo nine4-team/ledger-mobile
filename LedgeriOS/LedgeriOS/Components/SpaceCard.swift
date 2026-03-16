@@ -4,7 +4,6 @@ import SwiftUI
 struct SpaceCard: View {
     let space: Space
     let itemCount: Int
-    var showNotes: Bool = true
     var onPress: (() -> Void)? = nil
     var onMenuPress: (() -> Void)?
 
@@ -13,27 +12,13 @@ struct SpaceCard: View {
             ?? space.images?.first
     }
 
-    private struct ChecklistRow: Identifiable {
-        let id: String
-        let name: String
-        let checked: Int
-        let total: Int
-        var percentage: Double { total > 0 ? Double(checked) / Double(total) * 100 : 0 }
-    }
-
-    private var checklistRows: [ChecklistRow]? {
+    private var checklistProgress: (text: String, percentage: Double)? {
         guard let checklists = space.checklists, !checklists.isEmpty else { return nil }
-        let rows = checklists
-            .map { cl in
-                ChecklistRow(
-                    id: cl.id,
-                    name: cl.name,
-                    checked: cl.items.filter(\.isChecked).count,
-                    total: cl.items.count
-                )
-            }
-            .filter { $0.total > 0 }
-        return rows.isEmpty ? nil : rows
+        let allItems = checklists.flatMap(\.items)
+        guard !allItems.isEmpty else { return nil }
+        let done = allItems.filter(\.isChecked).count
+        let pct = Double(done) / Double(allItems.count) * 100
+        return ("Checklists: \(done)/\(allItems.count) items done", pct)
     }
 
     var body: some View {
@@ -57,42 +42,24 @@ struct SpaceCard: View {
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
 
-                if let rows = checklistRows {
-                    VStack(spacing: 8) {
-                        ForEach(rows) { row in
-                            VStack(spacing: 3) {
-                                HStack {
-                                    Text(row.name)
-                                        .font(Typography.caption)
-                                        .foregroundStyle(BrandColors.textSecondary)
-                                        .lineLimit(1)
+                if let progress = checklistProgress {
+                    HStack(spacing: Spacing.sm) {
+                        Text(progress.text)
+                            .font(Typography.caption)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .fixedSize()
 
-                                    Spacer()
-
-                                    Text("\(row.checked)/\(row.total)")
-                                        .font(Typography.caption)
-                                        .foregroundStyle(BrandColors.textSecondary)
-                                        .fixedSize()
-                                }
-
-                                ProgressBar(
-                                    percentage: row.percentage,
-                                    fillColor: Color(.systemGreen),
-                                    height: 5
-                                )
-                            }
-                        }
+                        ProgressBar(
+                            percentage: progress.percentage,
+                            fillColor: BrandColors.primary,
+                            height: 5
+                        )
                     }
-                    .padding(.top, 6)
+                } else {
+                    Text("")
+                        .font(Typography.caption)
                 }
 
-                if showNotes, let notes = space.notes, !notes.isEmpty {
-                    Text(notes)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .lineLimit(2)
-                        .padding(.top, 6)
-                }
             }
         }
     }
@@ -111,7 +78,6 @@ struct SpaceCard: View {
     SpaceCard(
         space: Space(name: "Kitchen", notes: "Need to finalize countertop material selection before ordering cabinets."),
         itemCount: 12,
-        showNotes: true,
         onPress: {},
         onMenuPress: {}
     )
