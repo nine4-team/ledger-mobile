@@ -101,14 +101,25 @@ struct ImageThumbnailGeneratorTests {
         #expect(result == nil)
     }
 
-    @Test("Handles already-small images")
-    func handlesSmallImages() {
+    @Test("Returns nil for images already smaller than target — avoids upscaling")
+    func skipsAlreadySmallImages() {
         let source = makeTestJPEG(width: 100, height: 100)
         let thumb = ImageThumbnailGenerator.generateThumbnailData(from: source, size: .sm)
+        #expect(thumb == nil, "Should skip thumbnail generation when source is smaller than target")
+    }
+
+    @Test("Returns nil for images at exactly the target size")
+    func skipsExactSizeImages() {
+        let source = makeTestJPEG(width: 300, height: 200)
+        let thumb = ImageThumbnailGenerator.generateThumbnailData(from: source, size: .sm)
+        #expect(thumb == nil, "Should skip when max dimension equals target")
+    }
+
+    @Test("Generates thumbnail for images just above the target size")
+    func generatesForSlightlyLargerImages() {
+        let source = makeTestJPEG(width: 301, height: 200)
+        let thumb = ImageThumbnailGenerator.generateThumbnailData(from: source, size: .sm)
         #expect(thumb != nil)
-        let dims = imageDimensions(of: thumb!)!
-        #expect(dims.width <= 300)
-        #expect(dims.height <= 300)
     }
 
     // MARK: - thumbnailPath

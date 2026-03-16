@@ -19,12 +19,7 @@ enum ThumbnailSize: CaseIterable {
         }
     }
 
-    var quality: CGFloat {
-        switch self {
-        case .sm: 0.7
-        case .md: 0.8
-        }
-    }
+    var quality: CGFloat { 1.0 }
 
     var suffix: String {
         switch self {
@@ -41,13 +36,22 @@ enum ThumbnailSize: CaseIterable {
 enum ImageThumbnailGenerator {
 
     /// Produces a resized JPEG `Data` from source image data.
-    /// Returns `nil` if the source data is not a valid image.
+    /// Returns `nil` if the source data is not a valid image or if the source is already
+    /// smaller than `maxDimension` (to avoid upscaling small images and degrading quality).
     static func generateThumbnailData(
         from sourceData: Data,
         maxDimension: Int,
         quality: CGFloat
     ) -> Data? {
         guard let source = CGImageSourceCreateWithData(sourceData as CFData, nil) else { return nil }
+
+        // Check source dimensions — skip if already smaller than target to avoid upscaling
+        if let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let width = properties[kCGImagePropertyPixelWidth] as? Int,
+           let height = properties[kCGImagePropertyPixelHeight] as? Int,
+           max(width, height) <= maxDimension {
+            return nil
+        }
 
         let options: [CFString: Any] = [
             kCGImageSourceThumbnailMaxPixelSize: maxDimension,

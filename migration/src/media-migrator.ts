@@ -14,8 +14,8 @@ import type { Bucket } from '@google-cloud/storage';
 import type { MediaRef, FirestoreDoc } from './types.js';
 
 const THUMBNAIL_SIZES = [
-  { suffix: '_sm', maxDimension: 300, quality: 70 },
-  { suffix: '_md', maxDimension: 800, quality: 80 },
+  { suffix: '_sm', maxDimension: 300, quality: 100 },
+  { suffix: '_md', maxDimension: 800, quality: 100 },
 ] as const;
 
 const CONCURRENCY = 5;
@@ -34,6 +34,12 @@ async function downloadToTemp(url: string): Promise<string> {
   if (!res.body) throw new Error(`No body for ${url}`);
   const writeStream = createWriteStream(tmpPath);
   await pipeline(res.body as unknown as NodeJS.ReadableStream, writeStream);
+  return tmpPath;
+}
+
+async function downloadFromStorage(bucket: Bucket, destPath: string): Promise<string> {
+  const tmpPath = join(tmpdir(), `ledger-media-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  await bucket.file(destPath).download({ destination: tmpPath });
   return tmpPath;
 }
 
@@ -99,33 +105,48 @@ export async function migrateMedia(
   const results = await runWithConcurrency(mediaRefs, CONCURRENCY, async (ref) => {
     const destPath = `migrated/${accountId}/${ref.objectPath}`;
 
-    // Check if already uploaded (idempotency)
+    // Check if original already uploaded (idempotency)
     const [exists] = await storageBucket.file(destPath).exists();
+    let skippedOriginal = false;
+
     if (exists) {
-      const gsUrl = `gs://${storageBucket.name}/${destPath}`;
-      mediaIdToFirebaseUrl.set(ref.mediaId, gsUrl);
-      return { mediaId: ref.mediaId, url: gsUrl, skipped: true };
+      mediaIdToFirebaseUrl.set(ref.mediaId, `gs://${storageBucket.name}/${destPath}`);
+      skippedOriginal = true;
     }
 
-    const tmpPath = await downloadToTemp(ref.supabaseUrl);
-    try {
-      const firebaseUrl = await uploadToFirebaseStorage(
-        storageBucket,
-        tmpPath,
-        destPath,
-        ref.contentType
-      );
-      mediaIdToFirebaseUrl.set(ref.mediaId, firebaseUrl);
+    const isImage = ref.contentType?.startsWith('image/') ?? false;
 
-      // Generate and upload thumbnails for image files
-      const isImage = ref.contentType?.startsWith('image/') ?? false;
+    if (skippedOriginal && !isImage) {
+      // Non-image already in Storage — nothing else to do
+      return { mediaId: ref.mediaId, url: mediaIdToFirebaseUrl.get(ref.mediaId)!, skipped: true };
+    }
+
+    // Download: from Firebase Storage if original exists, from Supabase if not
+    const tmpPath = skippedOriginal
+      ? await downloadFromStorage(storageBucket, destPath)
+      : await downloadToTemp(ref.supabaseUrl);
+
+    try {
+      // Upload original if not already in Storage
+      if (!skippedOriginal) {
+        const firebaseUrl = await uploadToFirebaseStorage(
+          storageBucket, tmpPath, destPath, ref.contentType
+        );
+        mediaIdToFirebaseUrl.set(ref.mediaId, firebaseUrl);
+      }
+
+      // Generate and upload thumbnails (has its own per-thumbnail idempotency)
       if (isImage) {
         await generateAndUploadThumbnails(
           storageBucket, tmpPath, destPath, ref.mediaId, mediaIdToFirebaseUrl
         );
       }
 
-      return { mediaId: ref.mediaId, url: firebaseUrl, skipped: false };
+      return {
+        mediaId: ref.mediaId,
+        url: mediaIdToFirebaseUrl.get(ref.mediaId)!,
+        skipped: skippedOriginal,
+      };
     } finally {
       await unlink(tmpPath).catch(() => {});
     }
@@ -175,6 +196,14 @@ async function generateAndUploadThumbnails(
       const [exists] = await bucket.file(thumbDestPath).exists();
       if (exists) {
         urlMap.set(`${mediaId}${size.suffix}`, `gs://${bucket.name}/${thumbDestPath}`);
+        continue;
+      }
+
+      // Skip thumbnail generation if source is already smaller than target —
+      // avoids re-encoding small images (e.g. invoice PDF crops) and degrading quality
+      const metadata = await sharp(localPath).metadata();
+      const longestSide = Math.max(metadata.width ?? 0, metadata.height ?? 0);
+      if (longestSide <= size.maxDimension) {
         continue;
       }
 
