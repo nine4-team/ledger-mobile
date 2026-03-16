@@ -197,24 +197,31 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func controlBarInstance(style: ControlBarStyle) -> some View {
+        if isPicker {
+            pickerControlBar(style: style)
+        } else {
+            standardControlBar(style: style)
+        }
+    }
+
+    @ViewBuilder
+    private func standardControlBar(style: ControlBarStyle) -> some View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search items...",
             onAdd: onAdd,
             style: style
         ) {
-            if !isPicker {
-                Button {
-                    resolvedSelectedIds.wrappedValue = SelectionCalculations.selectAllToggle(
-                        selectedIds: resolvedSelectedIds.wrappedValue,
-                        allIds: allVisibleIds
-                    )
-                } label: {
-                    SelectorCircle(isSelected: isAllSelected, indicator: .check)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Select all")
+            Button {
+                resolvedSelectedIds.wrappedValue = SelectionCalculations.selectAllToggle(
+                    selectedIds: resolvedSelectedIds.wrappedValue,
+                    allIds: allVisibleIds
+                )
+            } label: {
+                SelectorCircle(isSelected: isAllSelected, indicator: .check)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Select all")
         } sortMenu: {
             Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
@@ -226,6 +233,51 @@ struct SharedItemsList: View {
                     .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
             }
         }
+    }
+
+    /// Picker mode: inline search field next to sort/filter buttons (no toggle).
+    @ViewBuilder
+    private func pickerControlBar(style: ControlBarStyle) -> some View {
+        HStack(spacing: Spacing.sm) {
+            SearchField(
+                text: $searchText,
+                placeholder: "Search items...",
+                style: .overlay
+            )
+
+            Button { showSortMenu = true } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .tint(.secondary)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+
+            Button { showFilterMenu = true } label: {
+                Image(systemName: "line.3.horizontal.decrease")
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .tint(.secondary)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(BrandColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .frame(maxWidth: Dimensions.contentMaxWidth)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Content
@@ -466,40 +518,18 @@ struct SharedItemsList: View {
                     toggleSelection(itemId)
                 }
             } label: {
-                HStack(spacing: Spacing.md) {
-                    if isAdded {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.system(size: 22))
-                    } else {
-                        SelectorCircle(isSelected: isItemSelected, indicator: .check)
-                    }
-
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(item.displayName)
-                            .font(Typography.body)
-                            .foregroundStyle(isEligible || isAdded ? BrandColors.textPrimary : BrandColors.textDisabled)
-                            .lineLimit(2)
-
-                        if let price = displayPrice(for: item) {
-                            Text(price)
-                                .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    if let firstImage = item.images?.first {
-                        FirebaseImage(url: firstImage.url, thumbnailUrl: firstImage.thumbnailUrlSm, contentMode: .fill) {
-                            Color(BrandColors.surfaceTertiary)
-                        }
-                        .frame(width: 44, height: 44)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                }
-                .padding(Spacing.cardPadding)
-                .cardStyle()
+                ItemCard(
+                    item: item,
+                    priceLabel: displayPrice(for: item),
+                    budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                    statusOverride: isAdded ? "Added" : nil,
+                    isSelected: isAdded
+                        ? .constant(true)
+                        : Binding(
+                            get: { isItemSelected },
+                            set: { _ in toggleSelection(itemId) }
+                        )
+                )
             }
             .buttonStyle(.plain)
             .disabled(!isEligible && !isAdded)

@@ -40,11 +40,11 @@ struct SearchField: View {
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: "magnifyingglass")
-                .font(isOverlay ? .system(size: 15) : Typography.body)
+                .font(Typography.body)
                 .foregroundStyle(AnyShapeStyle(isOverlay ? AnyShapeStyle(.secondary) : AnyShapeStyle(BrandColors.textSecondary)))
 
             TextField(placeholder, text: $text)
-                .font(isOverlay ? .subheadline : Typography.body)
+                .font(Typography.body)
                 .focused($fieldFocused)
                 .autocorrectionDisabled()
                 .platformTextInputAutocapitalization(.never)
@@ -58,14 +58,14 @@ struct SearchField: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(isOverlay ? .system(size: 15) : Typography.body)
+                        .font(Typography.body)
                         .foregroundStyle(AnyShapeStyle(isOverlay ? AnyShapeStyle(.tertiary) : AnyShapeStyle(BrandColors.textTertiary)))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, isOverlay ? Spacing.sm : Spacing.md)
-        .padding(.vertical, isOverlay ? 7 : 10)
+        .padding(.horizontal, Spacing.md)
+        .frame(height: 44)
         .background(isOverlay ? Color.black.opacity(0.12) : BrandColors.inputBackground)
         .clipShape(Capsule(style: .continuous))
         .overlay(
