@@ -100,7 +100,7 @@ struct LedgerApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("") {
+        WindowGroup("Ledger", id: "main") {
             RootView()
                 .environment(authManager)
                 .environment(accountContext)

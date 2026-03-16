@@ -3,26 +3,34 @@ import SwiftUI
 struct LedgerCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
+            #if os(macOS)
+            NewWindowButton()
+            Divider()
+            #endif
+
             Button("New Project") {
                 NotificationCenter.default.post(name: .createProject, object: nil)
             }
-            .keyboardShortcut("n", modifiers: .command)
+            .keyboardShortcut("p", modifiers: .command)
 
             Button("New Transaction") {
                 NotificationCenter.default.post(name: .createTransaction, object: nil)
             }
-            .keyboardShortcut("n", modifiers: [.command, .shift])
+            .keyboardShortcut("t", modifiers: .command)
 
             Button("New Item") {
                 NotificationCenter.default.post(name: .createItem, object: nil)
             }
-            .keyboardShortcut("n", modifiers: [.command, .option])
+            .keyboardShortcut("i", modifiers: .command)
 
             Button("New Space") {
                 NotificationCenter.default.post(name: .createSpace, object: nil)
             }
-            .keyboardShortcut("n", modifiers: [.command, .option, .shift])
+            .keyboardShortcut("s", modifiers: .command)
         }
+
+        // Suppress default Print menu item so Cmd+P is free for New Project
+        CommandGroup(replacing: .printItem) { }
 
         CommandGroup(replacing: .textEditing) {
             Button("Search") {
@@ -39,3 +47,16 @@ struct LedgerCommands: Commands {
         }
     }
 }
+
+#if os(macOS)
+private struct NewWindowButton: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("New Window") {
+            openWindow(id: "main")
+        }
+        .keyboardShortcut("n", modifiers: .command)
+    }
+}
+#endif
