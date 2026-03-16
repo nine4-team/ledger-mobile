@@ -20,7 +20,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
         "presets/default/budgetCategories"
       );
       if (!includeArchived) {
-        query = query.where("isArchived", "!=", true);
+        query = query.where("isArchived", "==", false);
       }
 
       const categories = await queryDocs<BudgetCategory>(query);
@@ -29,7 +29,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
         name: c.name,
         categoryType: c.metadata?.categoryType ?? "general",
         excludeFromOverallBudget: c.metadata?.excludeFromOverallBudget ?? false,
-        isArchived: c.isArchived ?? false,
+        isArchived: c.isArchived,
         order: c.order ?? 0,
       }));
 

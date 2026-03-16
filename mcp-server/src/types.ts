@@ -7,7 +7,7 @@ export interface Project {
   clientName: string;
   description?: string;
   mainImageUrl?: string;
-  isArchived?: boolean;
+  isArchived: boolean;
   budgetSummary?: ProjectBudgetSummary;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
@@ -24,7 +24,7 @@ export interface BudgetSummaryCategory {
   spentCents?: number;
   name?: string;
   categoryType?: string;
-  isArchived?: boolean;
+  isArchived: boolean;
   excludeFromOverallBudget?: boolean;
 }
 
@@ -94,7 +94,7 @@ export interface Space {
   notes?: string;
   images?: AttachmentRef[];
   checklists?: Checklist[];
-  isArchived?: boolean;
+  isArchived: boolean;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }
@@ -116,7 +116,7 @@ export interface BudgetCategory {
   accountId?: string;
   name: string;
   slug?: string;
-  isArchived?: boolean;
+  isArchived: boolean;
   order?: number;
   metadata?: BudgetCategoryMetadata;
   createdAt?: FirebaseFirestore.Timestamp;

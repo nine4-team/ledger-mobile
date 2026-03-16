@@ -14,7 +14,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
     { filter: z.enum(["active", "archived", "all"]).default("active").describe("Filter by archive status") },
     async ({ filter }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "projects");
-      if (filter === "active") query = query.where("isArchived", "!=", true);
+      if (filter === "active") query = query.where("isArchived", "==", false);
       else if (filter === "archived") query = query.where("isArchived", "==", true);
 
       const projects = await queryDocs<Project>(query);
@@ -25,7 +25,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
           id: p.id,
           name: p.name || "",
           clientName: p.clientName || "",
-          isArchived: p.isArchived ?? false,
+          isArchived: p.isArchived,
           budget: formatCents(bs?.totalBudgetCents),
           spent: formatCents(bs?.spentCents),
         };

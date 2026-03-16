@@ -15,7 +15,7 @@ export function registerResources(server: McpServer, db: Firestore) {
     { description: "All active projects with budget summaries", mimeType: "application/json" },
     async (uri) => {
       const projects = await queryDocs<Project>(
-        accountCollection(db, "projects").where("isArchived", "!=", true)
+        accountCollection(db, "projects").where("isArchived", "==", false)
       );
 
       const rows = projects.map((p) => ({
@@ -147,7 +147,7 @@ export function registerResources(server: McpServer, db: Firestore) {
         name: c.name,
         categoryType: c.metadata?.categoryType ?? "general",
         excludeFromOverallBudget: c.metadata?.excludeFromOverallBudget ?? false,
-        isArchived: c.isArchived ?? false,
+        isArchived: c.isArchived,
       }));
 
       return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(rows, null, 2) }] };

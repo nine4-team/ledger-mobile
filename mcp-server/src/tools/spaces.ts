@@ -36,7 +36,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         name: s.name,
         projectId: s.projectId ?? null,
         notes: s.notes ?? "",
-        isArchived: s.isArchived ?? false,
+        isArchived: s.isArchived,
         itemCount: itemCountBySpace.get(s.id) ?? 0,
         checklistCount: s.checklists?.length ?? 0,
       }));
@@ -77,7 +77,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         name: space.name,
         projectId: space.projectId ?? null,
         notes: space.notes ?? "",
-        isArchived: space.isArchived ?? false,
+        isArchived: space.isArchived,
         checklists,
         items: items.map((i) => ({
           id: i.id,

@@ -437,7 +437,7 @@ export function transform(
       clientName: project.client_name ?? '',
       description: normalizeOptionalString(project.description) ?? null,
       mainImageUrl: normalizeOptionalString(project.main_image_url) ?? null,
-      isArchived: project.is_archived === true ? true : null,
+      isArchived: project.is_archived === true,
       ...toAuditFields(project, {
         createdBy: normalizeOptionalId(project.created_by) ?? defaultUserId,
       }),
@@ -493,7 +493,7 @@ export function transform(
       checklists: Array.isArray(space.checklists) && space.checklists.length > 0
         ? space.checklists
         : null,
-      isArchived: space.is_archived === true ? true : null,
+      isArchived: space.is_archived === true,
       ...toAuditFields(space),
     });
   }
