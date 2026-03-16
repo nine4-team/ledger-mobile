@@ -3,6 +3,7 @@ import SwiftUI
 /// Card with async image area and content below. Used by ProjectCard and SpaceCard.
 struct ImageCard<Content: View>: View {
     let imageUrl: String?
+    var thumbnailUrl: String?
     var aspectRatio: CGFloat = 3 / 1
     var onPress: (() -> Void)?
     @ViewBuilder let content: Content
@@ -37,7 +38,7 @@ struct ImageCard<Content: View>: View {
             Color.clear
                 .aspectRatio(aspectRatio, contentMode: .fit)
                 .overlay {
-                    FirebaseImage(url: imageUrl, contentMode: .fill) {
+                    FirebaseImage(url: imageUrl, thumbnailUrl: thumbnailUrl, contentMode: .fill) {
                         placeholder
                             .overlay { ProgressView() }
                     }

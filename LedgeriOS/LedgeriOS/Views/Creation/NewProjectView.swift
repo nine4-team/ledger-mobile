@@ -353,14 +353,15 @@ struct NewProjectView: View {
                     accountId: accountId, entityType: "projects",
                     entityId: projectId, filename: "hero.jpg"
                 )
-                mediaUploadQueue.enqueue(
-                    imageData: heroImageData,
-                    metadata: UploadMetadata(
-                        accountId: accountId, entityType: "projects", entityId: projectId,
-                        storagePath: path, updateType: .setField("mainImageUrl"),
-                        fileName: "hero.jpg"
-                    )
+                let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
+                var metadata = UploadMetadata(
+                    accountId: accountId, entityType: "projects", entityId: projectId,
+                    storagePath: path, updateType: .setField("mainImageUrl"),
+                    fileName: "hero.jpg"
                 )
+                metadata.thumbnailStoragePathSm = thumbPaths.sm
+                metadata.thumbnailStoragePathMd = thumbPaths.md
+                mediaUploadQueue.enqueue(imageData: heroImageData, metadata: metadata)
                 mediaUploadQueue.processQueue()
             }
         } catch {

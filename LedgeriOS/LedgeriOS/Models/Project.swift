@@ -7,13 +7,15 @@ struct Project: Codable, Identifiable, Hashable {
     var clientName: String = ""
     var description: String?
     var mainImageUrl: String?
+    var mainImageThumbUrlSm: String?
+    var mainImageThumbUrlMd: String?
     var isArchived: Bool?
     var budgetSummary: ProjectBudgetSummary?
     var createdAt: Date?
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, name, clientName, description, mainImageUrl, isArchived, budgetSummary
+        case id, accountId, name, clientName, description, mainImageUrl, mainImageThumbUrlSm, mainImageThumbUrlMd, isArchived, budgetSummary
     }
 }
 

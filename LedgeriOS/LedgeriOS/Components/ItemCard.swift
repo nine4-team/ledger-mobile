@@ -114,8 +114,8 @@ struct ItemCard: View {
 
     @ViewBuilder
     private var thumbnailView: some View {
-        if let urlString = item.images?.first?.url, !urlString.isEmpty {
-            FirebaseImage(url: urlString, contentMode: .fill) {
+        if let firstImage = item.images?.first, !firstImage.url.isEmpty {
+            FirebaseImage(url: firstImage.url, thumbnailUrl: firstImage.thumbnailUrlSm, contentMode: .fill) {
                 ProgressView()
                     .frame(width: 108, height: 108)
             }

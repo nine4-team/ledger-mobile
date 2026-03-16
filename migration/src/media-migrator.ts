@@ -1,15 +1,22 @@
 /**
  * Downloads media files from Supabase Storage and uploads them to Firebase Storage,
  * then patches the Firestore document URL fields from offline:// to the real Firebase URL.
+ * Generates sm (300px) and md (800px) JPEG thumbnails for image files.
  */
 import { createWriteStream } from 'node:fs';
-import { mkdir, unlink } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, extname, basename } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import admin from 'firebase-admin';
+import sharp from 'sharp';
 import type { Bucket } from '@google-cloud/storage';
 import type { MediaRef, FirestoreDoc } from './types.js';
+
+const THUMBNAIL_SIZES = [
+  { suffix: '_sm', maxDimension: 300, quality: 70 },
+  { suffix: '_md', maxDimension: 800, quality: 80 },
+] as const;
 
 const CONCURRENCY = 5;
 
@@ -109,6 +116,15 @@ export async function migrateMedia(
         ref.contentType
       );
       mediaIdToFirebaseUrl.set(ref.mediaId, firebaseUrl);
+
+      // Generate and upload thumbnails for image files
+      const isImage = ref.contentType?.startsWith('image/') ?? false;
+      if (isImage) {
+        await generateAndUploadThumbnails(
+          storageBucket, tmpPath, destPath, ref.mediaId, mediaIdToFirebaseUrl
+        );
+      }
+
       return { mediaId: ref.mediaId, url: firebaseUrl, skipped: false };
     } finally {
       await unlink(tmpPath).catch(() => {});
@@ -134,6 +150,48 @@ export async function migrateMedia(
   patchDocumentUrls(documents, mediaIdToFirebaseUrl);
 
   return { uploaded, skipped, failed: uploadErrors.length, errors: uploadErrors };
+}
+
+/**
+ * Generate sm and md JPEG thumbnails from a downloaded image and upload them.
+ * Maps {mediaId}_sm and {mediaId}_md to their Firebase URLs.
+ */
+async function generateAndUploadThumbnails(
+  bucket: Bucket,
+  localPath: string,
+  originalDestPath: string,
+  mediaId: string,
+  urlMap: Map<string, string>
+): Promise<void> {
+  const ext = extname(originalDestPath);
+  const base = originalDestPath.slice(0, -ext.length); // strip extension
+
+  for (const size of THUMBNAIL_SIZES) {
+    const thumbDestPath = `${base}${size.suffix}.jpg`;
+    const thumbLocalPath = `${localPath}${size.suffix}.jpg`;
+
+    try {
+      // Check if already uploaded (idempotency)
+      const [exists] = await bucket.file(thumbDestPath).exists();
+      if (exists) {
+        urlMap.set(`${mediaId}${size.suffix}`, `gs://${bucket.name}/${thumbDestPath}`);
+        continue;
+      }
+
+      await sharp(localPath)
+        .resize(size.maxDimension, size.maxDimension, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: size.quality })
+        .toFile(thumbLocalPath);
+
+      const url = await uploadToFirebaseStorage(bucket, thumbLocalPath, thumbDestPath, 'image/jpeg');
+      urlMap.set(`${mediaId}${size.suffix}`, url);
+      await unlink(thumbLocalPath).catch(() => {});
+    } catch (err) {
+      // Thumbnail failure is non-fatal — log and continue
+      console.warn(`  [warn] Thumbnail ${size.suffix} failed for ${originalDestPath}: ${err}`);
+      await unlink(thumbLocalPath).catch(() => {});
+    }
+  }
 }
 
 /**

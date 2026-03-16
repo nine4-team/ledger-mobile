@@ -274,12 +274,20 @@ export function transform(
       mediaRefs.push(ref);
     }
 
-    return {
+    const entry: Record<string, unknown> = {
       url: `offline://${mediaId}`,
       kind,
       ...(contentType ? { contentType } : {}),
       ...(img.isPrimary === true ? { isPrimary: true as const } : {}),
     };
+
+    // Add thumbnail placeholders for image types (not PDFs)
+    if (kind === 'image') {
+      entry.thumbnailUrlSm = `offline://${mediaId}_sm`;
+      entry.thumbnailUrlMd = `offline://${mediaId}_md`;
+    }
+
+    return entry as { url: string; kind: string; contentType?: string; isPrimary?: true; thumbnailUrlSm?: string; thumbnailUrlMd?: string };
   }
 
   function resolveTransactionId(value: unknown, context: Record<string, unknown>): string | null {
@@ -430,13 +438,26 @@ export function transform(
     const projectId = normalizeOptionalId(project.id);
     if (!projectId) continue;
 
-    addDoc(`accounts/${accountId}/projects/${projectId}`, {
+    // Register project hero image for media migration + thumbnail generation
+    const projectDocPath = `accounts/${accountId}/projects/${projectId}`;
+    const heroImage = normalizeOptionalString(project.main_image_url)
+      ? registerMedia(
+          { url: project.main_image_url!, mimeType: null, isPrimary: undefined },
+          projectDocPath,
+          'mainImageUrl',
+          false
+        )
+      : null;
+
+    addDoc(projectDocPath, {
       id: projectId,
       accountId,
       name: project.name ?? '',
       clientName: project.client_name ?? '',
       description: normalizeOptionalString(project.description) ?? null,
-      mainImageUrl: normalizeOptionalString(project.main_image_url) ?? null,
+      mainImageUrl: heroImage?.url ?? null,
+      mainImageThumbUrlSm: heroImage?.thumbnailUrlSm ?? null,
+      mainImageThumbUrlMd: heroImage?.thumbnailUrlMd ?? null,
       isArchived: project.is_archived === true,
       ...toAuditFields(project, {
         createdBy: normalizeOptionalId(project.created_by) ?? defaultUserId,

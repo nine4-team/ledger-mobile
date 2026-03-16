@@ -40,7 +40,7 @@ struct ProjectCard: View {
     @ViewBuilder
     private var heroImage: some View {
         if let url = project.mainImageUrl, !url.isEmpty {
-            FirebaseImage(url: url, contentMode: .fill) {
+            FirebaseImage(url: url, thumbnailUrl: project.mainImageThumbUrlMd, contentMode: .fill) {
                 imagePlaceholder
             }
             .frame(height: 140).clipped()

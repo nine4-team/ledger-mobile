@@ -24,6 +24,7 @@ struct ItemCardData: Identifiable, Sendable {
 struct GroupedItemCard<ExpandedContent: View>: View {
     let name: String
     var thumbnailUrl: String?
+    var thumbnailSmUrl: String?
     var countLabel: String?
     var totalLabel: String?
     var sku: String?
@@ -44,6 +45,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     init(
         name: String,
         thumbnailUrl: String? = nil,
+        thumbnailSmUrl: String? = nil,
         countLabel: String? = nil,
         totalLabel: String? = nil,
         sku: String? = nil,
@@ -61,6 +63,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     ) {
         self.name = name
         self.thumbnailUrl = thumbnailUrl
+        self.thumbnailSmUrl = thumbnailSmUrl
         self.countLabel = countLabel
         self.totalLabel = totalLabel
         self.sku = sku
@@ -212,7 +215,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     @ViewBuilder
     private var thumbnail: some View {
         if let thumbnailUrl, !thumbnailUrl.isEmpty {
-            FirebaseImage(url: thumbnailUrl, contentMode: .fill) {
+            FirebaseImage(url: thumbnailUrl, thumbnailUrl: thumbnailSmUrl, contentMode: .fill) {
                 ProgressView()
                     .frame(width: 108, height: 108)
             }

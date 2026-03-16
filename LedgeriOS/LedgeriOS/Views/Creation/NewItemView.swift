@@ -414,14 +414,15 @@ struct NewItemView: View {
                     accountId: accountId, entityType: "items",
                     entityId: itemId, filename: filename
                 )
-                mediaUploadQueue.enqueue(
-                    imageData: data,
-                    metadata: UploadMetadata(
-                        accountId: accountId, entityType: "items", entityId: itemId,
-                        storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
-                        fileName: filename
-                    )
+                let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
+                var metadata = UploadMetadata(
+                    accountId: accountId, entityType: "items", entityId: itemId,
+                    storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
+                    fileName: filename
                 )
+                metadata.thumbnailStoragePathSm = thumbPaths.sm
+                metadata.thumbnailStoragePathMd = thumbPaths.md
+                mediaUploadQueue.enqueue(imageData: data, metadata: metadata)
             }
             mediaUploadQueue.processQueue()
         } catch {

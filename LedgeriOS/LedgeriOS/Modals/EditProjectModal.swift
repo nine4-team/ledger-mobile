@@ -23,6 +23,7 @@ struct EditProjectModal: View {
     @State private var heroImageItem: PhotosPickerItem?
     @State private var heroImageData: Data?
     @State private var existingImageUrl: String?
+    @State private var existingImageThumbUrlMd: String?
 
     // Step 2 — category selection
     @State private var selectedCategoryIds: Set<String>
@@ -50,6 +51,7 @@ struct EditProjectModal: View {
         _clientName = State(initialValue: project.clientName)
         _descriptionText = State(initialValue: project.description ?? "")
         _existingImageUrl = State(initialValue: project.mainImageUrl)
+        _existingImageThumbUrlMd = State(initialValue: project.mainImageThumbUrlMd)
 
         // Step 2 pre-population
         let existingIds = Set(existingBudgetCategories.compactMap(\.id))
@@ -245,7 +247,7 @@ struct EditProjectModal: View {
                         .frame(height: 120)
                         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
                 } else if let existingUrl = existingImageUrl, !existingUrl.isEmpty {
-                    FirebaseImage(url: existingUrl, contentMode: .fill) {
+                    FirebaseImage(url: existingUrl, thumbnailUrl: existingImageThumbUrlMd, contentMode: .fill) {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     }
@@ -417,14 +419,15 @@ struct EditProjectModal: View {
                 accountId: accountId, entityType: "projects",
                 entityId: projectId, filename: "hero.jpg"
             )
-            mediaUploadQueue.enqueue(
-                imageData: heroImageData,
-                metadata: UploadMetadata(
-                    accountId: accountId, entityType: "projects", entityId: projectId,
-                    storagePath: path, updateType: .setField("mainImageUrl"),
-                    fileName: "hero.jpg"
-                )
+            let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
+            var metadata = UploadMetadata(
+                accountId: accountId, entityType: "projects", entityId: projectId,
+                storagePath: path, updateType: .setField("mainImageUrl"),
+                fileName: "hero.jpg"
             )
+            metadata.thumbnailStoragePathSm = thumbPaths.sm
+            metadata.thumbnailStoragePathMd = thumbPaths.md
+            mediaUploadQueue.enqueue(imageData: heroImageData, metadata: metadata)
             mediaUploadQueue.processQueue()
         }
     }

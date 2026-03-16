@@ -89,7 +89,7 @@ struct CreateItemsFromImagesModal: View {
                         Color(BrandColors.surfaceTertiary)
                             .frame(width: 56, height: 56)
                             .overlay {
-                                FirebaseImage(url: attachment.url, contentMode: .fill) {
+                                FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
                                     Color.clear
                                 }
                             }

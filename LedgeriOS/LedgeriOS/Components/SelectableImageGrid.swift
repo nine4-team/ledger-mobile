@@ -26,7 +26,7 @@ struct SelectableImageGrid: View {
         Color(BrandColors.surfaceTertiary)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                FirebaseImage(url: attachment.url, contentMode: .fill) {
+                FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
                     ProgressView()
                 }
             }

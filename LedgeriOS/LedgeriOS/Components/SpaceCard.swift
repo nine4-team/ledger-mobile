@@ -8,9 +8,9 @@ struct SpaceCard: View {
     var onPress: (() -> Void)? = nil
     var onMenuPress: (() -> Void)?
 
-    private var primaryImageUrl: String? {
-        space.images?.first(where: { $0.isPrimary == true })?.url
-            ?? space.images?.first?.url
+    private var primaryImage: AttachmentRef? {
+        space.images?.first(where: { $0.isPrimary == true })
+            ?? space.images?.first
     }
 
     private struct ChecklistRow: Identifiable {
@@ -37,7 +37,7 @@ struct SpaceCard: View {
     }
 
     var body: some View {
-        ImageCard(imageUrl: primaryImageUrl, onPress: onPress) {
+        ImageCard(imageUrl: primaryImage?.url, thumbnailUrl: primaryImage?.thumbnailUrlMd, onPress: onPress) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(alignment: .top) {
                     Text(space.name.trimmingCharacters(in: .whitespaces).isEmpty

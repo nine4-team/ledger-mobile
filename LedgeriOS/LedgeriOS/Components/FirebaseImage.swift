@@ -2,8 +2,12 @@ import SwiftUI
 
 /// Drop-in replacement for `AsyncImage` that also handles Firebase Storage `gs://` URLs.
 /// Uses a shared `ImageCache` so images survive view destruction/recreation without flashing.
+///
+/// When `thumbnailUrl` is provided, that URL is loaded instead of the primary URL.
+/// This allows cards to load pre-generated smaller images while galleries use the full URL.
 struct FirebaseImage<Placeholder: View>: View {
     let urlString: String?
+    let thumbnailUrl: String?
     let contentMode: ContentMode
     @ViewBuilder let placeholder: () -> Placeholder
 
@@ -12,10 +16,12 @@ struct FirebaseImage<Placeholder: View>: View {
 
     init(
         url urlString: String?,
+        thumbnailUrl: String? = nil,
         contentMode: ContentMode = .fill,
         @ViewBuilder placeholder: @escaping () -> Placeholder = { ProgressView() }
     ) {
         self.urlString = urlString
+        self.thumbnailUrl = thumbnailUrl
         self.contentMode = contentMode
         self.placeholder = placeholder
     }
@@ -38,7 +44,7 @@ struct FirebaseImage<Placeholder: View>: View {
                 placeholder()
             }
         }
-        .task(id: urlString) {
+        .task(id: effectiveUrl) {
             await resolveAndLoad()
         }
     }
@@ -48,28 +54,34 @@ struct FirebaseImage<Placeholder: View>: View {
             .foregroundStyle(BrandColors.textTertiary)
     }
 
+    /// The URL to actually load — prefers thumbnail when available.
+    private var effectiveUrl: String? {
+        if let thumbnailUrl, !thumbnailUrl.isEmpty { return thumbnailUrl }
+        return urlString
+    }
+
     private func resolveAndLoad() async {
         // Reset state for new URL
         loadedImage = nil
         loadFailed = false
 
-        guard let urlString, !urlString.isEmpty else {
+        guard let effectiveUrl, !effectiveUrl.isEmpty else {
             loadFailed = true
             return
         }
 
         // Synchronous cache check — before any await, so no placeholder frame is rendered
-        if let cached = ImageCache.image(for: urlString) {
+        if let cached = ImageCache.image(for: effectiveUrl) {
             loadedImage = cached
             return
         }
 
         // Resolve URL (gs:// needs async resolution, https:// is immediate)
         let url: URL?
-        if urlString.hasPrefix("http://") || urlString.hasPrefix("https://") {
-            url = URL(string: urlString)
+        if effectiveUrl.hasPrefix("http://") || effectiveUrl.hasPrefix("https://") {
+            url = URL(string: effectiveUrl)
         } else {
-            url = await StorageURLResolver.resolve(urlString)
+            url = await StorageURLResolver.resolve(effectiveUrl)
         }
 
         guard let url else {
@@ -91,7 +103,7 @@ struct FirebaseImage<Placeholder: View>: View {
                 loadFailed = true
                 return
             }
-            ImageCache.store(image, for: urlString, cost: data.count)
+            ImageCache.store(image, for: effectiveUrl, cost: data.count)
             loadedImage = image
         } catch {
             if !Task.isCancelled {

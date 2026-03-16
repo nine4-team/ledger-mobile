@@ -2,6 +2,8 @@ import Foundation
 
 struct AttachmentRef: Codable, Hashable {
     var url: String
+    var thumbnailUrlSm: String?
+    var thumbnailUrlMd: String?
     var kind: AttachmentKind = .image
     var fileName: String?
     var contentType: String?

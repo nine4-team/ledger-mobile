@@ -12,6 +12,8 @@ struct UploadMetadata: Codable {
     let contentType: String         // "image/jpeg", "image/png"
     let updateType: UpdateType
     let fileName: String?
+    var thumbnailStoragePathSm: String?
+    var thumbnailStoragePathMd: String?
     let createdAt: Date
     var attemptCount: Int
 
@@ -161,8 +163,13 @@ final class MediaUploadQueue {
         saveMetadata(meta)
 
         do {
+            // Upload the full-size image
             let url = try await mediaService.uploadData(imageData, path: meta.storagePath, contentType: meta.contentType)
-            try await writeBackURL(url, metadata: meta)
+
+            // Generate and upload thumbnails (failures don't block the primary upload)
+            let thumbUrls = await uploadThumbnails(sourceData: imageData, metadata: meta)
+
+            try await writeBackURL(url, thumbnailUrlSm: thumbUrls.sm, thumbnailUrlMd: thumbUrls.md, metadata: meta)
             removeFiles(for: meta)
         } catch {
             print("[MediaUploadQueue] Failed \(meta.id) (attempt \(meta.attemptCount)): \(error.localizedDescription)")
@@ -171,19 +178,57 @@ final class MediaUploadQueue {
         refreshCounts()
     }
 
-    private func writeBackURL(_ url: String, metadata: UploadMetadata) async throws {
+    /// Generates sm and md thumbnails from source data and uploads them.
+    /// Returns the download URLs for each size, or nil if generation/upload fails.
+    private func uploadThumbnails(sourceData: Data, metadata: UploadMetadata) async -> (sm: String?, md: String?) {
+        let isImage = metadata.contentType.hasPrefix("image/")
+        guard isImage else { return (nil, nil) }
+
+        var smUrl: String?
+        var mdUrl: String?
+
+        if let smPath = metadata.thumbnailStoragePathSm,
+           let smData = ImageThumbnailGenerator.generateThumbnailData(from: sourceData, size: .sm) {
+            smUrl = try? await mediaService.uploadData(smData, path: smPath, contentType: "image/jpeg")
+        }
+
+        if let mdPath = metadata.thumbnailStoragePathMd,
+           let mdData = ImageThumbnailGenerator.generateThumbnailData(from: sourceData, size: .md) {
+            mdUrl = try? await mediaService.uploadData(mdData, path: mdPath, contentType: "image/jpeg")
+        }
+
+        return (smUrl, mdUrl)
+    }
+
+    private func writeBackURL(
+        _ url: String,
+        thumbnailUrlSm: String? = nil,
+        thumbnailUrlMd: String? = nil,
+        metadata: UploadMetadata
+    ) async throws {
         let db = Firestore.firestore()
         let docRef = db.collection("accounts/\(metadata.accountId)/\(metadata.entityType)")
             .document(metadata.entityId)
 
         switch metadata.updateType {
         case .setField(let fieldName):
-            try await docRef.updateData([fieldName: url])
+            var updates: [String: Any] = [fieldName: url]
+            // Derive thumb field names: "mainImageUrl" → "mainImageThumbUrlSm"/"mainImageThumbUrlMd"
+            let baseField = fieldName.hasSuffix("Url") ? String(fieldName.dropLast(3)) : fieldName
+            if let smUrl = thumbnailUrlSm {
+                updates[baseField + "ThumbUrlSm"] = smUrl
+            }
+            if let mdUrl = thumbnailUrlMd {
+                updates[baseField + "ThumbUrlMd"] = mdUrl
+            }
+            try await docRef.updateData(updates)
 
         case .appendToArray(let field, let kind, let isPrimary):
             var entry: [String: Any] = ["url": url, "kind": kind]
             if isPrimary { entry["isPrimary"] = true }
             if let fileName = metadata.fileName { entry["fileName"] = fileName }
+            if let smUrl = thumbnailUrlSm { entry["thumbnailUrlSm"] = smUrl }
+            if let mdUrl = thumbnailUrlMd { entry["thumbnailUrlMd"] = mdUrl }
             try await docRef.updateData([field: FieldValue.arrayUnion([entry])])
         }
     }
