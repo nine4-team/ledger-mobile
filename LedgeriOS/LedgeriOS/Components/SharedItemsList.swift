@@ -370,7 +370,7 @@ struct SharedItemsList: View {
                                     indexLabel: "\(index + 1)/\(group.items.count)",
                                     statusOverride: item.status,
                                     isSelected: selectionBinding,
-                                    onPress: { handleItemPress(item) },
+                                    onPress: useNavigationLinks && resolvedSelectedIds.wrappedValue.isEmpty ? nil : { handleItemPress(item) },
                                     menuItems: getMenuItems?(item) ?? [],
                                     warningMessage: getWarning?(item)
                                 )
@@ -490,8 +490,8 @@ struct SharedItemsList: View {
 
                     Spacer()
 
-                    if let url = item.images?.first?.url {
-                        FirebaseImage(url: url, contentMode: .fill) {
+                    if let firstImage = item.images?.first {
+                        FirebaseImage(url: firstImage.url, thumbnailUrl: firstImage.thumbnailUrlSm, contentMode: .fill) {
                             Color(BrandColors.surfaceTertiary)
                         }
                         .frame(width: 44, height: 44)
@@ -540,6 +540,7 @@ struct SharedItemsList: View {
         GroupedItemCard(
             name: group.name,
             thumbnailUrl: summaryItem?.images?.first?.url,
+            thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
@@ -556,6 +557,7 @@ struct SharedItemsList: View {
         GroupedItemCard(
             name: group.name,
             thumbnailUrl: summaryItem?.images?.first?.url,
+            thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
