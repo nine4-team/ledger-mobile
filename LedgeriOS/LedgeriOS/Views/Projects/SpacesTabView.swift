@@ -29,9 +29,6 @@ struct SpacesTabView: View {
                     onAdd: { showNewSpace = true }
                 )
             }
-        .navigationDestination(for: Space.self) { space in
-            SpaceDetailView(space: space)
-        }
         .adaptivePresentation(isPresented: $showNewSpace, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 NewSpaceView(context: .project(projectId))

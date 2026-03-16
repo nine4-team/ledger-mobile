@@ -181,7 +181,7 @@ struct SpaceDetailView: View {
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
-        .onAppear { startSpaceListener() }
+        .task { startSpaceListener() }
         .onDisappear { spaceListener?.remove() }
         .background(BrandColors.background)
     }
@@ -402,7 +402,8 @@ struct SpaceDetailView: View {
     // MARK: - Actions
 
     private func startSpaceListener() {
-        guard let accountId = accountContext.currentAccountId,
+        guard spaceListener == nil,
+              let accountId = accountContext.currentAccountId,
               let spaceId = space.id else { return }
         spaceListener = SpacesService()
             .subscribeToSpace(accountId: accountId, spaceId: spaceId) { updatedSpace in

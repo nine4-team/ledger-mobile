@@ -53,6 +53,9 @@ struct ProjectDetailView: View {
                         }
                 case "spaces":
                     SpacesTabView()
+                        .navigationDestination(for: Space.self) { space in
+                            SpaceDetailView(space: space)
+                        }
                 case "finances":
                     FinancesTabView()
                 default:
