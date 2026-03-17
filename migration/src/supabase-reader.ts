@@ -114,6 +114,18 @@ export async function readAccount(
   };
 }
 
+export async function listAccounts(
+  supabase: SupabaseClient
+): Promise<Array<{ id: string; name: string }>> {
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('id, name')
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(`Failed listing accounts: ${error.message}`);
+  if (!data || data.length === 0) throw new Error('No accounts found in Supabase.');
+  return data as Array<{ id: string; name: string }>;
+}
+
 export function createSupabaseClient(supabaseUrl: string, serviceRoleKey: string): SupabaseClient {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },

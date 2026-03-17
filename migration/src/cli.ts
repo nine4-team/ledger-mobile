@@ -2,17 +2,20 @@
 /**
  * Ledger Migration CLI
  *
- * Migrates one account's data from Supabase (web) → Firestore (mobile).
+ * Migrates account data from Supabase (web) → Firestore (mobile).
  *
  * Usage:
  *   npx tsx migration/src/cli.ts --account <UUID> [options]
+ *   npx tsx migration/src/cli.ts --all [options]
  *
  * Options:
- *   --account <UUID>      Supabase account ID to migrate (required)
+ *   --account <UUID>      Supabase account ID to migrate
+ *   --all                 Discover and migrate all accounts from Supabase
  *   --target <emulator|production>  Where to write Firestore docs (default: emulator)
  *   --dry-run             Transform only — print report without writing anything
  *   --skip-media          Skip Supabase Storage → Firebase Storage migration
  *   --skip-backfill       Skip budgetSummary recalculation after writes
+ *   --skip-auth           Skip auth user import
  *
  * Environment (from .env.local or env):
  *   VITE_SUPABASE_URL           Supabase project URL
@@ -43,7 +46,7 @@ for (const envFile of ['.env.local', '.env']) {
   }
 }
 
-import { createSupabaseClient, readAccount } from './supabase-reader.js';
+import { createSupabaseClient, readAccount, listAccounts } from './supabase-reader.js';
 import { transform } from './transform.js';
 import { initFirestore, writeDocs, type WriteTarget } from './firestore-writer.js';
 import { backfillBudgetSummaries } from './budget-backfill.js';
@@ -57,7 +60,8 @@ import admin from 'firebase-admin';
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv: string[]): {
-  accountId: string;
+  accountId: string | null;
+  all: boolean;
   target: WriteTarget;
   dryRun: boolean;
   skipMedia: boolean;
@@ -80,9 +84,16 @@ function parseArgs(argv: string[]): {
   }
 
   const accountId = flags.get('account');
-  if (typeof accountId !== 'string' || accountId.length === 0) {
-    console.error('Error: --account <UUID> is required.');
-    console.error('Usage: npx tsx migration/src/cli.ts --account <UUID> [--target emulator|production] [--dry-run] [--skip-media] [--skip-backfill]');
+  const all = flags.has('all');
+
+  if (all && typeof accountId === 'string') {
+    console.error('Error: --all and --account are mutually exclusive.');
+    process.exit(1);
+  }
+  if (!all && (typeof accountId !== 'string' || accountId.length === 0)) {
+    console.error('Error: --account <UUID> or --all is required.');
+    console.error('Usage: npx tsx migration/src/cli.ts --account <UUID> [options]');
+    console.error('       npx tsx migration/src/cli.ts --all [options]');
     process.exit(1);
   }
 
@@ -93,44 +104,30 @@ function parseArgs(argv: string[]): {
   const skipBackfill = flags.has('skip-backfill');
   const skipAuth = flags.has('skip-auth');
 
-  return { accountId, target, dryRun, skipMedia, skipBackfill, skipAuth };
+  return { accountId: typeof accountId === 'string' ? accountId : null, all, target, dryRun, skipMedia, skipBackfill, skipAuth };
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Migrate a single account (steps 1–6 + report)
 // ---------------------------------------------------------------------------
 
-async function main() {
-  const { accountId, target, dryRun, skipMedia, skipBackfill, skipAuth } = parseArgs(process.argv);
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.');
-    process.exit(1);
+async function migrateOneAccount(
+  supabase: SupabaseClient,
+  db: admin.firestore.Firestore,
+  accountId: string,
+  opts: {
+    target: WriteTarget;
+    dryRun: boolean;
+    skipMedia: boolean;
+    skipBackfill: boolean;
+    skipAuth: boolean;
+    storageBucketName: string;
   }
-
-  const projectId = process.env.FIREBASE_PROJECT_ID ?? 'ledger-nine4';
-  const storageBucketName =
-    process.env.FIREBASE_STORAGE_BUCKET ?? `${projectId}.appspot.com`;
-
-  if (target === 'emulator') {
-    process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8181';
-    process.env.FIREBASE_STORAGE_EMULATOR_HOST ??= 'localhost:9199';
-    process.env.FIREBASE_AUTH_EMULATOR_HOST ??= 'localhost:9099';
-  }
-
-  console.log(`\n=== Ledger Migration ===`);
-  console.log(`Account:  ${accountId}`);
-  console.log(`Target:   ${target}${dryRun ? ' (dry-run)' : ''}`);
-  console.log(`Auth:     ${skipAuth ? 'skipped' : 'enabled'}`);
-  console.log(`Media:    ${skipMedia ? 'skipped' : 'enabled'}`);
-  console.log(`Backfill: ${skipBackfill ? 'skipped' : 'enabled'}`);
-  console.log('');
-
+): Promise<boolean> {
   // 1. Read from Supabase
   console.log('Step 1/6 — Reading from Supabase...');
-  const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
   const exportData = await readAccount(supabase, accountId);
 
   // 2. Transform
@@ -149,17 +146,14 @@ async function main() {
     }
   }
 
-  // Initialize Firebase before auth import or Firestore writes
-  const db = initFirestore(target, projectId);
-
   // 3. Import auth users
   let authResult = { imported: 0, skipped: 0, failed: 0, errors: [] as { uid: string; email: string | null; error: string }[] };
-  if (!skipAuth) {
+  if (!opts.skipAuth) {
     console.log('\nStep 3/6 — Importing auth users...');
     const userIds = exportData.users.map((u) => u.id).filter(Boolean);
     const authUsers = await fetchSupabaseAuthUsers(supabase, userIds);
     console.log(`  Found ${authUsers.length} auth user(s) in Supabase Auth.`);
-    authResult = await importAuthUsersWithPasswords(authUsers, { dryRun });
+    authResult = await importAuthUsersWithPasswords(authUsers, { dryRun: opts.dryRun });
     console.log(`  Imported: ${authResult.imported}, Skipped: ${authResult.skipped}, Failed: ${authResult.failed}`);
   } else {
     console.log('\nStep 3/6 — Auth import skipped.');
@@ -168,29 +162,29 @@ async function main() {
   // 4. Write to Firestore
   console.log('\nStep 4/6 — Writing to Firestore...');
   const writeResult = await writeDocs(db, result.documents, {
-    dryRun,
-    opsPerSecond: target === 'production' ? 50 : undefined,
+    dryRun: opts.dryRun,
+    opsPerSecond: opts.target === 'production' ? 50 : undefined,
   });
   console.log(`  Written: ${writeResult.written}, Failed: ${writeResult.failed}`);
 
   // 5. Media migration
   let mediaResult = { uploaded: 0, skipped: 0, failed: 0, errors: [] as { mediaId: string; supabaseUrl: string; error: string }[] };
-  if (!skipMedia && result.mediaRefs.length > 0) {
+  if (!opts.skipMedia && result.mediaRefs.length > 0) {
     console.log('\nStep 5/6 — Migrating media...');
     const storage = admin.storage();
-    const bucket = storage.bucket(storageBucketName) as unknown as Bucket;
+    const bucket = storage.bucket(opts.storageBucketName) as unknown as Bucket;
     mediaResult = await migrateMedia(
       result.mediaRefs,
       result.documents,
       bucket,
       accountId,
-      { dryRun }
+      { dryRun: opts.dryRun }
     );
     console.log(`  Uploaded: ${mediaResult.uploaded}, Skipped: ${mediaResult.skipped}, Failed: ${mediaResult.failed}`);
 
     // Write patched documents (URL fields updated) back to Firestore
-    if (!dryRun && (mediaResult.uploaded + mediaResult.skipped) > 0) {
-      const patchResult = await writeDocs(db, result.documents, { dryRun });
+    if (!opts.dryRun && (mediaResult.uploaded + mediaResult.skipped) > 0) {
+      const patchResult = await writeDocs(db, result.documents, { dryRun: opts.dryRun });
       console.log(`  Re-wrote ${patchResult.written} docs with patched URLs.`);
     }
   } else {
@@ -199,10 +193,10 @@ async function main() {
 
   // 6. Budget backfill
   let backfillResult = { backfilled: 0, failed: 0 };
-  if (!skipBackfill) {
+  if (!opts.skipBackfill) {
     console.log('\nStep 6/6 — Backfilling budget summaries...');
     const projectIds = exportData.projects.map((p) => p.id).filter(Boolean);
-    backfillResult = await backfillBudgetSummaries(db, accountId, projectIds, { dryRun });
+    backfillResult = await backfillBudgetSummaries(db, accountId, projectIds, { dryRun: opts.dryRun });
     console.log(`  Backfilled: ${backfillResult.backfilled}, Failed: ${backfillResult.failed}`);
   } else {
     console.log('\nStep 6/6 — Budget backfill skipped.');
@@ -212,8 +206,8 @@ async function main() {
   const report = {
     meta: {
       accountId,
-      target,
-      dryRun,
+      target: opts.target,
+      dryRun: opts.dryRun,
       migratedAt: new Date().toISOString(),
     },
     totals: {
@@ -243,11 +237,91 @@ async function main() {
   await mkdir(outDir, { recursive: true });
   const reportPath = join(outDir, 'migration-report.json');
   await writeFile(reportPath, JSON.stringify(report, null, 2), 'utf8');
-
   console.log(`\nReport written to: ${reportPath}`);
+
+  const hasFails = writeResult.failed > 0 || backfillResult.failed > 0 || authResult.failed > 0;
+  return !hasFails;
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main() {
+  const { accountId, all, target, dryRun, skipMedia, skipBackfill, skipAuth } = parseArgs(process.argv);
+
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.');
+    process.exit(1);
+  }
+
+  const projectId = process.env.FIREBASE_PROJECT_ID ?? 'ledger-nine4';
+  const storageBucketName =
+    process.env.FIREBASE_STORAGE_BUCKET ?? `${projectId}.firebasestorage.app`;
+
+  if (target === 'emulator') {
+    process.env.FIRESTORE_EMULATOR_HOST ??= 'localhost:8181';
+    process.env.FIREBASE_STORAGE_EMULATOR_HOST ??= 'localhost:9199';
+    process.env.FIREBASE_AUTH_EMULATOR_HOST ??= 'localhost:9099';
+  }
+
+  const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
+  const db = initFirestore(target, projectId);
+
+  // Determine which accounts to migrate
+  let accounts: Array<{ id: string; name: string }>;
+  if (all) {
+    console.log('\nDiscovering accounts from Supabase...');
+    accounts = await listAccounts(supabase);
+    console.log(`Found ${accounts.length} account(s):`);
+    for (const a of accounts) {
+      console.log(`  - ${a.name} (${a.id})`);
+    }
+  } else {
+    accounts = [{ id: accountId!, name: accountId! }];
+  }
+
+  const opts = { target, dryRun, skipMedia, skipBackfill, skipAuth, storageBucketName };
+  const results: Array<{ id: string; name: string; success: boolean }> = [];
+
+  for (const account of accounts) {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`=== Migrating: ${account.name} (${account.id}) ===`);
+    console.log(`${'='.repeat(60)}`);
+    console.log(`Target:   ${target}${dryRun ? ' (dry-run)' : ''}`);
+    console.log(`Auth:     ${skipAuth ? 'skipped' : 'enabled'}`);
+    console.log(`Media:    ${skipMedia ? 'skipped' : 'enabled'}`);
+    console.log(`Backfill: ${skipBackfill ? 'skipped' : 'enabled'}`);
+    console.log('');
+
+    try {
+      const success = await migrateOneAccount(supabase, db, account.id, opts);
+      results.push({ id: account.id, name: account.name, success });
+    } catch (err) {
+      console.error(`\nAccount ${account.name} (${account.id}) failed:`, err);
+      results.push({ id: account.id, name: account.name, success: false });
+    }
+  }
+
+  // Summary
+  if (accounts.length > 1) {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log('=== Migration Summary ===');
+    console.log(`${'='.repeat(60)}`);
+    for (const r of results) {
+      const icon = r.success ? 'OK' : 'FAILED';
+      console.log(`  [${icon}] ${r.name} (${r.id})`);
+    }
+    const failed = results.filter(r => !r.success).length;
+    const passed = results.filter(r => r.success).length;
+    console.log(`\n  ${passed}/${results.length} succeeded, ${failed} failed.`);
+  }
+
   console.log('\n=== Done ===\n');
 
-  if (writeResult.failed > 0 || backfillResult.failed > 0 || authResult.failed > 0) {
+  if (results.some(r => !r.success)) {
     process.exitCode = 1;
   }
 }
