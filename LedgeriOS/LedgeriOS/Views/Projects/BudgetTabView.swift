@@ -85,6 +85,12 @@ struct BudgetTabView: View {
         }
     }
 
+    private static let overallBudgetPinId = "overall"
+
+    private var isOverallPinned: Bool {
+        pinnedCategoryIds.contains(Self.overallBudgetPinId)
+    }
+
     private var overallBudgetRow: some View {
         let isOver = overallSpentCents > overallBudgetCents
         let pct = BudgetTrackerCalculations.progressPercentage(spentCents: overallSpentCents, budgetCents: overallBudgetCents)
@@ -119,8 +125,14 @@ struct BudgetTabView: View {
                 )
             }
 
-            // Spacer keeps alignment with pinnable rows
-            Color.clear.frame(width: 20)
+            Button(action: { togglePin(Self.overallBudgetPinId) }) {
+                Image(systemName: isOverallPinned ? "pin.fill" : "pin")
+                    .font(.system(size: 12))
+                    .foregroundStyle(isOverallPinned ? BrandColors.primary : BrandColors.textSecondary)
+                    .opacity(isOverallPinned ? 1 : 0.4)
+                    .frame(width: 20, height: 20)
+            }
+            .padding(.bottom, 1)
         }
         .padding(.vertical, Spacing.sm)
     }
@@ -131,9 +143,9 @@ struct BudgetTabView: View {
         let currentPins = pinnedCategoryIds
         guard !currentPins.isEmpty else { return }
 
-        // All account-level category IDs (including archived)
+        // All account-level category IDs (including archived) plus the overall budget sentinel
         let allCategoryIds = Set(accountContext.allBudgetCategories.compactMap(\.id))
-        let validPins = currentPins.filter { allCategoryIds.contains($0) }
+        let validPins = currentPins.filter { $0 == Self.overallBudgetPinId || allCategoryIds.contains($0) }
 
         guard validPins.count < currentPins.count,
               let accountId = accountContext.currentAccountId,

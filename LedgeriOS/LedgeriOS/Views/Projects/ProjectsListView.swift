@@ -174,9 +174,25 @@ struct ProjectsListView: View {
             )]
         }
 
-        // Has pinned categories → show only those
+        // Has pinned categories → show only those (plus overall if pinned)
         if !pinnedIds.isEmpty {
-            return sorted.filter { pinnedIds.contains($0.id) }
+            var result = sorted.filter { pinnedIds.contains($0.id) }
+            if pinnedIds.contains("overall") {
+                let included = allProgress.filter { !$0.excludeFromOverallBudget }
+                let totalBudget = included.reduce(0) { $0 + $1.budgetCents }
+                let totalSpent = included.reduce(0) { $0 + $1.spentCents }
+                if totalBudget > 0 || totalSpent != 0 {
+                    result.append(BudgetProgress.CategoryProgress(
+                        id: "overall",
+                        name: "Overall Budget",
+                        budgetCents: totalBudget,
+                        spentCents: totalSpent,
+                        categoryType: .general,
+                        excludeFromOverallBudget: false
+                    ))
+                }
+            }
+            return result
         }
 
         // Nothing pinned → fall back to Furnishings only
