@@ -159,6 +159,7 @@ final class AccountContext {
     func deactivate() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()
+        lastSelectedAccountId = nil
         currentAccountId = nil
         account = nil
         member = nil
