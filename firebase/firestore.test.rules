@@ -1,0 +1,168 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Health check endpoint for app-specific connectivity verification.
+    // Allows any authenticated user to read the health/ping doc.
+    // This supports the app's connectivity health check per OFFLINE_CAPABILITY_SPEC.md.
+    match /health/ping {
+      allow read: if request.auth != null;
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAccountMember(accountId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/accounts/$(accountId)/users/$(request.auth.uid));
+    }
+
+    function isRequestCreate() {
+      return request.resource.data.keys().hasOnly([
+        'type',
+        'status',
+        'opId',
+        'createdAt',
+        'createdBy',
+        'payload'
+      ]) &&
+      request.resource.data.status == 'pending' &&
+      request.resource.data.type is string &&
+      request.resource.data.createdBy == request.auth.uid &&
+      request.resource.data.createdAt == request.time;
+    }
+
+    // Public-ish user profile document (example).
+    match /users/{uid} {
+      allow read, write: if signedIn() && (request.auth.uid == uid || request.auth.uid == resource.data.uid);
+    }
+
+    // Account document (minimal shape for now).
+    // NOTE: Account creation + membership creation is server-owned (Cloud Functions using Admin SDK).
+    match /accounts/{accountId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if false;
+
+      // For now, account updates are server-managed (or future work).
+      allow update, delete: if false;
+    }
+
+    // Account membership docs.
+    // Membership docs are at: accounts/{accountId}/users/{uid}
+    match /accounts/{accountId}/users/{uid} {
+      allow read: if isAccountMember(accountId);
+      allow create: if false;
+
+      // For now, membership updates are server-managed (or future work).
+      allow update, delete: if false;
+    }
+
+    // Collection group query for discovering which accounts a user belongs to.
+    // Used by: AccountMembersService.listMembershipsForUser(userId:)
+    // Uses resource.data.uid (field) instead of path variable {uid} so the
+    // Firestore rules engine can prove the query constraint
+    // whereField("uid", isEqualTo: userId) satisfies the rule for list operations.
+    match /{path=**}/users/{uid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Per-user project preferences (pinned categories, etc.).
+    match /accounts/{accountId}/users/{uid}/projectPreferences/{projectId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Account presets document (e.g. default budget category, category order).
+    match /accounts/{accountId}/presets/{presetId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Account presets subcollections (budget categories, vendor defaults, space templates).
+    match /accounts/{accountId}/presets/{presetId}/budgetCategories/{categoryId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/presets/{presetId}/vendors/{vendorId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/presets/{presetId}/spaceTemplates/{templateId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Business profile document.
+    match /accounts/{accountId}/profile/{profileId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Invites (account member visibility for now).
+    match /accounts/{accountId}/invites/{inviteId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // Quota counters should only be written by trusted server code (Cloud Functions).
+    // Clients may read their own counters for UX, but server remains authoritative.
+    match /users/{uid}/quota/{objectKey} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    // Example quota'd objects path. In real apps, map this to each feature's collection(s).
+    // Recommended posture: write via Cloud Function so quotas/entitlements are enforced.
+    match /users/{uid}/objects/{objectId} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update, delete: if false;
+    }
+
+    // Request-doc pattern (multi-doc correctness). These are scoped examples.
+    // Adjust membership checks to your auth model (accounts, teams, etc.).
+    match /accounts/{accountId}/requests/{requestId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
+      allow update, delete: if false;
+    }
+
+    match /accounts/{accountId}/projects/{projectId}/requests/{requestId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
+      allow update, delete: if false;
+    }
+
+    match /accounts/{accountId}/inventory/requests/{requestId} {
+      allow read: if isAccountMember(accountId);
+      allow create: if isAccountMember(accountId) && isRequestCreate();
+      allow update, delete: if false;
+    }
+
+    // Core app data (MVP posture).
+    // NOTE: These permissions are intentionally broad for now (account-member access).
+    // Tighten to Roles v2 category-scoped permissions per the security model/specs.
+    match /accounts/{accountId}/items/{itemId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/projects/{projectId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/projects/{projectId}/budgetCategories/{categoryId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/spaces/{spaceId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    match /accounts/{accountId}/transactions/{transactionId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
+    // TEST RULES: Lineage edges opened for client writes so integration tests
+    // can verify InventoryOperationsService batch operations end-to-end.
+    // Production rules (firestore.rules) keep these server-only.
+    match /accounts/{accountId}/lineageEdges/{edgeId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+  }
+}
+
