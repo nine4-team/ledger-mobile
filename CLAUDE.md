@@ -161,6 +161,8 @@ Use **Swift Testing** framework (not XCTest) for all new tests. The global CLAUD
 
 For Firestore service testing, extract business logic into pure functions that can be tested without a live Firestore connection. Mock the Firestore layer at the boundary, not inside the logic.
 
+Full test suite documentation (unit tests, integration tests, emulator setup, helpers): `LedgeriOS/LedgeriOSTests/CLAUDE.md`.
+
 ## Verification After Delegation
 
 Sub-agents fabricate plausible details. When they produce specs, docs, or code that references data model facts (field names, status values, relationships, formulas), spot-check their output against source code before considering the work done.
