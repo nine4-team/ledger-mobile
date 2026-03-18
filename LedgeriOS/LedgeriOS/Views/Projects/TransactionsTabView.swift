@@ -14,6 +14,7 @@ struct TransactionsTabView: View {
     @State private var showBulkActionMenu = false
     @State private var showNewTransaction = false
     @State private var showAddMenu = false
+    @State private var pendingAddMenuAction: (() -> Void)?
     @State private var showInvoiceImport = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
@@ -124,7 +125,10 @@ struct TransactionsTabView: View {
                 NewTransactionView(context: .project(projectId))
             }
         }
-        .adaptivePresentation(isPresented: $showAddMenu, style: .quickMenu) {
+        .adaptivePresentation(isPresented: $showAddMenu, style: .quickMenu, onDismiss: {
+            pendingAddMenuAction?()
+            pendingAddMenuAction = nil
+        }) {
             ActionMenuSheet(
                 title: "Add Transaction",
                 items: [
@@ -135,7 +139,7 @@ struct TransactionsTabView: View {
                         showInvoiceImport = true
                     }),
                 ],
-                onSelectAction: { action in action() }
+                onSelectAction: { action in pendingAddMenuAction = action }
             )
         }
         #if canImport(UIKit)
