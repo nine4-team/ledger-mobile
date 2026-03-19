@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Firestore } from "firebase-admin/firestore";
+import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { Transaction, Item } from "../types.js";
 import { accountCollection, queryDocs, getDoc } from "../util/query.js";
@@ -142,8 +142,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Notes"),
+      itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
     },
-    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes }) => {
+    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds }) => {
       const data: Record<string, unknown> = {
         budgetCategoryId,
         amountCents,
@@ -156,8 +157,22 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (source) data.source = source;
       if (transactionDate) data.transactionDate = transactionDate;
       if (notes) data.notes = notes;
+      if (itemIds?.length) data.itemIds = itemIds;
 
       const ref = await accountCollection(db, "transactions").add(data);
+
+      // Maintain bidirectional link: set transactionId on each linked item
+      if (itemIds?.length) {
+        const batch = db.batch();
+        for (const itemId of itemIds) {
+          batch.update(accountCollection(db, "items").doc(itemId), {
+            transactionId: ref.id,
+            updatedAt: new Date(),
+          });
+        }
+        await batch.commit();
+      }
+
       return { content: [{ type: "text", text: `Created transaction ${ref.id}` }] };
     }
   );

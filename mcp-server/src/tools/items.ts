@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Firestore } from "firebase-admin/firestore";
+import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { Item } from "../types.js";
 import { accountCollection, queryDocs, getDoc } from "../util/query.js";
@@ -18,6 +18,7 @@ function formatItem(item: Item & { id: string }) {
     purchasePrice: formatCents(item.purchasePriceCents),
     projectPrice: formatCents(item.projectPriceCents),
     marketValue: formatCents(item.marketValueCents),
+    transactionId: item.transactionId ?? null,
     bookmark: item.bookmark ?? false,
     quantity: item.quantity ?? 1,
     notes: item.notes ?? "",
@@ -121,8 +122,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       notes: z.string().optional().describe("Notes"),
       spaceId: z.string().optional().describe("Space ID"),
       budgetCategoryId: z.string().optional().describe("Budget category ID"),
+      transactionId: z.string().optional().describe("Transaction ID to link this item to"),
     },
-    async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId }) => {
+    async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId }) => {
       const data: Record<string, unknown> = {
         name,
         status,
@@ -137,8 +139,18 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (notes) data.notes = notes;
       if (spaceId) data.spaceId = spaceId;
       if (budgetCategoryId) data.budgetCategoryId = budgetCategoryId;
+      if (transactionId) data.transactionId = transactionId;
 
       const ref = await accountCollection(db, "items").add(data);
+
+      // Maintain bidirectional link: append item to transaction's itemIds
+      if (transactionId) {
+        await accountCollection(db, "transactions").doc(transactionId).update({
+          itemIds: FieldValue.arrayUnion(ref.id),
+          updatedAt: new Date(),
+        });
+      }
+
       return { content: [{ type: "text", text: `Created item ${ref.id}` }] };
     }
   );
@@ -158,9 +170,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       sku: z.string().optional().describe("New SKU"),
       notes: z.string().optional().describe("New notes"),
       spaceId: z.string().optional().describe("New space ID"),
+      transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
     },
-    async ({ itemId, name, purchasePriceCents, projectPriceCents, marketValueCents, status, source, sku, notes, spaceId, bookmark }) => {
+    async ({ itemId, name, purchasePriceCents, projectPriceCents, marketValueCents, status, source, sku, notes, spaceId, transactionId, bookmark }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
       if (purchasePriceCents !== undefined) updates.purchasePriceCents = purchasePriceCents;
@@ -171,6 +184,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (sku !== undefined) updates.sku = sku;
       if (notes !== undefined) updates.notes = notes;
       if (spaceId !== undefined) updates.spaceId = spaceId;
+      if (transactionId !== undefined) updates.transactionId = transactionId;
       if (bookmark !== undefined) updates.bookmark = bookmark;
 
       await accountCollection(db, "items").doc(itemId).update(updates);

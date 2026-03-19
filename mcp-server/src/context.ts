@@ -8,15 +8,32 @@ export interface RequestContext {
 export const requestContext = new AsyncLocalStorage<RequestContext>();
 
 /**
+ * Active account for stdio mode. Set via the switch_account tool.
+ * Takes precedence over the LEDGER_ACCOUNT_ID env var.
+ */
+let activeAccountId: string | null = null;
+
+export function setActiveAccountId(accountId: string): void {
+  activeAccountId = accountId;
+}
+
+export function getActiveAccountId(): string | null {
+  return activeAccountId;
+}
+
+/**
  * Get the current account ID.
- * In HTTP mode: from AsyncLocalStorage (set per-request after auth).
- * In stdio mode: from env var (set at startup).
+ * Priority: HTTP context > runtime switch > env var > dev default.
  */
 export function getAccountId(): string {
+  // HTTP mode: per-request context
   const ctx = requestContext.getStore();
   if (ctx) return ctx.accountId;
 
-  // Fallback for stdio mode
+  // Stdio mode: runtime-selected account (from switch_account tool)
+  if (activeAccountId) return activeAccountId;
+
+  // Stdio mode: env var fallback
   const envId = process.env.LEDGER_ACCOUNT_ID;
   if (envId) return envId;
 

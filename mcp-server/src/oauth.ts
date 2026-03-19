@@ -18,7 +18,7 @@ const FIREBASE_API_KEY =
 const TOKEN_SECRET =
   process.env.OAUTH_TOKEN_SECRET || randomBytes(32).toString("hex");
 
-// ---------- In-memory stores ----------
+// ---------- Auth code store (Firestore-backed to survive cold starts) ----------
 
 interface AuthCode {
   uid: string;
@@ -29,19 +29,34 @@ interface AuthCode {
   expiresAt: number;
 }
 
-const authCodes = new Map<string, AuthCode>();
+// Firestore collection for auth codes — survives across Cloud Run instances
+let _db: Firestore | null = null;
+function authCodesCollection() {
+  return _db!.collection("_mcp_auth_codes");
+}
+
+async function storeAuthCode(code: string, data: AuthCode): Promise<void> {
+  await authCodesCollection().doc(code).set(data);
+}
+
+async function consumeAuthCode(code: string): Promise<AuthCode | null> {
+  const doc = await authCodesCollection().doc(code).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as AuthCode;
+  if (data.expiresAt < Date.now()) {
+    await doc.ref.delete();
+    return null;
+  }
+  // One-time use
+  await doc.ref.delete();
+  return data;
+}
+
+// Client registrations are ephemeral — Claude re-registers each flow
 const registeredClients = new Map<
   string,
   { clientId: string; clientSecret: string; redirectUris: string[] }
 >();
-
-// Purge expired auth codes every 60s
-setInterval(() => {
-  const now = Date.now();
-  for (const [code, data] of authCodes) {
-    if (data.expiresAt < now) authCodes.delete(code);
-  }
-}, 60_000);
 
 // ---------- JWT helpers ----------
 
@@ -100,6 +115,7 @@ function getOrigin(req: { protocol: string; get(name: string): string | undefine
 }
 
 export function registerOAuthRoutes(app: Express, db: Firestore) {
+  _db = db;
   // Protected Resource Metadata (RFC 9728) — Claude.ai checks this FIRST
   app.get("/.well-known/oauth-protected-resource", (req, res) => {
     const origin = getOrigin(req);
@@ -227,9 +243,9 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
         }
       }
 
-      // Generate one-time auth code
+      // Generate one-time auth code (stored in Firestore to survive cold starts)
       const code = randomBytes(32).toString("hex");
-      authCodes.set(code, {
+      await storeAuthCode(code, {
         uid,
         accountId,
         codeChallenge: code_challenge || "",
@@ -253,7 +269,7 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
   });
 
   // Token endpoint — exchange auth code for access token, or refresh
-  app.post("/token", (req, res) => {
+  app.post("/token", async (req, res) => {
     console.error("[ledger-mcp] Token request:", JSON.stringify({ ...req.body, code: req.body?.code ? "[redacted]" : undefined, code_verifier: req.body?.code_verifier ? "[redacted]" : undefined }));
     const {
       grant_type,
@@ -264,7 +280,7 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
     } = req.body;
 
     if (grant_type === "authorization_code") {
-      const stored = authCodes.get(code);
+      const stored = await consumeAuthCode(code);
       if (!stored) {
         res.status(400).json({
           error: "invalid_grant",
@@ -293,9 +309,6 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
         });
         return;
       }
-
-      // One-time use
-      authCodes.delete(code);
 
       // Issue access + refresh tokens
       const now = Math.floor(Date.now() / 1000);

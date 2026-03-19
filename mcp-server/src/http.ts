@@ -39,6 +39,7 @@ function createServer(): McpServer {
 const app = express();
 app.set("trust proxy", true); // Cloud Run runs behind a load balancer
 app.use(express.json()); // Parse JSON request bodies for OAuth + MCP endpoints
+app.use(express.urlencoded({ extended: false })); // Parse form-urlencoded bodies (OAuth token requests)
 
 // Health check (no auth required)
 app.get("/health", (_req, res) => {
@@ -48,44 +49,57 @@ app.get("/health", (_req, res) => {
 // OAuth routes (discovery, registration, authorize, token)
 registerOAuthRoutes(app, db);
 
-// MCP endpoint — auth via OAuth token, Firebase ID token, or env-based account ID
-app.post("/mcp", async (req, res) => {
+// ---------- Auth helper ----------
+
+/** Authenticate an MCP request. Returns auth context or null (after sending 401). */
+async function authenticateRequest(
+  req: express.Request,
+  res: express.Response
+): Promise<{ accountId: string; uid: string } | null> {
+  const authHeader = req.headers.authorization;
+  const envAccountId = process.env.LEDGER_ACCOUNT_ID;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+
+    // Try our OAuth access token first
+    const oauthUser = verifyAccessToken(token);
+    if (oauthUser) return oauthUser;
+
+    // Fall back to raw Firebase ID token (for backward compat)
+    const uid = await verifyToken(token);
+    const accountId = await resolveAccountId(db, uid);
+    return { accountId, uid };
+  }
+
+  if (envAccountId) {
+    return { accountId: envAccountId, uid: "env-configured" };
+  }
+
+  const origin = `${req.protocol}://${req.get("host")}`;
+  res.setHeader(
+    "WWW-Authenticate",
+    `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`
+  );
+  res.status(401).json({ error: "Missing Authorization header and no LEDGER_ACCOUNT_ID configured" });
+  return null;
+}
+
+// ---------- MCP routes (stateless mode) ----------
+// Served on both / and /mcp — Claude.ai sends to / despite resource metadata pointing to /mcp.
+// Stateless: new McpServer + StreamableHTTPServerTransport per request.
+// This is the SDK's documented pattern for serverless (Cloud Run) — no session affinity needed.
+
+const MCP_PATHS = ["/", "/mcp"];
+
+app.post(MCP_PATHS, async (req, res) => {
   try {
-    let accountId: string;
-    let uid: string;
+    const auth = await authenticateRequest(req, res);
+    if (!auth) return; // 401 already sent
 
-    const authHeader = req.headers.authorization;
-    const envAccountId = process.env.LEDGER_ACCOUNT_ID;
+    console.error(`[ledger-mcp] POST ${req.path} uid=${auth.uid} account=${auth.accountId}`);
 
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-
-      // Try our OAuth access token first
-      const oauthUser = verifyAccessToken(token);
-      if (oauthUser) {
-        accountId = oauthUser.accountId;
-        uid = oauthUser.uid;
-      } else {
-        // Fall back to raw Firebase ID token (for backward compat)
-        uid = await verifyToken(token);
-        accountId = await resolveAccountId(db, uid);
-      }
-    } else if (envAccountId) {
-      // Env-based: use configured account ID (single-tenant deployment)
-      accountId = envAccountId;
-      uid = "env-configured";
-    } else {
-      const origin = `${req.protocol}://${req.get("host")}`;
-      res.setHeader(
-        "WWW-Authenticate",
-        `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`
-      );
-      res.status(401).json({ error: "Missing Authorization header and no LEDGER_ACCOUNT_ID configured" });
-      return;
-    }
-
-    // Run the MCP handler within the request context
-    await requestContext.run({ accountId, uid }, async () => {
+    await requestContext.run(auth, async () => {
       const server = createServer();
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
@@ -112,12 +126,12 @@ app.post("/mcp", async (req, res) => {
   }
 });
 
-// Handle GET and DELETE for SSE and session management
-app.get("/mcp", async (_req, res) => {
+// GET and DELETE are not supported in stateless mode (no sessions to stream or terminate)
+app.get(MCP_PATHS, (_req, res) => {
   res.status(405).json({ error: "Method not allowed. Use POST for MCP requests." });
 });
 
-app.delete("/mcp", async (_req, res) => {
+app.delete(MCP_PATHS, (_req, res) => {
   res.status(405).json({ error: "Session termination not supported in stateless mode." });
 });
 
