@@ -17,6 +17,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/build/ ./build/
+COPY public/ ./public/
 
 ENV PORT=8080
 EXPOSE 8080

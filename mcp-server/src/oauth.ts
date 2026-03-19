@@ -151,6 +151,7 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
         "client_secret_post",
         "none",
       ],
+      logo_uri: `${origin}/logo.png`,
     });
   });
 

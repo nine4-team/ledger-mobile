@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -40,6 +42,10 @@ const app = express();
 app.set("trust proxy", true); // Cloud Run runs behind a load balancer
 app.use(express.json()); // Parse JSON request bodies for OAuth + MCP endpoints
 app.use(express.urlencoded({ extended: false })); // Parse form-urlencoded bodies (OAuth token requests)
+
+// Serve static assets (logo, etc.)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+app.use(express.static(join(__dirname, "..", "public")));
 
 // Health check (no auth required)
 app.get("/health", (_req, res) => {
