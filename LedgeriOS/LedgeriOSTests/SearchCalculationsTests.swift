@@ -590,3 +590,65 @@ struct TransactionDisplayNameTests {
         #expect(result == true)
     }
 }
+
+// MARK: - Centralized Search Path Tests
+
+@Suite("Centralized Search via List Calculations")
+struct CentralizedSearchTests {
+
+    @Test("TransactionFilterSortCalculations.applySearch matches amount query")
+    func transactionListAmountSearch() {
+        let tx = makeTransaction(amountCents: 167143)
+        let results = TransactionFilterSortCalculations.applySearch([tx], query: "1671")
+        #expect(results.count == 1)
+    }
+
+    @Test("TransactionFilterSortCalculations.applySearch matches transactionType")
+    func transactionListTypeSearch() {
+        let tx = makeTransaction(transactionType: "Purchase")
+        let results = TransactionFilterSortCalculations.applySearch([tx], query: "purchase")
+        #expect(results.count == 1)
+    }
+
+    @Test("TransactionFilterSortCalculations.applySearch matches dollar amount with symbol")
+    func transactionListDollarSearch() {
+        let tx = makeTransaction(amountCents: 167143)
+        let results = TransactionFilterSortCalculations.applySearch([tx], query: "$1,671")
+        #expect(results.count == 1)
+    }
+
+    @Test("TransactionFilterSortCalculations.applySearch excludes non-matching")
+    func transactionListNoMatch() {
+        let tx = makeTransaction(source: "Home Depot", amountCents: 5000)
+        let results = TransactionFilterSortCalculations.applySearch([tx], query: "9999")
+        #expect(results.isEmpty)
+    }
+
+    @Test("ListFilterSortCalculations.applySearch matches item amount")
+    func itemListAmountSearch() {
+        let item = makeItem(purchasePriceCents: 5099)
+        let results = ListFilterSortCalculations.applySearch([item], query: "$50")
+        #expect(results.count == 1)
+    }
+
+    @Test("ListFilterSortCalculations.applySearch matches normalized SKU")
+    func itemListNormalizedSKU() {
+        let item = makeItem(sku: "ABC-123")
+        let results = ListFilterSortCalculations.applySearch([item], query: "abc123")
+        #expect(results.count == 1)
+    }
+
+    @Test("ListFilterSortCalculations.applySearch empty query returns all")
+    func itemListEmptyQuery() {
+        let items = [makeItem(name: "A"), makeItem(name: "B")]
+        let results = ListFilterSortCalculations.applySearch(items, query: "  ")
+        #expect(results.count == 2)
+    }
+
+    @Test("Default categories parameter works without explicit []")
+    func defaultCategoriesParam() {
+        let tx = makeTransaction(source: "Amazon")
+        let result = SearchCalculations.transactionMatches(transaction: tx, query: "amazon")
+        #expect(result == true)
+    }
+}

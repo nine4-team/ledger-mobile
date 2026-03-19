@@ -32,7 +32,7 @@ enum SearchCalculations {
 
     // MARK: - Entity Matchers
 
-    static func itemMatches(item: Item, query: String, categories: [BudgetCategory]) -> Bool {
+    static func itemMatches(item: Item, query: String, categories: [BudgetCategory] = []) -> Bool {
         if query.isEmpty { return true }
 
         let categoryName = categories.first(where: { $0.id == item.budgetCategoryId })?.name
@@ -63,7 +63,7 @@ enum SearchCalculations {
         return false
     }
 
-    static func transactionMatches(transaction: Transaction, query: String, categories: [BudgetCategory]) -> Bool {
+    static func transactionMatches(transaction: Transaction, query: String, categories: [BudgetCategory] = []) -> Bool {
         if query.isEmpty { return true }
 
         let categoryName = categories.first(where: { $0.id == transaction.budgetCategoryId })?.name

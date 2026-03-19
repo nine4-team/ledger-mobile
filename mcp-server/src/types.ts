@@ -154,6 +154,8 @@ export interface LineageEdge {
 
 export interface AttachmentRef {
   url: string;
+  thumbnailUrlSm?: string;
+  thumbnailUrlMd?: string;
   kind?: string;
   fileName?: string;
   contentType?: string;

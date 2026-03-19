@@ -121,15 +121,7 @@ enum TransactionFilterSortCalculations {
     static func applySearch(_ transactions: [Transaction], query: String) -> [Transaction] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return transactions }
-        let needle = trimmed.lowercased()
-        return transactions.filter { tx in
-            let haystack = [
-                tx.source ?? "",
-                tx.notes ?? "",
-                tx.budgetCategoryId ?? "",
-            ].joined(separator: " ").lowercased()
-            return haystack.contains(needle)
-        }
+        return transactions.filter { SearchCalculations.transactionMatches(transaction: $0, query: trimmed) }
     }
 
     static func applyAll(

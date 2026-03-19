@@ -13,10 +13,17 @@ const FIREBASE_API_KEY =
   process.env.FIREBASE_API_KEY ||
   "AIzaSyBOryqA4-z4YEiR_FQCyBo-o3NSCucfyVs";
 
-// Token signing secret — auto-generated if not provided
-// Note: tokens won't survive Cloud Run cold starts without a stable secret
-const TOKEN_SECRET =
-  process.env.OAUTH_TOKEN_SECRET || randomBytes(32).toString("hex");
+// Token signing secret — required in production, random fallback for local dev
+const TOKEN_SECRET = (() => {
+  if (process.env.OAUTH_TOKEN_SECRET) return process.env.OAUTH_TOKEN_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "OAUTH_TOKEN_SECRET env var is required in production. " +
+        "Set a stable secret so tokens survive Cloud Run cold starts."
+    );
+  }
+  return randomBytes(32).toString("hex");
+})();
 
 // ---------- Auth code store (Firestore-backed to survive cold starts) ----------
 
@@ -311,26 +318,23 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
         return;
       }
 
-      // Issue access + refresh tokens
+      // Issue non-expiring access + refresh tokens
       const now = Math.floor(Date.now() / 1000);
       const accessToken = signJwt({
         uid: stored.uid,
         accountId: stored.accountId,
         iat: now,
-        exp: now + 3600, // 1 hour
       });
       const newRefreshToken = signJwt({
         uid: stored.uid,
         accountId: stored.accountId,
         type: "refresh",
         iat: now,
-        exp: now + 30 * 24 * 3600, // 30 days
       });
 
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
-        expires_in: 3600,
         refresh_token: newRefreshToken,
       });
     } else if (grant_type === "refresh_token") {
@@ -348,13 +352,11 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
         uid: payload.uid as string,
         accountId: payload.accountId as string,
         iat: now,
-        exp: now + 3600,
       });
 
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
-        expires_in: 3600,
       });
     } else {
       res.status(400).json({ error: "unsupported_grant_type" });

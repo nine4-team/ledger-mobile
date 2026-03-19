@@ -93,16 +93,7 @@ enum ListFilterSortCalculations {
     static func applySearch(_ items: [Item], query: String) -> [Item] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return items }
-        let needle = trimmed.lowercased()
-        return items.filter { item in
-            let haystack = [
-                item.displayName,
-                item.sku ?? "",
-                item.notes ?? "",
-                item.source ?? "",
-            ].joined(separator: " ").lowercased()
-            return haystack.contains(needle)
-        }
+        return items.filter { SearchCalculations.itemMatches(item: $0, query: trimmed) }
     }
 
     // MARK: - Available Filters

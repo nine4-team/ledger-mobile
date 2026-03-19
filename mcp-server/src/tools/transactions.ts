@@ -1,12 +1,24 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Transaction, Item } from "../types.js";
-import { accountCollection, queryDocs, getDoc } from "../util/query.js";
+import type { Transaction, Item, AttachmentRef } from "../types.js";
+import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { formatCents, formatDate } from "../util/format.js";
+import { uploadToStorage, deleteFromStorage } from "../storage.js";
+import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
+import { transactionMatches } from "../util/search.js";
 
 function txTypeName(tx: Transaction): string {
   return tx.type ?? tx.transactionType ?? "";
+}
+
+function formatAttachment(ref: AttachmentRef) {
+  return {
+    url: ref.url,
+    kind: ref.kind ?? "image",
+    fileName: ref.fileName ?? null,
+    contentType: ref.contentType ?? null,
+  };
 }
 
 function formatTransaction(tx: Transaction & { id: string }) {
@@ -90,7 +102,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         purchasedBy: tx.purchasedBy ?? "",
         reimbursementType: tx.reimbursementType ?? "",
         paymentMethod: tx.paymentMethod ?? "",
-        receiptImageCount: tx.receiptImages?.length ?? 0,
+        receiptImages: (tx.receiptImages ?? []).map(formatAttachment),
+        otherImages: (tx.otherImages ?? []).map(formatAttachment),
         items: items.map((i) => ({
           id: i.id,
           name: i.name ?? i.description ?? "",
@@ -106,7 +119,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── search_transactions ────────────────────────────────────────────────────
   server.tool(
     "search_transactions",
-    "Search transactions by source (vendor) name or notes. Case-insensitive client-side filter.",
+    "Search transactions by source, type, notes, purchasedBy, or amount. Case-insensitive client-side filter.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project"),
@@ -117,13 +130,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (projectId) q = q.where("projectId", "==", projectId);
 
       const all = await queryDocs<Transaction>(q);
-      const term = searchTerm.toLowerCase();
       const matched = all
-        .filter((tx) => {
-          const source = (tx.source ?? "").toLowerCase();
-          const notes = (tx.notes ?? "").toLowerCase();
-          return source.includes(term) || notes.includes(term);
-        })
+        .filter((tx) => transactionMatches(tx, searchTerm))
         .slice(0, limit);
 
       return { content: [{ type: "text", text: JSON.stringify(matched.map(formatTransaction), null, 2) }] };
@@ -213,6 +221,131 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         updatedAt: new Date(),
       });
       return { content: [{ type: "text", text: `Canceled transaction ${transactionId}` }] };
+    }
+  );
+
+  // ── attach_transaction_file ────────────────────────────────────────────────
+  server.tool(
+    "attach_transaction_file",
+    "Attach an image or PDF to a transaction. Uploads to Firebase Storage and appends an AttachmentRef to the transaction's receipt or other images array. For images, generates sm (300px) and md (800px) thumbnails.",
+    {
+      transactionId: z.string().describe("Transaction document ID"),
+      fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),
+      fileUrl: z.string().optional().describe("URL to fetch the file from (provide this OR fileData, not both)"),
+      fileName: z.string().describe("File name (e.g. 'order-summary.pdf', 'receipt.jpg')"),
+      contentType: z.string().optional().describe("MIME type (e.g. 'application/pdf', 'image/jpeg', 'image/png'). Inferred from response headers when using fileUrl."),
+      category: z.enum(["receipt", "other"]).default("receipt").describe("Target array: 'receipt' → receiptImages, 'other' → otherImages"),
+    },
+    async ({ transactionId, fileData, fileUrl, fileName, contentType, category }) => {
+      const fieldName = category === "receipt" ? "receiptImages" : "otherImages";
+
+      // 1. Validate transaction exists before uploading anything
+      const tx = await getDoc<Transaction>(db, "transactions", transactionId);
+      if (!tx) {
+        return { content: [{ type: "text", text: `Transaction ${transactionId} not found.` }], isError: true };
+      }
+
+      // 2. Resolve file data from fileData (base64) or fileUrl
+      if (!fileData && !fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not neither." }], isError: true };
+      }
+      if (fileData && fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not both." }], isError: true };
+      }
+
+      let data: Buffer;
+      let resolvedContentType = contentType;
+
+      if (fileUrl) {
+        const res = await fetch(fileUrl);
+        if (!res.ok) {
+          return { content: [{ type: "text", text: `Failed to fetch file from URL: ${res.status} ${res.statusText}` }], isError: true };
+        }
+        data = Buffer.from(await res.arrayBuffer());
+        if (!resolvedContentType) {
+          resolvedContentType = res.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
+        }
+      } else {
+        data = Buffer.from(fileData!, "base64");
+      }
+
+      if (!resolvedContentType) {
+        resolvedContentType = "application/octet-stream";
+      }
+
+      const sizeMB = data.length / (1024 * 1024);
+      if (sizeMB > 10) {
+        return { content: [{ type: "text", text: `File too large (${sizeMB.toFixed(1)}MB). Maximum is 10MB.` }], isError: true };
+      }
+
+      // 3. Determine attachment kind
+      const kind = resolvedContentType.startsWith("image/")
+        ? "image"
+        : resolvedContentType === "application/pdf"
+          ? "pdf"
+          : "file";
+
+      // 4. Upload primary file
+      //    Path mirrors iOS: accounts/{accountId}/transactions/{transactionId}/{fileName}
+      const storagePath = `${accountPath()}/transactions/${transactionId}/${fileName}`;
+      const url = await uploadToStorage(storagePath, data, resolvedContentType);
+
+      // 5. Generate and upload thumbnails for images
+      let thumbnailUrlSm: string | undefined;
+      let thumbnailUrlMd: string | undefined;
+
+      const thumbs = await generateThumbnails(data, resolvedContentType);
+      if (thumbs.sm) {
+        thumbnailUrlSm = await uploadToStorage(
+          thumbnailPath(storagePath, "sm"), thumbs.sm, "image/jpeg"
+        );
+      }
+      if (thumbs.md) {
+        thumbnailUrlMd = await uploadToStorage(
+          thumbnailPath(storagePath, "md"), thumbs.md, "image/jpeg"
+        );
+      }
+
+      // 6. Build AttachmentRef entry (matches iOS MediaUploadQueue.writeBackURL dict format)
+      const existingArray = (tx as unknown as Record<string, unknown>)[fieldName] as AttachmentRef[] | undefined;
+      const isPrimary = !existingArray?.length;
+
+      const entry: Record<string, unknown> = {
+        url,
+        kind,
+        isPrimary,
+      };
+      if (fileName) entry.fileName = fileName;
+      if (resolvedContentType) entry.contentType = resolvedContentType;
+      if (thumbnailUrlSm) entry.thumbnailUrlSm = thumbnailUrlSm;
+      if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
+
+      // 7. Append to Firestore array
+      try {
+        await accountCollection(db, "transactions").doc(transactionId).update({
+          [fieldName]: FieldValue.arrayUnion(entry),
+          updatedAt: new Date(),
+        });
+      } catch (err) {
+        // Clean up uploaded files on Firestore failure
+        await deleteFromStorage(url).catch(() => {});
+        if (thumbnailUrlSm) await deleteFromStorage(thumbnailUrlSm).catch(() => {});
+        if (thumbnailUrlMd) await deleteFromStorage(thumbnailUrlMd).catch(() => {});
+        throw err;
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            message: `Attached ${fileName} to transaction ${transactionId} (${fieldName})`,
+            url,
+            kind,
+            thumbnailUrlSm: thumbnailUrlSm ?? null,
+            thumbnailUrlMd: thumbnailUrlMd ?? null,
+          }, null, 2),
+        }],
+      };
     }
   );
 }

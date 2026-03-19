@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Item } from "../types.js";
 import { accountCollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
+import { itemMatches } from "../util/search.js";
 
 function formatItem(item: Item & { id: string }) {
   return {
@@ -77,7 +78,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── search_items ───────────────────────────────────────────────────────────
   server.tool(
     "search_items",
-    "Search items by name, description, SKU, or source. Case-insensitive client-side filter.",
+    "Search items by name, description, SKU, source, notes, or amount. Case-insensitive client-side filter.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project, or 'inventory' for business inventory"),
@@ -92,15 +93,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }
 
       const all = await queryDocs<Item>(q);
-      const term = searchTerm.toLowerCase();
       const matched = all
-        .filter((item) => {
-          const name = (item.name ?? "").toLowerCase();
-          const desc = (item.description ?? "").toLowerCase();
-          const sku = (item.sku ?? "").toLowerCase();
-          const source = (item.source ?? "").toLowerCase();
-          return name.includes(term) || desc.includes(term) || sku.includes(term) || source.includes(term);
-        })
+        .filter((item) => itemMatches(item, searchTerm))
         .slice(0, limit);
 
       return { content: [{ type: "text", text: JSON.stringify(matched.map(formatItem), null, 2) }] };
