@@ -60,8 +60,12 @@ struct ThumbnailGrid: View {
         Color(BrandColors.surfaceTertiary)
             .aspectRatio(1, contentMode: .fit)
             .overlay {
-                FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
-                    ProgressView()
+                if attachment.kind == .pdf {
+                    PDFThumbnailTile(fileName: attachment.fileName)
+                } else {
+                    FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
+                        ProgressView()
+                    }
                 }
             }
             .clipped()

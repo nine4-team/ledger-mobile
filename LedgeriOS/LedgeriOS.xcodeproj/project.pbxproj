@@ -299,6 +299,8 @@
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
+		PDFV0001000000000000B001 /* PDFViewerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFV0001000000000000F001 /* PDFViewerSheet.swift */; };
+		PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFT0001000000000000F001 /* PDFThumbnailTile.swift */; };
 		1981EB24ABFC7304052614DF /* TestFactories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 268ECEEB1D30D1C2CCA8995D /* TestFactories.swift */; };
 		7C8238F7BFF825ACA369D793 /* FirestoreTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C59C21D5DB951A1A1BB0BB /* FirestoreTestHelper.swift */; };
 		23653C8F3794997C3C839205 /* ItemCRUDIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE7E6326DB2F487C9E9E4A8 /* ItemCRUDIntegrationTests.swift */; };
@@ -618,6 +620,8 @@
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
+		PDFV0001000000000000F001 /* PDFViewerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerSheet.swift; sourceTree = "<group>"; };
+		PDFT0001000000000000F001 /* PDFThumbnailTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFThumbnailTile.swift; sourceTree = "<group>"; };
 		268ECEEB1D30D1C2CCA8995D /* TestFactories.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestFactories.swift; sourceTree = "<group>"; };
 		08C59C21D5DB951A1A1BB0BB /* FirestoreTestHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirestoreTestHelper.swift; sourceTree = "<group>"; };
 		DCE7E6326DB2F487C9E9E4A8 /* ItemCRUDIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemCRUDIntegrationTests.swift; sourceTree = "<group>"; };
@@ -1031,6 +1035,8 @@
 				DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */,
 				F4BBEC30C30C4A60BA6EFC28 /* ImageGallery.swift */,
 				ZOOM0001000000000000F001 /* ZoomableScrollView.swift */,
+				PDFV0001000000000000F001 /* PDFViewerSheet.swift */,
+				PDFT0001000000000000F001 /* PDFThumbnailTile.swift */,
 				PIN00001000000000000F001 /* PinnedImagePanel.swift */,
 				PIN00002000000000000F001 /* PinnedImageLayout.swift */,
 				DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */,
@@ -1363,6 +1369,8 @@
 				274B04463EC14100BDC9013A /* ThumbnailGrid.swift in Sources */,
 				BA27415ED19243A0B15042B3 /* ImageGallery.swift in Sources */,
 				ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */,
+				PDFV0001000000000000B001 /* PDFViewerSheet.swift in Sources */,
+				PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */,
 				PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */,
 				PIN00002000000000000B001 /* PinnedImageLayout.swift in Sources */,
 				1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */,

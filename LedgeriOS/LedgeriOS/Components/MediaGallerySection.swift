@@ -5,7 +5,7 @@ struct MediaGallerySection: View {
     let title: String
     let attachments: [AttachmentRef]
     var maxAttachments: Int = 50
-    var allowedKinds: [AttachmentKind] = [.image]
+    var allowedKinds: [AttachmentKind] = [.image, .pdf]
     /// Called when the user confirms image selection. Receives JPEG data; caller should upload
     /// via MediaService and append the resulting AttachmentRef to the entity's images array.
     var onUploadAttachment: ((Data) async throws -> Void)?
@@ -25,12 +25,18 @@ struct MediaGallerySection: View {
     @State private var showAddSourceMenu = false
     @State private var showCamera = false
     @State private var showPhotoPicker = false
+    @State private var showPDFViewer = false
+    @State private var selectedPDFAttachment: AttachmentRef?
 
     private var canAdd: Bool {
         MediaGalleryCalculations.canAddAttachment(current: attachments, maxAttachments: maxAttachments)
     }
 
-    private var imageAttachments: [AttachmentRef] {
+    private var displayAttachments: [AttachmentRef] {
+        attachments.filter { allowedKinds.contains($0.kind) }
+    }
+
+    private var imageOnlyAttachments: [AttachmentRef] {
         attachments.filter { $0.kind == .image }
     }
 
@@ -78,20 +84,30 @@ struct MediaGallerySection: View {
         #if canImport(UIKit)
         .fullScreenCover(isPresented: $showGallery) {
             ImageGallery(
-                images: imageAttachments,
+                images: imageOnlyAttachments,
                 initialIndex: galleryIndex,
                 isPresented: $showGallery,
                 onPinImage: onPinImage
             )
         }
+        .fullScreenCover(isPresented: $showPDFViewer) {
+            if let attachment = selectedPDFAttachment {
+                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer)
+            }
+        }
         #else
         .sheet(isPresented: $showGallery) {
             ImageGallery(
-                images: imageAttachments,
+                images: imageOnlyAttachments,
                 initialIndex: galleryIndex,
                 isPresented: $showGallery,
                 onPinImage: onPinImage
             )
+        }
+        .sheet(isPresented: $showPDFViewer) {
+            if let attachment = selectedPDFAttachment {
+                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer)
+            }
         }
         #endif
         .adaptivePresentation(isPresented: $showAttachmentMenu, style: .quickMenu, onDismiss: {
@@ -176,17 +192,26 @@ struct MediaGallerySection: View {
 
     private var galleryContent: some View {
         ThumbnailGrid(
-            attachments: imageAttachments,
+            attachments: displayAttachments,
             showPrimaryBadge: true,
             showOptionsButton: hasOptionsButton,
             showAddTile: canAdd && onUploadAttachment != nil,
             onThumbnailTap: { index in
-                galleryIndex = index
-                showGallery = true
+                guard index < displayAttachments.count else { return }
+                let attachment = displayAttachments[index]
+                if attachment.kind == .pdf {
+                    selectedPDFAttachment = attachment
+                    showPDFViewer = true
+                } else {
+                    // Map display index to image-only index for the pager
+                    let imageIndex = imageOnlyAttachments.firstIndex(where: { $0.url == attachment.url }) ?? 0
+                    galleryIndex = imageIndex
+                    showGallery = true
+                }
             },
             onOptionsButtonTap: { index in
-                guard index < imageAttachments.count else { return }
-                selectedAttachment = imageAttachments[index]
+                guard index < displayAttachments.count else { return }
+                selectedAttachment = displayAttachments[index]
                 showAttachmentMenu = true
             },
             onAddTap: {
@@ -230,8 +255,18 @@ struct MediaGallerySection: View {
         let isPrimary = attachment.isPrimary ?? false
         var items: [ActionMenuItem] = []
 
-        // Open in lightbox
-        if let index = imageAttachments.firstIndex(where: { $0.url == attachment.url }) {
+        // Open in viewer
+        if attachment.kind == .pdf {
+            items.append(ActionMenuItem(
+                id: "open",
+                label: "Open",
+                icon: "arrow.up.left.and.arrow.down.right",
+                onPress: { [self] in
+                    selectedPDFAttachment = attachment
+                    showPDFViewer = true
+                }
+            ))
+        } else if let index = imageOnlyAttachments.firstIndex(where: { $0.url == attachment.url }) {
             items.append(ActionMenuItem(
                 id: "open",
                 label: "Open",
