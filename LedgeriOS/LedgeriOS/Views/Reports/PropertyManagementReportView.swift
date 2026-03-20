@@ -61,7 +61,7 @@ struct PropertyManagementReportView: View {
                     spaceSection(
                         title: "No Space",
                         items: data.noSpaceItems,
-                        marketValueCents: data.noSpaceItems.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
+                        marketValueCents: data.noSpaceItems.reduce(0) { $0 + ReportAggregationCalculations.propertyValueCents(for: $1) }
                     )
                 }
 
@@ -149,11 +149,12 @@ struct PropertyManagementReportView: View {
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(CurrencyFormatting.formatCentsWithDecimals(item.marketValueCents ?? 0))
+                        let valueCents = ReportAggregationCalculations.propertyValueCents(for: item)
+                        Text(CurrencyFormatting.formatCentsWithDecimals(valueCents))
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textSecondary)
-                        if item.marketValueCents == nil || item.marketValueCents == 0 {
-                            Text("No market value")
+                        if valueCents == 0 {
+                            Text("No value")
                                 .font(Typography.caption)
                                 .foregroundStyle(BrandColors.textTertiary)
                         }
@@ -211,7 +212,7 @@ private struct PropertyManagementPDFContent: View {
 
             // No Space section
             if !data.noSpaceItems.isEmpty {
-                let noSpaceMarketValue = data.noSpaceItems.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
+                let noSpaceMarketValue = data.noSpaceItems.reduce(0) { $0 + ReportAggregationCalculations.propertyValueCents(for: $1) }
                 spaceTableSection(
                     title: "No Space",
                     items: data.noSpaceItems,
@@ -367,13 +368,14 @@ private struct PropertyManagementPDFContent: View {
                 .frame(width: 120, alignment: .leading)
             Text(item.sku ?? "")
                 .frame(width: 110, alignment: .leading)
-            if item.marketValueCents == nil || item.marketValueCents == 0 {
-                Text("No market value")
+            let valueCents = ReportAggregationCalculations.propertyValueCents(for: item)
+            if valueCents == 0 {
+                Text("No value")
                     .font(S.missingPriceFont)
                     .foregroundStyle(S.error)
                     .frame(width: 120, alignment: .trailing)
             } else {
-                Text(CurrencyFormatting.formatCentsWithDecimals(item.marketValueCents ?? 0))
+                Text(CurrencyFormatting.formatCentsWithDecimals(valueCents))
                     .frame(width: 120, alignment: .trailing)
             }
         }

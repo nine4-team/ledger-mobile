@@ -425,12 +425,12 @@ struct ReportAggregationCalculationTests {
         #expect(result.totalItemCount == 3)
     }
 
-    @Test("Total market value sums across all items")
+    @Test("Total market value sums across all items using fallback chain")
     func totalMarketValue() {
         let items = [
             makeItem(id: "item1", marketValueCents: 5000, spaceId: "space1"),
-            makeItem(id: "item2", marketValueCents: 3000, spaceId: nil),
-            makeItem(id: "item3", marketValueCents: nil, spaceId: nil),
+            makeItem(id: "item2", projectPriceCents: 3000, marketValueCents: nil, spaceId: nil),
+            makeItem(id: "item3", purchasePriceCents: 1000, projectPriceCents: nil, marketValueCents: nil, spaceId: nil),
         ]
         let spaces = [makeSpace(id: "space1")]
 
@@ -438,7 +438,49 @@ struct ReportAggregationCalculationTests {
             items: items, spaces: spaces
         )
 
-        #expect(result.totalMarketValueCents == 8000)
+        // 5000 (market) + 3000 (project fallback) + 1000 (purchase fallback)
+        #expect(result.totalMarketValueCents == 9000)
         #expect(result.totalItemCount == 3)
+    }
+
+    // MARK: - propertyValueCents Fallback Chain
+
+    @Test("propertyValueCents returns market value when present")
+    func propertyValueReturnsMarketValue() {
+        let item = makeItem(purchasePriceCents: 1000, projectPriceCents: 2000, marketValueCents: 5000)
+        #expect(ReportAggregationCalculations.propertyValueCents(for: item) == 5000)
+    }
+
+    @Test("propertyValueCents falls back to project price when no market value")
+    func propertyValueFallsBackToProjectPrice() {
+        let item = makeItem(purchasePriceCents: 1000, projectPriceCents: 2000, marketValueCents: nil)
+        #expect(ReportAggregationCalculations.propertyValueCents(for: item) == 2000)
+    }
+
+    @Test("propertyValueCents falls back to purchase price when no market value or project price")
+    func propertyValueFallsBackToPurchasePrice() {
+        let item = makeItem(purchasePriceCents: 1000, projectPriceCents: nil, marketValueCents: nil)
+        #expect(ReportAggregationCalculations.propertyValueCents(for: item) == 1000)
+    }
+
+    @Test("propertyValueCents returns 0 when all prices are nil")
+    func propertyValueReturnsZeroWhenAllNil() {
+        let item = makeItem(purchasePriceCents: nil, projectPriceCents: nil, marketValueCents: nil)
+        #expect(ReportAggregationCalculations.propertyValueCents(for: item) == 0)
+    }
+
+    @Test("SpaceGroup marketValueCents uses fallback chain")
+    func spaceGroupUsesPropertyValueFallback() {
+        let items = [
+            makeItem(id: "item1", marketValueCents: 5000),
+            makeItem(id: "item2", projectPriceCents: 3000, marketValueCents: nil),
+            makeItem(id: "item3", purchasePriceCents: 1000, projectPriceCents: nil, marketValueCents: nil),
+        ]
+        var space = Space()
+        space.id = "space1"
+        space.name = "Living Room"
+        let group = SpaceGroup(space: space, items: items)
+
+        #expect(group.marketValueCents == 9000)
     }
 }

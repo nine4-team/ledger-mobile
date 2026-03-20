@@ -66,7 +66,7 @@ struct PropertyManagementData {
 struct SpaceGroup {
     let space: Space
     let items: [Item]
-    var marketValueCents: Int { items.reduce(0) { $0 + ($1.marketValueCents ?? 0) } }
+    var marketValueCents: Int { items.reduce(0) { $0 + ReportAggregationCalculations.propertyValueCents(for: $1) } }
 }
 
 // MARK: - Aggregation Functions
@@ -309,6 +309,11 @@ enum ReportAggregationCalculations {
 
     // MARK: - Property Management
 
+    /// Market value with fallback to project price, then purchase price.
+    static func propertyValueCents(for item: Item) -> Int {
+        item.marketValueCents ?? item.projectPriceCents ?? item.purchasePriceCents ?? 0
+    }
+
     static func computePropertyManagement(
         items: [Item],
         spaces: [Space]
@@ -342,7 +347,7 @@ enum ReportAggregationCalculations {
         }
         let spaceGroups = spaceGroupsArray.sorted { $0.space.name < $1.space.name }
 
-        let totalMarketValueCents = items.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
+        let totalMarketValueCents = items.reduce(0) { $0 + propertyValueCents(for: $1) }
 
         return PropertyManagementData(
             spaceGroups: spaceGroups,
