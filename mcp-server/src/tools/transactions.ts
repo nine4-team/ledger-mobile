@@ -242,6 +242,77 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     }
   );
 
+  // ── bulk_update_transactions ──────────────────────────────────────────────
+  server.tool(
+    "bulk_update_transactions",
+    "Update a field across multiple transactions matching a filter. Uses Firestore batched writes (max 500 per batch). Returns count of updated documents.",
+    {
+      filter: z.object({
+        projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for null projectId."),
+        purchasedBy: z.string().optional().describe("Match transactions with this purchasedBy value"),
+        source: z.string().optional().describe("Match transactions with this source"),
+        needsReview: z.boolean().optional().describe("Match transactions with this needsReview value"),
+        type: z.string().optional().describe("Match transactions with this type"),
+      }).describe("Filter criteria — at least one field required"),
+      update: z.object({
+        purchasedBy: z.string().optional(),
+        source: z.string().optional(),
+        needsReview: z.boolean().optional(),
+        status: z.string().optional(),
+        reimbursementType: z.string().optional(),
+        paymentMethod: z.string().optional(),
+        receiptEmailed: z.boolean().optional(),
+      }).describe("Fields to set on all matched transactions"),
+    },
+    async ({ filter, update }) => {
+      // Build query from filter
+      let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
+
+      if (filter.projectId === "inventory") {
+        query = query.where("projectId", "==", null);
+      } else if (filter.projectId) {
+        query = query.where("projectId", "==", filter.projectId);
+      }
+      if (filter.purchasedBy) query = query.where("purchasedBy", "==", filter.purchasedBy);
+      if (filter.source) query = query.where("source", "==", filter.source);
+      if (filter.needsReview !== undefined) query = query.where("needsReview", "==", filter.needsReview);
+      if (filter.type) query = query.where("type", "==", filter.type);
+
+      const snapshot = await query.get();
+      if (snapshot.empty) {
+        return { content: [{ type: "text", text: "No transactions matched the filter. 0 updated." }] };
+      }
+
+      // Build update payload
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      for (const [key, value] of Object.entries(update)) {
+        if (value !== undefined) updates[key] = value;
+      }
+
+      // Batch writes (Firestore max 500 per batch)
+      let processed = 0;
+      let batch = db.batch();
+      let batchCount = 0;
+
+      for (const doc of snapshot.docs) {
+        batch.update(doc.ref, updates);
+        batchCount++;
+        if (batchCount === 500) {
+          await batch.commit();
+          processed += batchCount;
+          batch = db.batch();
+          batchCount = 0;
+        }
+      }
+      if (batchCount > 0) {
+        await batch.commit();
+        processed += batchCount;
+      }
+
+      return { content: [{ type: "text", text: `Updated ${processed} transactions.` }] };
+    }
+  );
+
   // ── cancel_transaction ─────────────────────────────────────────────────────
   server.tool(
     "cancel_transaction",

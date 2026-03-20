@@ -176,8 +176,18 @@ enum TransactionFilterSortCalculations {
                 guard filters.budgetCategory.contains(catId) else { return false }
             }
             if !filters.purchasedBy.isEmpty {
-                let purchaser = tx.purchasedBy ?? "missing"
-                guard filters.purchasedBy.contains(purchaser) else { return false }
+                let raw = (tx.purchasedBy ?? "").trimmingCharacters(in: .whitespaces).lowercased()
+                let normalized: String
+                if raw.isEmpty {
+                    normalized = "missing"
+                } else if raw.contains("client") {
+                    normalized = "client-card"
+                } else if raw.contains("design") || raw.contains("business") {
+                    normalized = "design-business"
+                } else {
+                    normalized = raw
+                }
+                guard filters.purchasedBy.contains(normalized) else { return false }
             }
             if !filters.source.isEmpty {
                 let src = tx.source ?? ""
