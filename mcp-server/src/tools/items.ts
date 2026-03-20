@@ -31,16 +31,18 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── list_items ─────────────────────────────────────────────────────────────
   server.tool(
     "list_items",
-    "List items with optional filters. Use projectId='inventory' for business inventory items (no project).",
+    "List items with optional filters. Supports pagination via offset + limit. Use projectId='inventory' for business inventory items (no project).",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
       spaceId: z.string().optional().describe("Filter by space ID"),
       budgetCategoryId: z.string().optional().describe("Filter by budget category"),
       status: z.string().optional().describe("Filter by status (to purchase, purchased, to return, returned)"),
       bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
+      hasTransaction: z.boolean().optional().describe("Filter by transaction linkage: true = only items with a transactionId, false = only items with NO transactionId"),
       limit: z.number().default(50).describe("Max results"),
+      offset: z.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, limit }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -54,8 +56,21 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (status) query = query.where("status", "==", status);
       if (bookmarked !== undefined) query = query.where("bookmark", "==", bookmarked);
 
-      query = query.limit(limit);
-      const items = await queryDocs<Item>(query);
+      // Firestore can't query "field does not exist", so we filter client-side
+      let clientFilter: ((item: Item & { id: string }) => boolean) | null = null;
+      if (hasTransaction === true) {
+        clientFilter = (item) => !!item.transactionId;
+      } else if (hasTransaction === false) {
+        clientFilter = (item) => !item.transactionId;
+      }
+
+      if (clientFilter) {
+        query = query.limit(500);
+      } else {
+        query = query.offset(offset).limit(limit);
+      }
+      let items = await queryDocs<Item>(query);
+      if (clientFilter) items = items.filter(clientFilter).slice(offset, offset + limit);
 
       return { content: [{ type: "text", text: JSON.stringify(items.map(formatItem), null, 2) }] };
     }
@@ -78,13 +93,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── search_items ───────────────────────────────────────────────────────────
   server.tool(
     "search_items",
-    "Search items by name, description, SKU, source, notes, or amount. Case-insensitive client-side filter.",
+    "Search items by name, description, SKU, source, notes, or amount. Case-insensitive client-side filter. Supports pagination via offset + limit.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project, or 'inventory' for business inventory"),
       limit: z.number().default(25).describe("Max results"),
+      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
     },
-    async ({ query: searchTerm, projectId, limit }) => {
+    async ({ query: searchTerm, projectId, limit, offset }) => {
       let q: FirebaseFirestore.Query = accountCollection(db, "items");
       if (projectId === "inventory") {
         q = q.where("projectId", "==", null);
@@ -95,7 +111,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const all = await queryDocs<Item>(q);
       const matched = all
         .filter((item) => itemMatches(item, searchTerm))
-        .slice(0, limit);
+        .slice(offset, offset + limit);
 
       return { content: [{ type: "text", text: JSON.stringify(matched.map(formatItem), null, 2) }] };
     }

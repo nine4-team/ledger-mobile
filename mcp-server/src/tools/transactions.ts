@@ -45,7 +45,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── list_transactions ──────────────────────────────────────────────────────
   server.tool(
     "list_transactions",
-    "List transactions with optional filters. Returns formatted amounts.",
+    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts.",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
@@ -54,9 +54,11 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       source: z.string().optional().describe("Filter by source/vendor name"),
       needsReview: z.boolean().optional().describe("Filter by needsReview flag"),
       reimbursementType: z.string().optional().describe("Filter by reimbursement type"),
+      hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
       limit: z.number().default(50).describe("Max results"),
+      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, needsReview, reimbursementType, limit }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, needsReview, reimbursementType, hasItems, limit, offset }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -89,8 +91,21 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         query = query.where("reimbursementType", "==", reimbursementType);
       }
 
-      query = query.limit(limit);
-      const transactions = await queryDocs<Transaction>(query);
+      // hasItems requires client-side filtering (Firestore can't query array length)
+      let clientFilter: ((tx: Transaction & { id: string }) => boolean) | null = null;
+      if (hasItems === true) {
+        clientFilter = (tx) => !!tx.itemIds?.length;
+      } else if (hasItems === false) {
+        clientFilter = (tx) => !tx.itemIds?.length;
+      }
+
+      if (clientFilter) {
+        query = query.limit(500);
+      } else {
+        query = query.offset(offset).limit(limit);
+      }
+      let transactions = await queryDocs<Transaction>(query);
+      if (clientFilter) transactions = transactions.filter(clientFilter).slice(offset, offset + limit);
       const rows = transactions.map(formatTransaction);
 
       return { content: [{ type: "text", text: JSON.stringify(rows, null, 2) }] };
@@ -142,20 +157,21 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── search_transactions ────────────────────────────────────────────────────
   server.tool(
     "search_transactions",
-    "Search transactions by source, type, notes, purchasedBy, or amount. Case-insensitive client-side filter.",
+    "Search transactions by source, type, notes, purchasedBy, or amount. Case-insensitive client-side filter. Supports pagination via offset + limit.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project"),
       limit: z.number().default(25).describe("Max results"),
+      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
     },
-    async ({ query: searchTerm, projectId, limit }) => {
+    async ({ query: searchTerm, projectId, limit, offset }) => {
       let q: FirebaseFirestore.Query = accountCollection(db, "transactions");
       if (projectId) q = q.where("projectId", "==", projectId);
 
       const all = await queryDocs<Transaction>(q);
       const matched = all
         .filter((tx) => transactionMatches(tx, searchTerm))
-        .slice(0, limit);
+        .slice(offset, offset + limit);
 
       return { content: [{ type: "text", text: JSON.stringify(matched.map(formatTransaction), null, 2) }] };
     }
@@ -447,6 +463,55 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
             thumbnailUrlSm: thumbnailUrlSm ?? null,
             thumbnailUrlMd: thumbnailUrlMd ?? null,
           }, null, 2),
+        }],
+      };
+    }
+  );
+
+  // ── detach_transaction_file ──────────────────────────────────────────────
+  server.tool(
+    "detach_transaction_file",
+    "Remove an attachment (receipt or other image) from a transaction. Deletes the file and its thumbnails from Firebase Storage and removes the AttachmentRef from the Firestore array.",
+    {
+      transactionId: z.string().describe("Transaction document ID"),
+      url: z.string().describe("The attachment URL to remove (matches the 'url' field in the AttachmentRef)"),
+      category: z.enum(["receipt", "other"]).default("receipt").describe("Which array: 'receipt' → receiptImages, 'other' → otherImages"),
+    },
+    async ({ transactionId, url, category }) => {
+      const fieldName = category === "receipt" ? "receiptImages" : "otherImages";
+
+      const tx = await getDoc<Transaction>(db, "transactions", transactionId);
+      if (!tx) {
+        return { content: [{ type: "text", text: `Transaction ${transactionId} not found.` }], isError: true };
+      }
+
+      const attachments = (tx as unknown as Record<string, unknown>)[fieldName] as AttachmentRef[] | undefined;
+      const entry = attachments?.find((a) => a.url === url);
+      if (!entry) {
+        return { content: [{ type: "text", text: `No attachment with that URL found in ${fieldName}.` }], isError: true };
+      }
+
+      // Remove from Firestore array
+      const remaining = attachments!.filter((a) => a.url !== url);
+      await accountCollection(db, "transactions").doc(transactionId).update({
+        [fieldName]: remaining,
+        updatedAt: new Date(),
+      });
+
+      // Delete files from Storage (best-effort — don't fail if storage delete fails)
+      const deleted: string[] = [];
+      try { await deleteFromStorage(url); deleted.push("primary"); } catch { /* ignore */ }
+      if (entry.thumbnailUrlSm) {
+        try { await deleteFromStorage(entry.thumbnailUrlSm); deleted.push("thumbnail-sm"); } catch { /* ignore */ }
+      }
+      if (entry.thumbnailUrlMd) {
+        try { await deleteFromStorage(entry.thumbnailUrlMd); deleted.push("thumbnail-md"); } catch { /* ignore */ }
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: `Removed attachment from ${fieldName} on transaction ${transactionId}. Deleted from storage: ${deleted.join(", ") || "none (files may have already been removed)"}`,
         }],
       };
     }
