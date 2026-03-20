@@ -120,13 +120,14 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
     "Update space fields.",
     {
       spaceId: z.string().describe("Space document ID"),
-      name: z.string().optional().describe("New name"),
-      notes: z.string().optional().describe("New notes"),
+      name: z.string().optional().describe("Space name"),
+      notes: z.string().optional().describe("Notes"),
     },
-    async ({ spaceId, name, notes }) => {
+    async ({ spaceId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
-      if (name !== undefined) updates.name = name;
-      if (notes !== undefined) updates.notes = notes;
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined) updates[key] = value;
+      }
 
       await accountCollection(db, "spaces").doc(spaceId).update(updates);
       return { content: [{ type: "text", text: `Updated space ${spaceId}` }] };

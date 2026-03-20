@@ -155,31 +155,25 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     "Update item fields.",
     {
       itemId: z.string().describe("Item document ID"),
-      name: z.string().optional().describe("New name"),
-      purchasePriceCents: z.number().optional().describe("New purchase price in cents"),
-      projectPriceCents: z.number().optional().describe("New project price in cents"),
-      marketValueCents: z.number().optional().describe("New market value in cents"),
-      status: z.string().optional().describe("New status"),
-      source: z.string().optional().describe("New vendor/source"),
-      sku: z.string().optional().describe("New SKU"),
-      notes: z.string().optional().describe("New notes"),
-      spaceId: z.string().optional().describe("New space ID"),
+      name: z.string().optional().describe("Item name"),
+      status: z.string().optional().describe("Item status: to purchase, purchased, to return, returned"),
+      purchasePriceCents: z.number().optional().describe("Purchase price in cents"),
+      projectPriceCents: z.number().optional().describe("Project price in cents"),
+      marketValueCents: z.number().optional().describe("Market value in cents"),
+      source: z.string().optional().describe("Vendor/source"),
+      sku: z.string().optional().describe("SKU"),
+      notes: z.string().optional().describe("Notes"),
+      projectId: z.string().optional().describe("Project ID — set to reassign item to a different project"),
+      spaceId: z.string().optional().describe("Space ID"),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
+      quantity: z.number().optional().describe("Quantity (defaults to 1)"),
     },
-    async ({ itemId, name, purchasePriceCents, projectPriceCents, marketValueCents, status, source, sku, notes, spaceId, transactionId, bookmark }) => {
+    async ({ itemId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
-      if (name !== undefined) updates.name = name;
-      if (purchasePriceCents !== undefined) updates.purchasePriceCents = purchasePriceCents;
-      if (projectPriceCents !== undefined) updates.projectPriceCents = projectPriceCents;
-      if (marketValueCents !== undefined) updates.marketValueCents = marketValueCents;
-      if (status !== undefined) updates.status = status;
-      if (source !== undefined) updates.source = source;
-      if (sku !== undefined) updates.sku = sku;
-      if (notes !== undefined) updates.notes = notes;
-      if (spaceId !== undefined) updates.spaceId = spaceId;
-      if (transactionId !== undefined) updates.transactionId = transactionId;
-      if (bookmark !== undefined) updates.bookmark = bookmark;
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined) updates[key] = value;
+      }
 
       await accountCollection(db, "items").doc(itemId).update(updates);
       return { content: [{ type: "text", text: `Updated item ${itemId}` }] };

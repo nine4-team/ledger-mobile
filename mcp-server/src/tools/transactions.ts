@@ -35,6 +35,9 @@ function formatTransaction(tx: Transaction & { id: string }) {
     isCanceled: tx.isCanceled ?? false,
     needsReview: tx.needsReview ?? false,
     status: tx.status ?? "",
+    purchasedBy: tx.purchasedBy ?? "",
+    reimbursementType: tx.reimbursementType ?? "",
+    receiptEmailed: tx.receiptEmailed ?? null,
   };
 }
 
@@ -47,9 +50,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
       type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, To Inventory)"),
+      purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
+      source: z.string().optional().describe("Filter by source/vendor name"),
+      needsReview: z.boolean().optional().describe("Filter by needsReview flag"),
+      reimbursementType: z.string().optional().describe("Filter by reimbursement type"),
       limit: z.number().default(50).describe("Max results"),
     },
-    async ({ projectId, budgetCategoryId, type, limit }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, needsReview, reimbursementType, limit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -64,6 +71,22 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
 
       if (type) {
         query = query.where("type", "==", type);
+      }
+
+      if (purchasedBy) {
+        query = query.where("purchasedBy", "==", purchasedBy);
+      }
+
+      if (source) {
+        query = query.where("source", "==", source);
+      }
+
+      if (needsReview !== undefined) {
+        query = query.where("needsReview", "==", needsReview);
+      }
+
+      if (reimbursementType) {
+        query = query.where("reimbursementType", "==", reimbursementType);
       }
 
       query = query.limit(limit);
@@ -191,19 +214,28 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     "Update transaction fields.",
     {
       transactionId: z.string().describe("Transaction document ID"),
-      amountCents: z.number().optional().describe("New amount in cents"),
-      source: z.string().optional().describe("New vendor/source"),
-      notes: z.string().optional().describe("New notes"),
-      budgetCategoryId: z.string().optional().describe("New budget category"),
-      transactionDate: z.string().optional().describe("New date string"),
+      amountCents: z.number().optional().describe("Total amount in cents (including tax)"),
+      subtotalCents: z.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
+      taxRatePct: z.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
+      type: z.string().optional().describe("Transaction type: Purchase, Return, Sale, To Inventory"),
+      status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
+      source: z.string().optional().describe("Vendor/source name"),
+      notes: z.string().optional().describe("Notes"),
+      budgetCategoryId: z.string().optional().describe("Budget category ID"),
+      transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
+      itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
+      projectId: z.string().optional().describe("Project ID — set to reassign transaction to a different project"),
+      needsReview: z.boolean().optional().describe("Flag transaction for user review"),
+      purchasedBy: z.string().optional().describe("Who made the purchase"),
+      reimbursementType: z.string().optional().describe("Reimbursement type"),
+      receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
+      paymentMethod: z.string().optional().describe("Payment method (e.g. 'Credit Card', 'Cash', 'Check')"),
     },
-    async ({ transactionId, amountCents, source, notes, budgetCategoryId, transactionDate }) => {
+    async ({ transactionId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
-      if (amountCents !== undefined) updates.amountCents = amountCents;
-      if (source !== undefined) updates.source = source;
-      if (notes !== undefined) updates.notes = notes;
-      if (budgetCategoryId !== undefined) updates.budgetCategoryId = budgetCategoryId;
-      if (transactionDate !== undefined) updates.transactionDate = transactionDate;
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined) updates[key] = value;
+      }
 
       await accountCollection(db, "transactions").doc(transactionId).update(updates);
       return { content: [{ type: "text", text: `Updated transaction ${transactionId}` }] };
