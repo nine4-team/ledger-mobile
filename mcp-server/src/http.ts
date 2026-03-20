@@ -15,6 +15,7 @@ import { registerSpaceTools } from "./tools/spaces.js";
 import { registerBudgetTools } from "./tools/budget.js";
 import { registerLineageTools } from "./tools/lineage.js";
 import { registerAnalyticsTools } from "./tools/analytics.js";
+import { registerAccountTools } from "./tools/accounts.js";
 import { registerResources } from "./resources/index.js";
 
 const db = initFirebase();
@@ -33,6 +34,7 @@ function createServer(): McpServer {
   registerBudgetTools(server, db);
   registerLineageTools(server, db);
   registerAnalyticsTools(server, db);
+  registerAccountTools(server, db);
   registerResources(server, db);
 
   return server;

@@ -335,6 +335,7 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
+        expires_in: 31536000,
         refresh_token: newRefreshToken,
       });
     } else if (grant_type === "refresh_token") {
@@ -357,6 +358,7 @@ export function registerOAuthRoutes(app: Express, db: Firestore) {
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
+        expires_in: 31536000,
       });
     } else {
       res.status(400).json({ error: "unsupported_grant_type" });
