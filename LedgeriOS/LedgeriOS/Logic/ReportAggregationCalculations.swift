@@ -190,6 +190,11 @@ enum ReportAggregationCalculations {
 
     // MARK: - Client Summary
 
+    /// Project price with fallback to purchase price for client-facing reports.
+    static func clientPriceCents(for item: Item) -> Int {
+        item.projectPriceCents ?? item.purchasePriceCents ?? 0
+    }
+
     static func computeClientSummary(
         items: [Item],
         transactions: [Transaction],
@@ -220,14 +225,14 @@ enum ReportAggregationCalculations {
             uniquingKeysWith: { first, _ in first }
         )
 
-        let totalSpentCents = items.reduce(0) { $0 + ($1.projectPriceCents ?? 0) }
+        let totalSpentCents = items.reduce(0) { $0 + clientPriceCents(for: $1) }
         let totalMarketValueCents = items.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
 
         let totalSavedCents = items.reduce(0) { sum, item in
             let marketValue = item.marketValueCents ?? 0
-            let projectPrice = item.projectPriceCents ?? 0
+            let clientPrice = clientPriceCents(for: item)
             guard marketValue > 0 else { return sum }
-            return sum + (marketValue - projectPrice)
+            return sum + (marketValue - clientPrice)
         }
 
         // Category breakdown
@@ -236,7 +241,7 @@ enum ReportAggregationCalculations {
             let categoryId = resolveItemCategoryId(item, transactionMap: transactionMap)
             if let categoryId {
                 let categoryName = categoryMap[categoryId]?.name ?? "Unknown Category"
-                categoryTotals[categoryName, default: 0] += item.projectPriceCents ?? 0
+                categoryTotals[categoryName, default: 0] += clientPriceCents(for: item)
             }
         }
 

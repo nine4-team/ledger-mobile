@@ -104,7 +104,7 @@ struct ClientSummaryReportView: View {
                                 HStack(spacing: Spacing.sm) {
                                     receiptLinkView(clientItem.receiptLink)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(
-                                        clientItem.item.projectPriceCents ?? 0
+                                        ReportAggregationCalculations.clientPriceCents(for: clientItem.item)
                                     ))
                                     .font(Typography.body)
                                     .foregroundStyle(BrandColors.textSecondary)
@@ -319,7 +319,7 @@ private struct ClientSummaryPDFContent: View {
                             .frame(width: 120, alignment: .leading)
                         Text(clientItem.spaceName ?? "")
                             .frame(width: 120, alignment: .leading)
-                        Text(CurrencyFormatting.formatCentsWithDecimals(clientItem.item.projectPriceCents ?? 0))
+                        Text(CurrencyFormatting.formatCentsWithDecimals(ReportAggregationCalculations.clientPriceCents(for: clientItem.item)))
                             .frame(width: 110, alignment: .trailing)
                     }
                     .font(S.bodyFont)

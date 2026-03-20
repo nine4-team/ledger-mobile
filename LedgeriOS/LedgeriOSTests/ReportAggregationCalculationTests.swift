@@ -38,6 +38,7 @@ struct ReportAggregationCalculationTests {
     private func makeItem(
         id: String? = "item1",
         name: String = "Test Item",
+        purchasePriceCents: Int? = nil,
         projectPriceCents: Int? = 5000,
         marketValueCents: Int? = 8000,
         spaceId: String? = nil,
@@ -49,6 +50,7 @@ struct ReportAggregationCalculationTests {
         var item = Item()
         item.id = id
         item.name = name
+        item.purchasePriceCents = purchasePriceCents
         item.projectPriceCents = projectPriceCents
         item.marketValueCents = marketValueCents
         item.spaceId = spaceId
@@ -202,6 +204,40 @@ struct ReportAggregationCalculationTests {
         )
 
         #expect(result.totalSpentCents == 8000)
+    }
+
+    @Test("Client price falls back to purchase price when project price is nil")
+    func clientPriceFallsBackToPurchasePrice() {
+        let items = [
+            makeItem(id: "item1", purchasePriceCents: 2000, projectPriceCents: 5000),
+            makeItem(id: "item2", purchasePriceCents: 3000, projectPriceCents: nil),
+            makeItem(id: "item3", purchasePriceCents: nil, projectPriceCents: nil),
+        ]
+
+        let result = ReportAggregationCalculations.computeClientSummary(
+            items: items, transactions: [], spaces: [], categories: []
+        )
+
+        // item1: 5000 (project price wins), item2: 3000 (fallback), item3: 0
+        #expect(result.totalSpentCents == 8000)
+    }
+
+    @Test("clientPriceCents prefers project price over purchase price")
+    func clientPriceCentsPreference() {
+        let item = makeItem(purchasePriceCents: 2000, projectPriceCents: 5000)
+        #expect(ReportAggregationCalculations.clientPriceCents(for: item) == 5000)
+    }
+
+    @Test("clientPriceCents falls back to purchase price")
+    func clientPriceCentsFallback() {
+        let item = makeItem(purchasePriceCents: 3000, projectPriceCents: nil)
+        #expect(ReportAggregationCalculations.clientPriceCents(for: item) == 3000)
+    }
+
+    @Test("clientPriceCents returns 0 when both nil")
+    func clientPriceCentsBothNil() {
+        let item = makeItem(purchasePriceCents: nil, projectPriceCents: nil)
+        #expect(ReportAggregationCalculations.clientPriceCents(for: item) == 0)
     }
 
     @Test("Total saved only counts items where market value > 0")
