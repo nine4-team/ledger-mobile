@@ -58,22 +58,28 @@ struct PinnedImageLayout<Content: View>: View {
     // MARK: - iPad Layout (leading sidebar)
 
     private func iPadLayout(attachment: AttachmentRef) -> some View {
-        HStack(spacing: 0) {
-            PinnedImagePanel(
-                attachment: attachment,
-                allImages: allImages,
-                onClose: onClose,
-                onChangeImage: onChangeImage
+        GeometryReader { geometry in
+            let sidebarWidth = max(
+                geometry.size.width - Dimensions.contentMaxWidth,
+                Dimensions.pinnedSidebarWidth
             )
-            .frame(width: Dimensions.pinnedSidebarWidth)
-            .id(attachment.url)
-            .transition(.opacity)
+            HStack(spacing: 0) {
+                PinnedImagePanel(
+                    attachment: attachment,
+                    allImages: allImages,
+                    onClose: onClose,
+                    onChangeImage: onChangeImage
+                )
+                .frame(width: sidebarWidth)
+                .id(attachment.url)
+                .transition(.opacity)
 
-            Divider()
+                Divider()
 
-            content()
+                content()
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinnedAttachment?.url)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: pinnedAttachment?.url)
     }
 
     // MARK: - Resize Handle
