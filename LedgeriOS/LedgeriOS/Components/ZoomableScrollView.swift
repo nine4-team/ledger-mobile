@@ -127,7 +127,7 @@ struct ZoomableScrollView: UIViewRepresentable {
         // MARK: Image Centering
 
         private func centerImage(in scrollView: UIScrollView) {
-            guard let imageView else { return }
+            guard imageView != nil else { return }
             let boundsSize = scrollView.bounds.size
             let contentSize = scrollView.contentSize
 
@@ -198,7 +198,7 @@ struct ZoomableScrollView: UIViewRepresentable {
                     let loadableURL: URL
                     if url.scheme == "gs" {
                         guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
-                            await self?.showError()
+                            self?.showError()
                             return
                         }
                         loadableURL = resolved
@@ -209,13 +209,13 @@ struct ZoomableScrollView: UIViewRepresentable {
                     let (data, _) = try await URLSession.shared.data(from: loadableURL)
                     guard !Task.isCancelled else { return }
                     guard let image = UIImage(data: data) else {
-                        await self?.showError()
+                        self?.showError()
                         return
                     }
-                    await self?.displayImage(image)
+                    self?.displayImage(image)
                 } catch {
                     if !Task.isCancelled {
-                        await self?.showError()
+                        self?.showError()
                     }
                 }
             }
@@ -277,41 +277,74 @@ struct ZoomableScrollView: UIViewRepresentable {
 }
 #elseif canImport(AppKit)
 import SwiftUI
+import AppKit
 
 /// macOS fallback — simple async image viewer without UIScrollView zoom.
+/// Resolves `gs://` Firebase Storage URLs before loading (AsyncImage can't handle them).
 struct ZoomableScrollView: View {
     let url: URL?
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
 
+    @State private var loadedImage: NSImage?
+    @State private var loadFailed = false
+
     var body: some View {
         Group {
-            if let url {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .scaleEffect(zoomScale)
-                    case .failure:
-                        Image(systemName: "exclamationmark.triangle")
-                            .foregroundStyle(.white.opacity(0.5))
-                            .font(.system(size: 36))
-                    case .empty:
-                        ProgressView()
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-            } else {
+            if let loadedImage {
+                Image(nsImage: loadedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .scaleEffect(zoomScale)
+            } else if loadFailed {
                 Image(systemName: "exclamationmark.triangle")
                     .foregroundStyle(.white.opacity(0.5))
                     .font(.system(size: 36))
+            } else {
+                ProgressView()
             }
         }
         .onTapGesture {
             onSingleTap?()
+        }
+        .task(id: url) {
+            await loadImage()
+        }
+    }
+
+    private func loadImage() async {
+        loadedImage = nil
+        loadFailed = false
+
+        guard let url else {
+            loadFailed = true
+            return
+        }
+
+        // Resolve gs:// URLs to HTTPS via Firebase Storage SDK
+        let loadableURL: URL
+        if url.scheme == "gs" {
+            guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
+                loadFailed = true
+                return
+            }
+            loadableURL = resolved
+        } else {
+            loadableURL = url
+        }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: loadableURL)
+            guard !Task.isCancelled else { return }
+            guard let image = NSImage(data: data) else {
+                loadFailed = true
+                return
+            }
+            loadedImage = image
+        } catch {
+            if !Task.isCancelled {
+                loadFailed = true
+            }
         }
     }
 }
