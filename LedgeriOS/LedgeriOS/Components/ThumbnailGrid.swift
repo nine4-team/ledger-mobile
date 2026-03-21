@@ -16,8 +16,13 @@ struct ThumbnailGrid: View {
     }
 
     private var gridItems: [GridItem] {
-        Array(
-            repeating: GridItem(.flexible(), spacing: Spacing.sm),
+        #if os(macOS)
+        let item = GridItem(.flexible(maximum: 150), spacing: Spacing.sm)
+        #else
+        let item = GridItem(.flexible(), spacing: Spacing.sm)
+        #endif
+        return Array(
+            repeating: item,
             count: MediaGalleryCalculations.gridColumns(for: totalItemCount, preferredColumns: columns)
         )
     }

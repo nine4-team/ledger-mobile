@@ -96,7 +96,7 @@ struct MediaGallerySection: View {
             }
         }
         #else
-        .sheet(isPresented: $showGallery) {
+        .adaptivePresentation(isPresented: $showGallery, style: .viewer) {
             ImageGallery(
                 images: imageOnlyAttachments,
                 initialIndex: galleryIndex,
@@ -104,7 +104,7 @@ struct MediaGallerySection: View {
                 onPinImage: onPinImage
             )
         }
-        .sheet(isPresented: $showPDFViewer) {
+        .adaptivePresentation(isPresented: $showPDFViewer, style: .viewer) {
             if let attachment = selectedPDFAttachment {
                 PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer)
             }

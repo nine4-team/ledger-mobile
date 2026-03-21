@@ -19,11 +19,14 @@ enum SheetStyle {
     /// Full-height sheet for complex content (item browsers with search/filter).
     case fullSheet
 
+    /// Large sheet for media viewers (image gallery, PDF viewer).
+    case viewer
+
     /// On macOS, use popover (click outside to dismiss) for most styles.
     var usesPopoverOnMac: Bool {
         switch self {
         case .quickMenu, .selectionMenu, .picker, .form: return true
-        case .fullSheet: return false
+        case .fullSheet, .viewer: return false
         }
     }
 }
@@ -176,7 +179,7 @@ private struct IOSSheetStyleModifier: ViewModifier {
             content
                 .presentationDetents([detent])
                 .presentationDragIndicator(.visible)
-        case .selectionMenu, .picker, .form, .fullSheet:
+        case .selectionMenu, .picker, .form, .fullSheet, .viewer:
             content
                 .presentationDetents([detent])
                 .presentationContentInteraction(.scrolls)
@@ -189,7 +192,7 @@ private struct IOSSheetStyleModifier: ViewModifier {
         case .quickMenu:              return .medium
         case .selectionMenu, .picker: return .fraction(0.65)
         case .form:                   return .fraction(0.85)
-        case .fullSheet:              return .large
+        case .fullSheet, .viewer:     return .large
         }
     }
 }
@@ -205,6 +208,7 @@ extension SheetStyle {
         case .picker:        return (400, 420)
         case .form:          return (480, 560)
         case .fullSheet:     return (520, 640)
+        case .viewer:        return (800, 700)
         }
     }
 }

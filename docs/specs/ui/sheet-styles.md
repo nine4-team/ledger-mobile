@@ -18,6 +18,7 @@ All modals, pickers, action menus, and forms present as bottom sheets. Every she
 | `.form` | 85% (`.fraction(0.85)`) | Yes | Create/edit forms, sell/reassign modals |
 | `.picker` | 65% (`.fraction(0.65)`) | Yes | Space picker, transaction picker, category picker |
 | `.fullSheet` | 100% (`.large`) | Yes | Full item browser with search/filter |
+| `.viewer` | 100% (`.large`) | Yes | Media viewers (image gallery, PDF viewer). macOS: 800×700 sheet. |
 
 ## Usage
 
@@ -35,6 +36,7 @@ All modals, pickers, action menus, and forms present as bottom sheets. Every she
 - **User fills in fields** → `.form`
 - **User picks from a list** → `.picker`
 - **Full browse experience with search/filter** → `.fullSheet`
+- **Media viewer (image gallery, PDF)** → `.viewer` (iOS uses `fullScreenCover`; macOS uses `.adaptivePresentation` with large sheet)
 
 ## Rules
 
