@@ -241,7 +241,6 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
       projectId: z.string().optional().describe("Project ID — set to reassign transaction to a different project"),
-      needsReview: z.boolean().optional().describe("Flag transaction for user review"),
       purchasedBy: z.string().optional().describe("Who made the purchase"),
       reimbursementType: z.string().optional().describe("Reimbursement type"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
@@ -273,7 +272,6 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       update: z.object({
         purchasedBy: z.string().optional(),
         source: z.string().optional(),
-        needsReview: z.boolean().optional(),
         status: z.string().optional(),
         reimbursementType: z.string().optional(),
         paymentMethod: z.string().optional(),
