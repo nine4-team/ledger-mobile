@@ -79,54 +79,50 @@ When both `amountCents` and `subtotalCents` are set:
 taxAmount = amountCents - subtotalCents
 ```
 
-## The `needsReview` Flag
+## The `isComplete` Flag (replaces `needsReview`)
 
-Transactions have a denormalized `needsReview` boolean field. This is set to `true` when the audit completeness is below the "complete" threshold for an itemized category. It enables:
-- Filtering transactions that need attention in list views
-- Showing review badges on transaction cards
-- Prioritizing incomplete transactions in workflows
+Transactions have an `isComplete` boolean field, auto-computed by a Cloud Function. The app shows a "Needs Review" badge when `isComplete` is `false` or `null`.
 
-This flag is updated whenever items are linked/unlinked or prices change.
+The Cloud Function is the **single source of truth** — no client recomputes completeness. The stored `audit` object contains the computed numbers (resolvedSubtotalCents, itemsSumCents, varianceCents, variancePercent) so all clients read stored data.
 
-## Computed Entity: TransactionCompleteness
+**Full spec:** `docs/specs/transaction-completeness.md`
 
-This is a computed (not persisted) data structure calculated client-side:
+The legacy `needsReview` field is deprecated and should not be used.
+
+## Stored Entity: TransactionAudit
+
+This is a persisted nested object on the transaction document, written by the Cloud Function:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `itemsNetTotal` | integer (cents) | Sum of linked item purchase prices |
-| `itemsCount` | integer | Total linked items |
-| `itemsMissingPriceCount` | integer | Items with no purchase price |
-| `transactionSubtotal` | integer (cents) | Resolved subtotal (per priority above) |
-| `completenessRatio` | decimal | itemsNetTotal / transactionSubtotal |
-| `completenessStatus` | string | One of: complete, near, incomplete, over |
-| `missingTaxData` | boolean | True if no subtotal and no tax rate |
-| `inferredTax` | integer or null (cents) | Tax calculated from rate |
-| `taxAmount` | integer or null (cents) | Explicit tax if available |
-| `varianceCents` | integer (cents) | itemsNetTotal - transactionSubtotal |
-| `variancePercent` | decimal | Variance as percentage of subtotal |
+| `resolvedSubtotalCents` | integer (cents) | Pre-tax subtotal used for comparison (per subtotal resolution priority) |
+| `itemsSumCents` | integer (cents) | Sum of `purchasePriceCents` across all items in `itemIds` |
+| `varianceCents` | integer (cents) | `itemsSumCents - resolvedSubtotalCents` |
+| `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
+
+`audit` is `null` when category is not itemized, transaction is canonical, subtotal can't be resolved, or no items are linked.
 
 ## Edge Cases
 
-1. **Zero items linked**: completenessRatio = 0, status = "incomplete"
-2. **Zero transaction subtotal**: status = N/A, do not calculate ratio (division by zero)
-3. **All items missing prices**: itemsNetTotal = 0, itemsMissingPriceCount = itemsCount
+1. **Zero items linked**: `isComplete = false`, `audit = null`
+2. **Zero transaction subtotal**: `isComplete = false`, `audit = null` (subtotal not resolvable)
+3. **All items missing prices**: `itemsSumCents = 0`, variance will be large → `isComplete = false`
 4. **Negative item prices**: Should not occur (validation prevents it), but if present, they contribute their value to the sum
-5. **Very small variance (< $0.05)**: Treat as "complete" if within the 1% threshold
-6. **Over 100% completeness**: When items total more than 120% of subtotal, flag as "over" status
-7. **Large item counts (100+)**: Calculations should remain performant — all data is already loaded, no additional queries needed
+5. **Very small variance (< $0.05)**: Treated as complete if within the ±1% threshold
+6. **Over 100% completeness**: `isComplete = false` if variance exceeds ±1%
+7. **Large item counts (100+)**: Calculations remain performant — Cloud Function uses batched Firestore queries
 
 ## Offline Behavior
 
-All audit calculations are performed client-side from data already loaded on the transaction detail screen. No additional network requests are needed. The audit renders correctly from cached data when offline.
+Audit data (`isComplete` + `audit` object) is stored on the transaction document by the Cloud Function. The native Firestore SDK caches this data, so the audit panel renders correctly from cached data when offline. No client-side computation is needed.
 
 ## Design Decisions
 
-### Why client-side computation (not persisted)?
-- The audit depends on item prices which change independently of the transaction
-- Persisting would require triggers on every item price update
-- Client-side computation is fast (simple arithmetic over already-loaded data)
-- Avoids sync conflicts between computed and source data
+### Why server-side computation (Cloud Function)?
+- Single source of truth — no parallel recomputation in MCP server or Swift app
+- Automatically recomputes when item prices change (via Firestore triggers)
+- All clients read stored data — consistent across platforms
+- Enables Firestore queries on `isComplete` for filtering
 
 ### Why 1% threshold for "complete" (not exact match)?
 - Rounding differences between individual item prices and transaction totals are common

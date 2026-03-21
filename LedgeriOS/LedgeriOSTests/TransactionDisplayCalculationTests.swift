@@ -16,7 +16,7 @@ struct TransactionDisplayCalculationTests {
         reimbursementType: String? = nil,
         hasEmailReceipt: Bool? = nil,
         receiptImages: [AttachmentRef]? = nil,
-        needsReview: Bool? = nil,
+        isComplete: Bool? = true,
         budgetCategoryId: String? = nil,
         amountCents: Int? = nil,
         transactionDate: String? = nil
@@ -30,7 +30,7 @@ struct TransactionDisplayCalculationTests {
         txn.reimbursementType = reimbursementType
         txn.hasEmailReceipt = hasEmailReceipt
         txn.receiptImages = receiptImages
-        txn.needsReview = needsReview
+        txn.isComplete = isComplete
         txn.budgetCategoryId = budgetCategoryId
         txn.amountCents = amountCents
         txn.transactionDate = transactionDate
@@ -159,9 +159,9 @@ struct TransactionDisplayCalculationTests {
         #expect(badges[0].text == "Purchase")
     }
 
-    @Test("Needs review badge appears first")
+    @Test("Needs review badge appears first when isComplete is false")
     func badgeNeedsReview() {
-        let txn = makeTransaction(transactionType: "purchase", needsReview: true)
+        let txn = makeTransaction(transactionType: "purchase", isComplete: false)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 2)
         #expect(badges[0].text == "Needs Review")
@@ -183,7 +183,7 @@ struct TransactionDisplayCalculationTests {
     func badgeAllTypes() {
         let txn = makeTransaction(
             transactionType: "purchase",
-            needsReview: true
+            isComplete: false
         )
         let cat = makeCategory(id: "cat1", name: "Decor")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: cat)

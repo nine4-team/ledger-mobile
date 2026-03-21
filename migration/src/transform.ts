@@ -185,6 +185,12 @@ export function transform(
     if (domainId) txIdToDocId.set(domainId, docId);
   }
 
+  // Budget category type lookup (populated during budget categories loop)
+  const categoryTypeById = new Map<string, string>();
+
+  // Item purchasePriceCents lookup (populated during items loop)
+  const itemPriceCentsById = new Map<string, number | null>();
+
   // Transaction → project map (for lineage edge fromProjectId/toProjectId derivation)
   const txDocIdToProjectId = new Map<string, string | null>();
   for (const tx of transactions) {
@@ -401,6 +407,7 @@ export function transform(
     const legacyMetadata =
       category.metadata && typeof category.metadata === 'object' ? category.metadata : null;
     const categoryType = mapCategoryType(category);
+    categoryTypeById.set(categoryId, categoryType);
     const mappedMetadata = {
       ...(categoryType !== 'standard' ? { categoryType } : {}),
       ...(legacyMetadata?.excludeFromOverallBudget === true ? { excludeFromOverallBudget: true } : {}),
@@ -610,6 +617,9 @@ export function transform(
         details: { itemId: docId } });
     }
 
+    // Track item price for isComplete computation on transactions
+    itemPriceCentsById.set(docId, purchasePriceOk ? purchasePriceCents : null);
+
     const images: ReturnType<typeof registerMedia>[] = [];
     for (const img of (item.images ?? [])) {
       const att = registerMedia(img, `accounts/${accountId}/items/${docId}`, 'images', false);
@@ -664,7 +674,6 @@ export function transform(
     const { cents: amountCents, ok: amountOk } = parseDecimalToCents(tx.amount);
     const { cents: subtotalCents, ok: subtotalOk } = parseDecimalToCents(tx.subtotal);
 
-    const needsReview = Boolean(tx.needs_review) || !amountOk || !subtotalOk;
     if (!amountOk) warnings.push({ code: 'invalid_transaction_amount',
       message: 'Transaction amount could not be parsed; set to 0 and flagged for review.',
       details: { transactionId: txId, amount: tx.amount } });
@@ -698,12 +707,67 @@ export function transform(
 
     const status = mapTransactionStatus(tx.status);
 
+    // Compute isComplete + audit (mirrors Cloud Function logic)
+    // Note: canonical transactions don't exist in legacy Supabase data — they're created at runtime
+    const txAmountValue: number = amountOk ? (amountCents ?? 0) : 0;
+    const txSubtotalValue: number | null = subtotalOk ? (subtotalCents ?? null) : null;
+    const txTaxRatePct = parseNumber(tx.tax_rate_pct);
+
+    let isComplete = false;
+    let audit: { resolvedSubtotalCents: number; itemsSumCents: number; varianceCents: number; variancePercent: number } | null = null;
+
+    {
+      const catType = budgetCategoryId ? (categoryTypeById.get(budgetCategoryId) ?? null) : null;
+      if (catType !== 'itemized') {
+        isComplete = true;
+      } else {
+        // Itemized category — compute completeness
+        const hasSubtotal = txSubtotalValue !== null && txSubtotalValue !== undefined;
+        const hasTaxRate = txTaxRatePct !== null && txTaxRatePct !== undefined;
+
+        if (!hasSubtotal && !hasTaxRate) {
+          isComplete = false;
+        } else if (itemIds.length === 0) {
+          isComplete = false;
+        } else {
+          // Resolve subtotal
+          let resolvedSubtotal: number | null = null;
+          if (txSubtotalValue !== null && txSubtotalValue > 0) {
+            resolvedSubtotal = txSubtotalValue;
+          } else if (txAmountValue > 0 && txTaxRatePct !== null && txTaxRatePct > 0) {
+            resolvedSubtotal = Math.round(txAmountValue / (1 + txTaxRatePct / 100));
+          } else if (txAmountValue > 0 && txTaxRatePct === 0) {
+            resolvedSubtotal = txAmountValue;
+          }
+
+          if (resolvedSubtotal !== null && resolvedSubtotal > 0) {
+            // Sum item prices
+            let itemsSumCents = 0;
+            for (const iid of itemIds) {
+              const price = itemPriceCentsById.get(iid);
+              if (typeof price === 'number') itemsSumCents += price;
+            }
+
+            const varianceCents = itemsSumCents - resolvedSubtotal;
+            const variancePercent = (varianceCents / resolvedSubtotal) * 100;
+            isComplete = Math.abs(variancePercent) <= 1;
+            audit = {
+              resolvedSubtotalCents: resolvedSubtotal,
+              itemsSumCents,
+              varianceCents,
+              variancePercent: Math.round(variancePercent * 100) / 100,
+            };
+          }
+        }
+      }
+    }
+
     addDoc(txOwnerPath, {
       id: txId,
       accountId,
       projectId: resolvedProjectId,
       transactionDate: normalizeOptionalString(tx.transaction_date) ?? '',
-      amountCents: amountOk ? amountCents : 0,
+      amountCents: txAmountValue,
       source: normalizeOptionalString(tx.source) ?? null,
       type: normalizeOptionalString(tx.transaction_type) ?? null,   // Firestore field is "type"
       paymentMethod: normalizeOptionalString(tx.payment_method) ?? null,  // ADDED
@@ -718,9 +782,10 @@ export function transform(
       otherImages: otherImages.length > 0 ? otherImages : null,
       transactionImages: transactionImages.length > 0 ? transactionImages : null,
       budgetCategoryId,
-      needsReview,
-      taxRatePct: parseNumber(tx.tax_rate_pct),
-      subtotalCents: subtotalOk ? subtotalCents : null,
+      isComplete,
+      audit,
+      taxRatePct: txTaxRatePct,
+      subtotalCents: txSubtotalValue,
       itemIds: itemIds.length > 0 ? itemIds : null,
       ...toAuditFields(tx, {
         createdBy: normalizeOptionalId(tx.created_by) ?? defaultUserId,

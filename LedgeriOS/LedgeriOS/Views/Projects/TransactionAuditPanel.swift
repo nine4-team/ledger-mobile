@@ -1,18 +1,33 @@
 import SwiftUI
 
 /// Audit panel for transaction completeness.
+/// Reads stored audit data from the Cloud Function — no client-side computation.
 /// Status is shown via the "Needs Review" badge on the CollapsibleSection header.
-/// This panel shows the progress bar, detail breakdown, warnings, and missing price list.
+/// This panel shows the progress bar, detail breakdown, and missing price list.
 struct TransactionAuditPanel: View {
-    let completeness: TransactionCompletenessCalculations.TransactionCompleteness
+    let audit: TransactionAudit
     let hasExplicitSubtotal: Bool
     let itemsMissingPrice: [Item]
+    let itemsCount: Int
+
+    private var resolvedSubtotalCents: Int { audit.resolvedSubtotalCents ?? 0 }
+    private var itemsSumCents: Int { audit.itemsSumCents ?? 0 }
+    private var varianceCents: Int { audit.varianceCents ?? 0 }
+    private var variancePercent: Double { audit.variancePercent ?? 0 }
+
+    private var completenessRatio: Double {
+        guard resolvedSubtotalCents > 0 else { return 0 }
+        return Double(itemsSumCents) / Double(resolvedSubtotalCents)
+    }
+
+    private var isComplete: Bool {
+        abs(variancePercent) <= 1.0
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             progressSection
             detailBreakdown
-            missingTaxWarning
 
             if !itemsMissingPrice.isEmpty {
                 missingPriceListSection
@@ -25,19 +40,19 @@ struct TransactionAuditPanel: View {
     private var progressSection: some View {
         VStack(spacing: Spacing.xs) {
             ProgressBar(
-                percentage: min(completeness.completenessRatio * 100, 100),
+                percentage: min(completenessRatio * 100, 100),
                 fillColor: statusBarColor,
                 height: 8
             )
 
             HStack {
-                Text("\(completeness.itemsCount) items")
+                Text("\(itemsCount) items")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
 
                 Spacer()
 
-                Text(TransactionCompletenessCalculations.remainingLabel(varianceCents: completeness.varianceCents))
+                Text(remainingLabel)
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
             }
@@ -49,29 +64,18 @@ struct TransactionAuditPanel: View {
     private var detailBreakdown: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             detailLine(
-                label: TransactionCompletenessCalculations.subtotalLabel(hasExplicitSubtotal: hasExplicitSubtotal),
-                value: CurrencyFormatting.formatCentsWithDecimals(completeness.transactionSubtotalCents)
+                label: hasExplicitSubtotal ? "Subtotal (pre-tax)" : "Estimated subtotal (pre-tax)",
+                value: CurrencyFormatting.formatCentsWithDecimals(resolvedSubtotalCents)
             )
 
             detailLine(
                 label: "Associated items total (pre-tax)",
-                value: CurrencyFormatting.formatCentsWithDecimals(completeness.itemsNetTotalCents)
+                value: CurrencyFormatting.formatCentsWithDecimals(itemsSumCents)
             )
 
-            if let taxAmount = completeness.taxAmount {
-                detailLine(
-                    label: "Tax",
-                    value: CurrencyFormatting.formatCentsWithDecimals(taxAmount)
-                )
-            } else if let inferredTax = completeness.inferredTax {
-                detailLine(
-                    label: "Calculated tax (from rate)",
-                    value: CurrencyFormatting.formatCentsWithDecimals(inferredTax)
-                )
-            }
-
-            if completeness.itemsMissingPriceCount > 0 {
-                Text("\(completeness.itemsMissingPriceCount) items missing purchase price")
+            let missingCount = itemsMissingPrice.count
+            if missingCount > 0 {
+                Text("\(missingCount) items missing purchase price")
                     .font(Typography.caption)
                     .foregroundStyle(StatusColors.inProgressText)
             }
@@ -82,28 +86,6 @@ struct TransactionAuditPanel: View {
         Text("\(label): \(value)")
             .font(Typography.caption)
             .foregroundStyle(BrandColors.textSecondary)
-    }
-
-    // MARK: - Missing Tax Warning
-
-    @ViewBuilder
-    private var missingTaxWarning: some View {
-        if completeness.missingTaxData {
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(StatusColors.inProgressText)
-
-                (Text("Tax rate not set. ").bold()
-                    + Text("Set tax rate or transaction subtotal for accurate calculations."))
-                    .font(Typography.caption)
-                    .foregroundStyle(StatusColors.inProgressText)
-            }
-            .padding(Spacing.md)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(StatusColors.inProgressBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-        }
     }
 
     // MARK: - Missing Price List
@@ -145,12 +127,17 @@ struct TransactionAuditPanel: View {
         }
     }
 
-    // MARK: - Color Helpers
+    // MARK: - Helpers
+
+    private var remainingLabel: String {
+        if varianceCents <= 0 {
+            return "\(CurrencyFormatting.formatCentsWithDecimals(-varianceCents)) remaining"
+        } else {
+            return "Over by \(CurrencyFormatting.formatCentsWithDecimals(varianceCents))"
+        }
+    }
 
     private var statusBarColor: Color {
-        switch completeness.status {
-        case .complete: return StatusColors.metBarComplete
-        case .near, .incomplete, .over: return StatusColors.inProgressBar
-        }
+        isComplete ? StatusColors.metBarComplete : StatusColors.inProgressBar
     }
 }

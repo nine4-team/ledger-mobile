@@ -35,7 +35,7 @@ All data lives under a single **Account** document. Every entity path begins wit
 
 ### AccountMember
 
-**Path:** `accounts/{accountId}/members/{memberId}`
+**Path:** `accounts/{accountId}/users/{userId}`
 
 | Field | Type | Constraints |
 |-------|------|-------------|
@@ -77,7 +77,9 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | inventorySaleDirection | string, nullable | One of: "business_to_project", "project_to_business". Only set when isCanonicalInventorySale is true |
 | isCanonicalInventory | boolean, nullable | Legacy flag for older inventory operations |
 | canonicalKind | string, nullable | Legacy kind classifier |
-| needsReview | boolean, nullable | Flags transaction for user review |
+| needsReview | boolean, nullable | **Deprecated.** Replaced by `isComplete`. |
+| isComplete | boolean, nullable | Auto-computed by Cloud Function. `true` = complete, `false` = needs review (shows badge). See `docs/specs/transaction-completeness.md` |
+| audit | TransactionAudit, nullable | Stored completeness audit data. Contains `resolvedSubtotalCents`, `itemsSumCents`, `varianceCents`, `variancePercent`. Null for non-itemized categories. See `docs/specs/transaction-completeness.md` |
 | purchasedBy | string, nullable | Who made the purchase |
 | reimbursementType | string, nullable | |
 | hasEmailReceipt | boolean, nullable | **Firestore field name is `receiptEmailed`** |

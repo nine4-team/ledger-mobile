@@ -49,6 +49,13 @@ export interface Transaction {
   isCanonicalInventory?: boolean;
   canonicalKind?: string;
   needsReview?: boolean;
+  isComplete?: boolean;
+  audit?: {
+    resolvedSubtotalCents: number;
+    itemsSumCents: number;
+    varianceCents: number;
+    variancePercent: number;
+  } | null;
   purchasedBy?: string;
   reimbursementType?: string;
   receiptEmailed?: boolean;

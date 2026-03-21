@@ -21,7 +21,7 @@ struct TransactionCard: View {
             transactionType: transaction.transactionType,
             reimbursementType: transaction.reimbursementType,
             hasEmailReceipt: transaction.hasEmailReceipt ?? false,
-            needsReview: transaction.needsReview ?? false,
+            isComplete: transaction.isComplete,
             status: transaction.status
         )
     }

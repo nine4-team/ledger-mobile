@@ -4,7 +4,7 @@ import SwiftUI
 
 enum TransactionFilterOption: String, CaseIterable {
     case all
-    case needsReview = "needs-review"
+    case needsReview = "needs-review"  // Shows transactions where isComplete != true
     case hasReceipt = "has-receipt"
     case purchase
     case sale
@@ -102,7 +102,7 @@ enum TransactionFilterSortCalculations {
         case .all:
             return transactions
         case .needsReview:
-            return transactions.filter { $0.needsReview == true }
+            return transactions.filter { $0.isComplete != true }
         case .hasReceipt:
             return transactions.filter { $0.hasEmailReceipt == true || !($0.receiptImages ?? []).isEmpty }
         case .purchase:
@@ -167,8 +167,7 @@ enum TransactionFilterSortCalculations {
                 guard filters.transactionType.contains(txType) else { return false }
             }
             if !filters.completeness.isEmpty {
-                let needsReview = tx.needsReview == true
-                let val = needsReview ? "needs-review" : "complete"
+                let val = tx.isComplete == true ? "complete" : "needs-review"
                 guard filters.completeness.contains(val) else { return false }
             }
             if !filters.budgetCategory.isEmpty {

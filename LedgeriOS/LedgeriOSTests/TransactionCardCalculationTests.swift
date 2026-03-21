@@ -13,7 +13,7 @@ struct TransactionCardCalculationTests {
             transactionType: "purchase",
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.count == 1)
@@ -29,7 +29,7 @@ struct TransactionCardCalculationTests {
             transactionType: "return",
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.count == 1)
@@ -45,7 +45,7 @@ struct TransactionCardCalculationTests {
             transactionType: "sale",
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.count == 1)
@@ -59,7 +59,7 @@ struct TransactionCardCalculationTests {
             transactionType: "to-inventory",
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -71,7 +71,7 @@ struct TransactionCardCalculationTests {
             transactionType: nil,
             reimbursementType: "owed-to-client",
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -83,7 +83,7 @@ struct TransactionCardCalculationTests {
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: true,
+            isComplete: false,
             status: nil
         )
         #expect(badges.count == 1)
@@ -99,7 +99,7 @@ struct TransactionCardCalculationTests {
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -111,7 +111,7 @@ struct TransactionCardCalculationTests {
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.isEmpty)
@@ -123,7 +123,7 @@ struct TransactionCardCalculationTests {
             transactionType: "purchase",
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
-            needsReview: true,
+            isComplete: false,
             status: nil
         )
         #expect(badges.count == 2)
@@ -137,7 +137,7 @@ struct TransactionCardCalculationTests {
             transactionType: "purchase",
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
-            needsReview: true,
+            isComplete: false,
             status: nil
         )
         #expect(badges.count == 2)
@@ -151,7 +151,7 @@ struct TransactionCardCalculationTests {
             transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
-            needsReview: false,
+            isComplete: true,
             status: nil
         )
         #expect(badges.isEmpty)

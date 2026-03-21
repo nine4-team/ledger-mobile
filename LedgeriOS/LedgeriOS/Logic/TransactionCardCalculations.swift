@@ -10,13 +10,13 @@ enum TransactionCardCalculations {
         transactionType: String?,
         reimbursementType: String?,
         hasEmailReceipt: Bool,
-        needsReview: Bool,
+        isComplete: Bool?,
         status: String?
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
-        // 1. Needs review badge (always leftmost)
-        if needsReview {
+        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil
+        if isComplete != true {
             badges.append(CardBadge(
                 text: "Needs Review",
                 color: StatusColors.badgeNeedsReview,

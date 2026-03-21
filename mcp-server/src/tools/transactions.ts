@@ -33,7 +33,7 @@ function formatTransaction(tx: Transaction & { id: string }) {
     itemCount: tx.itemIds?.length ?? 0,
     notes: tx.notes ?? "",
     isCanceled: tx.isCanceled ?? false,
-    needsReview: tx.needsReview ?? false,
+    isComplete: tx.isComplete ?? null,
     status: tx.status ?? "",
     purchasedBy: tx.purchasedBy ?? "",
     reimbursementType: tx.reimbursementType ?? "",
@@ -45,20 +45,20 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── list_transactions ──────────────────────────────────────────────────────
   server.tool(
     "list_transactions",
-    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts.",
+    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false).",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
       type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, To Inventory)"),
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
       source: z.string().optional().describe("Filter by source/vendor name"),
-      needsReview: z.boolean().optional().describe("Filter by needsReview flag"),
+      isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
       reimbursementType: z.string().optional().describe("Filter by reimbursement type"),
       hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, needsReview, reimbursementType, hasItems, limit, offset }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, hasItems, limit, offset }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -83,8 +83,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         query = query.where("source", "==", source);
       }
 
-      if (needsReview !== undefined) {
-        query = query.where("needsReview", "==", needsReview);
+      if (isComplete !== undefined) {
+        query = query.where("isComplete", "==", isComplete);
       }
 
       if (reimbursementType) {
@@ -115,7 +115,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── get_transaction ────────────────────────────────────────────────────────
   server.tool(
     "get_transaction",
-    "Get a single transaction with its linked items resolved via itemIds.",
+    "Get a single transaction with linked items. Returns isComplete (auto-computed by Cloud Function: true when items sum matches pre-tax subtotal within ±1% for itemized categories, always true for non-itemized/canonical). For itemized categories, returns an 'audit' object with resolvedSubtotalCents, itemsSumCents, varianceCents, variancePercent. The app shows a 'Needs Review' badge when isComplete is false — if a user says a transaction 'needs review', that means isComplete is false. Check null fields directly to identify missing data.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       const tx = await getDoc<Transaction>(db, "transactions", transactionId);
@@ -140,6 +140,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         purchasedBy: tx.purchasedBy ?? "",
         reimbursementType: tx.reimbursementType ?? "",
         paymentMethod: tx.paymentMethod ?? "",
+        audit: tx.audit ?? null,
         receiptImages: (tx.receiptImages ?? []).map(formatAttachment),
         otherImages: (tx.otherImages ?? []).map(formatAttachment),
         items: items.map((i) => ({
@@ -180,7 +181,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── create_transaction ─────────────────────────────────────────────────────
   server.tool(
     "create_transaction",
-    "Create a new transaction.",
+    "Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function.",
     {
       projectId: z.string().optional().describe("Project ID (omit for business inventory)"),
       budgetCategoryId: z.string().describe("Budget category ID"),
@@ -197,6 +198,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         amountCents,
         type: txType,
         isCanceled: false,
+        isComplete: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -227,7 +229,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "Update transaction fields.",
+    "Update transaction fields. isComplete recomputes automatically after every write via Cloud Function. For itemized categories, it becomes true when: (1) tax data exists (subtotalCents or taxRatePct is set), (2) items are linked, and (3) linked items' prices sum to within ±1% of the resolved pre-tax subtotal. Cannot be set manually.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.number().optional().describe("Total amount in cents (including tax)"),
@@ -266,7 +268,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for null projectId."),
         purchasedBy: z.string().optional().describe("Match transactions with this purchasedBy value"),
         source: z.string().optional().describe("Match transactions with this source"),
-        needsReview: z.boolean().optional().describe("Match transactions with this needsReview value"),
+        isComplete: z.boolean().optional().describe("Match transactions by completeness. false = needs review."),
         type: z.string().optional().describe("Match transactions with this type"),
       }).describe("Filter criteria — at least one field required"),
       update: z.object({
@@ -289,7 +291,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }
       if (filter.purchasedBy) query = query.where("purchasedBy", "==", filter.purchasedBy);
       if (filter.source) query = query.where("source", "==", filter.source);
-      if (filter.needsReview !== undefined) query = query.where("needsReview", "==", filter.needsReview);
+      if (filter.isComplete !== undefined) query = query.where("isComplete", "==", filter.isComplete);
       if (filter.type) query = query.where("type", "==", filter.type);
 
       const snapshot = await query.get();

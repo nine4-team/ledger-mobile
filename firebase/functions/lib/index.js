@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -690,15 +690,12 @@ exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('account
 });
 /**
  * Recompute canonical sale transaction totals when an item's price changes.
- * Only fires for items linked to a SALE_ transaction.
+ * Also recomputes isComplete for any parent transactions that reference this item.
  */
 exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
     const before = event.data?.before.data() ?? null;
     const after = event.data?.after.data() ?? null;
     if (!before || !after)
-        return;
-    const transactionId = after.transactionId;
-    if (!transactionId || !transactionId.startsWith('SALE_'))
         return;
     const beforePurchase = before.purchasePriceCents ?? null;
     const afterPurchase = after.purchasePriceCents ?? null;
@@ -707,18 +704,53 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
     if (beforePurchase === afterPurchase && beforeProject === afterProject)
         return;
     const accountId = event.params.accountId;
+    const itemId = event.params.itemId;
     const db = (0, firestore_1.getFirestore)();
-    const itemsSnapshot = await db
-        .collection(`accounts/${accountId}/items`)
-        .where('transactionId', '==', transactionId)
-        .get();
-    const amountCents = itemsSnapshot.docs.reduce((sum, doc) => sum + getItemValueCents(doc.data() ?? {}), 0);
-    const itemIds = itemsSnapshot.docs.map((doc) => doc.id);
-    await db.doc(`accounts/${accountId}/transactions/${transactionId}`).set({
-        amountCents: Math.max(0, amountCents),
-        itemIds,
-        updatedAt: firestore_1.FieldValue.serverTimestamp(),
-    }, { merge: true });
+    // --- Existing: recompute SALE_ transaction totals ---
+    const transactionId = after.transactionId;
+    if (transactionId && transactionId.startsWith('SALE_')) {
+        const itemsSnapshot = await db
+            .collection(`accounts/${accountId}/items`)
+            .where('transactionId', '==', transactionId)
+            .get();
+        const amountCents = itemsSnapshot.docs.reduce((sum, doc) => sum + getItemValueCents(doc.data() ?? {}), 0);
+        const saleItemIds = itemsSnapshot.docs.map((doc) => doc.id);
+        await db.doc(`accounts/${accountId}/transactions/${transactionId}`).set({
+            amountCents: Math.max(0, amountCents),
+            itemIds: saleItemIds,
+            updatedAt: firestore_1.FieldValue.serverTimestamp(),
+        }, { merge: true });
+    }
+    // --- New: recompute isComplete for parent transactions ---
+    // Only if purchasePriceCents changed (that's what audit uses)
+    if (beforePurchase !== afterPurchase) {
+        try {
+            const parentTxSnapshot = await db
+                .collection(`accounts/${accountId}/transactions`)
+                .where('itemIds', 'array-contains', itemId)
+                .get();
+            for (const txDoc of parentTxSnapshot.docs) {
+                // Skip SALE_ transactions — the write above already triggers onTransactionWritten
+                if (txDoc.id.startsWith('SALE_'))
+                    continue;
+                const txData = txDoc.data() ?? {};
+                const result = await computeIsComplete(db, accountId, txData);
+                const currentIsComplete = txData.isComplete ?? null;
+                const currentAudit = txData.audit ?? null;
+                if (currentIsComplete !== result.isComplete ||
+                    JSON.stringify(currentAudit) !== JSON.stringify(result.audit)) {
+                    await txDoc.ref.set({
+                        isComplete: result.isComplete,
+                        audit: result.audit,
+                        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                    }, { merge: true });
+                }
+            }
+        }
+        catch (err) {
+            console.error(`[onItemPriceChanged] isComplete recompute failed for item ${itemId}:`, err);
+        }
+    }
 });
 exports.onProjectRequestCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/projects/{projectId}/requests/{requestId}', async (event) => {
     const requestRef = event.data?.ref;
@@ -1263,26 +1295,168 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
         },
     }, { merge: true });
 }
+// ---------------------------------------------------------------------------
+// Transaction Completeness: isComplete + audit
+// ---------------------------------------------------------------------------
+/**
+ * Compute isComplete and audit for a transaction.
+ * Returns { isComplete, audit } where audit is null when not applicable.
+ */
+async function computeIsComplete(db, accountId, txData) {
+    // 1. Canonical transactions are always complete
+    if (txData.isCanonicalInventorySale === true || txData.isCanonicalInventory === true) {
+        return { isComplete: true, audit: null };
+    }
+    // 2. Check budget category type
+    const budgetCategoryId = typeof txData.budgetCategoryId === 'string' ? txData.budgetCategoryId.trim() : null;
+    if (budgetCategoryId) {
+        // Find the account ID to look up the category
+        const catDoc = await db
+            .doc(`accounts/${accountId}/presets/default/budgetCategories/${budgetCategoryId}`)
+            .get();
+        if (catDoc.exists) {
+            const catData = catDoc.data() ?? {};
+            const metadata = catData.metadata && typeof catData.metadata === 'object'
+                ? catData.metadata
+                : {};
+            const categoryType = typeof metadata.categoryType === 'string' ? metadata.categoryType : null;
+            if (categoryType !== 'itemized') {
+                return { isComplete: true, audit: null };
+            }
+        }
+        else {
+            // Category not found — treat as non-itemized
+            return { isComplete: true, audit: null };
+        }
+    }
+    else {
+        // No budget category — treat as non-itemized
+        return { isComplete: true, audit: null };
+    }
+    // From here: category is itemized
+    // 3. Check tax data presence (strict null check — taxRatePct: 0 is valid)
+    const hasSubtotal = txData.subtotalCents !== null && txData.subtotalCents !== undefined;
+    const hasTaxRate = txData.taxRatePct !== null && txData.taxRatePct !== undefined;
+    if (!hasSubtotal && !hasTaxRate) {
+        return { isComplete: false, audit: null };
+    }
+    // 4. Check items
+    const itemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
+    if (itemIds.length === 0) {
+        return { isComplete: false, audit: null };
+    }
+    // 5. Resolve subtotal
+    let resolvedSubtotalCents = null;
+    const subtotalCents = typeof txData.subtotalCents === 'number' ? txData.subtotalCents : null;
+    const amountCents = typeof txData.amountCents === 'number' ? txData.amountCents : null;
+    const taxRatePct = typeof txData.taxRatePct === 'number' ? txData.taxRatePct : null;
+    if (subtotalCents !== null && subtotalCents > 0) {
+        resolvedSubtotalCents = subtotalCents;
+    }
+    else if (amountCents !== null && amountCents > 0 && taxRatePct !== null && taxRatePct > 0) {
+        resolvedSubtotalCents = Math.round(amountCents / (1 + taxRatePct / 100));
+    }
+    else if (amountCents !== null && amountCents > 0 && taxRatePct === 0) {
+        // taxRatePct is explicitly 0 — no tax, amount is the subtotal
+        resolvedSubtotalCents = amountCents;
+    }
+    if (resolvedSubtotalCents === null || resolvedSubtotalCents <= 0) {
+        return { isComplete: false, audit: null };
+    }
+    // 6. Fetch items and sum purchasePriceCents
+    // Firestore 'in' queries max 30 items per batch
+    let itemsSumCents = 0;
+    const BATCH_SIZE = 30;
+    for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+        const batch = itemIds.slice(i, i + BATCH_SIZE);
+        const snapshot = await db
+            .collection(`accounts/${accountId}/items`)
+            .where('__name__', 'in', batch)
+            .get();
+        for (const doc of snapshot.docs) {
+            const data = doc.data() ?? {};
+            itemsSumCents += typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+        }
+    }
+    // 7. Compute variance
+    const varianceCents = itemsSumCents - resolvedSubtotalCents;
+    const variancePercent = (varianceCents / resolvedSubtotalCents) * 100;
+    const isComplete = Math.abs(variancePercent) <= 1;
+    return {
+        isComplete,
+        audit: {
+            resolvedSubtotalCents,
+            itemsSumCents,
+            varianceCents,
+            variancePercent: Math.round(variancePercent * 100) / 100, // 2 decimal places
+        },
+    };
+}
+/** Fields that, when they are the ONLY changes, should not re-trigger isComplete computation. */
+const IS_COMPLETE_LOOP_GUARD_FIELDS = new Set(['isComplete', 'audit', 'updatedAt', 'needsReview']);
+function onlyLoopGuardFieldsChanged(before, after) {
+    if (!before || !after)
+        return false;
+    const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    for (const key of allKeys) {
+        if (IS_COMPLETE_LOOP_GUARD_FIELDS.has(key))
+            continue;
+        if (JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+            return false;
+    }
+    return true;
+}
 /**
  * Recalculate budget summary when any transaction is created, updated, or deleted.
+ * Also computes isComplete + audit for transaction completeness.
  * Handles transactions moving between projects by recalculating both.
  */
 exports.onTransactionWritten = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/transactions/{transactionId}', async (event) => {
     const accountId = event.params.accountId;
+    const transactionId = event.params.transactionId;
     const beforeData = event.data?.before?.data();
     const afterData = event.data?.after?.data();
+    // Loop guard: skip if only isComplete/audit/updatedAt changed
+    if (beforeData && afterData && onlyLoopGuardFieldsChanged(beforeData, afterData)) {
+        return;
+    }
+    // --- Budget summary recalculation (existing logic, project-scoped only) ---
     const beforeProjectId = typeof beforeData?.projectId === 'string' ? beforeData.projectId : null;
     const afterProjectId = typeof afterData?.projectId === 'string' ? afterData.projectId : null;
-    if (!beforeProjectId && !afterProjectId)
-        return;
-    const projectIds = new Set();
-    if (beforeProjectId)
-        projectIds.add(beforeProjectId);
-    if (afterProjectId)
-        projectIds.add(afterProjectId);
-    await Promise.all(Array.from(projectIds).map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
-        console.error(`[onTransactionWritten] recalculate failed for project ${pid}:`, err);
-    })));
+    const budgetPromise = (beforeProjectId || afterProjectId)
+        ? Promise.all(Array.from(new Set([beforeProjectId, afterProjectId].filter(Boolean))).map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+            console.error(`[onTransactionWritten] recalculate failed for project ${pid}:`, err);
+        })))
+        : Promise.resolve();
+    // --- isComplete computation (runs for ALL transactions) ---
+    let isCompletePromise = Promise.resolve();
+    if (afterData) {
+        // Transaction exists (create or update) — compute isComplete
+        isCompletePromise = (async () => {
+            try {
+                const db = (0, firestore_1.getFirestore)();
+                const result = await computeIsComplete(db, accountId, afterData);
+                // Only write if values actually differ
+                const currentIsComplete = afterData.isComplete ?? null;
+                const currentAudit = afterData.audit ?? null;
+                const newAudit = result.audit;
+                if (currentIsComplete !== result.isComplete ||
+                    JSON.stringify(currentAudit) !== JSON.stringify(newAudit)) {
+                    await db
+                        .doc(`accounts/${accountId}/transactions/${transactionId}`)
+                        .set({
+                        isComplete: result.isComplete,
+                        audit: newAudit,
+                        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                    }, { merge: true });
+                }
+            }
+            catch (err) {
+                console.error(`[onTransactionWritten] isComplete computation failed for ${transactionId}:`, err);
+            }
+        })();
+    }
+    await Promise.all([budgetPromise, isCompletePromise]);
 });
 /**
  * Recalculate budget summary when a project-level budget category is written.
@@ -1318,6 +1492,47 @@ exports.onAccountBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('acc
             return;
     }
     const db = (0, firestore_1.getFirestore)();
+    const categoryId = event.params.categoryId;
+    // --- New: Handle categoryType changes for isComplete ---
+    if (before && after) {
+        const beforeMeta = before.metadata && typeof before.metadata === 'object'
+            ? before.metadata
+            : {};
+        const afterMeta = after.metadata && typeof after.metadata === 'object'
+            ? after.metadata
+            : {};
+        const beforeCategoryType = typeof beforeMeta.categoryType === 'string' ? beforeMeta.categoryType : null;
+        const afterCategoryType = typeof afterMeta.categoryType === 'string' ? afterMeta.categoryType : null;
+        if (beforeCategoryType !== afterCategoryType) {
+            try {
+                const txSnapshot = await db
+                    .collection(`accounts/${accountId}/transactions`)
+                    .where('budgetCategoryId', '==', categoryId)
+                    .get();
+                if (!txSnapshot.empty) {
+                    const isNowItemized = afterCategoryType === 'itemized';
+                    const TX_BATCH_SIZE = 500;
+                    for (let i = 0; i < txSnapshot.docs.length; i += TX_BATCH_SIZE) {
+                        const txBatch = db.batch();
+                        const slice = txSnapshot.docs.slice(i, i + TX_BATCH_SIZE);
+                        for (const txDoc of slice) {
+                            txBatch.set(txDoc.ref, {
+                                isComplete: !isNowItemized, // non-itemized = true, itemized = false (needs review)
+                                audit: null,
+                                updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                            }, { merge: true });
+                        }
+                        await txBatch.commit();
+                    }
+                    console.log(`[onAccountBudgetCategoryWritten] Updated isComplete on ${txSnapshot.size} transactions for category ${categoryId} (now ${afterCategoryType})`);
+                }
+            }
+            catch (err) {
+                console.error(`[onAccountBudgetCategoryWritten] isComplete fan-out failed for category ${categoryId}:`, err);
+            }
+        }
+    }
+    // --- Existing: recalculate budget summaries for all projects ---
     const projectsSnapshot = await db
         .collection(`accounts/${accountId}/projects`)
         .select()
@@ -1359,5 +1574,49 @@ exports.backfillBudgetSummaries = (0, https_1.onCall)(async (request) => {
         processed += batch.length;
     }
     return { processed, total: projectIds.length };
+});
+exports.backfillIsComplete = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+    const { accountId } = request.data ?? {};
+    if (!accountId) {
+        throw new https_1.HttpsError('invalid-argument', 'Missing accountId.');
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const txSnapshot = await db
+        .collection(`accounts/${accountId}/transactions`)
+        .get();
+    let processed = 0;
+    let updated = 0;
+    const BATCH_SIZE = 500;
+    const docs = txSnapshot.docs;
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+        const slice = docs.slice(i, i + BATCH_SIZE);
+        const batch = db.batch();
+        let batchHasWrites = false;
+        for (const txDoc of slice) {
+            const txData = txDoc.data() ?? {};
+            const result = await computeIsComplete(db, accountId, txData);
+            const currentIsComplete = txData.isComplete ?? null;
+            const currentAudit = txData.audit ?? null;
+            if (currentIsComplete !== result.isComplete ||
+                JSON.stringify(currentAudit) !== JSON.stringify(result.audit)) {
+                batch.set(txDoc.ref, {
+                    isComplete: result.isComplete,
+                    audit: result.audit,
+                    updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                }, { merge: true });
+                batchHasWrites = true;
+                updated++;
+            }
+            processed++;
+        }
+        if (batchHasWrites) {
+            await batch.commit();
+        }
+    }
+    return { processed, updated, total: docs.length };
 });
 //# sourceMappingURL=index.js.map

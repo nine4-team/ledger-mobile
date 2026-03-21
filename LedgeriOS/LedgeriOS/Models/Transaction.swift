@@ -1,5 +1,12 @@
 import FirebaseFirestore
 
+struct TransactionAudit: Codable, Hashable {
+    var resolvedSubtotalCents: Int?
+    var itemsSumCents: Int?
+    var varianceCents: Int?
+    var variancePercent: Double?
+}
+
 struct Transaction: Codable, Identifiable, Hashable {
     @DocumentID var id: String?
     var projectId: String?
@@ -24,6 +31,8 @@ struct Transaction: Codable, Identifiable, Hashable {
     var otherImages: [AttachmentRef]?
     var transactionImages: [AttachmentRef]?
     var needsReview: Bool?
+    var isComplete: Bool?
+    var audit: TransactionAudit?
     var taxRatePct: Double?
     var subtotalCents: Int?
     var triggerEvent: String?
@@ -35,7 +44,7 @@ struct Transaction: Codable, Identifiable, Hashable {
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes, isCanceled,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
-             needsReview, taxRatePct, subtotalCents, triggerEvent
+             needsReview, isComplete, audit, taxRatePct, subtotalCents, triggerEvent
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"
     }

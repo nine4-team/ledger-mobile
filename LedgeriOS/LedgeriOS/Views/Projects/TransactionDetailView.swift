@@ -97,13 +97,8 @@ struct TransactionDetailView: View {
         TransactionNextStepsCalculations.allStepsComplete(nextSteps)
     }
 
-    private var completeness: TransactionCompletenessCalculations.TransactionCompleteness? {
-        TransactionCompletenessCalculations.computeCompleteness(
-            transaction: currentTransaction,
-            items: activeItems,
-            returnedItems: returnedItems,
-            soldItems: soldItems
-        )
+    private var storedAudit: TransactionAudit? {
+        currentTransaction.audit
     }
 
     // MARK: - Body
@@ -273,7 +268,7 @@ struct TransactionDetailView: View {
             transactionType: currentTransaction.transactionType,
             reimbursementType: currentTransaction.reimbursementType,
             hasEmailReceipt: currentTransaction.hasEmailReceipt ?? false,
-            needsReview: currentTransaction.needsReview ?? false,
+            isComplete: currentTransaction.isComplete,
             status: currentTransaction.status
         )
         if !badges.isEmpty {
@@ -705,21 +700,21 @@ struct TransactionDetailView: View {
     }
 
     // 8. Transaction Audit (collapsed, conditional)
-    // H17: Only show for itemized categories — audit tracks item price completeness against receipt,
-    // which is only meaningful when the transaction has itemized items with individual prices.
+    // Only show for itemized categories when audit data is stored by Cloud Function.
     @ViewBuilder
     private var transactionAuditSection: some View {
-        if let comp = completeness,
+        if let audit = storedAudit,
            selectedCategory?.metadata?.categoryType == .itemized {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),
-                statusBadge: comp.status != .complete ? "Needs Review" : nil
+                statusBadge: currentTransaction.isComplete != true ? "Needs Review" : nil
             ) {
                 TransactionAuditPanel(
-                    completeness: comp,
+                    audit: audit,
                     hasExplicitSubtotal: (currentTransaction.subtotalCents ?? 0) > 0,
-                    itemsMissingPrice: transactionItems.filter { ($0.purchasePriceCents ?? 0) == 0 }
+                    itemsMissingPrice: transactionItems.filter { ($0.purchasePriceCents ?? 0) == 0 },
+                    itemsCount: transactionItems.count + returnedItems.count + soldItems.count
                 )
                 .padding(.top, Spacing.xs)
             }
@@ -958,7 +953,7 @@ struct TransactionDetailView: View {
             item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
             item.images = images
-            try? batch.setData(from: item, forDocument: ref)
+            _ = try? batch.setData(from: item, forDocument: ref)
             newItemIds.append(ref.documentID)
         }
 
