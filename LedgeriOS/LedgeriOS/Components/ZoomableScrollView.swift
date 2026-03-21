@@ -279,72 +279,263 @@ struct ZoomableScrollView: UIViewRepresentable {
 import SwiftUI
 import AppKit
 
-/// macOS fallback — simple async image viewer without UIScrollView zoom.
-/// Resolves `gs://` Firebase Storage URLs before loading (AsyncImage can't handle them).
-struct ZoomableScrollView: View {
+/// macOS zoomable image viewer backed by NSScrollView. Supports trackpad pinch-to-zoom,
+/// double-click zoom, pan when zoomed, and async image loading with spinner/error states.
+///
+/// Mirrors the iOS `UIViewRepresentable` + `UIScrollView` architecture.
+struct ZoomableScrollView: NSViewRepresentable {
     let url: URL?
     @Binding var zoomScale: CGFloat
     var onSingleTap: (() -> Void)?
 
-    @State private var loadedImage: NSImage?
-    @State private var loadFailed = false
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
 
-    var body: some View {
-        Group {
-            if let loadedImage {
-                Image(nsImage: loadedImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .scaleEffect(zoomScale)
-            } else if loadFailed {
-                Image(systemName: "exclamationmark.triangle")
-                    .foregroundStyle(.white.opacity(0.5))
-                    .font(.system(size: 36))
-            } else {
-                ProgressView()
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.borderType = .noBorder
+        scrollView.drawsBackground = false
+        scrollView.backgroundColor = .clear
+
+        // Enable native trackpad pinch-to-zoom
+        scrollView.allowsMagnification = true
+        scrollView.minMagnification = 1.0
+        scrollView.maxMagnification = 5.0
+
+        // Use a centering clip view
+        let clipView = CenteringClipView()
+        clipView.drawsBackground = false
+        scrollView.contentView = clipView
+
+        // Image view as document view
+        let imageView = NSImageView()
+        imageView.imageScaling = .scaleNone
+        imageView.imageAlignment = .alignCenter
+        scrollView.documentView = imageView
+        context.coordinator.imageView = imageView
+
+        // Loading spinner
+        let spinner = NSProgressIndicator()
+        spinner.style = .spinning
+        spinner.controlSize = .regular
+        spinner.isIndeterminate = true
+        spinner.isDisplayedWhenStopped = false
+        scrollView.addSubview(spinner)
+        context.coordinator.spinner = spinner
+
+        // Error icon
+        let errorConfig = NSImage.SymbolConfiguration(pointSize: 36, weight: .regular)
+        let errorImage = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: "Error")?
+            .withSymbolConfiguration(errorConfig)
+        let errorView = NSImageView(image: errorImage ?? NSImage())
+        errorView.contentTintColor = NSColor.white.withAlphaComponent(0.5)
+        errorView.isHidden = true
+        scrollView.addSubview(errorView)
+        context.coordinator.errorView = errorView
+
+        // Double-click gesture for zoom toggle
+        let doubleClick = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleDoubleClick(_:)))
+        doubleClick.numberOfClicksRequired = 2
+        scrollView.addGestureRecognizer(doubleClick)
+
+        // Single-click gesture
+        // Note: NSGestureRecognizer doesn't support failure requirements like UIKit.
+        // Single-click will also fire on double-click, which is acceptable — it toggles
+        // controls visibility while double-click handles zoom.
+        let singleClick = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleClick))
+        singleClick.numberOfClicksRequired = 1
+        singleClick.delaysPrimaryMouseButtonEvents = false
+        scrollView.addGestureRecognizer(singleClick)
+
+        // KVO on magnification to sync zoom back to SwiftUI
+        context.coordinator.magnificationObservation = scrollView.observe(\.magnification, options: [.new]) { [weak coordinator = context.coordinator] scrollView, change in
+            guard let coordinator, let newValue = change.newValue else { return }
+            if abs(newValue - coordinator.parent.zoomScale) > 0.01 {
+                DispatchQueue.main.async {
+                    coordinator.parent.zoomScale = newValue
+                }
             }
         }
-        .onTapGesture {
-            onSingleTap?()
+
+        // Load initial image
+        context.coordinator.loadImage(url: url)
+
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        context.coordinator.parent = self
+
+        // If URL changed, reload
+        if context.coordinator.currentURL != url {
+            context.coordinator.loadImage(url: url)
         }
-        .task(id: url) {
-            await loadImage()
+
+        // Sync zoom from SwiftUI → AppKit (from zoom buttons)
+        if abs(scrollView.magnification - zoomScale) > 0.01 {
+            scrollView.animator().magnification = zoomScale
         }
     }
 
-    private func loadImage() async {
-        loadedImage = nil
-        loadFailed = false
+    static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
+        coordinator.loadTask?.cancel()
+        coordinator.magnificationObservation = nil
+    }
 
-        guard let url else {
-            loadFailed = true
-            return
+    // MARK: - Centering Clip View
+
+    /// Custom NSClipView that centers the document view when it's smaller than the scroll view.
+    class CenteringClipView: NSClipView {
+        override func constrainBoundsRect(_ proposedBounds: NSRect) -> NSRect {
+            var constrained = super.constrainBoundsRect(proposedBounds)
+            guard let documentView else { return constrained }
+
+            let docFrame = documentView.frame
+            if docFrame.width < constrained.width {
+                constrained.origin.x = (docFrame.width - constrained.width) / 2
+            }
+            if docFrame.height < constrained.height {
+                constrained.origin.y = (docFrame.height - constrained.height) / 2
+            }
+            return constrained
+        }
+    }
+
+    // MARK: - Coordinator
+
+    class Coordinator: NSObject {
+        var parent: ZoomableScrollView
+        var imageView: NSImageView?
+        var spinner: NSProgressIndicator?
+        var errorView: NSImageView?
+        var currentURL: URL?
+        var magnificationObservation: NSKeyValueObservation?
+        fileprivate var loadTask: Task<Void, Never>?
+
+        init(parent: ZoomableScrollView) {
+            self.parent = parent
         }
 
-        // Resolve gs:// URLs to HTTPS via Firebase Storage SDK
-        let loadableURL: URL
-        if url.scheme == "gs" {
-            guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
-                loadFailed = true
-                return
-            }
-            loadableURL = resolved
-        } else {
-            loadableURL = url
+        deinit {
+            loadTask?.cancel()
+            magnificationObservation = nil
         }
 
-        do {
-            let (data, _) = try await URLSession.shared.data(from: loadableURL)
-            guard !Task.isCancelled else { return }
-            guard let image = NSImage(data: data) else {
-                loadFailed = true
+        // MARK: Double-Click
+
+        @objc func handleDoubleClick(_ recognizer: NSClickGestureRecognizer) {
+            guard let scrollView = recognizer.view as? NSScrollView else { return }
+
+            if scrollView.magnification > scrollView.minMagnification + 0.01 {
+                // Zoom out to fit
+                scrollView.animator().magnification = scrollView.minMagnification
+            } else {
+                // Zoom to 2.5x centered on click point
+                let clickPoint = recognizer.location(in: scrollView)
+                let targetScale: CGFloat = 2.5
+                scrollView.setMagnification(targetScale, centeredAt: clickPoint)
+            }
+        }
+
+        // MARK: Single-Click
+
+        @objc func handleSingleClick() {
+            parent.onSingleTap?()
+        }
+
+        // MARK: Image Loading
+
+        @MainActor
+        func loadImage(url: URL?) {
+            loadTask?.cancel()
+            currentURL = url
+            imageView?.image = nil
+            errorView?.isHidden = true
+
+            guard let url else {
+                errorView?.isHidden = false
                 return
             }
-            loadedImage = image
-        } catch {
-            if !Task.isCancelled {
-                loadFailed = true
+
+            spinner?.startAnimation(nil)
+
+            loadTask = Task { [weak self] in
+                do {
+                    // Resolve gs:// URLs to HTTPS download URLs
+                    let loadableURL: URL
+                    if url.scheme == "gs" {
+                        guard let resolved = await StorageURLResolver.resolve(url.absoluteString) else {
+                            self?.showError()
+                            return
+                        }
+                        loadableURL = resolved
+                    } else {
+                        loadableURL = url
+                    }
+
+                    let (data, _) = try await URLSession.shared.data(from: loadableURL)
+                    guard !Task.isCancelled else { return }
+                    guard let image = NSImage(data: data) else {
+                        self?.showError()
+                        return
+                    }
+                    self?.displayImage(image)
+                } catch {
+                    if !Task.isCancelled {
+                        self?.showError()
+                    }
+                }
             }
+        }
+
+        @MainActor
+        private func displayImage(_ image: NSImage) {
+            guard let imageView, let scrollView = imageView.enclosingScrollView else { return }
+            spinner?.stopAnimation(nil)
+            errorView?.isHidden = true
+
+            imageView.image = image
+            let imageSize = image.size
+            imageView.frame = CGRect(origin: .zero, size: imageSize)
+
+            // Fit image to scroll view bounds
+            let scrollBounds = scrollView.bounds
+            guard scrollBounds.width > 0, scrollBounds.height > 0,
+                  imageSize.width > 0, imageSize.height > 0 else { return }
+
+            let widthScale = scrollBounds.width / imageSize.width
+            let heightScale = scrollBounds.height / imageSize.height
+            let fitScale = min(widthScale, heightScale)
+
+            scrollView.minMagnification = fitScale
+            scrollView.maxMagnification = max(fitScale * 5, 5.0)
+            scrollView.magnification = fitScale
+
+            DispatchQueue.main.async {
+                self.parent.zoomScale = fitScale
+            }
+
+            layoutOverlays()
+        }
+
+        @MainActor
+        private func showError() {
+            spinner?.stopAnimation(nil)
+            errorView?.isHidden = false
+            layoutOverlays()
+        }
+
+        @MainActor
+        private func layoutOverlays() {
+            guard let scrollView = imageView?.enclosingScrollView else { return }
+            let bounds = scrollView.bounds
+            let center = CGPoint(x: bounds.midX, y: bounds.midY)
+            spinner?.frame = CGRect(x: center.x - 16, y: center.y - 16, width: 32, height: 32)
+            errorView?.frame = CGRect(x: center.x - 18, y: center.y - 18, width: 36, height: 36)
         }
     }
 }

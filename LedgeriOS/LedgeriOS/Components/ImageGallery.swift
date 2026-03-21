@@ -60,7 +60,9 @@ struct ImageGallery: View {
         #if canImport(UIKit)
         .statusBarHidden()
         #endif
+        #if canImport(UIKit)
         .gesture(dismissGesture)
+        #endif
         .onAppear {
             currentIndex = initialIndex
             resetHideTimer()
