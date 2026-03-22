@@ -27,14 +27,6 @@ struct TransactionDetailView: View {
     @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
 
-    // Items section filter/sort/search
-    @State private var itemsSearchText = ""
-    @State private var itemsActiveFilters: Set<ItemFilterOption> = []
-    @State private var itemsActiveSort: ItemSortOption = .createdDesc
-    @State private var itemsSelectedIds: Set<String> = []
-    @State private var itemsShowSortMenu = false
-    @State private var itemsShowFilterMenu = false
-
     // Image pinning
     @State private var pinnedAttachment: AttachmentRef?
     @State private var pinnedImageSource: [AttachmentRef] = []
@@ -61,15 +53,6 @@ struct TransactionDetailView: View {
 
     private var returnedItems: [Item] { lineageReturnedItems }
     private var soldItems: [Item] { lineageSoldItems }
-
-    private var processedActiveItems: [Item] {
-        ListFilterSortCalculations.applyAllMultiFilters(
-            activeItems,
-            filters: itemsActiveFilters,
-            sort: itemsActiveSort,
-            search: itemsSearchText
-        )
-    }
 
     private var categoryLookup: [String: BudgetCategory] {
         Dictionary(
@@ -134,25 +117,12 @@ struct TransactionDetailView: View {
             }
         }
         .background(BrandColors.background)
+        .navigationDestination(for: Item.self) { item in
+            ItemDetailView(item: item)
+        }
         .task(id: transaction.id) {
             await loadLineageItems()
         }
-        .background(SortMenu(
-            isPresented: $itemsShowSortMenu,
-            sortOptions: SortMenu.itemSortMenuItems(activeSort: itemsActiveSort, onSelect: { itemsActiveSort = $0 })
-        ))
-        .background(FilterMenu(
-            isPresented: $itemsShowFilterMenu,
-            filters: FilterMenu.filterMenuItems(
-                activeFilters: itemsActiveFilters,
-                scope: .project,
-                onToggle: { option in
-                    if itemsActiveFilters.contains(option) { itemsActiveFilters.remove(option) }
-                    else { itemsActiveFilters.insert(option) }
-                }
-            ),
-            closeOnItemPress: false
-        ))
         #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -546,48 +516,19 @@ struct TransactionDetailView: View {
         }
     }
 
-    // 5. Items — Section with pinned composite header (collapse toggle + control bar)
+    // 5. Items — Section with pinned composite header + SharedItemsList
     private var itemsSection: some View {
         Section {
             if expandedSections.contains("items") {
-                if processedActiveItems.isEmpty {
-                    Text(activeItems.isEmpty ? "No items yet" : "No items match your filters")
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, Spacing.xl)
-                } else {
-                    ForEach(processedActiveItems) { item in
-                        if let itemId = item.id {
-                            if itemsSelectedIds.isEmpty {
-                                NavigationLink(value: item) {
-                                    ItemCard(
-                                        item: item,
-                                        priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                                        isSelected: Binding(
-                                            get: { itemsSelectedIds.contains(itemId) },
-                                            set: { if $0 { itemsSelectedIds.insert(itemId) } else { itemsSelectedIds.remove(itemId) } }
-                                        )
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            } else {
-                                ItemCard(
-                                    item: item,
-                                    priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                                    isSelected: Binding(
-                                        get: { itemsSelectedIds.contains(itemId) },
-                                        set: { if $0 { itemsSelectedIds.insert(itemId) } else { itemsSelectedIds.remove(itemId) } }
-                                    ),
-                                    onPress: {
-                                        if itemsSelectedIds.contains(itemId) { itemsSelectedIds.remove(itemId) }
-                                        else { itemsSelectedIds.insert(itemId) }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+                SharedItemsList(
+                    mode: .embedded(items: activeItems, onItemPress: { _ in }),
+                    emptyMessage: "No items yet",
+                    onAdd: { showAddItemMenu = true },
+                    useNavigationLinks: true,
+                    filterScope: .project,
+                    inline: true
+                )
+                .padding(.top, Spacing.xs)
             }
         } header: {
             itemsSectionHeader
@@ -595,59 +536,28 @@ struct TransactionDetailView: View {
     }
 
     private var itemsSectionHeader: some View {
-        VStack(spacing: 0) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    sectionBinding("items").wrappedValue.toggle()
-                }
-            } label: {
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
-                        .foregroundStyle(BrandColors.textTertiary)
-                        .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
-                        .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
-                    Text("Items")
-                        .sectionLabelStyle()
-                    Text("\(activeItems.count)")
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.primary)
-                    Spacer()
-                }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                sectionBinding("items").wrappedValue.toggle()
             }
-            .buttonStyle(.plain)
-
-            if expandedSections.contains("items") {
-                let allIds = processedActiveItems.compactMap(\.id)
-                let isAllSelected = !allIds.isEmpty && allIds.allSatisfy { itemsSelectedIds.contains($0) }
-                NativeListControlBar(
-                    searchText: $itemsSearchText,
-                    searchPlaceholder: "Search items...",
-                    onAdd: { showAddItemMenu = true },
-                    style: .card
-                ) {
-                    Button {
-                        itemsSelectedIds = isAllSelected ? [] : Set(allIds)
-                    } label: {
-                        SelectorCircle(isSelected: isAllSelected, indicator: .check)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Select all")
-                } sortMenu: {
-                    Button { itemsShowSortMenu = true } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .foregroundStyle(itemsActiveSort != .createdDesc ? BrandColors.primary : .secondary)
-                    }
-                } filterMenu: {
-                    Button { itemsShowFilterMenu = true } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .foregroundStyle(!itemsActiveFilters.isEmpty ? BrandColors.primary : .secondary)
-                    }
-                }
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
+                    .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
+                Text("Items")
+                    .sectionLabelStyle()
+                Text("\(activeItems.count)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+                Spacer()
             }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .background(BrandColors.background
             .padding(.horizontal, -Spacing.screenPadding))
     }
@@ -837,7 +747,7 @@ struct TransactionDetailView: View {
 
     private func pinImage(_ attachment: AttachmentRef, from source: [AttachmentRef]) {
         pinnedAttachment = attachment
-        pinnedImageSource = source.filter { $0.kind == .image }
+        pinnedImageSource = source.filter { $0.kind == .image || $0.kind == .pdf }
     }
 
     // MARK: - Image Management (Receipts)
