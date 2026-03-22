@@ -8,6 +8,7 @@ export interface Project {
   description?: string;
   mainImageUrl?: string;
   isArchived: boolean;
+  paymentMethodLast4?: string;
   budgetSummary?: ProjectBudgetSummary;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;

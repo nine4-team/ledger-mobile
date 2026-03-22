@@ -66,13 +66,13 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | amountCents | number, nullable | Total amount in cents (always stored as positive; see Sign Conventions) |
 | subtotalCents | number, nullable | Pre-tax subtotal in cents. When set, should be <= amountCents |
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
-| transactionType | string, nullable | **Firestore field name is `type`**. One of: "Purchase", "Return", "Sale", "To Inventory" |
-| status | string, nullable | e.g. "returned" |
+| transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"` |
+| status | string, nullable | One of: `"pending"`, `"completed"`, `"canceled"` |
 | source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field |
 | transactionDate | string, nullable | Date of the transaction (stored as a string, not a timestamp) |
 | itemIds | array of string, nullable | **CANONICAL link to items.** List of Item document IDs associated with this transaction |
 | notes | string, nullable | |
-| isCanceled | boolean, nullable | When true, this transaction contributes $0 to all budget calculations |
+| ~~isCanceled~~ | ~~boolean~~ | **Removed.** Use `status == "canceled"` instead. Canceled transactions contribute $0 to all budget calculations |
 | isCanonicalInventorySale | boolean, nullable | True for system-generated sale transactions in the canonical sale system |
 | inventorySaleDirection | string, nullable | One of: "business_to_project", "project_to_business". Only set when isCanonicalInventorySale is true |
 | isCanonicalInventory | boolean, nullable | Legacy flag for older inventory operations |
@@ -113,7 +113,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | purchasePriceCents | number, nullable | What was paid for this item (in cents) |
 | projectPriceCents | number, nullable | Price charged to/for the project (in cents) |
 | marketValueCents | number, nullable | Estimated market value |
-| status | string, nullable | One of: "to purchase", "purchased", "to return", "returned" |
+| status | string, nullable | One of: `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"`. `"sold"` is system-set by sale operations |
 | source | string, nullable | Vendor/source name |
 | notes | string, nullable | |
 | bookmark | boolean, nullable | User-set bookmark flag |
@@ -165,6 +165,7 @@ A design project, job, or client engagement.
 | description | string, nullable | |
 | mainImageUrl | string, nullable | URL to the project's primary image |
 | isArchived | boolean, nullable | |
+| paymentMethodLast4 | string, nullable | Last 4 digits of credit card used for this client's purchases. Used by MCP audit to match receipts to projects |
 | budgetSummary | ProjectBudgetSummary, nullable | Denormalized budget rollup (see embedded type below) |
 | createdAt | timestamp | |
 | updatedAt | timestamp | |
@@ -491,7 +492,7 @@ Computed client-side for budget displays and the budget tab.
 
 ```
 function normalizeTransactionAmount(transaction):
-    if transaction.isCanceled is true:
+    if transaction.status == "canceled":
         return 0
 
     amount = transaction.amountCents or 0
@@ -503,7 +504,7 @@ function normalizeTransactionAmount(transaction):
             return abs(amount)      // money spent on project
         return amount               // fallback if direction unknown
 
-    if transaction.status == "returned" OR amount < 0:
+    if transaction.transactionType == "return" OR amount < 0:
         return -abs(amount)         // returns subtract from spend
 
     return amount                   // purchases add to spend
@@ -558,10 +559,10 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 ### Transaction amountCents
 
 - **Purchases:** Stored as positive. Adds to project spend.
-- **Returns:** Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `status == "returned"` or `transactionType == "Return"`.
+- **Returns:** Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
 - **Canonical sales, business_to_project:** Stored as positive. **Adds** to project spend (money going out of business into project).
 - **Canonical sales, project_to_business:** Stored as positive. **Multiplied by -1** in budget calculations (money coming back to business from project).
-- **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `isCanceled == true`.
+- **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `status == "canceled"`.
 
 ### Item price fields
 
@@ -602,7 +603,14 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 - `images`, `receiptImages`, `otherImages`, `transactionImages`: When null, treat as empty array.
 - `checklists`: When null, treat as empty array.
 
-### String Field Normalization
+### Field Value Conventions
 
-- `transactionType` values may have inconsistent casing in Firestore (e.g. "Return", "return", "RETURN"). Always normalize to lowercase before comparison in budget calculations.
+All enum-like fields use **lowercase with spaces** for multi-word values. Swift enums enforce this via `rawValue` matching the storage format. Display uses `.displayLabel` (computed from `rawValue.capitalized`).
+
+| Field | Valid values |
+|-------|-------------|
+| `item.status` | `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"` |
+| `transaction.type` | `"purchase"`, `"sale"`, `"return"` |
+| `transaction.status` | `"pending"`, `"completed"`, `"canceled"` |
+
 - `source` (vendor) values are case-sensitive display strings; do not normalize.

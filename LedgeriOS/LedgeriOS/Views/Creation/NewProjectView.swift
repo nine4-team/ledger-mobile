@@ -17,6 +17,7 @@ struct NewProjectView: View {
     @State private var name = ""
     @State private var clientName = ""
     @State private var descriptionText = ""
+    @State private var paymentMethodLast4 = ""
     @State private var heroImageItem: PhotosPickerItem?
     @State private var heroImageData: Data?
 
@@ -97,6 +98,14 @@ struct NewProjectView: View {
                 FormField(text: $name, placeholder: "Project name *")
                 FormField(text: $clientName, placeholder: "Client name *")
                 FormField(text: $descriptionText, placeholder: "Description", axis: .vertical)
+
+                FormField(text: $paymentMethodLast4, placeholder: "Card last 4 (e.g. 1234)")
+                    .platformKeyboardType(.numberPad)
+                    .onChange(of: paymentMethodLast4) { _, newValue in
+                        let digits = newValue.filter(\.isNumber)
+                        let truncated = String(digits.prefix(4))
+                        if truncated != newValue { paymentMethodLast4 = truncated }
+                    }
 
                 heroImageSection
             }
@@ -322,11 +331,13 @@ struct NewProjectView: View {
         let trimmedDesc = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
+            let trimmedLast4 = paymentMethodLast4.trimmingCharacters(in: .whitespacesAndNewlines)
             let projectId = try projectService.createProject(
                 accountId: accountId,
                 name: trimmedName,
                 clientName: trimmedClient,
-                description: trimmedDesc.isEmpty ? nil : trimmedDesc
+                description: trimmedDesc.isEmpty ? nil : trimmedDesc,
+                paymentMethodLast4: trimmedLast4.isEmpty ? nil : trimmedLast4
             )
 
             dismiss()

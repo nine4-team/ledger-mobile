@@ -25,6 +25,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
           id: p.id,
           name: p.name || "",
           clientName: p.clientName || "",
+          paymentMethodLast4: p.paymentMethodLast4 || null,
           isArchived: p.isArchived,
           budget: formatCents(bs?.totalBudgetCents),
           spent: formatCents(bs?.spentCents),
@@ -144,8 +145,9 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
       name: z.string().describe("Project name"),
       clientName: z.string().default("").describe("Client name"),
       description: z.string().optional().describe("Project description"),
+      paymentMethodLast4: z.string().optional().describe("Last 4 digits of the credit card used for this client's purchases"),
     },
-    async ({ name, clientName, description }) => {
+    async ({ name, clientName, description, paymentMethodLast4 }) => {
       const data: Record<string, unknown> = {
         name,
         clientName,
@@ -154,6 +156,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
         updatedAt: new Date(),
       };
       if (description) data.description = description;
+      if (paymentMethodLast4) data.paymentMethodLast4 = paymentMethodLast4;
 
       const ref = await accountCollection(db, "projects").add(data);
       return { content: [{ type: "text", text: `Created project ${ref.id}` }] };
@@ -169,12 +172,14 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
       name: z.string().optional().describe("New project name"),
       clientName: z.string().optional().describe("New client name"),
       description: z.string().optional().describe("New description"),
+      paymentMethodLast4: z.string().optional().describe("Last 4 digits of the credit card used for this client's purchases"),
     },
-    async ({ projectId, name, clientName, description }) => {
+    async ({ projectId, name, clientName, description, paymentMethodLast4 }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
       if (clientName !== undefined) updates.clientName = clientName;
       if (description !== undefined) updates.description = description;
+      if (paymentMethodLast4 !== undefined) updates.paymentMethodLast4 = paymentMethodLast4;
 
       await accountCollection(db, "projects").doc(projectId).update(updates);
       return { content: [{ type: "text", text: `Updated project ${projectId}` }] };
