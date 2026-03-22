@@ -10,7 +10,7 @@ struct TransactionCardCalculationTests {
     @Test("Purchase produces subtle brand-primary badge")
     func badgeItemsPurchase() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "purchase",
+            transactionType: .purchase,
             reimbursementType: nil,
             hasEmailReceipt: false,
             isComplete: true,
@@ -26,7 +26,7 @@ struct TransactionCardCalculationTests {
     @Test("Return produces subtle brand-primary badge")
     func badgeItemsReturn() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "return",
+            transactionType: .return,
             reimbursementType: nil,
             hasEmailReceipt: false,
             isComplete: true,
@@ -42,7 +42,7 @@ struct TransactionCardCalculationTests {
     @Test("Sale produces subtle brand-primary badge")
     func badgeItemsSale() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "sale",
+            transactionType: .sale,
             reimbursementType: nil,
             hasEmailReceipt: false,
             isComplete: true,
@@ -56,7 +56,7 @@ struct TransactionCardCalculationTests {
     @Test("To-inventory produces no badge")
     func badgeItemsToInventoryRemoved() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "to-inventory",
+            transactionType: nil,
             reimbursementType: nil,
             hasEmailReceipt: false,
             isComplete: true,
@@ -120,7 +120,7 @@ struct TransactionCardCalculationTests {
     @Test("Badge order: needs review first, then type")
     func badgeItemsOrder() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "purchase",
+            transactionType: .purchase,
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
             isComplete: false,
@@ -134,7 +134,7 @@ struct TransactionCardCalculationTests {
     @Test("Multiple badges: purchase + review (reimbursement excluded)")
     func badgeItemsMultiple() {
         let badges = TransactionCardCalculations.badgeItems(
-            transactionType: "purchase",
+            transactionType: .purchase,
             reimbursementType: "owed-to-client",
             hasEmailReceipt: true,
             isComplete: false,
@@ -161,7 +161,7 @@ struct TransactionCardCalculationTests {
 
     @Test("Formats positive cents with decimals")
     func formattedAmountPositive() {
-        let result = TransactionCardCalculations.formattedAmount(amountCents: 10012, transactionType: "purchase")
+        let result = TransactionCardCalculations.formattedAmount(amountCents: 10012, transactionType: .purchase)
         #expect(result == "$100.12")
     }
 

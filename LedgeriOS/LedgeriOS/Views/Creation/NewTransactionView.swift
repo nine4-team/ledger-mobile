@@ -17,7 +17,7 @@ struct NewTransactionView: View {
 
     // Step management
     @State private var currentStep = 1
-    @State private var transactionType: String?
+    @State private var transactionType: TransactionType?
 
     // Step 2
     @State private var destination = ""
@@ -26,7 +26,7 @@ struct NewTransactionView: View {
     @State private var source = ""
     @State private var transactionDate = Date()
     @State private var amount = ""
-    @State private var status = "pending"
+    @State private var status: TransactionStatus = .pending
     @State private var purchasedBy = "design-business"
     @State private var reimbursementType = "none"
     @State private var notes = ""
@@ -100,15 +100,14 @@ struct NewTransactionView: View {
             primaryAction: FormSheetAction(title: "Cancel") { dismiss() }
         ) {
             VStack(spacing: Spacing.md) {
-                typeCard("Purchase", icon: "cart", type: "purchase")
-                typeCard("Sale", icon: "dollarsign.circle", type: "sale")
-                typeCard("Return", icon: "arrow.uturn.left", type: "return")
-                typeCard("To Inventory", icon: "shippingbox", type: "to-inventory")
+                typeCard("Purchase", icon: "cart", type: .purchase)
+                typeCard("Sale", icon: "dollarsign.circle", type: .sale)
+                typeCard("Return", icon: "arrow.uturn.left", type: .return)
             }
         }
     }
 
-    private func typeCard(_ label: String, icon: String, type: String) -> some View {
+    private func typeCard(_ label: String, icon: String, type: TransactionType) -> some View {
         Button {
             transactionType = type
             currentStep = 2
@@ -162,10 +161,10 @@ struct NewTransactionView: View {
 
     private var destinationPrompt: String {
         switch transactionType {
-        case "purchase": return "Where was this purchased?"
-        case "sale": return "Who was this sold to?"
-        case "return": return "Where was this returned?"
-        default: return "Source"
+        case .purchase: return "Where was this purchased?"
+        case .sale: return "Who was this sold to?"
+        case .return: return "Where was this returned?"
+        case nil: return "Source"
         }
     }
 
@@ -211,10 +210,9 @@ struct NewTransactionView: View {
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
                     Picker("Status", selection: $status) {
-                        Text("Pending").tag("pending")
-                        Text("Completed").tag("completed")
-                        Text("Canceled").tag("canceled")
-                        Text("Inventory Only").tag("inventory-only")
+                        ForEach(TransactionStatus.allCases, id: \.self) { s in
+                            Text(s.displayLabel).tag(s)
+                        }
                     }
                     .pickerStyle(.segmented)
                 }

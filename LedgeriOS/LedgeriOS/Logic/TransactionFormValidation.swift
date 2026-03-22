@@ -48,7 +48,7 @@ enum TransactionFormValidation {
     }
 
     /// Quick check whether a transaction has the minimum required fields to submit.
-    static func isTransactionReadyToSubmit(type: String?) -> Bool {
-        type != nil && !type!.isEmpty
+    static func isTransactionReadyToSubmit(type: TransactionType?) -> Bool {
+        type != nil
     }
 }

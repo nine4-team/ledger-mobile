@@ -61,7 +61,7 @@ struct InventoryOperationsService {
             // FieldValue.arrayUnion + increment handle idempotent accumulation.
             batch.setData([
                 "projectId": groupKey.projectId,
-                "type": "Sale",                           // C1: use "type" not "transactionType"
+                "type": TransactionType.sale.rawValue,                           // C1: use "type" not "transactionType"
                 "isCanonicalInventorySale": true,
                 "inventorySaleDirection": "project_to_business",  // C2: only valid directions
                 "budgetCategoryId": groupKey.categoryId,
@@ -162,7 +162,7 @@ struct InventoryOperationsService {
                 )
                 batch.setData([
                     "projectId": srcProjectId,
-                    "type": "Sale",                     // C1
+                    "type": TransactionType.sale.rawValue,                     // C1
                     "isCanonicalInventorySale": true,
                     "inventorySaleDirection": "project_to_business",
                     "budgetCategoryId": srcCatId,
@@ -181,7 +181,7 @@ struct InventoryOperationsService {
             )
             batch.setData([
                 "projectId": destinationProjectId,
-                "type": "Sale",                         // C1
+                "type": TransactionType.sale.rawValue,                         // C1
                 "isCanonicalInventorySale": true,
                 "inventorySaleDirection": "business_to_project",
                 "budgetCategoryId": dstCatId,

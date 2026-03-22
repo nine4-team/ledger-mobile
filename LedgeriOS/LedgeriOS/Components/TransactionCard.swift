@@ -205,7 +205,7 @@ private struct FlowLayout: Layout {
             source: "Wayfair",
             reimbursementType: nil,
             notes: "***REPLACEMENT KING BED FOR MBR- first one came in with wrong piece and couldn't assemble......",
-            transactionType: "purchase",
+            transactionType: .purchase,
             hasEmailReceipt: false,
             needsReview: true
         ),
@@ -230,7 +230,7 @@ private struct FlowLayout: Layout {
             amountCents: 14194,
             source: "Amazon",
             notes: "1king sham for MBR, ochre king quilt set for green king wingback bed",
-            transactionType: "purchase",
+            transactionType: .purchase,
             needsReview: true
         ),
         budgetCategoryName: "Furnishings",

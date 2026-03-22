@@ -8,17 +8,17 @@ enum IncompleteReturnDetection {
     /// 3. No lineage edge with movementKind "returned" exists for this item
     static func isIncompleteReturn(
         itemId: String,
-        itemStatus: String?,
-        transactionType: String?,
+        itemStatus: ItemStatus?,
+        transactionType: TransactionType?,
         edgesFromTransaction: [LineageEdge]
     ) -> Bool {
-        guard itemStatus == "returned" else { return false }
+        guard itemStatus == .returned else { return false }
 
         // If no transaction context, can't determine completeness
         guard let txType = transactionType else { return false }
 
         // Item is already in a return transaction — return is complete
-        if txType.trimmingCharacters(in: .whitespaces).lowercased() == "return" {
+        if txType == .return {
             return false
         }
 
@@ -32,8 +32,8 @@ enum IncompleteReturnDetection {
 
     /// Filters items to find those with incomplete returns. Returns their IDs.
     static func findIncompleteReturns(
-        items: [(id: String, status: String?)],
-        transactionType: String?,
+        items: [(id: String, status: ItemStatus?)],
+        transactionType: TransactionType?,
         edgesFromTransaction: [LineageEdge]
     ) -> [String] {
         items.compactMap { item in

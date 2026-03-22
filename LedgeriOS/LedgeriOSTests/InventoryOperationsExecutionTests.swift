@@ -14,7 +14,7 @@ private func makeItem(
     transactionId: String? = nil,
     projectPriceCents: Int? = nil,
     spaceId: String? = nil,
-    status: String? = nil
+    status: ItemStatus? = nil
 ) -> Item {
     var item = Item()
     item.id = id
@@ -67,7 +67,7 @@ struct SellToBusinessExecutionTests {
         #expect(saleSets.count == 1)
         let saleFields = saleSets[0].fields
         #expect(saleFields["projectId"] as? String == "proj1")
-        #expect(saleFields["type"] as? String == "Sale")
+        #expect(saleFields["type"] as? String == "sale")
         #expect(saleFields["isCanonicalInventorySale"] as? Bool == true)
         #expect(saleFields["inventorySaleDirection"] as? String == "project_to_business")
         #expect(saleFields["budgetCategoryId"] as? String == "cat1")
@@ -991,7 +991,7 @@ struct ReassignToInventoryExecutionTests {
     func statusNotChanged() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "proj1", status: "to-purchase")
+        let item = makeItem(id: "i1", projectId: "proj1", status: .toPurchase)
 
         try await service.reassignToInventory(items: [item], accountId: acct)
 

@@ -35,7 +35,7 @@ struct NewItemView: View {
     @State private var projectPrice = ""
     @State private var marketValue = ""
     @State private var quantity = 1
-    @State private var status = "purchased"
+    @State private var status: ItemStatus = .purchased
 
     // Pickers
     @State private var showTransactionPicker = false
@@ -438,18 +438,12 @@ struct NewItemView: View {
         return Int(value * 100)
     }
 
-    private func statusDisplayLabel(_ status: String) -> String {
-        switch status {
-        case "to-purchase": return "To Purchase"
-        case "purchased": return "Purchased"
-        case "to-return": return "To Return"
-        case "returned": return "Returned"
-        default: return status.capitalized
-        }
+    private func statusDisplayLabel(_ status: ItemStatus) -> String {
+        status.displayLabel
     }
 
     private func transactionLabel(_ tx: Transaction) -> String {
-        let type = tx.transactionType?.capitalized ?? "Transaction"
+        let type = tx.transactionType?.displayLabel ?? "Transaction"
         if let cents = tx.amountCents {
             return "\(type) - \(CurrencyFormatting.formatCentsWithDecimals(cents))"
         }

@@ -18,7 +18,7 @@ struct BudgetProgressService {
 
         // Aggregate spending by category
         var spentByCategoryId: [String: Int] = [:]
-        let activeTransactions = transactions.filter { $0.isCanceled != true }
+        let activeTransactions = transactions.filter { $0.status != .canceled }
         for tx in activeTransactions {
             guard let categoryId = tx.budgetCategoryId else { continue }
             let amount = normalizeSpendAmount(tx)

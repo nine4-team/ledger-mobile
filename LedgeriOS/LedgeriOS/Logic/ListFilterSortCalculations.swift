@@ -16,9 +16,9 @@ enum ListFilterSortCalculations {
         case .fromInventory:
             return { $0.projectId == nil || $0.projectId?.isEmpty == true }
         case .toReturn:
-            return { $0.status == "to return" }
+            return { $0.status == .toReturn }
         case .returned:
-            return { $0.status == "returned" }
+            return { $0.status == .returned }
         case .noSku:
             return { $0.sku == nil || $0.sku?.trimmingCharacters(in: .whitespaces).isEmpty == true }
         case .noName:

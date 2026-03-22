@@ -8,7 +8,7 @@ struct Item: Codable, Identifiable, Hashable {
     var name: String?
     var description: String?
     var notes: String?
-    var status: String?
+    var status: ItemStatus?
     var source: String?
     var sku: String?
     var transactionId: String?

@@ -16,13 +16,13 @@ struct AccountingTabView: View {
 
     private var owedToCompanyCents: Int {
         projectContext.transactions
-            .filter { $0.isCanceled != true && $0.reimbursementType == "owed-to-company" }
+            .filter { $0.status != .canceled && $0.reimbursementType == "owed-to-company" }
             .reduce(0) { $0 + ($1.amountCents ?? 0) }
     }
 
     private var owedToClientCents: Int {
         projectContext.transactions
-            .filter { $0.isCanceled != true && $0.reimbursementType == "owed-to-client" }
+            .filter { $0.status != .canceled && $0.reimbursementType == "owed-to-client" }
             .reduce(0) { $0 + ($1.amountCents ?? 0) }
     }
 

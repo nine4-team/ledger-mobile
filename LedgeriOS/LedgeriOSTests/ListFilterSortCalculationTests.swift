@@ -9,7 +9,7 @@ private func makeItem(
     sku: String? = nil,
     notes: String? = nil,
     bookmark: Bool? = nil,
-    status: String? = nil,
+    status: ItemStatus? = nil,
     source: String? = nil,
     projectId: String? = nil,
     projectPriceCents: Int? = nil,
@@ -85,8 +85,8 @@ struct ListFilterSortCalculationTests {
     @Test("To return filter returns items with 'to return' status")
     func toReturnFilter() {
         let items = [
-            makeItem(name: "To return", status: "to return"),
-            makeItem(name: "Returned", status: "returned"),
+            makeItem(name: "To return", status: .toReturn),
+            makeItem(name: "Returned", status: .returned),
             makeItem(name: "No status"),
         ]
         let result = ListFilterSortCalculations.applyFilter(items, filter: .toReturn)
@@ -99,8 +99,8 @@ struct ListFilterSortCalculationTests {
     @Test("Returned filter returns items with 'returned' status")
     func returnedFilter() {
         let items = [
-            makeItem(name: "Returned", status: "returned"),
-            makeItem(name: "To return", status: "to return"),
+            makeItem(name: "Returned", status: .returned),
+            makeItem(name: "To return", status: .toReturn),
             makeItem(name: "No status"),
         ]
         let result = ListFilterSortCalculations.applyFilter(items, filter: .returned)

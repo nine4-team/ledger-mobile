@@ -52,7 +52,7 @@ struct InventoryItemsSubTab: View {
         // Single-item action sheets
         .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
-                updateItemField(actionTargetItem, fields: ["status": status])
+                updateItemField(actionTargetItem, fields: ["status": status.rawValue])
             }
         }
         .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
@@ -149,7 +149,7 @@ struct InventoryItemsSubTab: View {
                 onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
                 onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
             ),
-            currentStatus: item.status
+            currentStatus: item.status?.rawValue
         )
     }
 
@@ -189,12 +189,12 @@ struct InventoryItemsSubTab: View {
 
     // MARK: - Bulk Actions
 
-    private func updateStatusForSelected(_ status: String) {
+    private func updateStatusForSelected(_ status: ItemStatus) {
         guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status]) }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status.rawValue]) }
         }
         selectedItemIds.removeAll()
     }

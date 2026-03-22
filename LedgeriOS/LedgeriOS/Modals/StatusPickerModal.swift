@@ -1,18 +1,19 @@
 import SwiftUI
 
 /// Single-select status picker for item status updates.
-/// Options: to-purchase, purchased, to-return, returned.
+/// Excludes `.sold` — that status is system-set by sale operations.
 struct StatusPickerModal: View {
-    var currentStatus: String?
-    let onSelect: (String) -> Void
+    var currentStatus: ItemStatus?
+    let onSelect: (ItemStatus) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
-    private let statuses: [(id: String, label: String, icon: String)] = [
-        ("to-purchase", "To Purchase", "cart"),
-        ("purchased", "Purchased", "checkmark.circle"),
-        ("to return", "To Return", "arrow.uturn.left"),
-        ("returned", "Returned", "arrow.uturn.left.circle.fill"),
+    /// User-settable statuses (excludes `.sold` — system-set only).
+    private let statuses: [(status: ItemStatus, icon: String)] = [
+        (.toPurchase, "cart"),
+        (.purchased, "checkmark.circle"),
+        (.toReturn, "arrow.uturn.left"),
+        (.returned, "arrow.uturn.left.circle.fill"),
     ]
 
     var body: some View {
@@ -25,9 +26,9 @@ struct StatusPickerModal: View {
 
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(statuses, id: \.id) { option in
+                    ForEach(statuses, id: \.status) { option in
                         Button {
-                            onSelect(option.id)
+                            onSelect(option.status)
                             dismiss()
                         } label: {
                             HStack(spacing: Spacing.md) {
@@ -36,13 +37,13 @@ struct StatusPickerModal: View {
                                     .foregroundStyle(BrandColors.primary)
                                     .frame(width: 28)
 
-                                Text(option.label)
+                                Text(option.status.displayLabel)
                                     .font(Typography.body)
                                     .foregroundStyle(BrandColors.textPrimary)
 
                                 Spacer()
 
-                                if option.id == currentStatus {
+                                if option.status == currentStatus {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(BrandColors.primary)
@@ -54,7 +55,7 @@ struct StatusPickerModal: View {
                         }
                         .buttonStyle(.plain)
 
-                        if option.id != statuses.last?.id {
+                        if option.status != statuses.last?.status {
                             Divider()
                                 .padding(.horizontal, Spacing.screenPadding)
                         }
@@ -66,5 +67,5 @@ struct StatusPickerModal: View {
 }
 
 #Preview {
-    StatusPickerModal(currentStatus: "purchased", onSelect: { _ in })
+    StatusPickerModal(currentStatus: .purchased, onSelect: { _ in })
 }

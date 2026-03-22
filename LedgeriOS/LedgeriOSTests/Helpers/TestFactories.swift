@@ -11,7 +11,7 @@ func makeItem(
     name: String? = nil,
     description: String? = nil,
     notes: String? = nil,
-    status: String? = nil,
+    status: ItemStatus? = nil,
     source: String? = nil,
     sku: String? = nil,
     transactionId: String? = nil,
@@ -70,12 +70,11 @@ func makeTransaction(
     isCanonicalInventorySale: Bool? = nil,
     inventorySaleDirection: InventorySaleDirection? = nil,
     itemIds: [String]? = nil,
-    status: String? = nil,
+    status: TransactionStatus? = nil,
     purchasedBy: String? = nil,
     reimbursementType: String? = nil,
     notes: String? = nil,
-    transactionType: String? = nil,
-    isCanceled: Bool? = nil,
+    transactionType: TransactionType? = nil,
     budgetCategoryId: String? = nil,
     paymentMethod: String? = nil,
     hasEmailReceipt: Bool? = nil,
@@ -104,7 +103,6 @@ func makeTransaction(
     tx.reimbursementType = reimbursementType
     tx.notes = notes
     tx.transactionType = transactionType
-    tx.isCanceled = isCanceled
     tx.budgetCategoryId = budgetCategoryId
     tx.paymentMethod = paymentMethod
     tx.hasEmailReceipt = hasEmailReceipt

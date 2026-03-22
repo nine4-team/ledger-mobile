@@ -35,9 +35,9 @@ struct EditTransactionDetailsModal: View {
         _source = State(initialValue: transaction.source ?? "")
         _amountText = State(initialValue: Self.centsToText(transaction.amountCents))
         _transactionDate = State(initialValue: Self.parseDate(transaction.transactionDate) ?? Date())
-        _status = State(initialValue: transaction.status ?? "pending")
+        _status = State(initialValue: transaction.status?.rawValue ?? "pending")
         _purchasedBy = State(initialValue: transaction.purchasedBy ?? "")
-        _transactionType = State(initialValue: transaction.transactionType ?? "purchase")
+        _transactionType = State(initialValue: transaction.transactionType?.rawValue ?? "purchase")
         _reimbursementType = State(initialValue: transaction.reimbursementType ?? "none")
         _budgetCategoryId = State(initialValue: transaction.budgetCategoryId)
         _hasEmailReceipt = State(initialValue: transaction.hasEmailReceipt ?? false)
@@ -89,12 +89,9 @@ struct EditTransactionDetailsModal: View {
                 }
 
                 // 4. Status
-                pickerField(label: "Status", selection: $status, options: [
-                    ("pending", "Pending"),
-                    ("completed", "Completed"),
-                    ("canceled", "Canceled"),
-                    ("inventory-only", "Inventory Only"),
-                ])
+                pickerField(label: "Status", selection: $status, options:
+                    TransactionStatus.allCases.map { ($0.rawValue, $0.displayLabel) }
+                )
 
                 // 5. Purchased By
                 pickerField(label: "Purchased By", selection: $purchasedBy, options: [
@@ -105,12 +102,9 @@ struct EditTransactionDetailsModal: View {
                 ])
 
                 // 6. Transaction Type
-                pickerField(label: "Transaction Type", selection: $transactionType, options: [
-                    ("purchase", "Purchase"),
-                    ("sale", "Sale"),
-                    ("return", "Return"),
-                    ("to-inventory", "To Inventory"),
-                ])
+                pickerField(label: "Transaction Type", selection: $transactionType, options:
+                    TransactionType.allCases.map { ($0.rawValue, $0.displayLabel) }
+                )
 
                 // 7. Reimbursement Type
                 pickerField(label: "Reimbursement Type", selection: $reimbursementType, options: [

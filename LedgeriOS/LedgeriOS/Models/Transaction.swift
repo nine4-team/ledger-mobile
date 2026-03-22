@@ -18,12 +18,11 @@ struct Transaction: Codable, Identifiable, Hashable {
     var isCanonicalInventorySale: Bool?
     var inventorySaleDirection: InventorySaleDirection?
     var itemIds: [String]?
-    var status: String?
+    var status: TransactionStatus?
     var purchasedBy: String?
     var reimbursementType: String?
     var notes: String?
-    var transactionType: String?
-    var isCanceled: Bool?
+    var transactionType: TransactionType?
     var budgetCategoryId: String?
     var paymentMethod: String?
     var hasEmailReceipt: Bool?
@@ -42,7 +41,7 @@ struct Transaction: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, projectId, transactionDate, amountCents, source,
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
-             itemIds, status, purchasedBy, reimbursementType, notes, isCanceled,
+             itemIds, status, purchasedBy, reimbursementType, notes,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
              needsReview, isComplete, audit, taxRatePct, subtotalCents, triggerEvent
         case transactionType = "type"

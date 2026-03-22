@@ -7,11 +7,11 @@ enum TransactionCardCalculations {
     /// Returns ordered array of badges for a transaction.
     /// Order: needs review → type
     static func badgeItems(
-        transactionType: String?,
+        transactionType: TransactionType?,
         reimbursementType: String?,
         hasEmailReceipt: Bool,
         isComplete: Bool?,
-        status: String?
+        status: TransactionStatus?
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
@@ -26,17 +26,8 @@ enum TransactionCardCalculations {
         }
 
         // 2. Transaction type badge
-        if let type = transactionType?.lowercased() {
-            switch type {
-            case "purchase":
-                badges.append(CardBadge(text: "Purchase", color: BrandColors.primary))
-            case "sale":
-                badges.append(CardBadge(text: "Sale", color: BrandColors.primary))
-            case "return":
-                badges.append(CardBadge(text: "Return", color: BrandColors.primary))
-            default:
-                break
-            }
+        if let type = transactionType {
+            badges.append(CardBadge(text: type.displayLabel, color: BrandColors.primary))
         }
 
         return badges
@@ -45,7 +36,7 @@ enum TransactionCardCalculations {
     /// Formats transaction amount with sign prefix.
     /// Purchase/to-inventory → "$X.XX", sale/return → "$X.XX"
     /// The RN app shows "$X.XX" format (with decimals) for transaction amounts.
-    static func formattedAmount(amountCents: Int?, transactionType: String?) -> String {
+    static func formattedAmount(amountCents: Int?, transactionType: TransactionType?) -> String {
         guard let cents = amountCents else { return "—" }
         return CurrencyFormatting.formatCentsWithDecimals(cents)
     }

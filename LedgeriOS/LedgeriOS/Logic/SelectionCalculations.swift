@@ -24,12 +24,12 @@ enum SelectionCalculations {
     /// `return` and `sale` types count as negative; all others are positive.
     static func totalCentsForSelectedTransactions(
         selectedIds: Set<String>,
-        transactions: [(id: String, cents: Int, type: String?)]
+        transactions: [(id: String, cents: Int, type: TransactionType?)]
     ) -> Int {
         transactions
             .filter { selectedIds.contains($0.id) }
             .reduce(0) { sum, tx in
-                let isNegative = tx.type?.lowercased() == "return" || tx.type?.lowercased() == "sale"
+                let isNegative = tx.type == .return || tx.type == .sale
                 return sum + (isNegative ? -tx.cents : tx.cents)
             }
     }

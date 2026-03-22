@@ -31,7 +31,7 @@ private func makeItem(
 private func makeTransaction(
     id: String? = nil,
     source: String? = nil,
-    transactionType: String? = nil,
+    transactionType: TransactionType? = nil,
     notes: String? = nil,
     purchasedBy: String? = nil,
     budgetCategoryId: String? = nil,
@@ -323,7 +323,7 @@ struct TextSubstringTests {
 
     @Test("Transaction type match")
     func transactionTypeMatch() {
-        let tx = makeTransaction(transactionType: "purchase")
+        let tx = makeTransaction(transactionType: .purchase)
         let result = SearchCalculations.transactionMatches(transaction: tx, query: "purchase", categories: [])
         #expect(result == true)
     }
@@ -605,7 +605,7 @@ struct CentralizedSearchTests {
 
     @Test("TransactionFilterSortCalculations.applySearch matches transactionType")
     func transactionListTypeSearch() {
-        let tx = makeTransaction(transactionType: "Purchase")
+        let tx = makeTransaction(transactionType: .purchase)
         let results = TransactionFilterSortCalculations.applySearch([tx], query: "purchase")
         #expect(results.count == 1)
     }

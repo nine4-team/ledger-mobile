@@ -134,13 +134,13 @@ enum BudgetTabCalculations {
     /// Normalizes a single transaction's contribution to category spend.
     ///
     /// Rules (FR-3.8):
-    /// - `isCanceled == true` → $0
-    /// - `status == "returned"` OR negative `amountCents` → subtracts (negative contribution)
+    /// - `status == .canceled` → $0
+    /// - `transactionType == .return` OR negative `amountCents` → subtracts (negative contribution)
     /// - `isCanonicalInventorySale == true` AND `inventorySaleDirection == .projectToBusiness` → subtracts
     /// - `isCanonicalInventorySale == true` AND `inventorySaleDirection == .businessToProject` → adds
     /// - All others → adds
     static func normalizeTransactionAmount(_ transaction: Transaction) -> Int {
-        guard transaction.isCanceled != true else { return 0 }
+        guard transaction.status != .canceled else { return 0 }
 
         let amount = transaction.amountCents ?? 0
 
@@ -155,7 +155,7 @@ enum BudgetTabCalculations {
             }
         }
 
-        if transaction.status == "returned" || amount < 0 {
+        if transaction.transactionType == .return || amount < 0 {
             return -abs(amount)
         }
 

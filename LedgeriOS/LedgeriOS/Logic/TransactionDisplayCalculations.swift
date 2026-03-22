@@ -65,17 +65,8 @@ enum TransactionDisplayCalculations {
         }
 
         // 2. Type badge
-        if let type = transaction.transactionType?.lowercased() {
-            switch type {
-            case "purchase":
-                badges.append(BadgeConfig(text: "Purchase", color: BrandColors.primary))
-            case "sale":
-                badges.append(BadgeConfig(text: "Sale", color: BrandColors.primary))
-            case "return":
-                badges.append(BadgeConfig(text: "Return", color: BrandColors.primary))
-            default:
-                break
-            }
+        if let type = transaction.transactionType {
+            badges.append(BadgeConfig(text: type.displayLabel, color: BrandColors.primary))
         }
 
         // 3. Category badge
@@ -105,14 +96,7 @@ enum TransactionDisplayCalculations {
     // MARK: - Canonical Type Label
 
     /// Returns the canonical display label for a transaction type.
-    static func canonicalTypeLabel(for type: String?) -> String? {
-        guard let type = type?.lowercased() else { return nil }
-        switch type {
-        case "purchase": return "Purchase"
-        case "sale": return "Sale"
-        case "return": return "Return"
-        case "to-inventory": return "To Inventory"
-        default: return nil
-        }
+    static func canonicalTypeLabel(for type: TransactionType?) -> String? {
+        type?.displayLabel
     }
 }

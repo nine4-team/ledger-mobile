@@ -26,7 +26,7 @@ struct ItemCard: View {
 
     private var badges: [CardBadge] {
         ItemCardCalculations.badgeItems(
-            statusLabel: statusOverride ?? item.status,
+            statusLabel: statusOverride ?? item.status?.displayLabel,
             budgetCategoryName: budgetCategoryName,
             indexLabel: indexLabel
         )

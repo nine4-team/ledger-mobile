@@ -106,11 +106,11 @@ enum TransactionFilterSortCalculations {
         case .hasReceipt:
             return transactions.filter { $0.hasEmailReceipt == true || !($0.receiptImages ?? []).isEmpty }
         case .purchase:
-            return transactions.filter { $0.transactionType == "purchase" }
+            return transactions.filter { $0.transactionType == .purchase }
         case .sale:
-            return transactions.filter { $0.transactionType == "sale" }
+            return transactions.filter { $0.transactionType == .sale }
         case .returnType:
-            return transactions.filter { $0.transactionType == "return" }
+            return transactions.filter { $0.transactionType == .return }
         }
     }
 
@@ -163,7 +163,7 @@ enum TransactionFilterSortCalculations {
                 guard filters.emailReceipt.contains(val) else { return false }
             }
             if !filters.transactionType.isEmpty {
-                let txType = tx.transactionType ?? ""
+                let txType = tx.transactionType?.rawValue ?? ""
                 guard filters.transactionType.contains(txType) else { return false }
             }
             if !filters.completeness.isEmpty {
@@ -197,9 +197,7 @@ enum TransactionFilterSortCalculations {
     }
 
     private static func transactionStatus(for tx: Transaction) -> String {
-        if tx.isCanceled == true { return "canceled" }
-        if tx.status == "completed" { return "completed" }
-        return "pending"
+        tx.status?.rawValue ?? "pending"
     }
 
     private static func sortComparator(for option: TransactionSortOption) -> (Transaction, Transaction) -> Bool {
@@ -484,7 +482,7 @@ struct SharedTransactionsList: View {
             amountCents: 14194,
             source: "Amazon",
             notes: "1 king sham for MBR, ochre king quilt set",
-            transactionType: "purchase",
+            transactionType: .purchase,
             needsReview: true
         ),
         Transaction(
@@ -492,14 +490,14 @@ struct SharedTransactionsList: View {
             amountCents: 44620,
             source: "Wayfair",
             notes: "Replacement king bed for MBR",
-            transactionType: "purchase",
+            transactionType: .purchase,
             hasEmailReceipt: true
         ),
         Transaction(
             transactionDate: "2026-01-15",
             amountCents: 8997,
             source: "Homegoods",
-            transactionType: "purchase"
+            transactionType: .purchase
         ),
     ]
 

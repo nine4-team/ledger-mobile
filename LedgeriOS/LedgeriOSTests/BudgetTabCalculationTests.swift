@@ -27,15 +27,13 @@ struct BudgetTabCalculationTests {
     private func makeTransaction(
         budgetCategoryId: String? = "cat1",
         amountCents: Int? = 10000,
-        isCanceled: Bool? = nil,
-        status: String? = nil,
+        status: TransactionStatus? = nil,
         isCanonicalInventorySale: Bool? = nil,
         inventorySaleDirection: InventorySaleDirection? = nil
     ) -> Transaction {
         var tx = Transaction()
         tx.budgetCategoryId = budgetCategoryId
         tx.amountCents = amountCents
-        tx.isCanceled = isCanceled
         tx.status = status
         tx.isCanonicalInventorySale = isCanonicalInventorySale
         tx.inventorySaleDirection = inventorySaleDirection
@@ -183,14 +181,15 @@ struct BudgetTabCalculationTests {
 
     @Test("Canceled transaction contributes zero")
     func canceledTransactionContributesZero() {
-        let tx = makeTransaction(amountCents: 10000, isCanceled: true)
+        let tx = makeTransaction(amountCents: 10000, status: .canceled)
         let result = BudgetTabCalculations.normalizeTransactionAmount(tx)
         #expect(result == 0)
     }
 
     @Test("Returned transaction subtracts from spend")
     func returnedTransactionSubtracts() {
-        let tx = makeTransaction(amountCents: 5000, status: "returned")
+        var tx = makeTransaction(amountCents: 5000)
+        tx.transactionType = .return
         let result = BudgetTabCalculations.normalizeTransactionAmount(tx)
         #expect(result == -5000)
     }
@@ -244,7 +243,7 @@ struct BudgetTabCalculationTests {
 
     @Test("Canceled overrides returned status")
     func canceledOverridesReturned() {
-        let tx = makeTransaction(amountCents: 5000, isCanceled: true, status: "returned")
+        let tx = makeTransaction(amountCents: 5000, status: .canceled)
         let result = BudgetTabCalculations.normalizeTransactionAmount(tx)
         #expect(result == 0)
     }
@@ -253,7 +252,7 @@ struct BudgetTabCalculationTests {
     func canceledOverridesCanonicalSale() {
         let tx = makeTransaction(
             amountCents: 5000,
-            isCanceled: true,
+            status: .canceled,
             isCanonicalInventorySale: true,
             inventorySaleDirection: .businessToProject
         )
@@ -292,10 +291,14 @@ struct BudgetTabCalculationTests {
 
     @Test("Compute spend applies normalization rules")
     func computeSpendAppliesNormalization() {
+        var returnTx = Transaction()
+        returnTx.budgetCategoryId = "cat1"
+        returnTx.amountCents = 3000
+        returnTx.transactionType = .return
         let transactions = [
             makeTransaction(budgetCategoryId: "cat1", amountCents: 10000),
-            makeTransaction(budgetCategoryId: "cat1", amountCents: 5000, isCanceled: true),
-            makeTransaction(budgetCategoryId: "cat1", amountCents: 3000, status: "returned"),
+            makeTransaction(budgetCategoryId: "cat1", amountCents: 5000, status: .canceled),
+            returnTx,
         ]
         let result = BudgetTabCalculations.computeSpend(for: "cat1", transactions: transactions)
         // 10000 + 0 + (-3000) = 7000

@@ -14,7 +14,7 @@ struct TransactionCRUDIntegrationTests {
     func transactionTypeFieldName() async throws {
         try await FirestoreTestHelper.signIn()
         let id = UUID().uuidString
-        let tx = makeTransaction(id: id, transactionType: "purchase")
+        let tx = makeTransaction(id: id, transactionType: .purchase)
 
         try FirestoreTestHelper.write(tx, toCollection: txPath, id: id)
         let raw = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(id)"))
@@ -52,7 +52,7 @@ struct TransactionCRUDIntegrationTests {
 
         let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
 
-        #expect(result.transactionType == "sale")
+        #expect(result.transactionType == .sale)
         #expect(result.hasEmailReceipt == false)
         #expect(result.amountCents == 5000)
     }
@@ -74,12 +74,11 @@ struct TransactionCRUDIntegrationTests {
             isCanonicalInventorySale: true,
             inventorySaleDirection: .businessToProject,
             itemIds: ["item1", "item2", "item3"],
-            status: "complete",
+            status: .completed,
             purchasedBy: "user1",
             reimbursementType: "owed_to_client",
             notes: "Living room furniture",
-            transactionType: "purchase",
-            isCanceled: false,
+            transactionType: .purchase,
             budgetCategoryId: "catFurnishings",
             paymentMethod: "credit_card",
             hasEmailReceipt: true,
@@ -101,12 +100,11 @@ struct TransactionCRUDIntegrationTests {
         #expect(result.isCanonicalInventorySale == true)
         #expect(result.inventorySaleDirection == .businessToProject)
         #expect(result.itemIds == ["item1", "item2", "item3"])
-        #expect(result.status == "complete")
+        #expect(result.status == .completed)
         #expect(result.purchasedBy == "user1")
         #expect(result.reimbursementType == "owed_to_client")
         #expect(result.notes == "Living room furniture")
-        #expect(result.transactionType == "purchase")
-        #expect(result.isCanceled == false)
+        #expect(result.transactionType == .purchase)
         #expect(result.budgetCategoryId == "catFurnishings")
         #expect(result.paymentMethod == "credit_card")
         #expect(result.hasEmailReceipt == true)
@@ -129,23 +127,22 @@ struct TransactionCRUDIntegrationTests {
         #expect(result.amountCents == nil)
         #expect(result.itemIds == nil)
         #expect(result.transactionType == nil)
-        #expect(result.isCanceled == nil)
         #expect(result.hasEmailReceipt == nil)
         #expect(result.inventorySaleDirection == nil)
     }
 
-    // MARK: - Bool Optional Distinction
+    // MARK: - Status Enum Round-Trip
 
-    @Test("isCanceled: false preserved as false, not nil")
-    func falseVsNilCanceled() async throws {
+    @Test("status: .canceled preserved through round-trip")
+    func canceledStatusRoundTrip() async throws {
         try await FirestoreTestHelper.signIn()
         let id = UUID().uuidString
-        let tx = makeTransaction(id: id, isCanceled: false)
+        let tx = makeTransaction(id: id, status: .canceled)
 
         try FirestoreTestHelper.write(tx, toCollection: txPath, id: id)
         let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
 
-        #expect(result.isCanceled == false)
+        #expect(result.status == .canceled)
     }
 
     // MARK: - itemIds Array Operations
@@ -180,6 +177,84 @@ struct TransactionCRUDIntegrationTests {
 
         let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
         #expect(result.itemIds == ["item1", "item3"])
+    }
+
+    // MARK: - isComplete Round-Trip
+
+    @Test("isComplete: true survives Firestore round-trip")
+    func isCompleteRoundTrip() async throws {
+        try await FirestoreTestHelper.signIn()
+        let id = UUID().uuidString
+        let tx = makeTransaction(id: id, source: "Amazon", isComplete: true)
+
+        try FirestoreTestHelper.write(tx, toCollection: txPath, id: id)
+        let raw = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(id)"))
+        #expect(raw["isComplete"] as? Bool == true)
+
+        let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
+        #expect(result.isComplete == true)
+    }
+
+    @Test("isComplete: true decodes when written as raw field (server-side write)")
+    func isCompleteFromRawField() async throws {
+        try await FirestoreTestHelper.signIn()
+        let id = UUID().uuidString
+        try await FirestoreTestHelper.writeFields([
+            "source": "Amazon",
+            "amountCents": 14622,
+            "type": "purchase",
+            "isComplete": true,
+            "receiptEmailed": true,
+            "purchasedBy": "client-card",
+            "status": "completed"
+        ], toDocument: "\(txPath)/\(id)")
+
+        let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
+        #expect(result.isComplete == true)
+    }
+
+    @Test("isComplete: true decodes alongside audit object")
+    func isCompleteWithAudit() async throws {
+        try await FirestoreTestHelper.signIn()
+        let id = UUID().uuidString
+        try await FirestoreTestHelper.writeFields([
+            "source": "Amazon",
+            "amountCents": 14622,
+            "type": "purchase",
+            "isComplete": true,
+            "receiptEmailed": true,
+            "purchasedBy": "client-card",
+            "status": "completed",
+            "subtotalCents": 13697,
+            "taxRatePct": 6.75,
+            "paymentMethod": "Client Card",
+            "audit": [
+                "variancePercent": 0.0,
+                "itemsSumCents": 13697,
+                "varianceCents": 0,
+                "resolvedSubtotalCents": 13697
+            ] as [String: Any],
+            "itemIds": ["item1", "item2", "item3"],
+            "needsReview": false
+        ], toDocument: "\(txPath)/\(id)")
+
+        let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
+        #expect(result.isComplete == true)
+        #expect(result.audit != nil)
+        #expect(result.audit?.varianceCents == 0)
+    }
+
+    @Test("TransactionType decodes capitalized values from legacy data")
+    func transactionTypeCaseInsensitive() async throws {
+        try await FirestoreTestHelper.signIn()
+        let id = UUID().uuidString
+        try await FirestoreTestHelper.writeFields([
+            "source": "Test",
+            "type": "Purchase"
+        ], toDocument: "\(txPath)/\(id)")
+
+        let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))
+        #expect(result.transactionType == .purchase)
     }
 
     // MARK: - Enum Round-Trip

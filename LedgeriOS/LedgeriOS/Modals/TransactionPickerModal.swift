@@ -10,7 +10,7 @@ struct TransactionPickerModal: View {
 
     private var visibleTransactions: [Transaction] {
         transactions
-            .filter { $0.isCanceled != true }
+            .filter { $0.status != .canceled }
             .sorted { a, b in
                 let dateA = a.transactionDate ?? ""
                 let dateB = b.transactionDate ?? ""
@@ -94,7 +94,7 @@ struct TransactionPickerModal: View {
     }
 
     private func transactionLabel(_ transaction: Transaction) -> String {
-        let type = transaction.transactionType?.capitalized ?? "Transaction"
+        let type = transaction.transactionType?.displayLabel ?? "Transaction"
         if let date = transaction.transactionDate, !date.isEmpty {
             return "\(type) – \(date)"
         }

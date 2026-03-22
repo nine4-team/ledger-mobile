@@ -13,9 +13,9 @@ struct ReturnTransactionPickerModal: View {
     private var returnTransactions: [Transaction] {
         transactions
             .filter { tx in
-                let isReturn = tx.transactionType == "return" || tx.canonicalKind == "return"
-                let isIncomplete = tx.status != "completed"
-                let isNotCanceled = tx.isCanceled != true
+                let isReturn = tx.transactionType == .return || tx.canonicalKind == "return"
+                let isIncomplete = tx.status != .completed
+                let isNotCanceled = tx.status != .canceled
                 return isReturn && isIncomplete && isNotCanceled
             }
             .sorted { a, b in

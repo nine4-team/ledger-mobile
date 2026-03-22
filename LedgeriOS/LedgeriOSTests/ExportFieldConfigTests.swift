@@ -13,12 +13,11 @@ struct ExportFieldConfigTests {
         source: String? = "HomeGoods",
         amountCents: Int? = 15099,
         budgetCategoryId: String? = "cat1",
-        transactionType: String? = "expense",
+        transactionType: TransactionType? = .purchase,
         paymentMethod: String? = "credit_card",
         notes: String? = "Test notes",
         reimbursementType: String? = nil,
-        status: String? = "completed",
-        isCanceled: Bool? = nil,
+        status: TransactionStatus? = .completed,
         hasEmailReceipt: Bool? = false,
         taxRatePct: Double? = 8.25,
         subtotalCents: Int? = 13950,
@@ -38,7 +37,6 @@ struct ExportFieldConfigTests {
         tx.notes = notes
         tx.reimbursementType = reimbursementType
         tx.status = status
-        tx.isCanceled = isCanceled
         tx.hasEmailReceipt = hasEmailReceipt
         tx.taxRatePct = taxRatePct
         tx.subtotalCents = subtotalCents
@@ -115,8 +113,8 @@ struct ExportFieldConfigTests {
     @Test("transactionType field extracts type")
     func transactionTypeField() {
         let field = ExportFields.all.first { $0.id == "transactionType" }!
-        let tx = makeTransaction(transactionType: "expense")
-        #expect(field.getValue(tx, [], []) == "expense")
+        let tx = makeTransaction(transactionType: .purchase)
+        #expect(field.getValue(tx, [], []) == "Purchase")
     }
 
     @Test("paymentMethod field extracts payment method")
@@ -172,15 +170,15 @@ struct ExportFieldConfigTests {
     @Test("status field extracts status")
     func statusField() {
         let field = ExportFields.all.first { $0.id == "status" }!
-        let tx = makeTransaction(status: "completed")
-        #expect(field.getValue(tx, [], []) == "completed")
+        let tx = makeTransaction(status: .completed)
+        #expect(field.getValue(tx, [], []) == "Completed")
     }
 
-    @Test("status field returns canceled when isCanceled is true")
+    @Test("status field returns Canceled for canceled status")
     func statusFieldCanceled() {
         let field = ExportFields.all.first { $0.id == "status" }!
-        let tx = makeTransaction(status: "completed", isCanceled: true)
-        #expect(field.getValue(tx, [], []) == "canceled")
+        let tx = makeTransaction(status: .canceled)
+        #expect(field.getValue(tx, [], []) == "Canceled")
     }
 
     @Test("receiptEmailed field returns true/false string")

@@ -13,7 +13,7 @@ struct BudgetCalculationTests {
     func canceledTransactionReturnsZero() {
         var tx = Transaction()
         tx.amountCents = 5000
-        tx.isCanceled = true
+        tx.status = .canceled
 
         #expect(service.normalizeSpendAmount(tx) == 0)
     }
@@ -22,7 +22,7 @@ struct BudgetCalculationTests {
     func normalTransactionReturnsAmount() {
         var tx = Transaction()
         tx.amountCents = 5000
-        tx.isCanceled = false
+        tx.status = .completed
 
         #expect(service.normalizeSpendAmount(tx) == 5000)
     }
@@ -200,7 +200,7 @@ struct BudgetCalculationTests {
         var tx2 = Transaction()
         tx2.amountCents = 20000
         tx2.budgetCategoryId = "cat1"
-        tx2.isCanceled = true
+        tx2.status = .canceled
 
         let result = service.buildBudgetProgress(
             transactions: [tx1, tx2],

@@ -61,11 +61,9 @@ struct BulkItemMenuCallbacks {
 
 // MARK: - Item Statuses
 
-private let itemStatuses: [(key: String, label: String)] = [
-    ("to-purchase", "To Purchase"),
-    ("purchased", "Purchased"),
-    ("to return", "To Return"),
-    ("returned", "Returned"),
+/// User-settable item statuses (excludes `.sold` — system-set only).
+private let itemStatuses: [ItemStatus] = [
+    .toPurchase, .purchased, .toReturn, .returned,
 ]
 
 // MARK: - Builder
@@ -110,8 +108,8 @@ enum ItemMenuBuilder {
 
         // --- Status submenu ---
         var statusSubactions: [ActionMenuSubitem] = itemStatuses.map { status in
-            ActionMenuSubitem(id: status.key, label: status.label, onPress: {
-                callbacks.onStatusChange?(status.key)
+            ActionMenuSubitem(id: status.rawValue, label: status.displayLabel, onPress: {
+                callbacks.onStatusChange?(status.rawValue)
             })
         }
         if context == .detail || context == .transaction {
@@ -239,8 +237,8 @@ enum ItemMenuBuilder {
             items.append(ActionMenuItem(
                 id: "status", label: "Change Status", icon: "flag",
                 subactions: itemStatuses.map { status in
-                    ActionMenuSubitem(id: status.key, label: status.label, onPress: {
-                        onStatusChange(status.key)
+                    ActionMenuSubitem(id: status.rawValue, label: status.displayLabel, onPress: {
+                        onStatusChange(status.rawValue)
                     })
                 },
                 isActionOnly: true

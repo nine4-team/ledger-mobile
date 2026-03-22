@@ -368,7 +368,7 @@ struct ImportInvoiceModal: View {
                 newItem.quantity = draftItem.qty
                 newItem.source = source
                 newItem.sku = draftItem.sku
-                newItem.status = "active"
+                newItem.status = .purchased
                 newItem.budgetCategoryId = selectedCategoryId
 
                 // Wayfair: append attribute lines to notes
@@ -384,11 +384,11 @@ struct ImportInvoiceModal: View {
             // 2. Create transaction with itemIds
             var tx = Transaction()
             tx.projectId = projectId
-            tx.transactionType = "purchase"
+            tx.transactionType = .purchase
             tx.source = source
             tx.transactionDate = txDate
             tx.amountCents = totalCents
-            tx.status = "pending"
+            tx.status = .pending
             tx.itemIds = itemIds
             tx.budgetCategoryId = selectedCategoryId
 

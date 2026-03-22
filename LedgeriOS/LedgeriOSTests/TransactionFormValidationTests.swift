@@ -123,16 +123,11 @@ struct TransactionFormValidationTests {
 
     @Test("Ready to submit with valid type")
     func readyWithType() {
-        #expect(TransactionFormValidation.isTransactionReadyToSubmit(type: "purchase"))
+        #expect(TransactionFormValidation.isTransactionReadyToSubmit(type: .purchase))
     }
 
     @Test("Not ready with nil type")
     func notReadyNilType() {
         #expect(!TransactionFormValidation.isTransactionReadyToSubmit(type: nil))
-    }
-
-    @Test("Not ready with empty type")
-    func notReadyEmptyType() {
-        #expect(!TransactionFormValidation.isTransactionReadyToSubmit(type: ""))
     }
 }

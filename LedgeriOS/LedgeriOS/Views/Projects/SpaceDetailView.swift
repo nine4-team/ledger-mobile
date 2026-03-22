@@ -126,7 +126,7 @@ struct SpaceDetailView: View {
         // Item action sheets (from item kebab within space)
         .adaptivePresentation(isPresented: $showItemStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
-                updateItemField(actionTargetItem, fields: ["status": status])
+                updateItemField(actionTargetItem, fields: ["status": status.rawValue])
             }
         }
         .adaptivePresentation(isPresented: $showItemSetSpace, style: .picker) {
@@ -302,7 +302,7 @@ struct SpaceDetailView: View {
                 onReassignToProject: { actionTargetItem = item; showItemReassign = true },
                 onDelete: { actionTargetItem = item; showItemDeleteConfirmation = true }
             ),
-            currentStatus: item.status
+            currentStatus: item.status?.rawValue
         )
     }
 

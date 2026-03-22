@@ -109,7 +109,7 @@ enum ReportAggregationCalculations {
         )
 
         let active = transactions.filter { tx in
-            guard tx.isCanceled != true else { return false }
+            guard tx.status != .canceled else { return false }
             if let catId = tx.budgetCategoryId, feeCategoryIds.contains(catId) { return false }
             return true
         }

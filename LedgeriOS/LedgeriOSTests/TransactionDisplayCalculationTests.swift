@@ -12,7 +12,7 @@ struct TransactionDisplayCalculationTests {
         source: String? = nil,
         isCanonicalInventorySale: Bool? = nil,
         inventorySaleDirection: InventorySaleDirection? = nil,
-        transactionType: String? = nil,
+        transactionType: TransactionType? = nil,
         reimbursementType: String? = nil,
         hasEmailReceipt: Bool? = nil,
         receiptImages: [AttachmentRef]? = nil,
@@ -95,7 +95,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Purchase type produces brand-primary badge")
     func badgePurchase() {
-        let txn = makeTransaction(transactionType: "purchase")
+        let txn = makeTransaction(transactionType: .purchase)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Purchase")
@@ -104,7 +104,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Sale type produces brand-primary badge")
     func badgeSale() {
-        let txn = makeTransaction(transactionType: "sale")
+        let txn = makeTransaction(transactionType: .sale)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Sale")
@@ -113,23 +113,23 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Return type produces brand-primary badge")
     func badgeReturn() {
-        let txn = makeTransaction(transactionType: "return")
+        let txn = makeTransaction(transactionType: .return)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Return")
         #expect(badges[0].color == BrandColors.primary)
     }
 
-    @Test("To-inventory type produces no badge")
-    func badgeToInventory() {
-        let txn = makeTransaction(transactionType: "to-inventory")
+    @Test("Nil type produces no badge")
+    func badgeNilType() {
+        let txn = makeTransaction(transactionType: nil)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.isEmpty)
     }
 
     @Test("Reimbursement type does not produce a badge")
     func badgeReimbursementClient() {
-        let txn = makeTransaction(transactionType: "purchase", reimbursementType: "owed-to-client")
+        let txn = makeTransaction(transactionType: .purchase, reimbursementType: "owed-to-client")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Purchase")
@@ -137,7 +137,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("No reimbursement badge when type is none")
     func badgeReimbursementNone() {
-        let txn = makeTransaction(transactionType: "purchase", reimbursementType: "none")
+        let txn = makeTransaction(transactionType: .purchase, reimbursementType: "none")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1) // Only the type badge
     }
@@ -145,7 +145,7 @@ struct TransactionDisplayCalculationTests {
     @Test("Receipt images do not produce a badge")
     func badgeReceiptImages() {
         let ref = AttachmentRef(url: "https://example.com/receipt.jpg")
-        let txn = makeTransaction(transactionType: "purchase", receiptImages: [ref])
+        let txn = makeTransaction(transactionType: .purchase, receiptImages: [ref])
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Purchase")
@@ -153,7 +153,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Email receipt does not produce a badge")
     func badgeEmailReceipt() {
-        let txn = makeTransaction(transactionType: "purchase", hasEmailReceipt: true)
+        let txn = makeTransaction(transactionType: .purchase, hasEmailReceipt: true)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 1)
         #expect(badges[0].text == "Purchase")
@@ -161,7 +161,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Needs review badge appears first when isComplete is false")
     func badgeNeedsReview() {
-        let txn = makeTransaction(transactionType: "purchase", isComplete: false)
+        let txn = makeTransaction(transactionType: .purchase, isComplete: false)
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: nil)
         #expect(badges.count == 2)
         #expect(badges[0].text == "Needs Review")
@@ -171,7 +171,7 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Category badge when category present")
     func badgeCategory() {
-        let txn = makeTransaction(transactionType: "purchase")
+        let txn = makeTransaction(transactionType: .purchase)
         let cat = makeCategory(id: "cat1", name: "Furniture")
         let badges = TransactionDisplayCalculations.badgeConfigs(for: txn, category: cat)
         #expect(badges.count == 2)
@@ -182,7 +182,7 @@ struct TransactionDisplayCalculationTests {
     @Test("All badge types present in correct order: needs review, type, category")
     func badgeAllTypes() {
         let txn = makeTransaction(
-            transactionType: "purchase",
+            transactionType: .purchase,
             isComplete: false
         )
         let cat = makeCategory(id: "cat1", name: "Decor")
@@ -217,15 +217,13 @@ struct TransactionDisplayCalculationTests {
 
     @Test("Canonical labels for known types")
     func canonicalLabels() {
-        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: "purchase") == "Purchase")
-        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: "sale") == "Sale")
-        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: "return") == "Return")
-        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: "to-inventory") == "To Inventory")
+        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: .purchase) == "Purchase")
+        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: .sale) == "Sale")
+        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: .return) == "Return")
     }
 
-    @Test("Canonical label nil for unknown type")
+    @Test("Canonical label nil for nil type")
     func canonicalLabelUnknown() {
-        #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: "custom") == nil)
         #expect(TransactionDisplayCalculations.canonicalTypeLabel(for: nil) == nil)
     }
 }

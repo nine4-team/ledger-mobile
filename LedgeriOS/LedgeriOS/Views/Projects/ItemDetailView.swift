@@ -153,7 +153,7 @@ struct ItemDetailView: View {
         // Status Picker
         .adaptivePresentation(isPresented: $showStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: liveItem.status) { status in
-                updateItem(fields: ["status": status])
+                updateItem(fields: ["status": status.rawValue])
             }
         }
         // Delete confirmation
@@ -318,7 +318,7 @@ struct ItemDetailView: View {
     @ViewBuilder
     private var detailsContent: some View {
         VStack(spacing: 0) {
-            DetailRow(label: "Status", value: liveItem.status?.capitalized ?? "—")
+            DetailRow(label: "Status", value: liveItem.status?.displayLabel ?? "—")
             DetailRow(label: "Space", value: spaceNameForDetails)
             DetailRow(label: "Source", value: liveItem.source ?? "—")
             DetailRow(label: "SKU", value: liveItem.sku ?? "—")
@@ -338,7 +338,7 @@ struct ItemDetailView: View {
         Button {
             showStatusPicker = true
         } label: {
-            Text(liveItem.status ?? "No Status")
+            Text(liveItem.status?.displayLabel ?? "No Status")
                 .font(Typography.caption.weight(.semibold))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
@@ -385,10 +385,10 @@ struct ItemDetailView: View {
         ]
 
         // Shared actions via builder (Status, Transaction, Space, Sell, Reassign, Delete)
-        let hasStatus = liveItem.status != nil && !liveItem.status!.isEmpty
+        let hasStatus = liveItem.status != nil
         let hasTx = liveItem.transactionId != nil
         let hasSpace = liveItem.spaceId != nil
-        let isReturnStatus = liveItem.status == "to return" || liveItem.status == "returned"
+        let isReturnStatus = liveItem.status == .toReturn || liveItem.status == .returned
 
         items += ItemMenuBuilder.buildSingleItemMenu(
             context: .detail,
@@ -408,7 +408,7 @@ struct ItemDetailView: View {
                 onMakeCopies: { showMakeCopies = true },
                 onDelete: { showDeleteConfirmation = true }
             ),
-            currentStatus: liveItem.status
+            currentStatus: liveItem.status?.rawValue
         )
 
         return items

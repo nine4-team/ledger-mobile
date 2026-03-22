@@ -51,7 +51,7 @@ struct UniversalSearchView: View {
     }
 
     private var selectedTransactionTotalCents: Int? {
-        let tuples = searchResults.transactions.compactMap { tx -> (id: String, cents: Int, type: String?)? in
+        let tuples = searchResults.transactions.compactMap { tx -> (id: String, cents: Int, type: TransactionType?)? in
             guard let id = tx.id, let cents = tx.amountCents else { return nil }
             return (id: id, cents: cents, type: tx.transactionType)
         }
@@ -178,7 +178,7 @@ struct UniversalSearchView: View {
         // Single-item action sheets
         .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
             StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
-                updateItemField(actionTargetItem, fields: ["status": status])
+                updateItemField(actionTargetItem, fields: ["status": status.rawValue])
             }
         }
         .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
@@ -412,7 +412,7 @@ struct UniversalSearchView: View {
                 onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
                 onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
             ),
-            currentStatus: item.status
+            currentStatus: item.status?.rawValue
         )
     }
 
@@ -466,12 +466,12 @@ struct UniversalSearchView: View {
         selectedItemIds.removeAll()
     }
 
-    private func setStatusForSelectedItems(_ status: String) {
+    private func setStatusForSelectedItems(_ status: ItemStatus) {
         guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
         for item in selectedItems {
             guard let itemId = item.id else { continue }
-            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status]) }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status.rawValue]) }
         }
         selectedItemIds.removeAll()
     }

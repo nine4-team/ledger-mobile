@@ -22,7 +22,7 @@ enum ExportFields {
             tx.source ?? ""
         },
         ExportFieldConfig(id: "transactionType", label: "Transaction Type", defaultSelected: true) { tx, _, _ in
-            tx.transactionType ?? ""
+            tx.transactionType?.displayLabel ?? ""
         },
         ExportFieldConfig(id: "paymentMethod", label: "Payment Method", defaultSelected: true) { tx, _, _ in
             tx.paymentMethod ?? ""
@@ -43,8 +43,7 @@ enum ExportFields {
             tx.reimbursementType ?? ""
         },
         ExportFieldConfig(id: "status", label: "Status", defaultSelected: false) { tx, _, _ in
-            if tx.isCanceled == true { return "canceled" }
-            return tx.status ?? ""
+            tx.status?.displayLabel ?? ""
         },
         ExportFieldConfig(id: "receiptEmailed", label: "Receipt Emailed", defaultSelected: false) { tx, _, _ in
             tx.hasEmailReceipt == true ? "true" : "false"

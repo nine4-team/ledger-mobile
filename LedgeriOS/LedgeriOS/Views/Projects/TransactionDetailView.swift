@@ -52,15 +52,15 @@ struct TransactionDetailView: View {
     }
 
     private var activeItems: [Item] {
-        transactionItems.filter { $0.status != "returned" && $0.status != "sold" }
+        transactionItems.filter { $0.status != .returned && $0.status != .sold }
     }
 
     private var returnedItems: [Item] {
-        transactionItems.filter { $0.status == "returned" }
+        transactionItems.filter { $0.status == .returned }
     }
 
     private var soldItems: [Item] {
-        transactionItems.filter { $0.status == "sold" }
+        transactionItems.filter { $0.status == .sold }
     }
 
     private var processedActiveItems: [Item] {
@@ -757,14 +757,8 @@ struct TransactionDetailView: View {
         )
     }
 
-    private func displayStatus(_ status: String?) -> String {
-        switch status?.lowercased() {
-        case "pending": return "Pending"
-        case "completed": return "Completed"
-        case "canceled": return "Canceled"
-        case "inventory-only": return "Inventory Only"
-        default: return "—"
-        }
+    private func displayStatus(_ status: TransactionStatus?) -> String {
+        status?.displayLabel ?? "—"
     }
 
     private func displayPurchasedBy(_ value: String?) -> String {
@@ -776,14 +770,8 @@ struct TransactionDetailView: View {
         }
     }
 
-    private func displayTransactionType(_ value: String?) -> String {
-        switch value?.lowercased() {
-        case "purchase": return "Purchase"
-        case "sale": return "Sale"
-        case "return": return "Return"
-        case "to-inventory": return "To Inventory"
-        default: return "—"
-        }
+    private func displayTransactionType(_ value: TransactionType?) -> String {
+        value?.displayLabel ?? "—"
     }
 
     private func displayReimbursement(_ value: String?) -> String {
@@ -949,7 +937,7 @@ struct TransactionDetailView: View {
             var item = Item()
             item.accountId = accountId
             item.projectId = projectId
-            item.status = "purchased"
+            item.status = .purchased
             item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
             item.images = images

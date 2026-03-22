@@ -10,7 +10,7 @@ struct ItemDetailCalculationTests {
     private func makeItem(
         id: String? = nil,
         name: String = "",
-        status: String? = nil,
+        status: ItemStatus? = nil,
         spaceId: String? = nil,
         transactionId: String? = nil,
         projectPriceCents: Int? = nil,
@@ -51,7 +51,7 @@ struct ItemDetailCalculationTests {
 
     @Test("to-purchase item gets full actions")
     func availableActionsToPurchase() {
-        let item = makeItem(status: "to-purchase")
+        let item = makeItem(status: .toPurchase)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -69,7 +69,7 @@ struct ItemDetailCalculationTests {
 
     @Test("purchased item gets full actions")
     func availableActionsPurchased() {
-        let item = makeItem(status: "purchased")
+        let item = makeItem(status: .purchased)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -79,7 +79,7 @@ struct ItemDetailCalculationTests {
 
     @Test("returned item gets full actions (no status is terminal)")
     func availableActionsReturned() {
-        let item = makeItem(status: "returned")
+        let item = makeItem(status: .returned)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -163,7 +163,7 @@ struct ItemDetailCalculationTests {
 
     @Test("returned bookmarked item gets full actions with unbookmark")
     func availableActionsReturnedBookmarked() {
-        let item = makeItem(status: "returned", bookmark: true)
+        let item = makeItem(status: .returned, bookmark: true)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
@@ -174,7 +174,7 @@ struct ItemDetailCalculationTests {
 
     @Test("returned non-bookmarked item gets full actions with bookmark")
     func availableActionsReturnedNotBookmarked() {
-        let item = makeItem(status: "returned", bookmark: false)
+        let item = makeItem(status: .returned, bookmark: false)
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))

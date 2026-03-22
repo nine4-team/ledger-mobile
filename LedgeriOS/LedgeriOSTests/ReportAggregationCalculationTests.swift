@@ -11,7 +11,7 @@ struct ReportAggregationCalculationTests {
         id: String? = "tx1",
         amountCents: Int? = 10000,
         reimbursementType: String? = nil,
-        isCanceled: Bool? = nil,
+        status: TransactionStatus? = nil,
         budgetCategoryId: String? = nil,
         itemIds: [String]? = nil,
         source: String? = "HomeGoods",
@@ -24,7 +24,7 @@ struct ReportAggregationCalculationTests {
         tx.id = id
         tx.amountCents = amountCents
         tx.reimbursementType = reimbursementType
-        tx.isCanceled = isCanceled
+        tx.status = status
         tx.budgetCategoryId = budgetCategoryId
         tx.itemIds = itemIds
         tx.source = source
@@ -87,7 +87,7 @@ struct ReportAggregationCalculationTests {
     @Test("Canceled transactions are excluded from invoice report")
     func canceledTransactionExcluded() {
         let transactions = [
-            makeTransaction(id: "tx1", reimbursementType: "owed-to-company", isCanceled: true),
+            makeTransaction(id: "tx1", reimbursementType: "owed-to-company", status: .canceled),
             makeTransaction(id: "tx2", reimbursementType: "owed-to-company"),
         ]
 

@@ -70,7 +70,7 @@ enum SearchCalculations {
         let displayName = transactionDisplayName(for: transaction)
 
         // Text fields: displayName, transactionType, notes, purchasedBy, budget category name
-        let textFields: [String?] = [displayName, transaction.transactionType, transaction.notes, transaction.purchasedBy, categoryName]
+        let textFields: [String?] = [displayName, transaction.transactionType?.rawValue, transaction.notes, transaction.purchasedBy, categoryName]
         if textFields.contains(where: { textMatch(query: query, in: $0) }) {
             return true
         }

@@ -22,7 +22,7 @@ struct ItemCRUDIntegrationTests {
             name: "Velvet Sofa",
             description: "Mid-century modern",
             notes: "Client loves green",
-            status: "purchased",
+            status: .purchased,
             source: "Arhaus",
             sku: "ARH-9901",
             transactionId: "tx1",
@@ -55,7 +55,7 @@ struct ItemCRUDIntegrationTests {
         #expect(result.name == "Velvet Sofa")
         #expect(result.description == "Mid-century modern")
         #expect(result.notes == "Client loves green")
-        #expect(result.status == "purchased")
+        #expect(result.status == .purchased)
         #expect(result.source == "Arhaus")
         #expect(result.sku == "ARH-9901")
         #expect(result.transactionId == "tx1")
@@ -150,7 +150,7 @@ struct ItemCRUDIntegrationTests {
     func updateSingleField() async throws {
         try await FirestoreTestHelper.signIn()
         let id = UUID().uuidString
-        let item = makeItem(id: id, name: "Original", status: "purchased", purchasePriceCents: 10000)
+        let item = makeItem(id: id, name: "Original", status: .purchased, purchasePriceCents: 10000)
 
         try FirestoreTestHelper.write(item, toCollection: itemsPath, id: id)
 
@@ -161,7 +161,7 @@ struct ItemCRUDIntegrationTests {
 
         #expect(result.name == "Updated")
         #expect(result.purchasePriceCents == 10000) // unchanged
-        #expect(result.status == "purchased")        // unchanged
+        #expect(result.status == .purchased)        // unchanged
     }
 
     @Test("Update with NSNull clears field to nil")

@@ -57,7 +57,7 @@ struct InventoryOperationsIntegrationTests {
         let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
         #expect(resultItem.projectId == nil)
         #expect(resultItem.spaceId == nil)
-        #expect(resultItem.status == "purchased")
+        #expect(resultItem.status == .purchased)
 
         // Verify: item linked to canonical sale
         let expectedSaleId = "SALE_\(projectId)_project_to_business_\(categoryId)"
@@ -72,7 +72,7 @@ struct InventoryOperationsIntegrationTests {
         let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(expectedSaleId)"))
         #expect(rawSale["inventorySaleDirection"] as? String == "project_to_business")
         #expect(rawSale["isCanonicalInventorySale"] as? Bool == true)
-        #expect(rawSale["type"] as? String == "Sale")
+        #expect(rawSale["type"] as? String == "sale")
 
         // Verify: source transaction no longer has this item
         let resultSourceTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: sourceTxId))

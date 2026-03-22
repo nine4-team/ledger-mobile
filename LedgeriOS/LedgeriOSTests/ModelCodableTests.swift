@@ -30,7 +30,7 @@ struct ModelCodableTests {
         var item = Item()
         item.name = "Test Chair"
         item.purchasePriceCents = 15000
-        item.status = "purchased"
+        item.status = .purchased
         item.source = "Amazon"
         item.bookmark = true
         item.images = [AttachmentRef(url: "https://example.com/img.jpg")]
@@ -68,8 +68,7 @@ struct ModelCodableTests {
         tx.projectId = "proj1"
         tx.amountCents = 5000
         tx.source = "Home Depot"
-        tx.transactionType = "purchase"
-        tx.isCanceled = false
+        tx.transactionType = .purchase
         tx.budgetCategoryId = "cat1"
         tx.itemIds = ["item1", "item2"]
         tx.taxRatePct = 8.25
@@ -83,7 +82,6 @@ struct ModelCodableTests {
         #expect(dict["amountCents"] as? Int == 5000)
         #expect(dict["source"] as? String == "Home Depot")
         #expect(dict["type"] as? String == "purchase") // CodingKey maps transactionType → "type"
-        #expect(dict["isCanceled"] as? Bool == false)
         #expect(dict["budgetCategoryId"] as? String == "cat1")
         #expect(dict["itemIds"] as? [String] == ["item1", "item2"])
         #expect(dict["taxRatePct"] as? Double == 8.25)
@@ -97,6 +95,16 @@ struct ModelCodableTests {
         let dict = try encodeToDict(tx)
         #expect(dict["amountCents"] == nil)
         #expect(dict["itemIds"] == nil)
+    }
+
+    @Test("Transaction isComplete: true encodes to dict")
+    func transactionIsCompleteEncoding() throws {
+        var tx = Transaction()
+        tx.isComplete = true
+        tx.source = "Amazon"
+
+        let dict = try encodeToDict(tx)
+        #expect(dict["isComplete"] as? Bool == true)
     }
 
     // MARK: - Project

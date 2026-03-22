@@ -20,8 +20,8 @@ struct IncompleteReturnDetectionTests {
     func incompleteReturn_basic() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "returned",
-            transactionType: "purchase",
+            itemStatus: .returned,
+            transactionType: .purchase,
             edgesFromTransaction: []
         )
         #expect(result == true)
@@ -31,8 +31,8 @@ struct IncompleteReturnDetectionTests {
     func notReturned() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "purchased",
-            transactionType: "purchase",
+            itemStatus: .purchased,
+            transactionType: .purchase,
             edgesFromTransaction: []
         )
         #expect(result == false)
@@ -42,8 +42,8 @@ struct IncompleteReturnDetectionTests {
     func returnTransaction() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "returned",
-            transactionType: "return",
+            itemStatus: .returned,
+            transactionType: .return,
             edgesFromTransaction: []
         )
         #expect(result == false)
@@ -53,8 +53,8 @@ struct IncompleteReturnDetectionTests {
     func hasReturnedEdge() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "returned",
-            transactionType: "purchase",
+            itemStatus: .returned,
+            transactionType: .purchase,
             edgesFromTransaction: [makeEdge(itemId: "item-1", movementKind: "returned")]
         )
         #expect(result == false)
@@ -64,8 +64,8 @@ struct IncompleteReturnDetectionTests {
     func onlyAssociationEdges() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "returned",
-            transactionType: "purchase",
+            itemStatus: .returned,
+            transactionType: .purchase,
             edgesFromTransaction: [makeEdge(itemId: "item-1", movementKind: "association")]
         )
         #expect(result == true)
@@ -75,7 +75,7 @@ struct IncompleteReturnDetectionTests {
     func nilTransaction() {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
-            itemStatus: "returned",
+            itemStatus: .returned,
             transactionType: nil,
             edgesFromTransaction: []
         )
@@ -87,18 +87,7 @@ struct IncompleteReturnDetectionTests {
         let result = IncompleteReturnDetection.isIncompleteReturn(
             itemId: "item-1",
             itemStatus: nil,
-            transactionType: "purchase",
-            edgesFromTransaction: []
-        )
-        #expect(result == false)
-    }
-
-    @Test("Returns false when transactionType is return with whitespace")
-    func returnWithWhitespace() {
-        let result = IncompleteReturnDetection.isIncompleteReturn(
-            itemId: "item-1",
-            itemStatus: "returned",
-            transactionType: " return ",
+            transactionType: .purchase,
             edgesFromTransaction: []
         )
         #expect(result == false)
@@ -110,7 +99,7 @@ struct IncompleteReturnDetectionTests {
     func emptyItems() {
         let result = IncompleteReturnDetection.findIncompleteReturns(
             items: [],
-            transactionType: "purchase",
+            transactionType: .purchase,
             edgesFromTransaction: []
         )
         #expect(result.isEmpty)
@@ -118,16 +107,16 @@ struct IncompleteReturnDetectionTests {
 
     @Test("Returns only IDs of items with incomplete returns")
     func mixedItems() {
-        let items: [(id: String, status: String?)] = [
-            (id: "item-1", status: "returned"),
-            (id: "item-2", status: "purchased"),
-            (id: "item-3", status: "returned"),
+        let items: [(id: String, status: ItemStatus?)] = [
+            (id: "item-1", status: .returned),
+            (id: "item-2", status: .purchased),
+            (id: "item-3", status: .returned),
         ]
         let edges = [makeEdge(itemId: "item-3", movementKind: "returned")]
 
         let result = IncompleteReturnDetection.findIncompleteReturns(
             items: items,
-            transactionType: "purchase",
+            transactionType: .purchase,
             edgesFromTransaction: edges
         )
         #expect(result == ["item-1"])
@@ -135,9 +124,9 @@ struct IncompleteReturnDetectionTests {
 
     @Test("Returns empty array when all items have complete returns")
     func allComplete() {
-        let items: [(id: String, status: String?)] = [
-            (id: "item-1", status: "returned"),
-            (id: "item-2", status: "returned"),
+        let items: [(id: String, status: ItemStatus?)] = [
+            (id: "item-1", status: .returned),
+            (id: "item-2", status: .returned),
         ]
         let edges = [
             makeEdge(itemId: "item-1", movementKind: "returned"),
@@ -146,7 +135,7 @@ struct IncompleteReturnDetectionTests {
 
         let result = IncompleteReturnDetection.findIncompleteReturns(
             items: items,
-            transactionType: "purchase",
+            transactionType: .purchase,
             edgesFromTransaction: edges
         )
         #expect(result.isEmpty)
@@ -154,15 +143,15 @@ struct IncompleteReturnDetectionTests {
 
     @Test("Returns all IDs when multiple items have incomplete returns")
     func allIncomplete() {
-        let items: [(id: String, status: String?)] = [
-            (id: "item-1", status: "returned"),
-            (id: "item-2", status: "returned"),
-            (id: "item-3", status: "returned"),
+        let items: [(id: String, status: ItemStatus?)] = [
+            (id: "item-1", status: .returned),
+            (id: "item-2", status: .returned),
+            (id: "item-3", status: .returned),
         ]
 
         let result = IncompleteReturnDetection.findIncompleteReturns(
             items: items,
-            transactionType: "purchase",
+            transactionType: .purchase,
             edgesFromTransaction: []
         )
         #expect(result == ["item-1", "item-2", "item-3"])
