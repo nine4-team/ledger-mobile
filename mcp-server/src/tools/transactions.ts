@@ -45,7 +45,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── list_transactions ──────────────────────────────────────────────────────
   server.tool(
     "list_transactions",
-    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false).",
+    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false). To understand WHY a transaction is incomplete, call get_transaction — it returns the audit object (variance numbers) and shows which fields are null (subtotalCents, taxRatePct, items).",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
