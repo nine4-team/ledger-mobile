@@ -424,11 +424,11 @@ Embedded within Checklist.
 
 ## Computed Entities
 
-These are derived client-side and never persisted to Firestore.
-
 ### TransactionCompleteness
 
-Computed for the transaction audit section. Compares linked item prices against the transaction subtotal to measure how well items account for the total spend.
+The core audit fields (`itemsSumCents`, `varianceCents`, `variancePercent`, and the lineage breakdown fields) are computed server-side by the `computeIsComplete` Cloud Function and persisted as the `audit` object on the transaction document (see `transaction-completeness.md`). The fields below include both the persisted audit fields and additional presentation-only fields derived client-side.
+
+Compares linked item prices against the transaction subtotal to measure how well items account for the total spend.
 
 | Field | Type | How Computed |
 |-------|------|-------------|

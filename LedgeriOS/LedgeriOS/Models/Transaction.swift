@@ -5,6 +5,11 @@ struct TransactionAudit: Codable, Hashable {
     var itemsSumCents: Int?
     var varianceCents: Int?
     var variancePercent: Double?
+    var linkedItemsSumCents: Int?
+    var returnedItemsSumCents: Int?
+    var returnedItemsCount: Int?
+    var soldItemsSumCents: Int?
+    var soldItemsCount: Int?
 }
 
 struct Transaction: Codable, Identifiable, Hashable {

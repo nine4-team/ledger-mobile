@@ -2,7 +2,7 @@ import SwiftUI
 import FirebaseFirestore
 
 /// Full transaction detail screen with hero card, Next Steps, 8 collapsible sections,
-/// Moved Items, and delete action.
+/// and delete action.
 struct TransactionDetailView: View {
     let transaction: Transaction
 
@@ -39,6 +39,10 @@ struct TransactionDetailView: View {
     @State private var pinnedAttachment: AttachmentRef?
     @State private var pinnedImageSource: [AttachmentRef] = []
 
+    // Lineage-based returned/sold items
+    @State private var lineageReturnedItems: [Item] = []
+    @State private var lineageSoldItems: [Item] = []
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
@@ -55,13 +59,8 @@ struct TransactionDetailView: View {
         transactionItems.filter { $0.status != .returned && $0.status != .sold }
     }
 
-    private var returnedItems: [Item] {
-        transactionItems.filter { $0.status == .returned }
-    }
-
-    private var soldItems: [Item] {
-        transactionItems.filter { $0.status == .sold }
-    }
+    private var returnedItems: [Item] { lineageReturnedItems }
+    private var soldItems: [Item] { lineageSoldItems }
 
     private var processedActiveItems: [Item] {
         ListFilterSortCalculations.applyAllMultiFilters(
@@ -128,7 +127,6 @@ struct TransactionDetailView: View {
                         returnedItemsSection
                         soldItemsSection
                         transactionAuditSection
-                        movedItemsSection
                     }
                     .padding(.horizontal, Spacing.screenPadding)
                     .padding(.vertical, Spacing.lg)
@@ -136,6 +134,9 @@ struct TransactionDetailView: View {
             }
         }
         .background(BrandColors.background)
+        .task(id: transaction.id) {
+            await loadLineageItems()
+        }
         .background(SortMenu(
             isPresented: $itemsShowSortMenu,
             sortOptions: SortMenu.itemSortMenuItems(activeSort: itemsActiveSort, onSelect: { itemsActiveSort = $0 })
@@ -721,14 +722,6 @@ struct TransactionDetailView: View {
         }
     }
 
-    // Moved Items (non-collapsible, 50% opacity)
-    // LineageEdgesService may be a stub — show empty section if no edges
-    @ViewBuilder
-    private var movedItemsSection: some View {
-        // Stub: LineageEdgesService not yet implemented. Show nothing until edges exist.
-        EmptyView()
-    }
-
     // MARK: - Action Menu
 
     private var actionMenuItems: [ActionMenuItem] {
@@ -740,6 +733,63 @@ struct TransactionDetailView: View {
                 onDelete: { showDeleteConfirmation = true }
             )
         )
+    }
+
+    // MARK: - Lineage
+
+    private func loadLineageItems() async {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+
+        do {
+            let edges = try await LineageEdgesService()
+                .edges(forTransaction: transactionId, accountId: accountId)
+
+            // Filter to edges where THIS transaction is the source (items that LEFT)
+            let currentItemIds = Set(currentTransaction.itemIds ?? [])
+
+            // Group by itemId, keep latest by createdAt, split by movementKind
+            var latestByItem: [String: LineageEdge] = [:]
+            for edge in edges {
+                guard let itemId = edge.itemId,
+                      edge.fromTransactionId == transactionId,
+                      let kind = edge.movementKind,
+                      (kind == "returned" || kind == "sold"),
+                      !currentItemIds.contains(itemId) else { continue }
+
+                if let existing = latestByItem[itemId] {
+                    if (edge.createdAt ?? .distantPast) > (existing.createdAt ?? .distantPast) {
+                        latestByItem[itemId] = edge
+                    }
+                } else {
+                    latestByItem[itemId] = edge
+                }
+            }
+
+            let returnedIds = Set(latestByItem.filter { $0.value.movementKind == "returned" }.keys)
+            let soldIds = Set(latestByItem.filter { $0.value.movementKind == "sold" }.keys)
+
+            // Resolve items from project context (returned items stay in same project)
+            let returnedFromContext = projectContext.items.filter { returnedIds.contains($0.id ?? "") }
+
+            // Sold items may have left the project — try context first, then fetch missing
+            var soldResolved = projectContext.items.filter { soldIds.contains($0.id ?? "") }
+            let foundSoldIds = Set(soldResolved.compactMap(\.id))
+            let missingSoldIds = soldIds.subtracting(foundSoldIds)
+            if !missingSoldIds.isEmpty {
+                let service = ItemsService()
+                for itemId in missingSoldIds {
+                    if let item = try? await service.getItem(accountId: accountId, itemId: itemId) {
+                        soldResolved.append(item)
+                    }
+                }
+            }
+
+            lineageReturnedItems = returnedFromContext
+            lineageSoldItems = soldResolved
+        } catch {
+            // Fail silently — sections just won't show. Offline-first: no spinner.
+        }
     }
 
     // MARK: - Helpers

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -689,6 +689,46 @@ exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('account
     }
 });
 /**
+ * Recompute isComplete on the source transaction when a returned/sold lineage edge is created.
+ * Safety net for non-atomic flows where the edge lands after the transaction's itemIds was updated.
+ * For atomic batch writes (e.g., InventoryOperationsService), the onTransactionWritten trigger
+ * already handles this — this trigger fires redundantly but is idempotent.
+ */
+exports.onLineageEdgeCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/lineageEdges/{edgeId}', async (event) => {
+    const data = event.data?.data() ?? null;
+    if (!data)
+        return;
+    const movementKind = data.movementKind;
+    if (movementKind !== 'returned' && movementKind !== 'sold')
+        return;
+    const fromTransactionId = data.fromTransactionId;
+    if (!fromTransactionId)
+        return;
+    const accountId = event.params.accountId;
+    const db = (0, firestore_1.getFirestore)();
+    try {
+        const txRef = db.doc(`accounts/${accountId}/transactions/${fromTransactionId}`);
+        const txSnap = await txRef.get();
+        if (!txSnap.exists)
+            return;
+        const txData = txSnap.data() ?? {};
+        const result = await computeIsComplete(db, accountId, fromTransactionId, txData);
+        const currentIsComplete = txData.isComplete ?? null;
+        const currentAudit = txData.audit ?? null;
+        if (currentIsComplete !== result.isComplete ||
+            JSON.stringify(currentAudit) !== JSON.stringify(result.audit)) {
+            await txRef.set({
+                isComplete: result.isComplete,
+                audit: result.audit,
+                updatedAt: firestore_1.FieldValue.serverTimestamp(),
+            }, { merge: true });
+        }
+    }
+    catch (err) {
+        console.error(`[onLineageEdgeCreated] isComplete recompute failed for tx ${fromTransactionId}:`, err);
+    }
+});
+/**
  * Recompute canonical sale transaction totals when an item's price changes.
  * Also recomputes isComplete for any parent transactions that reference this item.
  */
@@ -734,7 +774,7 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
                 if (txDoc.id.startsWith('SALE_'))
                     continue;
                 const txData = txDoc.data() ?? {};
-                const result = await computeIsComplete(db, accountId, txData);
+                const result = await computeIsComplete(db, accountId, txDoc.id, txData);
                 const currentIsComplete = txData.isComplete ?? null;
                 const currentAudit = txData.audit ?? null;
                 if (currentIsComplete !== result.isComplete ||
@@ -749,6 +789,49 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
         }
         catch (err) {
             console.error(`[onItemPriceChanged] isComplete recompute failed for item ${itemId}:`, err);
+        }
+        // Also recompute source transactions where this item left via lineage edges
+        // (item no longer in their itemIds, but still contributes to their audit)
+        try {
+            const edgesSnapshot = await db
+                .collection(`accounts/${accountId}/lineageEdges`)
+                .where('itemId', '==', itemId)
+                .get();
+            const sourceTransactionIds = new Set();
+            for (const edgeDoc of edgesSnapshot.docs) {
+                const edge = edgeDoc.data() ?? {};
+                const kind = edge.movementKind;
+                if (kind !== 'returned' && kind !== 'sold')
+                    continue;
+                const fromTxId = edge.fromTransactionId;
+                if (fromTxId)
+                    sourceTransactionIds.add(fromTxId);
+            }
+            for (const srcTxId of sourceTransactionIds) {
+                const txRef = db.doc(`accounts/${accountId}/transactions/${srcTxId}`);
+                const txSnap = await txRef.get();
+                if (!txSnap.exists)
+                    continue;
+                const txData = txSnap.data() ?? {};
+                // Skip if this item is still in the transaction's itemIds (already handled above)
+                const txItemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
+                if (txItemIds.includes(itemId))
+                    continue;
+                const result = await computeIsComplete(db, accountId, srcTxId, txData);
+                const currentIsComplete = txData.isComplete ?? null;
+                const currentAudit = txData.audit ?? null;
+                if (currentIsComplete !== result.isComplete ||
+                    JSON.stringify(currentAudit) !== JSON.stringify(result.audit)) {
+                    await txRef.set({
+                        isComplete: result.isComplete,
+                        audit: result.audit,
+                        updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                    }, { merge: true });
+                }
+            }
+        }
+        catch (err) {
+            console.error(`[onItemPriceChanged] lineage-based isComplete recompute failed for item ${itemId}:`, err);
         }
     }
 });
@@ -1302,7 +1385,7 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
  * Compute isComplete and audit for a transaction.
  * Returns { isComplete, audit } where audit is null when not applicable.
  */
-async function computeIsComplete(db, accountId, txData) {
+async function computeIsComplete(db, accountId, transactionId, txData) {
     // 1. Canonical transactions are always complete
     if (txData.isCanonicalInventorySale === true || txData.isCanonicalInventory === true) {
         return { isComplete: true, audit: null };
@@ -1340,9 +1423,42 @@ async function computeIsComplete(db, accountId, txData) {
     if (!hasSubtotal && !hasTaxRate) {
         return { isComplete: false, audit: null };
     }
-    // 4. Check items
+    // 4. Check items (linked + lineage)
     const itemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
-    if (itemIds.length === 0) {
+    const itemIdSet = new Set(itemIds);
+    // 4b. Query lineage edges from this transaction (returned + sold items)
+    const edgesSnapshot = await db
+        .collection(`accounts/${accountId}/lineageEdges`)
+        .where('fromTransactionId', '==', transactionId)
+        .get();
+    // Filter to returned/sold, deduplicate by itemId (keep latest by createdAt)
+    const lineageItemMap = new Map();
+    for (const edgeDoc of edgesSnapshot.docs) {
+        const edge = edgeDoc.data() ?? {};
+        const kind = edge.movementKind;
+        if (kind !== 'returned' && kind !== 'sold')
+            continue;
+        const edgeItemId = edge.itemId;
+        if (!edgeItemId)
+            continue;
+        // Skip items still in itemIds (prevent double-counting)
+        if (itemIdSet.has(edgeItemId))
+            continue;
+        const existing = lineageItemMap.get(edgeItemId);
+        if (!existing) {
+            lineageItemMap.set(edgeItemId, { movementKind: kind, createdAt: edge.createdAt });
+        }
+        else {
+            // Keep latest by createdAt
+            const existingTime = existing.createdAt instanceof Date ? existing.createdAt.getTime() : 0;
+            const newTime = edge.createdAt instanceof Date ? edge.createdAt.getTime() : 0;
+            if (newTime > existingTime) {
+                lineageItemMap.set(edgeItemId, { movementKind: kind, createdAt: edge.createdAt });
+            }
+        }
+    }
+    // Bail if no items at all (neither linked nor lineage)
+    if (itemIds.length === 0 && lineageItemMap.size === 0) {
         return { isComplete: false, audit: null };
     }
     // 5. Resolve subtotal
@@ -1363,9 +1479,9 @@ async function computeIsComplete(db, accountId, txData) {
     if (resolvedSubtotalCents === null || resolvedSubtotalCents <= 0) {
         return { isComplete: false, audit: null };
     }
-    // 6. Fetch items and sum purchasePriceCents
+    // 6. Fetch linked items and sum purchasePriceCents
     // Firestore 'in' queries max 30 items per batch
-    let itemsSumCents = 0;
+    let linkedItemsSumCents = 0;
     const BATCH_SIZE = 30;
     for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
         const batch = itemIds.slice(i, i + BATCH_SIZE);
@@ -1375,10 +1491,39 @@ async function computeIsComplete(db, accountId, txData) {
             .get();
         for (const doc of snapshot.docs) {
             const data = doc.data() ?? {};
-            itemsSumCents += typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+            linkedItemsSumCents += typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
         }
     }
-    // 7. Compute variance
+    // 6b. Fetch lineage items and sum by movementKind
+    let returnedItemsSumCents = 0;
+    let returnedItemsCount = 0;
+    let soldItemsSumCents = 0;
+    let soldItemsCount = 0;
+    const lineageItemIds = Array.from(lineageItemMap.keys());
+    if (lineageItemIds.length > 0) {
+        for (let i = 0; i < lineageItemIds.length; i += BATCH_SIZE) {
+            const batch = lineageItemIds.slice(i, i + BATCH_SIZE);
+            const snapshot = await db
+                .collection(`accounts/${accountId}/items`)
+                .where('__name__', 'in', batch)
+                .get();
+            for (const doc of snapshot.docs) {
+                const data = doc.data() ?? {};
+                const priceCents = typeof data.purchasePriceCents === 'number' ? data.purchasePriceCents : 0;
+                const edgeInfo = lineageItemMap.get(doc.id);
+                if (edgeInfo?.movementKind === 'returned') {
+                    returnedItemsSumCents += priceCents;
+                    returnedItemsCount++;
+                }
+                else if (edgeInfo?.movementKind === 'sold') {
+                    soldItemsSumCents += priceCents;
+                    soldItemsCount++;
+                }
+            }
+        }
+    }
+    // 7. Compute totals and variance
+    const itemsSumCents = linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents;
     const varianceCents = itemsSumCents - resolvedSubtotalCents;
     const variancePercent = (varianceCents / resolvedSubtotalCents) * 100;
     const isComplete = Math.abs(variancePercent) <= 1;
@@ -1389,6 +1534,11 @@ async function computeIsComplete(db, accountId, txData) {
             itemsSumCents,
             varianceCents,
             variancePercent: Math.round(variancePercent * 100) / 100, // 2 decimal places
+            linkedItemsSumCents,
+            returnedItemsSumCents,
+            returnedItemsCount,
+            soldItemsSumCents,
+            soldItemsCount,
         },
     };
 }
@@ -1435,7 +1585,7 @@ exports.onTransactionWritten = (0, firestore_2.onDocumentWritten)('accounts/{acc
         isCompletePromise = (async () => {
             try {
                 const db = (0, firestore_1.getFirestore)();
-                const result = await computeIsComplete(db, accountId, afterData);
+                const result = await computeIsComplete(db, accountId, transactionId, afterData);
                 // Only write if values actually differ
                 const currentIsComplete = afterData.isComplete ?? null;
                 const currentAudit = afterData.audit ?? null;
@@ -1598,7 +1748,7 @@ exports.backfillIsComplete = (0, https_1.onCall)(async (request) => {
         let batchHasWrites = false;
         for (const txDoc of slice) {
             const txData = txDoc.data() ?? {};
-            const result = await computeIsComplete(db, accountId, txData);
+            const result = await computeIsComplete(db, accountId, txDoc.id, txData);
             const currentIsComplete = txData.isComplete ?? null;
             const currentAudit = txData.audit ?? null;
             if (currentIsComplete !== result.isComplete ||

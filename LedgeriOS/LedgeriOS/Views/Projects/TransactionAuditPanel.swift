@@ -61,6 +61,10 @@ struct TransactionAuditPanel: View {
 
     // MARK: - Detail Breakdown
 
+    private var hasLineageBreakdown: Bool {
+        (audit.returnedItemsCount ?? 0) > 0 || (audit.soldItemsCount ?? 0) > 0
+    }
+
     private var detailBreakdown: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             detailLine(
@@ -68,8 +72,29 @@ struct TransactionAuditPanel: View {
                 value: CurrencyFormatting.formatCentsWithDecimals(resolvedSubtotalCents)
             )
 
+            if hasLineageBreakdown {
+                detailLine(
+                    label: "Linked items",
+                    value: CurrencyFormatting.formatCentsWithDecimals(audit.linkedItemsSumCents ?? 0)
+                )
+
+                if let returnedCount = audit.returnedItemsCount, returnedCount > 0 {
+                    detailLine(
+                        label: "Returned items (\(returnedCount))",
+                        value: CurrencyFormatting.formatCentsWithDecimals(audit.returnedItemsSumCents ?? 0)
+                    )
+                }
+
+                if let soldCount = audit.soldItemsCount, soldCount > 0 {
+                    detailLine(
+                        label: "Sold items (\(soldCount))",
+                        value: CurrencyFormatting.formatCentsWithDecimals(audit.soldItemsSumCents ?? 0)
+                    )
+                }
+            }
+
             detailLine(
-                label: "Associated items total (pre-tax)",
+                label: hasLineageBreakdown ? "Total (pre-tax)" : "Associated items total (pre-tax)",
                 value: CurrencyFormatting.formatCentsWithDecimals(itemsSumCents)
             )
 

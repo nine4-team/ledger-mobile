@@ -12,11 +12,16 @@ The audit is only relevant when a transaction's budget category has `metadata.ca
 
 ### Items Total
 ```
-itemsNetTotal = sum of purchasePriceCents for all items whose id appears in transaction.itemIds
+itemsNetTotal = linkedItemsSum + returnedItemsSum + soldItemsSum
 ```
-Items with null or zero `purchasePriceCents` contribute $0 to the total.
+Where:
+- `linkedItemsSum` = sum of `purchasePriceCents` for items whose id appears in `transaction.itemIds`
+- `returnedItemsSum` = sum of `purchasePriceCents` for items referenced by lineage edges where `fromTransactionId == transaction.id` and `movementKind == "returned"`
+- `soldItemsSum` = sum of `purchasePriceCents` for items referenced by lineage edges where `fromTransactionId == transaction.id` and `movementKind == "sold"`
 
-**Important:** Items are looked up by checking which items have an `id` that appears in `transaction.itemIds`. Do NOT look up items by filtering `item.transactionId == transaction.id` — see data-model.md for the canonical lookup direction.
+Items with null or zero `purchasePriceCents` contribute $0 to the total. Lineage items already present in `transaction.itemIds` are excluded from the lineage sums to prevent double-counting.
+
+**Important:** Linked items are looked up by checking which items have an `id` that appears in `transaction.itemIds`. Do NOT look up items by filtering `item.transactionId == transaction.id` — see data-model.md for the canonical lookup direction. Lineage items are found by querying `lineageEdges` where `fromTransactionId == transaction.id`.
 
 ### Transaction Subtotal Resolution
 
@@ -96,15 +101,22 @@ This is a persisted nested object on the transaction document, written by the Cl
 | Field | Type | Description |
 |-------|------|-------------|
 | `resolvedSubtotalCents` | integer (cents) | Pre-tax subtotal used for comparison (per subtotal resolution priority) |
-| `itemsSumCents` | integer (cents) | Sum of `purchasePriceCents` across all items in `itemIds` |
+| `itemsSumCents` | integer (cents) | Total sum: `linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents` |
 | `varianceCents` | integer (cents) | `itemsSumCents - resolvedSubtotalCents` |
 | `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
+| `linkedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items currently in `transaction.itemIds` |
+| `returnedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"returned"` lineage edges |
+| `returnedItemsCount` | integer | Count of items that left via `"returned"` lineage edges |
+| `soldItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"sold"` lineage edges |
+| `soldItemsCount` | integer | Count of items that left via `"sold"` lineage edges |
 
-`audit` is `null` when category is not itemized, transaction is canonical, subtotal can't be resolved, or no items are linked.
+`audit` is `null` when category is not itemized, transaction is canonical, subtotal can't be resolved, or no items are linked (neither in `itemIds` nor via lineage edges).
 
 ## Edge Cases
 
-1. **Zero items linked**: `isComplete = false`, `audit = null`
+1. **Zero items linked (and no lineage edges)**: `isComplete = false`, `audit = null`
+8. **All items returned**: `itemIds` is empty but lineage edges exist with `movementKind: "returned"`. Audit is computed from lineage items. `isComplete` can be `true` if returned items cover the subtotal.
+9. **Item returned and price later changes**: The `onItemPriceChanged` trigger queries lineage edges (not just `itemIds`) to find source transactions and recompute their audits.
 2. **Zero transaction subtotal**: `isComplete = false`, `audit = null` (subtotal not resolvable)
 3. **All items missing prices**: `itemsSumCents = 0`, variance will be large → `isComplete = false`
 4. **Negative item prices**: Should not occur (validation prevents it), but if present, they contribute their value to the sum

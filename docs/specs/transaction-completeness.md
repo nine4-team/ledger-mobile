@@ -30,12 +30,12 @@ The `needsReview` field is deprecated and should not be read or written by new c
 2. **Non-itemized category** — budget category's `metadata.categoryType` is not `"itemized"` (includes `"general"`, `"standard"`, `"fee"`, or no category)
 3. **All conditions met** for an itemized category:
    - Tax data present — `subtotalCents` is set (not null/undefined) **or** `taxRatePct` is set (not null/undefined, including `0`)
-   - Has items — `itemIds` is non-empty
-   - Items match subtotal — `abs(variancePercent) ≤ 1%`
+   - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned"/"sold" exist for this transaction
+   - Items match subtotal — `abs(variancePercent) ≤ 1%` (where `itemsSumCents` includes both linked and lineage items)
 
 `isComplete = false` when itemized category **and any** of:
 - Missing tax data (neither `subtotalCents` nor `taxRatePct` is set)
-- No items linked (`itemIds` is null/empty)
+- No items linked and no qualifying lineage edges (`itemIds` is null/empty AND no returned/sold edges)
 - Items don't match subtotal (variance > ±1%)
 - No amount data (`amountCents` is null or 0)
 
@@ -63,9 +63,14 @@ The Cloud Function writes a nested `audit` object alongside `isComplete`:
   "isComplete": false,
   "audit": {
     "resolvedSubtotalCents": 16973,
-    "itemsSumCents": 5000,
-    "varianceCents": -11973,
-    "variancePercent": -70.5
+    "itemsSumCents": 15973,
+    "varianceCents": -1000,
+    "variancePercent": -5.89,
+    "linkedItemsSumCents": 12973,
+    "returnedItemsSumCents": 3000,
+    "returnedItemsCount": 2,
+    "soldItemsSumCents": 0,
+    "soldItemsCount": 0
   }
 }
 ```
@@ -74,16 +79,21 @@ The Cloud Function writes a nested `audit` object alongside `isComplete`:
 - Category is not itemized
 - Transaction is canonical
 - Subtotal cannot be resolved
-- No items are linked
+- No items are linked and no qualifying lineage edges exist
 
 ### Audit Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `resolvedSubtotalCents` | integer (cents) | Pre-tax subtotal used for comparison (per resolution priority) |
-| `itemsSumCents` | integer (cents) | Sum of `purchasePriceCents` across all items in `itemIds` |
+| `itemsSumCents` | integer (cents) | Total: `linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents` |
 | `varianceCents` | integer (cents) | `itemsSumCents - resolvedSubtotalCents` |
 | `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
+| `linkedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items currently in `itemIds` |
+| `returnedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"returned"` lineage edges |
+| `returnedItemsCount` | integer | Count of items that left via `"returned"` lineage edges |
+| `soldItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"sold"` lineage edges |
+| `soldItemsCount` | integer | Count of items that left via `"sold"` lineage edges |
 
 ## Cloud Function Triggers
 
@@ -97,7 +107,7 @@ Fires on every transaction create, update, or delete. Computes `isComplete` + `a
 
 ### 2. Item Price Change
 
-When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each.
+When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction.
 
 ### 3. Budget Category Type Change (`onAccountBudgetCategoryWritten`)
 
@@ -106,7 +116,15 @@ When `metadata.categoryType` changes on an account-level budget category:
 - **To non-itemized:** Query transactions with that `budgetCategoryId`, batch set `isComplete = true, audit = null`
 - **To itemized:** Query transactions with that `budgetCategoryId`, batch set `isComplete = false, audit = null` (marks for review; full computation happens on next transaction write or via backfill)
 
-### 4. Backfill (`backfillIsComplete`)
+### 4. Lineage Edge Creation (`onLineageEdgeCreated`)
+
+When a lineage edge is created with `movementKind` "returned" or "sold", recomputes `isComplete` + `audit` on the source transaction (`fromTransactionId`). This is a safety net for non-atomic flows where the edge is created after the transaction's `itemIds` was already updated.
+
+Guards:
+- Skip if `movementKind` is not "returned" or "sold" (avoids cascading on frequent "association" edges)
+- Skip if `fromTransactionId` is null
+
+### 5. Backfill (`backfillIsComplete`)
 
 Callable Cloud Function that iterates all transactions in an account, computes `isComplete` + `audit`, and writes results. Only writes `isComplete`, `audit`, and `updatedAt` — the loop guard prevents budget summary cascade.
 

@@ -115,7 +115,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── get_transaction ────────────────────────────────────────────────────────
   server.tool(
     "get_transaction",
-    "Get a single transaction with linked items. Returns isComplete (auto-computed by Cloud Function: true when items sum matches pre-tax subtotal within ±1% for itemized categories, always true for non-itemized/canonical). For itemized categories, returns an 'audit' object with resolvedSubtotalCents, itemsSumCents, varianceCents, variancePercent. The app shows a 'Needs Review' badge when isComplete is false — if a user says a transaction 'needs review', that means isComplete is false. Check null fields directly to identify missing data.",
+    "Get a single transaction with linked items. Returns isComplete (auto-computed by Cloud Function: true when items sum matches pre-tax subtotal within ±1% for itemized categories, always true for non-itemized/canonical). For itemized categories, returns an 'audit' object with: resolvedSubtotalCents, itemsSumCents (total including lineage items), varianceCents, variancePercent, linkedItemsSumCents (items still in itemIds), returnedItemsSumCents/returnedItemsCount (items that left via return), soldItemsSumCents/soldItemsCount (items that left via sale). The app shows a 'Needs Review' badge when isComplete is false — if a user says a transaction 'needs review', that means isComplete is false. Check null fields directly to identify missing data.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       const tx = await getDoc<Transaction>(db, "transactions", transactionId);

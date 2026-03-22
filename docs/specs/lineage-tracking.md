@@ -166,6 +166,10 @@ Same two-query-and-merge pattern as above.
 
 "What items were sold to this project?" -- Query lineage edges where `toProjectId == projectId` and `movementKind == "sold"`.
 
+### Transaction Audit Completeness
+
+Lineage edges with `movementKind` "returned" or "sold" are included in the source transaction's audit calculation. The Cloud Function (`computeIsComplete`) queries these edges from `fromTransactionId`, fetches the referenced items, and adds their `purchasePriceCents` to the transaction's `itemsSumCents`. This ensures a transaction's completeness status reflects its full purchase history — items that were returned or sold still count toward the audit, preventing false "incomplete" flags after returns.
+
 ## Relationship to Other Systems
 
 - **Canonical sales** (see canonical-sales.md): Every canonical sale creates "sold" lineage edges.

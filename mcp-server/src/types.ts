@@ -56,6 +56,11 @@ export interface Transaction {
     itemsSumCents: number;
     varianceCents: number;
     variancePercent: number;
+    linkedItemsSumCents?: number;
+    returnedItemsSumCents?: number;
+    returnedItemsCount?: number;
+    soldItemsSumCents?: number;
+    soldItemsCount?: number;
   } | null;
   purchasedBy?: string;
   reimbursementType?: string;

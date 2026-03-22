@@ -191,7 +191,30 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      await accountCollection(db, "items").doc(itemId).update(updates);
+      // If transactionId is changing, sync itemIds on both old and new transactions
+      if (fields.transactionId !== undefined) {
+        const itemDoc = await accountCollection(db, "items").doc(itemId).get();
+        const oldTransactionId = itemDoc.exists ? (itemDoc.data() as Record<string, unknown>)?.transactionId as string | undefined : undefined;
+        const newTransactionId = fields.transactionId;
+
+        await accountCollection(db, "items").doc(itemId).update(updates);
+
+        if (oldTransactionId && oldTransactionId !== newTransactionId) {
+          await accountCollection(db, "transactions").doc(oldTransactionId).update({
+            itemIds: FieldValue.arrayRemove(itemId),
+            updatedAt: new Date(),
+          });
+        }
+        if (newTransactionId && newTransactionId !== oldTransactionId) {
+          await accountCollection(db, "transactions").doc(newTransactionId).update({
+            itemIds: FieldValue.arrayUnion(itemId),
+            updatedAt: new Date(),
+          });
+        }
+      } else {
+        await accountCollection(db, "items").doc(itemId).update(updates);
+      }
+
       return { content: [{ type: "text", text: `Updated item ${itemId}` }] };
     }
   );
