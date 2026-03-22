@@ -21,7 +21,6 @@ struct SegmentedControl<T: Hashable>: View {
             ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
                 let isSelected = selection == option.id
                 let isLast = index == options.count - 1
-                let prevIsSelected = index > 0 && selection == options[index - 1].id
                 let nextIsSelected = !isLast && selection == options[index + 1].id
 
                 Button {

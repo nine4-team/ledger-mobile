@@ -78,7 +78,6 @@ struct ActionMenuSheet: View {
     @ViewBuilder
     private func menuItemRow(_ item: ActionMenuItem) -> some View {
         let hasSubmenu = ActionMenuCalculations.hasSubactions(item)
-        let isDestructive = ActionMenuCalculations.isDestructiveItem(item)
         let isExpanded = expandedItemKey == item.id
 
         Button {

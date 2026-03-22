@@ -15,8 +15,10 @@ final class CameraManager: NSObject {
     var isSessionRunning = false
     var permissionDenied = false
 
-    private(set) var session = AVCaptureSession()
-    private let photoOutput = AVCapturePhotoOutput()
+    @ObservationIgnored
+    nonisolated(unsafe) private(set) var session = AVCaptureSession()
+    @ObservationIgnored
+    nonisolated(unsafe) private var photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session")
     private var onCapture: ((Data) -> Void)?
 
@@ -89,7 +91,7 @@ final class CameraManager: NSObject {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
+extension CameraManager: AVCapturePhotoCaptureDelegate {
     nonisolated func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,

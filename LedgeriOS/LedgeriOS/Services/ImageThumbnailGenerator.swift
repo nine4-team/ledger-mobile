@@ -85,7 +85,6 @@ enum ImageThumbnailGenerator {
     /// Example: `"accounts/x/items/y/image_0.jpg"` → `"accounts/x/items/y/image_0_sm.jpg"`
     static func thumbnailPath(for originalPath: String, size: ThumbnailSize) -> String {
         let nsPath = originalPath as NSString
-        let ext = nsPath.pathExtension
         let withoutExt = nsPath.deletingPathExtension
         return "\(withoutExt)\(size.suffix).jpg"
     }

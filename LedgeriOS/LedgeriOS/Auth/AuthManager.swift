@@ -9,6 +9,7 @@ final class AuthManager {
     var isAuthenticated: Bool { currentUser != nil }
     var errorMessage: String?
 
+    @ObservationIgnored
     nonisolated(unsafe) private var authStateHandle: AuthStateDidChangeListenerHandle?
 
     init() {

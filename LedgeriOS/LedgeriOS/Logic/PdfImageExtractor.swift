@@ -91,8 +91,6 @@ enum PdfImageExtractor {
         // image gaps (regions with no text that likely contain images).
         //
         // Fallback: scan for rectangular gaps in the text layout on the left side of the page.
-        let pageHeight = pageBounds.height
-
         // Get all selections on the page to find text-free zones
         guard let pageString = page.string, !pageString.isEmpty else { return [] }
 
