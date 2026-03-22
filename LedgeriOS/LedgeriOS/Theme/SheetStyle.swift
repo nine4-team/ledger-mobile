@@ -77,15 +77,19 @@ private struct AdaptivePresentationModifier<C: View>: ViewModifier {
     func body(content: Content) -> some View {
         #if os(macOS)
         if style.usesPopoverOnMac {
-            content.popover(isPresented: $isPresented) {
-                sheetContent()
-                    .frame(
-                        minWidth: macSize.width,
-                        idealWidth: macSize.width,
-                        minHeight: macSize.height,
-                        idealHeight: macSize.height
-                    )
-            }
+            content
+                .popover(isPresented: $isPresented) {
+                    sheetContent()
+                        .frame(
+                            minWidth: macSize.width,
+                            idealWidth: macSize.width,
+                            minHeight: macSize.height,
+                            idealHeight: macSize.height
+                        )
+                }
+                .onChange(of: isPresented) { _, newValue in
+                    if !newValue { onDismiss?() }
+                }
         } else {
             content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
                 sheetContent()
@@ -124,17 +128,21 @@ private struct AdaptivePresentationItemModifier<Item: Identifiable, C: View>: Vi
         #if os(macOS)
         // popover doesn't have an item: variant — bridge via isPresented
         if style.usesPopoverOnMac {
-            content.popover(isPresented: itemPresented) {
-                if let current = item {
-                    sheetContent(current)
-                        .frame(
-                            minWidth: macSize.width,
-                            idealWidth: macSize.width,
-                            minHeight: macSize.height,
-                            idealHeight: macSize.height
-                        )
+            content
+                .popover(isPresented: itemPresented) {
+                    if let current = item {
+                        sheetContent(current)
+                            .frame(
+                                minWidth: macSize.width,
+                                idealWidth: macSize.width,
+                                minHeight: macSize.height,
+                                idealHeight: macSize.height
+                            )
+                    }
                 }
-            }
+                .onChange(of: item == nil) { _, isNil in
+                    if isNil { onDismiss?() }
+                }
         } else {
             content.sheet(item: $item, onDismiss: onDismiss) { current in
                 sheetContent(current)
