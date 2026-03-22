@@ -20,7 +20,7 @@ struct EditProjectModal: View {
     @State private var name: String
     @State private var clientName: String
     @State private var descriptionText: String
-    @State private var paymentMethodLast4: String
+    @State private var notesText: String
     @State private var heroImageItem: PhotosPickerItem?
     @State private var heroImageData: Data?
     @State private var existingImageUrl: String?
@@ -51,7 +51,7 @@ struct EditProjectModal: View {
         _name = State(initialValue: project.name)
         _clientName = State(initialValue: project.clientName)
         _descriptionText = State(initialValue: project.description ?? "")
-        _paymentMethodLast4 = State(initialValue: project.paymentMethodLast4 ?? "")
+        _notesText = State(initialValue: project.notes ?? "")
         _existingImageUrl = State(initialValue: project.mainImageUrl)
         _existingImageThumbUrlMd = State(initialValue: project.mainImageThumbUrlMd)
 
@@ -136,13 +136,7 @@ struct EditProjectModal: View {
                 FormField(text: $clientName, placeholder: "Client name *")
                 FormField(text: $descriptionText, placeholder: "Description", axis: .vertical)
 
-                FormField(text: $paymentMethodLast4, placeholder: "Card last 4 (e.g. 1234)")
-                    .platformKeyboardType(.numberPad)
-                    .onChange(of: paymentMethodLast4) { _, newValue in
-                        let digits = newValue.filter(\.isNumber)
-                        let truncated = String(digits.prefix(4))
-                        if truncated != newValue { paymentMethodLast4 = truncated }
-                    }
+                FormField(text: $notesText, placeholder: "Notes", axis: .vertical)
 
                 heroImageSection
             }
@@ -378,11 +372,11 @@ struct EditProjectModal: View {
             fields["description"] = trimmedDesc
         }
 
-        let trimmedLast4 = paymentMethodLast4.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedLast4.isEmpty {
-            fields["paymentMethodLast4"] = NSNull()
+        let trimmedNotes = notesText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedNotes.isEmpty {
+            fields["notes"] = NSNull()
         } else {
-            fields["paymentMethodLast4"] = trimmedLast4
+            fields["notes"] = trimmedNotes
         }
 
         // Dismiss immediately (optimistic UI)

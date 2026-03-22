@@ -9,13 +9,13 @@ struct ProjectService: ProjectServiceProtocol {
         try await repo(accountId: accountId).get(id: projectId)
     }
 
-    func createProject(accountId: String, name: String, clientName: String, description: String?, paymentMethodLast4: String? = nil) throws -> String {
+    func createProject(accountId: String, name: String, clientName: String, description: String?, notes: String? = nil) throws -> String {
         var project = Project()
         project.accountId = accountId
         project.name = name
         project.clientName = clientName
         project.description = description
-        project.paymentMethodLast4 = paymentMethodLast4
+        project.notes = notes
         let id = try repo(accountId: accountId).create(project)
         return id
     }

@@ -10,13 +10,13 @@ struct Project: Codable, Identifiable, Hashable {
     var mainImageThumbUrlSm: String?
     var mainImageThumbUrlMd: String?
     var isArchived: Bool?
-    var paymentMethodLast4: String?
+    var notes: String?
     var budgetSummary: ProjectBudgetSummary?
     var createdAt: Date?
     var updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, name, clientName, description, mainImageUrl, mainImageThumbUrlSm, mainImageThumbUrlMd, isArchived, paymentMethodLast4, budgetSummary
+        case id, accountId, name, clientName, description, mainImageUrl, mainImageThumbUrlSm, mainImageThumbUrlMd, isArchived, notes, budgetSummary
     }
 }
 

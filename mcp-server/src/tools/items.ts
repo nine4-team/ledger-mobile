@@ -123,7 +123,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     "Create a new item.",
     {
       name: z.string().describe("Item name"),
-      projectId: z.string().optional().describe("Project ID (omit for business inventory)"),
+      projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       purchasePriceCents: z.number().optional().describe("Purchase price in cents"),
       projectPriceCents: z.number().optional().describe("Project price in cents"),
       status: z.string().default("purchased").describe("Status: to purchase, purchased, to return, returned"),

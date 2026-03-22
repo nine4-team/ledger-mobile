@@ -165,7 +165,7 @@ A design project, job, or client engagement.
 | description | string, nullable | |
 | mainImageUrl | string, nullable | URL to the project's primary image |
 | isArchived | boolean, nullable | |
-| paymentMethodLast4 | string, nullable | Last 4 digits of credit card used for this client's purchases. Used by MCP audit to match receipts to projects |
+| notes | string, nullable | Free-text notes about the project (e.g. payment method details, billing address variations, other identifiers for receipt matching) |
 | budgetSummary | ProjectBudgetSummary, nullable | Denormalized budget rollup (see embedded type below) |
 | createdAt | timestamp | |
 | updatedAt | timestamp | |

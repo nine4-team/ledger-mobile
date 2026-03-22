@@ -10,7 +10,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── list_projects ──────────────────────────────────────────────────────────
   server.tool(
     "list_projects",
-    "List all projects. Returns name, client, archive status, and denormalized budget summary.",
+    "List all projects. Returns name, client, notes, archive status, and denormalized budget summary. The notes field may contain client-specific context useful for matching receipts to projects — payment method details (e.g. card last 4 digits), billing address variations, or other identifiers.",
     { filter: z.enum(["active", "archived", "all"]).default("active").describe("Filter by archive status") },
     async ({ filter }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "projects");
@@ -25,7 +25,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
           id: p.id,
           name: p.name || "",
           clientName: p.clientName || "",
-          paymentMethodLast4: p.paymentMethodLast4 || null,
+          notes: p.notes || null,
           isArchived: p.isArchived,
           budget: formatCents(bs?.totalBudgetCents),
           spent: formatCents(bs?.spentCents),
@@ -39,7 +39,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── get_project ────────────────────────────────────────────────────────────
   server.tool(
     "get_project",
-    "Get a single project with full details including budget summary.",
+    "Get a single project with full details including budget summary. The notes field may contain client-specific context useful for matching receipts to projects — payment method details (e.g. card last 4 digits), billing address variations, or other identifiers.",
     { projectId: z.string().describe("Project document ID") },
     async ({ projectId }) => {
       const project = await getDoc<Project>(db, "projects", projectId);
@@ -145,9 +145,9 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
       name: z.string().describe("Project name"),
       clientName: z.string().default("").describe("Client name"),
       description: z.string().optional().describe("Project description"),
-      paymentMethodLast4: z.string().optional().describe("Last 4 digits of the credit card used for this client's purchases"),
+      notes: z.string().optional().describe("Free-text notes about this project. Use for client-specific context that helps match receipts — e.g. payment method details (card last 4 digits), billing address variations, or other identifiers."),
     },
-    async ({ name, clientName, description, paymentMethodLast4 }) => {
+    async ({ name, clientName, description, notes }) => {
       const data: Record<string, unknown> = {
         name,
         clientName,
@@ -156,7 +156,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
         updatedAt: new Date(),
       };
       if (description) data.description = description;
-      if (paymentMethodLast4) data.paymentMethodLast4 = paymentMethodLast4;
+      if (notes) data.notes = notes;
 
       const ref = await accountCollection(db, "projects").add(data);
       return { content: [{ type: "text", text: `Created project ${ref.id}` }] };
@@ -172,14 +172,14 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
       name: z.string().optional().describe("New project name"),
       clientName: z.string().optional().describe("New client name"),
       description: z.string().optional().describe("New description"),
-      paymentMethodLast4: z.string().optional().describe("Last 4 digits of the credit card used for this client's purchases"),
+      notes: z.string().optional().describe("Free-text notes about this project. Use for client-specific context that helps match receipts — e.g. payment method details (card last 4 digits), billing address variations, or other identifiers."),
     },
-    async ({ projectId, name, clientName, description, paymentMethodLast4 }) => {
+    async ({ projectId, name, clientName, description, notes }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
       if (clientName !== undefined) updates.clientName = clientName;
       if (description !== undefined) updates.description = description;
-      if (paymentMethodLast4 !== undefined) updates.paymentMethodLast4 = paymentMethodLast4;
+      if (notes !== undefined) updates.notes = notes;
 
       await accountCollection(db, "projects").doc(projectId).update(updates);
       return { content: [{ type: "text", text: `Updated project ${projectId}` }] };

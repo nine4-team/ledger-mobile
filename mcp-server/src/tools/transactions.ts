@@ -183,7 +183,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     "create_transaction",
     "Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function.",
     {
-      projectId: z.string().optional().describe("Project ID (omit for business inventory)"),
+      projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.number().describe("Amount in cents (positive)"),
       type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Sale, To Inventory"),
