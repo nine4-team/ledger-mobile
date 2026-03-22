@@ -14,12 +14,13 @@ import { registerResources } from "./resources/index.js";
 
 const db = initFirebase();
 
-const server = new McpServer({
-  name: "ledger",
-  version: "1.0.0",
-  instructions:
-    "All entity IDs (projects, transactions, items, spaces, budgetCategories) are opaque strings that MUST be stored and used exactly as returned. Never truncate, abbreviate, or shorten IDs.",
-});
+const server = new McpServer(
+  { name: "ledger", version: "1.0.0" },
+  {
+    instructions:
+      "All entity IDs (projects, transactions, items, spaces, budgetCategories) are opaque strings that MUST be stored and used exactly as returned. Never truncate, abbreviate, or shorten IDs.",
+  },
+);
 
 registerProjectTools(server, db);
 registerTransactionTools(server, db);
