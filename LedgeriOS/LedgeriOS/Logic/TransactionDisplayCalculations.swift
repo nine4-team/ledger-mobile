@@ -54,8 +54,8 @@ enum TransactionDisplayCalculations {
     static func badgeConfigs(for transaction: Transaction, category: BudgetCategory?) -> [BadgeConfig] {
         var badges: [BadgeConfig] = []
 
-        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil
-        if transaction.isComplete != true {
+        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil, but not for canceled transactions
+        if transaction.isComplete != true && transaction.status != .canceled {
             badges.append(BadgeConfig(
                 text: "Needs Review",
                 color: StatusColors.badgeNeedsReview,

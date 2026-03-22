@@ -145,6 +145,19 @@ struct TransactionCardCalculationTests {
         #expect(badges[1].text == "Purchase")
     }
 
+    @Test("Canceled transaction does not get Needs Review badge")
+    func badgeItemsCanceledNoReview() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .purchase,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: false,
+            status: .canceled
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
+    }
+
     @Test("No type and no review produces empty badges")
     func badgeItemsEmptyCategory() {
         let badges = TransactionCardCalculations.badgeItems(

@@ -15,8 +15,8 @@ enum TransactionCardCalculations {
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
-        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil
-        if isComplete != true {
+        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil, but not for canceled transactions
+        if isComplete != true && status != .canceled {
             badges.append(CardBadge(
                 text: "Needs Review",
                 color: StatusColors.badgeNeedsReview,
