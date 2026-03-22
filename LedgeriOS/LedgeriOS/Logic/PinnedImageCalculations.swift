@@ -20,8 +20,8 @@ enum PinnedImageCalculations {
         return clampedFraction(raw, min: minVal, max: maxVal)
     }
 
-    /// Whether an attachment can be pinned (image-kind and not mid-upload).
+    /// Whether an attachment can be pinned (image or PDF, and not mid-upload).
     static func canPin(_ attachment: AttachmentRef) -> Bool {
-        attachment.kind == .image && !(attachment.isUploading ?? false)
+        (attachment.kind == .image || attachment.kind == .pdf) && !(attachment.isUploading ?? false)
     }
 }

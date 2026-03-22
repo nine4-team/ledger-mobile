@@ -92,7 +92,7 @@ struct MediaGallerySection: View {
         }
         .fullScreenCover(isPresented: $showPDFViewer) {
             if let attachment = selectedPDFAttachment {
-                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer)
+                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer, onPinImage: onPinImage)
             }
         }
         #else
@@ -106,7 +106,7 @@ struct MediaGallerySection: View {
         }
         .adaptivePresentation(isPresented: $showPDFViewer, style: .viewer) {
             if let attachment = selectedPDFAttachment {
-                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer)
+                PDFViewerSheet(attachment: attachment, isPresented: $showPDFViewer, onPinImage: onPinImage)
             }
         }
         #endif
@@ -292,7 +292,7 @@ struct MediaGallerySection: View {
         if let onPinImage, PinnedImageCalculations.canPin(attachment) {
             items.append(ActionMenuItem(
                 id: "pin",
-                label: "Pin Image",
+                label: attachment.kind == .pdf ? "Pin PDF" : "Pin Image",
                 icon: "pin",
                 onPress: {
                     onPinImage(attachment)

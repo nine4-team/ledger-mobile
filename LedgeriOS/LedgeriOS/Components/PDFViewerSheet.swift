@@ -5,6 +5,7 @@ import PDFKit
 struct PDFViewerSheet: View {
     let attachment: AttachmentRef
     @Binding var isPresented: Bool
+    var onPinImage: ((AttachmentRef) -> Void)?
 
     @State private var pdfDocument: PDFDocument?
     @State private var isLoading = true
@@ -34,6 +35,9 @@ struct PDFViewerSheet: View {
             VStack {
                 HStack {
                     closeButton
+                    if onPinImage != nil {
+                        pinButton
+                    }
                     Spacer()
                     shareButton
                 }
@@ -97,6 +101,22 @@ struct PDFViewerSheet: View {
         }
     }
 
+    private var pinButton: some View {
+        Button {
+            onPinImage?(attachment)
+            isPresented = false
+        } label: {
+            Image(systemName: "pin")
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.black.opacity(0.5))
+                .clipShape(Circle())
+        }
+        .accessibilityLabel("Pin PDF for reference")
+    }
+
     @ViewBuilder
     private var shareButton: some View {
         if let url = URL(string: attachment.url) {
@@ -116,7 +136,7 @@ struct PDFViewerSheet: View {
 // MARK: - PDFKit View
 
 #if canImport(UIKit)
-private struct PDFKitView: UIViewRepresentable {
+struct PDFKitView: UIViewRepresentable {
     let document: PDFDocument
 
     func makeUIView(context: Context) -> PDFView {
@@ -134,7 +154,7 @@ private struct PDFKitView: UIViewRepresentable {
     }
 }
 #elseif canImport(AppKit)
-private struct PDFKitView: NSViewRepresentable {
+struct PDFKitView: NSViewRepresentable {
     let document: PDFDocument
 
     func makeNSView(context: Context) -> PDFView {
