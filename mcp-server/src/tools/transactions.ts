@@ -186,13 +186,20 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Sale, To Inventory"),
+      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, To Inventory. For Sale transactions, use the sell_items tool instead."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Notes"),
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
     },
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds }) => {
+      if (txType === "Sale") {
+        return {
+          content: [{ type: "text", text: "Cannot create Sale transactions directly — use the sell_items tool instead. Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform." }],
+          isError: true,
+        };
+      }
+
       const data: Record<string, unknown> = {
         budgetCategoryId,
         amountCents,

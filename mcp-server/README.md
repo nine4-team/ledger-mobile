@@ -66,9 +66,14 @@ Remove `FIRESTORE_EMULATOR_HOST` to connect to production.
 ### Write
 - `create_project`, `update_project`, `archive_project`
 - `create_transaction`, `update_transaction`, `cancel_transaction`
+  - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items` instead
 - `create_item`, `update_item`, `delete_item`
 - `create_space`, `update_space`
 - `update_project_budget_allocation`, `enable_category_for_project`
+
+### Inventory Operations
+- `sell_items` — Move items between scopes via canonical sale transactions (project → business, business → project, project → project). Creates deterministic sale transaction IDs, lineage edges, and updates item fields atomically.
+- `return_items` — Process item returns atomically: moves items from source transaction to a return transaction, sets status to "returned", and creates lineage edges.
 
 ### Analytics
 - `project_health` — Budget utilization, item counts, attention items
