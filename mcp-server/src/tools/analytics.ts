@@ -59,8 +59,7 @@ export function registerAnalyticsTools(server: McpServer, db: Firestore) {
         }
       }
 
-      const needsReview = transactions.filter((t) => t.needsReview).length;
-      const canceled = transactions.filter((t) => t.isCanceled).length;
+      const incomplete = transactions.filter((t) => t.isComplete === false).length;
 
       const report = {
         projectId,
@@ -77,14 +76,13 @@ export function registerAnalyticsTools(server: McpServer, db: Firestore) {
         },
         transactions: {
           total: transactions.length,
-          needsReview,
-          canceled,
+          incomplete,
         },
         attention: {
           itemsMissingPrice: missingPrice,
           itemsMissingSku: missingSku,
           itemsMissingName: missingName,
-          transactionsNeedingReview: needsReview,
+          incompleteTransactions: incomplete,
         },
       };
 
