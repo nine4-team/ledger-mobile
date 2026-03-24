@@ -1044,3 +1044,205 @@ struct ReassignToInventoryExecutionTests {
         #expect(txUpdates.count == 2)
     }
 }
+
+// MARK: - returnToTransaction
+
+@Suite("InventoryOperationsService.returnToTransaction — execution")
+struct ReturnToTransactionExecutionTests {
+
+    private let destTx = "returnTx"
+
+    @Test("empty items returns immediately without committing")
+    func emptyItems() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        try await service.returnToTransaction(
+            items: [], destinationTransactionId: destTx, accountId: acct
+        )
+        #expect(!batch.commitCalled)
+    }
+
+    @Test("single item happy path — transactionId updated, itemIds moved, returned edge")
+    func singleItemHappyPath() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "i1", projectId: "proj1",
+            purchasePriceCents: 3000, transactionId: "purchaseTx"
+        )
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        #expect(batch.commitCalled)
+
+        // Item update — transactionId changed, projectId NOT changed
+        let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
+        #expect(itemUpdates.count == 1)
+        #expect(itemUpdates[0].fields["transactionId"] as? String == destTx)
+        #expect(itemUpdates[0].fields["projectId"] == nil) // Not touched
+        #expect(itemUpdates[0].fields.keys.contains("updatedAt"))
+
+        // Source transaction — remove item
+        let srcUpdates = batch.updatesForPath("accounts/\(acct)/transactions/purchaseTx")
+        #expect(srcUpdates.count == 1)
+        #expect(srcUpdates[0].fields.keys.contains("itemIds"))
+
+        // Destination transaction — add item
+        let dstUpdates = batch.updatesForPath("accounts/\(acct)/transactions/\(destTx)")
+        #expect(dstUpdates.count == 1)
+        #expect(dstUpdates[0].fields.keys.contains("itemIds"))
+
+        // Lineage edge — movementKind is "returned", not "correction"
+        let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
+        #expect(edges.count == 1)
+        let ef = edges[0].fields
+        #expect(ef["movementKind"] as? String == "returned")
+        #expect(ef["fromTransactionId"] as? String == "purchaseTx")
+        #expect(ef["toTransactionId"] as? String == destTx)
+        #expect(ef["fromProjectId"] as? String == "proj1")
+        #expect(ef["toProjectId"] as? String == "proj1")
+        #expect(ef["source"] as? String == "app")
+
+        // No canonical sales created (return, not financial sale)
+        #expect(batch.sets.isEmpty)
+    }
+
+    @Test("item without transactionId — no source removal, edge omits fromTransactionId")
+    func itemWithoutTransactionId() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "i1", projectId: "proj1", transactionId: nil)
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        // No source transaction updates (no fromTxId)
+        let txUpdates = batch.updates.filter {
+            $0.path.contains("/transactions/") && !$0.path.contains(destTx)
+        }
+        #expect(txUpdates.isEmpty)
+
+        // Destination still gets arrayUnion
+        let dstUpdates = batch.updatesForPath("accounts/\(acct)/transactions/\(destTx)")
+        #expect(dstUpdates.count == 1)
+
+        // Edge omits fromTransactionId
+        let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
+        #expect(edges[0].fields["fromTransactionId"] == nil)
+        #expect(edges[0].fields["movementKind"] as? String == "returned")
+    }
+
+    @Test("item without projectId — edge omits project fields")
+    func itemWithoutProjectId() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "i1", projectId: nil, transactionId: "oldTx")
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
+        #expect(edges[0].fields["fromProjectId"] == nil)
+        #expect(edges[0].fields["toProjectId"] == nil)
+        #expect(edges[0].fields["movementKind"] as? String == "returned")
+    }
+
+    @Test("projectPriceCents backfilled when nil")
+    func projectPriceCentsBackfill() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "i1", projectId: "proj1",
+            purchasePriceCents: 4200, transactionId: "oldTx",
+            projectPriceCents: nil
+        )
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
+        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 4200)
+    }
+
+    @Test("projectPriceCents NOT overwritten when already set")
+    func projectPriceCentsPreserved() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(
+            id: "i1", projectId: "proj1",
+            purchasePriceCents: 4200, transactionId: "oldTx",
+            projectPriceCents: 3500
+        )
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
+        #expect(itemUpdates[0].fields["projectPriceCents"] == nil) // Not touched
+    }
+
+    @Test("userId present — included in lineage edge")
+    func userIdPresent() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: "i1", projectId: "proj1", transactionId: "oldTx")
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx,
+            accountId: acct, userId: "user42"
+        )
+
+        let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
+        #expect(edges[0].fields["createdBy"] as? String == "user42")
+    }
+
+    @Test("multiple items — all get edges and itemIds updates")
+    func multipleItems() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let items = [
+            makeItem(id: "i1", projectId: "proj1", transactionId: "tx1"),
+            makeItem(id: "i2", projectId: "proj1", transactionId: "tx2"),
+            makeItem(id: "i3", projectId: "proj1", transactionId: nil),
+        ]
+
+        try await service.returnToTransaction(
+            items: items, destinationTransactionId: destTx, accountId: acct
+        )
+
+        // 3 item updates
+        #expect(batch.updatesForPath("accounts/\(acct)/items/i1").count == 1)
+        #expect(batch.updatesForPath("accounts/\(acct)/items/i2").count == 1)
+        #expect(batch.updatesForPath("accounts/\(acct)/items/i3").count == 1)
+
+        // 3 lineage edges, all "returned"
+        let allEdges = batch.lineageEdges(accountId: acct)
+        #expect(allEdges.count == 3)
+        #expect(allEdges.allSatisfy { $0.fields["movementKind"] as? String == "returned" })
+
+        // 2 source transaction removals (i3 has no transactionId) + 3 dest additions
+        let txUpdates = batch.updates.filter { $0.path.contains("/transactions/") }
+        #expect(txUpdates.count == 5)
+    }
+
+    @Test("item without id — skipped")
+    func itemWithoutId() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: nil, projectId: "proj1")
+
+        try await service.returnToTransaction(
+            items: [item], destinationTransactionId: destTx, accountId: acct
+        )
+
+        #expect(batch.updates.isEmpty)
+        #expect(batch.autoIdSets.isEmpty)
+        #expect(batch.commitCalled)
+    }
+}

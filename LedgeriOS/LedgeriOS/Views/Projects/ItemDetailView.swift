@@ -141,7 +141,21 @@ struct ItemDetailView: View {
                 transactions: projectContext.transactions,
                 selectedId: liveItem.transactionId
             ) { transaction in
-                updateItem(fields: ["transactionId": transaction.id ?? ""])
+                guard let accountId = accountContext.currentAccountId,
+                      let txId = transaction.id else { return }
+                let itemSnapshot = liveItem
+                let service = InventoryOperationsService()
+                Task {
+                    do {
+                        try await service.returnToTransaction(
+                            items: [itemSnapshot],
+                            destinationTransactionId: txId,
+                            accountId: accountId
+                        )
+                    } catch {
+                        print("🔴 returnToTransaction failed: \(error)")
+                    }
+                }
             }
         }
         // Make Copies

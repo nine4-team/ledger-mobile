@@ -357,6 +357,71 @@ struct InventoryOperationsService {
         try await batch.commit()
     }
 
+    // MARK: - Return to Transaction
+
+    /// Moves items to a return-type transaction within the same project.
+    /// Manages `itemIds` arrays atomically. Creates a `"returned"` lineage edge
+    /// client-side for immediate offline-first UI (the server also creates one
+    /// via `onItemTransactionIdChanged`, but the client edge lands faster).
+    func returnToTransaction(
+        items: [Item],
+        destinationTransactionId: String,
+        accountId: String,
+        userId: String? = nil
+    ) async throws {
+        guard !items.isEmpty else { return }
+
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
+
+        for item in items {
+            guard let itemId = item.id else { continue }
+
+            // Update item's transaction link (projectId stays the same)
+            var itemUpdate: [String: Any] = [
+                "transactionId": destinationTransactionId,
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
+                itemUpdate["projectPriceCents"] = purchasePrice
+            }
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
+
+            // Move item between transaction itemIds arrays
+            if let fromTxId = item.transactionId {
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId])],
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
+                )
+            }
+            batch.updateData(
+                ["itemIds": FieldValue.arrayUnion([itemId])],
+                forDocumentAt: "\(txPath)/\(destinationTransactionId)"
+            )
+
+            // "returned" intent edge
+            var edge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "toTransactionId": destinationTransactionId,
+                "movementKind": "returned",
+                "source": "app",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            if let projectId = item.projectId {
+                edge["fromProjectId"] = projectId
+                edge["toProjectId"] = projectId  // same project — returns don't cross scopes
+            }
+            if let userId { edge["createdBy"] = userId }
+            batch.setDataAutoId(edge, inCollection: edgesPath)
+        }
+
+        try await batch.commit()
+    }
+
     // MARK: - Pure Helpers (internal for testability)
 
     /// Builds the deterministic canonical sale transaction ID (H1).
