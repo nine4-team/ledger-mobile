@@ -106,9 +106,12 @@ npm run build
 gcloud run deploy ledger-mcp \
   --source . \
   --region us-central1 \
+  --project ledger-nine4 \
   --allow-unauthenticated \
-  --set-env-vars FIREBASE_PROJECT_ID=ledger-nine4
+  --update-env-vars FIREBASE_PROJECT_ID=ledger-nine4
 ```
+
+**IMPORTANT:** Always use `--update-env-vars` (not `--set-env-vars`). `--set-env-vars` replaces ALL env vars, which would wipe `OAUTH_TOKEN_SECRET` and invalidate all existing OAuth tokens.
 
 Cloud Run uses Application Default Credentials automatically — no service account key needed.
 
