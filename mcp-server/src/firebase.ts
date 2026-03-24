@@ -1,7 +1,7 @@
 import admin from "firebase-admin";
 import type { Firestore } from "firebase-admin/firestore";
 
-export function initFirebase(): Firestore {
+export function initFirebase(credentialsPath?: string): Firestore {
   const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
   const projectId = process.env.FIREBASE_PROJECT_ID || "ledger-nine4";
 
@@ -19,11 +19,24 @@ export function initFirebase(): Firestore {
       process.env.FIRESTORE_EMULATOR_HOST = firestoreEmulatorHost;
       admin.initializeApp({ projectId });
     } else {
-      // Production mode — use ADC or service account
-      admin.initializeApp({
-        credential: admin.credential.applicationDefault(),
-        projectId,
-      });
+      // Production mode
+      const credPath = credentialsPath || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (credPath) {
+        // Explicit cert() bypasses ADC chain — immune to RAPT re-auth
+        const fs = require("fs");
+        const serviceAccount = JSON.parse(fs.readFileSync(credPath, "utf8"));
+        console.error(`[ledger-mcp] Using service account: ${serviceAccount.client_email}`);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          projectId,
+        });
+      } else {
+        // Fallback to ADC for Cloud Run (uses instance identity)
+        admin.initializeApp({
+          credential: admin.credential.applicationDefault(),
+          projectId,
+        });
+      }
     }
   }
 

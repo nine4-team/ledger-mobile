@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "accountId": "2d612868-852e-4a80-9d02-9d10383898d4",
+    "target": "production",
+    "dryRun": false,
+    "migratedAt": "2026-03-16T22:28:05.898Z"
+  },
+  "totals": {
+    "documents": 474,
+    "written": 474,
+    "writeFailed": 0,
+    "authImported": 0,
+    "authSkipped": 0,
+    "authFailed": 0,
+    "mediaRefs": 92,
+    "mediaUploaded": 0,
+    "mediaSkipped": 92,
+    "mediaFailed": 0,
+    "backfilled": 3,
+    "backfillFailed": 0,
+    "warnings": 5,
+    "errors": 0
+  },
+  "counts": {
+    "accounts": 1,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/profile": 1,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/presets/default/budgetCategories": 4,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/presets/default/vendors": 1,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/projects": 3,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/projects/6bb65110-90bc-42ea-a5fa-1b7bfd5d7d70/budgetCategories": 4,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/spaces": 8,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/presets/default/spaceTemplates": 2,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/items": 345,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/transactions": 40,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/lineageEdges": 61,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/users": 1,
+    "accounts/2d612868-852e-4a80-9d02-9d10383898d4/users/1cffc489-b9b4-4535-a7ba-65253a037984/projectPreferences": 3
+  },
+  "warnings": [
+    {
+      "code": "missing_item_ref",
+      "message": "Item reference could not be resolved; omitted.",
+      "details": {
+        "ref": "I-1767046392355-avnl",
+        "edgeId": "18553737-9655-4e21-8154-fb98b1d4b884",
+        "field": "item_id"
+      }
+    },
+    {
+      "code": "missing_item_ref",
+      "message": "Lineage edge references missing item; edge skipped.",
+      "details": {
+        "edgeId": "18553737-9655-4e21-8154-fb98b1d4b884",
+        "itemId": "I-1767046392355-avnl"
+      }
+    },
+    {
+      "code": "missing_item_ref",
+      "message": "Item reference could not be resolved; omitted.",
+      "details": {
+        "ref": "I-1766521509089-aw3v",
+        "edgeId": "0fc8ded8-5475-4bff-8f84-11105b96ed0d",
+        "field": "item_id"
+      }
+    },
+    {
+      "code": "missing_item_ref",
+      "message": "Lineage edge references missing item; edge skipped.",
+      "details": {
+        "edgeId": "0fc8ded8-5475-4bff-8f84-11105b96ed0d",
+        "itemId": "I-1766521509089-aw3v"
+      }
+    },
+    {
+      "code": "missing_transaction_ref",
+      "message": "Transaction reference could not be resolved; set to null.",
+      "details": {
+        "ref": "6e4dc742-3ae4-47ba-ad0d-76d6bd808d84",
+        "edgeId": "d9b7ce52-2680-49a1-8047-b07e5b01696b",
+        "field": "from_transaction_id"
+      }
+    }
+  ],
+  "errors": [],
+  "authErrors": [],
+  "mediaErrors": []
+}

@@ -16,6 +16,7 @@ import { registerBudgetTools } from "./tools/budget.js";
 import { registerLineageTools } from "./tools/lineage.js";
 import { registerAnalyticsTools } from "./tools/analytics.js";
 import { registerAccountTools } from "./tools/accounts.js";
+import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
 import { registerResources } from "./resources/index.js";
 
 const db = initFirebase();
@@ -35,6 +36,7 @@ function createServer(): McpServer {
   registerLineageTools(server, db);
   registerAnalyticsTools(server, db);
   registerAccountTools(server, db);
+  registerInventoryOperationTools(server, db);
   registerResources(server, db);
 
   return server;
@@ -74,10 +76,25 @@ async function authenticateRequest(
     const oauthUser = verifyAccessToken(token);
     if (oauthUser) return oauthUser;
 
-    // Fall back to raw Firebase ID token (for backward compat)
-    const uid = await verifyToken(token);
-    const accountId = await resolveAccountId(db, uid);
-    return { accountId, uid };
+    // Only try Firebase ID token if it has a "kid" header
+    // (our JWTs are HS256, Firebase uses RS256 with "kid")
+    try {
+      const header = JSON.parse(Buffer.from(token.split(".")[0], "base64url").toString());
+      if (header.kid) {
+        const uid = await verifyToken(token);
+        const accountId = await resolveAccountId(db, uid);
+        return { accountId, uid };
+      }
+    } catch { /* malformed token — fall through to rejection */ }
+
+    // Token is our format but signature invalid — return 401 with re-auth hint
+    const origin = `${req.protocol}://${req.get("host")}`;
+    res.setHeader(
+      "WWW-Authenticate",
+      `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`
+    );
+    res.status(401).json({ error: "Invalid or expired access token. Please reconnect." });
+    return null;
   }
 
   if (envAccountId) {

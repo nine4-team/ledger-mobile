@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "accountId": "10fef89a-13dc-4532-83dc-819d02111cec",
+    "target": "production",
+    "dryRun": false,
+    "migratedAt": "2026-03-16T21:43:55.040Z"
+  },
+  "totals": {
+    "documents": 8,
+    "written": 8,
+    "writeFailed": 0,
+    "authImported": 0,
+    "authSkipped": 0,
+    "authFailed": 0,
+    "mediaRefs": 0,
+    "mediaUploaded": 0,
+    "mediaSkipped": 0,
+    "mediaFailed": 0,
+    "backfilled": 0,
+    "backfillFailed": 0,
+    "warnings": 0,
+    "errors": 0
+  },
+  "counts": {
+    "accounts": 1,
+    "accounts/10fef89a-13dc-4532-83dc-819d02111cec/profile": 1,
+    "accounts/10fef89a-13dc-4532-83dc-819d02111cec/presets/default/budgetCategories": 4,
+    "accounts/10fef89a-13dc-4532-83dc-819d02111cec/users": 1,
+    "accounts/10fef89a-13dc-4532-83dc-819d02111cec/invites": 1
+  },
+  "warnings": [],
+  "errors": [],
+  "authErrors": [],
+  "mediaErrors": []
+}

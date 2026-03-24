@@ -13,7 +13,10 @@ import { registerAccountTools } from "./tools/accounts.js";
 import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
 import { registerResources } from "./resources/index.js";
 
-const db = initFirebase();
+const credIdx = process.argv.indexOf("--credentials");
+const credentialsPath = credIdx !== -1 ? process.argv[credIdx + 1] : undefined;
+
+const db = initFirebase(credentialsPath);
 
 const server = new McpServer(
   { name: "ledger", version: "1.0.0" },
