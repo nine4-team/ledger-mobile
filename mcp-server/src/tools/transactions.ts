@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Transaction, Item, AttachmentRef } from "../types.js";
+import type { Transaction, Item, AttachmentRef, LineageEdge } from "../types.js";
 import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { formatCents, formatDate } from "../util/format.js";
 import { uploadToStorage, deleteFromStorage } from "../storage.js";
@@ -45,7 +45,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── list_transactions ──────────────────────────────────────────────────────
   server.tool(
     "list_transactions",
-    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false). To understand WHY a transaction is incomplete, call get_transaction — it returns the audit object (variance numbers) and shows which fields are null (subtotalCents, taxRatePct, items).",
+    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false). To understand WHY a transaction is incomplete, call get_transaction — it returns the audit object (variance numbers), resolved returned/sold items, and shows which fields are null (subtotalCents, taxRatePct, items).",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
@@ -115,7 +115,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── get_transaction ────────────────────────────────────────────────────────
   server.tool(
     "get_transaction",
-    "Get a single transaction with linked items. Returns isComplete (auto-computed by Cloud Function: true when items sum matches pre-tax subtotal within ±1% for itemized categories, always true for non-itemized/canonical). For itemized categories, returns an 'audit' object with: resolvedSubtotalCents, itemsSumCents (total including lineage items), varianceCents, variancePercent, linkedItemsSumCents (items still in itemIds), returnedItemsSumCents/returnedItemsCount (items that left via return), soldItemsSumCents/soldItemsCount (items that left via sale). The app shows a 'Needs Review' badge when isComplete is false — if a user says a transaction 'needs review', that means isComplete is false. Check null fields directly to identify missing data.",
+    "Get a single transaction with all linked, returned, and sold items resolved. Returns three item arrays: items (currently linked via itemIds), returnedItems (items that LEFT this transaction via return, resolved from lineage edges — still count toward audit total), soldItems (items that LEFT via sale, resolved from lineage edges — still count toward audit total). Audit object: resolvedSubtotalCents, itemsSumCents (linked + returned + sold), linkedItemsSumCents, returnedItemsSumCents/returnedItemsCount, soldItemsSumCents/soldItemsCount, varianceCents, variancePercent. Diagnostic guidance: if returnedItemsCount > 0 but returnedItems is empty, items may have been deleted or lineage edges are orphaned. isComplete == false means items don't match pre-tax subtotal within ±1% (app shows 'Needs Review' badge). Use get_item_history for full movement history of a specific item.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       const tx = await getDoc<Transaction>(db, "transactions", transactionId);
@@ -133,6 +133,53 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         items = results.filter((i): i is Item & { id: string } => i !== null);
       }
 
+      // Resolve returned/sold items from lineage edges (only when audit says they exist)
+      let returnedItems: (Item & { id: string })[] = [];
+      let soldItems: (Item & { id: string })[] = [];
+
+      const hasLineage = (tx.audit?.returnedItemsCount ?? 0) > 0 || (tx.audit?.soldItemsCount ?? 0) > 0;
+
+      if (hasLineage) {
+        const edgesCol = accountCollection(db, "lineageEdges");
+        const [fromEdges, toEdges] = await Promise.all([
+          queryDocs<LineageEdge>(edgesCol.where("fromTransactionId", "==", transactionId)),
+          queryDocs<LineageEdge>(edgesCol.where("toTransactionId", "==", transactionId)),
+        ]);
+
+        const currentItemIds = new Set(tx.itemIds ?? []);
+        const latestByItem = new Map<string, LineageEdge & { id: string }>();
+
+        for (const edge of [...fromEdges, ...toEdges]) {
+          if (edge.fromTransactionId !== transactionId) continue;
+          if (edge.movementKind !== "returned" && edge.movementKind !== "sold") continue;
+          if (!edge.itemId || currentItemIds.has(edge.itemId)) continue;
+
+          const existing = latestByItem.get(edge.itemId);
+          if (!existing || (edge.createdAt?.toMillis() ?? 0) > (existing.createdAt?.toMillis() ?? 0)) {
+            latestByItem.set(edge.itemId, edge);
+          }
+        }
+
+        const returnedIds = [...latestByItem.entries()].filter(([, e]) => e.movementKind === "returned").map(([id]) => id);
+        const soldIds = [...latestByItem.entries()].filter(([, e]) => e.movementKind === "sold").map(([id]) => id);
+
+        if (returnedIds.length) {
+          const results = await Promise.all(returnedIds.map((id) => getDoc<Item>(db, "items", id)));
+          returnedItems = results.filter((i): i is Item & { id: string } => i !== null);
+        }
+        if (soldIds.length) {
+          const results = await Promise.all(soldIds.map((id) => getDoc<Item>(db, "items", id)));
+          soldItems = results.filter((i): i is Item & { id: string } => i !== null);
+        }
+      }
+
+      const formatItem = (i: Item & { id: string }) => ({
+        id: i.id,
+        name: i.name ?? i.description ?? "",
+        status: i.status ?? "",
+        purchasePrice: formatCents(i.purchasePriceCents),
+      });
+
       const result = {
         ...formatTransaction(tx),
         subtotalCents: tx.subtotalCents,
@@ -143,12 +190,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         audit: tx.audit ?? null,
         receiptImages: (tx.receiptImages ?? []).map(formatAttachment),
         otherImages: (tx.otherImages ?? []).map(formatAttachment),
-        items: items.map((i) => ({
-          id: i.id,
-          name: i.name ?? i.description ?? "",
-          status: i.status ?? "",
-          purchasePrice: formatCents(i.purchasePriceCents),
-        })),
+        items: items.map(formatItem),
+        returnedItems: returnedItems.map(formatItem),
+        soldItems: soldItems.map(formatItem),
       };
 
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
