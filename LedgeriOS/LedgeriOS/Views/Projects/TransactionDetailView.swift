@@ -35,6 +35,10 @@ struct TransactionDetailView: View {
     @State private var lineageReturnedItems: [Item] = []
     @State private var lineageSoldItems: [Item] = []
 
+    // Expanded groups within returned/sold sections
+    @State private var expandedReturnedGroups: Set<String> = []
+    @State private var expandedSoldGroups: Set<String> = []
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
@@ -572,15 +576,11 @@ struct TransactionDetailView: View {
                 badge: "\(returnedItems.count)",
                 badgeColor: BrandColors.primary
             ) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    ForEach(returnedItems) { item in
-                        ItemCard(
-                            item: item,
-                            priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                            statusOverride: "Returned"
-                        )
-                    }
-                }
+                groupedItemCards(
+                    for: returnedItems,
+                    statusOverride: "Returned",
+                    expandedGroups: $expandedReturnedGroups
+                )
                 .padding(.top, Spacing.xs)
             }
         }
@@ -596,16 +596,61 @@ struct TransactionDetailView: View {
                 badge: "\(soldItems.count)",
                 badgeColor: BrandColors.primary
             ) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    ForEach(soldItems) { item in
-                        ItemCard(
-                            item: item,
-                            priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                            statusOverride: "Sold"
-                        )
-                    }
-                }
+                groupedItemCards(
+                    for: soldItems,
+                    statusOverride: "Sold",
+                    expandedGroups: $expandedSoldGroups
+                )
                 .padding(.top, Spacing.xs)
+            }
+        }
+    }
+
+    // MARK: - Grouped Item Cards Helper
+
+    @ViewBuilder
+    private func groupedItemCards(
+        for items: [Item],
+        statusOverride: String,
+        expandedGroups: Binding<Set<String>>
+    ) -> some View {
+        let groups = ListFilterSortCalculations.groupItems(items)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            ForEach(groups) { group in
+                if group.count > 1 {
+                    let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+                    let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
+                    GroupedItemCard(
+                        name: group.name,
+                        thumbnailUrl: summaryItem?.images?.first?.url,
+                        thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
+                        countLabel: "×\(group.count)",
+                        totalLabel: totalLabel,
+                        sku: summaryItem?.sku,
+                        sourceLabel: summaryItem?.source,
+                        priceLabel: totalLabel,
+                        isExpanded: Binding(
+                            get: { expandedGroups.wrappedValue.contains(group.id) },
+                            set: { if $0 { expandedGroups.wrappedValue.insert(group.id) } else { expandedGroups.wrappedValue.remove(group.id) } }
+                        ),
+                        itemCount: group.count
+                    ) {
+                        ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+                            ItemCard(
+                                item: item,
+                                priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
+                                indexLabel: "\(index + 1)/\(group.count)",
+                                statusOverride: statusOverride
+                            )
+                        }
+                    }
+                } else if let item = group.items.first {
+                    ItemCard(
+                        item: item,
+                        priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
+                        statusOverride: statusOverride
+                    )
+                }
             }
         }
     }
