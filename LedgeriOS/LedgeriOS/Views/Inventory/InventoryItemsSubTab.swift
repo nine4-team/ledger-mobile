@@ -182,9 +182,9 @@ struct InventoryItemsSubTab: View {
 
     private func deleteSingleItem() {
         guard let accountId = accountContext.currentAccountId,
-              let itemId = actionTargetItem?.id else { return }
+              let item = actionTargetItem else { return }
         let service = ItemsService()
-        Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
+        Task { try? await service.deleteItem(accountId: accountId, item: item) }
     }
 
     // MARK: - Bulk Actions
@@ -243,10 +243,8 @@ struct InventoryItemsSubTab: View {
     private func deleteSelected() {
         guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
-        for item in selectedItems {
-            guard let itemId = item.id else { continue }
-            Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
-        }
+        let items = Array(selectedItems)
+        Task { try? await service.deleteItems(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
     }
 }

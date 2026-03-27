@@ -551,11 +551,10 @@ struct ItemDetailView: View {
     }
 
     private func deleteItem() {
-        guard let accountId = accountContext.currentAccountId,
-              let itemId = item.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
         Task {
-            try? await service.deleteItem(accountId: accountId, itemId: itemId)
+            try? await service.deleteItem(accountId: accountId, item: item)
             await MainActor.run { dismiss() }
         }
     }

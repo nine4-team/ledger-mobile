@@ -1,6 +1,12 @@
 import FirebaseFirestore
 
 struct ItemsService: ItemsServiceProtocol {
+    private let makeBatch: @Sendable () -> any BatchWriting
+
+    init(makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() }) {
+        self.makeBatch = makeBatch
+    }
+
     private func repo(accountId: String) -> FirestoreRepository<Item> {
         FirestoreRepository<Item>(path: "accounts/\(accountId)/items")
     }
@@ -18,8 +24,32 @@ struct ItemsService: ItemsServiceProtocol {
         try await repo(accountId: accountId).update(id: itemId, fields: fields)
     }
 
-    func deleteItem(accountId: String, itemId: String) async throws {
-        try await repo(accountId: accountId).delete(id: itemId)
+    func deleteItem(accountId: String, item: Item) async throws {
+        try await deleteItems(accountId: accountId, items: [item])
+    }
+
+    func deleteItems(accountId: String, items: [Item]) async throws {
+        guard !items.isEmpty else { return }
+
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+
+        for item in items {
+            guard let itemId = item.id else { continue }
+
+            batch.deleteDocument(atPath: "\(itemsPath)/\(itemId)")
+
+            if let transactionId = item.transactionId {
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId]),
+                     "updatedAt": FieldValue.serverTimestamp()],
+                    forDocumentAt: "\(txPath)/\(transactionId)"
+                )
+            }
+        }
+
+        try await batch.commit()
     }
 
     func subscribeToItems(accountId: String, scope: ListScope, onChange: @escaping ([Item]) -> Void) -> ListenerRegistration {

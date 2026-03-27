@@ -530,9 +530,9 @@ struct SpaceDetailView: View {
 
     private func deleteActionTargetItem() {
         guard let accountId = accountContext.currentAccountId,
-              let itemId = actionTargetItem?.id else { return }
+              let item = actionTargetItem else { return }
         let service = ItemsService()
-        Task { try? await service.deleteItem(accountId: accountId, itemId: itemId) }
+        Task { try? await service.deleteItem(accountId: accountId, item: item) }
     }
 
     private func deleteSpace() {

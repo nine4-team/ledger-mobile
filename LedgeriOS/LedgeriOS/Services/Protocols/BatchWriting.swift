@@ -8,6 +8,7 @@ protocol BatchWriting {
     func setData(_ fields: [String: Any], forDocumentAt path: String, merge: Bool)
     func updateData(_ fields: [String: Any], forDocumentAt path: String)
     func setDataAutoId(_ fields: [String: Any], inCollection collectionPath: String)
+    func deleteDocument(atPath path: String)
     func commit() async throws
 }
 
@@ -32,6 +33,10 @@ struct FirestoreBatchWriter: BatchWriting {
 
     func setDataAutoId(_ fields: [String: Any], inCollection collectionPath: String) {
         batch.setData(fields, forDocument: db.collection(collectionPath).document())
+    }
+
+    func deleteDocument(atPath path: String) {
+        batch.deleteDocument(db.document(path))
     }
 
     func commit() async throws {

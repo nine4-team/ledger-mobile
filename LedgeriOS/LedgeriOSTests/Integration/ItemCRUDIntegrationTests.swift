@@ -251,4 +251,35 @@ struct ItemCRUDIntegrationTests {
         #expect(raw["bookmark"] as? Bool == true)
         #expect(raw["budgetCategoryId"] as? String == "cat1")
     }
+
+    // MARK: - Atomic Delete (transaction cleanup)
+
+    @Test("Delete item removes its ID from the parent transaction's itemIds")
+    func deleteItemRemovesFromTransactionItemIds() async throws {
+        try await FirestoreTestHelper.signIn()
+        let itemId = UUID().uuidString
+        let txId = UUID().uuidString
+        let txPath = FirestoreTestHelper.transactionsPath(accountId: accountId)
+
+        // Seed a transaction with the item in its itemIds
+        let tx = makeTransaction(id: txId, itemIds: [itemId, "other-item"])
+        try FirestoreTestHelper.write(tx, toCollection: txPath, id: txId)
+
+        // Seed the item linked to that transaction
+        let item = makeItem(id: itemId, transactionId: txId)
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+
+        // Delete via ItemsService (atomic batch)
+        let service = ItemsService()
+        try await service.deleteItem(accountId: accountId, item: item)
+
+        // Item doc is gone
+        let deletedItem: Item? = try await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId)
+        #expect(deletedItem == nil)
+
+        // Transaction's itemIds no longer contains the deleted item
+        let updatedTx: Transaction = try #require(await FirestoreTestHelper.read(Transaction.self, fromCollection: txPath, id: txId))
+        #expect(updatedTx.itemIds?.contains(itemId) != true)
+        #expect(updatedTx.itemIds?.contains("other-item") == true)
+    }
 }

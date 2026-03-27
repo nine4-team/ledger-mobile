@@ -20,9 +20,14 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
         let collectionPath: String
     }
 
+    struct DeleteOperation {
+        let path: String
+    }
+
     private(set) var sets: [SetOperation] = []
     private(set) var updates: [UpdateOperation] = []
     private(set) var autoIdSets: [AutoIdSetOperation] = []
+    private(set) var deletes: [DeleteOperation] = []
     private(set) var commitCalled = false
 
     func setData(_ fields: [String: Any], forDocumentAt path: String, merge: Bool) {
@@ -37,6 +42,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
         autoIdSets.append(AutoIdSetOperation(fields: fields, collectionPath: collectionPath))
     }
 
+    func deleteDocument(atPath path: String) {
+        deletes.append(DeleteOperation(path: path))
+    }
+
     func commit() async throws {
         commitCalled = true
     }
@@ -49,6 +58,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
 
     func updatesForPath(_ path: String) -> [UpdateOperation] {
         updates.filter { $0.path == path }
+    }
+
+    func deletesForPath(_ path: String) -> [DeleteOperation] {
+        deletes.filter { $0.path == path }
     }
 
     func autoIdSetsInCollection(_ collectionPath: String) -> [AutoIdSetOperation] {
