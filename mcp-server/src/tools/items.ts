@@ -165,6 +165,100 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     }
   );
 
+  // ── bulk_create_items ─────────────────────────────────────────────────────
+  server.tool(
+    "bulk_create_items",
+    "Create multiple items in one batch. Top-level transactionId and projectId are defaults applied to all items unless overridden per-item.",
+    {
+      transactionId: z.string().optional().describe("Transaction ID — applied to all items unless overridden per-item"),
+      projectId: z.string().optional().describe("Project ID — applied to all items unless overridden per-item"),
+      items: z.array(z.object({
+        name: z.string().describe("Item name"),
+        projectId: z.string().optional().describe("Project ID (overrides top-level)"),
+        purchasePriceCents: z.coerce.number().optional().describe("Purchase price in cents"),
+        projectPriceCents: z.coerce.number().optional().describe("Project price in cents"),
+        status: z.string().default("purchased").describe("Status: to purchase, purchased, to return, returned"),
+        source: z.string().optional().describe("Vendor/source"),
+        sku: z.string().optional().describe("SKU"),
+        notes: z.string().optional().describe("Notes"),
+        spaceId: z.string().optional().describe("Space ID"),
+        budgetCategoryId: z.string().optional().describe("Budget category ID"),
+        transactionId: z.string().optional().describe("Transaction ID (overrides top-level)"),
+      })).describe("Array of items to create"),
+    },
+    async ({ transactionId: defaultTransactionId, projectId: defaultProjectId, items }) => {
+      if (items.length === 0) {
+        return { content: [{ type: "text", text: "No items provided." }], isError: true };
+      }
+
+      const itemsCol = accountCollection(db, "items");
+      const txCol = accountCollection(db, "transactions");
+      const createdIds: string[] = [];
+      const txItemMap = new Map<string, string[]>();
+
+      type BatchOp = { type: "set"; ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> }
+        | { type: "update"; ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> };
+      const ops: BatchOp[] = [];
+
+      for (const item of items) {
+        const resolvedProjectId = item.projectId ?? defaultProjectId;
+        const resolvedTransactionId = item.transactionId ?? defaultTransactionId;
+
+        const data: Record<string, unknown> = {
+          name: item.name,
+          status: item.status,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        if (resolvedProjectId) data.projectId = resolvedProjectId;
+        if (item.purchasePriceCents !== undefined) data.purchasePriceCents = item.purchasePriceCents;
+        if (item.projectPriceCents !== undefined) data.projectPriceCents = item.projectPriceCents;
+        if (item.source) data.source = item.source;
+        if (item.sku) data.sku = item.sku;
+        if (item.notes) data.notes = item.notes;
+        if (item.spaceId) data.spaceId = item.spaceId;
+        if (item.budgetCategoryId) data.budgetCategoryId = item.budgetCategoryId;
+        if (resolvedTransactionId) data.transactionId = resolvedTransactionId;
+
+        const ref = itemsCol.doc();
+        createdIds.push(ref.id);
+        ops.push({ type: "set", ref, data });
+
+        if (resolvedTransactionId) {
+          const existing = txItemMap.get(resolvedTransactionId) ?? [];
+          existing.push(ref.id);
+          txItemMap.set(resolvedTransactionId, existing);
+        }
+      }
+
+      // One arrayUnion op per unique transaction
+      for (const [txId, itemIds] of txItemMap) {
+        ops.push({
+          type: "update",
+          ref: txCol.doc(txId),
+          data: { itemIds: FieldValue.arrayUnion(...itemIds), updatedAt: new Date() },
+        });
+      }
+
+      // Commit in chunks of 500
+      for (let i = 0; i < ops.length; i += 500) {
+        const batch = db.batch();
+        for (const op of ops.slice(i, i + 500)) {
+          if (op.type === "set") {
+            batch.set(op.ref, op.data);
+          } else {
+            batch.update(op.ref, op.data);
+          }
+        }
+        await batch.commit();
+      }
+
+      return {
+        content: [{ type: "text", text: `Created ${createdIds.length} items: ${createdIds.join(", ")}` }],
+      };
+    }
+  );
+
   // ── update_item ────────────────────────────────────────────────────────────
   server.tool(
     "update_item",
@@ -219,13 +313,111 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     }
   );
 
+  // ── bulk_update_items ───────────────────────────────────────────────────────
+  server.tool(
+    "bulk_update_items",
+    "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.",
+    {
+      filter: z.object({
+        projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
+        spaceId: z.string().optional().describe("Filter by space ID"),
+        budgetCategoryId: z.string().optional().describe("Filter by budget category"),
+        status: z.string().optional().describe("Filter by status"),
+        source: z.string().optional().describe("Filter by source/vendor"),
+        transactionId: z.string().optional().describe("Filter by transaction ID"),
+        bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
+      }).describe("Filter criteria — at least one field required"),
+      update: z.object({
+        name: z.string().optional(),
+        status: z.string().optional(),
+        purchasePriceCents: z.coerce.number().optional(),
+        projectPriceCents: z.coerce.number().optional(),
+        marketValueCents: z.coerce.number().optional(),
+        source: z.string().optional(),
+        sku: z.string().optional(),
+        notes: z.string().optional(),
+        projectId: z.string().optional(),
+        spaceId: z.string().optional(),
+        budgetCategoryId: z.string().optional(),
+        bookmark: z.boolean().optional(),
+        quantity: z.coerce.number().optional(),
+      }).describe("Fields to set on all matched items"),
+    },
+    async ({ filter, update }) => {
+      let query: FirebaseFirestore.Query = accountCollection(db, "items");
+
+      if (filter.projectId === "inventory") {
+        query = query.where("projectId", "==", null);
+      } else if (filter.projectId) {
+        query = query.where("projectId", "==", filter.projectId);
+      }
+      if (filter.spaceId) query = query.where("spaceId", "==", filter.spaceId);
+      if (filter.budgetCategoryId) query = query.where("budgetCategoryId", "==", filter.budgetCategoryId);
+      if (filter.status) query = query.where("status", "==", filter.status);
+      if (filter.source) query = query.where("source", "==", filter.source);
+      if (filter.transactionId) query = query.where("transactionId", "==", filter.transactionId);
+      if (filter.bookmarked !== undefined) query = query.where("bookmark", "==", filter.bookmarked);
+
+      const snapshot = await query.get();
+      if (snapshot.empty) {
+        return { content: [{ type: "text", text: "No items matched the filter. 0 updated." }] };
+      }
+
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      for (const [key, value] of Object.entries(update)) {
+        if (value !== undefined) updates[key] = value;
+      }
+
+      let processed = 0;
+      let batch = db.batch();
+      let batchCount = 0;
+
+      for (const doc of snapshot.docs) {
+        batch.update(doc.ref, updates);
+        batchCount++;
+        if (batchCount === 500) {
+          await batch.commit();
+          processed += batchCount;
+          batch = db.batch();
+          batchCount = 0;
+        }
+      }
+      if (batchCount > 0) {
+        await batch.commit();
+        processed += batchCount;
+      }
+
+      return {
+        content: [{ type: "text", text: `Updated ${processed} items matching filter.` }],
+      };
+    }
+  );
+
   // ── delete_item ────────────────────────────────────────────────────────────
   server.tool(
     "delete_item",
-    "Delete an item.",
+    "Delete an item and atomically remove it from the parent transaction's itemIds array.",
     { itemId: z.string().describe("Item document ID") },
     async ({ itemId }) => {
-      await accountCollection(db, "items").doc(itemId).delete();
+      // Fetch item to discover its transactionId before deleting.
+      // Note: narrow TOCTOU window if item is moved between read and commit —
+      // acceptable because arrayRemove is a no-op if the value isn't present.
+      const item = await getDoc<Item>(db, "items", itemId);
+      if (!item) {
+        return { content: [{ type: "text", text: `Item ${itemId} not found.` }], isError: true };
+      }
+
+      const batch = db.batch();
+      batch.delete(accountCollection(db, "items").doc(itemId));
+
+      if (item.transactionId) {
+        batch.update(accountCollection(db, "transactions").doc(item.transactionId), {
+          itemIds: FieldValue.arrayRemove(itemId),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
       return { content: [{ type: "text", text: `Deleted item ${itemId}` }] };
     }
   );
