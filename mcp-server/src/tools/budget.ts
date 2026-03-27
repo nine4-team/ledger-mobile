@@ -91,7 +91,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().describe("Project document ID"),
       budgetCategoryId: z.string().describe("Budget category document ID"),
-      budgetCents: z.number().describe("Budget amount in cents"),
+      budgetCents: z.coerce.number().describe("Budget amount in cents"),
     },
     async ({ projectId, budgetCategoryId, budgetCents }) => {
       const ref = subcollection(db, "projects", projectId, "budgetCategories").doc(budgetCategoryId);
@@ -112,7 +112,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().describe("Project document ID"),
       budgetCategoryId: z.string().describe("Budget category document ID"),
-      budgetCents: z.number().optional().describe("Optional initial budget in cents"),
+      budgetCents: z.coerce.number().optional().describe("Optional initial budget in cents"),
     },
     async ({ projectId, budgetCategoryId, budgetCents }) => {
       const ref = subcollection(db, "projects", projectId, "budgetCategories").doc(budgetCategoryId);

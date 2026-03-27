@@ -124,8 +124,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     {
       name: z.string().describe("Item name"),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
-      purchasePriceCents: z.number().optional().describe("Purchase price in cents"),
-      projectPriceCents: z.number().optional().describe("Project price in cents"),
+      purchasePriceCents: z.coerce.number().optional().describe("Purchase price in cents"),
+      projectPriceCents: z.coerce.number().optional().describe("Project price in cents"),
       status: z.string().default("purchased").describe("Status: to purchase, purchased, to return, returned"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
@@ -173,9 +173,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
       status: z.string().optional().describe("Item status: to purchase, purchased, to return, returned"),
-      purchasePriceCents: z.number().optional().describe("Purchase price in cents"),
-      projectPriceCents: z.number().optional().describe("Project price in cents"),
-      marketValueCents: z.number().optional().describe("Market value in cents"),
+      purchasePriceCents: z.coerce.number().optional().describe("Purchase price in cents"),
+      projectPriceCents: z.coerce.number().optional().describe("Project price in cents"),
+      marketValueCents: z.coerce.number().optional().describe("Market value in cents"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
       notes: z.string().optional().describe("Notes"),
@@ -183,7 +183,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       spaceId: z.string().optional().describe("Space ID"),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
-      quantity: z.number().optional().describe("Quantity (defaults to 1)"),
+      quantity: z.coerce.number().optional().describe("Quantity (defaults to 1)"),
     },
     async ({ itemId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };

@@ -229,7 +229,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
-      amountCents: z.number().describe("Amount in cents (positive)"),
+      amountCents: z.coerce.number().describe("Amount in cents (positive)"),
       type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, To Inventory. For Sale transactions, use the sell_items tool instead."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
@@ -283,9 +283,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     "Update transaction fields. isComplete recomputes automatically after every write via Cloud Function. For itemized categories, it becomes true when: (1) tax data exists (subtotalCents or taxRatePct is set), (2) items are linked, and (3) linked items' prices sum to within ±1% of the resolved pre-tax subtotal. Cannot be set manually.",
     {
       transactionId: z.string().describe("Transaction document ID"),
-      amountCents: z.number().optional().describe("Total amount in cents (including tax)"),
-      subtotalCents: z.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
-      taxRatePct: z.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
+      amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
+      subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
+      taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
       type: z.string().optional().describe("Transaction type: Purchase, Return, Sale, To Inventory"),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
