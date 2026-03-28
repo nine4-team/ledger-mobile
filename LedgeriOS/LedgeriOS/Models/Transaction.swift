@@ -10,6 +10,9 @@ struct TransactionAudit: Codable, Hashable {
     var returnedItemsCount: Int?
     var soldItemsSumCents: Int?
     var soldItemsCount: Int?
+    var itemsMissingTaxRateCount: Int?
+    var itemsMissingTaxRate: [String]?
+    var totalItemCount: Int?
 }
 
 struct Transaction: Codable, Identifiable, Hashable {

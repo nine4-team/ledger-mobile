@@ -61,6 +61,9 @@ export interface Transaction {
     returnedItemsCount?: number;
     soldItemsSumCents?: number;
     soldItemsCount?: number;
+    itemsMissingTaxRateCount?: number;
+    itemsMissingTaxRate?: string[];
+    totalItemCount?: number;
   } | null;
   purchasedBy?: string;
   reimbursementType?: string;
@@ -92,6 +95,7 @@ export interface Item {
   bookmark?: boolean;
   budgetCategoryId?: string;
   quantity?: number;
+  taxRatePct?: number;
   images?: AttachmentRef[];
   createdBy?: string;
   updatedBy?: string;

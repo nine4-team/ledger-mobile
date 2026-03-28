@@ -34,9 +34,24 @@ function groupForSale(
   return groups;
 }
 
-/** Sum of purchasePriceCents for a list of items. */
-function amountDelta(items: (Item & { id: string })[]): number {
-  return items.reduce((sum, item) => sum + (item.purchasePriceCents ?? 0), 0);
+/** Compute sale amounts for a group of items: subtotal (pre-tax) and tax-inclusive amount. */
+function saleDelta(items: (Item & { id: string })[]): { subtotalCents: number; amountCents: number } {
+  let subtotalCents = 0;
+  let amountCents = 0;
+  for (const item of items) {
+    const price = item.purchasePriceCents ?? 0;
+    const rate = item.taxRatePct ?? 0;
+    subtotalCents += price;
+    amountCents += rate > 0 ? Math.round(price * (1 + rate / 100)) : price;
+  }
+  return { subtotalCents, amountCents };
+}
+
+/** Count items missing taxRatePct and build a warning string if any. */
+function missingTaxWarning(items: (Item & { id: string })[]): string {
+  const missing = items.filter((i) => i.taxRatePct == null);
+  if (missing.length === 0) return "";
+  return `\n⚠ ${missing.length} of ${items.length} item(s) have no taxRatePct — amountCents may undercount actual cost. Use update_item to set taxRatePct on: ${missing.map((i) => i.id).join(", ")}`;
 }
 
 // ── Tool Registration ────────────────────────────────────────────────────────
@@ -179,9 +194,9 @@ async function sellToBusiness(
     const [projectId, categoryId] = key.split("::");
     const saleId = canonicalSaleId(projectId, "project_to_business", categoryId);
     saleIds.push(saleId);
-    const delta = amountDelta(groupItems);
+    const { subtotalCents, amountCents } = saleDelta(groupItems);
 
-    // Create or update canonical sale transaction
+    // Create or update canonical sale transaction (no taxRatePct — rate lives on items)
     batch.set(
       txCol.doc(saleId),
       {
@@ -191,7 +206,8 @@ async function sellToBusiness(
         inventorySaleDirection: "project_to_business",
         budgetCategoryId: categoryId,
         itemIds: FieldValue.arrayUnion(...groupItems.map((i) => i.id)),
-        amountCents: FieldValue.increment(delta),
+        subtotalCents: FieldValue.increment(subtotalCents),
+        amountCents: FieldValue.increment(amountCents),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       },
@@ -241,7 +257,8 @@ async function sellToBusiness(
       type: "text" as const,
       text: `Sold ${items.length} item(s) to business inventory.\n` +
         `Canonical sale transaction(s): ${uniqueSales.join(", ")}\n` +
-        `Items: ${items.map((i) => `${i.id} (${i.name ?? "unnamed"}, ${formatCents(i.purchasePriceCents)})`).join(", ")}`,
+        `Items: ${items.map((i) => `${i.id} (${i.name ?? "unnamed"}, ${formatCents(i.purchasePriceCents)})`).join(", ")}` +
+        missingTaxWarning(items),
     }],
   };
 }
@@ -265,7 +282,11 @@ async function sellToProject(
   for (const item of items) {
     const srcCatId = resolveCategory(item, overrideCategoryId);
     const dstCatId = resolveCategory(item, overrideCategoryId);
-    const delta = item.purchasePriceCents ?? 0;
+    const subtotal = item.purchasePriceCents ?? 0;
+    const itemTaxRate = item.taxRatePct ?? 0;
+    const amount = itemTaxRate > 0
+      ? Math.round(subtotal * (1 + itemTaxRate / 100))
+      : subtotal;
 
     destinationCategoryIds.add(dstCatId);
 
@@ -283,7 +304,8 @@ async function sellToProject(
           inventorySaleDirection: "project_to_business",
           budgetCategoryId: srcCatId,
           itemIds: FieldValue.arrayUnion(item.id),
-          amountCents: FieldValue.increment(delta),
+          subtotalCents: FieldValue.increment(subtotal),
+          amountCents: FieldValue.increment(amount),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
         },
@@ -304,7 +326,8 @@ async function sellToProject(
         inventorySaleDirection: "business_to_project",
         budgetCategoryId: dstCatId,
         itemIds: FieldValue.arrayUnion(item.id),
-        amountCents: FieldValue.increment(delta),
+        subtotalCents: FieldValue.increment(subtotal),
+        amountCents: FieldValue.increment(amount),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       },
@@ -363,7 +386,8 @@ async function sellToProject(
       type: "text" as const,
       text: `Sold ${items.length} item(s) to project ${destinationProjectId}.\n` +
         `Canonical sale transaction(s): ${uniqueSales.join(", ")}\n` +
-        `Items: ${items.map((i) => `${i.id} (${i.name ?? "unnamed"}, ${formatCents(i.purchasePriceCents)})`).join(", ")}`,
+        `Items: ${items.map((i) => `${i.id} (${i.name ?? "unnamed"}, ${formatCents(i.purchasePriceCents)})`).join(", ")}` +
+        missingTaxWarning(items),
     }],
   };
 }

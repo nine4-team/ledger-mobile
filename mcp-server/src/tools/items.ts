@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Item } from "../types.js";
+import type { Item, Transaction } from "../types.js";
 import { accountCollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { itemMatches } from "../util/search.js";
@@ -22,6 +22,7 @@ function formatItem(item: Item & { id: string }) {
     transactionId: item.transactionId ?? null,
     bookmark: item.bookmark ?? false,
     quantity: item.quantity ?? 1,
+    taxRatePct: item.taxRatePct ?? null,
     notes: item.notes ?? "",
     imageCount: item.images?.length ?? 0,
   };
@@ -133,8 +134,16 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       spaceId: z.string().optional().describe("Space ID"),
       budgetCategoryId: z.string().optional().describe("Budget category ID"),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
+      taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375). Auto-inherited from the linked transaction if not provided."),
     },
-    async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId }) => {
+    async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId, taxRatePct }) => {
+      // Auto-inherit taxRatePct from transaction if not explicitly provided
+      let resolvedTaxRate = taxRatePct;
+      if (resolvedTaxRate === undefined && transactionId) {
+        const tx = await getDoc<Transaction>(db, "transactions", transactionId);
+        if (tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
+      }
+
       const data: Record<string, unknown> = {
         name,
         status,
@@ -150,6 +159,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (spaceId) data.spaceId = spaceId;
       if (budgetCategoryId) data.budgetCategoryId = budgetCategoryId;
       if (transactionId) data.transactionId = transactionId;
+      if (resolvedTaxRate !== undefined) data.taxRatePct = resolvedTaxRate;
 
       const ref = await accountCollection(db, "items").add(data);
 
@@ -184,6 +194,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         spaceId: z.string().optional().describe("Space ID"),
         budgetCategoryId: z.string().optional().describe("Budget category ID"),
         transactionId: z.string().optional().describe("Transaction ID (overrides top-level)"),
+        taxRatePct: z.coerce.number().optional().describe("Tax rate % (auto-inherited from transaction if omitted)"),
       })).describe("Array of items to create"),
     },
     async ({ transactionId: defaultTransactionId, projectId: defaultProjectId, items }) => {
@@ -196,6 +207,18 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const createdIds: string[] = [];
       const txItemMap = new Map<string, string[]>();
 
+      // Pre-fetch transactions for taxRatePct inheritance (deduplicated)
+      const txIds = new Set<string>();
+      for (const item of items) {
+        const txId = item.transactionId ?? defaultTransactionId;
+        if (txId && item.taxRatePct === undefined) txIds.add(txId);
+      }
+      const txCache = new Map<string, Transaction>();
+      for (const txId of txIds) {
+        const tx = await getDoc<Transaction>(db, "transactions", txId);
+        if (tx) txCache.set(txId, tx);
+      }
+
       type BatchOp = { type: "set"; ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> }
         | { type: "update"; ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> };
       const ops: BatchOp[] = [];
@@ -203,6 +226,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       for (const item of items) {
         const resolvedProjectId = item.projectId ?? defaultProjectId;
         const resolvedTransactionId = item.transactionId ?? defaultTransactionId;
+
+        // Resolve tax rate: explicit > inherited from transaction
+        let resolvedTaxRate = item.taxRatePct;
+        if (resolvedTaxRate === undefined && resolvedTransactionId) {
+          const tx = txCache.get(resolvedTransactionId);
+          if (tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
+        }
 
         const data: Record<string, unknown> = {
           name: item.name,
@@ -219,6 +249,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (item.spaceId) data.spaceId = item.spaceId;
         if (item.budgetCategoryId) data.budgetCategoryId = item.budgetCategoryId;
         if (resolvedTransactionId) data.transactionId = resolvedTransactionId;
+        if (resolvedTaxRate !== undefined) data.taxRatePct = resolvedTaxRate;
 
         const ref = itemsCol.doc();
         createdIds.push(ref.id);
@@ -278,6 +309,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
       quantity: z.coerce.number().optional().describe("Quantity (defaults to 1)"),
+      taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375)"),
     },
     async ({ itemId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };
@@ -341,6 +373,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         budgetCategoryId: z.string().optional(),
         bookmark: z.boolean().optional(),
         quantity: z.coerce.number().optional(),
+        taxRatePct: z.coerce.number().optional(),
       }).describe("Fields to set on all matched items"),
     },
     async ({ filter, update }) => {

@@ -233,6 +233,7 @@ export function registerAnalyticsTools(server: McpServer, db: Firestore) {
         if (!item.sku) problems.push("missing SKU");
         if (item.status === "to return") problems.push("pending return");
         if (item.status === "to purchase") problems.push("not yet purchased");
+        if (item.taxRatePct == null && item.transactionId) problems.push("missing tax rate");
 
         if (problems.length > 0) {
           issues.push({

@@ -119,6 +119,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | bookmark | boolean, nullable | User-set bookmark flag |
 | purchasedBy | string, nullable | |
 | quantity | number, nullable | |
+| taxRatePct | number, nullable | Tax rate as a percentage (e.g. 8.375). Inherited from the transaction of origin at item creation time |
 | images | array of AttachmentRef, nullable | |
 | createdBy | string, nullable | Firebase Auth UID |
 | updatedBy | string, nullable | Firebase Auth UID |

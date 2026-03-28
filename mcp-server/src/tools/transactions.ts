@@ -178,6 +178,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         name: i.name ?? i.description ?? "",
         status: i.status ?? "",
         purchasePrice: formatCents(i.purchasePriceCents),
+        taxRatePct: i.taxRatePct ?? null,
       });
 
       const result = {
