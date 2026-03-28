@@ -62,8 +62,9 @@ struct ZoomableScrollView: UIViewRepresentable {
         singleTap.require(toFail: doubleTap)
         scrollView.addGestureRecognizer(singleTap)
 
-        // Load initial image
-        context.coordinator.loadImage(url: url)
+        // Don't load here — bounds are zero until the view is laid out.
+        // updateUIView fires after layout with correct bounds, and its
+        // currentURL != url check will trigger the initial load.
 
         return scrollView
     }
