@@ -356,7 +356,7 @@ struct ZoomableScrollView: NSViewRepresentable {
         context.coordinator.magnificationObservation = scrollView.observe(\.magnification, options: [.new]) { [weak coordinator = context.coordinator] scrollView, change in
             guard let coordinator, let newValue = change.newValue else { return }
             if abs(newValue - coordinator.parent.zoomScale) > 0.01 {
-                DispatchQueue.main.async {
+                MainActor.assumeIsolated {
                     coordinator.parent.zoomScale = newValue
                 }
             }
@@ -408,7 +408,7 @@ struct ZoomableScrollView: NSViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject {
+    class Coordinator: NSObject, @unchecked Sendable {
         var parent: ZoomableScrollView
         var imageView: NSImageView?
         var spinner: NSProgressIndicator?

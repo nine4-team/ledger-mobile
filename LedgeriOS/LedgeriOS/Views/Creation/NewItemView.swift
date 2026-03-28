@@ -512,18 +512,23 @@ struct NewItemView: View {
         item.purchasePriceCents = parseCents(purchasePrice)
         item.projectPriceCents = parseCents(projectPrice)
         item.marketValueCents = parseCents(marketValue)
-        item.quantity = quantity > 1 ? quantity : nil
         item.transactionId = selectedTransactionId
         item.accountId = accountId
 
         do {
-            let itemId = try itemsService.createItem(accountId: accountId, item: item)
+            var itemIds: [String] = []
+            for _ in 0..<quantity {
+                var copy = item
+                copy.id = nil
+                let itemId = try itemsService.createItem(accountId: accountId, item: copy)
+                itemIds.append(itemId)
+            }
 
             if let transactionId = selectedTransactionId {
                 let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
                 Task {
                     try? await Firestore.firestore().document(txPath).updateData([
-                        "itemIds": FieldValue.arrayUnion([itemId]),
+                        "itemIds": FieldValue.arrayUnion(itemIds),
                         "updatedAt": FieldValue.serverTimestamp()
                     ])
                 }
@@ -532,21 +537,23 @@ struct NewItemView: View {
             dismiss()
 
             // Enqueue images for persistent upload — survives app restart
-            for (index, data) in imageDatas.enumerated() {
-                let filename = "image_\(index).jpg"
-                let path = mediaService.uploadPath(
-                    accountId: accountId, entityType: "items",
-                    entityId: itemId, filename: filename
-                )
-                let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
-                var metadata = UploadMetadata(
-                    accountId: accountId, entityType: "items", entityId: itemId,
-                    storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
-                    fileName: filename
-                )
-                metadata.thumbnailStoragePathSm = thumbPaths.sm
-                metadata.thumbnailStoragePathMd = thumbPaths.md
-                mediaUploadQueue.enqueue(imageData: data, metadata: metadata)
+            for itemId in itemIds {
+                for (index, data) in imageDatas.enumerated() {
+                    let filename = "image_\(index).jpg"
+                    let path = mediaService.uploadPath(
+                        accountId: accountId, entityType: "items",
+                        entityId: itemId, filename: filename
+                    )
+                    let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
+                    var metadata = UploadMetadata(
+                        accountId: accountId, entityType: "items", entityId: itemId,
+                        storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
+                        fileName: filename
+                    )
+                    metadata.thumbnailStoragePathSm = thumbPaths.sm
+                    metadata.thumbnailStoragePathMd = thumbPaths.md
+                    mediaUploadQueue.enqueue(imageData: data, metadata: metadata)
+                }
             }
             mediaUploadQueue.processQueue()
         } catch {
