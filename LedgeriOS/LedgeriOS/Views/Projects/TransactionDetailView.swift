@@ -24,6 +24,7 @@ struct TransactionDetailView: View {
     @State private var showCreateItemsFromImages = false
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
+    @State private var showCreateNewItem = false
     @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
 
@@ -204,6 +205,9 @@ struct TransactionDetailView: View {
                 title: "Add Items",
                 items: {
                     var items = [
+                        ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
+                            showCreateNewItem = true
+                        }),
                         ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
                             showAddExistingItems = true
                         }),
@@ -225,6 +229,14 @@ struct TransactionDetailView: View {
                     menuPendingAction = action
                 }
             )
+        }
+        .adaptivePresentation(isPresented: $showCreateNewItem, style: .form) {
+            if let projectId = projectContext.currentProjectId {
+                NewItemView(
+                    context: .project(projectId, spaceId: nil),
+                    initialTransactionId: currentTransaction.id
+                )
+            }
         }
         .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(

@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import FirebaseFirestore
 
 /// Creation context determines Firestore paths and available pickers.
 enum ItemCreationContext {
@@ -10,6 +11,11 @@ enum ItemCreationContext {
 /// Two-step bottom-sheet form for creating a new item.
 struct NewItemView: View {
     let context: ItemCreationContext
+
+    init(context: ItemCreationContext, initialTransactionId: String? = nil) {
+        self.context = context
+        self._selectedTransactionId = State(initialValue: initialTransactionId)
+    }
 
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
@@ -405,6 +411,17 @@ struct NewItemView: View {
 
         do {
             let itemId = try itemsService.createItem(accountId: accountId, item: item)
+
+            if let transactionId = selectedTransactionId {
+                let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
+                Task {
+                    try? await Firestore.firestore().document(txPath).updateData([
+                        "itemIds": FieldValue.arrayUnion([itemId]),
+                        "updatedAt": FieldValue.serverTimestamp()
+                    ])
+                }
+            }
+
             dismiss()
 
             // Enqueue images for persistent upload — survives app restart
