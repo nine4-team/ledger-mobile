@@ -1386,9 +1386,30 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
  * Returns { isComplete, audit } where audit is null when not applicable.
  */
 async function computeIsComplete(db, accountId, transactionId, txData) {
-    // 1. Canonical transactions are always complete
+    // 1. Canonical transactions: complete only if all linked items have taxRatePct
     if (txData.isCanonicalInventorySale === true || txData.isCanonicalInventory === true) {
-        return { isComplete: true, audit: null };
+        const itemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
+        if (itemIds.length === 0) {
+            return { isComplete: true, audit: null };
+        }
+        const itemDocs = await Promise.all(itemIds.map(id => db.doc(`accounts/${accountId}/items/${id}`).get()));
+        const missingItemIds = itemDocs
+            .filter(d => {
+            const data = d.data();
+            return !data || data.taxRatePct == null;
+        })
+            .map(d => d.id);
+        if (missingItemIds.length === 0) {
+            return { isComplete: true, audit: null };
+        }
+        return {
+            isComplete: false,
+            audit: {
+                itemsMissingTaxRateCount: missingItemIds.length,
+                itemsMissingTaxRate: missingItemIds,
+                totalItemCount: itemIds.length,
+            },
+        };
     }
     // 2. Check budget category type
     const budgetCategoryId = typeof txData.budgetCategoryId === 'string' ? txData.budgetCategoryId.trim() : null;
