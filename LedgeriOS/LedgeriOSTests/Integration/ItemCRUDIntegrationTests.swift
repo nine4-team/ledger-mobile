@@ -278,7 +278,7 @@ struct ItemCRUDIntegrationTests {
         #expect(deletedItem == nil)
 
         // Transaction's itemIds no longer contains the deleted item
-        let updatedTx: Transaction = try #require(await FirestoreTestHelper.read(Transaction.self, fromCollection: txPath, id: txId))
+        let updatedTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: txId))
         #expect(updatedTx.itemIds?.contains(itemId) != true)
         #expect(updatedTx.itemIds?.contains("other-item") == true)
     }
