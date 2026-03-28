@@ -40,10 +40,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       status: z.string().optional().describe("Filter by status (to purchase, purchased, to return, returned)"),
       bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
       hasTransaction: z.boolean().optional().describe("Filter by transaction linkage: true = only items with a transactionId, false = only items with NO transactionId"),
-      limit: z.number().default(50).describe("Max results"),
+      limit: z.number().default(50).describe("Max results (ignored when fetchAll is true)"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
+      fetchAll: z.boolean().default(false).describe("Return all matching items, ignoring limit/offset. Use when you need the full collection without pagination."),
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -65,13 +66,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         clientFilter = (item) => !item.transactionId;
       }
 
-      if (clientFilter) {
-        query = query.limit(500);
-      } else {
+      if (!fetchAll && !clientFilter) {
         query = query.offset(offset).limit(limit);
       }
       let items = await queryDocs<Item>(query);
-      if (clientFilter) items = items.filter(clientFilter).slice(offset, offset + limit);
+      if (clientFilter) items = items.filter(clientFilter);
+      if (!fetchAll) items = items.slice(offset, offset + limit);
 
       return { content: [{ type: "text", text: JSON.stringify(items.map(formatItem), null, 2) }] };
     }
@@ -423,6 +423,62 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       return {
         content: [{ type: "text", text: `Updated ${processed} items matching filter.` }],
       };
+    }
+  );
+
+  // ── bulk_update_items_by_id ────────────────────────────────────────────────
+  server.tool(
+    "bulk_update_items_by_id",
+    "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.",
+    {
+      updates: z.array(z.object({
+        id: z.string().describe("Item document ID"),
+        name: z.string().optional(),
+        status: z.string().optional(),
+        purchasePriceCents: z.coerce.number().optional(),
+        projectPriceCents: z.coerce.number().optional(),
+        marketValueCents: z.coerce.number().optional(),
+        source: z.string().optional(),
+        sku: z.string().optional(),
+        notes: z.string().optional(),
+        projectId: z.string().optional(),
+        spaceId: z.string().optional(),
+        budgetCategoryId: z.string().optional(),
+        bookmark: z.boolean().optional(),
+        quantity: z.coerce.number().optional(),
+        taxRatePct: z.coerce.number().optional(),
+      })).describe("Array of items to update, each with its own field values"),
+    },
+    async ({ updates }) => {
+      if (updates.length === 0) {
+        return { content: [{ type: "text", text: "No updates provided." }], isError: true };
+      }
+
+      const itemsCol = accountCollection(db, "items");
+      let processed = 0;
+      let batch = db.batch();
+      let batchCount = 0;
+
+      for (const { id, ...fields } of updates) {
+        const itemUpdates: Record<string, unknown> = { updatedAt: new Date() };
+        for (const [key, value] of Object.entries(fields)) {
+          if (value !== undefined) itemUpdates[key] = value;
+        }
+        batch.update(itemsCol.doc(id), itemUpdates);
+        batchCount++;
+        if (batchCount === 500) {
+          await batch.commit();
+          processed += batchCount;
+          batch = db.batch();
+          batchCount = 0;
+        }
+      }
+      if (batchCount > 0) {
+        await batch.commit();
+        processed += batchCount;
+      }
+
+      return { content: [{ type: "text", text: `Updated ${processed} items.` }] };
     }
   );
 
