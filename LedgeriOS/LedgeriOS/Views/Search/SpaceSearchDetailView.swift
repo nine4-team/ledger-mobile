@@ -23,6 +23,7 @@ struct SpaceSearchDetailView: View {
                         Text(notes)
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textPrimary)
+                            .textSelection(.enabled)
                     }
                 }
 

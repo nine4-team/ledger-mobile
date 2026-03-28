@@ -28,6 +28,7 @@ struct DetailRow<Value: View>: View {
             .buttonStyle(.plain)
         } else {
             rowContent
+                .textSelection(.enabled)
         }
     }
 
