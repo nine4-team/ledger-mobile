@@ -44,7 +44,7 @@ struct TransactionPickerModal: View {
                         ForEach(visibleTransactions) { transaction in
                             transactionRow(
                                 label: transactionLabel(transaction),
-                                sublabel: transaction.source,
+                                sublabel: transactionSublabel(transaction),
                                 isSelected: transaction.id == selectedId
                             ) {
                                 onSelect(transaction)
@@ -98,9 +98,22 @@ struct TransactionPickerModal: View {
         if let date = transaction.transactionDate, !date.isEmpty {
             return "\(type) – \(date)"
         }
-        if let amount = transaction.amountCents {
-            return "\(type) – \(CurrencyFormatting.formatCentsWithDecimals(amount))"
-        }
         return type
+    }
+
+    private func transactionSublabel(_ transaction: Transaction) -> String? {
+        let vendor = transaction.source
+        let amount = transaction.amountCents.map { CurrencyFormatting.formatCentsWithDecimals($0) }
+
+        switch (vendor, amount) {
+        case (let v?, let a?) where !v.isEmpty:
+            return "\(v) · \(a)"
+        case (_, let a?):
+            return a
+        case (let v?, nil) where !v.isEmpty:
+            return v
+        default:
+            return nil
+        }
     }
 }

@@ -45,7 +45,7 @@ struct UniversalAddModifier: ViewModifier {
                 NewProjectView()
             }
             .adaptivePresentation(isPresented: $showNewItem, style: .form) {
-                NewItemView(context: .inventory)
+                NewItemView()
             }
             .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 NewTransactionView(context: .inventory)
@@ -116,7 +116,7 @@ struct UniversalAddSheetModifier: ViewModifier {
                 NewProjectView()
             }
             .adaptivePresentation(isPresented: $showNewItem, style: .form) {
-                NewItemView(context: .inventory)
+                NewItemView()
             }
             .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 NewTransactionView(context: .inventory)

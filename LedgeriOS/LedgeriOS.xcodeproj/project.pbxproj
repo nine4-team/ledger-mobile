@@ -69,6 +69,7 @@
 		5AE28A9EEA613E88BB36775A /* ImageThumbnailGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2DD58065490913562F0CD4 /* ImageThumbnailGenerator.swift */; };
 		5B4FF7903607E7F99C33FE95 /* UsersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE5748E2943183F32FE6124 /* UsersView.swift */; };
 		5BADB6A67B1F469BAD694F6F /* ProjectPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735D35058B9B023DFF14D776 /* ProjectPickerList.swift */; };
+		BB22CC33DD44EE55FF6677AA /* DestinationPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* DestinationPickerSheet.swift */; };
 		5E5F53EA937468D990B8E42F /* SpaceTemplateManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0FBA594B36A6B1037EA47B /* SpaceTemplateManagementView.swift */; };
 		5E935CB0BD60643258398CF9 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4551FEFFD9F3B79C7DC829B /* NewProjectView.swift */; };
 		5FFCCF119D1AFDE04768B6FD /* InvoiceDateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CA5CA236FBB37B8B4ED80C /* InvoiceDateParsing.swift */; };
@@ -335,6 +336,7 @@
 		0715DEDB6E5B432081A76B9F /* ReportPDFSharing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportPDFSharing.swift; sourceTree = "<group>"; };
 		0756B26E39032364A86F74DD /* PdfImageExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PdfImageExtractor.swift; sourceTree = "<group>"; };
 		082B142DF68203AFD6FBA3DE /* SetSpaceModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetSpaceModal.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF66 /* DestinationPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DestinationPickerSheet.swift; sourceTree = "<group>"; };
 		0830037BA7D2372C6ABB41EA /* ItemsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabPlaceholder.swift; sourceTree = "<group>"; };
 		0885214210ED3FFF5F74AB7C /* CreateItemsFromImagesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromImagesModal.swift; sourceTree = "<group>"; };
 		090384A47EBFBA9FB0BA599D /* ExportFieldConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExportFieldConfig.swift; sourceTree = "<group>"; };
@@ -1158,6 +1160,7 @@
 				D7184640FD902E9E64F1779F /* EditItemDetailsModal.swift */,
 				082B142DF68203AFD6FBA3DE /* SetSpaceModal.swift */,
 				735D35058B9B023DFF14D776 /* ProjectPickerList.swift */,
+				AA11BB22CC33DD44EE55FF66 /* DestinationPickerSheet.swift */,
 				033D7CD21A568DA7AC4CDBFA /* MakeCopiesModal.swift */,
 				0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */,
 				A42382CD300502891CBCC6A1 /* ExportTransactionsModal.swift */,
@@ -1478,6 +1481,7 @@
 				1947BCA3E47420ACAB476C75 /* EditItemDetailsModal.swift in Sources */,
 				F100517684382B0A3E771B46 /* SetSpaceModal.swift in Sources */,
 				5BADB6A67B1F469BAD694F6F /* ProjectPickerList.swift in Sources */,
+				BB22CC33DD44EE55FF6677AA /* DestinationPickerSheet.swift in Sources */,
 				ABB7F45B9ED5117D6C9910DD /* MakeCopiesModal.swift in Sources */,
 				F8CC9F1287A1E194B2B7DC7F /* TransactionPickerModal.swift in Sources */,
 				ADAE5766E7D8ED281BCFE507 /* BusinessProfile.swift in Sources */,

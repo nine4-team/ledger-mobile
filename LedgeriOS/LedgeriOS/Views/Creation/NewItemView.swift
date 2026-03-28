@@ -3,17 +3,18 @@ import PhotosUI
 import FirebaseFirestore
 
 /// Creation context determines Firestore paths and available pickers.
-enum ItemCreationContext {
+enum ItemCreationContext: Equatable {
     case project(String, spaceId: String?)
     case inventory
 }
 
 /// Two-step bottom-sheet form for creating a new item.
 struct NewItemView: View {
-    let context: ItemCreationContext
+    @State private var resolvedContext: ItemCreationContext?
+    @State private var selectedProject: Project?
 
-    init(context: ItemCreationContext, initialTransactionId: String? = nil) {
-        self.context = context
+    init(context: ItemCreationContext? = nil, initialTransactionId: String? = nil) {
+        self._resolvedContext = State(initialValue: context)
         self._selectedTransactionId = State(initialValue: initialTransactionId)
     }
 
@@ -43,7 +44,12 @@ struct NewItemView: View {
     @State private var quantity = 1
     @State private var status: ItemStatus = .purchased
 
+    // Scoped transaction subscription
+    @State private var scopedTransactions: [Transaction] = []
+    @State private var transactionListener: ListenerRegistration?
+
     // Pickers
+    @State private var showDestinationPicker = false
     @State private var showTransactionPicker = false
     @State private var showSpacePicker = false
     @State private var showStatusPicker = false
@@ -56,15 +62,17 @@ struct NewItemView: View {
     @State private var showPhotoPicker = false
 
     private let itemsService = ItemsService()
+    private let transactionsService = TransactionsService()
 
     private var isValid: Bool {
+        resolvedContext != nil &&
         ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
     }
 
     private var projectId: String? {
-        switch context {
+        switch resolvedContext {
         case .project(let id, _): return id
-        case .inventory: return nil
+        case .inventory, nil: return nil
         }
     }
 
@@ -73,7 +81,19 @@ struct NewItemView: View {
     }
 
     private var selectedTransaction: Transaction? {
-        projectContext?.transactions.first { $0.id == selectedTransactionId }
+        scopedTransactions.first { $0.id == selectedTransactionId }
+    }
+
+    private var destinationLabel: String {
+        switch resolvedContext {
+        case .project:
+            let name = selectedProject?.name ?? projectContext?.project?.name ?? ""
+            return name.isEmpty ? "Project" : name
+        case .inventory:
+            return "Business Inventory"
+        case nil:
+            return "Choose Destination"
+        }
     }
 
     var body: some View {
@@ -81,6 +101,17 @@ struct NewItemView: View {
             switch currentStep {
             case 1: step1Essentials
             default: step2Details
+            }
+        }
+        .adaptivePresentation(isPresented: $showDestinationPicker, style: .picker) {
+            DestinationPickerSheet { context, project in
+                if resolvedContext != context {
+                    selectedTransactionId = nil
+                    selectedSpaceId = nil
+                    scopedTransactions = []
+                }
+                resolvedContext = context
+                selectedProject = project
             }
         }
         .adaptivePresentation(isPresented: $showStatusPicker, style: .quickMenu) {
@@ -95,13 +126,28 @@ struct NewItemView: View {
         }
         .adaptivePresentation(isPresented: $showTransactionPicker, style: .picker) {
             TransactionPickerModal(
-                transactions: projectContext?.transactions ?? [],
+                transactions: scopedTransactions,
                 selectedId: selectedTransactionId,
                 onSelect: { tx in selectedTransactionId = tx.id }
             )
         }
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
             VendorPickerModal(selectedValue: source, onSelect: { source = $0 })
+        }
+        .task {
+            startTransactionSubscription()
+        }
+        .onChange(of: resolvedContext) { _, _ in
+            startTransactionSubscription()
+        }
+        .onDisappear {
+            transactionListener?.remove()
+            transactionListener = nil
+        }
+        .onAppear {
+            if case .project(_, let spaceId) = resolvedContext {
+                selectedSpaceId = spaceId
+            }
         }
     }
 
@@ -121,12 +167,46 @@ struct NewItemView: View {
             }
         ) {
             VStack(spacing: Spacing.md) {
+                destinationSection
                 imagesSection
                 FormField(label: "Name", text: $name, placeholder: "Item name")
                 FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
                 VendorPickerField(value: $source, showPicker: $showVendorPicker)
                 FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
             }
+        }
+    }
+
+    // MARK: - Destination Section
+
+    private var destinationSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Destination")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            Button { showDestinationPicker = true } label: {
+                HStack {
+                    Text(destinationLabel)
+                        .foregroundStyle(resolvedContext == nil ? BrandColors.textSecondary : BrandColors.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+                .font(Typography.input)
+                .padding(.horizontal, Spacing.md)
+                .frame(height: 44)
+                .contentShape(Rectangle())
+                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                .overlay(
+                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                        .stroke(
+                            resolvedContext == nil ? BrandColors.destructive : BrandColors.border,
+                            lineWidth: Dimensions.borderWidth
+                        )
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -147,8 +227,8 @@ struct NewItemView: View {
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
 
-                // Transaction picker (project context only) — before Space
-                if projectId != nil {
+                // Transaction picker — available once a destination is chosen
+                if resolvedContext != nil {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Transaction")
                             .font(Typography.label)
@@ -159,7 +239,10 @@ struct NewItemView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                }
 
+                // Space picker — project context only
+                if case .project = resolvedContext {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Space")
                             .font(Typography.label)
@@ -240,11 +323,6 @@ struct NewItemView: View {
                     }
                     .buttonStyle(.plain)
                 }
-            }
-        }
-        .onAppear {
-            if case .project(_, let spaceId) = context {
-                selectedSpaceId = spaceId
             }
         }
     }
@@ -384,6 +462,35 @@ struct NewItemView: View {
             RoundedRectangle(cornerRadius: Dimensions.inputRadius)
                 .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
         )
+    }
+
+    // MARK: - Transaction Subscription
+
+    private func startTransactionSubscription() {
+        guard let accountId = accountContext.currentAccountId,
+              let context = resolvedContext else {
+            transactionListener?.remove()
+            transactionListener = nil
+            scopedTransactions = []
+            return
+        }
+
+        transactionListener?.remove()
+
+        let scope: ListScope
+        switch context {
+        case .project(let id, _): scope = .project(id)
+        case .inventory: scope = .inventory
+        }
+
+        transactionListener = transactionsService.subscribeToTransactions(
+            accountId: accountId,
+            scope: scope
+        ) { transactions in
+            Task { @MainActor in
+                self.scopedTransactions = transactions
+            }
+        }
     }
 
     // MARK: - Actions
