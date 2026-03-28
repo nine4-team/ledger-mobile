@@ -74,7 +74,7 @@ enum ItemCardCalculations {
         let uniformPerItemPrice: String? = uniquePrices.count == 1 ? filtered[0] : nil
 
         if let total = totalLabel {
-            let suffix = uniformPerItemPrice.map { " (\($0) each)" }
+            let suffix = uniformPerItemPrice.map { " (\($0) ea)" }
             return (total, suffix)
         }
         return (uniformPerItemPrice, nil)

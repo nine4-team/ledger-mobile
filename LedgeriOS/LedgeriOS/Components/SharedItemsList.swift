@@ -545,6 +545,15 @@ struct SharedItemsList: View {
         let groupSelected = !validItems.isEmpty && validItems.allSatisfy { ids.contains($0.id!) }
         let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
 
+        let itemPriceLabels = group.items.map { displayPrice(for: $0) }
+        let collapsedPrice = group.count > 1
+            ? ItemCardCalculations.groupedCollapsedPrice(totalLabel: totalLabel, itemPriceLabels: itemPriceLabels)
+            : (totalLabel, nil as String?)
+        let displayedPriceLabel: String? = {
+            let combined = [collapsedPrice.0, collapsedPrice.1].compactMap { $0 }.joined()
+            return combined.isEmpty ? nil : combined
+        }()
+
         let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
 
         let selectionBinding = Binding(
@@ -575,7 +584,7 @@ struct SharedItemsList: View {
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
             sourceLabel: summaryItem?.source,
-            priceLabel: totalLabel,
+            priceLabel: displayedPriceLabel,
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
             onPress: { withAnimation { macOSExpandedGroup = group } },
@@ -592,7 +601,7 @@ struct SharedItemsList: View {
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
             sourceLabel: summaryItem?.source,
-            priceLabel: totalLabel,
+            priceLabel: displayedPriceLabel,
             isExpanded: Binding(
                 get: { expandedGroups.contains(group.id) },
                 set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
