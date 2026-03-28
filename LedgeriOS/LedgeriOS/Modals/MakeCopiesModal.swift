@@ -1,3 +1,4 @@
+import FirebaseFirestore
 import SwiftUI
 
 /// Creates duplicate copies of an item.
@@ -73,9 +74,23 @@ struct MakeCopiesModal: View {
 
         Task {
             do {
+                var newItemIds: [String] = []
                 for _ in 0..<copyCount {
-                    _ = try service.createItem(accountId: accountId, item: copyItem)
+                    let newId = try service.createItem(accountId: accountId, item: copyItem)
+                    newItemIds.append(newId)
                 }
+
+                // If the source item belongs to a transaction, add copies to it
+                if let transactionId = item.transactionId {
+                    let txRepo = FirestoreRepository<Transaction>(
+                        path: "accounts/\(accountId)/transactions"
+                    )
+                    try await txRepo.update(id: transactionId, fields: [
+                        "itemIds": FieldValue.arrayUnion(newItemIds),
+                        "updatedAt": FieldValue.serverTimestamp()
+                    ])
+                }
+
                 await MainActor.run { dismiss() }
             } catch {
                 await MainActor.run {
