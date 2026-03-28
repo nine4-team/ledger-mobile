@@ -261,6 +261,7 @@ struct SpaceDetailView: View {
             Text(notes)
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textPrimary)
+                .textSelection(.enabled)
                 .padding(.top, Spacing.xs)
         } else {
             Text("No notes")
@@ -418,9 +419,10 @@ struct SpaceDetailView: View {
             return
         }
         let service = SpacesService()
+        nonisolated(unsafe) let f = fields
         Task {
             do {
-                try await service.updateSpace(accountId: accountId, spaceId: spaceId, fields: fields)
+                try await service.updateSpace(accountId: accountId, spaceId: spaceId, fields: f)
             } catch {
                 print("🔴 updateSpace failed: \(error)")
             }
@@ -525,7 +527,8 @@ struct SpaceDetailView: View {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item?.id else { return }
         let service = ItemsService()
-        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        nonisolated(unsafe) let f = fields
+        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: f) }
     }
 
     private func deleteActionTargetItem() {

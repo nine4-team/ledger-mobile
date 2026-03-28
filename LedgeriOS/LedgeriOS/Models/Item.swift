@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-struct Item: Codable, Identifiable, Hashable {
+struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     @DocumentID var id: String?
     var accountId: String?
     var projectId: String?

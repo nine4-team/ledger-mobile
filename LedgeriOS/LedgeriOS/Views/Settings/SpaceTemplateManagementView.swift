@@ -135,7 +135,8 @@ struct SpaceTemplateManagementView: View {
             ] as [String: Any]
         }
         fields["checklists"] = checklistData.isEmpty ? NSNull() : checklistData
-        Task { try? await service.update(accountId: accountId, templateId: id, fields: fields) }
+        nonisolated(unsafe) let f = fields
+        Task { try? await service.update(accountId: accountId, templateId: id, fields: f) }
     }
 
     private func moveTemplates(from source: IndexSet, to destination: Int) {
@@ -144,7 +145,7 @@ struct SpaceTemplateManagementView: View {
         reordered.move(fromOffsets: source, toOffset: destination)
         for (index, template) in reordered.enumerated() {
             guard let id = template.id else { continue }
-            let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
+            nonisolated(unsafe) let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
             Task { try? await service.update(accountId: accountId, templateId: id, fields: fields) }
         }
     }

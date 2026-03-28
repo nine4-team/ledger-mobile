@@ -472,6 +472,7 @@ struct TransactionDetailView: View {
                 Text(notes)
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textPrimary)
+                    .textSelection(.enabled)
                     .padding(.top, Spacing.xs)
             } else {
                 Text("No notes")
@@ -904,10 +905,11 @@ struct TransactionDetailView: View {
             print("⚠️ updateTransaction skipped — missing accountId or transactionId")
             return
         }
+        nonisolated(unsafe) let f = fields
         Task {
             do {
                 try await TransactionsService()
-                    .updateTransaction(accountId: accountId, transactionId: transactionId, fields: fields)
+                    .updateTransaction(accountId: accountId, transactionId: transactionId, fields: f)
             } catch {
                 print("🔴 updateTransaction failed: \(error)")
             }

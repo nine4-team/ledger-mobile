@@ -383,9 +383,10 @@ struct EditProjectModal: View {
         dismiss()
 
         // Background: update project document
+        nonisolated(unsafe) let fieldsToSend = fields
         Task {
             try? await projectService.updateProject(
-                accountId: accountId, projectId: projectId, fields: fields
+                accountId: accountId, projectId: projectId, fields: fieldsToSend
             )
         }
 

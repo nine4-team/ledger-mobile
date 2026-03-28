@@ -151,7 +151,7 @@ struct BudgetCategoryManagementView: View {
 
     private func updateCategory(_ category: BudgetCategory, name: String, categoryType: BudgetCategoryType, excludeFromBudget: Bool) {
         guard let accountId = accountContext.currentAccountId, let id = category.id else { return }
-        let fields: [String: Any] = [
+        nonisolated(unsafe) let fields: [String: Any] = [
             "name": name,
             "slug": name.lowercased().replacingOccurrences(of: " ", with: "-"),
             "metadata": [
@@ -165,7 +165,7 @@ struct BudgetCategoryManagementView: View {
 
     private func archiveCategory(_ category: BudgetCategory) {
         guard let accountId = accountContext.currentAccountId, let id = category.id else { return }
-        let fields: [String: Any] = ["isArchived": true, "updatedAt": FieldValue.serverTimestamp()]
+        nonisolated(unsafe) let fields: [String: Any] = ["isArchived": true, "updatedAt": FieldValue.serverTimestamp()]
         Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
     }
 
@@ -175,14 +175,14 @@ struct BudgetCategoryManagementView: View {
         reordered.move(fromOffsets: source, toOffset: destination)
         for (index, category) in reordered.enumerated() {
             guard let id = category.id else { continue }
-            let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
+            nonisolated(unsafe) let fields: [String: Any] = ["order": index, "updatedAt": FieldValue.serverTimestamp()]
             Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
         }
     }
 
     private func unarchiveCategory(_ category: BudgetCategory) {
         guard let accountId = accountContext.currentAccountId, let id = category.id else { return }
-        let fields: [String: Any] = ["isArchived": false, "updatedAt": FieldValue.serverTimestamp()]
+        nonisolated(unsafe) let fields: [String: Any] = ["isArchived": false, "updatedAt": FieldValue.serverTimestamp()]
         Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
     }
 }

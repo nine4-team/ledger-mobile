@@ -14,7 +14,7 @@ protocol BatchWriting {
 
 // MARK: - Production Implementation
 
-struct FirestoreBatchWriter: BatchWriting {
+struct FirestoreBatchWriter: BatchWriting, @unchecked Sendable {
     private let batch: WriteBatch
     private let db: Firestore
 

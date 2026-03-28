@@ -1,6 +1,6 @@
 import Foundation
 
-struct AttachmentRef: Codable, Hashable {
+struct AttachmentRef: Codable, Hashable, Sendable {
     var url: String
     var thumbnailUrlSm: String?
     var thumbnailUrlMd: String?
@@ -13,6 +13,6 @@ struct AttachmentRef: Codable, Hashable {
     var isUploading: Bool?
 }
 
-enum AttachmentKind: String, Codable {
+enum AttachmentKind: String, Codable, Sendable {
     case image, pdf, file
 }

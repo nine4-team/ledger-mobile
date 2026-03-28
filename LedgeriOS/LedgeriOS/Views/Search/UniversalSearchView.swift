@@ -458,7 +458,7 @@ struct UniversalSearchView: View {
     private func setSpaceForSelectedItems(spaceId: String?) {
         guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
-        let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
+        nonisolated(unsafe) let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
         for item in selectedItems {
             guard let itemId = item.id else { continue }
             Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
@@ -505,7 +505,8 @@ struct UniversalSearchView: View {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item?.id else { return }
         let service = ItemsService()
-        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        nonisolated(unsafe) let f = fields
+        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: f) }
     }
 
     private func deleteSingleItem() {
