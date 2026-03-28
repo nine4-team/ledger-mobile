@@ -283,65 +283,6 @@ struct AddExistingItemsPicker: View {
         let liveTx = projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
         let destinationProjectId = liveTx.projectId
 
-        // Route by scope
-        let routing = AddExistingItemsCalculations.routeByScope(
-            items: items,
-            destinationProjectId: destinationProjectId
-        )
-
-        // Same-scope: use InventoryOperationsService.reassignToProject
-        if !routing.sameScope.isEmpty, let destProjectId = destinationProjectId {
-            let ops = InventoryOperationsService()
-            Task {
-                do {
-                    try await ops.reassignToProject(
-                        items: routing.sameScope,
-                        destinationTransactionId: transactionId,
-                        destinationProjectId: destProjectId,
-                        accountId: accountId
-                    )
-                } catch {
-                    print("🔴 reassignToProject failed: \(error)")
-                }
-            }
-        } else if !routing.sameScope.isEmpty {
-            // Inventory-to-inventory: simple batch reassign (no projectId)
-            sameProjectBatchReassign(
-                items: routing.sameScope,
-                transactionId: transactionId,
-                accountId: accountId,
-                budgetCategoryId: liveTx.budgetCategoryId
-            )
-        }
-
-        // Cross-scope: use sellToProject (two-hop for project→project, single hop for inventory→project)
-        if !routing.crossScope.isEmpty, let destProjectId = destinationProjectId {
-            let ops = InventoryOperationsService()
-            Task {
-                do {
-                    try await ops.sellToProject(
-                        items: routing.crossScope,
-                        destinationProjectId: destProjectId,
-                        accountId: accountId,
-                        destinationCategoryId: liveTx.budgetCategoryId
-                    )
-                } catch {
-                    print("🔴 sellToProject failed: \(error)")
-                }
-            }
-        }
-
-        selectedIds.removeAll()
-        onDismiss()
-    }
-
-    /// Fallback batch write for inventory-scope transactions (no projectId).
-    private func sameProjectBatchReassign(
-        items: [Item],
-        transactionId: String,
-        accountId: String,
-        budgetCategoryId: String?
-    ) {
         let batch = FirestoreBatchWriter()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
@@ -353,7 +294,15 @@ struct AddExistingItemsPicker: View {
                 "transactionId": transactionId,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let budgetCategoryId, item.budgetCategoryId == nil {
+            // Move item into the destination project (handles cross-scope)
+            if let destProjectId = destinationProjectId {
+                fields["projectId"] = destProjectId
+            }
+            // Clear stale space link when changing projects
+            if item.projectId != destinationProjectId {
+                fields["spaceId"] = NSNull()
+            }
+            if let budgetCategoryId = liveTx.budgetCategoryId, item.budgetCategoryId == nil {
                 fields["budgetCategoryId"] = budgetCategoryId
             }
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
@@ -361,7 +310,7 @@ struct AddExistingItemsPicker: View {
             }
             batch.updateData(fields, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // Source transaction cleanup
+            // Remove from source transaction
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
@@ -370,7 +319,7 @@ struct AddExistingItemsPicker: View {
             }
         }
 
-        // Add to destination
+        // Add all items to destination transaction
         let newIds = items.compactMap(\.id)
         batch.updateData(
             ["itemIds": FieldValue.arrayUnion(newIds), "updatedAt": FieldValue.serverTimestamp()],
@@ -379,8 +328,11 @@ struct AddExistingItemsPicker: View {
 
         Task {
             do { try await batch.commit() }
-            catch { print("🔴 sameProjectBatchReassign failed: \(error)") }
+            catch { print("🔴 addItemsToTransaction batch failed: \(error)") }
         }
+
+        selectedIds.removeAll()
+        onDismiss()
     }
 
     // MARK: - Space Add
