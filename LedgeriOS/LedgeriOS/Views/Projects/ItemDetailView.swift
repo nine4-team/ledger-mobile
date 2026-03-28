@@ -31,6 +31,7 @@ struct ItemDetailView: View {
     @State private var showMakeCopies = false
     @State private var showStatusPicker = false
     @State private var showDeleteConfirmation = false
+    @State private var showRenameItem = false
 
     // Sheet-on-sheet sequencing
     @State private var menuPendingAction: (() -> Void)?
@@ -82,6 +83,12 @@ struct ItemDetailView: View {
                 items: actionMenuItems,
                 onSelectAction: { action in menuPendingAction = action }
             )
+        }
+        // Rename Item
+        .adaptivePresentation(isPresented: $showRenameItem, style: .picker) {
+            RenameItemModal(currentName: liveItem.displayName) { newName in
+                updateItem(fields: ["name": newName])
+            }
         }
         // Edit Details
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
@@ -192,9 +199,18 @@ struct ItemDetailView: View {
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(liveItem.displayName.isEmpty ? "Unnamed Item" : liveItem.displayName)
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
+            HStack {
+                Text(liveItem.displayName.isEmpty ? "Unnamed Item" : liveItem.displayName)
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button { showRenameItem = true } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Rename item")
+            }
 
             heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
             HStack(spacing: Spacing.xs) {
@@ -320,6 +336,7 @@ struct ItemDetailView: View {
             Text(notes)
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textPrimary)
+                .textSelection(.enabled)
                 .padding(.top, Spacing.xs)
         } else {
             Text("No notes")
@@ -537,9 +554,10 @@ struct ItemDetailView: View {
             return
         }
         let service = ItemsService()
+        nonisolated(unsafe) let f = fields
         Task {
             do {
-                try await service.updateItem(accountId: accountId, itemId: itemId, fields: fields)
+                try await service.updateItem(accountId: accountId, itemId: itemId, fields: f)
             } catch {
                 print("🔴 updateItem failed: \(error)")
             }

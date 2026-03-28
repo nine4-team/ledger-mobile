@@ -110,6 +110,7 @@
 		8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */; };
 		8C022C22D824861D91971EF3 /* EditProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */; };
 		8E2660D3F9C826B26BFF25EE /* ProjectFormValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */; };
+		2810C4C7175BB17D26069FC0 /* RenameItemModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E665AF5D09BF06D144848C6 /* RenameItemModal.swift */; };
 		91546636B6396B2F37B01783 /* EditSpaceDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */; };
 		938E5EF58A1ACE61DCC97776 /* BatchWriting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF876F4BCCF157A3367AC517 /* BatchWriting.swift */; };
 		9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */; };
@@ -369,6 +370,7 @@
 		3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditTransactionDetailsModal.swift; sourceTree = "<group>"; };
 		453BAC1E5197316576CCE8E1 /* InventoryContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryContext.swift; sourceTree = "<group>"; };
 		46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditSpaceDetailsModal.swift; sourceTree = "<group>"; };
+		7E665AF5D09BF06D144848C6 /* RenameItemModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RenameItemModal.swift; sourceTree = "<group>"; };
 		47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountingTabView.swift; sourceTree = "<group>"; };
 		47370982DDDB5064026D1B45 /* Enums.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		4745C15BA2924A183A82E249 /* ItemsTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemsTabView.swift; sourceTree = "<group>"; };
@@ -1145,6 +1147,7 @@
 				00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */,
 				A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */,
 				46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */,
+				7E665AF5D09BF06D144848C6 /* RenameItemModal.swift */,
 				619B6C9FECA4E1812986ED09 /* EditChecklistModal.swift */,
 				A0AA3157B5010C6E5E0A36C0 /* ReassignToProjectModal.swift */,
 				RTPM000100000000000M0001 /* ReassignTransactionToProjectModal.swift */,
@@ -1465,6 +1468,7 @@
 				F45A8A2A63FE827BF26CFD61 /* ItemDetailCalculations.swift in Sources */,
 				949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */,
 				91546636B6396B2F37B01783 /* EditSpaceDetailsModal.swift in Sources */,
+				2810C4C7175BB17D26069FC0 /* RenameItemModal.swift in Sources */,
 				83BD186B0686885C821BF8E6 /* EditChecklistModal.swift in Sources */,
 				53268E107D507FF86118D9AE /* ReassignToProjectModal.swift in Sources */,
 				E9E5857CC5B1B42516862B32 /* SellToBusinessModal.swift in Sources */,
