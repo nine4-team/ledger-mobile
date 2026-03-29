@@ -37,7 +37,9 @@ private func makeTransaction(
     budgetCategoryId: String? = nil,
     amountCents: Int? = nil,
     isCanonicalInventorySale: Bool? = nil,
-    inventorySaleDirection: InventorySaleDirection? = nil
+    inventorySaleDirection: InventorySaleDirection? = nil,
+    status: TransactionStatus? = nil,
+    isComplete: Bool? = nil
 ) -> Transaction {
     var tx = Transaction()
     tx.id = id
@@ -49,6 +51,8 @@ private func makeTransaction(
     tx.amountCents = amountCents
     tx.isCanonicalInventorySale = isCanonicalInventorySale
     tx.inventorySaleDirection = inventorySaleDirection
+    tx.status = status
+    tx.isComplete = isComplete
     return tx
 }
 
@@ -650,5 +654,34 @@ struct CentralizedSearchTests {
         let tx = makeTransaction(source: "Amazon")
         let result = SearchCalculations.transactionMatches(transaction: tx, query: "amazon")
         #expect(result == true)
+    }
+}
+
+@Suite("Transaction Needs Review Filter")
+struct TransactionNeedsReviewFilterTests {
+
+    @Test("Needs review filter excludes canceled transactions")
+    func canceledTransactionsExcluded() {
+        let incomplete = makeTransaction(source: "Incomplete")
+        let canceled = makeTransaction(source: "Canceled", status: .canceled)
+        let results = TransactionFilterSortCalculations.applyFilter(
+            [incomplete, canceled], filter: .needsReview
+        )
+        #expect(results.count == 1)
+        #expect(results.first?.source == "Incomplete")
+    }
+
+    @Test("Needs review filter includes incomplete non-canceled transactions")
+    func incompleteNonCanceledIncluded() {
+        let tx = makeTransaction(source: "Pending", isComplete: false)
+        let results = TransactionFilterSortCalculations.applyFilter([tx], filter: .needsReview)
+        #expect(results.count == 1)
+    }
+
+    @Test("Needs review filter excludes completed transactions")
+    func completedExcluded() {
+        let tx = makeTransaction(source: "Done", isComplete: true)
+        let results = TransactionFilterSortCalculations.applyFilter([tx], filter: .needsReview)
+        #expect(results.isEmpty)
     }
 }

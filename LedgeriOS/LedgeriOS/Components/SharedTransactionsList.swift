@@ -102,7 +102,7 @@ enum TransactionFilterSortCalculations {
         case .all:
             return transactions
         case .needsReview:
-            return transactions.filter { $0.isComplete != true }
+            return transactions.filter { $0.isComplete != true && $0.status != .canceled }
         case .hasReceipt:
             return transactions.filter { $0.hasEmailReceipt == true || !($0.receiptImages ?? []).isEmpty }
         case .purchase:
