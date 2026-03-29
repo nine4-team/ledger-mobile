@@ -1077,10 +1077,11 @@ struct ReturnToTransactionExecutionTests {
 
         #expect(batch.commitCalled)
 
-        // Item update — transactionId changed, projectId NOT changed
+        // Item update — transactionId changed, status set to returned, projectId NOT changed
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
         #expect(itemUpdates.count == 1)
         #expect(itemUpdates[0].fields["transactionId"] as? String == destTx)
+        #expect(itemUpdates[0].fields["status"] as? String == "returned")
         #expect(itemUpdates[0].fields["projectId"] == nil) // Not touched
         #expect(itemUpdates[0].fields.keys.contains("updatedAt"))
 
@@ -1167,6 +1168,7 @@ struct ReturnToTransactionExecutionTests {
 
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
         #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 4200)
+        #expect(itemUpdates[0].fields["status"] as? String == "returned")
     }
 
     @Test("projectPriceCents NOT overwritten when already set")
@@ -1216,10 +1218,12 @@ struct ReturnToTransactionExecutionTests {
             items: items, destinationTransactionId: destTx, accountId: acct
         )
 
-        // 3 item updates
-        #expect(batch.updatesForPath("accounts/\(acct)/items/i1").count == 1)
-        #expect(batch.updatesForPath("accounts/\(acct)/items/i2").count == 1)
-        #expect(batch.updatesForPath("accounts/\(acct)/items/i3").count == 1)
+        // 3 item updates, all with status "returned"
+        for itemId in ["i1", "i2", "i3"] {
+            let updates = batch.updatesForPath("accounts/\(acct)/items/\(itemId)")
+            #expect(updates.count == 1)
+            #expect(updates[0].fields["status"] as? String == "returned")
+        }
 
         // 3 lineage edges, all "returned"
         let allEdges = batch.lineageEdges(accountId: acct)

@@ -379,9 +379,10 @@ struct InventoryOperationsService {
         for item in items {
             guard let itemId = item.id else { continue }
 
-            // Update item's transaction link (projectId stays the same)
+            // Update item's transaction link and status (projectId stays the same)
             var itemUpdate: [String: Any] = [
                 "transactionId": destinationTransactionId,
+                "status": ItemStatus.returned.rawValue,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {

@@ -55,4 +55,8 @@ struct Transaction: Codable, Identifiable, Hashable {
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"
     }
+
+    var isReturnTransaction: Bool {
+        transactionType == .return || canonicalKind == "return"
+    }
 }

@@ -419,8 +419,6 @@ struct ItemDetailView: View {
         let hasStatus = liveItem.status != nil
         let hasTx = liveItem.transactionId != nil
         let hasSpace = liveItem.spaceId != nil
-        let isReturnStatus = liveItem.status == .toReturn || liveItem.status == .returned
-
         items += ItemMenuBuilder.buildSingleItemMenu(
             context: .detail,
             scope: itemScope,
@@ -429,7 +427,7 @@ struct ItemDetailView: View {
                 onClearStatus: hasStatus ? { clearItemField("status") } : nil,
                 onSetTransaction: { showTransactionPicker = true },
                 onClearTransaction: hasTx ? { clearItemField("transactionId") } : nil,
-                onMoveToReturnTransaction: isReturnStatus ? { showReturnTransactionPicker = true } : nil,
+                onMoveToReturnTransaction: { showReturnTransactionPicker = true },
                 onSetSpace: { showSetSpace = true },
                 onClearSpace: hasSpace ? { clearItemField("spaceId") } : nil,
                 onSellToBusiness: itemScope == .project ? { showSellToBusiness = true } : nil,

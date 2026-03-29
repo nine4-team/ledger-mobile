@@ -53,7 +53,10 @@ struct TransactionDetailView: View {
     }
 
     private var activeItems: [Item] {
-        transactionItems.filter { $0.status != .returned && $0.status != .sold }
+        if currentTransaction.isReturnTransaction {
+            return transactionItems
+        }
+        return transactionItems.filter { $0.status != .returned && $0.status != .sold }
     }
 
     private var returnedItems: [Item] { lineageReturnedItems }
@@ -591,7 +594,6 @@ struct TransactionDetailView: View {
             ) {
                 groupedItemCards(
                     for: returnedItems,
-                    statusOverride: "Returned",
                     expandedGroups: $expandedReturnedGroups
                 )
                 .padding(.top, Spacing.xs)
@@ -624,7 +626,7 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private func groupedItemCards(
         for items: [Item],
-        statusOverride: String,
+        statusOverride: String? = nil,
         expandedGroups: Binding<Set<String>>
     ) -> some View {
         let groups = ListFilterSortCalculations.groupItems(items)

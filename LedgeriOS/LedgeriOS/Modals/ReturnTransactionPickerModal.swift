@@ -13,7 +13,7 @@ struct ReturnTransactionPickerModal: View {
     private var returnTransactions: [Transaction] {
         transactions
             .filter { tx in
-                let isReturn = tx.transactionType == .return || tx.canonicalKind == "return"
+                let isReturn = tx.isReturnTransaction
                 let isIncomplete = tx.status != .completed
                 let isNotCanceled = tx.status != .canceled
                 return isReturn && isIncomplete && isNotCanceled

@@ -60,6 +60,10 @@ struct AddExistingItemsPicker: View {
         return nil
     }
 
+    private var destinationIsReturn: Bool {
+        currentTransaction?.isReturnTransaction ?? false
+    }
+
     private var addedIds: Set<String> {
         switch context {
         case .transaction(let tx):
@@ -153,6 +157,7 @@ struct AddExistingItemsPicker: View {
                 message: conflictMessage,
                 itemNames: conflictItemNames,
                 onConfirm: { executeAdd(items: pendingItems) },
+                onReturn: destinationIsReturn ? { executeReturn(items: pendingItems) } : nil,
                 onCancel: { pendingItems.removeAll() }
             )
         }
@@ -294,6 +299,10 @@ struct AddExistingItemsPicker: View {
                 "transactionId": transactionId,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
+            // Set status to "returned" when adding to a return transaction
+            if liveTx.isReturnTransaction {
+                fields["status"] = ItemStatus.returned.rawValue
+            }
             // Move item into the destination project (handles cross-scope)
             if let destProjectId = destinationProjectId {
                 fields["projectId"] = destProjectId
@@ -329,6 +338,29 @@ struct AddExistingItemsPicker: View {
         Task {
             do { try await batch.commit() }
             catch { print("🔴 addItemsToTransaction batch failed: \(error)") }
+        }
+
+        selectedIds.removeAll()
+        onDismiss()
+    }
+
+    // MARK: - Return Add
+
+    private func executeReturn(items: [Item]) {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = currentTransaction?.id else { return }
+
+        let service = InventoryOperationsService()
+        Task {
+            do {
+                try await service.returnToTransaction(
+                    items: items,
+                    destinationTransactionId: transactionId,
+                    accountId: accountId
+                )
+            } catch {
+                print("🔴 executeReturn failed: \(error)")
+            }
         }
 
         selectedIds.removeAll()
