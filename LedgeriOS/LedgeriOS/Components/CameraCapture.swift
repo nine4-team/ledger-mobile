@@ -2,144 +2,41 @@
 import AVFoundation
 import SwiftUI
 
-// MARK: - CameraManager
+// MARK: - CameraEngine
 
-@MainActor
-@Observable
-final class CameraManager: NSObject {
-    var captureCount = 0
-    var lastThumbnail: UIImage?
-    var showFlash = false
-    var isSessionRunning = false
-    var permissionDenied = false
-    var isAdjustingFocus = false
-
-    @ObservationIgnored
-    nonisolated(unsafe) private(set) var session = AVCaptureSession()
-    @ObservationIgnored
-    nonisolated(unsafe) private var photoOutput = AVCapturePhotoOutput()
-    @ObservationIgnored
-    nonisolated(unsafe) private var videoOutput = AVCaptureVideoDataOutput()
-    @ObservationIgnored
-    nonisolated(unsafe) private var focusObservation: NSKeyValueObservation?
-    @ObservationIgnored
-    nonisolated(unsafe) private var continuousAFRestoreWork: DispatchWorkItem?
-
+final class CameraEngine: NSObject, @unchecked Sendable {
+    let session = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
+    private let videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session")
-    private var onCapture: ((Data) -> Void)?
+    private let videoQueue = DispatchQueue(label: "camera.video")
+    private var focusObservation: NSKeyValueObservation?
+    private var captureCompletion: (@MainActor (UIImage, Data) -> Void)?
 
-    func checkPermissionAndStart() async {
-        let status = AVCaptureDevice.authorizationStatus(for: .video)
-        switch status {
-        case .authorized:
-            configureSession()
-        case .notDetermined:
-            let granted = await AVCaptureDevice.requestAccess(for: .video)
-            if granted { configureSession() } else { permissionDenied = true }
-        default:
-            permissionDenied = true
-        }
-    }
+    var onSessionStarted: (@MainActor () -> Void)?
+    var onCapture: (@MainActor (UIImage, Data) -> Void)?
+    var onFocusStateChanged: (@MainActor (Bool) -> Void)?
 
-    func capturePhoto(onCapture: @escaping (Data) -> Void) {
-        self.onCapture = onCapture
-        sessionQueue.async { [self] in
-            let settings = AVCapturePhotoSettings()
-            settings.photoQualityPrioritization = .speed
-            photoOutput.capturePhoto(with: settings, delegate: self)
-        }
-    }
-
-    /// devicePoint is in normalized camera coordinates (0–1), produced by
-    /// AVCaptureVideoPreviewLayer.captureDevicePointConverted(fromLayerPoint:).
-    func focus(at devicePoint: CGPoint) {
-        sessionQueue.async { [self] in
-            guard let device = (session.inputs.first as? AVCaptureDeviceInput)?.device else {
-                print("[Camera] focus: no device input found")
-                return
-            }
-            print("[Camera] focus: devicePoint=\(devicePoint), focusSupported=\(device.isFocusPointOfInterestSupported), currentFocusMode=\(device.focusMode.rawValue), isAdjusting=\(device.isAdjustingFocus)")
-            do {
-                try device.lockForConfiguration()
-                if device.isFocusPointOfInterestSupported {
-                    device.focusPointOfInterest = devicePoint
-                    // .autoFocus triggers an immediate single-shot focus operation at the
-                    // new point. Setting .continuousAutoFocus when already in that mode is
-                    // a no-op — the device sees no state change and does not move the lens.
-                    // The KVO callback switches back to .continuousAutoFocus once done.
-                    device.focusMode = .autoFocus
-                }
-                if device.isExposurePointOfInterestSupported {
-                    device.exposurePointOfInterest = devicePoint
-                    device.exposureMode = .continuousAutoExposure
-                }
-                device.unlockForConfiguration()
-                print("[Camera] focus: configuration applied, focusMode=\(device.focusMode.rawValue), isAdjusting=\(device.isAdjustingFocus)")
-            } catch {
-                print("[Camera] focus: lockForConfiguration failed: \(error)")
-                return
-            }
-
-            // Signal adjusting before the KVO fires so the indicator appears active immediately
-            Task { @MainActor [weak self] in self?.isAdjustingFocus = true }
-
-            // Cancel any pending continuous-AF restore from a previous tap
-            continuousAFRestoreWork?.cancel()
-            continuousAFRestoreWork = nil
-
-            focusObservation?.invalidate()
-            let queue = sessionQueue  // captured to avoid accessing @MainActor property from closure
-            focusObservation = device.observe(\.isAdjustingFocus, options: [.new]) { [weak self, queue] captureDevice, change in
-                guard let isAdjusting = change.newValue else { return }
-                print("[Camera] KVO isAdjustingFocus → \(isAdjusting), lensPosition=\(captureDevice.lensPosition)")
-
-                if !isAdjusting {
-                    // One-shot: invalidate so continuous-AF evaluation doesn't re-fire this callback
-                    // and recreate the hunting loop (H4).
-                    self?.focusObservation?.invalidate()
-                    self?.focusObservation = nil
-                    // Restore continuous AF after 1s so the lens has time to settle on the subject.
-                    // .autoFocus consistently picks 0.0 (wrong). Immediately switch to
-                    // .continuousAutoFocus so it re-evaluates with full range and finds
-                    // the correct position. The KVO is already invalidated at this point
-                    // so there is no risk of recreating the H4 hunting loop.
-                    let work = DispatchWorkItem { [weak captureDevice] in
-                        guard let device = captureDevice else { return }
-                        print("[Camera] continuousAF restore: pre-restore lensPosition=\(device.lensPosition)")
-                        if device.isFocusModeSupported(.continuousAutoFocus) {
-                            try? device.lockForConfiguration()
-                            device.focusMode = .continuousAutoFocus
-                            device.unlockForConfiguration()
-                        }
-                    }
-                    self?.continuousAFRestoreWork = work
-                    queue.async(execute: work)
-                }
-                Task { @MainActor [weak self] in self?.isAdjustingFocus = isAdjusting }
-            }
-        }
-    }
-
-    func stopSession() {
-        sessionQueue.async { [self] in
-            if session.isRunning { session.stopRunning() }
-        }
-    }
-
-    private func configureSession() {
+    func start() {
         sessionQueue.async { [self] in
             session.beginConfiguration()
             session.sessionPreset = .photo
 
-            guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+            // Use the virtual multi-lens device (what the built-in Camera app uses).
+            // Falls back to the raw wide-angle if no multi-lens device is available.
+            let camera: AVCaptureDevice? =
+                AVCaptureDevice.default(.builtInTripleCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInDualCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+
+            guard let camera,
                   let input = try? AVCaptureDeviceInput(device: camera),
                   session.canAddInput(input) else {
                 session.commitConfiguration()
                 return
             }
             session.addInput(input)
-
-            print("[Camera] session: device=\(camera.localizedName), focusMode=\(camera.focusMode.rawValue), focusSupported=\(camera.isFocusPointOfInterestSupported)")
 
             guard session.canAddOutput(photoOutput) else {
                 session.commitConfiguration()
@@ -148,10 +45,10 @@ final class CameraManager: NSObject {
             session.addOutput(photoOutput)
             photoOutput.maxPhotoQualityPrioritization = .speed
 
-            // A photo-only session lacks the continuous frame pipeline that contrast-detection
-            // AF requires. Adding a discard-only video output provides that pipeline without
-            // any processing overhead — no delegate, no stored frames.
+            // Video output with active delegate — provides the continuous frame
+            // pipeline that the AF system needs on this hardware.
             videoOutput.alwaysDiscardsLateVideoFrames = true
+            videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
             if session.canAddOutput(videoOutput) {
                 session.addOutput(videoOutput)
             }
@@ -160,18 +57,103 @@ final class CameraManager: NSObject {
             session.startRunning()
 
             if let device = (session.inputs.first as? AVCaptureDeviceInput)?.device {
-                print("[Camera] session started: lensPosition=\(device.lensPosition), focusMode=\(device.focusMode.rawValue), focusPoint=\(device.focusPointOfInterest)")
+                print("[Camera] start: device=\(camera.localizedName), format=\(device.activeFormat.description)")
+
+                try? device.lockForConfiguration()
+                device.focusMode = .continuousAutoFocus
+                device.exposureMode = .continuousAutoExposure
+                device.isSubjectAreaChangeMonitoringEnabled = true
+                device.unlockForConfiguration()
             }
 
-            Task { @MainActor in self.isSessionRunning = true }
+            // Re-trigger AF when scene changes (combats drift)
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(subjectAreaDidChange),
+                name: .AVCaptureDeviceSubjectAreaDidChange,
+                object: camera
+            )
+
+            Task { @MainActor [weak self] in self?.onSessionStarted?() }
+        }
+    }
+
+    @objc private func subjectAreaDidChange(_ notification: Notification) {
+        sessionQueue.async { [self] in
+            guard let device = (session.inputs.first as? AVCaptureDeviceInput)?.device else { return }
+            try? device.lockForConfiguration()
+            device.focusMode = .continuousAutoFocus
+            device.exposureMode = .continuousAutoExposure
+            device.unlockForConfiguration()
+        }
+    }
+
+    func stop() {
+        sessionQueue.async { [self] in
+            NotificationCenter.default.removeObserver(self, name: .AVCaptureDeviceSubjectAreaDidChange, object: nil)
+            if session.isRunning { session.stopRunning() }
+        }
+    }
+
+    func capturePhoto(completion: @escaping @MainActor (UIImage, Data) -> Void) {
+        sessionQueue.async { [self] in
+            captureCompletion = completion
+            let settings = AVCapturePhotoSettings()
+            settings.photoQualityPrioritization = .speed
+            photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    func focus(at devicePoint: CGPoint) {
+        sessionQueue.async { [self] in
+            guard let device = (session.inputs.first as? AVCaptureDeviceInput)?.device else { return }
+
+            do {
+                try device.lockForConfiguration()
+                if device.isFocusPointOfInterestSupported {
+                    device.focusPointOfInterest = devicePoint
+                    device.focusMode = .autoFocus
+                }
+                if device.isExposurePointOfInterestSupported {
+                    device.exposurePointOfInterest = devicePoint
+                    device.exposureMode = .autoExpose
+                }
+                // Disable monitoring during tap — re-enabled when AF settles
+                device.isSubjectAreaChangeMonitoringEnabled = false
+                device.unlockForConfiguration()
+            } catch { return }
+
+            Task { @MainActor [weak self] in self?.onFocusStateChanged?(true) }
+
+            focusObservation?.invalidate()
+            focusObservation = device.observe(\.isAdjustingFocus, options: [.new]) { [weak self] dev, change in
+                guard let isAdjusting = change.newValue, !isAdjusting else { return }
+                self?.sessionQueue.async { [weak self] in
+                    self?.focusObservation?.invalidate()
+                    self?.focusObservation = nil
+                    // Re-enable monitoring so drift triggers re-focus
+                    try? dev.lockForConfiguration()
+                    dev.isSubjectAreaChangeMonitoringEnabled = true
+                    dev.unlockForConfiguration()
+                }
+                Task { @MainActor [weak self] in self?.onFocusStateChanged?(false) }
+            }
         }
     }
 }
 
-// MARK: - AVCapturePhotoCaptureDelegate
+// MARK: - CameraEngine + AVCaptureVideoDataOutputSampleBufferDelegate
 
-extension CameraManager: AVCapturePhotoCaptureDelegate {
-    nonisolated func photoOutput(
+extension CameraEngine: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // No-op — frame pipeline activation only
+    }
+}
+
+// MARK: - CameraEngine + AVCapturePhotoCaptureDelegate
+
+extension CameraEngine: AVCapturePhotoCaptureDelegate {
+    func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
@@ -185,16 +167,74 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
         let renderer = UIGraphicsImageRenderer(size: thumbSize)
         let thumbnail = renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: thumbSize)) }
 
+        let perCaptureCompletion = captureCompletion
+        captureCompletion = nil
+
         Task { @MainActor [weak self] in
+            perCaptureCompletion?(thumbnail, jpegData)
+            self?.onCapture?(thumbnail, jpegData)
+        }
+    }
+}
+
+// MARK: - CameraManager
+
+@MainActor
+@Observable
+final class CameraManager {
+    var isSessionRunning = false
+    var captureCount = 0
+    var lastThumbnail: UIImage?
+    var showFlash = false
+    var permissionDenied = false
+    var isAdjustingFocus = false
+
+    private let engine = CameraEngine()
+
+    var session: AVCaptureSession { engine.session }
+
+    init() {
+        engine.onSessionStarted = { [weak self] in
+            self?.isSessionRunning = true
+        }
+        engine.onCapture = { [weak self] thumbnail, _ in
             guard let self else { return }
             lastThumbnail = thumbnail
             captureCount += 1
-            self.onCapture?(jpegData)
-            self.onCapture = nil
             withAnimation(.easeIn(duration: 0.05)) { showFlash = true }
-            try? await Task.sleep(for: .milliseconds(100))
-            withAnimation(.easeOut(duration: 0.15)) { showFlash = false }
+            Task {
+                try? await Task.sleep(for: .milliseconds(100))
+                withAnimation(.easeOut(duration: 0.15)) { self.showFlash = false }
+            }
         }
+        engine.onFocusStateChanged = { [weak self] isAdjusting in
+            self?.isAdjustingFocus = isAdjusting
+        }
+    }
+
+    func checkPermissionAndStart() async {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            engine.start()
+        case .notDetermined:
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            if granted { engine.start() } else { permissionDenied = true }
+        default:
+            permissionDenied = true
+        }
+    }
+
+    func capturePhoto(onCapture: @escaping (Data) -> Void) {
+        engine.capturePhoto { _, data in onCapture(data) }
+    }
+
+    func focus(at devicePoint: CGPoint) {
+        engine.focus(at: devicePoint)
+    }
+
+    func stopSession() {
+        engine.stop()
     }
 }
 
