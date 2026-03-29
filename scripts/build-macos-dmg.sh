@@ -20,13 +20,14 @@ ARCHIVE_PATH="/tmp/LedgeriOS.xcarchive"
 EXPORT_PATH="/tmp/LedgeriOS-Export"
 EXPORT_PLIST="/tmp/ExportOptions.plist"
 DERIVED_DATA="/tmp/LedgeriOS-DerivedData-$(date +%s)"
-STAGING="/tmp/LedgerDMGStaging"
+SPARSE_PATH="/tmp/Ledger.sparseimage"
+MOUNT_POINT="/tmp/ledger_dmg_mount"
 DMG_PATH="/tmp/Ledger.dmg"
 DESKTOP_PATH="$HOME/Desktop/Ledger.dmg"
 KEYCHAIN_PROFILE="ledger-notarize"
 
 echo "==> Cleaning previous build artifacts..."
-rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH" "$STAGING" "$DMG_PATH"
+rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH" "$SPARSE_PATH" "$DMG_PATH"
 
 echo "==> Writing ExportOptions.plist..."
 cat > "$EXPORT_PLIST" <<'EOF'
@@ -61,9 +62,13 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates
 
 echo "==> Creating DMG..."
-mkdir -p "$STAGING"
-cp -R "$EXPORT_PATH/LedgeriOS.app" "$STAGING/Ledger.app"
-hdiutil create -volname "LedgerInstaller" -srcfolder "$STAGING" -ov -format UDZO "$DMG_PATH"
+# Use sparse image + rsync to avoid com.apple.provenance xattr blocking hdiutil -srcfolder
+hdiutil create -size 200m -fs HFS+ -volname "LedgerInstaller" -type SPARSE "$SPARSE_PATH"
+hdiutil attach "$SPARSE_PATH" -mountpoint "$MOUNT_POINT"
+rsync -a "$EXPORT_PATH/LedgeriOS.app/" "$MOUNT_POINT/Ledger.app/"
+hdiutil detach "$MOUNT_POINT"
+hdiutil convert "$SPARSE_PATH" -format UDZO -o "$DMG_PATH"
+rm -f "$SPARSE_PATH"
 
 echo "==> Notarizing..."
 xcrun notarytool submit "$DMG_PATH" \
