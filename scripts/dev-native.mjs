@@ -156,7 +156,7 @@ async function main() {
   }
 
   // 6. Build and launch SwiftUI app on simulator
-  const SIMULATOR_NAME = 'iPhone 16e';
+  const SIMULATOR_NAME = 'iPhone 17e';
   const SCHEME = 'LedgeriOS (Emulator)';
   const BUNDLE_ID = 'apps.nine4.ledger';
 

@@ -40,10 +40,15 @@ struct TransactionDetailView: View {
     @State private var expandedReturnedGroups: Set<String> = []
     @State private var expandedSoldGroups: Set<String> = []
 
+    // Document-level listener for this transaction (query listeners don't reliably
+    // fire after updateData on an already-matching document).
+    @State private var liveTransaction: Transaction?
+    @State private var transactionListener: ListenerRegistration?
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
-        projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
     }
 
     private var transactionItems: [Item] {
@@ -130,6 +135,19 @@ struct TransactionDetailView: View {
         }
         .task(id: transaction.id) {
             await loadLineageItems()
+        }
+        .onAppear {
+            guard let accountId = accountContext.currentAccountId,
+                  let transactionId = transaction.id else { return }
+            transactionListener?.remove()
+            transactionListener = TransactionsService()
+                .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { tx in
+                    liveTransaction = tx
+                }
+        }
+        .onDisappear {
+            transactionListener?.remove()
+            transactionListener = nil
         }
         #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)

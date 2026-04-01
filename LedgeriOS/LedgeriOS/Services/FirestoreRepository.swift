@@ -71,9 +71,18 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
     func subscribe(where field: String, isEqualTo value: Any, onChange: @escaping ([T]) -> Void) -> ListenerRegistration {
         collectionRef
             .whereField(field, isEqualTo: value)
-            .addSnapshotListener { snapshot, error in
-                guard let docs = snapshot?.documents else { return }
+            .addSnapshotListener { [collectionPath] snapshot, error in
+                if let error {
+                    print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot error: \(error)")
+                }
+                guard let docs = snapshot?.documents else {
+                    print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) snapshot nil")
+                    return
+                }
                 let items = docs.compactMap { doc in Self.decodeDocument(doc) }
+                if items.count != docs.count {
+                    print("[FirestoreRepo] \(collectionPath) WHERE \(field)==\(value) decode dropped \(docs.count - items.count)/\(docs.count) docs")
+                }
                 onChange(items)
             }
     }
