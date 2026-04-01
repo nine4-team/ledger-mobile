@@ -47,8 +47,8 @@ struct ReceiptListParserTests {
         let input = "01 - DINING TABLE SET 888001 $2,499.99 T"
         let result = ReceiptListParser.parseReceiptText(input)
         #expect(result.items.count == 1)
-        // Double floating-point truncation: Int(2499.99 * 100) = 249998
-        #expect(result.items[0].priceCents == 249998)
+        // Correctly rounds: 2499.99 * 100 → 249999
+        #expect(result.items[0].priceCents == 249999)
     }
 
     // MARK: - Lines without tax flag

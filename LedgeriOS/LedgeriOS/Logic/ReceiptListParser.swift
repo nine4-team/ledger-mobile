@@ -46,7 +46,7 @@ enum ReceiptListParser {
                 let name = String(match.1).trimmingCharacters(in: .whitespaces)
                 let sku = String(match.2)
                 let priceStr = String(match.3).replacingOccurrences(of: ",", with: "")
-                let priceCents = Int((Double(priceStr) ?? 0) * 100)
+                let priceCents = Int(((Double(priceStr) ?? 0) * 100).rounded())
 
                 items.append(ParsedItem(name: name, sku: sku, priceCents: priceCents))
             } else {

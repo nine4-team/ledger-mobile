@@ -53,11 +53,9 @@ enum SearchCalculations {
         }
 
         // Amount fields: purchasePriceCents, projectPriceCents, marketValueCents
-        if let range = parseAmountQuery(query) {
-            let amounts = [item.purchasePriceCents, item.projectPriceCents, item.marketValueCents].compactMap { $0 }
-            if amounts.contains(where: { range.contains($0) }) {
-                return true
-            }
+        let amounts = [item.purchasePriceCents, item.projectPriceCents, item.marketValueCents].compactMap { $0 }
+        if amounts.contains(where: { amountMatch(query: query, cents: $0) }) {
+            return true
         }
 
         return false
@@ -76,10 +74,8 @@ enum SearchCalculations {
         }
 
         // Amount field: amountCents
-        if let range = parseAmountQuery(query), let cents = transaction.amountCents {
-            if range.contains(cents) {
-                return true
-            }
+        if let cents = transaction.amountCents, amountMatch(query: query, cents: cents) {
+            return true
         }
 
         return false
@@ -106,51 +102,24 @@ enum SearchCalculations {
         sku.filter { $0.isLetter || $0.isNumber }.lowercased()
     }
 
-    /// Parses a query string into a cents range for amount prefix matching.
+    /// Checks if a cents value's formatted dollar amount starts with the query.
     ///
-    /// - "40" → 4000...4099 (any amount from $40.00 to $40.99)
-    /// - "40.0" → 4000...4009 (any amount from $40.00 to $40.09)
-    /// - "40.00" → 4000...4000 (exact $40.00)
-    /// - "$1,200" → 120000...120099
-    /// - "abc" → nil
-    static func parseAmountQuery(_ query: String) -> ClosedRange<Int>? {
-        // Strip $ and ,
+    /// Formats cents as a decimal string (e.g. 637000 → "6370.00") and checks
+    /// if it has the cleaned query as a prefix. This matches left-to-right as
+    /// the user types, handling all edge cases naturally:
+    ///
+    /// - "637" matches 637000 ($6,370.00) — "6370.00".hasPrefix("637")
+    /// - "407.87" matches 40787 ($407.87) — exact
+    /// - "6370." matches 637000 — trailing dot works
+    /// - "29" matches 2999 ($29.99) but NOT 12999 ($129.99)
+    /// - Uses abs() so negative amounts (returns) are also found
+    static func amountMatch(query: String, cents: Int) -> Bool {
         let cleaned = query.replacingOccurrences(of: "$", with: "")
             .replacingOccurrences(of: ",", with: "")
-
-        guard !cleaned.isEmpty else { return nil }
-
-        let parts = cleaned.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
-
-        guard let integerPart = Int(parts[0]) else { return nil }
-
-        if parts.count == 1 {
-            // Integer only: "40" → 4000...4099
-            let low = integerPart * 100
-            return low...(low + 99)
-        }
-
-        let decimalString = String(parts[1])
-
-        // Validate decimal part is numeric
-        guard !decimalString.isEmpty, decimalString.allSatisfy({ $0.isNumber }) else { return nil }
-
-        if decimalString.count == 1 {
-            // One decimal digit: "40.0" → 4000...4009
-            guard let d = Int(decimalString) else { return nil }
-            let low = integerPart * 100 + d * 10
-            return low...(low + 9)
-        }
-
-        if decimalString.count == 2 {
-            // Two decimal digits: "40.00" → 4000...4000 (exact)
-            guard let decimalCents = Int(decimalString) else { return nil }
-            let cents = integerPart * 100 + decimalCents
-            return cents...cents
-        }
-
-        // More than 2 decimal digits — not a valid amount query
-        return nil
+        guard !cleaned.isEmpty, let first = cleaned.first,
+              first.isNumber || first == "." else { return false }
+        let formatted = String(format: "%.2f", abs(Double(cents)) / 100.0)
+        return formatted.hasPrefix(cleaned)
     }
 
     // MARK: - Helpers

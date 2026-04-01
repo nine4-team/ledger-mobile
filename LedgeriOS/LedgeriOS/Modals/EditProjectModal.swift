@@ -449,6 +449,6 @@ struct EditProjectModal: View {
             .replacingOccurrences(of: "$", with: "")
             .replacingOccurrences(of: ",", with: "")
         guard let value = Double(cleaned), value >= 0 else { return 0 }
-        return Int(value * 100)
+        return Int(round(value * 100))
     }
 }

@@ -338,6 +338,6 @@ struct NewTransactionView: View {
             .replacingOccurrences(of: "$", with: "")
             .replacingOccurrences(of: ",", with: "")
         guard !cleaned.isEmpty, let value = Double(cleaned), value >= 0 else { return nil }
-        return Int(value * 100)
+        return Int(round(value * 100))
     }
 }

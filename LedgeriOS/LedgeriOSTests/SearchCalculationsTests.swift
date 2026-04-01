@@ -78,140 +78,113 @@ private func makeCategory(
     return cat
 }
 
-// MARK: - Amount Prefix-Range Tests
+// MARK: - Amount Match Tests
 
-@Suite("Amount Prefix-Range Parsing")
-struct AmountPrefixRangeTests {
+@Suite("Amount Prefix Match")
+struct AmountMatchTests {
 
-    @Test("Integer query: 40 → 4000...4099")
-    func integerQuery() {
-        let range = SearchCalculations.parseAmountQuery("40")
-        #expect(range == 4000...4099)
+    // MARK: - amountMatch unit tests
+
+    @Test("Partial dollar prefix: 637 matches $6,370.00")
+    func partialDollarPrefix() {
+        #expect(SearchCalculations.amountMatch(query: "637", cents: 637000) == true)
     }
 
-    @Test("One decimal query: 40.0 → 4000...4009")
-    func oneDecimalQuery() {
-        let range = SearchCalculations.parseAmountQuery("40.0")
-        #expect(range == 4000...4009)
+    @Test("Full dollar: 6370 matches $6,370.00")
+    func fullDollar() {
+        #expect(SearchCalculations.amountMatch(query: "6370", cents: 637000) == true)
     }
 
-    @Test("One decimal query: 40.1 → 4010...4019")
-    func oneDecimalQueryVariant() {
-        let range = SearchCalculations.parseAmountQuery("40.1")
-        #expect(range == 4010...4019)
+    @Test("Trailing dot: 6370. matches $6,370.00")
+    func trailingDot() {
+        #expect(SearchCalculations.amountMatch(query: "6370.", cents: 637000) == true)
     }
 
-    @Test("Two decimal query: 40.00 → 4000...4000 (exact)")
-    func twoDecimalQuery() {
-        let range = SearchCalculations.parseAmountQuery("40.00")
-        #expect(range == 4000...4000)
+    @Test("Full amount: 6370.00 matches $6,370.00")
+    func fullAmount() {
+        #expect(SearchCalculations.amountMatch(query: "6370.00", cents: 637000) == true)
     }
 
-    @Test("Dollar sign stripped: $40 → same as 40")
-    func dollarSignStripped() {
-        let range = SearchCalculations.parseAmountQuery("$40")
-        #expect(range == 4000...4099)
+    @Test("Exact cents: 407.87 matches 40787")
+    func exactCents() {
+        #expect(SearchCalculations.amountMatch(query: "407.87", cents: 40787) == true)
     }
 
-    @Test("Comma stripped: 1,200 → 120000...120099")
-    func commaStripped() {
-        let range = SearchCalculations.parseAmountQuery("1,200")
-        #expect(range == 120000...120099)
+    @Test("Dollar prefix: 407 matches 40787")
+    func dollarPrefix() {
+        #expect(SearchCalculations.amountMatch(query: "407", cents: 40787) == true)
     }
 
-    @Test("Dollar and comma: $1,200 → 120000...120099")
-    func dollarAndComma() {
-        let range = SearchCalculations.parseAmountQuery("$1,200")
-        #expect(range == 120000...120099)
+    @Test("Dollar sign stripped: $6,370 matches 637000")
+    func dollarSignAndCommaStripped() {
+        #expect(SearchCalculations.amountMatch(query: "$6,370", cents: 637000) == true)
     }
 
-    @Test("Invalid query returns nil")
-    func invalidQueryNoAmountMatch() {
-        #expect(SearchCalculations.parseAmountQuery("abc") == nil)
+    @Test("No false positive: 29 does NOT match $129.99")
+    func noFalsePositive() {
+        #expect(SearchCalculations.amountMatch(query: "29", cents: 12999) == false)
     }
 
-    @Test("Empty query returns nil")
-    func emptyQueryReturnsNil() {
-        #expect(SearchCalculations.parseAmountQuery("") == nil)
+    @Test("29 matches $29.99")
+    func shortQueryMatches() {
+        #expect(SearchCalculations.amountMatch(query: "29", cents: 2999) == true)
     }
 
-    @Test("Just dollar sign returns nil")
+    @Test("Negative cents: 407 matches -40787 via abs")
+    func negativeCents() {
+        #expect(SearchCalculations.amountMatch(query: "407", cents: -40787) == true)
+    }
+
+    @Test("Non-numeric query returns false")
+    func nonNumericQuery() {
+        #expect(SearchCalculations.amountMatch(query: "lamp", cents: 4050) == false)
+    }
+
+    @Test("Empty query returns false")
+    func emptyQuery() {
+        #expect(SearchCalculations.amountMatch(query: "", cents: 4050) == false)
+    }
+
+    @Test("Just dollar sign returns false")
     func justDollarSign() {
-        #expect(SearchCalculations.parseAmountQuery("$") == nil)
+        #expect(SearchCalculations.amountMatch(query: "$", cents: 4050) == false)
     }
 
-    @Test("Zero → 0...99")
-    func zeroQuery() {
-        let range = SearchCalculations.parseAmountQuery("0")
-        #expect(range == 0...99)
+    @Test("Zero cents: 0 matches $0.00")
+    func zeroCents() {
+        #expect(SearchCalculations.amountMatch(query: "0", cents: 0) == true)
     }
 
-    @Test("Three decimal digits returns nil")
-    func threeDecimalDigitsReturnsNil() {
-        #expect(SearchCalculations.parseAmountQuery("40.000") == nil)
+    // MARK: - Integration with entity matchers
+
+    @Test("Item amount match on purchasePriceCents")
+    func itemAmountMatch() {
+        let item = makeItem(purchasePriceCents: 637000)
+        #expect(SearchCalculations.itemMatches(item: item, query: "637", categories: []) == true)
     }
 
-    @Test("Amount match on item with purchasePriceCents")
-    func amountMatchOnItem() {
-        let item = makeItem(purchasePriceCents: 4050)
-        let result = SearchCalculations.itemMatches(item: item, query: "40", categories: [])
-        #expect(result == true)
-    }
-
-    @Test("One decimal excludes items outside range")
-    func oneDecimalExcludesOutOfRange() {
-        let item = makeItem(purchasePriceCents: 4050)
-        let result = SearchCalculations.itemMatches(item: item, query: "40.0", categories: [])
-        #expect(result == false)
-    }
-
-    @Test("One decimal includes items in range")
-    func oneDecimalIncludesInRange() {
-        let item = makeItem(purchasePriceCents: 4005)
-        let result = SearchCalculations.itemMatches(item: item, query: "40.0", categories: [])
-        #expect(result == true)
-    }
-
-    @Test("Two decimal exact match")
-    func twoDecimalExactMatch() {
-        let item = makeItem(purchasePriceCents: 4000)
-        let result = SearchCalculations.itemMatches(item: item, query: "40.00", categories: [])
-        #expect(result == true)
-    }
-
-    @Test("Two decimal no match on off-by-one")
-    func twoDecimalNoMatchOffByOne() {
-        let item = makeItem(purchasePriceCents: 4001)
-        let result = SearchCalculations.itemMatches(item: item, query: "40.00", categories: [])
-        #expect(result == false)
-    }
-
-    @Test("Amount match on projectPriceCents")
-    func amountMatchProjectPrice() {
+    @Test("Item amount match on projectPriceCents")
+    func itemProjectPriceMatch() {
         let item = makeItem(projectPriceCents: 4050)
-        let result = SearchCalculations.itemMatches(item: item, query: "40", categories: [])
-        #expect(result == true)
+        #expect(SearchCalculations.itemMatches(item: item, query: "40", categories: []) == true)
     }
 
-    @Test("Amount match on marketValueCents")
-    func amountMatchMarketValue() {
+    @Test("Item amount match on marketValueCents")
+    func itemMarketValueMatch() {
         let item = makeItem(marketValueCents: 4050)
-        let result = SearchCalculations.itemMatches(item: item, query: "40", categories: [])
-        #expect(result == true)
+        #expect(SearchCalculations.itemMatches(item: item, query: "40", categories: []) == true)
     }
 
     @Test("Transaction amount match")
     func transactionAmountMatch() {
         let tx = makeTransaction(amountCents: 4050)
-        let result = SearchCalculations.transactionMatches(transaction: tx, query: "40", categories: [])
-        #expect(result == true)
+        #expect(SearchCalculations.transactionMatches(transaction: tx, query: "40", categories: []) == true)
     }
 
     @Test("Transaction amount no match")
     func transactionAmountNoMatch() {
         let tx = makeTransaction(amountCents: 5050)
-        let result = SearchCalculations.transactionMatches(transaction: tx, query: "40", categories: [])
-        #expect(result == false)
+        #expect(SearchCalculations.transactionMatches(transaction: tx, query: "40", categories: []) == false)
     }
 }
 

@@ -15,56 +15,24 @@ export function normalizedSKU(sku: string): string {
 }
 
 /**
- * Parses a query string into a cents range for amount prefix matching.
+ * Checks if a cents value's formatted dollar amount starts with the query.
+ * Formats cents as a decimal string (e.g. 637000 → "6370.00") and checks
+ * prefix match. Handles commas, $, trailing dots, and negative amounts.
  *
- * - "40"    → [4000, 4099]  (any amount from $40.00 to $40.99)
- * - "40.0"  → [4000, 4009]  (any amount from $40.00 to $40.09)
- * - "40.00" → [4000, 4000]  (exact $40.00)
- * - "$1,200" → [120000, 120099]
- * - "abc"   → null
+ * - "637" matches 637000 ($6,370.00) — "6370.00".startsWith("637")
+ * - "407.87" matches 40787 — exact
+ * - "6370." matches 637000 — trailing dot works
+ * - "29" matches 2999 ($29.99) but NOT 12999 ($129.99)
  */
-export function parseAmountQuery(
-  query: string
-): [number, number] | null {
-  const cleaned = query.replace(/[$,]/g, "");
-  if (!cleaned) return null;
-
-  const parts = cleaned.split(".");
-  if (parts.length > 2) return null;
-
-  const integerPart = parseInt(parts[0], 10);
-  if (isNaN(integerPart)) return null;
-
-  if (parts.length === 1) {
-    const low = integerPart * 100;
-    return [low, low + 99];
-  }
-
-  const decimalString = parts[1];
-  if (!decimalString || !/^\d+$/.test(decimalString)) return null;
-
-  if (decimalString.length === 1) {
-    const d = parseInt(decimalString, 10);
-    const low = integerPart * 100 + d * 10;
-    return [low, low + 9];
-  }
-
-  if (decimalString.length === 2) {
-    const decimalCents = parseInt(decimalString, 10);
-    const cents = integerPart * 100 + decimalCents;
-    return [cents, cents];
-  }
-
-  // More than 2 decimal digits — not a valid amount query
-  return null;
-}
-
-function amountInRange(
-  cents: number | null | undefined,
-  range: [number, number]
+export function amountMatch(
+  query: string,
+  cents: number | null | undefined
 ): boolean {
   if (cents == null) return false;
-  return cents >= range[0] && cents <= range[1];
+  const cleaned = query.replace(/[$,]/g, "");
+  if (!cleaned || !/^[\d.]/.test(cleaned)) return false;
+  const formatted = (Math.round(Math.abs(cents)) / 100).toFixed(2);
+  return formatted.startsWith(cleaned);
 }
 
 /** Matches a transaction against a search query using text + amount strategies. */
@@ -84,8 +52,7 @@ export function transactionMatches(
   if (textFields.some((f) => textMatch(query, f))) return true;
 
   // Amount field
-  const range = parseAmountQuery(query);
-  if (range && amountInRange(tx.amountCents, range)) return true;
+  if (amountMatch(query, tx.amountCents)) return true;
 
   return false;
 }
@@ -117,15 +84,12 @@ export function itemMatches(
   }
 
   // Amount fields
-  const range = parseAmountQuery(query);
-  if (range) {
-    const amounts = [
-      item.purchasePriceCents,
-      item.projectPriceCents,
-      item.marketValueCents,
-    ];
-    if (amounts.some((a) => amountInRange(a, range))) return true;
-  }
+  const amounts = [
+    item.purchasePriceCents,
+    item.projectPriceCents,
+    item.marketValueCents,
+  ];
+  if (amounts.some((a) => amountMatch(query, a))) return true;
 
   return false;
 }
