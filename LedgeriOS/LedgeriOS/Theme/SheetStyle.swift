@@ -22,19 +22,12 @@ enum SheetStyle {
     /// Large sheet for media viewers (image gallery, PDF viewer).
     case viewer
 
-    /// On macOS, use popover (click outside to dismiss) for most styles.
-    var usesPopoverOnMac: Bool {
-        switch self {
-        case .quickMenu, .selectionMenu, .picker, .form: return true
-        case .fullSheet, .viewer: return false
-        }
-    }
 }
 
 // MARK: - Adaptive Presentation
 
 extension View {
-    /// Platform-adaptive presentation: popover on macOS for menus, sheet on iOS.
+    /// Platform-adaptive presentation: sized sheet on macOS, detent sheet on iOS.
     /// Replaces `.sheet { content.sheetStyle(.x) }` pattern.
     func adaptivePresentation<C: View>(
         isPresented: Binding<Bool>,
@@ -76,30 +69,14 @@ private struct AdaptivePresentationModifier<C: View>: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(macOS)
-        if style.usesPopoverOnMac {
-            content
-                .popover(isPresented: $isPresented) {
-                    sheetContent()
-                        .frame(
-                            minWidth: macSize.width,
-                            idealWidth: macSize.width,
-                            minHeight: macSize.height,
-                            idealHeight: macSize.height
-                        )
-                }
-                .onChange(of: isPresented) { _, newValue in
-                    if !newValue { onDismiss?() }
-                }
-        } else {
-            content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
-                sheetContent()
-                    .frame(
-                        minWidth: macSize.width,
-                        idealWidth: macSize.width,
-                        minHeight: macSize.height,
-                        idealHeight: macSize.height
-                    )
-            }
+        content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
+            sheetContent()
+                .frame(
+                    minWidth: style.macFrameSize.width,
+                    idealWidth: style.macFrameSize.width,
+                    minHeight: style.macFrameSize.height,
+                    idealHeight: style.macFrameSize.height
+                )
         }
         #else
         content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
@@ -108,12 +85,6 @@ private struct AdaptivePresentationModifier<C: View>: ViewModifier {
         }
         #endif
     }
-
-    #if os(macOS)
-    private var macSize: (width: CGFloat, height: CGFloat) {
-        style.macFrameSize
-    }
-    #endif
 }
 
 // MARK: - Item-binding modifier
@@ -126,33 +97,14 @@ private struct AdaptivePresentationItemModifier<Item: Identifiable, C: View>: Vi
 
     func body(content: Content) -> some View {
         #if os(macOS)
-        // popover doesn't have an item: variant — bridge via isPresented
-        if style.usesPopoverOnMac {
-            content
-                .popover(isPresented: itemPresented) {
-                    if let current = item {
-                        sheetContent(current)
-                            .frame(
-                                minWidth: macSize.width,
-                                idealWidth: macSize.width,
-                                minHeight: macSize.height,
-                                idealHeight: macSize.height
-                            )
-                    }
-                }
-                .onChange(of: item == nil) { _, isNil in
-                    if isNil { onDismiss?() }
-                }
-        } else {
-            content.sheet(item: $item, onDismiss: onDismiss) { current in
-                sheetContent(current)
-                    .frame(
-                        minWidth: macSize.width,
-                        idealWidth: macSize.width,
-                        minHeight: macSize.height,
-                        idealHeight: macSize.height
-                    )
-            }
+        content.sheet(item: $item, onDismiss: onDismiss) { current in
+            sheetContent(current)
+                .frame(
+                    minWidth: style.macFrameSize.width,
+                    idealWidth: style.macFrameSize.width,
+                    minHeight: style.macFrameSize.height,
+                    idealHeight: style.macFrameSize.height
+                )
         }
         #else
         content.sheet(item: $item, onDismiss: onDismiss) { current in
@@ -161,19 +113,6 @@ private struct AdaptivePresentationItemModifier<Item: Identifiable, C: View>: Vi
         }
         #endif
     }
-
-    #if os(macOS)
-    private var itemPresented: Binding<Bool> {
-        Binding(
-            get: { item != nil },
-            set: { if !$0 { item = nil } }
-        )
-    }
-
-    private var macSize: (width: CGFloat, height: CGFloat) {
-        style.macFrameSize
-    }
-    #endif
 }
 
 // MARK: - iOS detent styling (unchanged behavior)
