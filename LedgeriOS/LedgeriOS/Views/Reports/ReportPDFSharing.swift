@@ -29,23 +29,6 @@ enum ReportPDFSharing {
 
         guard FileManager.default.fileExists(atPath: tempURL.path) else { return }
 
-        #if canImport(UIKit)
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = scene.windows.first?.rootViewController else { return }
-
-        let activityVC = UIActivityViewController(
-            activityItems: [tempURL],
-            applicationActivities: nil
-        )
-        rootVC.present(activityVC, animated: true)
-        #elseif canImport(AppKit)
-        let savePanel = NSSavePanel()
-        savePanel.nameFieldStringValue = fileName
-        savePanel.allowedContentTypes = [.pdf]
-        savePanel.begin { response in
-            guard response == .OK, let destinationURL = savePanel.url else { return }
-            try? FileManager.default.copyItem(at: tempURL, to: destinationURL)
-        }
-        #endif
+        ShareHelper.share(url: tempURL)
     }
 }

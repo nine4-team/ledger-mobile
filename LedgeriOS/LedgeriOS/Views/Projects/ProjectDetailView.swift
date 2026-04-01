@@ -14,6 +14,7 @@ struct ProjectDetailView: View {
     @State private var showingEditProject = false
     @State private var showExportSheet = false
     @State private var showExportSheetAllTransactions = false
+    @State private var exportedFileURL: URL?
     @State private var errorMessage: String?
 
     var body: some View {
@@ -128,12 +129,18 @@ struct ProjectDetailView: View {
                 existingBudgetCategories: projectContext.projectBudgetCategories
             )
         }
-        .adaptivePresentation(isPresented: $showExportSheetAllTransactions, style: .selectionMenu) {
+        .adaptivePresentation(isPresented: $showExportSheetAllTransactions, style: .selectionMenu, onDismiss: {
+            if let url = exportedFileURL {
+                exportedFileURL = nil
+                ShareHelper.share(url: url)
+            }
+        }) {
             ExportTransactionsModal(
                 transactions: projectContext.transactions,
                 categories: projectContext.budgetCategories,
                 items: projectContext.items,
-                projectId: projectContext.currentProjectId
+                projectId: projectContext.currentProjectId,
+                onExport: { url in exportedFileURL = url }
             )
         }
         .confirmationDialog("Delete Project?", isPresented: $showingDeleteConfirmation) {

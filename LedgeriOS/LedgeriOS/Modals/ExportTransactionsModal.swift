@@ -6,6 +6,7 @@ struct ExportTransactionsModal: View {
     let categories: [BudgetCategory]
     let items: [Item]
     let projectId: String?
+    var onExport: ((URL) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedFieldIds: Set<String> = ExportFields.defaultSelectedIds
@@ -101,24 +102,7 @@ struct ExportTransactionsModal: View {
             return
         }
 
-        #if canImport(UIKit)
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = scene.windows.first?.rootViewController else { return }
-
-        // Dismiss the modal first, then present share sheet
+        onExport?(tempURL)
         dismiss()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-            rootVC.present(activityVC, animated: true)
-        }
-        #elseif canImport(AppKit)
-        let savePanel = NSSavePanel()
-        savePanel.nameFieldStringValue = fileName
-        savePanel.begin { response in
-            guard response == .OK, let destinationURL = savePanel.url else { return }
-            try? FileManager.default.copyItem(at: tempURL, to: destinationURL)
-        }
-        dismiss()
-        #endif
     }
 }

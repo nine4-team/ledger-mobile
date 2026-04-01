@@ -18,6 +18,7 @@ struct TransactionsTabView: View {
     @State private var showInvoiceImport = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
+    @State private var exportedFileURL: URL?
 
     // Bulk actions
     @State private var showBulkDeleteConfirmation = false
@@ -165,12 +166,18 @@ struct TransactionsTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createTransaction)) { _ in
             showNewTransaction = true
         }
-        .adaptivePresentation(isPresented: $showExportSheet, style: .selectionMenu) {
+        .adaptivePresentation(isPresented: $showExportSheet, style: .selectionMenu, onDismiss: {
+            if let url = exportedFileURL {
+                exportedFileURL = nil
+                ShareHelper.share(url: url)
+            }
+        }) {
             ExportTransactionsModal(
                 transactions: processedTransactions,
                 categories: projectContext.budgetCategories,
                 items: projectContext.items,
-                projectId: projectContext.currentProjectId
+                projectId: projectContext.currentProjectId,
+                onExport: { url in exportedFileURL = url }
             )
         }
     }
