@@ -32,6 +32,8 @@ struct ScrollableTabBar: View {
                                 .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textPrimary)
                                 .padding(.horizontal, Spacing.md)
                                 .padding(.vertical, Spacing.sm)
+                                .frame(minHeight: 36)
+                                .contentShape(Capsule())
                                 .background {
                                     if isSelected {
                                         Capsule()

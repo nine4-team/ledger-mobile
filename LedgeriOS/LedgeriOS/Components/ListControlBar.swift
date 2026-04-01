@@ -70,7 +70,7 @@ struct ListControlBar<LeftElement: View>: View {
                     : action.variant == .primary ? .white : BrandColors.textPrimary
             )
             .padding(.horizontal, Spacing.md)
-            .frame(minHeight: 40)
+            .frame(minHeight: 44)
             .background(
                 action.variant == .primary
                     ? BrandColors.primary
@@ -100,7 +100,7 @@ struct ListControlBar<LeftElement: View>: View {
                 .foregroundStyle(
                     action.variant == .primary ? .white : BrandColors.textPrimary
                 )
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .background(
                     action.variant == .primary
                         ? BrandColors.primary
@@ -128,7 +128,7 @@ struct ListControlBar<LeftElement: View>: View {
             Image(systemName: action.icon ?? "plus")
                 .font(.system(size: 16))
                 .foregroundStyle(BrandColors.textSecondary)
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .contentShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
                 .overlay(
                     RoundedRectangle(cornerRadius: Dimensions.cardRadius)

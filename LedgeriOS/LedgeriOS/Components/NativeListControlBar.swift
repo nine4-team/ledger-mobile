@@ -146,11 +146,12 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 .imageScale(.large)
                 .frame(height: 24)
                 .frame(minWidth: 44)
-                .contentShape(Rectangle())
             Text(label)
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.secondary)
         }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
         .frame(maxWidth: .infinity)
     }
 

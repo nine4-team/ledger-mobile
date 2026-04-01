@@ -189,6 +189,8 @@ struct VendorPickerModal: View {
             }
             .padding(.vertical, Spacing.sm)
             .padding(.horizontal, Spacing.md)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
             .background(isSelected ? BrandColors.inputBackground : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
             .overlay(

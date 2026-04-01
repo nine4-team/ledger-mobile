@@ -39,7 +39,8 @@ struct SegmentedControl<T: Hashable>: View {
                     .font(isSelected ? Typography.button : Typography.small)
                     .foregroundStyle(isSelected ? BrandColors.textPrimary : BrandColors.textSecondary)
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 36)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                     .background(isSelected ? BrandColors.surface : Color.clear)
                     .animation(.easeInOut(duration: 0.2), value: selection)
                 }

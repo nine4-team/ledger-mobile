@@ -39,6 +39,7 @@ struct CategoryRow: View {
             }
         }
         .padding(.vertical, Spacing.sm)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
 
         if let onTap {

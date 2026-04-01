@@ -14,6 +14,7 @@ struct CardKebabButton: View {
                 .foregroundStyle(BrandColors.textSecondary)
                 .rotationEffect(.degrees(90))
                 .padding(6)
+                .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -34,6 +35,7 @@ struct CardBookmarkButton: View {
                 .font(.system(size: 18))
                 .foregroundStyle(isBookmarked ? StatusColors.badgeError : BrandColors.primary)
                 .padding(6)
+                .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

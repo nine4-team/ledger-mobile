@@ -13,57 +13,59 @@ struct CollapsibleSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
-                        .foregroundStyle(BrandColors.textTertiary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                        .animation(.easeInOut(duration: 0.25), value: isExpanded)
-
-                    Text(title)
-                        .sectionLabelStyle()
-
-                    if let badge {
-                        Text(badge)
-                            .font(Typography.caption)
-                            .foregroundStyle(badgeColor)
+            HStack(spacing: Spacing.xs) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isExpanded.toggle()
                     }
+                } label: {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                            .animation(.easeInOut(duration: 0.25), value: isExpanded)
 
-                    Spacer()
+                        Text(title)
+                            .sectionLabelStyle()
 
-                    if let statusBadge {
-                        Badge(text: statusBadge, color: statusBadgeColor)
-                    }
-
-                    if let onEdit {
-                        Button {
-                            onEdit()
-                        } label: {
-                            Image(systemName: "pencil")
-                                .foregroundStyle(BrandColors.textSecondary)
+                        if let badge {
+                            Text(badge)
+                                .font(Typography.caption)
+                                .foregroundStyle(badgeColor)
                         }
-                        .buttonStyle(.plain)
-                    }
 
-                    if let onAdd {
-                        Button {
-                            onAdd()
-                        } label: {
-                            Image(systemName: "plus")
-                                .foregroundStyle(BrandColors.primary)
-                        }
-                        .buttonStyle(.plain)
+                        Spacer()
                     }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+
+                if let statusBadge {
+                    Badge(text: statusBadge, color: statusBadgeColor)
+                }
+
+                if let onEdit {
+                    Button(action: onEdit) {
+                        Image(systemName: "pencil")
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if let onAdd {
+                    Button(action: onAdd) {
+                        Image(systemName: "plus")
+                            .foregroundStyle(BrandColors.primary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.plain)
 
             if isExpanded {
                 content()
