@@ -22,12 +22,12 @@ enum ShareHelper {
         )
         topVC.present(activityVC, animated: true)
         #elseif canImport(AppKit)
-        let savePanel = NSSavePanel()
-        savePanel.nameFieldStringValue = url.lastPathComponent
-        savePanel.begin { response in
-            guard response == .OK, let destinationURL = savePanel.url else { return }
-            try? FileManager.default.copyItem(at: url, to: destinationURL)
-        }
+        guard let window = NSApplication.shared.keyWindow,
+              let contentView = window.contentView else { return }
+
+        let picker = NSSharingServicePicker(items: [url])
+        let anchor = CGRect(x: contentView.bounds.midX, y: contentView.bounds.midY, width: 1, height: 1)
+        picker.show(relativeTo: anchor, of: contentView, preferredEdge: .minY)
         #endif
     }
 }
