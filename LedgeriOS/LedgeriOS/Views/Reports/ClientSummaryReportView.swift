@@ -8,6 +8,7 @@ struct ClientSummaryReportView: View {
     var businessLogoUrl: String?
 
     @State private var logoImage: PlatformImage?
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         Group {
@@ -188,15 +189,19 @@ struct ClientSummaryReportView: View {
                 .foregroundStyle(BrandColors.primary)
             }
         case .receiptURL(let urlString):
-            if let url = URL(string: urlString) {
-                Link(destination: url) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "photo")
-                        Text("View Receipt")
+            Button {
+                Task {
+                    if let resolved = await StorageURLResolver.resolve(urlString) {
+                        openURL(resolved)
                     }
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.primary)
                 }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "photo")
+                    Text("View Receipt")
+                }
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.primary)
             }
         case .none:
             EmptyView()
