@@ -115,13 +115,21 @@ struct TransactionCard: View {
                 }
             }
 
-            // Notes
-            if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
-                Text(truncated)
-                    .font(Typography.small)
-                    .italic()
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .lineLimit(2)
+            // Notes — always reserve space for consistent card heights in grid
+            Group {
+                if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
+                    Text(truncated)
+                        .font(Typography.small)
+                        .italic()
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .lineLimit(1)
+                } else {
+                    Text(" ")
+                        .font(Typography.small)
+                        .italic()
+                        .lineLimit(1)
+                        .opacity(0)
+                }
             }
         }
         .padding(Spacing.cardPadding)
