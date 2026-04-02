@@ -225,12 +225,12 @@ struct SharedItemsList: View {
         } sortMenu: {
             Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : BrandColors.textSecondary)
             }
         } filterMenu: {
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : BrandColors.textSecondary)
             }
         }
     }
@@ -247,20 +247,20 @@ struct SharedItemsList: View {
 
             Button { showSortMenu = true } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : .secondary)
+                    .foregroundStyle(activeSort != .createdDesc ? BrandColors.primary : BrandColors.textSecondary)
             }
             .buttonStyle(CircleBarButtonStyle())
-            .tint(.secondary)
+            .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
             .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
 
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : .secondary)
+                    .foregroundStyle(!activeFilters.isEmpty ? BrandColors.primary : BrandColors.textSecondary)
             }
             .buttonStyle(CircleBarButtonStyle())
-            .tint(.secondary)
+            .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
             .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))

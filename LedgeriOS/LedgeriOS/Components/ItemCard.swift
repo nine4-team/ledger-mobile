@@ -134,10 +134,10 @@ struct ItemCard: View {
     private func placeholderView(icon: String) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                .fill(BrandColors.surfaceTertiary)
+                .fill(BrandColors.buttonSecondaryBackground)
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundStyle(BrandColors.textSecondary)
+                .foregroundStyle(BrandColors.textTertiary)
         }
         .frame(width: 108, height: 108)
         .overlay(

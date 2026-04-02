@@ -19,6 +19,12 @@ struct ProjectDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if !project.clientName.isEmpty {
+                Text(project.clientName)
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .padding(.top, Spacing.xs)
+            }
             PinnedBudgetsSection()
                 .frame(maxWidth: Dimensions.contentMaxWidth)
                 .frame(maxWidth: .infinity)
@@ -65,17 +71,8 @@ struct ProjectDetailView: View {
             }
         }
         .navBarTitleDisplayMode(.inline)
+        .navigationTitle(project.name.isEmpty ? "Project" : project.name)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: Spacing.xs) {
-                    Text(project.name.isEmpty ? "Project" : project.name)
-                        .font(Typography.h3)
-                        .foregroundStyle(BrandColors.textPrimary)
-                    Text(project.clientName.isEmpty ? "" : project.clientName)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showingMenu = true

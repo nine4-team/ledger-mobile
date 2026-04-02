@@ -62,9 +62,9 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                         }
                     } label: {
                         Image(systemName: "magnifyingglass")
-                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : .secondary)
+                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
                     }
-                    .tint(isSearchExpanded ? BrandColors.primary : .secondary)
+                    .tint(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
                     .accessibilityLabel("Search")
                 }
 
@@ -81,9 +81,9 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                         Button(action: onAdd) {
                             Image(systemName: "plus")
                                 .fontWeight(.medium)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(BrandColors.textSecondary)
                         }
-                        .tint(.secondary)
+                        .tint(BrandColors.textSecondary)
                         .accessibilityLabel("Add")
                     }
                 }
@@ -142,13 +142,13 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     private func labeledBarItem<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 2) {
             content()
-                .tint(.secondary)
+                .tint(BrandColors.textSecondary)
                 .imageScale(.large)
                 .frame(height: 24)
                 .frame(minWidth: 44)
             Text(label)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(BrandColors.textSecondary)
         }
         .frame(minHeight: 44)
         .contentShape(Rectangle())
@@ -158,7 +158,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     private func circleBarItem<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .buttonStyle(CircleBarButtonStyle())
-            .tint(.secondary)
+            .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
             .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
