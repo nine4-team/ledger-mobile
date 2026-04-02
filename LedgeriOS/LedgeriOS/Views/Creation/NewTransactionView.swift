@@ -95,6 +95,7 @@ struct NewTransactionView: View {
         MultiStepFormSheet(
             title: "New Transaction",
             description: "What type of transaction?",
+
             currentStep: 1,
             totalSteps: 3,
             primaryAction: FormSheetAction(title: "Cancel") { dismiss() }
@@ -144,6 +145,7 @@ struct NewTransactionView: View {
         MultiStepFormSheet(
             title: "New Transaction",
             description: destinationPrompt,
+
             currentStep: 2,
             totalSteps: 3,
             primaryAction: FormSheetAction(title: "Next") {
@@ -171,8 +173,11 @@ struct NewTransactionView: View {
     // MARK: - Step 3: Details
 
     private var step3Details: some View {
-        FormSheet(
+        MultiStepFormSheet(
             title: "New Transaction",
+
+            currentStep: 3,
+            totalSteps: 3,
             primaryAction: FormSheetAction(title: "Create Transaction", isDisabled: !isReadyToSubmit) {
                 createTransaction()
             },
@@ -180,118 +185,135 @@ struct NewTransactionView: View {
                 currentStep = 2
             }
         ) {
-            VStack(spacing: Spacing.md) {
-                Text("Step 3 of 3")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                if !destination.isEmpty {
-                    VendorPickerField(value: $destination, label: "Source / Vendor", showPicker: $showVendorPicker)
-                } else {
-                    VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
-                }
-
-                // Date
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Date")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    DatePicker("", selection: $transactionDate, displayedComponents: .date)
-                        .labelsHidden()
-                }
-
-                // Amount
-                FormField(text: $amount, placeholder: "Amount")
-                    .platformKeyboardType(.decimalPad)
-
-                // Status
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Status")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    Picker("Status", selection: $status) {
-                        ForEach(TransactionStatus.allCases, id: \.self) { s in
-                            Text(s.displayLabel).tag(s)
-                        }
+            VStack(spacing: Spacing.xl) {
+                // MARK: Transaction Info
+                formSection("Transaction Info") {
+                    if !destination.isEmpty {
+                        VendorPickerField(value: $destination, label: "Source / Vendor", showPicker: $showVendorPicker)
+                    } else {
+                        VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
                     }
-                    .pickerStyle(.segmented)
-                }
 
-                // Purchased By
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Purchased By")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    Picker("Purchased By", selection: $purchasedBy) {
-                        Text("Client Card").tag("client-card")
-                        Text("Design Business").tag("design-business")
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                // Reimbursement Type
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Reimbursement Type")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    Picker("Reimbursement", selection: $reimbursementType) {
-                        Text("None").tag("none")
-                        Text("Owed to Client").tag("owed-to-client")
-                        Text("Owed to Company").tag("owed-to-company")
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                // Notes
-                FormField(text: $notes, placeholder: "Notes", axis: .vertical)
-
-                // Budget Category (project context only)
-                if projectId != nil {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Budget Category")
+                        Text("Date")
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
+                        DatePicker("", selection: $transactionDate, displayedComponents: .date)
+                            .labelsHidden()
+                    }
 
-                        Button {
-                            showCategoryPicker = true
-                        } label: {
-                            HStack {
-                                Text(selectedCategory?.name ?? "Select Category")
-                                    .foregroundStyle(
-                                        selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textSecondary
-                                    )
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .foregroundStyle(BrandColors.textSecondary)
-                            }
-                            .font(Typography.input)
-                            .padding(.horizontal, Spacing.md)
-                            .frame(height: 44)
-                            .contentShape(Rectangle())
-                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                            )
-                        }
-                        .buttonStyle(.plain)
+                    FormField(label: "Amount", text: $amount, placeholder: "0.00")
+                        .platformKeyboardType(.decimalPad)
+                }
+
+                // MARK: Classification
+                formSection("Classification") {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Status")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        SegmentedControl(selection: $status, options: TransactionStatus.allCases.map {
+                            SegmentOption(id: $0, label: $0.displayLabel)
+                        })
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Purchased By")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        SegmentedControl(selection: $purchasedBy, options: [
+                            SegmentOption(id: "client-card", label: "Client Card"),
+                            SegmentOption(id: "design-business", label: "Design Business"),
+                        ])
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Reimbursement")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        SegmentedControl(selection: $reimbursementType, options: [
+                            SegmentOption(id: "none", label: "None"),
+                            SegmentOption(id: "owed-to-client", label: "Owed to Client"),
+                            SegmentOption(id: "owed-to-company", label: "Owed to Company"),
+                        ])
                     }
                 }
 
-                // Email Receipt
-                Toggle("Email Receipt", isOn: $hasEmailReceipt)
-                    .font(Typography.body)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .tint(BrandColors.primary)
+                // MARK: Additional Details
+                formSection("Additional Details") {
+                    FormField(text: $notes, placeholder: "Notes", axis: .vertical)
 
-                // Conditional: Itemized category fields
+                    if projectId != nil {
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            Text("Budget Category")
+                                .font(Typography.label)
+                                .foregroundStyle(BrandColors.textSecondary)
+
+                            Button {
+                                showCategoryPicker = true
+                            } label: {
+                                HStack {
+                                    Text(selectedCategory?.name ?? "Select Category")
+                                        .foregroundStyle(
+                                            selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textSecondary
+                                        )
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(BrandColors.textSecondary)
+                                }
+                                .font(Typography.input)
+                                .padding(.horizontal, Spacing.md)
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
+                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    HStack {
+                        Text("Email Receipt")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textPrimary)
+                        Spacer()
+                        Toggle("", isOn: $hasEmailReceipt)
+                            .labelsHidden()
+                            .tint(BrandColors.primary)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .frame(minHeight: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                    )
+                }
+
+                // MARK: Itemized Details (conditional)
                 if isItemizedCategory {
-                    FormField(text: $subtotal, placeholder: "Subtotal")
-                        .platformKeyboardType(.decimalPad)
-                    FormField(text: $taxRate, placeholder: "Tax rate (%)")
-                        .platformKeyboardType(.decimalPad)
+                    formSection("Itemized Details") {
+                        FormField(label: "Subtotal", text: $subtotal, placeholder: "0.00")
+                            .platformKeyboardType(.decimalPad)
+                        FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.00")
+                            .platformKeyboardType(.decimalPad)
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: - Section Helper
+
+    @ViewBuilder
+    private func formSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text(title)
+                .sectionLabelStyle()
+            content()
         }
     }
 

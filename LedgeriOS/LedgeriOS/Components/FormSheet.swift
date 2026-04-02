@@ -3,6 +3,7 @@ import SwiftUI
 struct FormSheet<Content: View>: View {
     let title: String
     var description: String? = nil
+    var showDismissButton: Bool = true
     let primaryAction: FormSheetAction
     var secondaryAction: FormSheetAction? = nil
     var error: String? = nil
@@ -11,48 +12,67 @@ struct FormSheet<Content: View>: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                // Description (optional subtitle below nav bar title)
-                if let description {
-                    Text(description)
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
+        if showDismissButton {
+            formContent
+        } else {
+            NavigationStack {
+                formContent
+                    .navigationTitle(title)
+                    .navBarTitleDisplayMode(.inline)
+            }
+        }
+    }
 
-                // Content
-                ScrollView {
-                    content
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Spacer(minLength: 0)
-
-                // Error
-                if let error {
-                    Text(error)
-                        .font(Typography.small)
-                        .foregroundStyle(StatusColors.missedText)
-                }
-
-                // Actions
-                if let secondaryAction {
-                    HStack(spacing: Spacing.sm) {
-                        AppButton(
-                            title: secondaryAction.title,
-                            variant: .secondary,
-                            isLoading: secondaryAction.isLoading,
-                            isDisabled: secondaryAction.isDisabled,
-                            action: secondaryAction.action
-                        )
-                        AppButton(
-                            title: primaryAction.title,
-                            isLoading: primaryAction.isLoading,
-                            isDisabled: primaryAction.isDisabled,
-                            action: primaryAction.action
-                        )
+    private var formContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            // Header with dismiss button (only when not using nav bar)
+            if showDismissButton {
+                HStack {
+                    Text(title)
+                        .font(Typography.h2)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .font(.title2)
                     }
-                } else {
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Description (optional subtitle below title)
+            if let description {
+                Text(description)
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+
+            // Content
+            ScrollView {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer(minLength: 0)
+
+            // Error
+            if let error {
+                Text(error)
+                    .font(Typography.small)
+                    .foregroundStyle(StatusColors.missedText)
+            }
+
+            // Actions
+            if let secondaryAction {
+                HStack(spacing: Spacing.sm) {
+                    AppButton(
+                        title: secondaryAction.title,
+                        variant: .secondary,
+                        isLoading: secondaryAction.isLoading,
+                        isDisabled: secondaryAction.isDisabled,
+                        action: secondaryAction.action
+                    )
                     AppButton(
                         title: primaryAction.title,
                         isLoading: primaryAction.isLoading,
@@ -60,16 +80,21 @@ struct FormSheet<Content: View>: View {
                         action: primaryAction.action
                     )
                 }
+            } else {
+                AppButton(
+                    title: primaryAction.title,
+                    isLoading: primaryAction.isLoading,
+                    isDisabled: primaryAction.isDisabled,
+                    action: primaryAction.action
+                )
             }
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.top, Spacing.md)
-            .padding(.bottom, Spacing.screenPadding)
-            .frame(maxWidth: Dimensions.formMaxWidth)
-            .frame(maxWidth: .infinity)
-            .background(BrandColors.surface)
-            .navigationTitle(title)
-            .navBarTitleDisplayMode(.inline)
         }
+        .padding(.horizontal, Spacing.screenPadding)
+        .padding(.top, Spacing.md)
+        .padding(.bottom, Spacing.screenPadding)
+        .frame(maxWidth: Dimensions.formMaxWidth)
+        .frame(maxWidth: .infinity)
+        .background(BrandColors.surface)
     }
 }
 

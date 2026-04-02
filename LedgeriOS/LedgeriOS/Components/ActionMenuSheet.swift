@@ -36,7 +36,34 @@ struct ActionMenuSheet: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            // Header with title and dismiss button
+            if let title {
+                HStack {
+                    Text(title)
+                        .font(Typography.h2)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Spacer()
+                    if !closeOnItemPress && hasActiveSelections {
+                        Button("Clear") {
+                            clearAllFilters()
+                        }
+                        .font(Typography.buttonSmall)
+                        .foregroundStyle(BrandColors.primary)
+                        .buttonStyle(.plain)
+                    }
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .font(.title2)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.screenPadding)
+                .padding(.bottom, Spacing.md)
+            }
+
             List {
                 ForEach(flatRows) { row in
                     switch row {
@@ -49,28 +76,8 @@ struct ActionMenuSheet: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(BrandColors.surface)
-            .navigationTitle(title ?? "")
-            .navBarTitleDisplayMode(.inline)
-            #if canImport(UIKit)
-            .toolbar(title == nil ? .hidden : .automatic, for: .navigationBar)
-            #endif
-            .toolbar {
-                #if os(macOS)
-                ToolbarItem(placement: .cancellationAction) {
-                    EmptyView()
-                }
-                #endif
-                if !closeOnItemPress && hasActiveSelections {
-                    ToolbarItem(placement: .trailingNavBar) {
-                        Button("Clear") {
-                            clearAllFilters()
-                        }
-                        .foregroundStyle(BrandColors.primary)
-                    }
-                }
-            }
         }
+        .background(BrandColors.surface)
     }
 
     // MARK: - Menu Item Row

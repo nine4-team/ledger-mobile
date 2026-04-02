@@ -13,9 +13,6 @@ struct TransactionsTabView: View {
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
     @State private var showNewTransaction = false
-    @State private var showAddMenu = false
-    @State private var pendingAddMenuAction: (() -> Void)?
-    @State private var showInvoiceImport = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
     @State private var exportedFileURL: URL?
@@ -126,30 +123,8 @@ struct TransactionsTabView: View {
                 NewTransactionView(context: .project(projectId))
             }
         }
-        .adaptivePresentation(isPresented: $showAddMenu, style: .quickMenu, onDismiss: {
-            pendingAddMenuAction?()
-            pendingAddMenuAction = nil
-        }) {
-            ActionMenuSheet(
-                title: "Add Transaction",
-                items: [
-                    ActionMenuItem(id: "new-transaction", label: "New Transaction", icon: "plus", onPress: {
-                        showNewTransaction = true
-                    }),
-                    ActionMenuItem(id: "import-invoice", label: "Import Invoice", icon: "doc.text.viewfinder", onPress: {
-                        showInvoiceImport = true
-                    }),
-                ],
-                onSelectAction: { action in pendingAddMenuAction = action }
-            )
-        }
-        #if canImport(UIKit)
-        .adaptivePresentation(isPresented: $showInvoiceImport, style: .fullSheet) {
-            if let projectId = projectContext.currentProjectId {
-                ImportInvoiceModal(projectId: projectId)
-            }
-        }
-        #endif
+
+
         .background(SortMenu(
             isPresented: $showSortMenu,
             sortOptions: SortMenu.transactionSortMenuItems(
@@ -188,7 +163,7 @@ struct TransactionsTabView: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            onAdd: { showAddMenu = true },
+            onAdd: { showNewTransaction = true },
             style: .card
         ) {
             if !processedTransactions.isEmpty {

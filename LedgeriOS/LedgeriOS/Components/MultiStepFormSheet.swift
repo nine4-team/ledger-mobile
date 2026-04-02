@@ -3,6 +3,7 @@ import SwiftUI
 struct MultiStepFormSheet<Content: View>: View {
     let title: String
     var description: String? = nil
+    var showDismissButton: Bool = true
     let currentStep: Int
     let totalSteps: Int
     let primaryAction: FormSheetAction
@@ -14,6 +15,7 @@ struct MultiStepFormSheet<Content: View>: View {
         FormSheet(
             title: title,
             description: description,
+            showDismissButton: showDismissButton,
             primaryAction: primaryAction,
             secondaryAction: secondaryAction,
             error: error
