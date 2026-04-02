@@ -26,7 +26,7 @@ struct NewTransactionView: View {
     @State private var source = ""
     @State private var transactionDate = Date()
     @State private var amount = ""
-    @State private var status: TransactionStatus = .pending
+    @State private var status: TransactionStatus = .completed
     @State private var purchasedBy = "design-business"
     @State private var reimbursementType = "none"
     @State private var notes = ""
@@ -208,15 +208,6 @@ struct NewTransactionView: View {
 
                 // MARK: Classification
                 formSection("Classification") {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Status")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
-                        SegmentedControl(selection: $status, options: TransactionStatus.allCases.map {
-                            SegmentOption(id: $0, label: $0.displayLabel)
-                        })
-                    }
-
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Purchased By")
                             .font(Typography.label)
