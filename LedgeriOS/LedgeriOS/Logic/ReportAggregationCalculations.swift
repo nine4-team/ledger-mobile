@@ -69,9 +69,45 @@ struct SpaceGroup {
     var marketValueCents: Int { items.reduce(0) { $0 + ReportAggregationCalculations.propertyValueCents(for: $1) } }
 }
 
+// MARK: - Reimbursement Direction
+
+/// Unified direction derived from explicit `reimbursementType` OR canonical sale direction.
+enum ReimbursementDirection {
+    case owedToCompany
+    case owedToClient
+}
+
 // MARK: - Aggregation Functions
 
 enum ReportAggregationCalculations {
+
+    /// Determines reimbursement direction from explicit field or canonical sale direction.
+    static func reimbursementDirection(for tx: Transaction) -> ReimbursementDirection? {
+        if tx.reimbursementType == "owed-to-company" { return .owedToCompany }
+        if tx.reimbursementType == "owed-to-client" { return .owedToClient }
+
+        if tx.isCanonicalInventorySale == true {
+            switch tx.inventorySaleDirection {
+            case .businessToProject: return .owedToCompany
+            case .projectToBusiness: return .owedToClient
+            case nil: return nil
+            }
+        }
+
+        return nil
+    }
+
+    /// Display name for a transaction in invoice context.
+    static func invoiceDisplayName(for tx: Transaction) -> String {
+        if tx.isCanonicalInventorySale == true {
+            switch tx.inventorySaleDirection {
+            case .businessToProject: return "Design Business Inventory Sale"
+            case .projectToBusiness: return "Design Business Inventory Purchase"
+            case nil: break
+            }
+        }
+        return tx.source ?? "Transaction"
+    }
 
     // MARK: - Invoice Report
 
@@ -115,11 +151,11 @@ enum ReportAggregationCalculations {
         }
 
         let charges = active
-            .filter { $0.reimbursementType == "owed-to-company" }
+            .filter { reimbursementDirection(for: $0) == .owedToCompany }
             .sorted { compareDatesAscending($0.transactionDate, $1.transactionDate) }
 
         let credits = active
-            .filter { $0.reimbursementType == "owed-to-client" }
+            .filter { reimbursementDirection(for: $0) == .owedToClient }
             .sorted { compareDatesAscending($0.transactionDate, $1.transactionDate) }
 
         let chargeLines = charges.map { buildInvoiceLine($0, items: items, categoryMap: categoryMap) }
@@ -139,32 +175,24 @@ enum ReportAggregationCalculations {
             return txItemIds.contains(itemId)
         }
 
-        let hasItems = !linkedItems.isEmpty
-        var amountCents: Int
+        let amountCents = transaction.amountCents ?? 0
         var invoiceItems: [InvoiceItem] = []
         var hasMissingPrices = false
 
-        if hasItems {
-            amountCents = 0
-            for item in linkedItems {
-                let priceCents = item.projectPriceCents ?? 0
-                let isMissing = item.projectPriceCents == nil || item.projectPriceCents == 0
-                if isMissing { hasMissingPrices = true }
-                amountCents += priceCents
-                invoiceItems.append(InvoiceItem(
-                    name: item.displayName,
-                    projectPriceCents: item.projectPriceCents,
-                    isMissingPrice: isMissing
-                ))
-            }
-        } else {
-            amountCents = transaction.amountCents ?? 0
+        for item in linkedItems {
+            let isMissing = item.projectPriceCents == nil || item.projectPriceCents == 0
+            if isMissing { hasMissingPrices = true }
+            invoiceItems.append(InvoiceItem(
+                name: item.displayName,
+                projectPriceCents: item.projectPriceCents,
+                isMissingPrice: isMissing
+            ))
         }
 
         let categoryId = transaction.budgetCategoryId
         let categoryName = categoryId.flatMap { categoryMap[$0]?.name }
 
-        let displayName = transaction.source ?? "Transaction"
+        let displayName = invoiceDisplayName(for: transaction)
         let formattedDate = transaction.transactionDate ?? ""
 
         return InvoiceLineItem(

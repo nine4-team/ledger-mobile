@@ -18,6 +18,7 @@ struct ReportAggregationCalculationTests {
         transactionDate: String? = "2024-01-15",
         notes: String? = nil,
         isCanonicalInventorySale: Bool? = nil,
+        inventorySaleDirection: InventorySaleDirection? = nil,
         receiptImages: [AttachmentRef]? = nil
     ) -> Transaction {
         var tx = Transaction()
@@ -31,6 +32,7 @@ struct ReportAggregationCalculationTests {
         tx.transactionDate = transactionDate
         tx.notes = notes
         tx.isCanonicalInventorySale = isCanonicalInventorySale
+        tx.inventorySaleDirection = inventorySaleDirection
         tx.receiptImages = receiptImages
         return tx
     }
@@ -168,8 +170,8 @@ struct ReportAggregationCalculationTests {
         #expect(result.chargeLines[0].linkedItems.isEmpty)
     }
 
-    @Test("Invoice line sums item project prices when items linked")
-    func invoiceLineSumsItemPrices() {
+    @Test("Invoice line uses transaction amount even when items are linked")
+    func invoiceLineUsesTransactionAmountWithItems() {
         let transactions = [
             makeTransaction(
                 id: "tx1", amountCents: 99999,
@@ -186,7 +188,125 @@ struct ReportAggregationCalculationTests {
             transactions: transactions, items: items, categories: []
         )
 
-        #expect(result.chargeLines[0].amountCents == 5000)
+        // Amount comes from transaction, not item sum
+        #expect(result.chargeLines[0].amountCents == 99999)
+        // Items are still listed for informational breakdown
+        #expect(result.chargeLines[0].linkedItems.count == 2)
+    }
+
+    @Test("Canonical sale business_to_project appears as charge")
+    func canonicalSaleBusinessToProjectIsCharge() {
+        let transactions = [
+            makeTransaction(
+                id: "SALE_proj1_business_to_project_cat1",
+                amountCents: 8000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.count == 1)
+        #expect(result.creditLines.isEmpty)
+        #expect(result.chargeLines[0].transaction.id == "SALE_proj1_business_to_project_cat1")
+    }
+
+    @Test("Canonical sale project_to_business appears as credit")
+    func canonicalSaleProjectToBusinessIsCredit() {
+        let transactions = [
+            makeTransaction(
+                id: "SALE_proj1_project_to_business_cat1",
+                amountCents: 5000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .projectToBusiness
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.creditLines.count == 1)
+        #expect(result.chargeLines.isEmpty)
+        #expect(result.creditLines[0].transaction.id == "SALE_proj1_project_to_business_cat1")
+    }
+
+    @Test("Canonical sales and reimbursement transactions combine on invoice")
+    func canonicalSalesAndReimbursementCombine() {
+        let transactions = [
+            makeTransaction(id: "tx1", amountCents: 5000, reimbursementType: "owed-to-company"),
+            makeTransaction(
+                id: "SALE_proj1_business_to_project_cat1",
+                amountCents: 3000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+            makeTransaction(id: "tx2", amountCents: 2000, reimbursementType: "owed-to-client"),
+            makeTransaction(
+                id: "SALE_proj1_project_to_business_cat1",
+                amountCents: 1000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .projectToBusiness
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.count == 2)
+        #expect(result.creditLines.count == 2)
+        #expect(result.chargesSubtotalCents == 8000)
+        #expect(result.creditsSubtotalCents == 3000)
+        #expect(result.netDueCents == 5000)
+    }
+
+    @Test("Canceled canonical sale excluded from invoice")
+    func canceledCanonicalSaleExcluded() {
+        let transactions = [
+            makeTransaction(
+                id: "SALE_proj1_business_to_project_cat1",
+                amountCents: 5000,
+                status: .canceled,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.isEmpty)
+        #expect(result.creditLines.isEmpty)
+    }
+
+    @Test("Canonical sale with linked items uses transaction amount")
+    func canonicalSaleWithLinkedItemsUsesTransactionAmount() {
+        let transactions = [
+            makeTransaction(
+                id: "SALE_proj1_business_to_project_cat1",
+                amountCents: 10000,
+                itemIds: ["item1", "item2"],
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+        ]
+        let items = [
+            makeItem(id: "item1", projectPriceCents: 4000),
+            makeItem(id: "item2", projectPriceCents: 6000),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: items, categories: []
+        )
+
+        #expect(result.chargeLines.count == 1)
+        #expect(result.chargeLines[0].amountCents == 10000)
+        #expect(result.chargeLines[0].linkedItems.count == 2)
     }
 
     // MARK: - Client Summary Tests
@@ -482,5 +602,147 @@ struct ReportAggregationCalculationTests {
         let group = SpaceGroup(space: space, items: items)
 
         #expect(group.marketValueCents == 9000)
+    }
+
+    // MARK: - Reimbursement Direction Tests
+
+    @Test("reimbursementDirection returns owedToCompany for explicit reimbursement type")
+    func directionExplicitOwedToCompany() {
+        let tx = makeTransaction(reimbursementType: "owed-to-company")
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == .owedToCompany)
+    }
+
+    @Test("reimbursementDirection returns owedToClient for explicit reimbursement type")
+    func directionExplicitOwedToClient() {
+        let tx = makeTransaction(reimbursementType: "owed-to-client")
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == .owedToClient)
+    }
+
+    @Test("reimbursementDirection returns owedToCompany for business-to-project canonical sale")
+    func directionCanonicalSaleBusinessToProject() {
+        let tx = makeTransaction(
+            reimbursementType: nil,
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == .owedToCompany)
+    }
+
+    @Test("reimbursementDirection returns owedToClient for project-to-business canonical sale")
+    func directionCanonicalSaleProjectToBusiness() {
+        let tx = makeTransaction(
+            reimbursementType: nil,
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == .owedToClient)
+    }
+
+    @Test("reimbursementDirection returns nil for transaction with no reimbursement info")
+    func directionNilForPlainTransaction() {
+        let tx = makeTransaction(reimbursementType: nil, isCanonicalInventorySale: nil)
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == nil)
+    }
+
+    @Test("Explicit reimbursementType takes priority over canonical sale direction")
+    func directionExplicitOverridesCanonical() {
+        let tx = makeTransaction(
+            reimbursementType: "owed-to-client",
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        // Explicit says owed-to-client, even though direction says businessToProject
+        #expect(ReportAggregationCalculations.reimbursementDirection(for: tx) == .owedToClient)
+    }
+
+    // MARK: - Invoice with Canonical Sales
+
+    @Test("Canonical business-to-project sale appears as charge in invoice")
+    func canonicalSaleAppearsAsCharge() {
+        let transactions = [
+            makeTransaction(
+                id: "sale1", amountCents: 15000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.count == 1)
+        #expect(result.creditLines.count == 0)
+        #expect(result.chargesSubtotalCents == 15000)
+    }
+
+    @Test("Canonical project-to-business sale appears as credit in invoice")
+    func canonicalSaleAppearsAsCredit() {
+        let transactions = [
+            makeTransaction(
+                id: "sale1", amountCents: 8000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .projectToBusiness
+            ),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.count == 0)
+        #expect(result.creditLines.count == 1)
+        #expect(result.creditsSubtotalCents == 8000)
+    }
+
+    @Test("Invoice mixes reimbursement and canonical sale transactions")
+    func invoiceMixesReimbursementAndCanonicalSales() {
+        let transactions = [
+            makeTransaction(id: "tx1", amountCents: 5000, reimbursementType: "owed-to-company"),
+            makeTransaction(
+                id: "sale1", amountCents: 12000,
+                isCanonicalInventorySale: true,
+                inventorySaleDirection: .businessToProject
+            ),
+            makeTransaction(id: "tx2", amountCents: 3000, reimbursementType: "owed-to-client"),
+        ]
+
+        let result = ReportAggregationCalculations.computeInvoiceReport(
+            transactions: transactions, items: [], categories: []
+        )
+
+        #expect(result.chargeLines.count == 2)
+        #expect(result.creditLines.count == 1)
+        #expect(result.chargesSubtotalCents == 17000)
+        #expect(result.creditsSubtotalCents == 3000)
+        #expect(result.netDueCents == 14000)
+    }
+
+    // MARK: - Invoice Display Name
+
+    @Test("Invoice display name shows vendor for regular transactions")
+    func invoiceDisplayNameRegular() {
+        let tx = makeTransaction(source: "Wayfair")
+        #expect(ReportAggregationCalculations.invoiceDisplayName(for: tx) == "Wayfair")
+    }
+
+    @Test("Invoice display name for business-to-project canonical sale")
+    func invoiceDisplayNameBusinessToProject() {
+        let tx = makeTransaction(
+            source: "Wayfair",
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(ReportAggregationCalculations.invoiceDisplayName(for: tx) == "Design Business Inventory Sale")
+    }
+
+    @Test("Invoice display name for project-to-business canonical sale")
+    func invoiceDisplayNameProjectToBusiness() {
+        let tx = makeTransaction(
+            source: "Wayfair",
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        #expect(ReportAggregationCalculations.invoiceDisplayName(for: tx) == "Design Business Inventory Purchase")
     }
 }

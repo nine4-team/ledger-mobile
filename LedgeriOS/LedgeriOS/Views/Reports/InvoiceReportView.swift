@@ -105,6 +105,11 @@ struct InvoiceReportView: View {
                         amount: data.netDueCents,
                         isBold: true
                     )
+
+                    Text("Totals are calculated from the associated transaction amounts.")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(Spacing.screenPadding)
