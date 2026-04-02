@@ -17,99 +17,77 @@ struct InvoiceReportView: View {
         ScrollView {
             AdaptiveContentWidth {
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                // Header
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    if let logoImage {
-                        #if canImport(UIKit)
-                        Image(uiImage: logoImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 48)
-                        #elseif canImport(AppKit)
-                        Image(nsImage: logoImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 48)
-                        #endif
+                // Header — logo + info side-by-side, brand border bottom
+                invoiceHeader
+
+                // Totals summary card
+                Card {
+                    VStack(spacing: Spacing.sm) {
+                        HStack {
+                            Text("Charges")
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+                            Spacer()
+                            Text(CurrencyFormatting.formatCentsWithDecimals(data.chargesSubtotalCents))
+                                .font(Typography.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(BrandColors.textPrimary)
+                        }
+                        HStack {
+                            Text("Credits")
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+                            Spacer()
+                            Text("(\(CurrencyFormatting.formatCentsWithDecimals(data.creditsSubtotalCents)))")
+                                .font(Typography.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(BrandColors.textPrimary)
+                        }
+                        Divider()
+                        HStack {
+                            Text("Net Amount Due")
+                                .font(Typography.body)
+                                .fontWeight(.bold)
+                                .foregroundStyle(BrandColors.primary)
+                            Spacer()
+                            Text(CurrencyFormatting.formatCentsWithDecimals(data.netDueCents))
+                                .font(Typography.body)
+                                .fontWeight(.bold)
+                                .foregroundStyle(BrandColors.primary)
+                        }
                     }
-                    if let businessName, !businessName.isEmpty {
-                        Text(businessName)
-                            .font(Typography.h2)
-                            .foregroundStyle(BrandColors.textPrimary)
-                    }
-                    Text(projectName)
-                        .font(Typography.h1)
-                        .foregroundStyle(BrandColors.textPrimary)
-                    if !clientName.isEmpty {
-                        Text(clientName)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
-                    }
-                    Text(currentDateFormatted)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textTertiary)
                 }
 
-                // Missing prices warning
-                if data.chargeLines.contains(where: \.isMissingProjectPrices)
-                    || data.creditLines.contains(where: \.isMissingProjectPrices) {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                        Text("Some items are missing project prices. Totals may be incomplete.")
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
+                // Legend
+                if data.hasFallbackPrices {
+                    HStack(spacing: Spacing.xs) {
+                        Circle()
+                            .fill(.orange)
+                            .frame(width: 8, height: 8)
+                        Text("Using purchase price (no project price set)")
+                            .font(Typography.caption)
+                            .foregroundStyle(BrandColors.textTertiary)
                     }
-                    .padding(Spacing.md)
-                    .background(Color.orange.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
                 }
 
                 // Charges section
                 if !data.chargeLines.isEmpty {
-                    Text("Charges")
-                        .sectionLabelStyle()
-                    let grouped = ReportAggregationCalculations.groupLinesByCategory(data.chargeLines)
-                    ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
-                        invoiceSection(title: group.categoryName, lines: group.lines)
-                    }
+                    invoiceSection(
+                        title: "Charges",
+                        lines: data.chargeLines,
+                        totalCents: data.chargesSubtotalCents,
+                        totalLabel: "Charges Total"
+                    )
                 }
 
                 // Credits section
                 if !data.creditLines.isEmpty {
-                    Text("Credits")
-                        .sectionLabelStyle()
-                    let grouped = ReportAggregationCalculations.groupLinesByCategory(data.creditLines)
-                    ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
-                        invoiceSection(title: group.categoryName, lines: group.lines)
-                    }
-                }
-
-                // Summary
-                Divider()
-
-                VStack(spacing: Spacing.sm) {
-                    summaryRow(
-                        label: "Charges Subtotal",
-                        amount: data.chargesSubtotalCents,
-                        isBold: false
+                    invoiceSection(
+                        title: "Credits",
+                        lines: data.creditLines,
+                        totalCents: data.creditsSubtotalCents,
+                        totalLabel: "Credits Total"
                     )
-                    summaryRow(
-                        label: "Credits Subtotal",
-                        amount: data.creditsSubtotalCents,
-                        isBold: false
-                    )
-                    Divider()
-                    summaryRow(
-                        label: "Net Due",
-                        amount: data.netDueCents,
-                        isBold: true
-                    )
-
-                    Text("Totals are calculated from the associated transaction amounts.")
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textTertiary)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(Spacing.screenPadding)
@@ -140,87 +118,101 @@ struct InvoiceReportView: View {
 
     // MARK: - Subviews
 
-    private func invoiceSection(title: String, lines: [InvoiceLineItem]) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+    private var invoiceHeader: some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            if let logoImage {
+                #if canImport(UIKit)
+                Image(uiImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                #elseif canImport(AppKit)
+                Image(nsImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                #endif
+            }
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                if let businessName, !businessName.isEmpty {
+                    Text(businessName)
+                        .font(Typography.h1)
+                        .foregroundStyle(BrandColors.primary)
+                }
+                Text("Invoice")
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    metaRow(label: "Project:", value: projectName)
+                    if !clientName.isEmpty {
+                        metaRow(label: "Client:", value: clientName)
+                    }
+                    metaRow(label: "Date:", value: currentDateFormatted)
+                }
+            }
+            Spacer()
+        }
+        .padding(.bottom, Spacing.md)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(BrandColors.primary)
+                .frame(height: 2)
+        }
+    }
+
+    private func metaRow(label: String, value: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Text(label)
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+            Text(value)
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+        }
+    }
+
+    private func invoiceSection(
+        title: String,
+        lines: [InvoiceLineEntry],
+        totalCents: Int,
+        totalLabel: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
             Text(title)
                 .sectionLabelStyle()
 
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(line.displayName)
-                                .font(Typography.body)
-                                .foregroundStyle(BrandColors.textPrimary)
-                            HStack(spacing: Spacing.sm) {
-                                if !line.formattedDate.isEmpty {
-                                    Text(line.formattedDate)
-                                        .font(Typography.caption)
-                                        .foregroundStyle(BrandColors.textTertiary)
-                                }
-                                if let category = line.categoryName {
-                                    Text(category)
-                                        .font(Typography.caption)
-                                        .foregroundStyle(BrandColors.textTertiary)
-                                }
-                            }
-                        }
-                        Spacer()
-                        Text(CurrencyFormatting.formatCentsWithDecimals(line.amountCents))
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textPrimary)
-                    }
-
-                    if let notes = line.notes, !notes.isEmpty {
-                        Text(notes)
-                            .font(Typography.caption)
-                            .foregroundStyle(BrandColors.textTertiary)
-                    }
-
-                    // Linked items (indented)
-                    if !line.linkedItems.isEmpty {
-                        VStack(alignment: .leading, spacing: 2) {
-                            ForEach(Array(line.linkedItems.enumerated()), id: \.offset) { _, item in
-                                HStack {
-                                    Text(item.name ?? "Unnamed Item")
-                                        .font(Typography.small)
-                                        .foregroundStyle(BrandColors.textSecondary)
-                                    Spacer()
-                                    if let price = item.projectPriceCents {
-                                        Text(CurrencyFormatting.formatCentsWithDecimals(price))
-                                            .font(Typography.small)
-                                            .foregroundStyle(
-                                                item.isMissingPrice
-                                                ? .orange
-                                                : BrandColors.textSecondary
-                                            )
-                                    } else {
-                                        Text("No Price")
-                                            .font(Typography.small)
-                                            .foregroundStyle(.orange)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.leading, Spacing.lg)
-                    }
+                HStack {
+                    Text(line.name)
+                        .font(Typography.body)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Spacer()
+                    Text(CurrencyFormatting.formatCentsWithDecimals(line.priceCents))
+                        .font(Typography.body)
+                        .foregroundStyle(
+                            line.isMissingPrice ? .orange : BrandColors.textPrimary
+                        )
                 }
                 .padding(.vertical, Spacing.xs)
 
                 Divider()
             }
-        }
-    }
 
-    private func summaryRow(label: String, amount: Int, isBold: Bool) -> some View {
-        HStack {
-            Text(label)
-                .font(isBold ? Typography.h3 : Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
-            Spacer()
-            Text(CurrencyFormatting.formatCentsWithDecimals(amount))
-                .font(isBold ? Typography.h3 : Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
+            // Section total
+            HStack {
+                Text(totalLabel)
+                    .font(Typography.body)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Text(CurrencyFormatting.formatCentsWithDecimals(totalCents))
+                    .font(Typography.body)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(BrandColors.textPrimary)
+            }
+            .padding(.vertical, Spacing.sm)
         }
     }
 
@@ -260,51 +252,24 @@ private struct InvoiceReportPDFContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Branded header with bottom border
-            pdfHeader(title: "Invoice Report")
+            // Header
+            pdfHeader
 
-            // Missing prices warning
-            if data.chargeLines.contains(where: \.isMissingProjectPrices)
-                || data.creditLines.contains(where: \.isMissingProjectPrices) {
-                HStack(spacing: 6) {
-                    Text("\u{26A0}")
-                        .font(S.bodyFont)
-                    Text("Some items are missing project prices. Totals may be incomplete.")
-                        .font(S.subItemFont)
-                        .foregroundStyle(S.error)
-                        .italic()
-                }
-                .padding(.top, 16)
-            }
 
             // Charges section
             if !data.chargeLines.isEmpty {
-                Text("Charges")
-                    .font(S.sectionHeaderFont)
-                    .foregroundStyle(S.brand)
-                    .padding(.top, 28)
-                let grouped = ReportAggregationCalculations.groupLinesByCategory(data.chargeLines)
-                ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
-                    invoiceLinesSection(title: group.categoryName, lines: group.lines)
-                }
+                pdfSection(title: "Charges", lines: data.chargeLines)
             }
 
             // Credits section
             if !data.creditLines.isEmpty {
-                Text("Credits")
-                    .font(S.sectionHeaderFont)
-                    .foregroundStyle(S.brand)
-                    .padding(.top, 28)
-                let grouped = ReportAggregationCalculations.groupLinesByCategory(data.creditLines)
-                ForEach(Array(grouped.enumerated()), id: \.offset) { _, group in
-                    invoiceLinesSection(title: group.categoryName, lines: group.lines)
-                }
+                pdfSection(title: "Credits", lines: data.creditLines)
             }
 
             // Totals
             VStack(alignment: .trailing, spacing: 0) {
-                totalsRow(label: "Charges Total", cents: data.chargesSubtotalCents, isNet: false)
-                totalsRow(label: "Credits Total", cents: data.creditsSubtotalCents, isNet: false, showParens: true)
+                pdfTotalsRow(label: "Charges Total", cents: data.chargesSubtotalCents)
+                pdfTotalsRow(label: "Credits Total", cents: data.creditsSubtotalCents, showParens: true)
                 // Net due with brand-color top border
                 HStack(spacing: 0) {
                     Spacer()
@@ -330,61 +295,51 @@ private struct InvoiceReportPDFContent: View {
             .padding(.top, 12)
 
             // Footer
-            pdfFooter()
+            pdfFooter
         }
+        .frame(width: S.pageWidth - S.pagePadding * 2)
         .padding(S.pagePadding)
-        .frame(width: S.pageWidth)
         .background(Color.white)
     }
 
     // MARK: - Header
 
-    private func pdfHeader(title: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private var pdfHeader: some View {
+        HStack(alignment: .top, spacing: 16) {
             if let logoImage {
                 #if canImport(UIKit)
                 Image(uiImage: logoImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 60)
-                    .padding(.bottom, 8)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 #elseif canImport(AppKit)
                 Image(nsImage: logoImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 60)
-                    .padding(.bottom, 8)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 #endif
             }
-            if let businessName, !businessName.isEmpty {
-                Text(businessName)
+            VStack(alignment: .leading, spacing: 4) {
+                if let businessName, !businessName.isEmpty {
+                    Text(businessName)
+                        .font(S.titleFont)
+                        .foregroundStyle(S.brand)
+                }
+                Text("Invoice")
                     .font(S.subtitleFont)
                     .foregroundStyle(S.textDark)
-            }
-            Text(projectName)
-                .font(S.titleFont)
-                .foregroundStyle(S.brand)
-            Text(title)
-                .font(S.subtitleFont)
-                .foregroundStyle(S.textDark)
-            VStack(alignment: .leading, spacing: 2) {
-                if !clientName.isEmpty {
-                    HStack(spacing: 4) {
-                        Text("Client:")
-                            .font(S.metaLabelFont)
-                        Text(clientName)
-                            .font(S.metaFont)
+                VStack(alignment: .leading, spacing: 2) {
+                    pdfMetaRow(label: "Project:", value: projectName)
+                    if !clientName.isEmpty {
+                        pdfMetaRow(label: "Client:", value: clientName)
                     }
                 }
-                HStack(spacing: 4) {
-                    Text("Date:")
-                        .font(S.metaLabelFont)
-                    Text(currentDateFormatted)
-                        .font(S.metaFont)
-                }
+                .foregroundStyle(S.textSecondary)
+                .padding(.top, 4)
             }
-            .foregroundStyle(S.textSecondary)
-            .padding(.top, 4)
+            Spacer()
         }
         .padding(.bottom, 20)
         .overlay(alignment: .bottom) {
@@ -394,32 +349,32 @@ private struct InvoiceReportPDFContent: View {
         }
     }
 
+    private func pdfMetaRow(label: String, value: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(S.metaLabelFont)
+            Text(value)
+                .font(S.metaFont)
+        }
+    }
+
     // MARK: - Invoice Lines Table
 
-    private func invoiceLinesSection(title: String, lines: [InvoiceLineItem]) -> some View {
+    private func pdfSection(title: String, lines: [InvoiceLineEntry]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Section header (h2 style)
+            // Section header
             Text(title)
                 .font(S.sectionHeaderFont)
                 .foregroundStyle(S.brand)
                 .padding(.top, 28)
                 .padding(.bottom, 12)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(S.border)
-                        .frame(height: 1)
-                }
 
             // Table header row
             HStack(spacing: 0) {
-                Text("DATE")
-                    .frame(width: 100, alignment: .leading)
-                Text("DESCRIPTION")
+                Text("ITEM")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("CATEGORY")
-                    .frame(width: 140, alignment: .leading)
                 Text("AMOUNT")
-                    .frame(width: 110, alignment: .trailing)
+                    .frame(width: 120, alignment: .trailing)
             }
             .font(S.tableHeaderFont)
             .foregroundStyle(S.textSecondary)
@@ -435,52 +390,21 @@ private struct InvoiceReportPDFContent: View {
 
             // Data rows
             ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: 0) {
-                        Text(line.formattedDate)
-                            .frame(width: 100, alignment: .leading)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 4) {
-                                Text(line.displayName)
-                                if line.isMissingProjectPrices {
-                                    Text("(contains missing prices)")
-                                        .font(S.missingPriceFont)
-                                        .foregroundStyle(S.error)
-                                }
-                            }
-                            // Sub-items
-                            ForEach(Array(line.linkedItems.enumerated()), id: \.offset) { _, item in
-                                HStack(spacing: 4) {
-                                    Text(item.name ?? "Unnamed Item")
-                                    Text("\u{2014}")
-                                    if item.isMissingPrice {
-                                        Text("\(CurrencyFormatting.formatCentsWithDecimals(item.projectPriceCents ?? 0)) (missing price)")
-                                            .foregroundStyle(S.error)
-                                    } else {
-                                        Text(CurrencyFormatting.formatCentsWithDecimals(item.projectPriceCents ?? 0))
-                                    }
-                                }
-                                .font(S.subItemFont)
-                                .foregroundStyle(S.textSub)
-                                .padding(.leading, 20)
-                            }
-                        }
+                HStack(spacing: 0) {
+                    Text(line.name)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(line.categoryName ?? "")
-                            .frame(width: 140, alignment: .leading)
-                        Text(CurrencyFormatting.formatCentsWithDecimals(line.amountCents))
-                            .frame(width: 110, alignment: .trailing)
-                    }
-                    .font(S.bodyFont)
-                    .foregroundStyle(S.textPrimary)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 10)
-                    .background(index.isMultiple(of: 2) ? Color.clear : S.cardBg)
-                    .overlay(alignment: .bottom) {
-                        Rectangle()
-                            .fill(S.rowBorder)
-                            .frame(height: 1)
-                    }
+                    Text(CurrencyFormatting.formatCentsWithDecimals(line.priceCents))
+                        .frame(width: 120, alignment: .trailing)
+                }
+                .font(S.bodyFont)
+                .foregroundStyle(S.textPrimary)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 10)
+                .background(index.isMultiple(of: 2) ? Color.clear : S.cardBg)
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(S.rowBorder)
+                        .frame(height: 1)
                 }
             }
         }
@@ -488,7 +412,7 @@ private struct InvoiceReportPDFContent: View {
 
     // MARK: - Totals
 
-    private func totalsRow(label: String, cents: Int, isNet: Bool, showParens: Bool = false) -> some View {
+    private func pdfTotalsRow(label: String, cents: Int, showParens: Bool = false) -> some View {
         HStack(spacing: 0) {
             Spacer()
             HStack {
@@ -511,23 +435,10 @@ private struct InvoiceReportPDFContent: View {
 
     // MARK: - Footer
 
-    private func pdfFooter() -> some View {
-        VStack(spacing: 0) {
-            Rectangle()
-                .fill(S.border)
-                .frame(height: 1)
-                .padding(.top, 40)
-            Text("Generated on \(currentDateFormatted)")
-                .font(S.footerFont)
-                .foregroundStyle(S.textFooter)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 16)
-        }
-    }
-
-    private var currentDateFormatted: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        return formatter.string(from: Date())
+    private var pdfFooter: some View {
+        Rectangle()
+            .fill(S.border)
+            .frame(height: 1)
+            .padding(.top, 40)
     }
 }

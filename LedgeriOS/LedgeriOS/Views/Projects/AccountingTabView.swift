@@ -107,7 +107,7 @@ struct AccountingTabView: View {
                 InvoiceReportView(
                     data: ReportAggregationCalculations.computeInvoiceReport(
                         transactions: projectContext.transactions,
-                        items: projectContext.items,
+                        items: accountContext.allItems,
                         categories: projectContext.budgetCategories
                     ),
                     projectName: projectContext.project?.name ?? "",

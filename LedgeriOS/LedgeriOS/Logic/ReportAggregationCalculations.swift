@@ -2,29 +2,22 @@ import Foundation
 
 // MARK: - Invoice Report Types
 
-struct InvoiceLineItem {
-    let transaction: Transaction
-    let displayName: String
-    let formattedDate: String
-    let notes: String?
-    let amountCents: Int
-    let categoryName: String?
-    let linkedItems: [InvoiceItem]
-    let isMissingProjectPrices: Bool
-}
-
-struct InvoiceItem {
-    let name: String?
-    let projectPriceCents: Int?
+/// A single line on the invoice — either an item or a non-item transaction.
+struct InvoiceLineEntry {
+    let name: String
+    let priceCents: Int
     let isMissingPrice: Bool
 }
 
 struct InvoiceReportData {
-    let chargeLines: [InvoiceLineItem]
-    let creditLines: [InvoiceLineItem]
-    var chargesSubtotalCents: Int { chargeLines.reduce(0) { $0 + $1.amountCents } }
-    var creditsSubtotalCents: Int { creditLines.reduce(0) { $0 + $1.amountCents } }
+    let chargeLines: [InvoiceLineEntry]
+    let creditLines: [InvoiceLineEntry]
+    var chargesSubtotalCents: Int { chargeLines.reduce(0) { $0 + $1.priceCents } }
+    var creditsSubtotalCents: Int { creditLines.reduce(0) { $0 + $1.priceCents } }
     var netDueCents: Int { chargesSubtotalCents - creditsSubtotalCents }
+    var hasFallbackPrices: Bool {
+        chargeLines.contains { $0.isMissingPrice } || creditLines.contains { $0.isMissingPrice }
+    }
 }
 
 // MARK: - Client Summary Types
@@ -97,44 +90,13 @@ enum ReportAggregationCalculations {
         return nil
     }
 
-    /// Display name for a transaction in invoice context.
-    static func invoiceDisplayName(for tx: Transaction) -> String {
-        if tx.isCanonicalInventorySale == true {
-            switch tx.inventorySaleDirection {
-            case .businessToProject: return "Design Business Inventory Sale"
-            case .projectToBusiness: return "Design Business Inventory Purchase"
-            case nil: break
-            }
-        }
-        return tx.source ?? "Transaction"
-    }
-
     // MARK: - Invoice Report
-
-    static func groupLinesByCategory(_ lines: [InvoiceLineItem]) -> [(categoryName: String, lines: [InvoiceLineItem])] {
-        let grouped = Dictionary(grouping: lines) { $0.categoryName ?? "Uncategorized" }
-        return grouped
-            .map { (categoryName: $0.key, lines: $0.value) }
-            .sorted { a, b in
-                if a.categoryName == "Uncategorized" { return false }
-                if b.categoryName == "Uncategorized" { return true }
-                return a.categoryName < b.categoryName
-            }
-    }
 
     static func computeInvoiceReport(
         transactions: [Transaction],
         items: [Item],
         categories: [BudgetCategory]
     ) -> InvoiceReportData {
-        let categoryMap = Dictionary(
-            categories.compactMap { cat -> (String, BudgetCategory)? in
-                guard let id = cat.id else { return nil }
-                return (id, cat)
-            },
-            uniquingKeysWith: { first, _ in first }
-        )
-
         // Fee categories (categoryType == .fee) represent income received from the client,
         // not charges passed through to them. They are intentionally excluded from the invoice.
         let feeCategoryIds = Set(
@@ -150,70 +112,61 @@ enum ReportAggregationCalculations {
             return true
         }
 
-        let charges = active
-            .filter { reimbursementDirection(for: $0) == .owedToCompany }
-            .sorted { compareDatesAscending($0.transactionDate, $1.transactionDate) }
-
-        let credits = active
-            .filter { reimbursementDirection(for: $0) == .owedToClient }
-            .sorted { compareDatesAscending($0.transactionDate, $1.transactionDate) }
-
-        let chargeLines = charges.map { buildInvoiceLine($0, items: items, categoryMap: categoryMap) }
-        let creditLines = credits.map { buildInvoiceLine($0, items: items, categoryMap: categoryMap) }
-
-        return InvoiceReportData(chargeLines: chargeLines, creditLines: creditLines)
-    }
-
-    private static func buildInvoiceLine(
-        _ transaction: Transaction,
-        items: [Item],
-        categoryMap: [String: BudgetCategory]
-    ) -> InvoiceLineItem {
-        let txItemIds = transaction.itemIds ?? []
-        let linkedItems = items.filter { item in
-            guard let itemId = item.id else { return false }
-            return txItemIds.contains(itemId)
-        }
-
-        let amountCents = transaction.amountCents ?? 0
-        var invoiceItems: [InvoiceItem] = []
-        var hasMissingPrices = false
-
-        for item in linkedItems {
-            let isMissing = item.projectPriceCents == nil || item.projectPriceCents == 0
-            if isMissing { hasMissingPrices = true }
-            invoiceItems.append(InvoiceItem(
-                name: item.displayName,
-                projectPriceCents: item.projectPriceCents,
-                isMissingPrice: isMissing
-            ))
-        }
-
-        let categoryId = transaction.budgetCategoryId
-        let categoryName = categoryId.flatMap { categoryMap[$0]?.name }
-
-        let displayName = invoiceDisplayName(for: transaction)
-        let formattedDate = transaction.transactionDate ?? ""
-
-        return InvoiceLineItem(
-            transaction: transaction,
-            displayName: displayName,
-            formattedDate: formattedDate,
-            notes: transaction.notes,
-            amountCents: amountCents,
-            categoryName: categoryName,
-            linkedItems: invoiceItems,
-            isMissingProjectPrices: hasMissingPrices
+        let itemMap = Dictionary(
+            items.compactMap { item -> (String, Item)? in
+                guard let id = item.id else { return nil }
+                return (id, item)
+            },
+            uniquingKeysWith: { first, _ in first }
         )
-    }
 
-    private static func compareDatesAscending(_ a: String?, _ b: String?) -> Bool {
-        switch (a, b) {
-        case (nil, nil): return false
-        case (nil, _): return true
-        case (_, nil): return false
-        case let (a?, b?): return a < b
+        var chargeLines: [InvoiceLineEntry] = []
+        var creditLines: [InvoiceLineEntry] = []
+        for tx in active {
+            guard let direction = reimbursementDirection(for: tx) else { continue }
+
+            let txItemIds = tx.itemIds ?? []
+            let linkedItems = txItemIds.compactMap { itemMap[$0] }
+
+            if linkedItems.isEmpty {
+                // Non-item transaction (e.g., service fee) — use transaction amount
+                let entry = InvoiceLineEntry(
+                    name: tx.source ?? tx.notes ?? "Adjustment",
+                    priceCents: tx.amountCents ?? 0,
+                    isMissingPrice: false
+                )
+                switch direction {
+                case .owedToCompany: chargeLines.append(entry)
+                case .owedToClient: creditLines.append(entry)
+                }
+            } else {
+                // Flatten items as individual line entries
+                for item in linkedItems {
+                    let projectPrice = item.projectPriceCents ?? 0
+                    let priceCents = projectPrice > 0
+                        ? projectPrice
+                        : (item.purchasePriceCents ?? 0)
+                    let isMissing = projectPrice == 0
+                    let entry = InvoiceLineEntry(
+                        name: item.displayName.isEmpty ? "Unnamed Item" : item.displayName,
+                        priceCents: priceCents,
+                        isMissingPrice: isMissing
+                    )
+                    switch direction {
+                    case .owedToCompany: chargeLines.append(entry)
+                    case .owedToClient: creditLines.append(entry)
+                    }
+                }
+            }
         }
+
+        chargeLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        creditLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+        return InvoiceReportData(
+            chargeLines: chargeLines,
+            creditLines: creditLines
+        )
     }
 
     // MARK: - Client Summary
