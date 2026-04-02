@@ -1,14 +1,23 @@
 import SwiftUI
+import UniformTypeIdentifiers
+#if canImport(UIKit)
+import PhotosUI
+#endif
 
 struct AccountView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
+    @Environment(MediaService.self) private var mediaService
 
-    @State private var businessProfile: BusinessProfile?
     @State private var showingEditProfile = false
     @State private var showingSignOutConfirmation = false
+    @State private var showingLogoPicker = false
+    @State private var isUploadingLogo = false
+    #if canImport(UIKit)
+    @State private var logoPickerItem: PhotosPickerItem?
+    #endif
 
-    private let profileService = BusinessProfileService()
+    private let accountsService = AccountsService()
 
     var body: some View {
         ScrollView {
@@ -21,10 +30,27 @@ struct AccountView: View {
 
                         Card {
                             VStack(alignment: .leading, spacing: Spacing.md) {
-                                DetailRow(
-                                    label: "Business Name",
-                                    value: businessProfile?.name ?? accountContext.account?.name ?? "—"
-                                )
+                                // Logo
+                                HStack(spacing: Spacing.md) {
+                                    logoButton
+                                        .overlay {
+                                            if isUploadingLogo {
+                                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                                    .fill(.ultraThinMaterial)
+                                                    .frame(width: 64, height: 64)
+                                                    .overlay(ProgressView())
+                                            }
+                                        }
+
+                                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                                        Text(accountContext.account?.name ?? "—")
+                                            .font(Typography.h3)
+                                            .foregroundStyle(BrandColors.textPrimary)
+                                        Text("Tap logo to change")
+                                            .font(Typography.caption)
+                                            .foregroundStyle(BrandColors.textTertiary)
+                                    }
+                                }
 
                                 Button {
                                     showingEditProfile = true
@@ -84,14 +110,39 @@ struct AccountView: View {
             }
         }
         .background(BrandColors.background)
-        .task { await loadProfile() }
         .adaptivePresentation(isPresented: $showingEditProfile, style: .quickMenu) {
             EditProfileSheet(
-                currentName: businessProfile?.name ?? accountContext.account?.name ?? ""
+                currentName: accountContext.account?.name ?? ""
             ) { name in
-                updateProfile(name: name)
+                updateAccountName(name)
             }
         }
+        #if canImport(UIKit)
+        .onChange(of: logoPickerItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self) {
+                    await uploadLogo(data)
+                }
+            }
+        }
+        #endif
+        #if canImport(AppKit)
+        .fileImporter(
+            isPresented: $showingLogoPicker,
+            allowedContentTypes: [.image],
+            allowsMultipleSelection: false
+        ) { result in
+            guard case .success(let urls) = result, let url = urls.first else { return }
+            Task {
+                guard url.startAccessingSecurityScopedResource() else { return }
+                defer { url.stopAccessingSecurityScopedResource() }
+                if let data = try? Data(contentsOf: url) {
+                    await uploadLogo(data)
+                }
+            }
+        }
+        #endif
         .confirmationDialog(
             "Sign out?",
             isPresented: $showingSignOutConfirmation,
@@ -106,20 +157,69 @@ struct AccountView: View {
         }
     }
 
-    // MARK: - Data
+    // MARK: - Logo Button
 
-    private func loadProfile() async {
-        guard let accountId = accountContext.currentAccountId else { return }
-        businessProfile = try? await profileService.fetch(accountId: accountId)
+    @ViewBuilder
+    private var logoButton: some View {
+        let logoThumbnail = Group {
+            if let logoUrl = accountContext.account?.logo?.url, !logoUrl.isEmpty {
+                FirebaseImage(url: logoUrl, contentMode: .fill) {
+                    ProgressView()
+                }
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            } else {
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .fill(BrandColors.inputBackground)
+                    .overlay(
+                        Image(systemName: "building.2")
+                            .font(.system(size: 24))
+                            .foregroundStyle(BrandColors.textTertiary)
+                    )
+                    .frame(width: 64, height: 64)
+            }
+        }
+
+        #if canImport(UIKit)
+        PhotosPicker(selection: $logoPickerItem, matching: .images) {
+            logoThumbnail
+        }
+        .buttonStyle(.plain)
+        #else
+        Button { showingLogoPicker = true } label: {
+            logoThumbnail
+        }
+        .buttonStyle(.plain)
+        #endif
     }
 
-    private func updateProfile(name: String) {
+    // MARK: - Data
+
+    private func updateAccountName(_ name: String) {
         guard let accountId = accountContext.currentAccountId else { return }
-        var profile = businessProfile ?? BusinessProfile()
-        profile.name = name
         Task {
-            try? await profileService.update(accountId: accountId, profile: profile)
-            businessProfile = profile
+            try? await accountsService.updateAccount(accountId: accountId, fields: ["name": name])
+        }
+    }
+
+    private func uploadLogo(_ data: Data) async {
+        guard let accountId = accountContext.currentAccountId else { return }
+        isUploadingLogo = true
+        defer { isUploadingLogo = false }
+
+        do {
+            let filename = "logo_\(UUID().uuidString).jpg"
+            let path = mediaService.uploadPath(
+                accountId: accountId,
+                entityType: "account",
+                entityId: accountId,
+                filename: filename
+            )
+            let url = try await mediaService.uploadImage(data, path: path)
+            let logo: [String: Any] = ["url": url, "kind": "image"]
+            try await accountsService.updateAccount(accountId: accountId, fields: ["logo": logo])
+        } catch {
+            print("Logo upload failed: \(error)")
         }
     }
 }

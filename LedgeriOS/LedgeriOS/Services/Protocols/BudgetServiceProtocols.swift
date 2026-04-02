@@ -5,6 +5,7 @@ import FirebaseFirestore
 protocol AccountsServiceProtocol: Sendable {
     func getAccount(accountId: String) async throws -> Account?
     func subscribeToAccount(accountId: String, onChange: @escaping (Account?) -> Void) -> ListenerRegistration
+    func updateAccount(accountId: String, fields: [String: Any]) async throws
 }
 
 // MARK: - BudgetCategoriesService

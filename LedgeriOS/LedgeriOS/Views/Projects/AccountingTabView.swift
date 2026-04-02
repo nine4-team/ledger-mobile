@@ -10,9 +10,6 @@ struct AccountingTabView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @State private var columnCount: Int = 1
-    @State private var businessProfile: BusinessProfile?
-
-    private let profileService = BusinessProfileService()
 
     private var owedToCompanyCents: Int {
         projectContext.transactions
@@ -112,8 +109,8 @@ struct AccountingTabView: View {
                     ),
                     projectName: projectContext.project?.name ?? "",
                     clientName: projectContext.project?.clientName ?? "",
-                    businessName: businessProfile?.name,
-                    businessLogoUrl: businessProfile?.logoUrl
+                    businessName: accountContext.account?.name,
+                    businessLogoUrl: accountContext.account?.logo?.url
                 )
             case .clientSummary:
                 ClientSummaryReportView(
@@ -125,8 +122,8 @@ struct AccountingTabView: View {
                     ),
                     projectName: projectContext.project?.name ?? "",
                     clientName: projectContext.project?.clientName,
-                    businessName: businessProfile?.name,
-                    businessLogoUrl: businessProfile?.logoUrl
+                    businessName: accountContext.account?.name,
+                    businessLogoUrl: accountContext.account?.logo?.url
                 )
             case .propertyManagement:
                 PropertyManagementReportView(
@@ -136,14 +133,9 @@ struct AccountingTabView: View {
                     ),
                     projectName: projectContext.project?.name ?? "",
                     clientName: projectContext.project?.clientName,
-                    businessName: businessProfile?.name,
-                    businessLogoUrl: businessProfile?.logoUrl
+                    businessName: accountContext.account?.name,
+                    businessLogoUrl: accountContext.account?.logo?.url
                 )
-            }
-        }
-        .task {
-            if let accountId = accountContext.currentAccountId {
-                businessProfile = try? await profileService.fetch(accountId: accountId)
             }
         }
     }

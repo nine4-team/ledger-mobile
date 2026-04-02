@@ -35,6 +35,8 @@ private struct MockAccountsService: AccountsServiceProtocol {
         onChange(accounts[accountId])
         return MockListenerRegistration()
     }
+
+    func updateAccount(accountId: String, fields: [String: Any]) async throws {}
 }
 
 // MARK: - Tests

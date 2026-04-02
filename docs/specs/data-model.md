@@ -30,6 +30,7 @@ All data lives under a single **Account** document. Every entity path begins wit
 | id | string | Document ID |
 | name | string | Required |
 | ownerUid | string, nullable | Firebase Auth UID of the account owner |
+| logo | AttachmentRef, nullable | Business logo image |
 | createdAt | timestamp | |
 | updatedAt | timestamp | |
 
@@ -106,7 +107,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | projectId | string, nullable | FK to Project. Null means item is in business inventory |
 | transactionId | string, nullable | FK to Transaction. **Exists but is NOT reliably set.** Do not use for lookups (see Relationships warning) |
 | spaceId | string, nullable | FK to Space |
-| budgetCategoryId | string, nullable | FK to BudgetCategory. Persists across scope moves; set during canonical sale prompting |
+| budgetCategoryId | string, nullable | FK to BudgetCategory. Persists across scope moves. Auto-inherited from transaction when null (on association or reassignment); set via prompting for cross-scope sells |
 | name | string, nullable | Primary display name |
 | description | string, nullable | Legacy field. Fallback display name when name is null |
 | sku | string, nullable | Stock-keeping unit identifier |
@@ -407,7 +408,7 @@ Embedded within Checklist.
 | Item | belongs to | Transaction | N:1 | `item.transactionId` | **EXISTS but UNRELIABLE.** Do not use for forward lookups from transaction to items. May be used for reverse lookups (given an item, find its transaction) with caution |
 | Item | belongs to | Project | N:1 | `item.projectId` | Null means business inventory. See Scope Semantics |
 | Item | belongs to | Space | N:1 | `item.spaceId` | Null means item is not in any space |
-| Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | Persists across scope moves. Set during canonical sale category prompting |
+| Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | Persists across scope moves. Auto-set from destination transaction when null (on association or reassignment); set during canonical sale category prompting for cross-scope sells |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |
 | Space | belongs to | Project | N:1 | `space.projectId` | Null means business inventory scope |

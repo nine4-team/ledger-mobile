@@ -26,13 +26,6 @@ protocol InvitesServiceProtocol: Sendable {
     func revoke(accountId: String, inviteId: String) async throws
 }
 
-// MARK: - BusinessProfileService
-
-protocol BusinessProfileServiceProtocol: Sendable {
-    func fetch(accountId: String) async throws -> BusinessProfile?
-    func update(accountId: String, profile: BusinessProfile) async throws
-}
-
 // MARK: - AccountPresetsService
 
 protocol AccountPresetsServiceProtocol: Sendable {
