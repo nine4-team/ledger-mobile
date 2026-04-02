@@ -53,7 +53,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
-      reimbursementType: z.string().optional().describe("Filter by reimbursement type"),
+      reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Filter by reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
@@ -236,8 +236,15 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Notes"),
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
+      subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents"),
+      taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25)"),
+      paymentMethod: z.string().optional().describe("Payment method (e.g. 'Credit Card', 'Cash', 'Check')"),
+      purchasedBy: z.string().optional().describe("Who made the purchase"),
+      reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
+      receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
+      status: z.string().default("completed").describe("Transaction status (e.g. 'completed', 'pending')"),
     },
-    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds }) => {
+    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status }) => {
       if (txType === "Sale") {
         return {
           content: [{ type: "text", text: "Cannot create Sale transactions directly — use the sell_items tool instead. Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform." }],
@@ -249,6 +256,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         budgetCategoryId,
         amountCents,
         type: txType,
+        status,
         isCanceled: false,
         isComplete: false,
         createdAt: new Date(),
@@ -259,6 +267,12 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (transactionDate) data.transactionDate = transactionDate;
       if (notes) data.notes = notes;
       if (itemIds?.length) data.itemIds = itemIds;
+      if (subtotalCents !== undefined) data.subtotalCents = subtotalCents;
+      if (taxRatePct !== undefined) data.taxRatePct = taxRatePct;
+      if (paymentMethod) data.paymentMethod = paymentMethod;
+      if (purchasedBy) data.purchasedBy = purchasedBy;
+      if (reimbursementType && reimbursementType !== "none") data.reimbursementType = reimbursementType;
+      if (receiptEmailed !== undefined) data.receiptEmailed = receiptEmailed;
 
       const ref = await accountCollection(db, "transactions").add(data);
 
@@ -296,7 +310,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
       projectId: z.string().optional().describe("Project ID — set to reassign transaction to a different project"),
       purchasedBy: z.string().optional().describe("Who made the purchase"),
-      reimbursementType: z.string().optional().describe("Reimbursement type"),
+      reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
       paymentMethod: z.string().optional().describe("Payment method (e.g. 'Credit Card', 'Cash', 'Check')"),
     },
@@ -327,7 +341,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         purchasedBy: z.string().optional(),
         source: z.string().optional(),
         status: z.string().optional(),
-        reimbursementType: z.string().optional(),
+        reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional(),
         paymentMethod: z.string().optional(),
         receiptEmailed: z.boolean().optional(),
       }).describe("Fields to set on all matched transactions"),

@@ -44,8 +44,9 @@ struct TransactionFilterMenu: View {
             group: .reimbursementStatus,
             options: [
                 ("all", "All"),
-                ("we-owe", "Owed to Client"),
-                ("client-owes", "Owed to Design Business"),
+                ("none", "None"),
+                ("owed-to-client", "Owed to Client"),
+                ("owed-to-company", "Owed to Business"),
             ]
         ))
 

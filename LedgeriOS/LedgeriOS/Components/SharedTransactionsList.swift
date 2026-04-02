@@ -154,7 +154,7 @@ enum TransactionFilterSortCalculations {
                 guard filters.status.contains(txStatus) else { return false }
             }
             if !filters.reimbursementStatus.isEmpty {
-                let reimb = tx.reimbursementType ?? ""
+                let reimb = tx.reimbursementType ?? "none"
                 guard filters.reimbursementStatus.contains(reimb) else { return false }
             }
             if !filters.emailReceipt.isEmpty {
