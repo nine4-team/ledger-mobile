@@ -9,11 +9,11 @@ struct SpaceDetailView: View {
     @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
-    // Collapsible section state (Media expanded by default, others collapsed)
+    // Collapsible section state (all expanded by default)
     @State private var isMediaExpanded = true
-    @State private var isNotesExpanded = false
-    @State private var isItemsExpanded = false
-    @State private var isChecklistsExpanded = false
+    @State private var isNotesExpanded = true
+    @State private var isItemsExpanded = true
+    @State private var isChecklistsExpanded = true
 
     // Modal presentation
     @State private var showActionMenu = false

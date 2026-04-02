@@ -11,8 +11,8 @@ struct TransactionDetailView: View {
     @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
-    // Section expanded states — Receipts expanded by default, all others collapsed
-    @State private var expandedSections: Set<String> = ["receipts"]
+    // Section expanded states — all expanded by default
+    @State private var expandedSections: Set<String> = ["receipts", "other-images", "notes", "details", "items", "returned-items", "sold-items", "transaction-audit"]
 
     // Items picker
     @State private var showAddExistingItems = false

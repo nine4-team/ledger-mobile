@@ -11,8 +11,8 @@ struct ItemDetailView: View {
 
     // Collapsible section state
     @State private var isMediaExpanded = true
-    @State private var isNotesExpanded = false
-    @State private var isDetailsExpanded = false
+    @State private var isNotesExpanded = true
+    @State private var isDetailsExpanded = true
 
     // Live document subscription
     @State private var liveItemData: Item?
