@@ -11,6 +11,13 @@ struct TransactionsService: TransactionsServiceProtocol {
 
     func createTransaction(accountId: String, transaction: Transaction) throws -> String {
         let id = try repo(accountId: accountId).create(transaction)
+        // Firebase Codable encoder omits nil optionals instead of writing null.
+        // Inventory transactions need projectId: null so the inventory scope query matches.
+        if transaction.projectId == nil {
+            Firestore.firestore()
+                .document("accounts/\(accountId)/transactions/\(id)")
+                .updateData(["projectId": NSNull()])
+        }
         return id
     }
 
@@ -28,7 +35,7 @@ struct TransactionsService: TransactionsServiceProtocol {
         case .project(let projectId):
             return r.subscribe(where: "projectId", isEqualTo: projectId, onChange: onChange)
         case .inventory:
-            return r.subscribe(where: "isCanonicalInventory", isEqualTo: true, onChange: onChange)
+            return r.subscribe(where: "projectId", isEqualTo: NSNull(), onChange: onChange)
         case .all:
             return r.subscribe(onChange: onChange)
         }
