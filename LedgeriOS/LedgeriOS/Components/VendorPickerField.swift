@@ -16,7 +16,7 @@ struct VendorPickerField: View {
 
     @Environment(AccountContext.self) private var accountContext
 
-    @State private var vendors: [String] = []
+    @State private var vendors: [String] = VendorDefaultsService.defaultVendors
     @State private var listener: ListenerRegistration?
 
     private let service = VendorDefaultsService()
@@ -70,12 +70,20 @@ struct VendorPickerField: View {
     // MARK: - Data
 
     private func startListening() {
-        guard let accountId = accountContext.currentAccountId else { return }
+        guard let accountId = accountContext.currentAccountId else {
+            print("🔴 [VendorPicker] No accountId — skipping vendor load")
+            return
+        }
+
+        print("🟢 [VendorPicker] startListening for account: \(accountId)")
 
         Task { try? await service.initializeDefaults(accountId: accountId) }
 
         listener = service.subscribe(accountId: accountId) { defaults in
-            vendors = defaults?.vendors ?? []
+            print("🟡 [VendorPicker] Listener fired — defaults: \(defaults == nil ? "nil" : "exists"), vendors: \(defaults?.vendors.count ?? -1)")
+            if let loaded = defaults?.vendors, !loaded.isEmpty {
+                vendors = loaded
+            }
         }
     }
 }
@@ -91,7 +99,7 @@ struct VendorPickerModal: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var vendors: [String] = []
+    @State private var vendors: [String] = VendorDefaultsService.defaultVendors
     @State private var listener: ListenerRegistration?
     @State private var otherMode: Bool
     @State private var otherText: String
@@ -132,33 +140,41 @@ struct VendorPickerModal: View {
                 dismiss()
             }
         ) {
-            VStack(spacing: Spacing.xs) {
-                ForEach(displayVendors, id: \.self) { vendor in
-                    vendorOption(vendor, isSelected: !otherMode && selectedValue == vendor) {
-                        otherMode = false
-                        otherFieldFocused = false
-                        onSelect(vendor)
+            ScrollViewReader { proxy in
+                VStack(spacing: Spacing.xs) {
+                    ForEach(displayVendors, id: \.self) { vendor in
+                        vendorOption(vendor, isSelected: !otherMode && selectedValue == vendor) {
+                            otherMode = false
+                            otherFieldFocused = false
+                            onSelect(vendor)
+                        }
                     }
-                }
 
-                vendorOption("Other", isSelected: otherMode) {
-                    otherMode = true
-                    otherText = ""
-                    otherFieldFocused = true
-                }
+                    vendorOption("Other", isSelected: otherMode) {
+                        otherMode = true
+                        otherText = ""
+                    }
 
-                if otherMode {
-                    TextField("e.g. Home Depot, Amazon", text: $otherText)
-                        .font(Typography.input)
-                        .padding(.horizontal, Spacing.md)
-                        .frame(minHeight: 44)
-                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                        )
-                        .focused($otherFieldFocused)
-                        .padding(.top, Spacing.xs)
+                    if otherMode {
+                        TextField("e.g. Home Depot, Amazon", text: $otherText)
+                            .font(Typography.input)
+                            .padding(.horizontal, Spacing.md)
+                            .frame(minHeight: 44)
+                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                            )
+                            .focused($otherFieldFocused)
+                            .padding(.top, Spacing.xs)
+                            .id("otherTextField")
+                            .onAppear {
+                                otherFieldFocused = true
+                                withAnimation {
+                                    proxy.scrollTo("otherTextField", anchor: .bottom)
+                                }
+                            }
+                    }
                 }
             }
         }
@@ -207,7 +223,9 @@ struct VendorPickerModal: View {
         guard let accountId = accountContext.currentAccountId else { return }
 
         listener = service.subscribe(accountId: accountId) { defaults in
-            vendors = defaults?.vendors ?? []
+            if let loaded = defaults?.vendors, !loaded.isEmpty {
+                vendors = loaded
+            }
 
             // Auto-enable "Other" mode if current value doesn't match any preset
             let available = displayVendors
