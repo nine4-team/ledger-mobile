@@ -118,6 +118,15 @@ struct UniversalSearchView: View {
         .onChange(of: debouncedQuery) { _, newValue in
             performSearch(query: newValue)
         }
+        .onChange(of: accountContext.allTransactions.count) { _, _ in
+            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
+        }
+        .onChange(of: accountContext.allItems.count) { _, _ in
+            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
+        }
+        .onChange(of: accountContext.allSpaces.count) { _, _ in
+            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
+        }
         .onChange(of: selectedTab) { _, _ in
             selectedItemIds.removeAll()
             selectedTransactionIds.removeAll()
