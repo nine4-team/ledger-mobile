@@ -1,10 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Item, Transaction } from "../types.js";
-import { accountCollection, queryDocs, getDoc } from "../util/query.js";
+import type { Item, Transaction, AttachmentRef } from "../types.js";
+import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { itemMatches } from "../util/search.js";
+import { uploadToStorage, deleteFromStorage } from "../storage.js";
+import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 
 function formatItem(item: Item & { id: string }) {
   return {
@@ -132,16 +134,18 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       sku: z.string().optional().describe("SKU"),
       notes: z.string().optional().describe("Notes"),
       spaceId: z.string().optional().describe("Space ID"),
-      budgetCategoryId: z.string().optional().describe("Budget category ID"),
+      budgetCategoryId: z.string().optional().describe("Budget category ID. Auto-inherited from the linked transaction if not provided."),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375). Auto-inherited from the linked transaction if not provided."),
     },
     async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId, taxRatePct }) => {
-      // Auto-inherit taxRatePct from transaction if not explicitly provided
+      // Auto-inherit taxRatePct and budgetCategoryId from transaction if not explicitly provided
       let resolvedTaxRate = taxRatePct;
-      if (resolvedTaxRate === undefined && transactionId) {
+      let resolvedBudgetCategoryId = budgetCategoryId;
+      if ((resolvedTaxRate === undefined || resolvedBudgetCategoryId === undefined) && transactionId) {
         const tx = await getDoc<Transaction>(db, "transactions", transactionId);
-        if (tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
+        if (resolvedTaxRate === undefined && tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
+        if (resolvedBudgetCategoryId === undefined && tx?.budgetCategoryId) resolvedBudgetCategoryId = tx.budgetCategoryId;
       }
 
       const data: Record<string, unknown> = {
@@ -157,7 +161,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (sku) data.sku = sku;
       if (notes) data.notes = notes;
       if (spaceId) data.spaceId = spaceId;
-      if (budgetCategoryId) data.budgetCategoryId = budgetCategoryId;
+      if (resolvedBudgetCategoryId) data.budgetCategoryId = resolvedBudgetCategoryId;
       if (transactionId) data.transactionId = transactionId;
       if (resolvedTaxRate !== undefined) data.taxRatePct = resolvedTaxRate;
 
@@ -306,6 +310,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       notes: z.string().optional().describe("Notes"),
       projectId: z.string().optional().describe("Project ID — set to reassign item to a different project"),
       spaceId: z.string().optional().describe("Space ID"),
+      budgetCategoryId: z.string().optional().describe("Budget category ID"),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
       quantity: z.coerce.number().optional().describe("Quantity (defaults to 1)"),
@@ -507,7 +512,191 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }
 
       await batch.commit();
+
+      // Best-effort cleanup of Storage files for any images on the item
+      if (item.images?.length) {
+        for (const img of item.images) {
+          try { await deleteFromStorage(img.url); } catch { /* ignore */ }
+          if (img.thumbnailUrlSm) {
+            try { await deleteFromStorage(img.thumbnailUrlSm); } catch { /* ignore */ }
+          }
+          if (img.thumbnailUrlMd) {
+            try { await deleteFromStorage(img.thumbnailUrlMd); } catch { /* ignore */ }
+          }
+        }
+      }
+
       return { content: [{ type: "text", text: `Deleted item ${itemId}` }] };
+    }
+  );
+
+  // ── attach_item_image ───────────────────────────────────────────────────────
+  server.tool(
+    "attach_item_image",
+    "Attach an image or file to an item. Uploads to Firebase Storage and appends an AttachmentRef to the item's images array. For images, generates sm (300px) and md (800px) thumbnails.",
+    {
+      itemId: z.string().describe("Item document ID"),
+      fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),
+      fileUrl: z.string().optional().describe("URL to fetch the file from (provide this OR fileData, not both)"),
+      fileName: z.string().describe("File name (e.g. 'photo.jpg', 'spec-sheet.pdf')"),
+      contentType: z.string().optional().describe("MIME type (e.g. 'image/jpeg', 'image/png', 'application/pdf'). Inferred from response headers when using fileUrl."),
+    },
+    async ({ itemId, fileData, fileUrl, fileName, contentType }) => {
+      // 1. Validate item exists before uploading anything
+      const item = await getDoc<Item>(db, "items", itemId);
+      if (!item) {
+        return { content: [{ type: "text", text: `Item ${itemId} not found.` }], isError: true };
+      }
+
+      // 2. Resolve file data from fileData (base64) or fileUrl
+      if (!fileData && !fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not neither." }], isError: true };
+      }
+      if (fileData && fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not both." }], isError: true };
+      }
+
+      let data: Buffer;
+      let resolvedContentType = contentType;
+
+      if (fileUrl) {
+        const res = await fetch(fileUrl);
+        if (!res.ok) {
+          return { content: [{ type: "text", text: `Failed to fetch file from URL: ${res.status} ${res.statusText}` }], isError: true };
+        }
+        data = Buffer.from(await res.arrayBuffer());
+        if (!resolvedContentType) {
+          resolvedContentType = res.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
+        }
+      } else {
+        data = Buffer.from(fileData!, "base64");
+      }
+
+      if (!resolvedContentType) {
+        resolvedContentType = "application/octet-stream";
+      }
+
+      const sizeMB = data.length / (1024 * 1024);
+      if (sizeMB > 10) {
+        return { content: [{ type: "text", text: `File too large (${sizeMB.toFixed(1)}MB). Maximum is 10MB.` }], isError: true };
+      }
+
+      // 3. Determine attachment kind
+      const kind = resolvedContentType.startsWith("image/")
+        ? "image"
+        : resolvedContentType === "application/pdf"
+          ? "pdf"
+          : "file";
+
+      // 4. Upload primary file
+      const storagePath = `${accountPath()}/items/${itemId}/${fileName}`;
+      const url = await uploadToStorage(storagePath, data, resolvedContentType);
+
+      // 5. Generate and upload thumbnails for images
+      let thumbnailUrlSm: string | undefined;
+      let thumbnailUrlMd: string | undefined;
+
+      const thumbs = await generateThumbnails(data, resolvedContentType);
+      if (thumbs.sm) {
+        thumbnailUrlSm = await uploadToStorage(
+          thumbnailPath(storagePath, "sm"), thumbs.sm, "image/jpeg"
+        );
+      }
+      if (thumbs.md) {
+        thumbnailUrlMd = await uploadToStorage(
+          thumbnailPath(storagePath, "md"), thumbs.md, "image/jpeg"
+        );
+      }
+
+      // 6. Build AttachmentRef entry
+      const isPrimary = !item.images?.length;
+
+      const entry: Record<string, unknown> = {
+        url,
+        kind,
+        isPrimary,
+      };
+      if (fileName) entry.fileName = fileName;
+      if (resolvedContentType) entry.contentType = resolvedContentType;
+      if (thumbnailUrlSm) entry.thumbnailUrlSm = thumbnailUrlSm;
+      if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
+
+      // 7. Append to Firestore array
+      try {
+        await accountCollection(db, "items").doc(itemId).update({
+          images: FieldValue.arrayUnion(entry),
+          updatedAt: new Date(),
+        });
+      } catch (err) {
+        // Clean up uploaded files on Firestore failure
+        await deleteFromStorage(url).catch(() => {});
+        if (thumbnailUrlSm) await deleteFromStorage(thumbnailUrlSm).catch(() => {});
+        if (thumbnailUrlMd) await deleteFromStorage(thumbnailUrlMd).catch(() => {});
+        throw err;
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            message: `Attached ${fileName} to item ${itemId}`,
+            url,
+            kind,
+            thumbnailUrlSm: thumbnailUrlSm ?? null,
+            thumbnailUrlMd: thumbnailUrlMd ?? null,
+          }, null, 2),
+        }],
+      };
+    }
+  );
+
+  // ── detach_item_image ───────────────────────────────────────────────────────
+  server.tool(
+    "detach_item_image",
+    "Remove an attachment from an item. Deletes the file and its thumbnails from Firebase Storage and removes the AttachmentRef from the item's images array. If the removed image was primary, promotes the next image.",
+    {
+      itemId: z.string().describe("Item document ID"),
+      url: z.string().describe("The attachment URL to remove (matches the 'url' field in the AttachmentRef)"),
+    },
+    async ({ itemId, url }) => {
+      const item = await getDoc<Item>(db, "items", itemId);
+      if (!item) {
+        return { content: [{ type: "text", text: `Item ${itemId} not found.` }], isError: true };
+      }
+
+      const attachments = item.images;
+      const entry = attachments?.find((a) => a.url === url);
+      if (!entry) {
+        return { content: [{ type: "text", text: "No attachment with that URL found in images." }], isError: true };
+      }
+
+      // Remove the entry and promote next image to primary if needed
+      let remaining = attachments!.filter((a) => a.url !== url);
+      if (entry.isPrimary && remaining.length > 0) {
+        remaining = remaining.map((a, i) => i === 0 ? { ...a, isPrimary: true } : a);
+      }
+
+      await accountCollection(db, "items").doc(itemId).update({
+        images: remaining,
+        updatedAt: new Date(),
+      });
+
+      // Delete files from Storage (best-effort)
+      const deleted: string[] = [];
+      try { await deleteFromStorage(url); deleted.push("primary"); } catch { /* ignore */ }
+      if (entry.thumbnailUrlSm) {
+        try { await deleteFromStorage(entry.thumbnailUrlSm); deleted.push("thumbnail-sm"); } catch { /* ignore */ }
+      }
+      if (entry.thumbnailUrlMd) {
+        try { await deleteFromStorage(entry.thumbnailUrlMd); deleted.push("thumbnail-md"); } catch { /* ignore */ }
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: `Removed attachment from item ${itemId}. Deleted from storage: ${deleted.join(", ") || "none (files may have already been removed)"}`,
+        }],
+      };
     }
   );
 }
