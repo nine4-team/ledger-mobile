@@ -371,38 +371,10 @@ struct SharedItemsList: View {
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.sm)
             }
-            .onChange(of: findState.currentMatchID) { _, matchID in
-                if let matchID {
-                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
-                }
-            }
-            .onChange(of: findState.debouncedQuery) { _, _ in
-                registerFindMatches()
-            }
-            .onChange(of: processedItems.count) { _, _ in
-                if findState.isActive { registerFindMatches() }
+            .onReceive(findState.scrollToPublisher) { matchID in
+                withAnimation { proxy.scrollTo(matchID, anchor: .center) }
             }
         }
-    }
-
-    private func registerFindMatches() {
-        let query = findState.debouncedQuery
-        guard !query.isEmpty else {
-            findState.registerMatches([], source: "items")
-            return
-        }
-        let entities: [(id: String, texts: [String])] = processedItems.compactMap { item -> (id: String, texts: [String])? in
-            guard let id = item.id else { return nil }
-            var texts = [item.displayName]
-            if let source = item.source { texts.append(source) }
-            if let sku = item.sku { texts.append(sku) }
-            if let price = item.projectPriceCents ?? item.purchasePriceCents {
-                texts.append(CurrencyFormatting.formatCents(price))
-            }
-            return (id: id, texts: texts)
-        }
-        let matches = FindMatchCalculations.computeMatches(query: query, entities: entities)
-        findState.registerMatches(matches, source: "items")
     }
 
     // MARK: - macOS Group Overlay

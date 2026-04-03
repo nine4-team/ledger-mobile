@@ -84,13 +84,8 @@ struct ProjectsListView: View {
                     .padding(.bottom, Spacing.md)
                 }
                 .scrollContentTopFade()
-                .onChange(of: findState.currentMatchID) { _, matchID in
-                    if let matchID {
-                        withAnimation { proxy.scrollTo(matchID, anchor: .center) }
-                    }
-                }
-                .onChange(of: findState.debouncedQuery) { _, _ in
-                    registerProjectFindMatches()
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
                 }
             }
         }
@@ -237,17 +232,4 @@ struct ProjectsListView: View {
         )]
     }
 
-    private func registerProjectFindMatches() {
-        let query = findState.debouncedQuery
-        guard !query.isEmpty else {
-            findState.registerMatches([], source: "projects")
-            return
-        }
-        let entities: [(id: String, texts: [String])] = filteredProjects.compactMap { project -> (id: String, texts: [String])? in
-            guard let id = project.id else { return nil }
-            return (id: id, texts: [project.name, project.clientName])
-        }
-        let matches = FindMatchCalculations.computeMatches(query: query, entities: entities)
-        findState.registerMatches(matches, source: "projects")
-    }
 }

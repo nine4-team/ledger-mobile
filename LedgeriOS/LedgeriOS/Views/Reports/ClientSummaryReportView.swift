@@ -34,15 +34,15 @@ struct ClientSummaryReportView: View {
                         #endif
                     }
                     if let businessName, !businessName.isEmpty {
-                        Text(businessName)
+                        FindableText(businessName)
                             .font(Typography.h2)
                             .foregroundStyle(BrandColors.textPrimary)
                     }
-                    Text(projectName)
+                    FindableText(projectName)
                         .font(Typography.h1)
                         .foregroundStyle(BrandColors.textPrimary)
                     if let clientName, !clientName.isEmpty {
-                        Text(clientName)
+                        FindableText(clientName)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                     }
@@ -63,7 +63,7 @@ struct ClientSummaryReportView: View {
 
                         ForEach(Array(data.categoryBreakdowns.enumerated()), id: \.offset) { _, breakdown in
                             HStack {
-                                Text(breakdown.categoryName)
+                                FindableText(breakdown.categoryName)
                                     .font(Typography.body)
                                     .foregroundStyle(BrandColors.textPrimary)
                                 Spacer()
@@ -85,17 +85,17 @@ struct ClientSummaryReportView: View {
                         ForEach(Array(data.items.enumerated()), id: \.offset) { _, clientItem in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(clientItem.item.displayName)
+                                    FindableText(clientItem.item.displayName)
                                         .font(Typography.body)
                                         .foregroundStyle(BrandColors.textPrimary)
                                     HStack(spacing: Spacing.sm) {
                                         if let source = clientItem.item.source, !source.isEmpty {
-                                            Text(source)
+                                            FindableText(source)
                                                 .font(Typography.caption)
                                                 .foregroundStyle(BrandColors.textTertiary)
                                         }
                                         if let spaceName = clientItem.spaceName {
-                                            Text(spaceName)
+                                            FindableText(spaceName)
                                                 .font(Typography.caption)
                                                 .foregroundStyle(BrandColors.textTertiary)
                                         }

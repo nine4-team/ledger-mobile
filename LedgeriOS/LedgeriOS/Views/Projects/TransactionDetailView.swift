@@ -9,6 +9,7 @@ struct TransactionDetailView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
+    @Environment(FindStateManager.self) private var findState
     @Environment(\.dismiss) private var dismiss
 
     // Section expanded states — all expanded by default
@@ -105,30 +106,36 @@ struct TransactionDetailView: View {
             onClose: { pinnedAttachment = nil },
             onChangeImage: { pinnedAttachment = $0 }
         ) {
-            ScrollView {
-                AdaptiveContentWidth {
-                    LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                        VStack(spacing: Spacing.lg) {
-                            badgesRow
-                            heroCard
-                            nextStepsCard
+            ScrollViewReader { proxy in
+                ScrollView {
+                    AdaptiveContentWidth {
+                        LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                            VStack(spacing: Spacing.lg) {
+                                badgesRow
+                                heroCard
+                                nextStepsCard
+                            }
+                            .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
+                            .padding(.bottom, Spacing.xs)
+                            receiptsSection
+                            otherImagesSection
+                            notesSection
+                            detailsSection
+                            itemsSection
+                            returnedItemsSection
+                            soldItemsSection
+                            transactionAuditSection
                         }
-                        .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
-                        .padding(.bottom, Spacing.xs)
-                        receiptsSection
-                        otherImagesSection
-                        notesSection
-                        detailsSection
-                        itemsSection
-                        returnedItemsSection
-                        soldItemsSection
-                        transactionAuditSection
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.lg)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.lg)
+                }
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
                 }
             }
         }
+        .findEntity(id: transaction.id)
         .background(BrandColors.background)
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
@@ -299,7 +306,7 @@ struct TransactionDetailView: View {
     private var heroCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text(TransactionDisplayCalculations.displayName(for: currentTransaction))
+                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
 
@@ -307,7 +314,7 @@ struct TransactionDetailView: View {
                     Text("Amount:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    Text(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
+                    FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -316,7 +323,7 @@ struct TransactionDetailView: View {
                     Text("Date:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    Text(TransactionDisplayCalculations.formattedDate(for: currentTransaction))
+                    FindableText(TransactionDisplayCalculations.formattedDate(for: currentTransaction))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -326,7 +333,7 @@ struct TransactionDetailView: View {
                         Text("Budget Category:")
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
-                        Text(categoryName)
+                        FindableText(categoryName)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textPrimary)
                     }
@@ -502,10 +509,9 @@ struct TransactionDetailView: View {
             onEdit: { showEditNotes = true }
         ) {
             if let notes = currentTransaction.notes, !notes.isEmpty {
-                Text(notes)
+                FindableText(notes)
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textPrimary)
-                    .textSelection(.enabled)
                     .padding(.top, Spacing.xs)
             } else {
                 Text("No notes")
@@ -1016,4 +1022,5 @@ struct TransactionDetailView: View {
             _ = try? service.createItem(accountId: accountId, item: item)
         }
     }
+
 }

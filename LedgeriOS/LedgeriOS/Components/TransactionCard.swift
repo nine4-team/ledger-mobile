@@ -55,6 +55,8 @@ struct TransactionCard: View {
             }
         }
         .contentShape(Rectangle())
+        .findEntity(id: transaction.id)
+        .findMatchHighlight()
 
         if let onPress {
             base.onTapGesture { onPress() }

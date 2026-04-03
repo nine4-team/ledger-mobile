@@ -33,15 +33,15 @@ struct PropertyManagementReportView: View {
                         #endif
                     }
                     if let businessName, !businessName.isEmpty {
-                        Text(businessName)
+                        FindableText(businessName)
                             .font(Typography.h2)
                             .foregroundStyle(BrandColors.textPrimary)
                     }
-                    Text(projectName)
+                    FindableText(projectName)
                         .font(Typography.h1)
                         .foregroundStyle(BrandColors.textPrimary)
                     if let clientName, !clientName.isEmpty {
-                        Text(clientName)
+                        FindableText(clientName)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                     }
@@ -120,7 +120,7 @@ struct PropertyManagementReportView: View {
     private func spaceSection(title: String, items: [Item], marketValueCents: Int) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             HStack {
-                Text(title)
+                FindableText(title)
                     .sectionLabelStyle()
                 Spacer()
                 Text(CurrencyFormatting.formatCentsWithDecimals(marketValueCents))
@@ -131,12 +131,12 @@ struct PropertyManagementReportView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.displayName)
+                        FindableText(item.displayName)
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textPrimary)
                         HStack(spacing: Spacing.sm) {
                             if let source = item.source {
-                                Text(source)
+                                FindableText(source)
                                     .font(Typography.caption)
                                     .foregroundStyle(BrandColors.textTertiary)
                             }

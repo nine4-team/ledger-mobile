@@ -439,16 +439,8 @@ struct SharedTransactionsList: View {
                     .padding(.horizontal, Spacing.screenPadding)
                     .padding(.vertical, Spacing.sm)
                 }
-                .onChange(of: findState.currentMatchID) { _, matchID in
-                    if let matchID {
-                        withAnimation { proxy.scrollTo(matchID, anchor: .center) }
-                    }
-                }
-                .onChange(of: findState.debouncedQuery) { _, _ in
-                    registerTransactionFindMatches()
-                }
-                .onChange(of: processedTransactions.count) { _, _ in
-                    if findState.isActive { registerTransactionFindMatches() }
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
                 }
             }
         }
@@ -487,24 +479,6 @@ struct SharedTransactionsList: View {
         }
     }
 
-    private func registerTransactionFindMatches() {
-        let query = findState.debouncedQuery
-        guard !query.isEmpty else {
-            findState.registerMatches([], source: "transactions")
-            return
-        }
-        let entities: [(id: String, texts: [String])] = processedTransactions.compactMap { tx -> (id: String, texts: [String])? in
-            guard let id = tx.id else { return nil }
-            var texts: [String] = []
-            if let source = tx.source { texts.append(source) }
-            if let notes = tx.notes { texts.append(notes) }
-            if let date = tx.transactionDate { texts.append(date) }
-            texts.append(TransactionCardCalculations.formattedAmount(amountCents: tx.amountCents, transactionType: tx.transactionType))
-            return (id: id, texts: texts)
-        }
-        let matches = FindMatchCalculations.computeMatches(query: query, entities: entities)
-        findState.registerMatches(matches, source: "transactions")
-    }
 }
 
 // MARK: - Previews

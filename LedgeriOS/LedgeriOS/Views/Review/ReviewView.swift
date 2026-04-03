@@ -5,6 +5,7 @@ struct ReviewView: View {
     @State private var selectedToggle = "pending"
     @State private var searchText = ""
     @State private var activeSort: TransactionSortOption = .dateDesc
+    @Environment(FindStateManager.self) private var findState
 
     private var pendingTransactions: [Transaction] {
         ReviewCalculations.pendingTransactions(accountContext.allTransactions)
@@ -89,24 +90,30 @@ struct ReviewView: View {
             }
             .frame(maxHeight: .infinity)
         } else {
-            ScrollView {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
-                    alignment: .leading,
-                    spacing: Spacing.cardListGap
-                ) {
-                    ForEach(displayTransactions) { transaction in
-                        NavigationLink(value: transaction) {
-                            TransactionCard(
-                                transaction: transaction,
-                                budgetCategoryName: transaction.budgetCategoryId
-                            )
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                        alignment: .leading,
+                        spacing: Spacing.cardListGap
+                    ) {
+                        ForEach(displayTransactions) { transaction in
+                            NavigationLink(value: transaction) {
+                                TransactionCard(
+                                    transaction: transaction,
+                                    budgetCategoryName: transaction.budgetCategoryId
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .id(transaction.id ?? "")
                         }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
+                }
             }
         }
     }

@@ -60,7 +60,7 @@ struct FindOverlayBar: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(findState.matches.isEmpty)
+                .disabled(findState.totalMatchCount == 0)
 
                 Button { findState.nextMatch() } label: {
                     Image(systemName: "chevron.down")
@@ -69,9 +69,9 @@ struct FindOverlayBar: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(findState.matches.isEmpty)
+                .disabled(findState.totalMatchCount == 0)
             }
-            .foregroundStyle(findState.matches.isEmpty ? BrandColors.textTertiary : BrandColors.textPrimary)
+            .foregroundStyle(findState.totalMatchCount == 0 ? BrandColors.textTertiary : BrandColors.textPrimary)
 
             // Dismiss
             Button { findState.deactivate() } label: {
@@ -96,10 +96,11 @@ struct FindOverlayBar: View {
     }
 
     private var matchCountLabel: String {
-        if findState.matches.isEmpty {
+        let total = findState.totalMatchCount
+        if total == 0 {
             return "No matches"
         }
-        return "\(findState.currentMatchIndex + 1) of \(findState.matches.count)"
+        return "\(findState.currentMatchIndex + 1) of \(total)"
     }
 }
 

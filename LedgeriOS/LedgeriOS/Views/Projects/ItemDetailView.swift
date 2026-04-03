@@ -7,6 +7,7 @@ struct ItemDetailView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
+    @Environment(FindStateManager.self) private var findState
     @Environment(\.dismiss) private var dismiss
 
     // Collapsible section state
@@ -50,17 +51,23 @@ struct ItemDetailView: View {
             onClose: { pinnedAttachment = nil },
             onChangeImage: { pinnedAttachment = $0 }
         ) {
-            ScrollView {
-                AdaptiveContentWidth {
-                    VStack(alignment: .leading, spacing: Spacing.lg) {
-                        heroCard
-                        sectionsArea
+            ScrollViewReader { proxy in
+                ScrollView {
+                    AdaptiveContentWidth {
+                        VStack(alignment: .leading, spacing: Spacing.lg) {
+                            heroCard
+                            sectionsArea
+                        }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.sm)
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.sm)
+                }
+                .onReceive(findState.scrollToPublisher) { matchID in
+                    withAnimation { proxy.scrollTo(matchID, anchor: .center) }
                 }
             }
         }
+        .findEntity(id: item.id)
         .background(BrandColors.background)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
@@ -200,7 +207,7 @@ struct ItemDetailView: View {
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
-                Text(liveItem.displayName.isEmpty ? "Unnamed Item" : liveItem.displayName)
+                FindableText(liveItem.displayName.isEmpty ? "Unnamed Item" : liveItem.displayName)
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
@@ -219,7 +226,7 @@ struct ItemDetailView: View {
                     .foregroundStyle(BrandColors.textSecondary)
                 if let tx = linkedTransaction {
                     NavigationLink(value: tx) {
-                        Text(linkedTransactionLabel)
+                        FindableText(linkedTransactionLabel)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.primary)
                     }
@@ -235,7 +242,7 @@ struct ItemDetailView: View {
                     .foregroundStyle(BrandColors.textSecondary)
                 if let space = linkedSpace {
                     NavigationLink(value: space) {
-                        Text(space.name)
+                        FindableText(space.name)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.primary)
                     }
@@ -255,7 +262,7 @@ struct ItemDetailView: View {
             Text("\(label):")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
-            Text(value)
+            FindableText(value)
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textPrimary)
         }
@@ -333,10 +340,9 @@ struct ItemDetailView: View {
     @ViewBuilder
     private var notesContent: some View {
         if let notes = liveItem.notes, !notes.isEmpty {
-            Text(notes)
+            FindableText(notes)
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textPrimary)
-                .textSelection(.enabled)
                 .padding(.top, Spacing.xs)
         } else {
             Text("No notes")
@@ -574,6 +580,7 @@ struct ItemDetailView: View {
             await MainActor.run { dismiss() }
         }
     }
+
 }
 
 // MARK: - DateFormatter helper

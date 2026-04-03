@@ -30,7 +30,7 @@ struct BudgetCategoryTracker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(name)
+            FindableText(name)
                 .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
 

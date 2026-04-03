@@ -137,7 +137,7 @@ struct InvoiceReportView: View {
             }
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 if let businessName, !businessName.isEmpty {
-                    Text(businessName)
+                    FindableText(businessName)
                         .font(Typography.h1)
                         .foregroundStyle(BrandColors.primary)
                 }
@@ -167,7 +167,7 @@ struct InvoiceReportView: View {
             Text(label)
                 .font(Typography.caption)
                 .foregroundStyle(BrandColors.textSecondary)
-            Text(value)
+            FindableText(value)
                 .font(Typography.caption)
                 .foregroundStyle(BrandColors.textSecondary)
         }
@@ -185,7 +185,7 @@ struct InvoiceReportView: View {
 
             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                 HStack {
-                    Text(line.name)
+                    FindableText(line.name)
                         .font(Typography.body)
                         .foregroundStyle(BrandColors.textPrimary)
                     Spacer()

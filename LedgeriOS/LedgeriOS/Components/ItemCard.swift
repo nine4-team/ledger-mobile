@@ -60,6 +60,8 @@ struct ItemCard: View {
             }
         }
         .contentShape(Rectangle())
+        .findEntity(id: item.id)
+        .findMatchHighlight()
 
         if let onPress {
             base.onTapGesture { onPress() }

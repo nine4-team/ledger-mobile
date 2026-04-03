@@ -35,6 +35,8 @@ struct ProjectCard: View {
                 .padding(Spacing.cardPadding)
             }
         }
+        .findEntity(id: project.id)
+        .findMatchHighlight()
     }
 
     @ViewBuilder

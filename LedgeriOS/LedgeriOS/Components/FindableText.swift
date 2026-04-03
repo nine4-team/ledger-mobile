@@ -1,34 +1,71 @@
 import SwiftUI
 
+// MARK: - Environment key for entity ID
+
+/// Set at the card level so every FindableText inside inherits the entity ID.
+/// Usage: `.findEntity(id: item.id)`
+private struct FindEntityIDKey: EnvironmentKey {
+    static let defaultValue: String? = nil
+}
+
+extension EnvironmentValues {
+    var findEntityID: String? {
+        get { self[FindEntityIDKey.self] }
+        set { self[FindEntityIDKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Sets the entity ID for find-on-page match tracking.
+    /// Apply once at the card level — all FindableText children inherit it.
+    func findEntity(id: String?) -> some View {
+        environment(\.findEntityID, id)
+    }
+}
+
+// MARK: - FindableText
+
 /// Drop-in replacement for `Text(string)` that supports find-on-page highlighting
 /// and text selection. When no find query is active, renders identically to `Text`.
 ///
-/// Usage:
-/// ```swift
-/// FindableText(item.displayName)
-///     .font(Typography.h3)
-///     .foregroundStyle(BrandColors.textPrimary)
-/// ```
+/// Self-reports match counts to FindStateManager — no manual registration needed.
 struct FindableText: View {
     let text: String
 
-    /// Which entity this text belongs to (for current-match tracking).
-    var entityID: String?
-
-    /// The cumulative occurrence offset for this text field within the entity.
-    /// Used to determine which specific occurrence is the "current match."
-    var occurrenceOffset: Int = 0
+    /// Stable identity for match reporting. Defaults to the text content itself,
+    /// combined with entityID to handle duplicate strings across entities.
+    var reportID: String?
 
     @Environment(FindStateManager.self) private var findState
+    @Environment(\.findEntityID) private var entityID
+
+    private var identity: String {
+        reportID ?? "\(entityID ?? ""):\(text)"
+    }
 
     var body: some View {
         if findState.debouncedQuery.isEmpty {
             Text(text)
                 .textSelection(.enabled)
+                .onAppear { findState.removeReport(identity: identity) }
         } else {
             Text(highlightedString)
                 .textSelection(.enabled)
+                .id(identity)
+                .onAppear { reportMatches() }
+                .onDisappear { findState.removeReport(identity: identity) }
+                .onChange(of: findState.debouncedQuery) { _, _ in reportMatches() }
         }
+    }
+
+    private func reportMatches() {
+        let query = findState.debouncedQuery
+        guard !query.isEmpty else {
+            findState.removeReport(identity: identity)
+            return
+        }
+        let count = FindMatchCalculations.occurrenceCount(in: text, query: query.lowercased())
+        findState.reportMatchCount(count, identity: identity, entityID: entityID ?? "")
     }
 
     private var highlightedString: AttributedString {
@@ -38,21 +75,14 @@ struct FindableText: View {
         let ranges = FindMatchCalculations.matchRanges(in: text, query: query)
         guard !ranges.isEmpty else { return attributed }
 
-        let currentEntityID = findState.currentMatchID.flatMap { matchID in
-            findState.matches.first(where: { $0.id == matchID })?.entityID
-        }
-        let currentOccurrence = findState.currentOccurrenceIndex
+        let isCurrentEntity = entityID != nil && entityID == findState.currentMatchID
 
-        for (index, range) in ranges.enumerated() {
-            // Convert String.Index range to AttributedString range
+        for (_, range) in ranges.enumerated() {
             guard let attrRange = Range(range, in: attributed) else { continue }
 
-            let globalOccurrenceIndex = occurrenceOffset + index
-            let isCurrent = entityID == currentEntityID && globalOccurrenceIndex == currentOccurrence
-
-            if isCurrent {
+            if isCurrentEntity {
                 attributed[attrRange].backgroundColor = Color(
-                    red: 152/255, green: 126/255, blue: 85/255, opacity: 0.4
+                    red: 152/255, green: 126/255, blue: 85/255, opacity: 0.45
                 )
             } else {
                 attributed[attrRange].backgroundColor = Color.yellow.opacity(0.25)
@@ -63,7 +93,6 @@ struct FindableText: View {
     }
 }
 
-// Convenience initializer matching Text(string) pattern
 extension FindableText {
     init(_ text: String) {
         self.text = text

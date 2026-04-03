@@ -60,17 +60,19 @@ struct DetailRow<Value: View>: View {
     }
 }
 
-extension DetailRow where Value == Text {
+extension DetailRow {
     init(
         label: String,
         value: String,
         showDivider: Bool = true,
         onTap: (() -> Void)? = nil
-    ) {
+    ) where Value == AnyView {
         self.init(label: label, showDivider: showDivider, onTap: onTap) {
-            Text(value)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
+            AnyView(
+                FindableText(value)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+            )
         }
     }
 }

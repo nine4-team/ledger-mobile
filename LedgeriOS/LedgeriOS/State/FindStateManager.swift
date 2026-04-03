@@ -11,38 +11,101 @@ final class FindStateManager {
         didSet { scheduleDebouncedQuery() }
     }
 
-    /// The debounced query that FindableText reads — avoids rebuilding
-    /// AttributedStrings on every keystroke.
+    /// The debounced query that FindableText reads.
     private(set) var debouncedQuery = ""
 
-    /// Per-source match lists — each view registers under its own key.
-    /// The merged `matches` array is the flattened, ordered result.
-    private var matchesBySource: [String: [FindMatch]] = [:]
+    /// Match count reported by each on-screen FindableText instance.
+    /// Key = stable view identity string, Value = (entityID, matchCount).
+    private var reportedMatches: [String: (entityID: String, count: Int)] = [:]
 
-    /// Ordered list of all matches across all sources.
-    var matches: [FindMatch] {
-        matchesBySource.keys.sorted().flatMap { matchesBySource[$0] ?? [] }
+    /// Total match count across all visible FindableText instances.
+    var totalMatchCount: Int {
+        reportedMatches.values.reduce(0) { $0 + $1.count }
     }
 
-    /// Index into `matches` for the currently focused match.
+    /// Ordered entity IDs that have matches (for scroll-to).
+    /// Preserves insertion order via the sorted keys.
+    var matchEntityIDs: [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for key in reportedMatches.keys.sorted() {
+            let entry = reportedMatches[key]!
+            if entry.count > 0 && seen.insert(entry.entityID).inserted {
+                result.append(entry.entityID)
+            }
+        }
+        return result
+    }
+
+    /// Index of the current match (0-based into totalMatchCount).
     var currentMatchIndex = 0
 
-    /// The entity ID of the current match, for scroll-to.
+    /// The entity ID of the current match, for scroll-to and card highlight.
     var currentMatchID: String? {
-        guard !matches.isEmpty, currentMatchIndex >= 0, currentMatchIndex < matches.count else {
+        let total = totalMatchCount
+        guard total > 0, currentMatchIndex >= 0, currentMatchIndex < total else {
             return nil
         }
-        return matches[currentMatchIndex].entityID
+        // Walk through reported matches to find which entity the index lands in.
+        var remaining = currentMatchIndex
+        for key in reportedMatches.keys.sorted() {
+            let entry = reportedMatches[key]!
+            if entry.count > 0 {
+                if remaining < entry.count {
+                    return entry.entityID
+                }
+                remaining -= entry.count
+            }
+        }
+        return nil
     }
 
-    /// The occurrence index within the current entity, so FindableText
-    /// can distinguish the "active" highlight from other highlights.
-    var currentOccurrenceIndex: Int? {
-        guard !matches.isEmpty, currentMatchIndex >= 0, currentMatchIndex < matches.count else {
+    /// Which occurrence within the current entity is the active one.
+    var currentOccurrenceInEntity: Int {
+        let total = totalMatchCount
+        guard total > 0, currentMatchIndex >= 0, currentMatchIndex < total else {
+            return 0
+        }
+        var remaining = currentMatchIndex
+        let targetEntity = currentMatchID
+        for key in reportedMatches.keys.sorted() {
+            let entry = reportedMatches[key]!
+            if entry.count > 0 {
+                if entry.entityID == targetEntity {
+                    if remaining < entry.count {
+                        return remaining
+                    }
+                    remaining -= entry.count
+                } else {
+                    remaining -= entry.count
+                }
+            }
+        }
+        return 0
+    }
+
+    /// The identity key of the FindableText that contains the current match.
+    /// Used as scroll target — FindableText sets `.id(identity)` on itself.
+    var currentMatchIdentity: String? {
+        let total = totalMatchCount
+        guard total > 0, currentMatchIndex >= 0, currentMatchIndex < total else {
             return nil
         }
-        return matches[currentMatchIndex].occurrenceIndex
+        var remaining = currentMatchIndex
+        for key in reportedMatches.keys.sorted() {
+            let entry = reportedMatches[key]!
+            if entry.count > 0 {
+                if remaining < entry.count {
+                    return key
+                }
+                remaining -= entry.count
+            }
+        }
+        return nil
     }
+
+    /// Combine publisher for scroll-to — fires on every arrow press.
+    let scrollToPublisher = PassthroughSubject<String, Never>()
 
     private var debounceTask: Task<Void, Never>?
 
@@ -54,7 +117,7 @@ final class FindStateManager {
         isActive = false
         searchText = ""
         debouncedQuery = ""
-        matchesBySource = [:]
+        reportedMatches = [:]
         currentMatchIndex = 0
         debounceTask?.cancel()
     }
@@ -64,23 +127,47 @@ final class FindStateManager {
     }
 
     func nextMatch() {
-        guard !matches.isEmpty else { return }
-        currentMatchIndex = (currentMatchIndex + 1) % matches.count
+        guard totalMatchCount > 0 else { return }
+        currentMatchIndex = (currentMatchIndex + 1) % totalMatchCount
+        emitScroll()
     }
 
     func previousMatch() {
-        guard !matches.isEmpty else { return }
-        currentMatchIndex = (currentMatchIndex - 1 + matches.count) % matches.count
+        guard totalMatchCount > 0 else { return }
+        currentMatchIndex = (currentMatchIndex - 1 + totalMatchCount) % totalMatchCount
+        emitScroll()
     }
 
-    /// Content views call this to report their matches, keyed by source.
-    /// Each source overwrites only its own slot — other sources are preserved.
-    func registerMatches(_ newMatches: [FindMatch], source: String) {
-        matchesBySource[source] = newMatches
-        // Clamp index if total matches shrank
-        let total = matches.count
+    /// Called by each FindableText to report how many matches it contains.
+    func reportMatchCount(_ count: Int, identity: String, entityID: String) {
+        let oldCount = reportedMatches[identity]?.count ?? 0
+        if oldCount != count || reportedMatches[identity]?.entityID != entityID {
+            reportedMatches[identity] = (entityID: entityID, count: count)
+            clampIndex()
+            // Auto-scroll to first match when results first appear
+            if oldCount == 0 && count > 0 {
+                emitScroll()
+            }
+        }
+    }
+
+    /// Called when a FindableText disappears (navigated away).
+    func removeReport(identity: String) {
+        if reportedMatches.removeValue(forKey: identity) != nil {
+            clampIndex()
+        }
+    }
+
+    private func clampIndex() {
+        let total = totalMatchCount
         if currentMatchIndex >= total {
             currentMatchIndex = max(0, total - 1)
+        }
+    }
+
+    private func emitScroll() {
+        if let id = currentMatchIdentity {
+            scrollToPublisher.send(id)
         }
     }
 
@@ -93,11 +180,4 @@ final class FindStateManager {
             debouncedQuery = text
         }
     }
-}
-
-/// A single match occurrence for scroll-to and highlight tracking.
-struct FindMatch: Identifiable, Equatable {
-    let id: String // Unique: "\(entityID)-\(occurrenceIndex)"
-    let entityID: String
-    let occurrenceIndex: Int // Which occurrence within that entity (0-based)
 }

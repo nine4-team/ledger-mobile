@@ -62,6 +62,8 @@ struct SpaceCard: View {
 
             }
         }
+        .findEntity(id: space.id)
+        .findMatchHighlight()
     }
 }
 

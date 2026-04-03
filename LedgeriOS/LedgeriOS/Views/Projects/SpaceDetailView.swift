@@ -7,6 +7,7 @@ struct SpaceDetailView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
+    @Environment(FindStateManager.self) private var findState
     @Environment(\.dismiss) private var dismiss
 
     // Collapsible section state (all expanded by default)
@@ -58,15 +59,21 @@ struct SpaceDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                VStack(alignment: .leading, spacing: Spacing.lg) {
-                    sectionsArea
+        ScrollViewReader { proxy in
+            ScrollView {
+                AdaptiveContentWidth {
+                    VStack(alignment: .leading, spacing: Spacing.lg) {
+                        sectionsArea
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
+            }
+            .onReceive(findState.scrollToPublisher) { matchID in
+                withAnimation { proxy.scrollTo(matchID, anchor: .center) }
             }
         }
+        .findEntity(id: space.id)
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -258,10 +265,9 @@ struct SpaceDetailView: View {
     @ViewBuilder
     private var notesContent: some View {
         if let notes = liveSpace.notes, !notes.isEmpty {
-            Text(notes)
+            FindableText(notes)
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textPrimary)
-                .textSelection(.enabled)
                 .padding(.top, Spacing.xs)
         } else {
             Text("No notes")
@@ -331,7 +337,7 @@ struct SpaceDetailView: View {
     @ViewBuilder
     private func checklistView(_ checklist: Checklist) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(checklist.name)
+            FindableText(checklist.name)
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.textPrimary)
 
@@ -344,7 +350,7 @@ struct SpaceDetailView: View {
                             .font(.system(size: 20))
                             .foregroundStyle(item.isChecked ? BrandColors.primary : BrandColors.textTertiary)
 
-                        Text(item.text)
+                        FindableText(item.text)
                             .font(Typography.body)
                             .foregroundStyle(item.isChecked ? BrandColors.textSecondary : BrandColors.textPrimary)
                             .strikethrough(item.isChecked)
