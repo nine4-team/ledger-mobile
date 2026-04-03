@@ -23,7 +23,7 @@ Reassign moves an item from one transaction to another **within the same scope**
 - `item.projectId` stays the same
 - No canonical sale transaction is created
 - No budget impact
-- `item.budgetCategoryId` is unchanged
+- `item.budgetCategoryId` — set from destination transaction's `budgetCategoryId` if item's current value is null; otherwise unchanged
 
 ### When to Use
 

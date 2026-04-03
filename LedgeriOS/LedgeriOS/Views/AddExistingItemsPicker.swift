@@ -356,6 +356,7 @@ struct AddExistingItemsPicker: View {
                 try await service.returnToTransaction(
                     items: items,
                     destinationTransactionId: transactionId,
+                    destinationBudgetCategoryId: currentTransaction?.budgetCategoryId,
                     accountId: accountId
                 )
             } catch {

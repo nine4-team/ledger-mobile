@@ -252,6 +252,7 @@ struct InventoryOperationsService {
         items: [Item],
         destinationTransactionId: String,
         destinationProjectId: String,
+        destinationBudgetCategoryId: String? = nil,
         accountId: String,
         userId: String? = nil
     ) async throws {
@@ -274,6 +275,9 @@ struct InventoryOperationsService {
                 "transactionId": destinationTransactionId,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
+            if item.budgetCategoryId == nil, let categoryId = destinationBudgetCategoryId {
+                itemUpdate["budgetCategoryId"] = categoryId
+            }
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
                 itemUpdate["projectPriceCents"] = purchasePrice
             }
@@ -366,6 +370,7 @@ struct InventoryOperationsService {
     func returnToTransaction(
         items: [Item],
         destinationTransactionId: String,
+        destinationBudgetCategoryId: String? = nil,
         accountId: String,
         userId: String? = nil
     ) async throws {
@@ -385,6 +390,9 @@ struct InventoryOperationsService {
                 "status": ItemStatus.returned.rawValue,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
+            if item.budgetCategoryId == nil, let categoryId = destinationBudgetCategoryId {
+                itemUpdate["budgetCategoryId"] = categoryId
+            }
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
                 itemUpdate["projectPriceCents"] = purchasePrice
             }
