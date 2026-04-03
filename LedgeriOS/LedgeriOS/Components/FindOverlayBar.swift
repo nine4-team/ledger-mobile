@@ -86,8 +86,14 @@ struct FindOverlayBar: View {
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
         .modifier(CardGlassModifier())
+        #if os(macOS)
+        .frame(maxWidth: 360)
+        .padding(.trailing, Spacing.screenPadding)
+        .padding(.top, Spacing.xs)
+        #else
         .padding(.horizontal, Spacing.screenPadding)
         .padding(.top, Spacing.xs)
+        #endif
         .onAppear { isFocused = true }
         .onKeyPress(.escape) {
             findState.deactivate()

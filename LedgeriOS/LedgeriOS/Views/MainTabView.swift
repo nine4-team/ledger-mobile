@@ -76,7 +76,7 @@ struct MainTabView: View {
             }
         }
         .tint(BrandColors.primary)
-        .overlay(alignment: .top) {
+        .overlay(alignment: findOverlayAlignment) {
             if findState.isActive {
                 FindOverlayBar()
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -145,7 +145,7 @@ struct MainTabView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tint(BrandColors.primary)
-        .overlay(alignment: .top) {
+        .overlay(alignment: findOverlayAlignment) {
             if findState.isActive {
                 FindOverlayBar()
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -164,6 +164,13 @@ struct MainTabView: View {
         .onChange(of: selectedTab) { _, _ in
             findState.deactivate()
         }
+    }
+    private var findOverlayAlignment: Alignment {
+        #if os(macOS)
+        .topTrailing
+        #else
+        .top
+        #endif
     }
 }
 
