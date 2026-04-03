@@ -37,6 +37,7 @@ ui-debug.log
 
 # Claude / IDE
 .claude/
+!.claude/commands/
 .cursor/
 .vscode/
 
