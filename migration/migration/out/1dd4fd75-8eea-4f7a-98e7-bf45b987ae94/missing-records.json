@@ -1,0 +1,1028 @@
+{
+  "meta": {
+    "accountId": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94",
+    "pulledAt": "2026-03-30T21:14:35.355Z"
+  },
+  "transactions": [
+    {
+      "supabaseRowId": "45cacd3a-0515-4d39-a698-f751c80c6fe9",
+      "docId": "56dd193b-2d19-471b-911c-44a4f7e5e3b0",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 920090,
+      "subtotalCents": null,
+      "taxRatePct": 8.375,
+      "type": "Purchase",
+      "source": "Crate & Barrel",
+      "transactionDate": "2026-03-16",
+      "notes": "Upstairs living room sectional, 2 antiqued mirrors for MBR, JennyLind accent chair for Nova’s bedroom",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-18T15-32-56-216/1773847976216_IMG_5981.png",
+          "size": 205122,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-18T15-32-56-216/1773847976216_IMG_5981.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T15:32:57.273Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-18T15:32:57.987+00:00"
+    },
+    {
+      "supabaseRowId": "11934552-85ef-4e8b-a79f-5a0152dd17d8",
+      "docId": "6492c330-73b6-4c82-a2be-dadfe3a63731",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 634937,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-18",
+      "notes": "4 white outdoor pool loungers, four piece outdoor sofa set",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-18T15-36-39-159/1773848199159_IMG_5716.png",
+          "size": 754260,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-18T15-36-39-159/1773848199159_IMG_5716.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T15:36:40.412Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-18T15-36-40-414/1773848200414_IMG_5658.png",
+          "size": 2623849,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-18T15-36-40-414/1773848200414_IMG_5658.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T15:36:42.662Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-18T15-36-42-662/1773848202662_IMG_5690.png",
+          "size": 2581724,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-18T15-36-42-662/1773848202662_IMG_5690.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T15:36:44.692Z"
+        }
+      ],
+      "createdAt": "2026-03-18T15:36:44.946+00:00"
+    },
+    {
+      "supabaseRowId": "1ad9b05d-aca6-48a4-a392-f5f180b4256f",
+      "docId": "5f89661c-9878-482e-96f0-5df7c57edd3c",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 29724,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Return",
+      "source": "Amazon",
+      "transactionDate": "2026-03-18",
+      "notes": "Refund for six orange velvet curtains from Amazon that were undeliverable and had to be credited. They went in the upstairs living space. I will try to re-order.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-27-20-688/1773858440688_IMG_5732.png",
+          "size": 531315,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-27-20-688/1773858440688_IMG_5732.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T18:27:22.009Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-18T18:27:22.623+00:00"
+    },
+    {
+      "supabaseRowId": "a5bf79c7-4838-4ff1-887c-4e8462ff082a",
+      "docId": "82273b13-c99c-4c4a-b8b7-b5a8dc087266",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 29724,
+      "subtotalCents": 27846,
+      "taxRatePct": 6.7442,
+      "type": "Purchase",
+      "source": "Amazon",
+      "transactionDate": "2026-03-18",
+      "notes": "6 burnt pumpkin velvet curtain panels for upstairs living room in BAHAMA unit.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-33-13-171/1773858793171_IMG_5733.png",
+          "size": 486103,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-33-13-171/1773858793171_IMG_5733.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T18:33:14.370Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-33-14-371/1773858794371_IMG_5734.png",
+          "size": 976841,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-33-14-371/1773858794371_IMG_5734.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T18:33:15.599Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-18T18:33:16.212+00:00"
+    },
+    {
+      "supabaseRowId": "0305056e-4803-4bdf-9a49-b4eb06e7a72e",
+      "docId": "039dce48-7ff6-4b67-a2f8-51ae794e189f",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 62697,
+      "subtotalCents": 59200,
+      "taxRatePct": 5.9071,
+      "type": "Purchase",
+      "source": "Society6",
+      "transactionDate": "2026-03-18",
+      "notes": "*Included $74.00 in shipping in the subtotal. Tax was $34.97.\n\n2 twin & 2 full striped aqua cotton comforters for bunk room.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-40-08-324/1773859208324_IMG_5737.png",
+          "size": 662976,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-18T18-40-08-324/1773859208324_IMG_5737.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-18T18:40:10.078Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-18T18-40-10-080/1773859210080_IMG_5738.jpeg",
+          "size": 298305,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-18T18-40-10-080/1773859210080_IMG_5738.jpeg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-18T18:40:11.030Z"
+        }
+      ],
+      "createdAt": "2026-03-18T18:40:11.501+00:00"
+    },
+    {
+      "supabaseRowId": "dc2b91a1-e33e-453e-b520-857a48a77a35",
+      "docId": "e4364732-4f3c-4ff9-9561-7c75e89df3e5",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 91271,
+      "subtotalCents": 85500,
+      "taxRatePct": 6.7497,
+      "type": "Purchase",
+      "source": "Living Spaces",
+      "transactionDate": "2026-03-19",
+      "notes": "Bunk bed mattresses (twin, twin trundle, full); king low-pro box spring for Daisy’s room.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-19T23-28-43-523/1773962923523_IMG_5997.jpeg",
+          "size": 264138,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-19T23-28-43-523/1773962923523_IMG_5997.jpeg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-19T23:28:44.288Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-19T23:28:44.49+00:00"
+    },
+    {
+      "supabaseRowId": "8496f0d8-2c03-4e65-a932-8c9fe7facbc0",
+      "docId": "9fd15a13-2df3-46ad-b86e-7bf80b7f2ca5",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 180327,
+      "subtotalCents": 168650,
+      "taxRatePct": 6.9238,
+      "type": "Purchase",
+      "source": "Living Spaces",
+      "transactionDate": "2026-03-19",
+      "notes": "Bunk bed w/ trundle for brick bedroom\n\n* included $119.00 delivery/ assembly fee.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": false,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-19T23-31-26-315/1773963086315_79565498766__5C28AD8F-962B-4821-8F25-028744B6615C.jpeg",
+          "size": 2229343,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-19T23-31-26-315/1773963086315_79565498766__5C28AD8F-962B-4821-8F25-028744B6615C.jpeg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-19T23:31:28.643Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-19T23-32-45-890/1773963165890_IMG_5333.png",
+          "size": 246829,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-19T23-32-45-890/1773963165890_IMG_5333.png",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-19T23:32:46.774Z"
+        }
+      ],
+      "createdAt": "2026-03-19T23:31:28.846+00:00"
+    },
+    {
+      "supabaseRowId": "2885e8d5-23f7-40be-9529-f5a2ec72f5d4",
+      "docId": "5a86c742-7a3b-4061-b4e1-f15023bd8992",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 83270,
+      "subtotalCents": 78229,
+      "taxRatePct": 6.4439,
+      "type": "Purchase",
+      "source": "Amazon",
+      "transactionDate": "2026-03-22",
+      "notes": "Throw blankets (both living rooms/ bunk room), wall hooks, octopus paper towel holder, brass whale decor for vanity bath, fishing net, octopus kitchen towels, turtle plush for bunk room",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-11-727/1774195691727_IMG_6140.png",
+          "size": 517147,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-11-727/1774195691727_IMG_6140.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:13.279Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-13-279/1774195693279_IMG_6141.png",
+          "size": 485149,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-13-279/1774195693279_IMG_6141.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:13.988Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-13-989/1774195693989_IMG_6142.png",
+          "size": 821931,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-22T16-08-13-989/1774195693989_IMG_6142.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:15.114Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-15-116/1774195695116_IMG_6137.png",
+          "size": 724288,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-15-116/1774195695116_IMG_6137.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:16.038Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-16-039/1774195696039_IMG_6138.png",
+          "size": 940402,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-16-039/1774195696039_IMG_6138.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:17.165Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-17-166/1774195697166_IMG_6139.png",
+          "size": 860791,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-22T16-08-17-166/1774195697166_IMG_6139.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-22T16:08:18.186Z"
+        }
+      ],
+      "createdAt": "2026-03-22T16:08:18.905+00:00"
+    },
+    {
+      "supabaseRowId": "653b1245-853a-49bd-9044-c980297ac58e",
+      "docId": "570020e2-8dab-4271-9db3-24e2bcdcdc61",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 203609,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-23",
+      "notes": "On Jeff’s AMEX CARD\n\n4 “bubble”yellow dining chairs for game table, 2 yellow tufted swivel chairs for main living room, sm & lg seahorse statues on stands for upstairs living room.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-23T22-10-16-430/1774303816430_IMG_6366.png",
+          "size": 767602,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-23T22-10-16-430/1774303816430_IMG_6366.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:10:17.532Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-23T22-11-09-785/1774303869785_IMG_6351.png",
+          "size": 1550272,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-23T22-11-09-785/1774303869785_IMG_6351.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:11:11.396Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-23T22-11-11-397/1774303871397_IMG_6352.png",
+          "size": 1333190,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-23T22-11-11-397/1774303871397_IMG_6352.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:11:12.932Z"
+        }
+      ],
+      "createdAt": "2026-03-23T20:35:46.282+00:00"
+    },
+    {
+      "supabaseRowId": "d45195da-65fd-4482-abc8-33740aa7941b",
+      "docId": "9404492c-d2f0-4133-817f-465d825cd47c",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 1754577,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-23",
+      "notes": "2nd round of big order\n\n*Put on AMEX",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-25-140/1774303945140_IMG_6367.png",
+          "size": 866434,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-25-140/1774303945140_IMG_6367.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:12:26.556Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-26-557/1774303946557_IMG_6368.png",
+          "size": 940765,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-26-557/1774303946557_IMG_6368.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:12:27.694Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-27-694/1774303947694_IMG_6369.png",
+          "size": 519614,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-12-27-694/1774303947694_IMG_6369.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:12:28.501Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-23T20:37:21.417+00:00"
+    },
+    {
+      "supabaseRowId": "2077232f-0e90-4dde-896f-5621e5a5a545",
+      "docId": "9efb8265-2f25-4e92-8f34-7a474e18c9e6",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 241637,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-23",
+      "notes": "**HALF OF THESE ITEMS ARE NOT INCLUDED IN OUR ORIGINAL BUDGET- ONLY THE SHEET SETS, MATTRESS PROTECTORS AND PILLOWS… the regular towels and pool towels were added on by her because she needed to get them, and I offered to order them for her.\n$1012.64 total went towards all of her towels, so should not be included in our overall budget, or we add $1012.64 to the total budget to cover.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-53-198/1774304333197_IMG_6363.png",
+          "size": 828404,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-53-198/1774304333197_IMG_6363.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:18:54.510Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-54-510/1774304334510_IMG_6364.png",
+          "size": 875851,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-54-510/1774304334510_IMG_6364.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:18:55.793Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-55-793/1774304335793_IMG_6365.png",
+          "size": 464132,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-23T22-18-55-793/1774304335793_IMG_6365.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:18:56.613Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-23T22-18-56-615/1774304336615_IMG_6362.png",
+          "size": 1588660,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-23T22-18-56-615/1774304336615_IMG_6362.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:18:58.661Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-23T22-18-58-662/1774304338662_IMG_6361.png",
+          "size": 1887492,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-23T22-18-58-662/1774304338662_IMG_6361.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:19:00.604Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-23T22-19-00-605/1774304340605_IMG_6360.png",
+          "size": 2088189,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-23T22-19-00-605/1774304340605_IMG_6360.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-23T22:19:02.961Z"
+        }
+      ],
+      "createdAt": "2026-03-23T22:19:04.093+00:00"
+    },
+    {
+      "supabaseRowId": "611ba5a0-dbb5-49e0-81a3-3e4fbeca4903",
+      "docId": "565283b5-5ddf-40c5-971f-936641dfb2b8",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "amountCents": 208515,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Article",
+      "transactionDate": "2026-03-24",
+      "notes": "*Tax was $131.85 + $249 shipping (got 5% discount for pro acct)\n\n6 blue velvet dining armchairs",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [
+        "I-1774389806960-cyad",
+        "I-1774389835114-egeo",
+        "I-1774389835410-orc3",
+        "I-1774389835763-ikyv",
+        "I-1774389836053-98mi",
+        "I-1774389836359-ykim"
+      ],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-24T22-03-19-767/1774389799767_IMG_6379.png",
+          "size": 761165,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-24T22-03-19-767/1774389799767_IMG_6379.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-24T22:03:21.009Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-24T22-03-21-010/1774389801010_IMG_6380.png",
+          "size": 4183830,
+          "fileName": "Sandra-_BAHAMA_Unit/receipt-attachments/2026-03-24T22-03-21-010/1774389801010_IMG_6380.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-24T22:03:24.693Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Sandra-_BAHAMA_Unit/other-images/2026-03-24T22-03-24-695/1774389804695_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/other-images/2026-03-24T22-03-24-695/1774389804695_IMG_6381.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-24T22:03:25.924Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:26.33+00:00"
+    },
+    {
+      "supabaseRowId": "bcaeaed3-2c92-4ef5-b141-2b465d4d3f45",
+      "docId": "fb71ae72-2f70-490c-aa78-92b6f0d4fbe9",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 97215,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Jennifer Taylor Home",
+      "transactionDate": "2026-03-25",
+      "notes": "*AMEX pmt\n\nBrown Knox chaise lounge for MBR sku#62230-V035",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [
+        "I-1774472750816-olw0"
+      ],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-45-401/1774472745401_IMG_6435.png",
+          "size": 601412,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-45-401/1774472745401_IMG_6435.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T21:05:46.614Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-46-614/1774472746614_IMG_6436.png",
+          "size": 498026,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-46-614/1774472746614_IMG_6436.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T21:05:47.432Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-47-432/1774472747432_IMG_6437.png",
+          "size": 1528456,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T21-05-47-432/1774472747432_IMG_6437.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T21:05:48.969Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-25T21-05-48-971/1774472748971_IMG_6438.jpeg",
+          "size": 70927,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-25T21-05-48-971/1774472748971_IMG_6438.jpeg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-25T21:05:49.479Z"
+        }
+      ],
+      "createdAt": "2026-03-25T21:05:49.889+00:00"
+    },
+    {
+      "supabaseRowId": "d94eeced-e99c-4948-8fff-f6bf0950637e",
+      "docId": "d53f45bf-d29d-402e-9b96-bf880c81f923",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 95962,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-25",
+      "notes": "Tax was $60.68; AMEX purchase\n\n9x13’ wool rug for Asher’s room and tacky rug pads for bedroom rugs",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-25-828/1774478545827_IMG_6453.png",
+          "size": 1166092,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-25-828/1774478545827_IMG_6453.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:42:27.221Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-27-221/1774478547221_IMG_6454.png",
+          "size": 1147595,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-27-221/1774478547221_IMG_6454.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:42:28.447Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-28-447/1774478548447_IMG_6455.png",
+          "size": 1216604,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-42-28-447/1774478548447_IMG_6455.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:42:29.984Z"
+        }
+      ],
+      "otherImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/other-images/Witzenman_s_2nd_Home/other-images/2026-03-25T22-42-29-986/1774478549986_IMG_6450.png",
+          "size": 2388682,
+          "fileName": "Witzenman_s_2nd_Home/other-images/2026-03-25T22-42-29-986/1774478549986_IMG_6450.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:42:32.134Z"
+        }
+      ],
+      "createdAt": "2026-03-25T22:42:32.545+00:00"
+    },
+    {
+      "supabaseRowId": "0a008554-5ff5-4eab-897d-903cdd35daca",
+      "docId": "bd50641b-74ac-409b-bdb9-9d694066a6bb",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 402061,
+      "subtotalCents": null,
+      "taxRatePct": 0,
+      "type": "Purchase",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-25",
+      "notes": "Tax was $254.21; AMEX purchase- \n\nLast part of large order.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-44-23-022/1774478663022_IMG_6396.png",
+          "size": 854346,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-44-23-022/1774478663022_IMG_6396.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:44:24.366Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-44-24-367/1774478664367_IMG_6397.png",
+          "size": 455499,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-25T22-44-24-367/1774478664367_IMG_6397.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-25T22:44:25.186Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-25T22:44:25.4+00:00"
+    },
+    {
+      "supabaseRowId": "9f1cbbc5-43ad-444a-be10-fe0c51b02fe6",
+      "docId": "723d9f70-d8f8-4d7a-afe3-8cb0ae6389ad",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 538785,
+      "subtotalCents": null,
+      "taxRatePct": 8.375,
+      "type": "Purchase",
+      "source": "Pottery Barn",
+      "transactionDate": "2026-03-27",
+      "notes": "2 MBR Sausalito 3-Drawer nightstands, living Room blue diamond rug 10x14’, bronze floor lamp w/ burlap shade (office), 2 tall leather lamps for MBR nightstands",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": "",
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-27T20-14-53-952/1774642493952_image.jpg",
+          "size": 2349232,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-27T20-14-53-952/1774642493952_image.jpg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-27T20:15:01.239Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-27T20-15-01-239/1774642501239_image.jpg",
+          "size": 2564205,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-27T20-15-01-239/1774642501239_image.jpg",
+          "mimeType": "image/jpeg",
+          "uploadedAt": "2026-03-27T20:15:18.415Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-27T20:15:18.821+00:00"
+    },
+    {
+      "supabaseRowId": "4af97530-f25d-4405-99c0-54d268116054",
+      "docId": "59318e00-7782-4925-8aef-c22c9bcd5849",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "amountCents": 233858,
+      "subtotalCents": 219070,
+      "taxRatePct": 6.7504,
+      "type": "Return",
+      "source": "Wayfair",
+      "transactionDate": "2026-03-28",
+      "notes": "*I DOUBLE-ORDERED A 72”ROUND DINING TABLE AND CANCELED IT- full amount was refunded to Kristin’s AMEX for this amount.",
+      "status": "completed",
+      "paymentMethod": "Client Card",
+      "reimbursementType": null,
+      "receiptEmailed": true,
+      "categoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+      "itemIds": [],
+      "receiptImages": [
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-45-20-367/1774698320367_IMG_6050.png",
+          "size": 467957,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-45-20-367/1774698320367_IMG_6050.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-28T11:45:21.437Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-47-48-034/1774698468034_IMG_6125.png",
+          "size": 453548,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-47-48-034/1774698468034_IMG_6125.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-28T11:47:48.700Z"
+        },
+        {
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/receipt-images/Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-47-48-701/1774698468701_IMG_6124.png",
+          "size": 345549,
+          "fileName": "Witzenman_s_2nd_Home/receipt-attachments/2026-03-28T11-47-48-701/1774698468701_IMG_6124.png",
+          "mimeType": "image/png",
+          "uploadedAt": "2026-03-28T11:47:49.305Z"
+        }
+      ],
+      "otherImages": [],
+      "createdAt": "2026-03-28T11:45:21.641+00:00"
+    }
+  ],
+  "items": [
+    {
+      "supabaseRowId": "93664137-59e1-4f9c-b8ce-8de738d471d1",
+      "docId": "I-1774472750816-olw0",
+      "projectId": "5abd46c9-9886-4b3e-b2b1-19f6cf995a44",
+      "projectName": "Witzenman's 2nd Home",
+      "name": null,
+      "description": "Brown velvet Knox 65” chaise lounge",
+      "purchasePriceCents": 97215,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Jennifer Taylor Home",
+      "sku": "62230-V035",
+      "notes": "Purchased w/ AMEX",
+      "spaceId": null,
+      "taxRatePct": 0,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6438.jpeg",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Witzenman_s_2nd_Home/item-images/2026-03-25T21-05-52-175/1774472752175_IMG_6438.jpeg",
+          "size": 70927,
+          "fileName": "Witzenman_s_2nd_Home/item-images/2026-03-25T21-05-52-175/1774472752175_IMG_6438.jpeg",
+          "mimeType": "image/jpeg",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-25T21:05:52.551Z"
+        },
+        {
+          "alt": "IMG_6437.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Witzenman_s_2nd_Home/item-images/2026-03-25T21-05-52-552/1774472752551_IMG_6437.png",
+          "size": 1528456,
+          "fileName": "Witzenman_s_2nd_Home/item-images/2026-03-25T21-05-52-552/1774472752551_IMG_6437.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-25T21:05:53.927Z"
+        }
+      ],
+      "createdAt": "2026-03-25T21:05:50.816+00:00"
+    },
+    {
+      "supabaseRowId": "a2f7c52f-459c-4037-93eb-7be9d23245b3",
+      "docId": "I-1774389806960-cyad",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": 0,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:26.96+00:00"
+    },
+    {
+      "supabaseRowId": "c0f9203f-7a09-489e-91ce-b6fa40c07b11",
+      "docId": "I-1774389835114-egeo",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": null,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:55.132+00:00"
+    },
+    {
+      "supabaseRowId": "0a9bb8bb-caad-40f5-9cfe-a45d0660b19a",
+      "docId": "I-1774389835410-orc3",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": null,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:55.418+00:00"
+    },
+    {
+      "supabaseRowId": "ac1576df-4f71-4566-be20-a554ba596edf",
+      "docId": "I-1774389835763-ikyv",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": null,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:55.769+00:00"
+    },
+    {
+      "supabaseRowId": "0c3a96fd-442c-480f-a291-7fde0651d566",
+      "docId": "I-1774389836053-98mi",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": null,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:56.066+00:00"
+    },
+    {
+      "supabaseRowId": "756dd477-281b-4b33-9a4e-cecb1ad2ff20",
+      "docId": "I-1774389836359-ykim",
+      "projectId": "fc4e8569-75f6-46b4-97ae-c4bc57f615d0",
+      "projectName": "Sandra- BAHAMA Unit",
+      "name": null,
+      "description": "Harris Navy blue velvet dining armchair",
+      "purchasePriceCents": 29900,
+      "projectPriceCents": null,
+      "marketValueCents": null,
+      "status": "purchased",
+      "source": "Article",
+      "sku": "",
+      "notes": "x6",
+      "spaceId": null,
+      "taxRatePct": null,
+      "bookmark": false,
+      "images": [
+        {
+          "alt": "IMG_6383.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "size": 4736459,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-28-004/1774389808004_IMG_6383.png",
+          "mimeType": "image/png",
+          "isPrimary": true,
+          "uploadedAt": "2026-03-24T22:03:31.794Z"
+        },
+        {
+          "alt": "IMG_6381.png",
+          "url": "https://rwevbekceexnoaabdnbz.supabase.co/storage/v1/object/public/item-images/Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "size": 944220,
+          "fileName": "Sandra-_BAHAMA_Unit/item-images/2026-03-24T22-03-31-794/1774389811794_IMG_6381.png",
+          "mimeType": "image/png",
+          "isPrimary": false,
+          "uploadedAt": "2026-03-24T22:03:32.784Z"
+        }
+      ],
+      "createdAt": "2026-03-24T22:03:56.369+00:00"
+    }
+  ]
+}

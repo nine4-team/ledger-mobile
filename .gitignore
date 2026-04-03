@@ -18,35 +18,15 @@ DerivedData*
 *.hmap
 *.ipa
 *.xcuserstate
-ios/.xcode.env.local
-
-# Android/IntelliJ
-build/
-.idea
-.gradle
-local.properties
-*.iml
-*.hprof
-.cxx/
-*.keystore
-!debug.keystore
 
 # node.js
 node_modules/
 npm-debug.log
 yarn-error.log
 
-# Expo
-.expo/
-dist/
-web-build/
-
 # Environment
 .env
 .env.local
-
-# TypeScript
-*.tsbuildinfo
 
 # Firebase
 .firebase/
@@ -55,29 +35,10 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
-# Dev working notes (preserved for cross-session continuity)
-# .plans/
-# .troubleshooting/
+# Claude / IDE
+.claude/
+.cursor/
+.vscode/
 
 # Worktrees
 .worktrees/
-
-# Added by Spec Kitty CLI (auto-managed)
-.claude/
-.codex/
-.opencode/
-.windsurf/
-.gemini/
-.cursor/
-.qwen/
-.kilocode/
-.augment/
-.roo/
-.amazonq/
-.github/copilot/
-.kittify/.dashboard
-.kittify/workspaces/
-__pycache__/
-*.pyc
-# Excluded via sparse-checkout
-# kitty-specs/

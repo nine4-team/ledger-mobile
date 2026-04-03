@@ -26,6 +26,7 @@ struct UniversalAddModifier: ViewModifier {
                             Label("New Item", systemImage: "shippingbox")
                         }
                         Button {
+                            print("🔵 [UniversalAdd] 'New Transaction' menu item tapped")
                             showNewTransaction = true
                         } label: {
                             Label("New Transaction", systemImage: "creditcard")
@@ -47,7 +48,11 @@ struct UniversalAddModifier: ViewModifier {
             .adaptivePresentation(isPresented: $showNewItem, style: .form) {
                 NewItemView()
             }
+            .onChange(of: showNewTransaction) { _, newValue in
+                print("🔵 [UniversalAdd] showNewTransaction changed to \(newValue)")
+            }
             .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
+                let _ = print("🔵 [UniversalAdd] NewTransactionView sheet body evaluated")
                 NewTransactionView(context: .inventory)
             }
     }

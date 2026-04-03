@@ -2,7 +2,7 @@
 /**
  * dev-native.mjs — One-command native dev workflow.
  *
- * Usage: npm run dev:native
+ * Usage: node scripts/dev-native.mjs
  *
  * Full native dev workflow:
  * 1. Starts Firebase emulators with persistence
@@ -24,8 +24,8 @@ const AUTH_USER_EMAIL = 'team@nine4.co';
 const AUTH_USER_PASSWORD = 'password123';
 const AUTH_USER_UID = '4ef35958-597c-4aea-b99e-1ef62352a72d';
 
-const BUNDLE_PATH = 'docs/data_migrator/out/v1/bundle.json';
-const MEDIA_MANIFEST_PATH = 'docs/data_migrator/out/v1/media-manifest.json';
+const BUNDLE_PATH = 'firebase/seed-data/bundle.json';
+const MEDIA_MANIFEST_PATH = 'firebase/seed-data/media-manifest.json';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,9 +64,6 @@ function run(cmd, args, extraEnv = {}) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Force emulator mode regardless of .env
-  process.env.EXPO_PUBLIC_USE_FIREBASE_EMULATORS = 'true';
-
   // 1. Start emulators in background
   log('Starting Firebase emulators...');
   const emulatorProc = spawn(

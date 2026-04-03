@@ -97,7 +97,11 @@ struct InventoryTransactionsSubTab: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .onChange(of: showNewTransaction) { _, newValue in
+            print("🟡 [TxSubTab] showNewTransaction changed to \(newValue)")
+        }
         .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
+            let _ = print("🟢 [TxSubTab] NewTransactionView sheet body evaluated")
             NewTransactionView(context: .inventory)
         }
         .background(SortMenu(
@@ -120,7 +124,10 @@ struct InventoryTransactionsSubTab: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            onAdd: { showNewTransaction = true },
+            onAdd: {
+                print("🟡 [TxSubTab] inline + tapped, setting showNewTransaction = true")
+                showNewTransaction = true
+            },
             style: .card
         ) {
             if !processedTransactions.isEmpty {
