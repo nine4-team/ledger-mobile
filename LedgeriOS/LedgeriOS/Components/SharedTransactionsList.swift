@@ -301,6 +301,7 @@ struct SharedTransactionsList: View {
     @State private var activeSort: TransactionSortOption = .dateDesc
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
+    @Environment(FindStateManager.self) private var findState
 
     // MARK: - Computed
 
@@ -423,18 +424,32 @@ struct SharedTransactionsList: View {
             }
             .frame(maxHeight: .infinity)
         } else {
-            ScrollView {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
-                    alignment: .leading,
-                    spacing: Spacing.cardListGap
-                ) {
-                    ForEach(processedTransactions) { transaction in
-                        transactionCard(for: transaction)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                        alignment: .leading,
+                        spacing: Spacing.cardListGap
+                    ) {
+                        ForEach(processedTransactions) { transaction in
+                            transactionCard(for: transaction)
+                                .id(transaction.id ?? "")
+                        }
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
+                }
+                .onChange(of: findState.currentMatchID) { _, matchID in
+                    if let matchID {
+                        withAnimation { proxy.scrollTo(matchID, anchor: .center) }
                     }
                 }
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
+                .onChange(of: findState.debouncedQuery) { _, _ in
+                    registerTransactionFindMatches()
+                }
+                .onChange(of: processedTransactions.count) { _, _ in
+                    if findState.isActive { registerTransactionFindMatches() }
+                }
             }
         }
     }
@@ -470,6 +485,25 @@ struct SharedTransactionsList: View {
         } else {
             selectedIds.insert(txId)
         }
+    }
+
+    private func registerTransactionFindMatches() {
+        let query = findState.debouncedQuery
+        guard !query.isEmpty else {
+            findState.registerMatches([], source: "transactions")
+            return
+        }
+        let entities: [(id: String, texts: [String])] = processedTransactions.compactMap { tx -> (id: String, texts: [String])? in
+            guard let id = tx.id else { return nil }
+            var texts: [String] = []
+            if let source = tx.source { texts.append(source) }
+            if let notes = tx.notes { texts.append(notes) }
+            if let date = tx.transactionDate { texts.append(date) }
+            texts.append(TransactionCardCalculations.formattedAmount(amountCents: tx.amountCents, transactionType: tx.transactionType))
+            return (id: id, texts: texts)
+        }
+        let matches = FindMatchCalculations.computeMatches(query: query, entities: entities)
+        findState.registerMatches(matches, source: "transactions")
     }
 }
 

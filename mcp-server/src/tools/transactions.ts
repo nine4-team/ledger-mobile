@@ -38,6 +38,9 @@ function formatTransaction(tx: Transaction & { id: string }) {
     purchasedBy: tx.purchasedBy ?? "",
     reimbursementType: tx.reimbursementType ?? "",
     receiptEmailed: tx.receiptEmailed ?? null,
+    ingestionSource: tx.ingestionSource ?? null,
+    ingestionStatus: tx.ingestionStatus ?? null,
+    ingestionMeta: tx.ingestionMeta ?? null,
   };
 }
 
@@ -54,11 +57,12 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Filter by reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
+      ingestionStatus: z.string().optional().describe("Filter by ingestion status: 'needs_review', 'auto_matched', 'confirmed'. Used to find email-ingested transactions pending triage."),
       hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, hasItems, limit, offset }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -89,6 +93,10 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
 
       if (reimbursementType) {
         query = query.where("reimbursementType", "==", reimbursementType);
+      }
+
+      if (ingestionStatus) {
+        query = query.where("ingestionStatus", "==", ingestionStatus);
       }
 
       // hasItems requires client-side filtering (Firestore can't query array length)
@@ -243,8 +251,19 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
       status: z.string().default("completed").describe("Transaction status (e.g. 'completed', 'pending')"),
+      ingestionSource: z.string().optional().describe("Origin of transaction: 'email' (auto-ingested) or 'manual'. Omit for manually created transactions."),
+      ingestionStatus: z.string().optional().describe("Ingestion lifecycle: 'needs_review' (unmatched), 'auto_matched' (matched but unconfirmed), 'confirmed'. Only set for ingested transactions."),
+      ingestionMeta: z.object({
+        emailId: z.string().optional(),
+        subject: z.string().optional(),
+        inbox: z.string().optional(),
+        matchConfidence: z.number().optional(),
+        matchReason: z.string().optional(),
+        orderNumber: z.string().optional(),
+        linkedIngestionIds: z.array(z.string()).optional(),
+      }).optional().describe("Email ingestion metadata: email ID, subject, inbox, match confidence/reason, order number, linked transaction IDs for split shipments."),
     },
-    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status }) => {
+    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
       if (txType === "Sale") {
         return {
           content: [{ type: "text", text: "Cannot create Sale transactions directly — use the sell_items tool instead. Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform." }],
@@ -273,6 +292,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (purchasedBy) data.purchasedBy = purchasedBy;
       if (reimbursementType && reimbursementType !== "none") data.reimbursementType = reimbursementType;
       if (receiptEmailed !== undefined) data.receiptEmailed = receiptEmailed;
+      if (ingestionSource) data.ingestionSource = ingestionSource;
+      if (ingestionStatus) data.ingestionStatus = ingestionStatus;
+      if (ingestionMeta) data.ingestionMeta = ingestionMeta;
 
       const ref = await accountCollection(db, "transactions").add(data);
 
@@ -313,6 +335,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
       paymentMethod: z.string().optional().describe("Payment method (e.g. 'Credit Card', 'Cash', 'Check')"),
+      ingestionStatus: z.string().optional().describe("Update ingestion status: 'confirmed' (user verified), 'needs_review', 'auto_matched'"),
     },
     async ({ transactionId, ...fields }) => {
       const updates: Record<string, unknown> = { updatedAt: new Date() };

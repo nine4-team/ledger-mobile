@@ -72,6 +72,17 @@ export interface Transaction {
   receiptImages?: AttachmentRef[];
   otherImages?: AttachmentRef[];
   transactionImages?: AttachmentRef[];
+  ingestionSource?: string;
+  ingestionStatus?: string;
+  ingestionMeta?: {
+    emailId?: string;
+    subject?: string;
+    inbox?: string;
+    matchConfidence?: number;
+    matchReason?: string;
+    orderNumber?: string;
+    linkedIngestionIds?: string[];
+  };
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }

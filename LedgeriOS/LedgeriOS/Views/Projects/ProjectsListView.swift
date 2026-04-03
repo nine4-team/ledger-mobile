@@ -10,6 +10,8 @@ struct ProjectsListView: View {
     @State private var preferencesListener: ListenerRegistration?
     @State private var projectPreferences: [String: ProjectPreferences] = [:]
     @State private var showNewProject = false
+    @Environment(FindStateManager.self) private var findState
+    @Environment(InventoryContext.self) private var inventoryContext
 
     private let projectService = ProjectService()
     private let preferencesService = ProjectPreferencesService()
@@ -35,40 +37,61 @@ struct ProjectsListView: View {
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
-            if filteredProjects.isEmpty {
-                ContentUnavailableView(
-                    selectedTab == "archived"
-                        ? "No Archived Projects"
-                        : "No Active Projects",
-                    systemImage: "house",
-                    description: Text(
-                        selectedTab == "archived"
-                            ? "No archived projects yet."
-                            : "No active projects yet."
-                    )
-                )
-            } else {
+            ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
-                        alignment: .leading,
-                        spacing: Spacing.cardListGap
-                    ) {
-                        ForEach(filteredProjects) { project in
-                            NavigationLink(value: project) {
-                                ProjectCard(
-                                    project: project,
-                                    budgetPreview: budgetPreviewFor(project)
-                                )
+                    VStack(spacing: Spacing.cardListGap) {
+                        if selectedTab == "active" {
+                            NavigationLink(value: AppDestination.inventory) {
+                                InventoryPinnedCard()
                             }
                             .buttonStyle(.plain)
+                            .padding(.horizontal, Spacing.screenPadding)
+                        }
+
+                        if filteredProjects.isEmpty {
+                            ContentUnavailableView(
+                                selectedTab == "archived"
+                                    ? "No Archived Projects"
+                                    : "No Projects Yet",
+                                systemImage: "house",
+                                description: Text(
+                                    selectedTab == "archived"
+                                        ? "No archived projects yet."
+                                        : "Create a project to get started."
+                                )
+                            )
+                        } else {
+                            LazyVGrid(
+                                columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                                alignment: .leading,
+                                spacing: Spacing.cardListGap
+                            ) {
+                                ForEach(filteredProjects) { project in
+                                    NavigationLink(value: project) {
+                                        ProjectCard(
+                                            project: project,
+                                            budgetPreview: budgetPreviewFor(project)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .id(project.id ?? "")
+                                }
+                            }
+                            .padding(.horizontal, Spacing.screenPadding)
                         }
                     }
-                    .padding(.horizontal, Spacing.screenPadding)
                     .padding(.top, Spacing.md)
                     .padding(.bottom, Spacing.md)
                 }
                 .scrollContentTopFade()
+                .onChange(of: findState.currentMatchID) { _, matchID in
+                    if let matchID {
+                        withAnimation { proxy.scrollTo(matchID, anchor: .center) }
+                    }
+                }
+                .onChange(of: findState.debouncedQuery) { _, _ in
+                    registerProjectFindMatches()
+                }
             }
         }
         .navigationTitle("Projects")
@@ -212,5 +235,19 @@ struct ProjectsListView: View {
             categoryType: .general,
             excludeFromOverallBudget: false
         )]
+    }
+
+    private func registerProjectFindMatches() {
+        let query = findState.debouncedQuery
+        guard !query.isEmpty else {
+            findState.registerMatches([], source: "projects")
+            return
+        }
+        let entities: [(id: String, texts: [String])] = filteredProjects.compactMap { project -> (id: String, texts: [String])? in
+            guard let id = project.id else { return nil }
+            return (id: id, texts: [project.name, project.clientName])
+        }
+        let matches = FindMatchCalculations.computeMatches(query: query, entities: entities)
+        findState.registerMatches(matches, source: "projects")
     }
 }

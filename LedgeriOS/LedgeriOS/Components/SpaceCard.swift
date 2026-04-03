@@ -25,7 +25,7 @@ struct SpaceCard: View {
         ImageCard(imageUrl: primaryImage?.url, thumbnailUrl: primaryImage?.thumbnailUrlMd, onPress: onPress) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(alignment: .top) {
-                    Text(space.name.trimmingCharacters(in: .whitespaces).isEmpty
+                    FindableText(space.name.trimmingCharacters(in: .whitespaces).isEmpty
                          ? "Untitled space" : space.name)
                         .font(Typography.h3)
                         .foregroundStyle(BrandColors.textPrimary)

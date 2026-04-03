@@ -174,7 +174,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
 
     private var collapsedContent: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(name)
+            FindableText(name)
                 .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
                 .lineLimit(3)
@@ -184,22 +184,22 @@ struct GroupedItemCard<ExpandedContent: View>: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     if let displayPrice = priceLabel ?? totalLabel, !displayPrice.isEmpty {
-                        Text(displayPrice)
+                        FindableText(displayPrice)
                             .font(Typography.h3)
                             .foregroundStyle(BrandColors.textPrimary)
                     }
                     if let sourceLabel, !sourceLabel.isEmpty {
-                        Text("Source: \(sourceLabel)")
+                        FindableText("Source: \(sourceLabel)")
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                     }
                     if let sku, !sku.isEmpty {
-                        Text("SKU: \(sku)")
+                        FindableText("SKU: \(sku)")
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                     }
                     if let locationLabel, !locationLabel.isEmpty {
-                        Text("Location: \(locationLabel)")
+                        FindableText("Location: \(locationLabel)")
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                             .lineLimit(2)

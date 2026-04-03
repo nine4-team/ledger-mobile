@@ -4,7 +4,7 @@ import SwiftUI
 
 enum AppSection: String, CaseIterable {
     case projects
-    case inventory
+    case review
     case search
     case settings
 }
@@ -13,6 +13,7 @@ enum AppSection: String, CaseIterable {
 
 struct MainTabView: View {
     @SceneStorage("selectedTab") private var selectedTab: AppSection = .projects
+    @Environment(FindStateManager.self) private var findState
 
     var body: some View {
         #if os(macOS)
@@ -33,7 +34,7 @@ struct MainTabView: View {
         NavigationSplitView {
             List(selection: $selectedTab) {
                 Label("Projects", systemImage: "folder").tag(AppSection.projects)
-                Label("Inventory", systemImage: "archivebox").tag(AppSection.inventory)
+                Label("Review", systemImage: "checklist").tag(AppSection.review)
                 Label("Search", systemImage: "magnifyingglass").tag(AppSection.search)
                 Label("Settings", systemImage: "gear").tag(AppSection.settings)
             }
@@ -46,8 +47,13 @@ struct MainTabView: View {
                         .navigationDestination(for: Project.self) { project in
                             ProjectDetailView(project: project)
                         }
-                case .inventory:
-                    InventoryView()
+                        .navigationDestination(for: AppDestination.self) { dest in
+                            switch dest {
+                            case .inventory: InventoryView()
+                            }
+                        }
+                case .review:
+                    ReviewView()
                 case .search:
                     UniversalSearchView()
                         .navigationDestination(for: Item.self) { item in
@@ -70,11 +76,24 @@ struct MainTabView: View {
             }
         }
         .tint(BrandColors.primary)
+        .overlay(alignment: .top) {
+            if findState.isActive {
+                FindOverlayBar()
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: findState.isActive)
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             selectedTab = .settings
         }
         .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
             selectedTab = .search
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleFindOverlay)) { _ in
+            findState.toggle()
+        }
+        .onChange(of: selectedTab) { _, _ in
+            findState.deactivate()
         }
     }
     #endif
@@ -89,12 +108,17 @@ struct MainTabView: View {
                         .navigationDestination(for: Project.self) { project in
                             ProjectDetailView(project: project)
                         }
+                        .navigationDestination(for: AppDestination.self) { dest in
+                            switch dest {
+                            case .inventory: InventoryView()
+                            }
+                        }
                 }
             }
 
-            Tab("Inventory", systemImage: "archivebox", value: .inventory) {
+            Tab("Review", systemImage: "checklist", value: .review) {
                 NavigationStack {
-                    InventoryView()
+                    ReviewView()
                 }
             }
 
@@ -121,11 +145,24 @@ struct MainTabView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tint(BrandColors.primary)
+        .overlay(alignment: .top) {
+            if findState.isActive {
+                FindOverlayBar()
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: findState.isActive)
         .onReceive(NotificationCenter.default.publisher(for: .showSettings)) { _ in
             selectedTab = .settings
         }
         .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
             selectedTab = .search
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleFindOverlay)) { _ in
+            findState.toggle()
+        }
+        .onChange(of: selectedTab) { _, _ in
+            findState.deactivate()
         }
     }
 }
@@ -137,4 +174,5 @@ struct MainTabView: View {
             accountsService: AccountsService(),
             membersService: AccountMembersService()
         ))
+        .environment(FindStateManager())
 }

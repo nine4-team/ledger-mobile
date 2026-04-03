@@ -1,5 +1,15 @@
 import FirebaseFirestore
 
+struct IngestionMeta: Codable, Hashable {
+    var emailId: String?
+    var subject: String?
+    var inbox: String?
+    var matchConfidence: Double?
+    var matchReason: String?
+    var orderNumber: String?
+    var linkedIngestionIds: [String]?
+}
+
 struct TransactionAudit: Codable, Hashable {
     var resolvedSubtotalCents: Int?
     var itemsSumCents: Int?
@@ -42,6 +52,9 @@ struct Transaction: Codable, Identifiable, Hashable {
     var audit: TransactionAudit?
     var taxRatePct: Double?
     var subtotalCents: Int?
+    var ingestionSource: String?
+    var ingestionStatus: String?
+    var ingestionMeta: IngestionMeta?
     var triggerEvent: String?
     var createdAt: Date?
     var updatedAt: Date?
@@ -51,7 +64,8 @@ struct Transaction: Codable, Identifiable, Hashable {
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
-             needsReview, isComplete, audit, taxRatePct, subtotalCents, triggerEvent
+             needsReview, isComplete, audit, taxRatePct, subtotalCents,
+             ingestionSource, ingestionStatus, ingestionMeta, triggerEvent
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"
     }

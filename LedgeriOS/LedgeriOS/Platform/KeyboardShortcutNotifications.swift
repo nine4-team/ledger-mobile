@@ -7,4 +7,5 @@ extension Notification.Name {
     static let createSpace = Notification.Name("ledger.createSpace")
     static let focusSearch = Notification.Name("ledger.focusSearch")
     static let showSettings = Notification.Name("ledger.showSettings")
+    static let toggleFindOverlay = Notification.Name("ledger.toggleFindOverlay")
 }

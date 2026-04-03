@@ -10,11 +10,11 @@ struct ProjectCard: View {
                 heroImage
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Text(project.name.isEmpty ? "Project" : project.name)
+                    FindableText(project.name.isEmpty ? "Project" : project.name)
                         .font(Typography.h3)
                         .foregroundStyle(BrandColors.textPrimary)
 
-                    Text(project.clientName.isEmpty ? "No client" : project.clientName)
+                    FindableText(project.clientName.isEmpty ? "No client" : project.clientName)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
 

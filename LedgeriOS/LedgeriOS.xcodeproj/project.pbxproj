@@ -168,6 +168,7 @@
 		C1CF755D2AE8CCEB427F39F2 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A62391566C00DD3400BFD5 /* Account.swift */; };
 		C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857F2893750ABBED0530AF4C /* BudgetProgress.swift */; };
 		C2EE9D45E7FF4C91AF3CD35C /* ActionMenuCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55E546158544F24A30DD037 /* ActionMenuCalculationTests.swift */; };
+		0F2E7A38BCF140038A391EEF /* FindStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4437FB6F1347482CBB9EDD2C /* FindStateManager.swift */; };
 		C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0604D18D632527DF01B41A4 /* AccountContext.swift */; };
 		C5A0010100000000000C0001 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0001 /* Card.swift */; };
 		C5A0010100000000000C0002 /* AppButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0002 /* AppButton.swift */; };
@@ -214,6 +215,8 @@
 		E283D15CAC0B47ABF15699FC /* InventoryContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453BAC1E5197316576CCE8E1 /* InventoryContext.swift */; };
 		E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */; };
 		E57A8103EC4D73FB50EFEC11 /* ProjectListCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */; };
+		2CBEFA12A9214AEBB0564350 /* FindableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5943A53A02D94A45B1D7271E /* FindableText.swift */; };
+		15C4E80CC76B4F5AB30468EA /* FindOverlayBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */; };
 		E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */; };
 		E6BB3B6D6F4E2339F3A86967 /* AccountsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FA024C7D26993F0325E7C4 /* AccountsService.swift */; };
 		E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */; };
@@ -232,6 +235,7 @@
 		F100517684382B0A3E771B46 /* SetSpaceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082B142DF68203AFD6FBA3DE /* SetSpaceModal.swift */; };
 		F1A8091E7D2EAF253BF66A93 /* ItemsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4745C15BA2924A183A82E249 /* ItemsTabView.swift */; };
 		F1E2D3C4B5A647B89C0D1E2F /* ReportPDFStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F64A7B8C9D0E1F /* ReportPDFStyles.swift */; };
+		A47AD2D354574F3790A40C52 /* FindMatchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A19F2DA548041B58E2198DA /* FindMatchCalculations.swift */; };
 		F1EF25204FEBCEF208204A62 /* SearchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9861555F95FB044633943568 /* SearchCalculations.swift */; };
 		F30423AB5031451051CBFDD9 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A249549F993D74A6F0A4A94 /* InventoryView.swift */; };
 		F45A8A2A63FE827BF26CFD61 /* ItemDetailCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7698CDEC62AC82AB04FE5656 /* ItemDetailCalculations.swift */; };
@@ -308,6 +312,10 @@
 		WP10B00100000000000C0002 /* SharedTransactionsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0002 /* SharedTransactionsList.swift */; };
 		WP10B00100000000000C0003 /* DraggableCardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP10F00100000000000C0003 /* DraggableCardList.swift */; };
 		ZOOM0001000000000000B001 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZOOM0001000000000000F001 /* ZoomableScrollView.swift */; };
+		D70496EBF6B840E2AD61B041 /* AppDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B2D2ED0E4448B6B3A822FC /* AppDestination.swift */; };
+		5491B92CE6254D4E99CC7A70 /* InventoryPinnedCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F94AB65C9B2436388CFF890 /* InventoryPinnedCard.swift */; };
+		C38E1B1E37864DBFBF161F32 /* ReviewCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6186D40779AF445E9263F512 /* ReviewCalculations.swift */; };
+		0A617136702D4744818ABA4D /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2756A3BB9A2040C889C00F43 /* ReviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -360,6 +368,8 @@
 		2538F854507B4CA8A499223E /* InventorySpacesSubTab.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventorySpacesSubTab.swift; sourceTree = "<group>"; };
 		268ECEEB1D30D1C2CCA8995D /* TestFactories.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestFactories.swift; sourceTree = "<group>"; };
 		2A267D245751FF8566886407 /* ReportHTMLBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportHTMLBuilder.swift; sourceTree = "<group>"; };
+		5943A53A02D94A45B1D7271E /* FindableText.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindableText.swift; sourceTree = "<group>"; };
+		BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindOverlayBar.swift; sourceTree = "<group>"; };
 		2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
 		2B10F56A51B97546036FC5CC /* AccountMember.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountMember.swift; sourceTree = "<group>"; };
 		2F74BE7B5D06201352DB914C /* SpaceDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceDetailView.swift; sourceTree = "<group>"; };
@@ -427,6 +437,7 @@
 		8B7F3B254BE0DF4BB1DFED50 /* AccountingTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountingTabPlaceholder.swift; sourceTree = "<group>"; };
 		95CA5CA236FBB37B8B4ED80C /* InvoiceDateParsing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceDateParsing.swift; sourceTree = "<group>"; };
 		9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionAuditPanel.swift; sourceTree = "<group>"; };
+		6A19F2DA548041B58E2198DA /* FindMatchCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindMatchCalculations.swift; sourceTree = "<group>"; };
 		9861555F95FB044633943568 /* SearchCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchCalculations.swift; sourceTree = "<group>"; };
 		9DBDFE9FA8544210AF2DDE46 /* MediaServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaServiceTests.swift; sourceTree = "<group>"; };
 		9F3499445B08E06435FF4D4F /* ParseDebugReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParseDebugReport.swift; sourceTree = "<group>"; };
@@ -542,6 +553,7 @@
 		E6C001C78127D35A8B1050F0 /* VendorDefaultsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaultsService.swift; sourceTree = "<group>"; };
 		EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculationTests.swift; sourceTree = "<group>"; };
 		EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewSpaceView.swift; sourceTree = "<group>"; };
+		4437FB6F1347482CBB9EDD2C /* FindStateManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindStateManager.swift; sourceTree = "<group>"; };
 		F0604D18D632527DF01B41A4 /* AccountContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
 		F0DB6D4C81937205D1F35C0F /* SpaceListCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceListCalculations.swift; sourceTree = "<group>"; };
 		F4567B7B7D371DE596BD3FEE /* ImageGroupingState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ImageGroupingState.swift; sourceTree = "<group>"; };
@@ -629,6 +641,10 @@
 		WP10F00100000000000C0002 /* SharedTransactionsList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTransactionsList.swift; sourceTree = "<group>"; };
 		WP10F00100000000000C0003 /* DraggableCardList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableCardList.swift; sourceTree = "<group>"; };
 		ZOOM0001000000000000F001 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
+		F7B2D2ED0E4448B6B3A822FC /* AppDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDestination.swift; sourceTree = "<group>"; };
+		0F94AB65C9B2436388CFF890 /* InventoryPinnedCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryPinnedCard.swift; sourceTree = "<group>"; };
+		6186D40779AF445E9263F512 /* ReviewCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCalculations.swift; sourceTree = "<group>"; };
+		2756A3BB9A2040C889C00F43 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -703,6 +719,7 @@
 		41E4C3E7AD3CB291B4D14E08 /* Logic */ = {
 			isa = PBXGroup;
 			children = (
+				6186D40779AF445E9263F512 /* ReviewCalculations.swift */,
 				835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */,
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
 				C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */,
@@ -733,6 +750,7 @@
 				87E32BBC387EF4E5DA99A2B0 /* TransactionFormValidation.swift */,
 				551A176F41B9F7E76B0124BA /* TransactionDisplayCalculations.swift */,
 				72FB2AE7B011092E46E9D316 /* SpaceDetailCalculations.swift */,
+				6A19F2DA548041B58E2198DA /* FindMatchCalculations.swift */,
 				9861555F95FB044633943568 /* SearchCalculations.swift */,
 				7698CDEC62AC82AB04FE5656 /* ItemDetailCalculations.swift */,
 				090384A47EBFBA9FB0BA599D /* ExportFieldConfig.swift */,
@@ -784,6 +802,7 @@
 		5049E7963806A086E13C5318 /* State */ = {
 			isa = PBXGroup;
 			children = (
+				4437FB6F1347482CBB9EDD2C /* FindStateManager.swift */,
 				F0604D18D632527DF01B41A4 /* AccountContext.swift */,
 				B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */,
 				F89888110732C2D81B903322 /* SyncTracking.swift */,
@@ -987,6 +1006,7 @@
 		A1000401000000000000EE06 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F7E840AABD4F422696BC5562 /* Review */,
 				078746923E5042AAB3A9E41E /* Reports */,
 				A2B3C4D5E6F7089012345601 /* AccountGateView.swift */,
 				A1000201000000000000AA09 /* AuthView.swift */,
@@ -1010,6 +1030,7 @@
 		A361CA30A9E9C606550C3AE9 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				F7B2D2ED0E4448B6B3A822FC /* AppDestination.swift */,
 				D5B86A1C58FBF298270046AF /* AttachmentRef.swift */,
 				47370982DDDB5064026D1B45 /* Enums.swift */,
 				WP01F00100000000000S0001 /* ActionMenuItem.swift */,
@@ -1037,8 +1058,11 @@
 		C5A0040100000000000G0001 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				0F94AB65C9B2436388CFF890 /* InventoryPinnedCard.swift */,
 				C5A0020100000000000C0001 /* Card.swift */,
 				C5A0020100000000000C0002 /* AppButton.swift */,
+				5943A53A02D94A45B1D7271E /* FindableText.swift */,
+				BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */,
 				2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */,
 				200C7DF8AAEB4CB28DF47A42 /* BudgetProgressDisplay.swift */,
 				DD22C94062B04FD8B6A1CCD3 /* ThumbnailGrid.swift */,
@@ -1185,6 +1209,14 @@
 			path = Modals;
 			sourceTree = "<group>";
 		};
+		F7E840AABD4F422696BC5562 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				2756A3BB9A2040C889C00F43 /* ReviewView.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1292,6 +1324,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A617136702D4744818ABA4D /* ReviewView.swift in Sources */,
+				C38E1B1E37864DBFBF161F32 /* ReviewCalculations.swift in Sources */,
+				5491B92CE6254D4E99CC7A70 /* InventoryPinnedCard.swift in Sources */,
+				D70496EBF6B840E2AD61B041 /* AppDestination.swift in Sources */,
 				E2B407AAA8D31F63F4354E57 /* StorageURLResolver.swift in Sources */,
 				3ADAFC69F4DA9C2E1954EA9D /* AddExistingItemsCalculations.swift in Sources */,
 				F9A66300C9ADB6E421932898 /* ItemConflictSheet.swift in Sources */,
@@ -1345,6 +1381,7 @@
 				ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */,
 				CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */,
 				1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */,
+				0F2E7A38BCF140038A391EEF /* FindStateManager.swift in Sources */,
 				C42AC27A2C8E31B669ECBDB1 /* AccountContext.swift in Sources */,
 				7D571115A2B67A032EFEB239 /* ProjectContext.swift in Sources */,
 				AA7A4FB11F9B4302BBF6106D /* SyncTracking.swift in Sources */,
@@ -1361,6 +1398,8 @@
 				C5A0010100000000000C0001 /* Card.swift in Sources */,
 				C5A0010100000000000C0002 /* AppButton.swift in Sources */,
 				8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */,
+				2CBEFA12A9214AEBB0564350 /* FindableText.swift in Sources */,
+				15C4E80CC76B4F5AB30468EA /* FindOverlayBar.swift in Sources */,
 				E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */,
 				D98670FB4B844C34A26042A5 /* BudgetProgressDisplay.swift in Sources */,
 				8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */,
@@ -1467,6 +1506,7 @@
 				72227E784FF099CC1968C1F4 /* TransactionFormValidation.swift in Sources */,
 				259D7CEA6457EFEFF3466975 /* TransactionDisplayCalculations.swift in Sources */,
 				DD8ABBE12A39AD82D8EF0840 /* SpaceDetailCalculations.swift in Sources */,
+				A47AD2D354574F3790A40C52 /* FindMatchCalculations.swift in Sources */,
 				F1EF25204FEBCEF208204A62 /* SearchCalculations.swift in Sources */,
 				F45A8A2A63FE827BF26CFD61 /* ItemDetailCalculations.swift in Sources */,
 				949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */,

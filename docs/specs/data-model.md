@@ -87,6 +87,9 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | receiptImages | array of AttachmentRef, nullable | Receipt photo attachments |
 | otherImages | array of AttachmentRef, nullable | Other supporting images |
 | transactionImages | array of AttachmentRef, nullable | General transaction images |
+| ingestionSource | string, nullable | Origin of the transaction: `"email"` (auto-ingested from email), `"manual"` (created by human), or null (legacy/unknown) |
+| ingestionStatus | string, nullable | Ingestion lifecycle: `"needs_review"` (unmatched or low confidence), `"auto_matched"` (matched to project but unconfirmed), `"confirmed"` (user-verified), or null |
+| ingestionMeta | IngestionMeta, nullable | Metadata from the email ingestion pipeline. Null for manually created transactions |
 | createdAt | timestamp | |
 | updatedAt | timestamp | |
 
@@ -332,6 +335,20 @@ Embedded within Transaction, Item, and Space documents.
 | fileName | string, nullable | Original file name |
 | contentType | string, nullable | MIME type |
 | isPrimary | boolean, nullable | Whether this is the primary/hero image |
+
+### IngestionMeta
+
+Embedded within Transaction documents. Stores context from the email ingestion pipeline.
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| emailId | string, nullable | Unique identifier of the source email (e.g. Gmail message ID). Used for deduplication |
+| subject | string, nullable | Email subject line |
+| inbox | string, nullable | Email address of the inbox that received the order |
+| matchConfidence | number, nullable | 0.0–1.0 confidence score for project matching |
+| matchReason | string, nullable | Human-readable explanation of why this transaction was matched to a project |
+| orderNumber | string, nullable | Vendor order number parsed from the email |
+| linkedIngestionIds | array of string, nullable | Transaction IDs of related ingested transactions (e.g. split shipments from the same order) |
 
 ### BudgetCategoryMetadata
 

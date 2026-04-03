@@ -72,7 +72,7 @@ struct ItemCard: View {
 
     private var contentArea: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(item.displayName)
+            FindableText(item.displayName)
                 .font(Typography.h3)
                 .foregroundStyle(BrandColors.textPrimary)
                 .lineLimit(3)
@@ -83,11 +83,11 @@ struct ItemCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(metadata.enumerated()), id: \.offset) { index, line in
                         if index == 0 {
-                            Text(line)
+                            FindableText(line)
                                 .font(Typography.h3)
                                 .foregroundStyle(BrandColors.textPrimary)
                         } else {
-                            Text(line)
+                            FindableText(line)
                                 .font(Typography.small)
                                 .foregroundStyle(BrandColors.textSecondary)
                                 .lineLimit(2)

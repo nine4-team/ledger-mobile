@@ -12,6 +12,7 @@ struct LedgerApp: App {
     @State private var mediaService = MediaService()
     @State private var networkMonitor = NetworkMonitor()
     @State private var mediaUploadQueue: MediaUploadQueue
+    @State private var findStateManager = FindStateManager()
 
     init() {
         FirebaseApp.configure()
@@ -109,6 +110,7 @@ struct LedgerApp: App {
                 .environment(mediaService)
                 .environment(mediaUploadQueue)
                 .environment(networkMonitor)
+                .environment(findStateManager)
                 .preferredColorScheme(resolvedColorScheme)
                 #if DEBUG
                 .overlay(alignment: .top) {
@@ -134,13 +136,13 @@ struct LedgerApp: App {
                     mediaUploadQueue.processQueue()
                 }
         }
+        .commands {
+            LedgerCommands()
+        }
         #if os(macOS)
         .defaultSize(width: 1000, height: 700)
         .windowResizability(.contentMinSize)
         .windowToolbarStyle(.unified)
-        .commands {
-            LedgerCommands()
-        }
         #endif
     }
 }

@@ -33,8 +33,8 @@ struct LedgerCommands: Commands {
         CommandGroup(replacing: .printItem) { }
 
         CommandGroup(replacing: .textEditing) {
-            Button("Search") {
-                NotificationCenter.default.post(name: .focusSearch, object: nil)
+            Button("Find on Page") {
+                NotificationCenter.default.post(name: .toggleFindOverlay, object: nil)
             }
             .keyboardShortcut("f", modifiers: .command)
         }

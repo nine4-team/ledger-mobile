@@ -70,14 +70,14 @@ struct TransactionCard: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             // Source + Amount row
             HStack(alignment: .firstTextBaseline) {
-                Text(source.isEmpty ? "Transaction \((transaction.id ?? "").prefix(6))" : source)
+                FindableText(source.isEmpty ? "Transaction \((transaction.id ?? "").prefix(6))" : source)
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(2)
 
                 Spacer(minLength: Spacing.md)
 
-                Text(TransactionCardCalculations.formattedAmount(amountCents: transaction.amountCents, transactionType: transaction.transactionType))
+                FindableText(TransactionCardCalculations.formattedAmount(amountCents: transaction.amountCents, transactionType: transaction.transactionType))
                     .font(Typography.body.weight(.bold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
@@ -89,7 +89,7 @@ struct TransactionCard: View {
                 Text("Date: ")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                Text(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
@@ -109,7 +109,7 @@ struct TransactionCard: View {
                     Text("Budget Category:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    Text(category)
+                    FindableText(category)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
@@ -118,7 +118,7 @@ struct TransactionCard: View {
             // Notes — always reserve space for consistent card heights in grid
             Group {
                 if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
-                    Text(truncated)
+                    FindableText(truncated)
                         .font(Typography.small)
                         .italic()
                         .foregroundStyle(BrandColors.textSecondary)
