@@ -250,7 +250,7 @@ struct UniversalSearchView: View {
         VStack(spacing: 0) {
             Picker("Search", selection: $selectedTab) {
                 Text("Items (\(itemsCount))").tag("items")
-                Text("Txns (\(transactionsCount))").tag("transactions")
+                Text("Transactions (\(transactionsCount))").tag("transactions")
                 Text("Spaces (\(spacesCount))").tag("spaces")
             }
             .pickerStyle(.segmented)
@@ -565,6 +565,28 @@ struct UniversalSearchView: View {
             spaces: accountContext.allSpaces,
             categories: accountContext.allBudgetCategories
         )
+        autoSwitchTab()
+    }
+
+    /// If the current tab has no results but exactly one other tab does, switch to it.
+    private func autoSwitchTab() {
+        let currentCount: Int = switch selectedTab {
+        case "items": itemsCount
+        case "transactions": transactionsCount
+        case "spaces": spacesCount
+        default: 0
+        }
+        guard currentCount == 0 else { return }
+
+        let tabsWithResults = [
+            ("items", itemsCount),
+            ("transactions", transactionsCount),
+            ("spaces", spacesCount),
+        ].filter { $0.1 > 0 }
+
+        if tabsWithResults.count == 1 {
+            selectedTab = tabsWithResults[0].0
+        }
     }
 
     private func categoryName(for categoryId: String?) -> String? {

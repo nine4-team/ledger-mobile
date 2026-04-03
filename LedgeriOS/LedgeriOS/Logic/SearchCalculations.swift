@@ -37,8 +37,8 @@ enum SearchCalculations {
 
         let categoryName = categories.first(where: { $0.id == item.budgetCategoryId })?.name
 
-        // Text fields: name, source, SKU (raw), notes, budget category name
-        let textFields: [String?] = [item.displayName, item.source, item.sku, item.notes, categoryName]
+        // Text fields: ID, name, source, SKU (raw), notes, budget category name
+        let textFields: [String?] = [item.id, item.displayName, item.source, item.sku, item.notes, categoryName]
         if textFields.contains(where: { textMatch(query: query, in: $0) }) {
             return true
         }
@@ -67,8 +67,8 @@ enum SearchCalculations {
         let categoryName = categories.first(where: { $0.id == transaction.budgetCategoryId })?.name
         let displayName = transactionDisplayName(for: transaction)
 
-        // Text fields: displayName, transactionType, notes, purchasedBy, budget category name
-        let textFields: [String?] = [displayName, transaction.transactionType?.rawValue, transaction.notes, transaction.purchasedBy, categoryName]
+        // Text fields: ID, displayName, transactionType, notes, purchasedBy, budget category name
+        let textFields: [String?] = [transaction.id, displayName, transaction.transactionType?.rawValue, transaction.notes, transaction.purchasedBy, categoryName]
         if textFields.contains(where: { textMatch(query: query, in: $0) }) {
             return true
         }
@@ -84,8 +84,8 @@ enum SearchCalculations {
     static func spaceMatches(space: Space, query: String) -> Bool {
         if query.isEmpty { return true }
 
-        // Text fields: name, notes. No amount matching.
-        let textFields: [String?] = [space.name, space.notes]
+        // Text fields: ID, name, notes. No amount matching.
+        let textFields: [String?] = [space.id, space.name, space.notes]
         return textFields.contains(where: { textMatch(query: query, in: $0) })
     }
 
