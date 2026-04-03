@@ -42,8 +42,8 @@ enum ReportPDFStyles {
 
     // MARK: - Layout
 
-    /// Standard PDF page width (US Letter at 72dpi = 612pt)
-    static let pageWidth: CGFloat = 800
+    /// Standard PDF page width (US Letter at 72dpi)
+    static let pageWidth: CGFloat = 612
 
     /// Page padding
     static let pagePadding: CGFloat = 40

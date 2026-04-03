@@ -47,7 +47,8 @@ struct ReportAggregationCalculationTests {
         transactionId: String? = nil,
         budgetCategoryId: String? = nil,
         source: String? = nil,
-        sku: String? = nil
+        sku: String? = nil,
+        status: ItemStatus? = nil
     ) -> Item {
         var item = Item()
         item.id = id
@@ -60,6 +61,7 @@ struct ReportAggregationCalculationTests {
         item.budgetCategoryId = budgetCategoryId
         item.source = source
         item.sku = sku
+        item.status = status
         return item
     }
 
@@ -416,6 +418,24 @@ struct ReportAggregationCalculationTests {
         }
     }
 
+    @Test("Returned items excluded from client summary totals")
+    func returnedItemsExcludedFromClientSummary() {
+        let items = [
+            makeItem(id: "item1", projectPriceCents: 5000, marketValueCents: 8000, status: .purchased),
+            makeItem(id: "item2", projectPriceCents: 3000, marketValueCents: 6000, status: .returned),
+            makeItem(id: "item3", projectPriceCents: 2000, marketValueCents: 4000, status: .toReturn),
+        ]
+
+        let result = ReportAggregationCalculations.computeClientSummary(
+            items: items, transactions: [], spaces: [], categories: []
+        )
+
+        // item2 (returned) excluded; item1 + item3 included
+        #expect(result.totalSpentCents == 7000)
+        #expect(result.totalMarketValueCents == 12000)
+        #expect(result.items.count == 2)
+    }
+
     @Test("Receipt link returns none when no transaction linked")
     func receiptLinkNone() {
         let item = makeItem(id: "item1", transactionId: nil)
@@ -506,6 +526,25 @@ struct ReportAggregationCalculationTests {
         // 5000 (market) + 3000 (project fallback) + 1000 (purchase fallback)
         #expect(result.totalMarketValueCents == 9000)
         #expect(result.totalItemCount == 3)
+    }
+
+    @Test("Returned items excluded from property management")
+    func returnedItemsExcludedFromPropertyManagement() {
+        let items = [
+            makeItem(id: "item1", marketValueCents: 5000, spaceId: "space1", status: .purchased),
+            makeItem(id: "item2", marketValueCents: 3000, spaceId: "space1", status: .returned),
+            makeItem(id: "item3", marketValueCents: 2000, spaceId: nil, status: .returned),
+        ]
+        let spaces = [makeSpace(id: "space1", name: "Living Room")]
+
+        let result = ReportAggregationCalculations.computePropertyManagement(
+            items: items, spaces: spaces
+        )
+
+        #expect(result.totalItemCount == 1)
+        #expect(result.totalMarketValueCents == 5000)
+        #expect(result.spaceGroups[0].items.count == 1)
+        #expect(result.noSpaceItems.count == 0)
     }
 
     // MARK: - propertyValueCents Fallback Chain

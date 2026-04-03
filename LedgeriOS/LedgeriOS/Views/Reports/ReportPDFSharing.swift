@@ -1,34 +1,64 @@
 import SwiftUI
+import WebKit
 
 enum ReportPDFSharing {
 
+    /// Retained until PDF generation completes.
     @MainActor
-    static func sharePDF<Content: View>(
-        content: Content,
+    private static var activeWebView: WKWebView?
+    @MainActor
+    private static var activeDelegate: PDFNavigationDelegate?
+
+    @MainActor
+    static func sharePDF(
+        html: String,
         fileName: String
     ) {
-        let renderer = ImageRenderer(content: content)
-
-        #if canImport(UIKit)
-        renderer.scale = UIScreen.main.scale
-        #elseif canImport(AppKit)
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        #endif
-
-        let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(fileName)
-
-        renderer.render { size, renderContext in
-            var box = CGRect(origin: .zero, size: size)
-            guard let context = CGContext(tempURL as CFURL, mediaBox: &box, nil) else { return }
-            context.beginPDFPage(nil)
-            renderContext(context)
-            context.endPDFPage()
-            context.closePDF()
+        let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 612, height: 792))
+        let delegate = PDFNavigationDelegate(fileName: fileName) {
+            // Cleanup after PDF is shared
+            activeWebView = nil
+            activeDelegate = nil
         }
+        webView.navigationDelegate = delegate
 
-        guard FileManager.default.fileExists(atPath: tempURL.path) else { return }
+        // Retain until done
+        activeWebView = webView
+        activeDelegate = delegate
 
-        ShareHelper.share(url: tempURL)
+        webView.loadHTMLString(html, baseURL: nil)
+    }
+}
+
+@MainActor
+private final class PDFNavigationDelegate: NSObject, WKNavigationDelegate {
+    let fileName: String
+    let cleanup: @MainActor () -> Void
+
+    init(fileName: String, cleanup: @escaping @MainActor () -> Void) {
+        self.fileName = fileName
+        self.cleanup = cleanup
+    }
+
+    nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        Task { @MainActor in
+            // Brief delay to let layout settle
+            try? await Task.sleep(for: .milliseconds(100))
+
+            let config = WKPDFConfiguration()
+            config.rect = CGRect(x: 0, y: 0, width: 612, height: 792)
+
+            do {
+                let data = try await webView.pdf(configuration: config)
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(self.fileName)
+                try data.write(to: tempURL)
+                ShareHelper.share(url: tempURL)
+            } catch {
+                print("⚠️ ReportPDFSharing: PDF generation failed: \(error)")
+            }
+
+            self.cleanup()
+        }
     }
 }

@@ -182,6 +182,11 @@ enum ReportAggregationCalculations {
         spaces: [Space],
         categories: [BudgetCategory]
     ) -> ClientSummaryData {
+        // Exclude returned items — they stayed in the project (projectId unchanged)
+        // but shouldn't appear in client-facing reports. Sold items are already
+        // excluded at the Firestore query level (projectId is cleared on sell).
+        let activeItems = items.filter { $0.status != .returned }
+
         let transactionMap = Dictionary(
             transactions.compactMap { tx -> (String, Transaction)? in
                 guard let id = tx.id else { return nil }
@@ -206,10 +211,10 @@ enum ReportAggregationCalculations {
             uniquingKeysWith: { first, _ in first }
         )
 
-        let totalSpentCents = items.reduce(0) { $0 + clientPriceCents(for: $1) }
-        let totalMarketValueCents = items.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
+        let totalSpentCents = activeItems.reduce(0) { $0 + clientPriceCents(for: $1) }
+        let totalMarketValueCents = activeItems.reduce(0) { $0 + ($1.marketValueCents ?? 0) }
 
-        let totalSavedCents = items.reduce(0) { sum, item in
+        let totalSavedCents = activeItems.reduce(0) { sum, item in
             let marketValue = item.marketValueCents ?? 0
             let clientPrice = clientPriceCents(for: item)
             guard marketValue > 0 else { return sum }
@@ -218,7 +223,7 @@ enum ReportAggregationCalculations {
 
         // Category breakdown
         var categoryTotals: [String: Int] = [:]
-        for item in items {
+        for item in activeItems {
             let categoryId = resolveItemCategoryId(item, transactionMap: transactionMap)
             if let categoryId {
                 let categoryName = categoryMap[categoryId]?.name ?? "Unknown Category"
@@ -231,7 +236,7 @@ enum ReportAggregationCalculations {
             .sorted { $0.categoryName < $1.categoryName }
 
         // Build item list with receipt links
-        let clientItems = items.map { item in
+        let clientItems = activeItems.map { item in
             ClientSummaryItem(
                 item: item,
                 spaceName: item.spaceId.flatMap { spaceMap[$0]?.name },
@@ -299,6 +304,8 @@ enum ReportAggregationCalculations {
         items: [Item],
         spaces: [Space]
     ) -> PropertyManagementData {
+        let activeItems = items.filter { $0.status != .returned }
+
         let spaceMap = Dictionary(
             spaces.compactMap { s -> (String, Space)? in
                 guard let id = s.id else { return nil }
@@ -310,7 +317,7 @@ enum ReportAggregationCalculations {
         var grouped: [String: [Item]] = [:]
         var noSpaceItems: [Item] = []
 
-        for item in items {
+        for item in activeItems {
             if let spaceId = item.spaceId {
                 grouped[spaceId, default: []].append(item)
             } else {
@@ -328,12 +335,12 @@ enum ReportAggregationCalculations {
         }
         let spaceGroups = spaceGroupsArray.sorted { $0.space.name < $1.space.name }
 
-        let totalMarketValueCents = items.reduce(0) { $0 + propertyValueCents(for: $1) }
+        let totalMarketValueCents = activeItems.reduce(0) { $0 + propertyValueCents(for: $1) }
 
         return PropertyManagementData(
             spaceGroups: spaceGroups,
             noSpaceItems: noSpaceItems,
-            totalItemCount: items.count,
+            totalItemCount: activeItems.count,
             totalMarketValueCents: totalMarketValueCents
         )
     }
