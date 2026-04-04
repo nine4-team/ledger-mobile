@@ -64,14 +64,11 @@ private struct GeneralSettingsView: View {
                         Text("Appearance")
                             .sectionLabelStyle()
 
-                        SegmentedControl(
-                            selection: $colorSchemePreference,
-                            options: [
-                                SegmentOption(id: "system", label: "System", icon: Image(systemName: "gear")),
-                                SegmentOption(id: "light", label: "Light", icon: Image(systemName: "sun.max")),
-                                SegmentOption(id: "dark", label: "Dark", icon: Image(systemName: "moon")),
-                            ]
-                        )
+                        InlineOptionPicker(selection: $colorSchemePreference, options: [
+                            InlineOption(id: "system", label: "System"),
+                            InlineOption(id: "light", label: "Light"),
+                            InlineOption(id: "dark", label: "Dark"),
+                        ])
                     }
 
                     // Account Info
