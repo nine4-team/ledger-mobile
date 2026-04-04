@@ -7,7 +7,7 @@ enum TransactionCreationContext {
 }
 
 /// Multi-step bottom sheet form for creating a new transaction.
-/// Step 1: Type selection → Step 2: Destination → Step 3: Details.
+/// Step 1: Type selection → Step 2: Destination → Step 3: Budget Category (project only) → Step 4: Details.
 struct NewTransactionView: View {
     let context: TransactionCreationContext
 
@@ -18,9 +18,13 @@ struct NewTransactionView: View {
     // Step management
     @State private var currentStep = 1
     @State private var transactionType: TransactionType?
+    @State private var createdTransactionId: String?
 
     // Step 2
     @State private var destination = ""
+    @State private var otherVendorMode = false
+    @State private var otherVendorText = ""
+    @FocusState private var otherVendorFocused: Bool
 
     // Step 3 — detail fields
     @State private var source = ""
@@ -36,7 +40,6 @@ struct NewTransactionView: View {
     @State private var taxRate = ""
 
     // Pickers
-    @State private var showCategoryPicker = false
     @State private var showVendorPicker = false
 
     private let transactionsService = TransactionsService()
@@ -60,20 +63,34 @@ struct NewTransactionView: View {
         selectedCategory?.metadata?.categoryType == .itemized
     }
 
+    private var hasCategories: Bool {
+        projectId != nil
+    }
+
+    private var totalSteps: Int {
+        hasCategories ? 4 : 3
+    }
+
+    private var detailsStep: Int {
+        hasCategories ? 4 : 3
+    }
+
     var body: some View {
         Group {
-            switch currentStep {
-            case 1: step1TypeSelection
-            case 2: step2Destination
-            default: step3Details
+            if let txId = createdTransactionId {
+                ItemEntryFlowView(
+                    transactionId: txId,
+                    budgetCategoryId: selectedCategoryId,
+                    originProjectId: projectId
+                )
+            } else {
+                switch currentStep {
+                case 1: step1TypeSelection
+                case 2: step2Destination
+                case 3 where hasCategories: step3BudgetCategory
+                default: stepDetails
+                }
             }
-        }
-        .adaptivePresentation(isPresented: $showCategoryPicker, style: .picker) {
-            CategoryPickerList(
-                categories: projectContext?.enabledBudgetCategories ?? [],
-                selectedId: selectedCategoryId,
-                onSelect: { cat in selectedCategoryId = cat?.id }
-            )
         }
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
             VendorPickerModal(
@@ -97,7 +114,7 @@ struct NewTransactionView: View {
             description: "What type of transaction?",
 
             currentStep: 1,
-            totalSteps: 3,
+            totalSteps: totalSteps,
             primaryAction: FormSheetAction(title: "Cancel") { dismiss() }
         ) {
             VStack(spacing: Spacing.md) {
@@ -147,17 +164,23 @@ struct NewTransactionView: View {
             description: destinationPrompt,
 
             currentStep: 2,
-            totalSteps: 3,
-            primaryAction: FormSheetAction(title: "Next") {
+            totalSteps: totalSteps,
+            primaryAction: FormSheetAction(title: "Next", isDisabled: destination.isEmpty && (!otherVendorMode || otherVendorText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) {
+                if otherVendorMode {
+                    destination = otherVendorText.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
                 currentStep = 3
             },
             secondaryAction: FormSheetAction(title: "Back") {
                 currentStep = 1
             }
         ) {
-            VStack(spacing: Spacing.md) {
-                VendorPickerField(value: $destination, label: "Source / Vendor", showPicker: $showVendorPicker)
-            }
+            InlineVendorPicker(
+                selectedValue: $destination,
+                otherMode: $otherVendorMode,
+                otherText: $otherVendorText,
+                otherFocused: $otherVendorFocused
+            )
         }
     }
 
@@ -170,19 +193,45 @@ struct NewTransactionView: View {
         }
     }
 
-    // MARK: - Step 3: Details
+    // MARK: - Step 3: Budget Category (project only)
 
-    private var step3Details: some View {
+    private var step3BudgetCategory: some View {
+        MultiStepFormSheet(
+            title: "New Transaction",
+            description: "Assign a budget category",
+
+            currentStep: 3,
+            totalSteps: totalSteps,
+            primaryAction: FormSheetAction(title: "Next") {
+                currentStep = detailsStep
+            },
+            secondaryAction: FormSheetAction(title: "Back") {
+                currentStep = 2
+            }
+        ) {
+            InlineOptionPicker(selection: $selectedCategoryId, options:
+                [InlineOption(id: nil as String?, label: "No Category")] +
+                (projectContext?.enabledBudgetCategories ?? [])
+                    .filter { $0.isArchived != true }
+                    .sorted { ($0.order ?? 999) < ($1.order ?? 999) }
+                    .map { InlineOption(id: $0.id, label: $0.name) }
+            )
+        }
+    }
+
+    // MARK: - Details
+
+    private var stepDetails: some View {
         MultiStepFormSheet(
             title: "New Transaction",
 
-            currentStep: 3,
-            totalSteps: 3,
+            currentStep: detailsStep,
+            totalSteps: totalSteps,
             primaryAction: FormSheetAction(title: "Create Transaction", isDisabled: !isReadyToSubmit) {
                 createTransaction()
             },
             secondaryAction: FormSheetAction(title: "Back") {
-                currentStep = 2
+                currentStep = detailsStep - 1
             }
         ) {
             VStack(spacing: Spacing.xl) {
@@ -212,9 +261,9 @@ struct NewTransactionView: View {
                         Text("Purchased By")
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
-                        SegmentedControl(selection: $purchasedBy, options: [
-                            SegmentOption(id: "client-card", label: "Client Card"),
-                            SegmentOption(id: "design-business", label: "Design Business"),
+                        InlineOptionPicker(selection: $purchasedBy, options: [
+                            InlineOption(id: "client-card", label: "Client Card"),
+                            InlineOption(id: "design-business", label: "Design Business"),
                         ])
                     }
 
@@ -222,10 +271,10 @@ struct NewTransactionView: View {
                         Text("Reimbursement")
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
-                        SegmentedControl(selection: $reimbursementType, options: [
-                            SegmentOption(id: "none", label: "None"),
-                            SegmentOption(id: "owed-to-client", label: "Owed to Client"),
-                            SegmentOption(id: "owed-to-company", label: "Owed to Company"),
+                        InlineOptionPicker(selection: $reimbursementType, options: [
+                            InlineOption(id: "none", label: "None"),
+                            InlineOption(id: "owed-to-client", label: "Owed to Client"),
+                            InlineOption(id: "owed-to-company", label: "Owed to Company"),
                         ])
                     }
                 }
@@ -234,54 +283,15 @@ struct NewTransactionView: View {
                 formSection("Additional Details") {
                     FormField(text: $notes, placeholder: "Notes", axis: .vertical)
 
-                    if projectId != nil {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text("Budget Category")
-                                .font(Typography.label)
-                                .foregroundStyle(BrandColors.textSecondary)
-
-                            Button {
-                                showCategoryPicker = true
-                            } label: {
-                                HStack {
-                                    Text(selectedCategory?.name ?? "Select Category")
-                                        .foregroundStyle(
-                                            selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textSecondary
-                                        )
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .foregroundStyle(BrandColors.textSecondary)
-                                }
-                                .font(Typography.input)
-                                .padding(.horizontal, Spacing.md)
-                                .frame(minHeight: 44)
-                                .contentShape(Rectangle())
-                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-
-                    HStack {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Email Receipt")
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textPrimary)
-                        Spacer()
-                        Toggle("", isOn: $hasEmailReceipt)
-                            .labelsHidden()
-                            .tint(BrandColors.primary)
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        InlineOptionPicker(selection: $hasEmailReceipt, options: [
+                            InlineOption(id: false, label: "No"),
+                            InlineOption(id: true, label: "Yes"),
+                        ])
                     }
-                    .padding(.horizontal, Spacing.md)
-                    .frame(minHeight: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                    )
                 }
 
                 // MARK: Itemized Details (conditional)
@@ -328,19 +338,27 @@ struct NewTransactionView: View {
         transaction.reimbursementType = reimbursementType == "none" ? nil : reimbursementType
         transaction.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        transaction.budgetCategoryId = selectedCategoryId
         transaction.hasEmailReceipt = hasEmailReceipt
 
         if isItemizedCategory {
+            // Itemized categories route through inventory — items are added next
+            transaction.projectId = nil
+            transaction.budgetCategoryId = selectedCategoryId
             transaction.subtotalCents = parseCents(subtotal)
             if let rate = Double(taxRate.trimmingCharacters(in: .whitespacesAndNewlines)) {
                 transaction.taxRatePct = rate
             }
+        } else {
+            transaction.budgetCategoryId = selectedCategoryId
         }
 
         do {
-            _ = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
-            dismiss()
+            let txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
+            if isItemizedCategory {
+                createdTransactionId = txId
+            } else {
+                dismiss()
+            }
         } catch {
             // Offline-first: should not fail
         }

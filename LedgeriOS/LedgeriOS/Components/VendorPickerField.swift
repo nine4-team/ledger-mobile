@@ -237,6 +237,137 @@ struct VendorPickerModal: View {
     }
 }
 
+// MARK: - Inline Vendor Picker
+
+/// Vendor radio list displayed inline (no extra tap/modal).
+/// Loads vendor presets from Firestore, shows radio options + "Other" free-text.
+struct InlineVendorPicker: View {
+    @Binding var selectedValue: String
+    @Binding var otherMode: Bool
+    @Binding var otherText: String
+    var otherFocused: FocusState<Bool>.Binding
+
+    @Environment(AccountContext.self) private var accountContext
+
+    @State private var vendors: [String] = VendorDefaultsService.defaultVendors
+    @State private var listener: ListenerRegistration?
+
+    private let service = VendorDefaultsService()
+
+    private var displayVendors: [String] {
+        var seen = Set<String>()
+        return vendors.filter { v in
+            let trimmed = v.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
+            seen.insert(trimmed)
+            return true
+        }
+    }
+
+    var body: some View {
+        Group {
+            if displayVendors.isEmpty {
+                FormField(label: "Source / Vendor", text: $selectedValue, placeholder: "e.g. Home Depot, Amazon")
+            } else {
+                ScrollViewReader { proxy in
+                    VStack(spacing: Spacing.xs) {
+                        ForEach(displayVendors, id: \.self) { vendor in
+                            vendorOption(vendor, isSelected: !otherMode && selectedValue == vendor) {
+                                otherMode = false
+                                otherFocused.wrappedValue = false
+                                selectedValue = vendor
+                            }
+                        }
+
+                        vendorOption("Other", isSelected: otherMode) {
+                            otherMode = true
+                            selectedValue = ""
+                            otherText = ""
+                        }
+
+                        if otherMode {
+                            TextField("e.g. Home Depot, Amazon", text: $otherText)
+                                .font(Typography.input)
+                                .padding(.horizontal, Spacing.md)
+                                .frame(minHeight: 44)
+                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                                )
+                                .focused(otherFocused)
+                                .padding(.top, Spacing.xs)
+                                .id("otherTextField")
+                                .onAppear {
+                                    otherFocused.wrappedValue = true
+                                    withAnimation {
+                                        proxy.scrollTo("otherTextField", anchor: .bottom)
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear { startListening() }
+        .onDisappear { listener?.remove() }
+    }
+
+    @ViewBuilder
+    private func vendorOption(_ name: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: Spacing.md) {
+                Circle()
+                    .strokeBorder(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: 2)
+                    .frame(width: 20, height: 20)
+                    .overlay {
+                        if isSelected {
+                            Circle()
+                                .fill(BrandColors.primary)
+                                .frame(width: 10, height: 10)
+                        }
+                    }
+
+                Text(name)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+
+                Spacer()
+            }
+            .padding(.vertical, Spacing.sm)
+            .padding(.horizontal, Spacing.md)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .background(isSelected ? BrandColors.inputBackground : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func startListening() {
+        guard let accountId = accountContext.currentAccountId else { return }
+
+        Task { try? await service.initializeDefaults(accountId: accountId) }
+
+        listener = service.subscribe(accountId: accountId) { defaults in
+            if let loaded = defaults?.vendors, !loaded.isEmpty {
+                vendors = loaded
+            }
+
+            // Auto-enable "Other" mode if current value doesn't match any preset
+            let available = displayVendors
+            if !available.isEmpty && !selectedValue.isEmpty && !available.contains(selectedValue) {
+                otherMode = true
+                otherText = selectedValue
+            }
+        }
+    }
+}
+
 #Preview("With Vendors") {
     @Previewable @State var source = "Amazon"
     @Previewable @State var showPicker = false

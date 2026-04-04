@@ -52,6 +52,7 @@
 		3C9C9C33C7D14276BE0F6FB6 /* PropertyManagementReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */; };
 		3D556AFB25C9F91C3E0284CA /* InvoiceParseSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6122568C75226455F9A53299 /* InvoiceParseSummary.swift */; };
 		3DEA2CCE027CA7C67DCEB337 /* NewTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B4DBFCBFB441C084D24633 /* NewTransactionView.swift */; };
+		87C62DF75AE56D54EC0590AD /* ItemEntryFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A3032F2348CD92C41812A9 /* ItemEntryFlowView.swift */; };
 		3F582B99A07E893EB77D4930 /* TransactionExportCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */; };
 		41228B2CE8BCF5256643BCDA /* IncompleteReturnDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862F852843A06A4E1AD326AF /* IncompleteReturnDetectionTests.swift */; };
 		41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */; };
@@ -180,6 +181,7 @@
 		C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0008 /* SegmentedControl.swift */; };
 		C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0009 /* CollapsibleSection.swift */; };
 		C5A0010100000000000C000A /* TitledCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000A /* TitledCard.swift */; };
+		C5A0010100000000000C000B /* InlineOptionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000B /* InlineOptionPicker.swift */; };
 		C5A0010100000000000C000C /* VendorPickerField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C000C /* VendorPickerField.swift */; };
 		C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */; };
 		C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000L0002 /* ProgressBarCalculations.swift */; };
@@ -481,6 +483,7 @@
 		B4E7ECCE7343406FCE2B6C74 /* ProjectService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectService.swift; sourceTree = "<group>"; };
 		B563E6B9581893C9611B421B /* SpaceTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceTemplate.swift; sourceTree = "<group>"; };
 		B6B4DBFCBFB441C084D24633 /* NewTransactionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewTransactionView.swift; sourceTree = "<group>"; };
+		F7A3032F2348CD92C41812A9 /* ItemEntryFlowView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemEntryFlowView.swift; sourceTree = "<group>"; };
 		B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectListCalculations.swift; sourceTree = "<group>"; };
 		B74CC761A05322C4486E9543 /* AddExistingItemsPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddExistingItemsPicker.swift; sourceTree = "<group>"; };
 		B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectContext.swift; sourceTree = "<group>"; };
@@ -505,6 +508,7 @@
 		C5A0020100000000000C0008 /* SegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControl.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0009 /* CollapsibleSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleSection.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C000A /* TitledCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitledCard.swift; sourceTree = "<group>"; };
+		C5A0020100000000000C000B /* InlineOptionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineOptionPicker.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C000C /* VendorPickerField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorPickerField.swift; sourceTree = "<group>"; };
 		C5A0020100000000000L0001 /* BudgetDisplayCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDisplayCalculations.swift; sourceTree = "<group>"; };
 		C5A0020100000000000L0002 /* ProgressBarCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarCalculations.swift; sourceTree = "<group>"; };
@@ -1085,6 +1089,7 @@
 				C5A0020100000000000C0008 /* SegmentedControl.swift */,
 				C5A0020100000000000C0009 /* CollapsibleSection.swift */,
 				C5A0020100000000000C000A /* TitledCard.swift */,
+				C5A0020100000000000C000B /* InlineOptionPicker.swift */,
 				C5A0020100000000000C000C /* VendorPickerField.swift */,
 				815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */,
 				D728B501E3FD1CF2F39E557D /* ProjectCard.swift */,
@@ -1160,6 +1165,7 @@
 			children = (
 				217E428E23D79EDE3C0AA4A2 /* NewItemView.swift */,
 				B6B4DBFCBFB441C084D24633 /* NewTransactionView.swift */,
+				F7A3032F2348CD92C41812A9 /* ItemEntryFlowView.swift */,
 				EE71AC13097BB45FCBF70AA7 /* NewSpaceView.swift */,
 				E4551FEFFD9F3B79C7DC829B /* NewProjectView.swift */,
 			);
@@ -1426,6 +1432,7 @@
 				C5A0010100000000000C0008 /* SegmentedControl.swift in Sources */,
 				C5A0010100000000000C0009 /* CollapsibleSection.swift in Sources */,
 				C5A0010100000000000C000A /* TitledCard.swift in Sources */,
+				C5A0010100000000000C000B /* InlineOptionPicker.swift in Sources */,
 				C5A0010100000000000C000C /* VendorPickerField.swift in Sources */,
 				C5A0010100000000000L0001 /* BudgetDisplayCalculations.swift in Sources */,
 				C5A0010100000000000L0002 /* ProgressBarCalculations.swift in Sources */,
@@ -1547,6 +1554,7 @@
 				89B7DA9202AD40FE7C087A39 /* SpaceSearchDetailView.swift in Sources */,
 				BAE5B2B58298E2EBC4B92BF9 /* NewItemView.swift in Sources */,
 				3DEA2CCE027CA7C67DCEB337 /* NewTransactionView.swift in Sources */,
+				87C62DF75AE56D54EC0590AD /* ItemEntryFlowView.swift in Sources */,
 				661C747700264DC9DD1F1728 /* NewSpaceView.swift in Sources */,
 				5E935CB0BD60643258398CF9 /* NewProjectView.swift in Sources */,
 				7EA853156807631DB3F7F21F /* InventoryTransactionsSubTab.swift in Sources */,
