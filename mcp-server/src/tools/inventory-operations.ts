@@ -63,7 +63,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     "Move items between scopes (project ↔ business inventory) via canonical sale transactions. " +
       "Creates deterministic sale transaction IDs, lineage edges, and updates item fields atomically. " +
       "Use direction 'to_business' to move project items to inventory, 'to_project' to move items into a project. " +
-      "Project-to-project moves are handled by 'to_project' with a two-hop model (source → inventory → destination).",
+      "Project-to-project moves are handled by 'to_project' with a two-hop model (source → inventory → destination). " +
+      "IMPORTANT: When selling items to a project (direction 'to_project'), you MUST ask the user which budget " +
+      "category this sale should be filed under BEFORE calling this tool. Use get_project_budget_categories on the " +
+      "destination project to list the available categories, present them to the user, and pass their choice as " +
+      "overrideCategoryId. Do not skip this step or assume a default — the app always requires the user to pick a category.",
     {
       itemIds: z.array(z.string()).min(1).describe("Item document IDs to sell"),
       direction: z.enum(["to_business", "to_project"]).describe(
@@ -74,7 +78,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         "Destination project ID — required when direction is 'to_project'"
       ),
       overrideCategoryId: z.string().optional().describe(
-        "Budget category fallback for items without a budgetCategoryId"
+        "Budget category for the sale. When direction is 'to_project', this is required — " +
+          "always ask the user to choose from the destination project's budget categories before calling this tool"
       ),
     },
     async ({ itemIds, direction, destinationProjectId, overrideCategoryId }) => {
