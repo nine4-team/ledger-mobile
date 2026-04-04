@@ -138,7 +138,7 @@ struct ItemCard: View {
     private func placeholderView(icon: String) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                .fill(BrandColors.buttonSecondaryBackground)
+                .fill(BrandColors.surfaceTertiary)
             Image(systemName: icon)
                 .font(.system(size: 24))
                 .foregroundStyle(BrandColors.textTertiary)

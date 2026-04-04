@@ -14,20 +14,17 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Settings", selection: $selectedTab) {
-                Text("General").tag("general")
-                Text("Presets").tag("presets")
-                if isAdmin {
-                    Text("Users").tag("users")
-                }
-                if isOwner {
-                    Text("Account").tag("account")
-                }
-            }
-            .pickerStyle(.segmented)
-            #if os(macOS)
-            .labelsHidden()
-            #endif
+            SegmentedControl(selection: $selectedTab, options: {
+                var opts = [
+                    SegmentOption(id: "general", label: "General"),
+                    SegmentOption(id: "presets", label: "Presets"),
+                ]
+                if isAdmin { opts.append(SegmentOption(id: "users", label: "Users")) }
+                if isOwner { opts.append(SegmentOption(id: "account", label: "Account")) }
+                return opts
+            }())
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 
@@ -127,15 +124,13 @@ private struct PresetsSettingsView: View {
     var body: some View {
         if isAdmin {
             VStack(spacing: 0) {
-                Picker("Preset Type", selection: $selectedPreset) {
-                    Text("Categories").tag("categories")
-                    Text("Templates").tag("templates")
-                    Text("Vendors").tag("vendors")
-                }
-                .pickerStyle(.segmented)
-                #if os(macOS)
-                .labelsHidden()
-                #endif
+                SegmentedControl(selection: $selectedPreset, options: [
+                    SegmentOption(id: "categories", label: "Categories"),
+                    SegmentOption(id: "templates", label: "Templates"),
+                    SegmentOption(id: "vendors", label: "Vendors"),
+                ])
+                .frame(maxWidth: Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.sm)
 

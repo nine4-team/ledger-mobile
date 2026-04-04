@@ -43,12 +43,9 @@ struct AuthView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Picker("", selection: $authMode) {
-                    ForEach(AuthMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
+                SegmentedControl(selection: $authMode, options: AuthMode.allCases.map {
+                    SegmentOption(id: $0, label: $0.rawValue)
+                })
 
                 if let errorMessage {
                     Text(errorMessage)

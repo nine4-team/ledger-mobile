@@ -56,8 +56,8 @@ struct ProjectCard: View {
             .fill(BrandColors.surfaceTertiary)
             .frame(height: 100)
             .overlay {
-                Text("No image")
-                    .font(Typography.small)
+                Image(systemName: "photo")
+                    .font(Typography.h1)
                     .foregroundStyle(BrandColors.textTertiary)
             }
     }

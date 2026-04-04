@@ -92,7 +92,6 @@ struct BudgetTabView: View {
     }
 
     private var overallBudgetRow: some View {
-        let isOver = overallSpentCents > overallBudgetCents
         let pct = BudgetTrackerCalculations.progressPercentage(spentCents: overallSpentCents, budgetCents: overallBudgetCents)
         let overflow = BudgetTrackerCalculations.overflowPercentage(spentCents: overallSpentCents, budgetCents: overallBudgetCents)
 
@@ -114,12 +113,12 @@ struct BudgetTabView: View {
                     ))
                     .font(Typography.small)
                     .fontWeight(.regular)
-                    .foregroundStyle(isOver ? Color(.systemRed) : BrandColors.textSecondary)
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: pct, categoryType: .general))
                 }
 
                 ProgressBar(
                     percentage: pct,
-                    fillColor: BrandColors.primary,
+                    fillColor: BudgetTrackerCalculations.progressColor(percentage: pct, categoryType: .general),
                     overflowPercentage: overflow > 0 ? overflow : nil,
                     overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                 )
@@ -205,10 +204,6 @@ private struct BudgetCategoryRow: View {
     let isPinned: Bool
     let onTogglePin: () -> Void
 
-    private var isOverBudget: Bool {
-        category.budgetCents > 0 && category.spentCents > category.budgetCents
-    }
-
     private var percentage: Double {
         BudgetTrackerCalculations.progressPercentage(spentCents: category.spentCents, budgetCents: category.budgetCents)
     }
@@ -245,13 +240,13 @@ private struct BudgetCategoryRow: View {
                     ))
                     .font(Typography.small)
                     .fontWeight(.regular)
-                    .foregroundStyle(isOverBudget ? Color(.systemRed) : BrandColors.textSecondary)
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: category.categoryType))
                 }
 
                 if category.budgetCents > 0 {
                     ProgressBar(
                         percentage: percentage,
-                        fillColor: BrandColors.primary,
+                        fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: category.categoryType),
                         overflowPercentage: overflow > 0 ? overflow : nil,
                         overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                     )

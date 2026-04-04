@@ -344,8 +344,7 @@ struct ItemDetailView: View {
             },
             onPinImage: { attachment in
                 pinnedAttachment = attachment
-            },
-            emptyStateMessage: "No images yet"
+            }
         )
         .padding(.top, Spacing.xs)
     }

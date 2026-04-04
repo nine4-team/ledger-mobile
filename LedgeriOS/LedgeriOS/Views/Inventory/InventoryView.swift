@@ -15,13 +15,11 @@ struct InventoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $selectedTab) {
-                Text("Items").tag("items")
-                Text("Transactions").tag("transactions")
-                Text("Spaces").tag("spaces")
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
+            SegmentedControl(selection: $selectedTab, options: [
+                SegmentOption(id: "items", label: "Items"),
+                SegmentOption(id: "transactions", label: "Transactions"),
+                SegmentOption(id: "spaces", label: "Spaces"),
+            ])
             .frame(maxWidth: Dimensions.contentMaxWidth)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)

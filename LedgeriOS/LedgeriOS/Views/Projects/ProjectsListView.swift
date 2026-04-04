@@ -26,14 +26,12 @@ struct ProjectsListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Projects", selection: $selectedTab) {
-                Text("Active").tag("active")
-                Text("Archived").tag("archived")
-            }
-            .pickerStyle(.segmented)
-            #if os(macOS)
-            .labelsHidden()
-            #endif
+            SegmentedControl(selection: $selectedTab, options: [
+                SegmentOption(id: "active", label: "Active"),
+                SegmentOption(id: "archived", label: "Archived"),
+            ])
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

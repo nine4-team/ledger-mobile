@@ -20,51 +20,44 @@ struct SegmentedControl<T: Hashable>: View {
         HStack(spacing: 0) {
             ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
                 let isSelected = selection == option.id
-                let isLast = index == options.count - 1
-                let nextIsSelected = !isLast && selection == options[index + 1].id
 
                 Button {
-                    selection = option.id
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selection = option.id
+                    }
                 } label: {
-                    Group {
-                        if let icon = option.icon {
-                            HStack(spacing: 4) {
-                                icon
+                    VStack(spacing: 0) {
+                        Spacer()
+                        Group {
+                            if let icon = option.icon {
+                                HStack(spacing: 4) {
+                                    icon
+                                    Text(option.label)
+                                }
+                            } else {
                                 Text(option.label)
                             }
-                        } else {
-                            Text(option.label)
                         }
+                        .font(isSelected ? Typography.button : Typography.small)
+                        .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(isSelected ? BrandColors.primary : Color.clear)
+                            .frame(height: 2)
                     }
-                    .font(isSelected ? Typography.button : Typography.small)
-                    .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
-                    .background(isSelected ? BrandColors.surface : Color.clear)
-                    .animation(.easeInOut(duration: 0.2), value: selection)
                 }
                 .buttonStyle(.plain)
-
-                if !isLast {
-                    let showDivider = !isSelected && !nextIsSelected
-                    GeometryReader { geo in
-                        Rectangle()
-                            .fill(showDivider ? BrandColors.borderSecondary : Color.clear)
-                            .frame(width: 1, height: geo.size.height * 0.6)
-                            .frame(maxHeight: .infinity)
-                    }
-                    .frame(width: 1)
-                    .animation(.easeInOut(duration: 0.2), value: selection)
-                }
             }
         }
+        .frame(height: 36)
         .background(BrandColors.surface)
-        .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: Dimensions.borderWidth)
+        }
     }
 }
 

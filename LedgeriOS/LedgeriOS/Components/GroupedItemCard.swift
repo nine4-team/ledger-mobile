@@ -234,7 +234,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     private var thumbnailPlaceholder: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                .fill(BrandColors.buttonSecondaryBackground)
+                .fill(BrandColors.surfaceTertiary)
             Image(systemName: "photo")
                 .font(.system(size: 24))
                 .foregroundStyle(BrandColors.textTertiary)

@@ -68,32 +68,33 @@ struct AccountingTabView: View {
                     .animation(.default, value: columnCount)
 
                     // Report navigation
-                    VStack(spacing: Spacing.sm) {
-                        Text("Reports")
-                            .sectionLabelStyle()
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Reports")
+                        .sectionLabelStyle()
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        NavigationLink(value: ReportType.propertyManagement) {
-                            reportButton(
-                                title: "Property Management Summary",
-                                icon: "building.2"
-                            )
-                        }
-
-                        NavigationLink(value: ReportType.clientSummary) {
-                            reportButton(
-                                title: "Client Summary",
-                                icon: "chart.bar.doc.horizontal"
-                            )
-                        }
-
-                        NavigationLink(value: ReportType.invoice) {
-                            reportButton(
-                                title: "Invoice",
-                                icon: "doc.text"
-                            )
-                        }
+                    NavigationLink(value: ReportType.propertyManagement) {
+                        reportButton(
+                            title: "Property Management Summary",
+                            icon: "building.2"
+                        )
                     }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(value: ReportType.clientSummary) {
+                        reportButton(
+                            title: "Client Summary",
+                            icon: "chart.bar.doc.horizontal"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(value: ReportType.invoice) {
+                        reportButton(
+                            title: "Invoice",
+                            icon: "doc.text"
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(Spacing.screenPadding)
             }

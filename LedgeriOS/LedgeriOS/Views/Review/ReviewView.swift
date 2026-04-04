@@ -27,14 +27,12 @@ struct ReviewView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Review", selection: $selectedToggle) {
-                Text("Pending (\(pendingTransactions.count))").tag("pending")
-                Text("Done").tag("done")
-            }
-            .pickerStyle(.segmented)
-            #if os(macOS)
-            .labelsHidden()
-            #endif
+            SegmentedControl(selection: $selectedToggle, options: [
+                SegmentOption(id: "pending", label: "Pending (\(pendingTransactions.count))"),
+                SegmentOption(id: "done", label: "Done"),
+            ])
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

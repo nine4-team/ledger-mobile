@@ -256,11 +256,10 @@ private struct InviteUserSheet: View {
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
 
-                    Picker("Role", selection: $role) {
-                        Text("User").tag("user")
-                        Text("Admin").tag("admin")
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedControl(selection: $role, options: [
+                        SegmentOption(id: "user", label: "User"),
+                        SegmentOption(id: "admin", label: "Admin"),
+                    ])
                 }
             }
         }

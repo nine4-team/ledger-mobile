@@ -257,15 +257,13 @@ struct UniversalSearchView: View {
 
     private var resultsView: some View {
         VStack(spacing: 0) {
-            Picker("Search", selection: $selectedTab) {
-                Text("Items (\(itemsCount))").tag("items")
-                Text("Transactions (\(transactionsCount))").tag("transactions")
-                Text("Spaces (\(spacesCount))").tag("spaces")
-            }
-            .pickerStyle(.segmented)
-            #if os(macOS)
-            .labelsHidden()
-            #endif
+            SegmentedControl(selection: $selectedTab, options: [
+                SegmentOption(id: "items", label: "Items (\(itemsCount))"),
+                SegmentOption(id: "transactions", label: "Transactions (\(transactionsCount))"),
+                SegmentOption(id: "spaces", label: "Spaces (\(spacesCount))"),
+            ])
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

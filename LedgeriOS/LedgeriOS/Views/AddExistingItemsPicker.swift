@@ -108,12 +108,9 @@ struct AddExistingItemsPicker: View {
         NavigationStack {
             VStack(spacing: 0) {
                 if tabs.count > 1 {
-                    Picker("", selection: $activeTab) {
-                        ForEach(tabs, id: \.self) { tab in
-                            Text(tabLabel(tab)).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedControl(selection: $activeTab, options: tabs.map {
+                        SegmentOption(id: $0, label: tabLabel($0))
+                    })
                     .padding(.horizontal, Spacing.screenPadding)
                     .padding(.vertical, Spacing.sm)
                 }

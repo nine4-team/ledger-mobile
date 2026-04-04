@@ -254,8 +254,7 @@ struct SpaceDetailView: View {
             },
             onSetPrimary: { attachment in
                 setPrimaryImage(attachment)
-            },
-            emptyStateMessage: "No images yet"
+            }
         )
         .padding(.top, Spacing.xs)
     }

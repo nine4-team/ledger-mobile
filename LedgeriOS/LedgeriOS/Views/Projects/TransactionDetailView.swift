@@ -466,8 +466,7 @@ struct TransactionDetailView: View {
                 },
                 onPinImage: { attachment in
                     pinImage(attachment, from: currentTransaction.receiptImages ?? [])
-                },
-                emptyStateMessage: "No receipts yet"
+                }
             )
             .padding(.top, Spacing.xs)
         }
@@ -494,8 +493,7 @@ struct TransactionDetailView: View {
                 },
                 onPinImage: { attachment in
                     pinImage(attachment, from: currentTransaction.otherImages ?? [])
-                },
-                emptyStateMessage: "No other images"
+                }
             )
             .padding(.top, Spacing.xs)
         }

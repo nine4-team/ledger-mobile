@@ -5,14 +5,12 @@ struct FinancesTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Finances", selection: $selectedSubtab) {
-                Text("Budget").tag("budget")
-                Text("Reports").tag("reports")
-            }
-            .pickerStyle(.segmented)
-            #if os(macOS)
-            .labelsHidden()
-            #endif
+            SegmentedControl(selection: $selectedSubtab, options: [
+                SegmentOption(id: "budget", label: "Budget"),
+                SegmentOption(id: "reports", label: "Reports"),
+            ])
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
 

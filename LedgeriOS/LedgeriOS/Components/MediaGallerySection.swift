@@ -12,7 +12,6 @@ struct MediaGallerySection: View {
     var onRemoveAttachment: ((AttachmentRef) -> Void)?
     var onSetPrimary: ((AttachmentRef) -> Void)?
     var onPinImage: ((AttachmentRef) -> Void)?
-    var emptyStateMessage: String = "No images yet"
 
     @State private var showGallery = false
     @State private var galleryIndex: Int = 0
@@ -181,9 +180,9 @@ struct MediaGallerySection: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        Text(emptyStateMessage)
-            .font(Typography.small)
-            .foregroundStyle(BrandColors.textSecondary)
+        Image(systemName: "photo.on.rectangle")
+            .font(.system(size: 28))
+            .foregroundStyle(BrandColors.textTertiary)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, Spacing.xl)
     }

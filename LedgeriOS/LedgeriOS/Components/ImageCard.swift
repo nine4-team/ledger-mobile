@@ -51,7 +51,7 @@ struct ImageCard<Content: View>: View {
 
     private var placeholder: some View {
         Rectangle()
-            .fill(Color(.secondarySystemFill))
+            .fill(BrandColors.surfaceTertiary)
             .aspectRatio(aspectRatio, contentMode: .fit)
             .overlay {
                 Image(systemName: "photo")

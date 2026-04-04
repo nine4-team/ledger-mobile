@@ -22,19 +22,12 @@ struct ProjectDetailView: View {
             PinnedBudgetsSection()
                 .frame(maxWidth: Dimensions.contentMaxWidth)
                 .frame(maxWidth: .infinity)
-            Picker("", selection: $selectedTab) {
-                Text("Items").tag("items")
-                Text("Transactions").tag("transactions")
-                Text("Spaces").tag("spaces")
-                Text("Finances").tag("finances")
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            #if canImport(UIKit)
-            .onAppear {
-                UISegmentedControl.appearance().apportionsSegmentWidthsByContent = true
-            }
-            #endif
+            SegmentedControl(selection: $selectedTab, options: [
+                SegmentOption(id: "items", label: "Items"),
+                SegmentOption(id: "transactions", label: "Transactions"),
+                SegmentOption(id: "spaces", label: "Spaces"),
+                SegmentOption(id: "finances", label: "Finances"),
+            ])
             .frame(maxWidth: Dimensions.contentMaxWidth)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)

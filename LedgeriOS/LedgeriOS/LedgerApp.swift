@@ -24,14 +24,6 @@ struct LedgerApp: App {
             diskCapacity: 200 * 1024 * 1024      // 200 MB disk
         )
 
-        // Global segmented control styling — gold selection tint, white text
-        #if canImport(UIKit)
-        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(BrandColors.primary)
-        UISegmentedControl.appearance().setTitleTextAttributes(
-            [.foregroundColor: UIColor.white],
-            for: .selected
-        )
-        #endif
 
         // macOS + App Sandbox: use memory-only cache to avoid gRPC/persistence deadlocks.
         // Emulator config handles its own cache settings when active.
