@@ -81,8 +81,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         "Budget category for the sale. When direction is 'to_project', this is required — " +
           "always ask the user to choose from the destination project's budget categories before calling this tool"
       ),
+      notes: z.string().optional().describe(
+        "Brief note explaining the move — what was done and why. Written to the sale transaction(s)."
+      ),
     },
-    async ({ itemIds, direction, destinationProjectId, overrideCategoryId }) => {
+    async ({ itemIds, direction, destinationProjectId, overrideCategoryId, notes }) => {
       // Validate direction-specific requirements
       if (direction === "to_project" && !destinationProjectId) {
         return {
@@ -110,9 +113,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       }
 
       if (direction === "to_business") {
-        return await sellToBusiness(db, items, overrideCategoryId);
+        return await sellToBusiness(db, items, overrideCategoryId, notes);
       } else {
-        return await sellToProject(db, items, destinationProjectId!, overrideCategoryId);
+        return await sellToProject(db, items, destinationProjectId!, overrideCategoryId, notes);
       }
     }
   );
@@ -172,7 +175,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 async function sellToBusiness(
   db: Firestore,
   items: (Item & { id: string })[],
-  overrideCategoryId?: string
+  overrideCategoryId?: string,
+  notes?: string
 ) {
   // Validate all items have a projectId
   const noProject = items.filter((i) => !i.projectId);
@@ -215,6 +219,7 @@ async function sellToBusiness(
         amountCents: FieldValue.increment(amountCents),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
+        ...(notes ? { notes } : {}),
       },
       { merge: true }
     );
@@ -274,7 +279,8 @@ async function sellToProject(
   db: Firestore,
   items: (Item & { id: string })[],
   destinationProjectId: string,
-  overrideCategoryId?: string
+  overrideCategoryId?: string,
+  notes?: string
 ) {
   const batch = db.batch();
   const itemsCol = accountCollection(db, "items");
@@ -313,6 +319,7 @@ async function sellToProject(
           amountCents: FieldValue.increment(amount),
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
+          ...(notes ? { notes } : {}),
         },
         { merge: true }
       );
@@ -335,6 +342,7 @@ async function sellToProject(
         amountCents: FieldValue.increment(amount),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
+        ...(notes ? { notes } : {}),
       },
       { merge: true }
     );
