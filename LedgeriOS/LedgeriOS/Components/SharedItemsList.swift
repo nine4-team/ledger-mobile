@@ -320,7 +320,7 @@ struct SharedItemsList: View {
                 .padding(.vertical, Spacing.xl)
         } else {
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                columns: Dimensions.listColumns,
                 alignment: .leading,
                 spacing: Spacing.cardListGap
             ) {
@@ -349,7 +349,7 @@ struct SharedItemsList: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                    columns: Dimensions.listColumns,
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {

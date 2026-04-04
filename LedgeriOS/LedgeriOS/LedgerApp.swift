@@ -66,7 +66,8 @@ struct LedgerApp: App {
             itemsService: itemsService,
             transactionsService: transactionsService,
             spacesService: spacesService,
-            budgetCategoriesService: budgetCategoriesService
+            budgetCategoriesService: budgetCategoriesService,
+            projectService: projectService
         ))
 
         _projectContext = State(initialValue: ProjectContext(

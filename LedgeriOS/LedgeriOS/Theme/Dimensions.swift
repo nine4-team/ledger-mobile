@@ -35,6 +35,15 @@ enum Dimensions {
     /// Minimum card width for responsive grid calculation
     static let cardMinWidth: CGFloat = 320
 
+    /// Grid columns for card lists — single-column on macOS, adaptive grid on iOS.
+    static var listColumns: [GridItem] {
+        #if os(macOS)
+        [GridItem(.flexible())]
+        #else
+        [GridItem(.adaptive(minimum: cardMinWidth), spacing: Spacing.cardListGap)]
+        #endif
+    }
+
     // MARK: - Pinned Image
 
     /// Width of the pinned image sidebar on regular-width displays (iPad)

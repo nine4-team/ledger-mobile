@@ -20,6 +20,7 @@ final class AccountContext {
     var allTransactions: [Transaction] = []
     var allSpaces: [Space] = []
     var allBudgetCategories: [BudgetCategory] = []
+    var allProjects: [Project] = []
 
     private var listeners: [ListenerRegistration] = []
     private let accountsService: AccountsServiceProtocol
@@ -28,6 +29,7 @@ final class AccountContext {
     private let transactionsService: TransactionsServiceProtocol?
     private let spacesService: SpacesServiceProtocol?
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol?
+    private let projectService: ProjectServiceProtocol?
 
     private static let lastAccountKey = "lastSelectedAccountId"
 
@@ -42,7 +44,8 @@ final class AccountContext {
         itemsService: ItemsServiceProtocol? = nil,
         transactionsService: TransactionsServiceProtocol? = nil,
         spacesService: SpacesServiceProtocol? = nil,
-        budgetCategoriesService: BudgetCategoriesServiceProtocol? = nil
+        budgetCategoriesService: BudgetCategoriesServiceProtocol? = nil,
+        projectService: ProjectServiceProtocol? = nil
     ) {
         self.accountsService = accountsService
         self.membersService = membersService
@@ -50,6 +53,7 @@ final class AccountContext {
         self.transactionsService = transactionsService
         self.spacesService = spacesService
         self.budgetCategoriesService = budgetCategoriesService
+        self.projectService = projectService
     }
 
     // MARK: - Discovery
@@ -109,6 +113,7 @@ final class AccountContext {
         allTransactions = []
         allSpaces = []
         allBudgetCategories = []
+        allProjects = []
 
         currentAccountId = accountId
 
@@ -154,6 +159,13 @@ final class AccountContext {
             }
             listeners.append(categoriesListener)
         }
+
+        if let projectService {
+            let projectsListener = projectService.subscribeToProjects(accountId: accountId) { [weak self] projects in
+                Task { @MainActor in self?.allProjects = projects }
+            }
+            listeners.append(projectsListener)
+        }
     }
 
     func deactivate() {
@@ -168,5 +180,6 @@ final class AccountContext {
         allTransactions = []
         allSpaces = []
         allBudgetCategories = []
+        allProjects = []
     }
 }

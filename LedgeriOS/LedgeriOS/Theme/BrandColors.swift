@@ -29,9 +29,19 @@ enum BrandColors {
     // MARK: - Adaptive Borders
 
     /// Primary border
-    static let border = platformColor(.separator)
+    static let border = softBorder
     /// Secondary border (subtle dividers)
-    static let borderSecondary = platformColor(.separator)
+    static let borderSecondary = softBorder
+
+    /// Soft border — uses a lighter gray on macOS to match the web app's gray-200 treatment,
+    /// while iOS keeps the standard separator.
+    private static var softBorder: Color {
+        #if os(macOS)
+        Color(red: 229/255, green: 231/255, blue: 235/255)
+        #else
+        platformColor(.separator)
+        #endif
+    }
 
     // MARK: - Adaptive Buttons
 

@@ -5,6 +5,8 @@ struct Card<Content: View>: View {
     let isSelected: Bool
     let content: Content
 
+    @State private var isHovered = false
+
     init(
         padding: CGFloat = Spacing.cardPadding,
         isSelected: Bool = false,
@@ -28,17 +30,26 @@ struct Card<Content: View>: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                     .stroke(
-                        isSelected ? BrandColors.primary : Color.clear,
-                        lineWidth: isSelected ? Dimensions.selectionBorderWidth : 0
+                        isSelected ? BrandColors.primary : (isHovered ? BrandColors.primary.opacity(0.4) : Color.clear),
+                        lineWidth: isSelected ? Dimensions.selectionBorderWidth : (isHovered ? Dimensions.borderWidth : 0)
                     )
             )
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+            .shadow(
+                color: isHovered ? BrandColors.primary.opacity(0.12) : .black.opacity(0.05),
+                radius: isHovered ? 12 : 6,
+                x: 0,
+                y: isHovered ? 4 : 2
+            )
+            .animation(.easeInOut(duration: 0.2), value: isHovered)
+            .onHover { hovering in isHovered = hovering }
     }
 }
 
 struct CardStyle: ViewModifier {
     let padding: CGFloat
     let isSelected: Bool
+
+    @State private var isHovered = false
 
     init(padding: CGFloat = Spacing.cardPadding, isSelected: Bool = false) {
         self.padding = padding
@@ -58,11 +69,18 @@ struct CardStyle: ViewModifier {
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
                     .stroke(
-                        isSelected ? BrandColors.primary : Color.clear,
-                        lineWidth: isSelected ? Dimensions.selectionBorderWidth : 0
+                        isSelected ? BrandColors.primary : (isHovered ? BrandColors.primary.opacity(0.4) : Color.clear),
+                        lineWidth: isSelected ? Dimensions.selectionBorderWidth : (isHovered ? Dimensions.borderWidth : 0)
                     )
             )
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+            .shadow(
+                color: isHovered ? BrandColors.primary.opacity(0.12) : .black.opacity(0.05),
+                radius: isHovered ? 12 : 6,
+                x: 0,
+                y: isHovered ? 4 : 2
+            )
+            .animation(.easeInOut(duration: 0.2), value: isHovered)
+            .onHover { hovering in isHovered = hovering }
     }
 }
 

@@ -11,17 +11,17 @@ enum StatusColors {
     static let metBackground = Color("statusMetBg")
     /// Met status text — brand primary
     static let metText = BrandColors.primary
-    /// Met bar complete — #4A7C59 (success green, same both modes)
-    static let metBarComplete = Color(red: 74/255, green: 124/255, blue: 89/255)
+    /// Met bar complete — #30A654 (vivid success green, same both modes)
+    static let metBarComplete = Color(red: 48/255, green: 166/255, blue: 84/255)
 
     // MARK: - In Progress
 
     /// In-progress background — light: #FFF8E1, dark: #3E2E1A
     static let inProgressBackground = Color("statusInProgressBg")
-    /// In-progress text — light: #B06E00, dark: #FFC107
+    /// In-progress text — light: #E08B05, dark: #FFC107
     static let inProgressText = Color("statusInProgressText")
-    /// In-progress bar — #C4911E darker amber/gold (same both modes)
-    static let inProgressBar = Color(red: 0.769, green: 0.569, blue: 0.118)
+    /// In-progress bar — #E3A713 vivid amber/gold (same both modes)
+    static let inProgressBar = Color(red: 0.890, green: 0.655, blue: 0.075)
 
     // MARK: - Missed / Error
 
@@ -32,10 +32,10 @@ enum StatusColors {
 
     // MARK: - At Risk / Overflow
 
-    /// At-risk bar — #9E3B2F darker red for >= 75% fill (same both modes)
-    static let atRiskBar = Color(red: 0.620, green: 0.231, blue: 0.184)
-    /// Overflow bar — #D4574A brighter red for the over-budget segment (same both modes)
-    static let overflowBar = Color(red: 0.831, green: 0.341, blue: 0.290)
+    /// At-risk bar — #dc2626 red-600 for >= 75% fill (same both modes)
+    static let atRiskBar = Color(red: 220/255, green: 38/255, blue: 38/255)
+    /// Overflow bar — #ef4444 red-500 for the over-budget segment (same both modes)
+    static let overflowBar = Color(red: 239/255, green: 68/255, blue: 68/255)
 
     // MARK: - Transaction Badge Semantic Colors
 
@@ -45,8 +45,8 @@ enum StatusColors {
     static let badgeInfo = Color(red: 37/255, green: 99/255, blue: 235/255)
     /// Warning badge — #d97706
     static let badgeWarning = Color(red: 217/255, green: 119/255, blue: 6/255)
-    /// Error badge — #dc2626
-    static let badgeError = Color(red: 220/255, green: 38/255, blue: 38/255)
+    /// Error badge — #ef4444
+    static let badgeError = Color(red: 239/255, green: 68/255, blue: 68/255)
     /// Needs Review — #b94520
     static let badgeNeedsReview = Color(red: 185/255, green: 69/255, blue: 32/255)
 }

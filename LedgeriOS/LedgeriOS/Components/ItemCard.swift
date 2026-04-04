@@ -7,6 +7,7 @@ struct ItemCard: View {
     var priceLabel: String?
     var budgetCategoryName: String?
     var locationLabel: String?
+    var projectName: String?
     var indexLabel: String?
     var statusOverride: String?
     var stackSkuAndSource: Bool = true
@@ -39,6 +40,7 @@ struct ItemCard: View {
             sourceLabel: item.source,
             locationLabel: locationLabel,
             priceLabel: priceLabel,
+            projectName: projectName,
             stackSkuAndSource: stackSkuAndSource
         )
     }

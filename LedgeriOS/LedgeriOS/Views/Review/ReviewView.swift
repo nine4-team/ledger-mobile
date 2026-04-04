@@ -93,7 +93,7 @@ struct ReviewView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                        columns: Dimensions.listColumns,
                         alignment: .leading,
                         spacing: Spacing.cardListGap
                     ) {

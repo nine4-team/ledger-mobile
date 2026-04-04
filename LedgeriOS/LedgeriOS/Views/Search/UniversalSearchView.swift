@@ -271,7 +271,7 @@ struct UniversalSearchView: View {
 
             ScrollView {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: Dimensions.cardMinWidth), spacing: Spacing.cardListGap)],
+                    columns: Dimensions.listColumns,
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {
@@ -315,6 +315,7 @@ struct UniversalSearchView: View {
                             CurrencyFormatting.formatCentsWithDecimals($0)
                         },
                         budgetCategoryName: categoryName(for: item.budgetCategoryId),
+                        projectName: projectName(for: item.projectId),
                         isSelected: isSelected,
                         menuItems: selectedItemIds.isEmpty ? singleItemMenuItems(for: itemId) : []
                     )
@@ -601,6 +602,11 @@ struct UniversalSearchView: View {
     private func categoryName(for categoryId: String?) -> String? {
         guard let categoryId else { return nil }
         return accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
+    }
+
+    private func projectName(for projectId: String?) -> String? {
+        guard let projectId else { return nil }
+        return accountContext.allProjects.first(where: { $0.id == projectId })?.name
     }
 
     private func itemCount(for space: Space) -> Int {

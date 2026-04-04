@@ -219,6 +219,7 @@ struct ItemDetailView: View {
                 .accessibilityLabel("Rename item")
             }
 
+            heroDetailRow(label: "Project", value: linkedProjectName)
             heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
             HStack(spacing: Spacing.xs) {
                 Text("Transaction:")
@@ -279,6 +280,18 @@ struct ItemDetailView: View {
             transactionType: tx.transactionType
         )
         return "\(source) - \(amount)"
+    }
+
+    private var linkedProjectName: String {
+        if let projectId = liveItem.projectId {
+            // Check current project context first
+            if projectContext.project?.id == projectId {
+                return projectContext.project?.name ?? "Unknown Project"
+            }
+            // Fall back to account-level project list
+            return accountContext.allProjects.first(where: { $0.id == projectId })?.name ?? "Unknown Project"
+        }
+        return "Inventory"
     }
 
     private var linkedBudgetCategoryName: String {

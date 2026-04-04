@@ -86,7 +86,35 @@ struct TransactionCard: View {
                     .layoutPriority(1)
             }
 
-            // Date + item count row
+            // Date + item count + category (collapsed on macOS)
+            #if os(macOS)
+            HStack(spacing: 0) {
+                Text("Date: ")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+
+                if let count = itemCount {
+                    Text(" \u{00B7} ")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    Text("\(count) \(count == 1 ? "item" : "items")")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+
+                if let category = budgetCategoryName, !category.isEmpty {
+                    Text(" \u{00B7} ")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FindableText(category)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+            #else
             HStack(spacing: 0) {
                 Text("Date: ")
                     .font(Typography.small)
@@ -105,7 +133,6 @@ struct TransactionCard: View {
                 }
             }
 
-            // Budget category
             if let category = budgetCategoryName, !category.isEmpty {
                 HStack(spacing: Spacing.xs) {
                     Text("Budget Category:")
@@ -116,8 +143,9 @@ struct TransactionCard: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
+            #endif
 
-            // Notes — always reserve space for consistent card heights in grid
+            // Notes
             Group {
                 if let truncated = TransactionCardCalculations.truncatedNotes(transaction.notes) {
                     FindableText(truncated)
@@ -126,11 +154,16 @@ struct TransactionCard: View {
                         .foregroundStyle(BrandColors.textSecondary)
                         .lineLimit(1)
                 } else {
+                    #if os(macOS)
+                    EmptyView()
+                    #else
+                    // Reserve space for consistent card heights in grid on iOS
                     Text(" ")
                         .font(Typography.small)
                         .italic()
                         .lineLimit(1)
                         .opacity(0)
+                    #endif
                 }
             }
         }
