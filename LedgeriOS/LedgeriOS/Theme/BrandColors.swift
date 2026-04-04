@@ -89,7 +89,13 @@ extension NSColor {
     static var separator: NSColor { .separatorColor }
     static var systemGroupedBackground: NSColor { .windowBackgroundColor }
     static var secondarySystemGroupedBackground: NSColor { .controlBackgroundColor }
-    static var tertiarySystemGroupedBackground: NSColor { .underPageBackgroundColor }
+    static var tertiarySystemGroupedBackground: NSColor {
+        NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(srgbRed: 44/255, green: 44/255, blue: 46/255, alpha: 1)   // #2C2C2E — iOS dark
+                : NSColor(srgbRed: 239/255, green: 238/255, blue: 236/255, alpha: 1) // #EFECEA — neutral light gray
+        }
+    }
     static var secondarySystemFill: NSColor { .controlColor }
     static var tertiarySystemFill: NSColor { .unemphasizedSelectedContentBackgroundColor }
     static var quaternarySystemFill: NSColor { .quaternaryLabelColor }
