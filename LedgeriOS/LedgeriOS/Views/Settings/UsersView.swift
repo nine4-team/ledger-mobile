@@ -256,9 +256,9 @@ private struct InviteUserSheet: View {
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
 
-                    SegmentedControl(selection: $role, options: [
-                        SegmentOption(id: "user", label: "User"),
-                        SegmentOption(id: "admin", label: "Admin"),
+                    InlineOptionPicker(selection: $role, options: [
+                        InlineOption(id: "user", label: "User"),
+                        InlineOption(id: "admin", label: "Admin"),
                     ])
                 }
             }
