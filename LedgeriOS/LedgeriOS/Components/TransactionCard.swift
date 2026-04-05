@@ -22,7 +22,9 @@ struct TransactionCard: View {
             reimbursementType: transaction.reimbursementType,
             hasEmailReceipt: transaction.hasEmailReceipt ?? false,
             isComplete: transaction.isComplete,
-            status: transaction.status
+            status: transaction.status,
+            isCanonicalInventorySale: transaction.isCanonicalInventorySale,
+            inventorySaleDirection: transaction.inventorySaleDirection
         )
     }
 
@@ -72,7 +74,7 @@ struct TransactionCard: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             // Source + Amount row
             HStack(alignment: .firstTextBaseline) {
-                FindableText(source.isEmpty ? "Transaction \((transaction.id ?? "").prefix(6))" : source)
+                FindableText(TransactionDisplayCalculations.displayName(for: transaction))
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(2)

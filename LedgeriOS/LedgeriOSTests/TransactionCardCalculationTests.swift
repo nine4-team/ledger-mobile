@@ -23,7 +23,7 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].borderOpacity == 0.20)
     }
 
-    @Test("Return produces subtle brand-primary badge")
+    @Test("Return produces destructive-colored badge")
     func badgeItemsReturn() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: .return,
@@ -34,12 +34,12 @@ struct TransactionCardCalculationTests {
         )
         #expect(badges.count == 1)
         #expect(badges[0].text == "Return")
-        #expect(badges[0].color == BrandColors.primary)
+        #expect(badges[0].color == StatusColors.atRiskBar)
         #expect(badges[0].backgroundOpacity == 0.10)
         #expect(badges[0].borderOpacity == 0.20)
     }
 
-    @Test("Sale produces subtle brand-primary badge")
+    @Test("Sale produces red badge")
     func badgeItemsSale() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: .sale,
@@ -50,7 +50,39 @@ struct TransactionCardCalculationTests {
         )
         #expect(badges.count == 1)
         #expect(badges[0].text == "Sale")
+        #expect(badges[0].color == StatusColors.atRiskBar)
+    }
+
+    @Test("Canonical business-to-project sale shows Purchase badge")
+    func badgeItemsCanonicalBusinessToProject() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .sale,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: true,
+            status: nil,
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
         #expect(badges[0].color == BrandColors.primary)
+    }
+
+    @Test("Canonical project-to-business sale keeps Sale badge")
+    func badgeItemsCanonicalProjectToBusiness() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .sale,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: true,
+            status: nil,
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Sale")
+        #expect(badges[0].color == StatusColors.atRiskBar)
     }
 
     @Test("To-inventory produces no badge")

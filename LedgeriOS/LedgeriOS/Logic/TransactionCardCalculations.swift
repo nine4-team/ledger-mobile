@@ -11,7 +11,9 @@ enum TransactionCardCalculations {
         reimbursementType: String?,
         hasEmailReceipt: Bool,
         isComplete: Bool?,
-        status: TransactionStatus?
+        status: TransactionStatus?,
+        isCanonicalInventorySale: Bool? = nil,
+        inventorySaleDirection: InventorySaleDirection? = nil
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
@@ -27,7 +29,17 @@ enum TransactionCardCalculations {
 
         // 2. Transaction type badge
         if let type = transactionType {
-            badges.append(CardBadge(text: type.displayLabel, color: BrandColors.primary))
+            // Canonical inventory sales: business_to_project shows "Purchase" badge with primary color
+            let label: String
+            let color: Color
+            if isCanonicalInventorySale == true, inventorySaleDirection == .businessToProject {
+                label = TransactionType.purchase.displayLabel
+                color = BrandColors.primary
+            } else {
+                label = type.displayLabel
+                color = (type == .sale || type == .return) ? StatusColors.atRiskBar : BrandColors.primary
+            }
+            badges.append(CardBadge(text: label, color: color))
         }
 
         return badges
