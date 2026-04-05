@@ -23,15 +23,16 @@ Both paths can be used for the same type of item (e.g., furnishings), which lead
 - The concept of "who purchased" (business vs. client) is preserved
 
 ### Changing
-- **Path A (direct to project) is eliminated for physical/itemized items.** All furnishings, accessories, additional requests, and other itemized categories must flow through inventory first, even if they're immediately sold to a project in the same action.
-- **Category selection becomes the routing decision.** The first step of transaction creation is choosing a category. The category type (itemized vs. non-itemized) determines which flow the user enters — no manual choice of "inventory or project?"
+- **Path A (direct to project) is eliminated for business-purchased itemized items.** When the design business purchases items in an itemized category (furnishings, accessories, etc.), those items must flow through inventory first, even if they're immediately sold to a project in the same action. Client-purchased itemized items go direct to project — the business never held them.
+- **Category + purchaser together become the routing decision.** The category type (itemized vs. non-itemized) and who purchased (business vs. client) determine which flow the user enters — no manual choice of "inventory or project?"
 
 ### Adding
-- **Immediate sell-to-project option at inventory entry.** When entering items into inventory under an itemized category, the user is prompted: "Do you want to sell this entire transaction to a project?" or "Do you want to select specific items to sell to a project?" This makes inventory → sell feel like one step, not two, while still routing through the consistent pipeline.
+- **Immediate sell-to-project option at inventory entry.** When entering business-purchased items into inventory under an itemized category, the user is prompted: "Do you want to sell this entire transaction to a project?" or "Do you want to select specific items to sell to a project?" This makes inventory → sell feel like one step, not two, while still routing through the consistent pipeline.
 - **Direct-to-project flow for non-itemized expense categories.** Categories like install, fuel, delivery, and other service/expense categories skip inventory entirely. These aren't physical goods — they go straight to a project. The flow asks: which project? Who purchased it?
+- **Direct-to-project flow for client-purchased itemized items.** When the client's card was used, the items go straight to the project — they were never business inventory.
 
 ### Removing
-- **The ability to add itemized items directly to a project as "business purchased, client owes."** This path goes away. If it's an itemized category, it goes through inventory (even if it's immediately sold onward).
+- **The ability to add business-purchased itemized items directly to a project.** This path goes away for business-purchased items. If it's an itemized category and the business paid, it goes through inventory (even if it's immediately sold onward). Client-purchased items are unaffected.
 
 ## How It Works
 

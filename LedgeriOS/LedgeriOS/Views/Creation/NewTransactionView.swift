@@ -337,21 +337,22 @@ struct NewTransactionView: View {
             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
         transaction.hasEmailReceipt = hasEmailReceipt
 
+        let routeThroughInventory = isItemizedCategory && purchasedBy == "design-business"
+
+        transaction.budgetCategoryId = selectedCategoryId
         if isItemizedCategory {
-            // Itemized categories route through inventory — items are added next
-            transaction.projectId = nil
-            transaction.budgetCategoryId = selectedCategoryId
             transaction.subtotalCents = parseCents(subtotal)
             if let rate = Double(taxRate.trimmingCharacters(in: .whitespacesAndNewlines)) {
                 transaction.taxRatePct = rate
             }
-        } else {
-            transaction.budgetCategoryId = selectedCategoryId
+        }
+        if routeThroughInventory {
+            transaction.projectId = nil
         }
 
         do {
             let txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
-            if isItemizedCategory {
+            if routeThroughInventory {
                 createdTransactionId = txId
             } else {
                 dismiss()
