@@ -235,7 +235,11 @@ struct TransactionsTabView: View {
 
     @ViewBuilder
     private func transactionCardContent(for transaction: Transaction, txId: String) -> some View {
-        let catName = transaction.budgetCategoryId.flatMap { categoryLookup[$0]?.name }
+        let catName: String? = {
+            guard let catId = transaction.budgetCategoryId else { return nil }
+            if catId == "uncategorized" { return "Uncategorized" }
+            return categoryLookup[catId]?.name
+        }()
 
         TransactionCard(
             transaction: transaction,

@@ -599,6 +599,7 @@ struct UniversalSearchView: View {
 
     private func categoryName(for categoryId: String?) -> String? {
         guard let categoryId else { return nil }
+        if categoryId == "uncategorized" { return "Uncategorized" }
         return accountContext.allBudgetCategories.first(where: { $0.id == categoryId })?.name
     }
 

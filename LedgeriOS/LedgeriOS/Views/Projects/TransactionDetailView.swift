@@ -37,6 +37,9 @@ struct TransactionDetailView: View {
     @State private var lineageReturnedItems: [Item] = []
     @State private var lineageSoldItems: [Item] = []
 
+    // Items fetched outside project context (e.g. inventory items in project_to_business sales)
+    @State private var resolvedExternalItems: [Item] = []
+
     // Expanded groups within returned/sold sections
     @State private var expandedReturnedGroups: Set<String> = []
     @State private var expandedSoldGroups: Set<String> = []
@@ -55,11 +58,26 @@ struct TransactionDetailView: View {
     private var transactionItems: [Item] {
         guard let ids = currentTransaction.itemIds, !ids.isEmpty else { return [] }
         let idSet = Set(ids)
-        return projectContext.items.filter { idSet.contains($0.id ?? "") }
+        let fromContext = projectContext.items.filter { idSet.contains($0.id ?? "") }
+        let contextIds = Set(fromContext.compactMap(\.id))
+        let external = resolvedExternalItems.filter {
+            guard let id = $0.id else { return false }
+            return idSet.contains(id) && !contextIds.contains(id)
+        }
+        return fromContext + external
     }
 
     private var activeItems: [Item] {
         if currentTransaction.isReturnTransaction {
+            return transactionItems
+        }
+        // Sale transactions show all items regardless of status. Items in a sale's
+        // itemIds may have status "returned" (returned to vendor while in inventory)
+        // or "sold" (sold to another project) — but they still belong to this
+        // transaction until moved via lineage. The status-based filter only applies
+        // to purchase transactions where returned/sold items have been moved out
+        // and are tracked via lineage in separate sections.
+        if currentTransaction.transactionType == .sale {
             return transactionItems
         }
         return transactionItems.filter { $0.status != .returned && $0.status != .sold }
@@ -142,6 +160,7 @@ struct TransactionDetailView: View {
         }
         .task(id: transaction.id) {
             await loadLineageItems()
+            await loadExternalItems()
         }
         .onAppear {
             guard let accountId = accountContext.currentAccountId,
@@ -284,7 +303,9 @@ struct TransactionDetailView: View {
             reimbursementType: currentTransaction.reimbursementType,
             hasEmailReceipt: currentTransaction.hasEmailReceipt ?? false,
             isComplete: currentTransaction.isComplete,
-            status: currentTransaction.status
+            status: currentTransaction.status,
+            isCanonicalInventorySale: currentTransaction.isCanonicalInventorySale,
+            inventorySaleDirection: currentTransaction.inventorySaleDirection
         )
         if !badges.isEmpty {
             HStack(spacing: Spacing.sm) {
@@ -328,12 +349,14 @@ struct TransactionDetailView: View {
                         .foregroundStyle(BrandColors.textPrimary)
                 }
 
-                if let categoryName = selectedCategory?.name, !categoryName.isEmpty {
+                let displayCategoryName = selectedCategory?.name
+                    ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : nil)
+                if let displayCategoryName, !displayCategoryName.isEmpty {
                     HStack(spacing: Spacing.xs) {
                         Text("Budget Category:")
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
-                        FindableText(categoryName)
+                        FindableText(displayCategoryName)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textPrimary)
                     }
@@ -538,7 +561,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
                 DetailRow(label: "Reimbursement", value: displayReimbursement(currentTransaction.reimbursementType))
-                DetailRow(label: "Budget Category", value: selectedCategory?.name ?? "—")
+                DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
                 if selectedCategory?.metadata?.categoryType == .itemized {
                     DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
                     DetailRow(
@@ -782,6 +805,25 @@ struct TransactionDetailView: View {
         } catch {
             // Fail silently — sections just won't show. Offline-first: no spinner.
         }
+    }
+
+    /// Fetch items not in project context (e.g. inventory items in project_to_business canonical sales).
+    private func loadExternalItems() async {
+        guard let accountId = accountContext.currentAccountId,
+              let ids = currentTransaction.itemIds, !ids.isEmpty else { return }
+        let idSet = Set(ids)
+        let contextIds = Set(projectContext.items.compactMap(\.id).filter { idSet.contains($0) })
+        let missingIds = idSet.subtracting(contextIds)
+        guard !missingIds.isEmpty else { return }
+
+        let service = ItemsService()
+        var fetched: [Item] = []
+        for itemId in missingIds {
+            if let item = try? await service.getItem(accountId: accountId, itemId: itemId) {
+                fetched.append(item)
+            }
+        }
+        resolvedExternalItems = fetched
     }
 
     // MARK: - Helpers
