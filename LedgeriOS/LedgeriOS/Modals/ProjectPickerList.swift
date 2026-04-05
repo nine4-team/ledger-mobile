@@ -11,8 +11,26 @@ struct ProjectPickerList: View {
     @State private var isLoading = true
     @State private var listener: ListenerRegistration?
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        NavigationStack {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Select Project")
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .font(.title2)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.top, Spacing.screenPadding)
+            .padding(.bottom, Spacing.md)
+
             Group {
                 if isLoading {
                     LoadingScreen(message: "Loading projects...")
@@ -28,8 +46,6 @@ struct ProjectPickerList: View {
                 listener?.remove()
                 listener = nil
             }
-            .navigationTitle("Select Project")
-            .navBarTitleDisplayMode(.inline)
         }
     }
 

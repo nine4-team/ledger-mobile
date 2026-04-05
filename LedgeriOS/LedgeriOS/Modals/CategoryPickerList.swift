@@ -15,7 +15,23 @@ struct CategoryPickerList: View {
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Budget Category")
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .font(.title2)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.top, Spacing.screenPadding)
+            .padding(.bottom, Spacing.md)
+
             ScrollView {
                 LazyVStack(spacing: 0) {
                     // "No Category" option
@@ -35,8 +51,6 @@ struct CategoryPickerList: View {
                     }
                 }
             }
-            .navigationTitle("Budget Category")
-            .navBarTitleDisplayMode(.inline)
         }
     }
 

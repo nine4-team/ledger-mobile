@@ -48,12 +48,10 @@ struct ItemEntryFlowView: View {
             NewItemView(context: .inventory, initialTransactionId: transactionId)
         }
         .adaptivePresentation(isPresented: $showProjectPicker, style: .picker) {
-            DismissableProjectPicker { project in
+            ProjectPickerList { project in
                 destinationProject = project
                 showProjectPicker = false
                 showConfirmation = true
-            } onCancel: {
-                showProjectPicker = false
             }
         }
         .alert("Confirm Sale", isPresented: $showConfirmation) {
@@ -308,22 +306,5 @@ struct ItemEntryFlowView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Dismissable Project Picker
-
-/// Wraps ProjectPickerList with a Cancel toolbar button so the user isn't stuck.
-private struct DismissableProjectPicker: View {
-    let onSelect: (Project) -> Void
-    let onCancel: () -> Void
-
-    var body: some View {
-        ProjectPickerList(onSelect: onSelect)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onCancel() }
-                }
-            }
     }
 }

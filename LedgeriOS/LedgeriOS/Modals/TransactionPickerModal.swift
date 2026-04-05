@@ -20,11 +20,20 @@ struct TransactionPickerModal: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
-            Text("Link Transaction")
-                .font(Typography.h2)
-                .foregroundStyle(BrandColors.textPrimary)
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.screenPadding)
+            HStack {
+                Text("Link Transaction")
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .font(.title2)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.top, Spacing.screenPadding)
 
             if visibleTransactions.isEmpty {
                 ContentUnavailableView("No transactions", systemImage: "arrow.left.arrow.right")
