@@ -281,6 +281,13 @@ struct NewTransactionView: View {
 
                 // MARK: Additional Details
                 formSection("Additional Details") {
+                    if isItemizedCategory {
+                        FormField(label: "Subtotal", text: $subtotal, placeholder: "0.00")
+                            .platformKeyboardType(.decimalPad)
+                        FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.00")
+                            .platformKeyboardType(.decimalPad)
+                    }
+
                     FormField(text: $notes, placeholder: "Notes", axis: .vertical)
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -291,16 +298,6 @@ struct NewTransactionView: View {
                             InlineOption(id: false, label: "No"),
                             InlineOption(id: true, label: "Yes"),
                         ])
-                    }
-                }
-
-                // MARK: Itemized Details (conditional)
-                if isItemizedCategory {
-                    formSection("Itemized Details") {
-                        FormField(label: "Subtotal", text: $subtotal, placeholder: "0.00")
-                            .platformKeyboardType(.decimalPad)
-                        FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.00")
-                            .platformKeyboardType(.decimalPad)
                     }
                 }
             }
