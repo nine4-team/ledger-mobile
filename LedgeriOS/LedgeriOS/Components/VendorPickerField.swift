@@ -207,7 +207,7 @@ struct VendorPickerModal: View {
             .padding(.horizontal, Spacing.md)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
-            .background(isSelected ? BrandColors.inputBackground : Color.clear)
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.inputRadius)
@@ -338,7 +338,7 @@ struct InlineVendorPicker: View {
             .padding(.horizontal, Spacing.md)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
-            .background(isSelected ? BrandColors.inputBackground : Color.clear)
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.inputRadius)
