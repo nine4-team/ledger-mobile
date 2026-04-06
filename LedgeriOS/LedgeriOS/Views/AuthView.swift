@@ -54,6 +54,17 @@ struct AuthView: View {
                         .multilineTextAlignment(.center)
                 }
 
+                if let detail = authManager.errorDetail {
+                    Text(detail)
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Spacing.sm)
+                        .background(Color.secondarySystemBackground)
+                        .cornerRadius(Dimensions.inputRadius)
+                }
+
                 emailFields
 
                 primaryButton
