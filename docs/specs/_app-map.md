@@ -36,11 +36,39 @@ Ledger is an inventory and transaction management app for design teams. It exist
 - Invoices are downloaded and attached to external payment software for collection
 - No item-level billing status exists today
 
+### Sale Transaction Source (Inventory → Project)
+- When items are sold from inventory to a project, a sale transaction is created in the project
+- **Current state:** The source field on these sale transactions is **blank** (empty string)
+- **Transaction IDs** follow the pattern `SALE_[projectId]_business_to_project_[categoryId]` or `SALE_[projectId]_project_to_business_[categoryId]` — structured but not human-readable
+- **purchasedBy** field is also blank on sale transactions
+- **Being changed:** Source should be populated with "[Business Name] Inventory" or "Business Inventory" — see inventory-source-naming.md
+
 ### Who Purchased
 - Transactions track who made the purchase: Business or Client
 - Most common scenario: business purchases, client owes reimbursement
 - Also common: client card used directly (logged for tracking, no reimbursement needed)
 - Rare: client purchased something the business should have covered
+
+### Item Detail View (Web)
+- **What it does**: Shows all details for a single item — fields, status, images, location, history
+- **Key elements**:
+  - Item fields with inline pencil icons for some fields (edit in place)
+  - Three-dot overflow menu in top-right header containing: "Edit Details", "Status", [other items need discovery]
+  - Item status display showing one of four values: To Purchase, Purchased, To Return, Returned
+  - [Other sections/fields need discovery — what exactly is shown on this screen]
+- **Navigates to/from**: Accessed by tapping/clicking an item from any list view (project items, inventory, search results, etc.)
+- **Status**: partially-mapped
+
+## Item Status Model
+Items have four statuses (confirmed via Ledger API):
+- **To Purchase** — item identified but not yet bought
+- **Purchased** — item has been bought by the business
+- **To Return** — item needs to be returned
+- **Returned** — item has been returned
+
+These are designer-facing workflow statuses tracking the physical lifecycle of an item. A separate billing status track (unbilled → invoiced → paid) is being specced as a new addition — see billing-invoicing.md.
+
+**Known issue:** When items are moved from inventory to a project, the status does not auto-update to "Purchased." This requires manual cleanup.
 
 ## Data Model Summary
 Based on available MCP tools, key entities include: Items, Transactions, Projects, Spaces, Accounts, Budget Categories. Relationships between these are [needs discovery].

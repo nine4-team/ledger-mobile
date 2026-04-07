@@ -1,9 +1,9 @@
 # Visual Style (Desktop & Mobile)
 Status: modify
-Last updated: 2026-04-02
+Last updated: 2026-04-03
 
 ## Summary
-The desktop app's color palette and UI chrome (borders, outlines, button styling) need to be updated to match the lighter, sleeker look and feel of the web app. The mobile app's colors are closer but the red specifically feels too dark/gloomy and should also align with the web app's palette.
+The desktop app's color palette and UI chrome (borders, outlines, button styling) need to be updated to match the lighter, sleeker look and feel of the web app. The mobile app's colors are closer but the red specifically feels too dark/gloomy and should also align with the web app's palette. The app's typography across all platforms should adopt the 1584 Design brand fonts: Playfair Display and Avenir.
 
 ## Reference
 The **web app is the visual reference** for both desktop and mobile. The web app's colors, borders, and overall styling represent the desired look and feel.
@@ -50,6 +50,43 @@ The user described the desired feel as: lighter, dimensional, sleeker. The curre
 
 Not silly at all — color and visual weight have a huge impact on how an app feels to use day-to-day.
 
+## Typography
+
+The app should use the **1584 Design brand fonts** to create a more polished, upscale feel that aligns with the company's brand identity. Two fonts, used with restraint:
+
+### Font Family
+
+- **Playfair Display** — A high-contrast transitional serif designed by Claus Eggers Sørensen. Elegant, editorial quality. Used sparingly for maximum impact.
+- **Avenir** — A geometric sans-serif designed by Adrian Frutiger. Clean, modern, highly legible at all sizes. The workhorse font for the app.
+
+### Typography Hierarchy
+
+| Role | Font | Weight | Usage |
+|------|------|--------|-------|
+| Screen titles | Playfair Display | Regular or Bold | The main title at the top of each screen ("Projects," "Inventory," "Transaction Detail," etc.) |
+| Section headers | Avenir | Semibold | Labels above groups of content within a screen ("Recent Transactions," "Budget Summary," etc.) |
+| Body text | Avenir | Regular | List item descriptions, detail view content, general reading text |
+| Labels & captions | Avenir | Medium or Light | Field labels, secondary info, metadata, timestamps |
+| Button text | Avenir | Medium | All interactive button labels |
+| Navigation labels | Avenir | Medium | Tab bar items, sidebar navigation, menu items |
+| Dollar amounts & numbers | Avenir | Regular or Semibold | All financial figures — consistent stroke weight matters for scannability |
+| Input text | Avenir | Regular | Text the user types into form fields |
+
+### Design Rationale
+
+Playfair Display is reserved for screen titles only. This restraint is intentional — Playfair's high-contrast strokes look stunning at large sizes but lose their elegance as text gets smaller. By limiting it to the single biggest text element on each screen, it creates a branded, luxurious moment without competing with the functional text below it. Avenir handles everything else because its even stroke weight and geometric consistency make it effortlessly legible at any size, which is critical for an app where the user is scanning lists of transactions, reading dollar amounts, and navigating quickly.
+
+### Scope
+
+- **Desktop app**: Full typography update (both fonts)
+- **Mobile app**: Full typography update (both fonts)
+- **Web app**: Full typography update (both fonts) — all platforms should feel consistent
+
+### What's Changing
+
+- **All platforms**: Current system/default fonts → Playfair Display for screen titles, Avenir for all other text
+- Font sizes, line heights, and letter spacing should be calibrated per platform to feel native while maintaining the brand identity [exact values TBD during implementation]
+
 ## Open Questions
 - What are the exact hex/color values used in the web app for red, green, and yellow? [needs discovery from codebase or design files]
 - What are the current desktop and mobile values for comparison? [needs discovery]
@@ -57,3 +94,6 @@ Not silly at all — color and visual weight have a huge impact on how an app fe
 - **Toggle borders are likely a bug**: The black on toggles is inconsistent in thickness, which points to a rendering issue (something leaking through) rather than intentional design. Dev team should investigate the toggle component specifically for an errant background color or border.
 - **Card/tile borders are intentional but should change**: The borders on cards and tiles appear to be consistent theming — not a bug, but a design choice that should be updated to match the web app's lighter treatment.
 - Should the border treatment change apply to all UI elements universally, or are there specific elements where a border is appropriate?
+- **Typography — font sizes**: What specific font sizes should Playfair Display screen titles use on each platform? (e.g., 28pt on mobile, 32pt on desktop?)
+- **Typography — font licensing**: Playfair Display is open-source (Google Fonts), but Avenir is a commercial font (Linotype). Need to confirm licensing for app embedding. Alternative: Avenir Next (Apple system font, available on iOS/macOS natively) or Nunito Sans (open-source geometric sans with a similar feel).
+- **Typography — web font loading**: For the web app, Playfair Display can be loaded from Google Fonts. Avenir will need to be self-hosted or an alternative used. Consider whether Avenir Next or a similar open-source alternative is acceptable for web.
