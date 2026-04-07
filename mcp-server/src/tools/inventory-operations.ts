@@ -4,6 +4,9 @@ import { z } from "zod";
 import type { Item, Transaction } from "../types.js";
 import { accountCollection, subcollection, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
+import { notFound, requireAuditNote, validation } from "../util/errors.js";
+import { asToolResponse } from "../util/projections.js";
+import { withTelemetry } from "../util/telemetry.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,10 +63,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── sell_items ──────────────────────────────────────────────────────────────
   server.tool(
     "sell_items",
-    "Move items between scopes (project ↔ business inventory) via canonical sale transactions. " +
+    "[destructive] Move items between scopes (project ↔ business inventory) via canonical sale transactions. " +
       "Creates deterministic sale transaction IDs, lineage edges, and updates item fields atomically. " +
       "Use direction 'to_business' to move project items to inventory, 'to_project' to move items into a project. " +
       "Project-to-project moves are handled by 'to_project' with a two-hop model (source → inventory → destination). " +
+      "Set dryRun: true to preview the plan without writing. " +
       "IMPORTANT: When selling items to a project (direction 'to_project'), you MUST ask the user which budget " +
       "category this sale should be filed under BEFORE calling this tool. Use get_project_budget_categories on the " +
       "destination project to list the available categories, present them to the user, and pass their choice as " +
@@ -81,17 +85,23 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         "Budget category for the sale. When direction is 'to_project', this is required — " +
           "always ask the user to choose from the destination project's budget categories before calling this tool"
       ),
-      notes: z.string().optional().describe(
-        "Brief note explaining the move — what was done and why. Written to the sale transaction(s)."
+      notes: z.string().describe(
+        "REQUIRED dated audit note explaining the move — e.g. '4/6 — Moved 3 fixtures from Witzenman to inventory, client returned them'."
+      ),
+      dryRun: z.boolean().default(false).describe(
+        "If true, compute and return the sale plan (transactions, item updates, lineage edges) without writing. Use to preview before committing."
       ),
     },
-    async ({ itemIds, direction, destinationProjectId, overrideCategoryId, notes }) => {
+    withTelemetry("sell_items", async ({ itemIds, direction, destinationProjectId, overrideCategoryId, notes, dryRun }) => {
+      const noteError = requireAuditNote(notes, "sell_items");
+      if (noteError) return noteError;
+
       // Validate direction-specific requirements
       if (direction === "to_project" && !destinationProjectId) {
-        return {
-          content: [{ type: "text", text: "destinationProjectId is required when direction is 'to_project'" }],
-          isError: true,
-        };
+        return validation(
+          "destinationProjectId is required when direction is 'to_project'",
+          "Pass the target project's ID as destinationProjectId."
+        );
       }
 
       // Fetch all items
@@ -106,10 +116,21 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         }
       }
       if (missing.length > 0) {
-        return {
-          content: [{ type: "text", text: `Items not found: ${missing.join(", ")}` }],
-          isError: true,
-        };
+        return notFound("Items", missing.join(", "), "get_items");
+      }
+
+      if (dryRun) {
+        return asToolResponse({
+          dryRun: true,
+          direction,
+          destinationProjectId: destinationProjectId ?? null,
+          overrideCategoryId: overrideCategoryId ?? null,
+          plan: planSale(items, direction, destinationProjectId, overrideCategoryId),
+          warning:
+            items.filter((i) => i.taxRatePct == null).length > 0
+              ? `${items.filter((i) => i.taxRatePct == null).length} item(s) missing taxRatePct — amountCents will undercount.`
+              : null,
+        });
       }
 
       if (direction === "to_business") {
@@ -117,34 +138,37 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       } else {
         return await sellToProject(db, items, destinationProjectId!, overrideCategoryId, notes);
       }
-    }
+    })
   );
 
   // ── return_items ────────────────────────────────────────────────────────────
   server.tool(
     "return_items",
-    "Process item returns atomically: updates item status to 'returned', moves items from source " +
+    "[destructive] Process item returns atomically: updates item status to 'returned', moves items from source " +
       "transaction to the return transaction, and creates lineage edges. The return transaction must " +
-      "already exist with type 'Return'.",
+      "already exist with type 'Return'. Set dryRun: true to preview the plan without writing.",
     {
       itemIds: z.array(z.string()).min(1).describe("Item document IDs to return"),
       returnTransactionId: z.string().describe("Existing return transaction ID to move items to"),
+      notes: z.string().describe(
+        "REQUIRED dated audit note — e.g. '4/6 — Returned 2 fixtures (wrong finish)'."
+      ),
+      dryRun: z.boolean().default(false).describe(
+        "If true, return the plan without writing."
+      ),
     },
-    async ({ itemIds, returnTransactionId }) => {
+    withTelemetry("return_items", async ({ itemIds, returnTransactionId, notes, dryRun }) => {
+      const noteError = requireAuditNote(notes, "return_items");
+      if (noteError) return noteError;
+
       // Validate return transaction exists and is type Return
       const returnTx = await getDoc<Transaction>(db, "transactions", returnTransactionId);
-      if (!returnTx) {
-        return {
-          content: [{ type: "text", text: `Return transaction ${returnTransactionId} not found` }],
-          isError: true,
-        };
-      }
-      const txType = returnTx.type ?? returnTx.transactionType;
-      if (txType !== "Return") {
-        return {
-          content: [{ type: "text", text: `Transaction ${returnTransactionId} is type '${txType}', not 'Return'` }],
-          isError: true,
-        };
+      if (!returnTx) return notFound("Return transaction", returnTransactionId);
+      if (returnTx.type !== "Return") {
+        return validation(
+          `Transaction ${returnTransactionId} is type '${returnTx.type}', not 'Return'.`,
+          "Create a transaction with type 'Return' first, then call return_items with its ID."
+        );
       }
 
       // Fetch all items
@@ -159,15 +183,115 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         }
       }
       if (missing.length > 0) {
-        return {
-          content: [{ type: "text", text: `Items not found: ${missing.join(", ")}` }],
-          isError: true,
-        };
+        return notFound("Items", missing.join(", "), "get_items");
+      }
+
+      if (dryRun) {
+        return asToolResponse({
+          dryRun: true,
+          returnTransactionId,
+          plan: {
+            itemUpdates: items.map((i) => ({
+              itemId: i.id,
+              name: i.name ?? null,
+              from: { transactionId: i.transactionId ?? null, status: i.status ?? null },
+              to: { transactionId: returnTransactionId, status: "returned" },
+            })),
+            lineageEdges: items.length,
+          },
+        });
       }
 
       return await returnItems(db, items, returnTransactionId);
-    }
+    })
   );
+}
+
+// ── dry-run planner (pure) ──────────────────────────────────────────────────
+
+export function planSale(
+  items: (Item & { id: string })[],
+  direction: "to_business" | "to_project",
+  destinationProjectId: string | undefined,
+  overrideCategoryId: string | undefined
+) {
+  const canonical = (projectId: string, dir: string, catId: string) =>
+    `SALE_${projectId}_${dir}_${catId}`;
+  const resolveCat = (i: Item) => i.budgetCategoryId ?? overrideCategoryId ?? "uncategorized";
+
+  const saleTransactions: Array<{
+    id: string;
+    projectId: string;
+    direction: string;
+    budgetCategoryId: string;
+    itemIds: string[];
+    subtotalCents: number;
+    amountCents: number;
+  }> = [];
+  const itemUpdates: Array<Record<string, unknown>> = [];
+  let edgeCount = 0;
+
+  const upsert = (
+    id: string,
+    projectId: string,
+    dir: string,
+    catId: string,
+    itemId: string,
+    subtotal: number,
+    amount: number
+  ) => {
+    let existing = saleTransactions.find((s) => s.id === id);
+    if (!existing) {
+      existing = {
+        id,
+        projectId,
+        direction: dir,
+        budgetCategoryId: catId,
+        itemIds: [],
+        subtotalCents: 0,
+        amountCents: 0,
+      };
+      saleTransactions.push(existing);
+    }
+    existing.itemIds.push(itemId);
+    existing.subtotalCents += subtotal;
+    existing.amountCents += amount;
+  };
+
+  for (const item of items) {
+    const catId = resolveCat(item);
+    const subtotal = item.purchasePriceCents ?? 0;
+    const rate = item.taxRatePct ?? 0;
+    const amount = rate > 0 ? Math.round(subtotal * (1 + rate / 100)) : subtotal;
+
+    if (direction === "to_business") {
+      if (!item.projectId) continue;
+      const id = canonical(item.projectId, "project_to_business", catId);
+      upsert(id, item.projectId, "project_to_business", catId, item.id, subtotal, amount);
+      itemUpdates.push({
+        itemId: item.id,
+        set: { status: "purchased", transactionId: id },
+        clear: ["projectId", "spaceId"],
+      });
+      edgeCount++;
+    } else {
+      const dstCatId = catId;
+      if (item.projectId) {
+        const srcId = canonical(item.projectId, "project_to_business", catId);
+        upsert(srcId, item.projectId, "project_to_business", catId, item.id, subtotal, amount);
+      }
+      const dstId = canonical(destinationProjectId!, "business_to_project", dstCatId);
+      upsert(dstId, destinationProjectId!, "business_to_project", dstCatId, item.id, subtotal, amount);
+      itemUpdates.push({
+        itemId: item.id,
+        set: { projectId: destinationProjectId, transactionId: dstId },
+        clear: ["spaceId"],
+      });
+      edgeCount++;
+    }
+  }
+
+  return { saleTransactions, itemUpdates, lineageEdges: edgeCount };
 }
 
 // ── sell_items: to_business ─────────────────────────────────────────────────

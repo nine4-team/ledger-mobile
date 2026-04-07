@@ -45,3 +45,28 @@ export async function getDoc<T>(
   if (!snap.exists) return null;
   return { id: snap.id, ...(snap.data() as T) };
 }
+
+/**
+ * Read many docs by ID in a single round-trip using Firestore `getAll()`.
+ * Returns `{ found, missing }` in request order. Input must be non-empty.
+ */
+export async function getDocs<T>(
+  db: Firestore,
+  collection: string,
+  ids: string[]
+): Promise<{ found: (T & { id: string })[]; missing: string[] }> {
+  if (ids.length === 0) return { found: [], missing: [] };
+  const refs = ids.map((id) => db.doc(`${accountPath()}/${collection}/${id}`));
+  const snaps = await db.getAll(...refs);
+  const found: (T & { id: string })[] = [];
+  const missing: string[] = [];
+  for (let i = 0; i < snaps.length; i++) {
+    const snap = snaps[i];
+    if (snap.exists) {
+      found.push({ id: snap.id, ...(snap.data() as T) });
+    } else {
+      missing.push(ids[i]);
+    }
+  }
+  return { found, missing };
+}

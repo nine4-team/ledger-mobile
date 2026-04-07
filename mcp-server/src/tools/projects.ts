@@ -5,34 +5,36 @@ import type { Project, Transaction, BudgetCategory, ProjectBudgetCategory } from
 import { accountCollection, subcollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { normalizeSpendAmount } from "../util/budget.js";
+import {
+  ProjectionMode,
+  projectSummary,
+  capResponse,
+  asToolResponse,
+  pickFields,
+} from "../util/projections.js";
+import { requireAuditNote, notFound } from "../util/errors.js";
 
 export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── list_projects ──────────────────────────────────────────────────────────
   server.tool(
     "list_projects",
     "List all projects. Returns name, client, notes, archive status, and denormalized budget summary. The notes field may contain client-specific context useful for matching receipts to projects — payment method details (e.g. card last 4 digits), billing address variations, or other identifiers.",
-    { filter: z.enum(["active", "archived", "all"]).default("active").describe("Filter by archive status") },
-    async ({ filter }) => {
+    {
+      filter: z.enum(["active", "archived", "all"]).default("active").describe("Filter by archive status"),
+      mode: ProjectionMode.describe("'summary' (default) or 'full'."),
+      fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
+    },
+    async ({ filter, mode, fields }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "projects");
       if (filter === "active") query = query.where("isArchived", "==", false);
       else if (filter === "archived") query = query.where("isArchived", "==", true);
 
       const projects = await queryDocs<Project>(query);
-
-      const rows = projects.map((p) => {
-        const bs = p.budgetSummary;
-        return {
-          id: p.id,
-          name: p.name || "",
-          clientName: p.clientName || "",
-          notes: p.notes || null,
-          isArchived: p.isArchived,
-          budget: formatCents(bs?.totalBudgetCents),
-          spent: formatCents(bs?.spentCents),
-        };
+      const projected = projects.map((p) => {
+        if (fields && fields.length) return pickFields(p as unknown as Record<string, unknown>, fields);
+        return mode === "full" ? (p as unknown as Record<string, unknown>) : (projectSummary(p) as unknown as Record<string, unknown>);
       });
-
-      return { content: [{ type: "text", text: JSON.stringify(rows, null, 2) }] };
+      return asToolResponse(capResponse(projected));
     }
   );
 
@@ -140,14 +142,16 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── create_project ─────────────────────────────────────────────────────────
   server.tool(
     "create_project",
-    "Create a new project.",
+    "[mutating] Create a new project. Requires a dated audit note in `notes`.",
     {
       name: z.string().describe("Project name"),
       clientName: z.string().default("").describe("Client name"),
       description: z.string().optional().describe("Project description"),
-      notes: z.string().optional().describe("Free-text notes about this project. Use for client-specific context that helps match receipts — e.g. payment method details (card last 4 digits), billing address variations, or other identifiers."),
+      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — New Witzenman 2nd home project, signed contract'. May also contain receipt-matching hints."),
     },
     async ({ name, clientName, description, notes }) => {
+      const noteError = requireAuditNote(notes, "create_project");
+      if (noteError) return noteError;
       const data: Record<string, unknown> = {
         name,
         clientName,
@@ -166,20 +170,25 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── update_project ─────────────────────────────────────────────────────────
   server.tool(
     "update_project",
-    "Update project fields.",
+    "[mutating] Update project fields. Requires a dated audit note in `notes` — appended to existing notes.",
     {
       projectId: z.string().describe("Project document ID"),
       name: z.string().optional().describe("New project name"),
       clientName: z.string().optional().describe("New client name"),
       description: z.string().optional().describe("New description"),
-      notes: z.string().optional().describe("Free-text notes about this project. Use for client-specific context that helps match receipts — e.g. payment method details (card last 4 digits), billing address variations, or other identifiers."),
+      notes: z.string().describe("REQUIRED dated audit note for this update"),
     },
     async ({ projectId, name, clientName, description, notes }) => {
-      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      const noteError = requireAuditNote(notes, "update_project");
+      if (noteError) return noteError;
+      const existing = await getDoc<Project>(db, "projects", projectId);
+      if (!existing) return notFound("Project", projectId);
+      const mergedNotes = existing.notes ? `${existing.notes}\n${notes}` : notes;
+
+      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
       if (name !== undefined) updates.name = name;
       if (clientName !== undefined) updates.clientName = clientName;
       if (description !== undefined) updates.description = description;
-      if (notes !== undefined) updates.notes = notes;
 
       await accountCollection(db, "projects").doc(projectId).update(updates);
       return { content: [{ type: "text", text: `Updated project ${projectId}` }] };

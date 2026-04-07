@@ -7,9 +7,18 @@ import { formatCents, formatDate } from "../util/format.js";
 import { uploadToStorage, deleteFromStorage } from "../storage.js";
 import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 import { transactionMatches } from "../util/search.js";
+import {
+  ProjectionMode,
+  transactionSummary,
+  capResponse,
+  asToolResponse,
+  pickFields,
+} from "../util/projections.js";
+import { requireAuditNote, notFound, validation } from "../util/errors.js";
+import { withTelemetry } from "../util/telemetry.js";
 
 function txTypeName(tx: Transaction): string {
-  return tx.type ?? tx.transactionType ?? "";
+  return tx.type ?? "";
 }
 
 function formatAttachment(ref: AttachmentRef) {
@@ -32,7 +41,7 @@ function formatTransaction(tx: Transaction & { id: string }) {
     budgetCategoryId: tx.budgetCategoryId ?? null,
     itemCount: tx.itemIds?.length ?? 0,
     notes: tx.notes ?? "",
-    isCanceled: tx.isCanceled ?? false,
+    isCanceled: tx.status === "canceled",
     isComplete: tx.isComplete ?? null,
     status: tx.status ?? "",
     purchasedBy: tx.purchasedBy ?? "",
@@ -61,8 +70,10 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
+      mode: ProjectionMode.describe("Response shape: 'summary' (default, compact) or 'full' (raw document)."),
+      fields: z.array(z.string()).optional().describe("Optional explicit field list. Overrides mode."),
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset, mode, fields }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -114,9 +125,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }
       let transactions = await queryDocs<Transaction>(query);
       if (clientFilter) transactions = transactions.filter(clientFilter).slice(offset, offset + limit);
-      const rows = transactions.map(formatTransaction);
 
-      return { content: [{ type: "text", text: JSON.stringify(rows, null, 2) }] };
+      const projected = transactions.map((tx) => {
+        if (fields && fields.length) return pickFields(tx as unknown as Record<string, unknown>, fields);
+        return mode === "full" ? (tx as unknown as Record<string, unknown>) : (transactionSummary(tx) as unknown as Record<string, unknown>);
+      });
+      const capped = capResponse(projected);
+      return asToolResponse(capped);
     }
   );
 
@@ -234,7 +249,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── create_transaction ─────────────────────────────────────────────────────
   server.tool(
     "create_transaction",
-    "Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function.",
+    "[mutating] Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function. Requires a dated audit note in `notes`.",
     {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
@@ -242,7 +257,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, To Inventory. For Sale transactions, use the sell_items tool instead."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
-      notes: z.string().optional().describe("Notes"),
+      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — Home Depot receipt'"),
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25)"),
@@ -264,11 +279,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }).optional().describe("Email ingestion metadata: email ID, subject, inbox, match confidence/reason, order number, linked transaction IDs for split shipments."),
     },
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
+      const noteError = requireAuditNote(notes, "create_transaction");
+      if (noteError) return noteError;
       if (txType === "Sale") {
-        return {
-          content: [{ type: "text", text: "Cannot create Sale transactions directly — use the sell_items tool instead. Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform." }],
-          isError: true,
-        };
+        return validation(
+          "Cannot create Sale transactions directly — use sell_items instead.",
+          "Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform."
+        );
       }
 
       const data: Record<string, unknown> = {
@@ -276,7 +293,6 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         amountCents,
         type: txType,
         status,
-        isCanceled: false,
         isComplete: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -317,7 +333,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "Update transaction fields. isComplete recomputes automatically after every write via Cloud Function. For itemized categories, it becomes true when: (1) tax data exists (subtotalCents or taxRatePct is set), (2) items are linked, and (3) linked items' prices sum to within ±1% of the resolved pre-tax subtotal. Cannot be set manually.",
+    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. Requires a dated audit note in `notes`.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
@@ -326,7 +342,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       type: z.string().optional().describe("Transaction type: Purchase, Return, Sale, To Inventory"),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
-      notes: z.string().optional().describe("Notes"),
+      notes: z.string().describe("REQUIRED dated audit note for this update, e.g. '4/6 — corrected category to lighting'"),
       budgetCategoryId: z.string().optional().describe("Budget category ID"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
@@ -338,8 +354,19 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       ingestionStatus: z.string().optional().describe("Update ingestion status: 'confirmed' (user verified), 'needs_review', 'auto_matched'"),
     },
     async ({ transactionId, ...fields }) => {
-      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      const noteError = requireAuditNote(fields.notes, "update_transaction");
+      if (noteError) return noteError;
+
+      // Append dated note to existing notes so context is preserved.
+      const existing = await getDoc<Transaction>(db, "transactions", transactionId);
+      if (!existing) return notFound("Transaction", transactionId);
+      const mergedNotes = existing.notes
+        ? `${existing.notes}\n${fields.notes}`
+        : fields.notes;
+
+      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
       for (const [key, value] of Object.entries(fields)) {
+        if (key === "notes") continue;
         if (value !== undefined) updates[key] = value;
       }
 
@@ -425,7 +452,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       await accountCollection(db, "transactions").doc(transactionId).update({
-        isCanceled: true,
+        status: "canceled",
         updatedAt: new Date(),
       });
       return { content: [{ type: "text", text: `Canceled transaction ${transactionId}` }] };

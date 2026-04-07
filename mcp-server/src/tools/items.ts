@@ -7,6 +7,14 @@ import { formatCents } from "../util/format.js";
 import { itemMatches } from "../util/search.js";
 import { uploadToStorage, deleteFromStorage } from "../storage.js";
 import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
+import {
+  ProjectionMode,
+  itemSummary,
+  capResponse,
+  asToolResponse,
+  pickFields,
+} from "../util/projections.js";
+import { requireAuditNote, notFound } from "../util/errors.js";
 
 function formatItem(item: Item & { id: string }) {
   return {
@@ -45,8 +53,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       limit: z.number().default(50).describe("Max results (ignored when fetchAll is true)"),
       offset: z.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
       fetchAll: z.boolean().default(false).describe("Return all matching items, ignoring limit/offset. Use when you need the full collection without pagination."),
+      mode: ProjectionMode.describe("'summary' (default) or 'full'."),
+      fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll, mode, fields }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -75,7 +85,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (clientFilter) items = items.filter(clientFilter);
       if (!fetchAll) items = items.slice(offset, offset + limit);
 
-      return { content: [{ type: "text", text: JSON.stringify(items.map(formatItem), null, 2) }] };
+      const projected = items.map((i) => {
+        if (fields && fields.length) return pickFields(i as unknown as Record<string, unknown>, fields);
+        return mode === "full" ? (i as unknown as Record<string, unknown>) : (itemSummary(i) as unknown as Record<string, unknown>);
+      });
+      return asToolResponse(capResponse(projected));
     }
   );
 
@@ -123,7 +137,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── create_item ────────────────────────────────────────────────────────────
   server.tool(
     "create_item",
-    "Create a new item.",
+    "[mutating] Create a new item. Requires a dated audit note in `notes`.",
     {
       name: z.string().describe("Item name"),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
@@ -132,13 +146,15 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       status: z.string().default("purchased").describe("Status: to purchase, purchased, to return, returned"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
-      notes: z.string().optional().describe("Notes"),
+      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — added chair from Restoration Hardware receipt'"),
       spaceId: z.string().optional().describe("Space ID"),
       budgetCategoryId: z.string().optional().describe("Budget category ID. Auto-inherited from the linked transaction if not provided."),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375). Auto-inherited from the linked transaction if not provided."),
     },
     async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId, taxRatePct }) => {
+      const noteError = requireAuditNote(notes, "create_item");
+      if (noteError) return noteError;
       // Auto-inherit taxRatePct and budgetCategoryId from transaction if not explicitly provided
       let resolvedTaxRate = taxRatePct;
       let resolvedBudgetCategoryId = budgetCategoryId;
@@ -297,7 +313,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── update_item ────────────────────────────────────────────────────────────
   server.tool(
     "update_item",
-    "Update item fields.",
+    "[mutating] Update item fields. Requires a dated audit note in `notes`.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -307,7 +323,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       marketValueCents: z.coerce.number().optional().describe("Market value in cents"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
-      notes: z.string().optional().describe("Notes"),
+      notes: z.string().describe("REQUIRED dated audit note for this update, appended to existing notes"),
       projectId: z.string().optional().describe("Project ID — set to reassign item to a different project"),
       spaceId: z.string().optional().describe("Space ID"),
       budgetCategoryId: z.string().optional().describe("Budget category ID"),
@@ -317,8 +333,15 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375)"),
     },
     async ({ itemId, ...fields }) => {
-      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      const noteError = requireAuditNote(fields.notes, "update_item");
+      if (noteError) return noteError;
+      const existing = await getDoc<Item>(db, "items", itemId);
+      if (!existing) return notFound("Item", itemId);
+      const mergedNotes = existing.notes ? `${existing.notes}\n${fields.notes}` : fields.notes;
+
+      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
       for (const [key, value] of Object.entries(fields)) {
+        if (key === "notes") continue;
         if (value !== undefined) updates[key] = value;
       }
 

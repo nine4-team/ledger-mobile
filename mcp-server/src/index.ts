@@ -12,6 +12,10 @@ import { registerAnalyticsTools } from "./tools/analytics.js";
 import { registerAccountTools } from "./tools/accounts.js";
 import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
 import { registerResources } from "./resources/index.js";
+import { registerBulkGetterTools } from "./tools/bulk-getters.js";
+import { registerSchemaTools } from "./tools/schema.js";
+import { registerServerInfoTools } from "./tools/server-info.js";
+import { registerCompositeTools } from "./tools/composite.js";
 
 const credIdx = process.argv.indexOf("--credentials");
 const credentialsPath = credIdx !== -1 ? process.argv[credIdx + 1] : undefined;
@@ -19,15 +23,15 @@ const credentialsPath = credIdx !== -1 ? process.argv[credIdx + 1] : undefined;
 const db = initFirebase(credentialsPath);
 
 const server = new McpServer(
-  { name: "ledger", version: "1.0.0" },
+  { name: "ledger", version: "1.1.0" },
   {
     instructions:
-      "All entity IDs (projects, transactions, items, spaces, budgetCategories) are opaque strings that MUST be stored and used exactly as returned. Never truncate, abbreviate, or shorten IDs.\n\n" +
-      "AUDIT TRAIL: Every time you create or update an entity (transaction, item, project, space), include a brief, " +
-      "natural note in the `notes` field explaining what you did and why — written as if you're leaving a quick message " +
-      "for a teammate. Always prefix with today's date. Example: '4/2 — Moved 3 lighting fixtures from inventory into Witzenman project, client approved selections.' " +
-      "If the entity already has notes, append your note on a new line so existing context is preserved. " +
-      "This applies to every write operation, not just sales or moves.",
+      "START HERE: Call `server_info` and `describe_schema` (or read ledger://schema) once per session to learn capabilities, enums, and entity rules.\n\n" +
+      "IDS: All entity IDs are opaque strings — pass them through exactly as returned. Never truncate.\n\n" +
+      "AUDIT NOTES: Every mutation requires a dated `notes` field, e.g. '4/6 — Moved 3 fixtures to Witzenman'. Calls without one are rejected with a VALIDATION error. Existing notes are preserved — your note is appended.\n\n" +
+      "TOKEN BUDGET: list_/search_/get_ tools default to `mode: 'summary'` — pass `mode: 'full'` or explicit `fields` only when you need more. Use `get_transactions` / `get_items` / `get_projects` for bulk ID lookups in one round-trip.\n\n" +
+      "PREFER TASK TOOLS: `reconcile_transaction`, `create_transaction_with_items`, `triage_inbox` collapse long primitive chains. `sell_items` and `return_items` support `dryRun: true` — use it before committing.\n\n" +
+      "ERRORS: Failures return structured JSON with `{ code, message, hint, retryable }`. Branch on `code`; the `hint` field tells you how to recover.",
   },
 );
 
@@ -40,6 +44,10 @@ registerLineageTools(server, db);
 registerAnalyticsTools(server, db);
 registerAccountTools(server, db);
 registerInventoryOperationTools(server, db);
+registerBulkGetterTools(server, db);
+registerSchemaTools(server, db);
+registerServerInfoTools(server, db);
+registerCompositeTools(server, db);
 registerResources(server, db);
 
 async function main() {
