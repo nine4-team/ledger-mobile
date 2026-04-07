@@ -9,6 +9,7 @@ import { uploadToStorage, deleteFromStorage } from "../storage.js";
 import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 import {
   ProjectionMode,
+  ResponseLimitArg,
   itemSummary,
   capResponse,
   asToolResponse,
@@ -50,13 +51,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       status: z.string().optional().describe("Filter by status (to purchase, purchased, to return, returned)"),
       bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
       hasTransaction: z.boolean().optional().describe("Filter by transaction linkage: true = only items with a transactionId, false = only items with NO transactionId"),
-      limit: z.number().default(50).describe("Max results (ignored when fetchAll is true)"),
-      offset: z.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
+      limit: z.coerce.number().default(50).describe("Max results (ignored when fetchAll is true)"),
+      offset: z.coerce.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
       fetchAll: z.boolean().default(false).describe("Return all matching items, ignoring limit/offset. Use when you need the full collection without pagination."),
       mode: ProjectionMode.describe("'summary' (default) or 'full'."),
       fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
+      responseLimit: ResponseLimitArg,
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll, mode, fields }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -89,7 +91,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (fields && fields.length) return pickFields(i as unknown as Record<string, unknown>, fields);
         return mode === "full" ? (i as unknown as Record<string, unknown>) : (itemSummary(i) as unknown as Record<string, unknown>);
       });
-      return asToolResponse(capResponse(projected));
+      return asToolResponse(capResponse(projected, { limitBytes: responseLimit }));
     }
   );
 
@@ -114,8 +116,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project, or 'inventory' for business inventory"),
-      limit: z.number().default(25).describe("Max results"),
-      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
+      limit: z.coerce.number().default(25).describe("Max results"),
+      offset: z.coerce.number().default(0).describe("Number of results to skip (for pagination)"),
     },
     async ({ query: searchTerm, projectId, limit, offset }) => {
       let q: FirebaseFirestore.Query = accountCollection(db, "items");

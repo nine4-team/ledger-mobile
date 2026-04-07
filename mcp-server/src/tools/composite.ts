@@ -248,7 +248,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     "triage_inbox",
     "[read-only] Return incomplete transactions most in need of attention, with suggested next actions. Summary mode. Use this as an entry point for cleanup workflows.",
     {
-      limit: z.number().default(20).describe("Max transactions to return"),
+      limit: z.coerce.number().default(20).describe("Max transactions to return"),
       projectId: z
         .string()
         .optional()

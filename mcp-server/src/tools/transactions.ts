@@ -9,6 +9,7 @@ import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 import { transactionMatches } from "../util/search.js";
 import {
   ProjectionMode,
+  ResponseLimitArg,
   transactionSummary,
   capResponse,
   asToolResponse,
@@ -68,12 +69,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Filter by reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       ingestionStatus: z.string().optional().describe("Filter by ingestion status: 'needs_review', 'auto_matched', 'confirmed'. Used to find email-ingested transactions pending triage."),
       hasItems: z.boolean().optional().describe("Filter by item linkage: true = has itemIds, false = no items linked"),
-      limit: z.number().default(50).describe("Max results"),
-      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
+      limit: z.coerce.number().default(50).describe("Max results"),
+      offset: z.coerce.number().default(0).describe("Number of results to skip (for pagination)"),
       mode: ProjectionMode.describe("Response shape: 'summary' (default, compact) or 'full' (raw document)."),
       fields: z.array(z.string()).optional().describe("Optional explicit field list. Overrides mode."),
+      responseLimit: ResponseLimitArg,
     },
-    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset, mode, fields }) => {
+    async ({ projectId, budgetCategoryId, type, purchasedBy, source, isComplete, reimbursementType, ingestionStatus, hasItems, limit, offset, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "transactions");
 
       if (projectId === "inventory") {
@@ -130,7 +132,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (fields && fields.length) return pickFields(tx as unknown as Record<string, unknown>, fields);
         return mode === "full" ? (tx as unknown as Record<string, unknown>) : (transactionSummary(tx) as unknown as Record<string, unknown>);
       });
-      const capped = capResponse(projected);
+      const capped = capResponse(projected, { limitBytes: responseLimit });
       return asToolResponse(capped);
     }
   );
@@ -230,8 +232,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project"),
-      limit: z.number().default(25).describe("Max results"),
-      offset: z.number().default(0).describe("Number of results to skip (for pagination)"),
+      limit: z.coerce.number().default(25).describe("Max results"),
+      offset: z.coerce.number().default(0).describe("Number of results to skip (for pagination)"),
     },
     async ({ query: searchTerm, projectId, limit, offset }) => {
       let q: FirebaseFirestore.Query = accountCollection(db, "transactions");

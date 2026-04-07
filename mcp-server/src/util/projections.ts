@@ -11,8 +11,28 @@ import { z } from "zod";
 import type { Transaction, Item, Project } from "../types.js";
 import { formatCents } from "./format.js";
 
-/** Max serialized bytes for a single tool response before we truncate. */
-export const RESPONSE_SIZE_LIMIT_BYTES = 50_000;
+/**
+ * Default and hard-ceiling sizes (in serialized JSON bytes) for a single
+ * tool response. Callers can opt into a larger budget via `responseLimit`
+ * on list/search/bulk tools — but never above the hard ceiling.
+ */
+export const RESPONSE_SIZE_LIMIT_BYTES = 75_000;
+export const RESPONSE_SIZE_HARD_CEILING_BYTES = 200_000;
+
+/**
+ * Zod schema for the optional `responseLimit` parameter on list/search/bulk tools.
+ * Use `z.coerce` so MCP clients that send numbers as strings still validate.
+ */
+export const ResponseLimitArg = z
+  .coerce
+  .number()
+  .int()
+  .positive()
+  .max(RESPONSE_SIZE_HARD_CEILING_BYTES)
+  .optional()
+  .describe(
+    `Optional override for the per-response byte budget. Defaults to ${RESPONSE_SIZE_LIMIT_BYTES.toLocaleString()}; hard ceiling ${RESPONSE_SIZE_HARD_CEILING_BYTES.toLocaleString()}. Use only when generating reports — narrow filters and \`fields\` projection are usually a better answer.`
+  );
 
 export const ProjectionMode = z.enum(["summary", "full"]).default("summary");
 export type ProjectionModeValue = z.infer<typeof ProjectionMode>;
@@ -116,7 +136,7 @@ export function capResponse<T>(
   };
   if (truncated) {
     response.hint =
-      "Response was capped for size. Narrow the filter (by project, date, status) or request fewer records.";
+      `Response was capped at ${limit.toLocaleString()} bytes. Narrow the filter (by project, date, status), pass \`fields: [...]\` to slim each row, or raise \`responseLimit\` (max ${RESPONSE_SIZE_HARD_CEILING_BYTES.toLocaleString()}).`;
   }
   return response;
 }

@@ -5,6 +5,7 @@ import type { Transaction, Item, Project } from "../types.js";
 import { getDocs } from "../util/query.js";
 import {
   ProjectionMode,
+  ResponseLimitArg,
   transactionSummary,
   itemSummary,
   projectSummary,
@@ -32,6 +33,7 @@ const commonArgs = {
     .array(z.string())
     .optional()
     .describe("Optional explicit field list. Overrides `mode` when provided."),
+  responseLimit: ResponseLimitArg,
 };
 
 function project<T extends Record<string, unknown>>(
@@ -52,7 +54,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
     commonArgs,
     withTelemetry(
       "get_transactions",
-      async ({ ids, mode, fields }) => {
+      async ({ ids, mode, fields, responseLimit }) => {
         if (ids.length > MAX_IDS) {
           return toolError({
             code: "LIMIT_EXCEEDED",
@@ -69,7 +71,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
             fields
           )
         );
-        const capped = capResponse(projected);
+        const capped = capResponse(projected, { limitBytes: responseLimit });
         return asToolResponse({ ...capped, missing });
       }
     )
@@ -82,7 +84,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
     commonArgs,
     withTelemetry(
       "get_items",
-      async ({ ids, mode, fields }) => {
+      async ({ ids, mode, fields, responseLimit }) => {
         if (ids.length > MAX_IDS) {
           return toolError({
             code: "LIMIT_EXCEEDED",
@@ -99,7 +101,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
             fields
           )
         );
-        const capped = capResponse(projected);
+        const capped = capResponse(projected, { limitBytes: responseLimit });
         return asToolResponse({ ...capped, missing });
       }
     )
@@ -112,7 +114,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
     commonArgs,
     withTelemetry(
       "get_projects",
-      async ({ ids, mode, fields }) => {
+      async ({ ids, mode, fields, responseLimit }) => {
         if (ids.length > MAX_IDS) {
           return validation(
             `Too many IDs: ${ids.length}. Max ${MAX_IDS} per call.`,
@@ -128,7 +130,7 @@ export function registerBulkGetterTools(server: McpServer, db: Firestore) {
             fields
           )
         );
-        const capped = capResponse(projected);
+        const capped = capResponse(projected, { limitBytes: responseLimit });
         return asToolResponse({ ...capped, missing });
       }
     )

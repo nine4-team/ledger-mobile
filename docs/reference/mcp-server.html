@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger MCP — Mental Model</title>
+<style>
+  :root {
+    --brand: #987e55;
+    --ink: #222;
+    --muted: #666;
+    --bg: #fff;
+    --code-bg: #f4f2ee;
+    --border: #e2ddd2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e8e4da;
+      --muted: #9a9488;
+      --bg: #1a1816;
+      --code-bg: #2a2622;
+      --border: #3a3530;
+    }
+  }
+  html { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.25rem 4rem;
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+  h1 + p.lede { color: var(--muted); margin-top: 0; font-size: 1.05rem; }
+  h2 {
+    font-size: 1.25rem;
+    margin-top: 2.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; margin-top: 1.75rem; }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    background: var(--code-bg);
+    font-size: 0.9em;
+  }
+  code { padding: 0.1em 0.35em; border-radius: 3px; }
+  pre {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85em;
+    line-height: 1.45;
+  }
+  pre code { background: transparent; padding: 0; }
+  details {
+    margin: 0.5rem 0 0.75rem;
+    padding: 0.25rem 0 0.25rem 0.9rem;
+    border-left: 2px solid var(--border);
+  }
+  details[open] { border-left-color: var(--brand); }
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.92em;
+    user-select: none;
+  }
+  summary:hover { color: var(--brand); }
+  details > *:not(summary) { margin-top: 0.5rem; }
+  .diagram {
+    background: var(--code-bg);
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 0.8em;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .failure { margin: 1rem 0; }
+  .failure strong { color: var(--brand); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+  td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td:first-child { white-space: nowrap; font-family: "SF Mono", Menlo, monospace; color: var(--brand); }
+</style>
+</head>
+<body>
+
+<h1>Ledger MCP — Mental Model</h1>
+<p class="lede">What it is, how a request flows, and why each design decision exists. Click any section to dig deeper.</p>
+
+<h2>What is this thing?</h2>
+<p>
+  An <strong>MCP server</strong> is a typed tool adapter that lets Claude read and write your Firestore.
+  It runs on Google Cloud Run at a stable URL.
+  Claude (desktop, Code, or the web app) connects to it — you don't call it directly.
+</p>
+<p>
+  Source: <a href="../../mcp-server/">mcp-server/</a> ·
+  Stable URL: <code>https://ledger-mcp-351137650087.us-central1.run.app</code>
+</p>
+
+<h2>The one-sentence mental model</h2>
+<p>
+  <strong>Claude calls a tool → the tool wraps Firestore + business logic → the response is shaped for AI token budgets and audit trail → Claude acts on the result.</strong>
+</p>
+
+<h2>Lifecycle of a request</h2>
+<div class="diagram">Claude (desktop / code)
+   │
+   │  MCP protocol over HTTP  (POST /mcp)
+   ▼
+┌──────────────────────────────────────────┐
+│  ledger-mcp  (Cloud Run, Node + Express) │
+│                                          │
+│  1. Zod validates args                   │
+│  2. requireAuditNote()  (mutations)      │
+│  3. Tool handler runs                    │
+│  4. Firestore read / write               │
+│  5. projection → summary or full         │
+│  6. capResponse() on list/search/bulk    │
+│     (single-doc reads skip this)         │
+│  7. withTelemetry() logs JSON to stderr  │
+└──────────────────────────────────────────┘
+   │
+   ▼
+Claude receives { items, truncated?, ... }
+or { error: { code, message, hint } }</div>
+
+<h2>The five design decisions that matter</h2>
+
+<h3>1. Summary mode by default</h3>
+<p>Every <code>list_*</code>, <code>search_*</code>, and bulk-getter tool defaults to <code>mode: "summary"</code> — a small curated shape — instead of dumping full Firestore docs.</p>
+<details>
+  <summary>How it actually works</summary>
+  <p>Shapes are defined once in <a href="../../mcp-server/src/util/projections.ts">util/projections.ts</a>: <code>transactionSummary</code>, <code>itemSummary</code>, <code>projectSummary</code>. Tools accept <code>mode: "summary" | "full"</code> and <code>fields?: string[]</code>. After projection, <code>capResponse()</code> serializes items one at a time until a 50&nbsp;KB budget is hit; anything over returns <code>{ truncated: true, hint }</code>.</p>
+</details>
+<details>
+  <summary>Why</summary>
+  <p>Tool responses count against Claude's context window. A list of 50 full Firestore transactions is often 30–40&nbsp;KB of JSON Claude never reads. Summary mode plus the size cap cuts typical responses by ~10× without removing the ability to ask for full docs when needed.</p>
+</details>
+
+<h3>2. Required dated audit notes</h3>
+<p>Every mutation rejects without a <code>notes</code> field starting with a date (e.g. <code>"4/6 — moved 3 fixtures to Witzenman"</code>). On updates, the new note is appended to existing notes — history is preserved.</p>
+<details>
+  <summary>How it actually works</summary>
+  <p><code>requireAuditNote()</code> in <a href="../../mcp-server/src/util/errors.ts">util/errors.ts</a> checks <code>notes.length ≥ 8</code> and the regex <code>/^\s*\d/</code>. Failures return a structured <code>VALIDATION</code> error whose <code>hint</code> tells Claude the exact format. Every <code>create_*</code> / <code>update_*</code> tool calls this before touching Firestore.</p>
+</details>
+<details>
+  <summary>Why</summary>
+  <p>Before this, the server's <code>instructions</code> field just <em>asked</em> Claude to include dated notes. Sometimes it didn't. Hard-enforcement with a teachable error means Claude complies after one failure and the audit trail stays clean — no silent backfilling, no <code>(auto)</code> prefixes polluting data.</p>
+</details>
+
+<h3>3. Structured errors with hints</h3>
+<p>Every tool failure returns <code>{ error: { code, message, hint, retryable } }</code> instead of plain text. Claude branches on <code>code</code>; it acts on <code>hint</code>.</p>
+<details>
+  <summary>How it actually works</summary>
+  <p>Helpers in <a href="../../mcp-server/src/util/errors.ts">util/errors.ts</a>: <code>toolError()</code>, <code>notFound()</code>, <code>validation()</code>. Codes are <code>NOT_FOUND</code>, <code>VALIDATION</code>, <code>PERMISSION</code>, <code>CONFLICT</code>, <code>LIMIT_EXCEEDED</code>, <code>UNAVAILABLE</code>. The MCP SDK wraps the result with <code>isError: true</code>.</p>
+  <pre><code>{
+  "error": {
+    "code": "VALIDATION",
+    "message": "`notes` is required and must be a short dated audit note.",
+    "hint": "Include a dated note like \"4/6 — short description of what changed and why\".",
+    "retryable": true
+  }
+}</code></pre>
+</details>
+<details>
+  <summary>Why</summary>
+  <p>Plain-text errors forced Claude to string-match ("not found", "missing"). Structured codes let it self-recover without a human: if <code>code === "VALIDATION"</code>, read the hint, retry; if <code>NOT_FOUND</code>, re-list and pick a different ID.</p>
+</details>
+
+<h3>4. Dry-run for destructive ops</h3>
+<p><code>sell_items</code> and <code>return_items</code> accept <code>dryRun: true</code>. You get the full plan — transactions that would be created, items that would be updated, lineage edges — with zero side effects.</p>
+<details>
+  <summary>How it actually works</summary>
+  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, planning logic is extracted into a pure <code>planSale()</code> function returning <code>{ saleTransactions, itemUpdates, lineageEdges }</code>. When <code>dryRun: true</code>, the handler returns the plan verbatim; otherwise it commits the batch. The pure function is unit-testable without Firestore.</p>
+</details>
+<details>
+  <summary>Why</summary>
+  <p>Sales and returns touch multiple collections (transactions, items, lineage) and are hard to undo. MCP has no mid-call confirmation primitive yet (elicitation/sampling are not widely supported). <code>dryRun</code> gives Claude a way to show its work before committing, and gives you a way to inspect before approving a large move.</p>
+</details>
+
+<h3>5. Telemetry as stderr JSON</h3>
+<p>Every tool call logs one JSON line to stderr: tool name, success, duration, response bytes, error code. Cloud Run streams stderr into Cloud Logging automatically.</p>
+<details>
+  <summary>How it actually works</summary>
+  <p><code>withTelemetry(toolName, handler)</code> in <a href="../../mcp-server/src/util/telemetry.ts">util/telemetry.ts</a> wraps every tool handler. It times the call, JSON-stringifies the response to measure bytes, extracts an error code from structured <code>isError</code> responses, and writes <code>{"event":"mcp_tool_call", ...}</code> to stderr.</p>
+</details>
+<details>
+  <summary>Why</summary>
+  <p>Before this, there was zero visibility into what Claude actually reached for. Now you can query Cloud Logging for tool frequency, latency p95, and error rate — which tells you which chains Claude repeats (candidates for new composite tools) and which tools keep failing (candidates for better hints).</p>
+</details>
+
+<h2>Task-shaped tools vs primitives</h2>
+<p>Most of the MCP surface is <strong>primitives</strong> — <code>get_transaction</code>, <code>list_items</code>, <code>update_project</code>. On top of those sit a few <strong>task-shaped composite tools</strong> that collapse common 5–15-call chains into a single intent verb:</p>
+
+<table>
+  <tr><td>reconcile_transaction</td><td>Fetch tx + items, compute audit variance, return concrete suggested fixes with tool names.</td></tr>
+  <tr><td>create_transaction_with_items</td><td>Atomic batched write — creates a transaction and its items in one call, rolls back on failure.</td></tr>
+  <tr><td>triage_inbox</td><td>Ranked incomplete transactions with per-row reasons (needs review > missing category > largest amount).</td></tr>
+  <tr><td>sell_items / return_items</td><td>Inventory moves with canonical sale transactions + lineage edges + dryRun preview.</td></tr>
+</table>
+
+<details>
+  <summary>Why keep the primitives too?</summary>
+  <p>Composites are great for known workflows but terrible for one-off queries and exploratory work. If Claude only needs one field on one item, it shouldn't have to call <code>reconcile_transaction</code>. The principle: <strong>composites sit on top, they don't replace.</strong></p>
+</details>
+
+<h2>Where things live</h2>
+<p>Inside <a href="../../mcp-server/src/">mcp-server/src/</a>:</p>
+<table>
+  <tr><td>index.ts</td><td>Entry point. Registers every tool + resource. The <code>instructions</code> field (lines 28–35) is what Claude reads on connect.</td></tr>
+  <tr><td>firebase.ts</td><td>Firebase Admin SDK init. Honors <code>FIRESTORE_EMULATOR_HOST</code> for local dev.</td></tr>
+  <tr><td>tools/transactions.ts</td><td>list / get / search / create / update / bulk-update / cancel.</td></tr>
+  <tr><td>tools/items.ts</td><td>Item CRUD + bulk ops + items_needing_attention.</td></tr>
+  <tr><td>tools/projects.ts</td><td>Project CRUD + health + budget breakdowns.</td></tr>
+  <tr><td>tools/inventory-operations.ts</td><td><code>sell_items</code>, <code>return_items</code> — destructive, dryRun-aware.</td></tr>
+  <tr><td>tools/composite.ts</td><td><code>reconcile_transaction</code>, <code>create_transaction_with_items</code>, <code>triage_inbox</code>.</td></tr>
+  <tr><td>tools/bulk-getters.ts</td><td><code>get_transactions</code> / <code>get_items</code> / <code>get_projects</code> — up to 50 IDs, one round trip.</td></tr>
+  <tr><td>tools/schema.ts</td><td><code>describe_schema</code> tool + <code>ledger://schema</code> resource.</td></tr>
+  <tr><td>tools/server-info.ts</td><td><code>server_info</code> capability manifest (version + feature flags).</td></tr>
+  <tr><td>util/errors.ts</td><td>Structured error helpers + <code>requireAuditNote</code>.</td></tr>
+  <tr><td>util/projections.ts</td><td>Summary shapes, <code>capResponse</code>, 50KB budget.</td></tr>
+  <tr><td>util/telemetry.ts</td><td><code>withTelemetry</code> wrapper.</td></tr>
+  <tr><td>util/query.ts</td><td><code>getDoc</code>, <code>getDocs</code> (bulk), <code>accountCollection</code>.</td></tr>
+  <tr><td>util/enums.ts</td><td>Single source of truth for transaction types, statuses, item states, etc.</td></tr>
+</table>
+
+<h2>When something breaks</h2>
+
+<div class="failure">
+  <p><strong>Symptom:</strong> Claude says a tool doesn't exist, or calls one with an old signature.</p>
+  <details>
+    <summary>Check → Fix</summary>
+    <p><strong>Check:</strong> Did the last deploy land? Run <code>gcloud run services describe ledger-mcp --region us-central1 --format='value(status.latestReadyRevisionName)'</code>. Check <code>server_info</code> returns the version you expect.</p>
+    <p><strong>Fix:</strong> Redeploy (see Deploy section). Then in Claude, disconnect and reconnect the MCP server — clients cache tool schemas on connect.</p>
+  </details>
+</div>
+
+<div class="failure">
+  <p><strong>Symptom:</strong> Every mutation fails with <code>VALIDATION: \`notes\` must begin with a date</code>.</p>
+  <details>
+    <summary>Check → Fix</summary>
+    <p><strong>Check:</strong> Claude's note probably starts with a word, not a digit. The regex is <code>/^\s*\d/</code>.</p>
+    <p><strong>Fix:</strong> Nothing to fix server-side — this is working as designed. Claude will retry with a correct format after reading the hint. If it doesn't, tell it to prefix with today's date like <code>"4/7 — ..."</code>.</p>
+  </details>
+</div>
+
+<div class="failure">
+  <p><strong>Symptom:</strong> A <code>list_*</code> call returns <code>truncated: true</code> and is missing data.</p>
+  <details>
+    <summary>Check → Fix</summary>
+    <p><strong>Check:</strong> The serialized response exceeded the 50&nbsp;KB budget in <code>capResponse()</code>. Look at <code>returnedCount</code> vs <code>totalCount</code>.</p>
+    <p><strong>Fix:</strong> Narrow the query (add filters), or pass explicit <code>fields: ["id", "amountCents"]</code> to shrink each item further, or lower the limit. The hint in the response tells Claude which lever to pull.</p>
+  </details>
+</div>
+
+<div class="failure">
+  <p><strong>Symptom:</strong> After a deploy, all OAuth tokens are invalid — Claude has to reauthenticate.</p>
+  <details>
+    <summary>Check → Fix</summary>
+    <p><strong>Check:</strong> Did you use <code>--set-env-vars</code> instead of <code>--update-env-vars</code>? <code>--set-env-vars</code> replaces ALL env vars, wiping <code>OAUTH_TOKEN_SECRET</code>. When the secret changes, all signed JWTs become invalid.</p>
+    <p><strong>Fix:</strong> Always use <code>--update-env-vars</code> (see Deploy below). If you already wiped it, reauthenticate in each client — there's no recovery.</p>
+  </details>
+</div>
+
+<h2>Deploy + env vars</h2>
+<p>Must run from inside <code>mcp-server/</code> — the service has its own Dockerfile there; running from the repo root triggers generic buildpack detection which fails.</p>
+<pre><code>cd mcp-server &amp;&amp; npm run build &amp;&amp; \
+  gcloud run deploy ledger-mcp \
+    --source . \
+    --region us-central1 \
+    --project ledger-nine4 \
+    --allow-unauthenticated \
+    --update-env-vars FIREBASE_PROJECT_ID=ledger-nine4</code></pre>
+<p><strong>CRITICAL:</strong> <code>--update-env-vars</code>, never <code>--set-env-vars</code>. The latter wipes <code>OAUTH_TOKEN_SECRET</code> and <code>NODE_ENV=production</code>.</p>
+<p><strong>Never</strong> create a new Cloud Run service or change the service name. The Claude macOS connector uses a legacy alias URL (<code>ledger-mcp-twpe4tgoja-uc.a.run.app</code>) that routes to the same service. Both URLs must keep resolving.</p>
+<details>
+  <summary>Required env vars on Cloud Run</summary>
+  <ul>
+    <li><code>FIREBASE_PROJECT_ID=ledger-nine4</code></li>
+    <li><code>OAUTH_TOKEN_SECRET</code> — stable secret for signing OAuth JWTs. Changing it invalidates all tokens.</li>
+    <li><code>NODE_ENV=production</code> — ensures the server crashes loudly if <code>OAUTH_TOKEN_SECRET</code> is missing.</li>
+  </ul>
+</details>
+
+<p style="margin-top: 3rem; color: var(--muted); font-size: 0.85em;">
+  For live tool schemas and enums, ask Claude to call <code>server_info</code> and <code>describe_schema</code> — the code is the source of truth, not this doc.
+</p>
+
+</body>
+</html>
