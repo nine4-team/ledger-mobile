@@ -14,6 +14,8 @@ enum AppSection: String, CaseIterable {
 struct MainTabView: View {
     @SceneStorage("selectedTab") private var selectedTab: AppSection = .projects
     @Environment(FindStateManager.self) private var findState
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(InventoryContext.self) private var inventoryContext
 
     var body: some View {
         #if os(macOS)
@@ -95,6 +97,16 @@ struct MainTabView: View {
         .onChange(of: selectedTab) { _, _ in
             findState.deactivate()
         }
+        .task(id: accountContext.currentAccountId) {
+            // Keep InventoryContext live for the whole signed-in session so
+            // inventory counts on the Projects screen are accurate immediately,
+            // not just after the user visits the Inventory tab.
+            guard let accountId = accountContext.currentAccountId else {
+                inventoryContext.deactivate()
+                return
+            }
+            inventoryContext.activate(accountId: accountId)
+        }
     }
     #endif
 
@@ -163,6 +175,16 @@ struct MainTabView: View {
         }
         .onChange(of: selectedTab) { _, _ in
             findState.deactivate()
+        }
+        .task(id: accountContext.currentAccountId) {
+            // Keep InventoryContext live for the whole signed-in session so
+            // inventory counts on the Projects screen are accurate immediately,
+            // not just after the user visits the Inventory tab.
+            guard let accountId = accountContext.currentAccountId else {
+                inventoryContext.deactivate()
+                return
+            }
+            inventoryContext.activate(accountId: accountId)
         }
     }
     private var findOverlayAlignment: Alignment {

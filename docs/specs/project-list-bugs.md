@@ -1,6 +1,8 @@
 # Project List — Bugs
-Status: modify
-Last updated: 2026-04-05
+Status: shipped (2026-04-07)
+Last updated: 2026-04-07
+
+> **Shipped 2026-04-07** — Root cause: `InventoryContext` was only `activate()`d from the Inventory tab, so `InventoryPinnedCard` on the Projects screen read empty arrays until the user visited Inventory. Fix: activate the context at `MainTabView` for the whole signed-in session, keyed on `accountContext.currentAccountId`. Removed the activate/deactivate calls from `InventoryView` so it no longer tears down the shared listeners on disappear.
 
 ## Summary
 

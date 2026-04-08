@@ -185,6 +185,7 @@ struct InventoryOperationsService {
                 "isCanonicalInventorySale": true,
                 "inventorySaleDirection": "business_to_project",
                 "budgetCategoryId": dstCatId,
+                "source": "Business Inventory",  // inventory-source-naming spec
                 "itemIds": FieldValue.arrayUnion([itemId]),
                 "amountCents": FieldValue.increment(Int64(amountDelta)),
                 "createdAt": FieldValue.serverTimestamp(),
@@ -195,6 +196,7 @@ struct InventoryOperationsService {
             var itemUpdate: [String: Any] = [
                 "projectId": destinationProjectId,
                 "spaceId": NSNull(),
+                "status": "purchased",  // item-detail-view spec: auto-set on inventory→project move
                 "transactionId": dstSaleId,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]

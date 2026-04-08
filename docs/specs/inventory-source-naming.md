@@ -1,6 +1,10 @@
 # Inventory Source & Naming Conventions
-Status: modify
-Last updated: 2026-04-03
+Status: modify (Phase 1 shipped 2026-04-07)
+Last updated: 2026-04-07
+
+> **Phase 1 shipped 2026-04-07** — Sale transactions created by `InventoryOperationsService.sellToProject` (Hop 2, `business_to_project`) now carry `source: "Business Inventory"` (Option B static label). Hop 1 (`project_to_business`) is intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
+>
+> Still pending: client-facing source masking on invoices/closeout reports, item "From Inventory" badge/origin indicator, dynamic business-name label (Option A), and source revert behavior on returns.
 
 ## Summary
 When items are sold from business inventory into a project, the resulting sale transaction currently has a blank source field — no label at all. This spec defines how those transactions should be labeled, how the original acquisition source (the store the business bought the item from) should be preserved and surfaced internally, and how source information should be masked in any client-facing context.

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct InventoryView: View {
     @Environment(InventoryContext.self) private var inventoryContext
-    @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
 
     @State private var selectedTab: String
@@ -58,13 +57,6 @@ struct InventoryView: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-        }
-        .task {
-            guard let accountId = accountContext.currentAccountId else { return }
-            inventoryContext.activate(accountId: accountId)
-        }
-        .onDisappear {
-            inventoryContext.deactivate()
         }
         .onChange(of: selectedTab) { _, newValue in
             let tabIds = ["items", "transactions", "spaces"]

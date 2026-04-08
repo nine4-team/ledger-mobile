@@ -1,6 +1,10 @@
 # Item Detail View
-Status: modify
-Last updated: 2026-04-03
+Status: modify (auto-status sub-task shipped 2026-04-07)
+Last updated: 2026-04-07
+
+> **Auto-status sub-task shipped 2026-04-07** — `InventoryOperationsService.sellToProject` now sets `status: "purchased"` on each item in the destination-project update batch, matching the existing `sellToBusiness` behavior. Decision on the open question "should already-'to return' items still flip to 'purchased'?": yes for now — selling a to-return item is unusual, and assigning it to a project is a clear signal that it's purchased. Revisit if this causes confusion in practice.
+>
+> Still pending: editing UX revamp (pencil-per-section, status pulled out of three-dot menu), two-track designer-workflow vs. billing status model, and the rest of the section-level edit affordances.
 
 ## Summary
 The item detail view shows all information about a single item — its details, status, images, location, and history. This spec covers two areas: (1) making the editing experience more consistent and accessible, and (2) clarifying item status definitions and automation.
