@@ -309,7 +309,6 @@ enum ReportHTMLBuilder {
             <tr>
               <td>\(esc(item.displayName))</td>
               <td>\(esc(item.source ?? ""))</td>
-              <td>\(esc(item.sku ?? ""))</td>
               <td class="right">\(valueStr)</td>
             </tr>
             """
@@ -324,7 +323,6 @@ enum ReportHTMLBuilder {
           <thead><tr>
             <th>Item</th>
             <th style="width:110px">Source</th>
-            <th style="width:100px">SKU</th>
             <th class="right" style="width:110px">Market Value</th>
           </tr></thead>
           <tbody>\(rows)</tbody>

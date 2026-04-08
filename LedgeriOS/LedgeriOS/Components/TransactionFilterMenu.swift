@@ -69,6 +69,7 @@ struct TransactionFilterMenu: View {
                 ("all", "All"),
                 ("purchase", "Purchase"),
                 ("return", "Return"),
+                ("sale", "Sale"),
             ]
         ))
 
@@ -84,7 +85,7 @@ struct TransactionFilterMenu: View {
         ))
 
         if !budgetCategories.isEmpty {
-            var catOptions: [(String, String)] = [("all", "All")]
+            var catOptions: [(String, String)] = [("all", "All"), ("uncategorized", "Uncategorized")]
             catOptions.append(contentsOf: budgetCategories.map { ($0.id, $0.name) })
             items.append(filterGroup(
                 id: "budget-category",

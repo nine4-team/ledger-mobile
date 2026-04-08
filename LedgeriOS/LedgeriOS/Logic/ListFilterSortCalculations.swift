@@ -29,6 +29,8 @@ enum ListFilterSortCalculations {
             return { $0.images == nil || $0.images?.isEmpty == true }
         case .noTransaction:
             return { $0.transactionId == nil }
+        case .uncategorized:
+            return { $0.budgetCategoryId == nil || $0.budgetCategoryId?.trimmingCharacters(in: .whitespaces).isEmpty == true }
         }
     }
 
@@ -219,6 +221,7 @@ enum ListFilterSortCalculations {
         case .noProjectPrice: return "No Project Price"
         case .noImage: return "No Image"
         case .noTransaction: return "No Transaction"
+        case .uncategorized: return "Uncategorized"
         }
     }
 

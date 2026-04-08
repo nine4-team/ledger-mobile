@@ -174,7 +174,8 @@ enum TransactionFilterSortCalculations {
                 guard filters.completeness.contains(val) else { return false }
             }
             if !filters.budgetCategory.isEmpty {
-                let catId = tx.budgetCategoryId ?? ""
+                let rawCatId = tx.budgetCategoryId ?? ""
+                let catId = rawCatId.isEmpty ? "uncategorized" : rawCatId
                 guard filters.budgetCategory.contains(catId) else { return false }
             }
             if !filters.purchasedBy.isEmpty {

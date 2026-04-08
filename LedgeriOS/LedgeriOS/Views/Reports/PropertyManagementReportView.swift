@@ -140,11 +140,6 @@ struct PropertyManagementReportView: View {
                                     .font(Typography.caption)
                                     .foregroundStyle(BrandColors.textTertiary)
                             }
-                            if let sku = item.sku {
-                                Text("SKU: \(sku)")
-                                    .font(Typography.caption)
-                                    .foregroundStyle(BrandColors.textTertiary)
-                            }
                         }
                     }
                     Spacer()
