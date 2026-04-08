@@ -1,21 +1,22 @@
 # Ledger — Specification Index
-Last updated: 2026-04-05
+Last updated: 2026-04-07
 
 ## Status Key
 - [current] — Already built, keeping as-is
 - [modify] — Already built, needs changes
 - [new] — Not yet built
+- [shipped] — Spec implemented (note any deferred stretch goals inline)
 - [remove] — Currently exists, should be removed
 - [tbd] — Needs further discussion
 
 ## Feature Areas
 
 ### Transactions & Item Entry
-- [modify] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing: itemized categories go through inventory, non-itemized expenses go directly to projects
+- [shipped] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing: itemized categories go through inventory, non-itemized expenses go directly to projects (commit 322cf420, 2026-04-07)
 - [modify] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking
 
 ### Billing & Invoicing
-- [modify] [Billing & Invoicing](billing-invoicing.md) — Item-level billing status (unbilled → invoiced → paid), selective mid-project invoicing, invoice-level payment cascade, auto-payment detection stretch goal
+- [shipped] [Billing & Invoicing](billing-invoicing.md) — Item-level billing status (unbilled → invoiced → paid), selective mid-project invoicing, invoice-level payment cascade. Auto-payment detection (email/MCP stretch goal) **deferred**. Shipped 2026-04-07.
 
 ### Lists & Layout
 - [modify] [List Layout](list-layout.md) — Item and transaction list display format across the app (desktop vs. web parity)

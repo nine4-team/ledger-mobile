@@ -1,6 +1,7 @@
 # Item & Expense Entry Flow
-Status: modify
-Last updated: 2026-04-03
+Status: shipped
+Last updated: 2026-04-07
+Implemented: 2026-04-07
 
 ## Summary
 How items and expenses get into a project. Currently there are two overlapping paths for physical items (direct-to-project vs. inventory-first), which creates confusion. This spec replaces them with a single, category-based routing system: the category you select at transaction creation determines whether the flow goes through inventory or goes directly to the project.
