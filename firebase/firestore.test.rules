@@ -157,6 +157,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/invoices/{invoiceId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     // TEST RULES: Lineage edges opened for client writes so integration tests
     // can verify InventoryOperationsService batch operations end-to-end.
     // Production rules (firestore.rules) keep these server-only.

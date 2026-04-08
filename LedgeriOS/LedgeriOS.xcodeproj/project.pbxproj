@@ -42,6 +42,16 @@
 		2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */; };
 		2E296194748E4C49A690F79D /* AccountingTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */; };
 		2EB56A038F955DDA41E7244C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03AED92E32EB085437B6F76 /* Item.swift */; };
+		BL00000000000000000B0001 /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0001 /* Invoice.swift */; };
+		BL00000000000000000B0002 /* InvoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0002 /* InvoiceService.swift */; };
+		BL00000000000000000B0003 /* InvoiceServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */; };
+		BL00000000000000000B0010 /* BillingSummaryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0010 /* BillingSummaryCalculations.swift */; };
+		BL00000000000000000B0011 /* BillingSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0011 /* BillingSummaryCard.swift */; };
+		BL00000000000000000B0012 /* CreateInvoiceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0012 /* CreateInvoiceModal.swift */; };
+		BL00000000000000000B0013 /* InvoiceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0013 /* InvoiceDetailView.swift */; };
+		BL00000000000000000B0014 /* BillingSummaryCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0014 /* BillingSummaryCalculationTests.swift */; };
+		BL00000000000000000B0015 /* InvoiceReportAggregationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */; };
+		BL00000000000000000B0016 /* PDFDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0016 /* PDFDownloadHelper.swift */; };
 		31D8FBEE0A5ED549A350D7D4 /* SpaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F74BE7B5D06201352DB914C /* SpaceDetailView.swift */; };
 		32E5DED81173DDDE282CC643 /* ProjectListCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EC60755DC6A09F023B6A35 /* ProjectListCalculations.swift */; };
 		38B64700D19DC7268618121F /* BulkSaleResolutionCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89F38C225B3ABEBCDDF68A0 /* BulkSaleResolutionCalculations.swift */; };
@@ -477,6 +487,16 @@
 		AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategoriesService.swift; sourceTree = "<group>"; };
 		B03AED92E32EB085437B6F76 /* Item.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0001 /* Invoice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0002 /* InvoiceService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceService.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceServiceProtocol.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0010 /* BillingSummaryCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BillingSummaryCalculations.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0011 /* BillingSummaryCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BillingSummaryCard.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0012 /* CreateInvoiceModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateInvoiceModal.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0013 /* InvoiceDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceDetailView.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0014 /* BillingSummaryCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BillingSummaryCalculationTests.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceReportAggregationTests.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0016 /* PDFDownloadHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PDFDownloadHelper.swift; sourceTree = "<group>"; };
 		B090A11277DE4908909DB8F9 /* InventoryOperationsExecutionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsExecutionTests.swift; sourceTree = "<group>"; };
 		B2A62391566C00DD3400BFD5 /* Account.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
 		B2C3D4E5F607182A3B4C5D6E /* SortMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortMenu.swift; sourceTree = "<group>"; };
@@ -702,6 +722,7 @@
 		2467EB342B9890A03C91F1B3 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				BL00000000000000000F0013 /* InvoiceDetailView.swift */,
 				47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */,
 				01B811FD8239474CAE880515 /* FinancesTabView.swift */,
 				4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */,
@@ -725,6 +746,7 @@
 		41E4C3E7AD3CB291B4D14E08 /* Logic */ = {
 			isa = PBXGroup;
 			children = (
+				BL00000000000000000F0010 /* BillingSummaryCalculations.swift */,
 				6186D40779AF445E9263F512 /* ReviewCalculations.swift */,
 				835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */,
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
@@ -793,6 +815,7 @@
 				873F47E2A621690D041C7170 /* Project.swift */,
 				6DC6F116D54531636D87F2F9 /* Transaction.swift */,
 				B03AED92E32EB085437B6F76 /* Item.swift */,
+				BL00000000000000000F0001 /* Invoice.swift */,
 				1A548983AC0E6196622B4719 /* Space.swift */,
 				7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */,
 				BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */,
@@ -841,6 +864,7 @@
 				030B878870CC9B12544CF67C /* LineageEdgesService.swift */,
 				FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */,
 				5A3F64AA8C3DC7C81C205AD0 /* InventoryOperationsService.swift */,
+				BL00000000000000000F0002 /* InvoiceService.swift */,
 				E2B407AAA8D31F63F4354E58 /* StorageURLResolver.swift */,
 				5A074B54DC26CF87DC9E20BE /* ImageCache.swift */,
 				0F2DD58065490913562F0CD4 /* ImageThumbnailGenerator.swift */,
@@ -880,6 +904,8 @@
 		79C14EF1AAD96575EAC6E631 /* LedgeriOSTests */ = {
 			isa = PBXGroup;
 			children = (
+				BL00000000000000000F0014 /* BillingSummaryCalculationTests.swift */,
+				BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */,
 				BE243B592ABD484D8B319501 /* ReportAggregationCalculationTests.swift */,
 				CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */,
 				A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */,
@@ -930,6 +956,7 @@
 				1E88C74D965EACBD6E6BC694 /* BudgetServiceProtocols.swift */,
 				CD603C3D64F77EC36777BED8 /* SettingsServiceProtocols.swift */,
 				AF876F4BCCF157A3367AC517 /* BatchWriting.swift */,
+				BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -1064,6 +1091,7 @@
 		C5A0040100000000000G0001 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				BL00000000000000000F0011 /* BillingSummaryCard.swift */,
 				0F94AB65C9B2436388CFF890 /* InventoryPinnedCard.swift */,
 				C5A0020100000000000C0001 /* Card.swift */,
 				C5A0020100000000000C0002 /* AppButton.swift */,
@@ -1178,6 +1206,7 @@
 				S009WP02F0000000000P0002 /* PlatformModifiers.swift */,
 				S009WP02F0000000000P0001 /* PlatformPresenting.swift */,
 				S009WP02F0000000000P0003 /* ShareHelper.swift */,
+				BL00000000000000000F0016 /* PDFDownloadHelper.swift */,
 				S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */,
 				S009WP05F0000000000P0002 /* LedgerCommands.swift */,
 			);
@@ -1187,6 +1216,7 @@
 		WP04G00100000000000M0001 /* Modals */ = {
 			isa = PBXGroup;
 			children = (
+				BL00000000000000000F0012 /* CreateInvoiceModal.swift */,
 				3EDF811FA45202254BB71E50 /* EditTransactionDetailsModal.swift */,
 				FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */,
 				FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */,
@@ -1367,6 +1397,13 @@
 				12A676B63F549896773CA41F /* Project.swift in Sources */,
 				DA144F57DC347861FFCB5E2B /* Transaction.swift in Sources */,
 				2EB56A038F955DDA41E7244C /* Item.swift in Sources */,
+				BL00000000000000000B0001 /* Invoice.swift in Sources */,
+				BL00000000000000000B0002 /* InvoiceService.swift in Sources */,
+				BL00000000000000000B0003 /* InvoiceServiceProtocol.swift in Sources */,
+				BL00000000000000000B0010 /* BillingSummaryCalculations.swift in Sources */,
+				BL00000000000000000B0011 /* BillingSummaryCard.swift in Sources */,
+				BL00000000000000000B0012 /* CreateInvoiceModal.swift in Sources */,
+				BL00000000000000000B0013 /* InvoiceDetailView.swift in Sources */,
 				C199091B0339E9DDE0585615 /* Space.swift in Sources */,
 				8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */,
 				EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */,
@@ -1572,6 +1609,7 @@
 				S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */,
 				S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */,
 				S009WP02B0000000000P0003 /* ShareHelper.swift in Sources */,
+				BL00000000000000000B0016 /* PDFDownloadHelper.swift in Sources */,
 				S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */,
 				S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */,
 				84671D35EAAC82C04BEFF3DA /* SearchField.swift in Sources */,
@@ -1606,6 +1644,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				EDB7E04308BF46559EA19425 /* ReportAggregationCalculationTests.swift in Sources */,
+				BL00000000000000000B0014 /* BillingSummaryCalculationTests.swift in Sources */,
+				BL00000000000000000B0015 /* InvoiceReportAggregationTests.swift in Sources */,
 				01261AFE5A0846848B96077B /* InventoryOperationsServiceTests.swift in Sources */,
 				E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */,
 				FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */,

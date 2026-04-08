@@ -5,7 +5,8 @@ enum ItemCardCalculations {
     static func badgeItems(
         statusLabel: String?,
         budgetCategoryName: String?,
-        indexLabel: String?
+        indexLabel: String?,
+        billingStatus: BillingStatus? = nil
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
         if let index = indexLabel, !index.isEmpty {
@@ -16,6 +17,10 @@ enum ItemCardCalculations {
         }
         if let status = statusLabel, !status.isEmpty {
             badges.append(CardBadge(text: status, color: BrandColors.primary))
+        }
+        if let billing = billingStatus, billing != .unbilled {
+            let color: Color = billing == .paid ? StatusColors.metText : StatusColors.inProgressText
+            badges.append(CardBadge(text: billing.displayLabel, color: color))
         }
         return badges
     }

@@ -23,6 +23,7 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     var taxAmountPurchasePriceCents: Int?
     var taxAmountProjectPriceCents: Int?
     var images: [AttachmentRef]?
+    var billingStatus: BillingStatus?
     var createdBy: String?
     var updatedBy: String?
     var createdAt: Date?
@@ -38,6 +39,6 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
              transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
              purchasedBy, bookmark, budgetCategoryId, quantity,
              taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,
-             images, createdBy, updatedBy
+             images, billingStatus, createdBy, updatedBy
     }
 }

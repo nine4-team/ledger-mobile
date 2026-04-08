@@ -16,15 +16,22 @@ struct TransactionCard: View {
     var menuItems: [ActionMenuItem] = []
     var onPress: (() -> Void)?
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     private var badges: [CardBadge] {
-        TransactionCardCalculations.badgeItems(
+        // Only show billing badge for non-itemized transactions on regular width (iPad/macOS).
+        let isNonItemized = (transaction.itemIds ?? []).isEmpty
+        let billing: BillingStatus? =
+            (isNonItemized && horizontalSizeClass == .regular) ? transaction.billingStatus : nil
+        return TransactionCardCalculations.badgeItems(
             transactionType: transaction.transactionType,
             reimbursementType: transaction.reimbursementType,
             hasEmailReceipt: transaction.hasEmailReceipt ?? false,
             isComplete: transaction.isComplete,
             status: transaction.status,
             isCanonicalInventorySale: transaction.isCanonicalInventorySale,
-            inventorySaleDirection: transaction.inventorySaleDirection
+            inventorySaleDirection: transaction.inventorySaleDirection,
+            billingStatus: billing
         )
     }
 

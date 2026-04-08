@@ -48,13 +48,21 @@ Status transitions are one-directional under normal flow: unbilled → invoiced 
 For non-itemized expenses (install, fuel, etc.), the billing status applies to the expense entry itself rather than individual items, since these aren't itemized.
 
 ### Generating an Invoice (Mid-Project or End-of-Project)
-1. User navigates to a project transaction (e.g., the Furnishings transaction)
-2. User sees all items with their current billing status
-3. User selects/checks the items they want to bill for — typically items the client has already approved (e.g., the $6,000 mattresses, the dining table)
-4. User taps "Generate Invoice" (or similar action)
-5. Ledger generates a downloadable invoice document containing only the selected items, with line items, amounts, and project details
-6. Selected items automatically update from "unbilled" → "invoiced"
-7. User downloads the invoice and sends it through their external payment software
+1. User opens the project's Finances → Billing tab
+2. User taps "Create Invoice"
+3. The Create Invoice picker presents every billable item and non-itemized expense in the project (see "Billable Membership" below). A search field at the top filters both lists in real time by name, source, or SKU using the same matchers as the rest of the app.
+4. User selects/checks the items and expenses they want to bill for — typically those the client has already approved. Selections persist across search queries (selecting an item, changing the search, then returning to a different filter still keeps it counted in the running total).
+5. User reviews step 2: optional **Invoice Name** (free-form, e.g. "Phase 1 — Furnishings"), optional notes, total. Tapping Create makes the invoice in `draft` status and cascades every selected item + transaction to `billingStatus = invoiced` in one atomic batch.
+6. User downloads (or otherwise exports) the invoice and sends it through their external payment software, then can mark it Sent in Ledger.
+
+### Billable Membership
+
+The Create Invoice picker includes:
+
+- **Items** that satisfy: persisted, `billingStatus ∈ {nil, unbilled}`, AND `status != returned` (returned items are terminal and never billable).
+- **Transactions** that satisfy: persisted, **non-itemized** (no `itemIds` — itemized transactions are excluded so their value isn't double-counted alongside their child items), `billingStatus ∈ {nil, unbilled}`, AND `status != canceled`.
+
+Transactions where `isComplete != true` ("needs review") **are** included in the picker but each row is flagged with a "Needs Review" badge so the user can decide whether to bill them as-is.
 
 The user can generate multiple invoices over the life of a project — one for the big items confirmed early on, another for accessories confirmed later, a final one for remaining items at project end. Each invoice is a separate billing event.
 
@@ -101,9 +109,11 @@ This would eliminate the manual confirmation step entirely. Requires: email MCP 
 
 ---
 ## Implementation Notes
-- Items need a new `billingStatus` field (enum: unbilled, invoiced, paid) — default: unbilled
-- A new `Invoice` entity is needed: references a list of items (across transactions/categories), has its own status (draft, sent, paid, voided?), total amount, date generated, date paid
-- Invoice generation should reuse the existing invoice generation capability but make it item-aware (currently unclear if existing generation is item-level or transaction-level)
-- The cascade from invoice "paid" → items "paid" should be a single operation, not individual item updates, to ensure atomicity
+- Items have a `billingStatus` field (enum: unbilled, invoiced, paid). nil is treated as unbilled. Default for new items: unbilled.
+- Transactions also have a `billingStatus` field — used for non-itemized expenses (install, fuel) that have no child items.
+- The `Invoice` entity (`accounts/{accountId}/invoices/{id}`, with `projectId` field) references a list of `itemIds` AND `transactionIds`, has its own status (draft / sent / paid / voided), `totalCents` snapshot, and date stamps for issued / sent / paid / voided.
+- The `invoiceNumber` Firestore field stores the user's free-form **Invoice Name** (the UI label is "Invoice Name", but the underlying field name is preserved for backward compatibility).
+- All cascading operations (create → invoiced, markPaid → paid, void → unbilled) commit through one Firestore batch so they're atomic.
+- Voiding an invoice reverts referenced items + transactions to `unbilled`, but **skips** any that have already moved to `paid` — paid is terminal.
 - Auto-payment detection would use an email MCP to monitor inbox, parse payment notifications, and call Ledger's MCP to update invoice status — this is a significant integration effort and should be treated as a separate phase
 - Consider whether billing status should also be reflected on the transaction level (e.g., "partially billed," "fully billed," "fully paid") for quick scanning

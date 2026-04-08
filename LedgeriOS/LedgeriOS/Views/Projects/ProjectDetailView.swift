@@ -52,6 +52,9 @@ struct ProjectDetailView: View {
                         }
                 case "finances":
                     FinancesTabView()
+                        .navigationDestination(for: Invoice.self) { invoice in
+                            InvoiceDetailView(invoice: invoice)
+                        }
                 default:
                     ItemsTabView()
                 }

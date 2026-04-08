@@ -124,17 +124,40 @@ enum ReportHTMLBuilder {
         projectName: String,
         clientName: String,
         businessName: String?,
-        logoBase64: String?
+        logoBase64: String?,
+        invoiceName: String? = nil,
+        invoiceStatusLabel: String? = nil,
+        invoiceDate: Date? = nil,
+        notes: String? = nil
     ) -> String {
         var body = ""
 
+        let title: String = {
+            if let invoiceName, !invoiceName.isEmpty { return "Invoice — \(invoiceName)" }
+            return "Invoice"
+        }()
+
         body += headerHTML(
             businessName: businessName,
-            reportTitle: "Invoice",
+            reportTitle: title,
             projectName: projectName,
             clientName: clientName.isEmpty ? nil : clientName,
             logoBase64: logoBase64
         )
+
+        // Optional invoice meta (date / status)
+        var metaExtras: [String] = []
+        if let invoiceDate {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .long
+            metaExtras.append("<strong>Date:</strong> \(esc(formatter.string(from: invoiceDate)))")
+        }
+        if let invoiceStatusLabel, !invoiceStatusLabel.isEmpty {
+            metaExtras.append("<strong>Status:</strong> \(esc(invoiceStatusLabel))")
+        }
+        if !metaExtras.isEmpty {
+            body += #"<div class="meta">\#(metaExtras.joined(separator: "<br/>"))</div>"#
+        }
 
         // Charges
         if !data.chargeLines.isEmpty {
@@ -165,6 +188,10 @@ enum ReportHTMLBuilder {
           </tbody>
         </table>
         """
+
+        if let notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            body += #"<div class="meta"><strong>Notes:</strong><br/>\#(esc(notes))</div>"#
+        }
 
         return wrapHTML(title: "Invoice", body: body)
     }

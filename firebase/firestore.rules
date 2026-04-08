@@ -157,6 +157,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/invoices/{invoiceId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     // Lineage edges are append-only and server-produced (request-doc handlers / server triggers).
     // Clients may read for UI ("sold/returned/where did it go?") but cannot forge history.
     match /accounts/{accountId}/lineageEdges/{edgeId} {

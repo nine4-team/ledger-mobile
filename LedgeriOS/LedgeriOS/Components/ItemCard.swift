@@ -25,11 +25,15 @@ struct ItemCard: View {
     // Warning
     var warningMessage: String?
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     private var badges: [CardBadge] {
         ItemCardCalculations.badgeItems(
             statusLabel: statusOverride ?? item.status?.displayLabel,
             budgetCategoryName: budgetCategoryName,
-            indexLabel: indexLabel
+            indexLabel: indexLabel,
+            // Tight on iPhone — only show billing badge in regular width.
+            billingStatus: horizontalSizeClass == .regular ? item.billingStatus : nil
         )
     }
 

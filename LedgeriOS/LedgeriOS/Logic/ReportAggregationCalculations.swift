@@ -169,6 +169,57 @@ enum ReportAggregationCalculations {
         )
     }
 
+    /// Per-invoice aggregation: builds an InvoiceReportData containing exactly the
+    /// items and non-itemized expenses referenced by the given Invoice. Credits are
+    /// unused on this path (per-invoice billing is charges-only).
+    static func computeInvoiceReport(
+        for invoice: Invoice,
+        items: [Item],
+        transactions: [Transaction]
+    ) -> InvoiceReportData {
+        let itemMap = Dictionary(
+            items.compactMap { item -> (String, Item)? in
+                guard let id = item.id else { return nil }
+                return (id, item)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let txMap = Dictionary(
+            transactions.compactMap { tx -> (String, Transaction)? in
+                guard let id = tx.id else { return nil }
+                return (id, tx)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        var chargeLines: [InvoiceLineEntry] = []
+
+        for itemId in invoice.itemIds ?? [] {
+            guard let item = itemMap[itemId] else { continue }
+            let projectPrice = item.projectPriceCents ?? 0
+            let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
+            let isMissing = projectPrice == 0
+            chargeLines.append(InvoiceLineEntry(
+                name: item.displayName.isEmpty ? "Unnamed Item" : item.displayName,
+                priceCents: priceCents,
+                isMissingPrice: isMissing
+            ))
+        }
+
+        for txId in invoice.transactionIds ?? [] {
+            guard let tx = txMap[txId] else { continue }
+            chargeLines.append(InvoiceLineEntry(
+                name: tx.source ?? tx.notes ?? "Adjustment",
+                priceCents: tx.amountCents ?? 0,
+                isMissingPrice: false
+            ))
+        }
+
+        chargeLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+        return InvoiceReportData(chargeLines: chargeLines, creditLines: [])
+    }
+
     // MARK: - Client Summary
 
     /// Project price with fallback to purchase price for client-facing reports.

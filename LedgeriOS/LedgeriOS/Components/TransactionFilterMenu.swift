@@ -106,6 +106,18 @@ struct TransactionFilterMenu: View {
             ]
         ))
 
+        items.append(filterGroup(
+            id: "billing-status",
+            label: "Billing Status",
+            group: .billingStatus,
+            options: [
+                ("all", "All"),
+                ("unbilled", "Unbilled"),
+                ("invoiced", "Invoiced"),
+                ("paid", "Paid"),
+            ]
+        ))
+
         if !sources.isEmpty {
             var srcOptions: [(String, String)] = [("all", "All")]
             srcOptions.append(contentsOf: sources.map { ($0, $0) })

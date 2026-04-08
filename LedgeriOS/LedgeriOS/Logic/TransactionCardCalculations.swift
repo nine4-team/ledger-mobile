@@ -13,7 +13,8 @@ enum TransactionCardCalculations {
         isComplete: Bool?,
         status: TransactionStatus?,
         isCanonicalInventorySale: Bool? = nil,
-        inventorySaleDirection: InventorySaleDirection? = nil
+        inventorySaleDirection: InventorySaleDirection? = nil,
+        billingStatus: BillingStatus? = nil
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
@@ -40,6 +41,13 @@ enum TransactionCardCalculations {
                 color = (type == .sale || type == .return) ? StatusColors.atRiskBar : BrandColors.primary
             }
             badges.append(CardBadge(text: label, color: color))
+        }
+
+        // Billing status badge — only for non-itemized transactions (itemized derive from children).
+        // The caller is responsible for passing nil when the transaction is itemized.
+        if let billing = billingStatus, billing != .unbilled {
+            let billingColor: Color = billing == .paid ? StatusColors.metText : StatusColors.inProgressText
+            badges.append(CardBadge(text: billing.displayLabel, color: billingColor))
         }
 
         return badges

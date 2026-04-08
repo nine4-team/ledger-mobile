@@ -6,6 +6,11 @@ struct InvoiceReportView: View {
     let clientName: String
     var businessName: String?
     var businessLogoUrl: String?
+    var invoiceName: String? = nil
+    var invoiceStatusLabel: String? = nil
+    var invoiceDate: Date? = nil
+    var notes: String? = nil
+    var showsDownloadAction: Bool = true
 
     @State private var logoImage: PlatformImage?
 
@@ -89,6 +94,16 @@ struct InvoiceReportView: View {
                         totalLabel: "Credits Total"
                     )
                 }
+
+                if let notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Notes").sectionLabelStyle()
+                        Text(notes)
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
+                    .padding(.top, Spacing.md)
+                }
             }
             .padding(Spacing.screenPadding)
             }
@@ -106,11 +121,13 @@ struct InvoiceReportView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .trailingNavBar) {
-                Button {
-                    sharePDF()
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
+            if showsDownloadAction {
+                ToolbarItem(placement: .trailingNavBar) {
+                    Button {
+                        downloadPDF()
+                    } label: {
+                        Image(systemName: "arrow.down.circle")
+                    }
                 }
             }
         }
@@ -144,12 +161,20 @@ struct InvoiceReportView: View {
                 Text("Invoice")
                     .font(Typography.h3)
                     .foregroundStyle(BrandColors.textPrimary)
+                if let invoiceName, !invoiceName.isEmpty {
+                    FindableText(invoiceName)
+                        .font(Typography.h3)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     metaRow(label: "Project:", value: projectName)
                     if !clientName.isEmpty {
                         metaRow(label: "Client:", value: clientName)
                     }
-                    metaRow(label: "Date:", value: currentDateFormatted)
+                    metaRow(label: "Date:", value: formattedDate(invoiceDate) ?? currentDateFormatted)
+                    if let invoiceStatusLabel, !invoiceStatusLabel.isEmpty {
+                        metaRow(label: "Status:", value: invoiceStatusLabel)
+                    }
                 }
             }
             Spacer()
@@ -222,19 +247,31 @@ struct InvoiceReportView: View {
         return formatter.string(from: Date())
     }
 
+    private func formattedDate(_ date: Date?) -> String? {
+        guard let date else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        return formatter.string(from: date)
+    }
+
     // MARK: - PDF Sharing
 
-    private func sharePDF() {
+    private func downloadPDF() {
         let html = ReportHTMLBuilder.invoice(
             data: data,
             projectName: projectName,
             clientName: clientName,
             businessName: businessName,
-            logoBase64: logoImage?.pngBase64
+            logoBase64: logoImage?.pngBase64,
+            invoiceName: invoiceName,
+            invoiceStatusLabel: invoiceStatusLabel,
+            invoiceDate: invoiceDate,
+            notes: notes
         )
-        ReportPDFSharing.sharePDF(
+        let label = (invoiceName?.isEmpty == false ? invoiceName! : projectName)
+        ReportPDFSharing.downloadPDF(
             html: html,
-            fileName: "invoice-\(projectName).pdf"
+            fileName: "invoice-\(label).pdf"
         )
     }
 }

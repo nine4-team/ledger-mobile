@@ -33,16 +33,17 @@ struct TransactionFilterState {
     var budgetCategory: Set<String> = []
     var purchasedBy: Set<String> = []
     var source: Set<String> = []
+    var billingStatus: Set<String> = []
 
     var isActive: Bool {
         !status.isEmpty || !reimbursementStatus.isEmpty || !emailReceipt.isEmpty
             || !transactionType.isEmpty || !completeness.isEmpty || !budgetCategory.isEmpty
-            || !purchasedBy.isEmpty || !source.isEmpty
+            || !purchasedBy.isEmpty || !source.isEmpty || !billingStatus.isEmpty
     }
 
     enum FilterGroup {
         case status, reimbursementStatus, emailReceipt, transactionType
-        case completeness, budgetCategory, purchasedBy, source
+        case completeness, budgetCategory, purchasedBy, source, billingStatus
     }
 
     func selections(for group: FilterGroup) -> Set<String> {
@@ -55,6 +56,7 @@ struct TransactionFilterState {
         case .budgetCategory: return budgetCategory
         case .purchasedBy: return purchasedBy
         case .source: return source
+        case .billingStatus: return billingStatus
         }
     }
 
@@ -89,6 +91,7 @@ struct TransactionFilterState {
         case .budgetCategory: budgetCategory = value
         case .purchasedBy: purchasedBy = value
         case .source: source = value
+        case .billingStatus: billingStatus = value
         }
     }
 }
@@ -191,6 +194,10 @@ enum TransactionFilterSortCalculations {
             if !filters.source.isEmpty {
                 let src = tx.source ?? ""
                 guard filters.source.contains(src) else { return false }
+            }
+            if !filters.billingStatus.isEmpty {
+                let val = (tx.billingStatus ?? .unbilled).rawValue
+                guard filters.billingStatus.contains(val) else { return false }
             }
             return true
         }

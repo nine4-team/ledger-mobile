@@ -21,6 +21,7 @@ final class AccountContext {
     var allSpaces: [Space] = []
     var allBudgetCategories: [BudgetCategory] = []
     var allProjects: [Project] = []
+    var allInvoices: [Invoice] = []
 
     private var listeners: [ListenerRegistration] = []
     private let accountsService: AccountsServiceProtocol
@@ -30,6 +31,7 @@ final class AccountContext {
     private let spacesService: SpacesServiceProtocol?
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol?
     private let projectService: ProjectServiceProtocol?
+    private let invoicesService: InvoiceServiceProtocol?
 
     private static let lastAccountKey = "lastSelectedAccountId"
 
@@ -45,7 +47,8 @@ final class AccountContext {
         transactionsService: TransactionsServiceProtocol? = nil,
         spacesService: SpacesServiceProtocol? = nil,
         budgetCategoriesService: BudgetCategoriesServiceProtocol? = nil,
-        projectService: ProjectServiceProtocol? = nil
+        projectService: ProjectServiceProtocol? = nil,
+        invoicesService: InvoiceServiceProtocol? = nil
     ) {
         self.accountsService = accountsService
         self.membersService = membersService
@@ -54,6 +57,7 @@ final class AccountContext {
         self.spacesService = spacesService
         self.budgetCategoriesService = budgetCategoriesService
         self.projectService = projectService
+        self.invoicesService = invoicesService
     }
 
     // MARK: - Discovery
@@ -114,6 +118,7 @@ final class AccountContext {
         allSpaces = []
         allBudgetCategories = []
         allProjects = []
+        allInvoices = []
 
         currentAccountId = accountId
 
@@ -166,6 +171,13 @@ final class AccountContext {
             }
             listeners.append(projectsListener)
         }
+
+        if let invoicesService {
+            let invoicesListener = invoicesService.subscribeToInvoices(accountId: accountId) { [weak self] invoices in
+                Task { @MainActor in self?.allInvoices = invoices }
+            }
+            listeners.append(invoicesListener)
+        }
     }
 
     func deactivate() {
@@ -181,5 +193,6 @@ final class AccountContext {
         allSpaces = []
         allBudgetCategories = []
         allProjects = []
+        allInvoices = []
     }
 }
