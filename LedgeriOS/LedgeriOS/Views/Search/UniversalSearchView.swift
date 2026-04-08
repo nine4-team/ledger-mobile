@@ -51,11 +51,10 @@ struct UniversalSearchView: View {
     }
 
     private var selectedTransactionTotalCents: Int? {
-        let tuples = searchResults.transactions.compactMap { tx -> (id: String, cents: Int, type: TransactionType?)? in
-            guard let id = tx.id, let cents = tx.amountCents else { return nil }
-            return (id: id, cents: cents, type: tx.transactionType)
-        }
-        let total = SelectionCalculations.totalCentsForSelectedTransactions(selectedIds: selectedTransactionIds, transactions: tuples)
+        let total = SelectionCalculations.totalCentsForSelectedTransactions(
+            selectedIds: selectedTransactionIds,
+            transactions: searchResults.transactions
+        )
         return total != 0 ? total : nil
     }
 

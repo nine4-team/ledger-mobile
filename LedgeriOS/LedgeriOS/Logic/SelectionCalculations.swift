@@ -20,17 +20,21 @@ enum SelectionCalculations {
         items.filter { selectedIds.contains($0.id) }.reduce(0) { $0 + $1.cents }
     }
 
-    /// Sums transaction amounts for selected IDs with sign-aware logic.
-    /// `return` and `sale` types count as negative; all others are positive.
+    /// Sums transaction amounts for selected IDs using the same direction-aware
+    /// normalization as the budget tab and the denormalized project summary.
+    /// Cancelled transactions contribute $0; returns subtract; canonical
+    /// inventory sales add or subtract based on `inventorySaleDirection`.
     static func totalCentsForSelectedTransactions(
         selectedIds: Set<String>,
-        transactions: [(id: String, cents: Int, type: TransactionType?)]
+        transactions: [Transaction]
     ) -> Int {
         transactions
-            .filter { selectedIds.contains($0.id) }
+            .filter { tx in
+                guard let id = tx.id else { return false }
+                return selectedIds.contains(id)
+            }
             .reduce(0) { sum, tx in
-                let isNegative = tx.type == .return || tx.type == .sale
-                return sum + (isNegative ? -tx.cents : tx.cents)
+                sum + BudgetTabCalculations.normalizeTransactionAmount(tx)
             }
     }
 

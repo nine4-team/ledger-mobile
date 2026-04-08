@@ -64,11 +64,10 @@ struct TransactionsTabView: View {
     }
 
     private var selectedTransactionTotalCents: Int? {
-        let tuples = processedTransactions.compactMap { tx -> (id: String, cents: Int, type: TransactionType?)? in
-            guard let id = tx.id, let cents = tx.amountCents else { return nil }
-            return (id: id, cents: cents, type: tx.transactionType)
-        }
-        let total = SelectionCalculations.totalCentsForSelectedTransactions(selectedIds: selectedIds, transactions: tuples)
+        let total = SelectionCalculations.totalCentsForSelectedTransactions(
+            selectedIds: selectedIds,
+            transactions: processedTransactions
+        )
         return total != 0 ? total : nil
     }
 
