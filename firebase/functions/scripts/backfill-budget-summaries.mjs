@@ -29,13 +29,13 @@ const FieldValue = admin.firestore.FieldValue;
  * Mirrors normalizeSpendAmount from budgetProgressService.ts
  */
 function normalizeSpendAmount(tx) {
-  if (tx.isCanceled === true) return 0;
+  if (tx.status === 'canceled') return 0;
   if (typeof tx.amountCents !== 'number') return 0;
 
   let amount = tx.amountCents;
   const txType =
-    typeof tx.transactionType === 'string'
-      ? tx.transactionType.trim().toLowerCase()
+    typeof tx.type === 'string'
+      ? tx.type.trim().toLowerCase()
       : null;
 
   if (txType === 'return') {
@@ -88,7 +88,7 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
   const spentByCategory = {};
   for (const doc of txSnapshot.docs) {
     const tx = doc.data() ?? {};
-    if (tx.isCanceled === true) continue;
+    if (tx.status === 'canceled') continue;
     if (typeof tx.amountCents !== 'number') continue;
 
     const categoryId =
@@ -134,18 +134,17 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
     }
   }
 
-  // 6. Write to project doc
-  await db.doc(`accounts/${accountId}/projects/${projectId}`).set(
-    {
-      budgetSummary: {
-        spentCents: overallSpentCents,
-        totalBudgetCents: overallBudgetCents,
-        categories,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
+  // 6. Write to project doc. Use `update` so the budgetSummary field is
+  // replaced wholesale — `set merge:true` deep-merges the categories map and
+  // leaves stale category entries behind on re-categorization.
+  await db.doc(`accounts/${accountId}/projects/${projectId}`).update({
+    budgetSummary: {
+      spentCents: overallSpentCents,
+      totalBudgetCents: overallBudgetCents,
+      categories,
+      updatedAt: FieldValue.serverTimestamp(),
     },
-    { merge: true }
-  );
+  });
 }
 
 async function main() {

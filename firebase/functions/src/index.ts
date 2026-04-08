@@ -1788,7 +1788,7 @@ async function recalculateProjectBudgetSummary(
   const spentByCategory: Record<string, number> = {};
   for (const doc of txSnapshot.docs) {
     const tx = doc.data() ?? {};
-    if (tx.isCanceled === true) continue;
+    if (tx.status === 'canceled') continue;
     if (typeof tx.amountCents !== 'number') continue;
 
     const categoryId =
@@ -1799,8 +1799,8 @@ async function recalculateProjectBudgetSummary(
 
     let amount = tx.amountCents;
     const txType =
-      typeof tx.transactionType === 'string'
-        ? tx.transactionType.trim().toLowerCase()
+      typeof tx.type === 'string'
+        ? tx.type.trim().toLowerCase()
         : null;
 
     if (txType === 'return') {
@@ -1848,19 +1848,19 @@ async function recalculateProjectBudgetSummary(
     }
   }
 
-  // 6. Write to project document (merge to preserve other fields)
+  // 6. Write to project document. Use `update` (not `set` merge:true) so the
+  // entire `budgetSummary` field is replaced wholesale — otherwise Firestore
+  // deep-merges the `categories` map and stale category entries (e.g. one a
+  // transaction was re-categorized away from) linger forever.
   const projectRef = db.doc(`accounts/${accountId}/projects/${projectId}`);
-  await projectRef.set(
-    {
-      budgetSummary: {
-        spentCents: overallSpentCents,
-        totalBudgetCents: overallBudgetCents,
-        categories,
-        updatedAt: FieldValue.serverTimestamp(),
-      } satisfies BudgetSummary,
-    },
-    { merge: true }
-  );
+  await projectRef.update({
+    budgetSummary: {
+      spentCents: overallSpentCents,
+      totalBudgetCents: overallBudgetCents,
+      categories,
+      updatedAt: FieldValue.serverTimestamp(),
+    } satisfies BudgetSummary,
+  });
 }
 
 // ---------------------------------------------------------------------------

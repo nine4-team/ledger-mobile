@@ -10,13 +10,12 @@ import type { Transaction } from "../types.js";
  * - Everything else → positive
  */
 export function normalizeSpendAmount(tx: Transaction): number {
-  if (tx.isCanceled === true) return 0;
+  if (tx.status === "canceled") return 0;
   if (typeof tx.amountCents !== "number") return 0;
 
   const amount = tx.amountCents;
 
-  // Firestore field is "type", legacy data may use "transactionType"
-  const raw = tx.type ?? tx.transactionType;
+  const raw = tx.type;
   const txType = typeof raw === "string" ? raw.trim().toLowerCase() : null;
 
   if (txType === "return") {

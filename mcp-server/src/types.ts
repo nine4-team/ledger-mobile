@@ -36,15 +36,12 @@ export interface Transaction {
   amountCents?: number;
   subtotalCents?: number;
   taxRatePct?: number;
-  /** Firestore field name is "type" — legacy data may also use "transactionType" */
   type?: string;
-  transactionType?: string;
   status?: string;
   source?: string;
   transactionDate?: string;
   itemIds?: string[];
   notes?: string;
-  isCanceled?: boolean;
   isCanonicalInventorySale?: boolean;
   inventorySaleDirection?: string;
   isCanonicalInventory?: boolean;

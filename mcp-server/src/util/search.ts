@@ -42,10 +42,10 @@ export function transactionMatches(
 ): boolean {
   if (!query) return true;
 
-  // Text fields: source, transactionType/type, notes, purchasedBy
+  // Text fields: source, type, notes, purchasedBy
   const textFields = [
     tx.source,
-    tx.transactionType ?? tx.type,
+    tx.type,
     tx.notes,
     tx.purchasedBy,
   ];

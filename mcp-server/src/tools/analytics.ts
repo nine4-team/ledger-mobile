@@ -139,7 +139,7 @@ export function registerAnalyticsTools(server: McpServer, db: Firestore) {
       const vendorTotals = new Map<string, { totalCents: number; count: number }>();
 
       for (const tx of transactions) {
-        if (tx.isCanceled) continue;
+        if (tx.status === "canceled") continue;
         const vendor = tx.source ?? "Unknown";
         const existing = vendorTotals.get(vendor) ?? { totalCents: 0, count: 0 };
         existing.totalCents += tx.amountCents ?? 0;
