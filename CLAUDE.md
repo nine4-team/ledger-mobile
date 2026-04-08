@@ -14,28 +14,29 @@ Native SwiftUI iOS app for inventory and project ledger management.
 
 ## Running the App
 
-```bash
-node scripts/dev-native.mjs
-```
-
-This single command handles the full dev workflow:
-1. Starts Firebase emulators (Auth, Firestore, Storage) with persistence
-2. Seeds Firestore and Storage with test data
-3. Creates the dev auth user (`team@nine4.co` / `password123`)
-4. Builds the SwiftUI app (`LedgeriOS (Emulator)` scheme)
-5. Boots the iPhone 17e simulator and launches the app
-
-The emulators run in the foreground — Ctrl+C stops everything.
+**The app runs against production Firebase by default.** Build and run from Xcode using the `LedgeriOS (Emulator)` scheme — despite the name, this is the day-to-day scheme and it talks to production Firestore/Auth/Storage unless `FirebaseEmulatorConfig` is explicitly toggled on. The "(Emulator)" suffix is vestigial from when emulator-first was the default.
 
 ### Build-Only Check
 
-To verify code compiles without restarting emulators or the simulator, use xcodebuild directly:
+To verify code compiles, use xcodebuild directly:
 
 ```bash
 cd LedgeriOS && xcodebuild build -scheme "LedgeriOS (Emulator)" -destination 'platform=iOS Simulator,name=iPhone 17e' -derivedDataPath DerivedData -quiet 2>&1 | tail -5
 ```
 
-Use `node scripts/dev-native.mjs` only when you need the full environment (emulators + seed data + simulator launch). For compile checks during iterative development, use the xcodebuild command above.
+### Deploying Firestore Rules
+
+After editing `firebase/firestore.rules`, deploy them to production:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+Local edits to the rules file have **no effect on the running app** until deployed. If you see "Missing or insufficient permissions" after adding or modifying a rule, the most likely cause is that the rules haven't been deployed yet.
+
+### Optional: Running Against the Local Emulator
+
+There is a `scripts/dev-native.mjs` workflow that boots Firebase emulators (Auth, Firestore, Storage) with seeded data. This is **not** the day-to-day workflow — only use it when you specifically want to test against an isolated local environment (e.g., destructive integration tests). See `LedgeriOSTests/CLAUDE.md` for the integration-test setup that requires it.
 
 ## Architecture
 

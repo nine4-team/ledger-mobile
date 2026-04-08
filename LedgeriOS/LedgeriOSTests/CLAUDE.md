@@ -1,5 +1,7 @@
 # Test Suite
 
+> **Note:** Day-to-day app usage runs against **production** Firebase, not the emulator. Integration tests are the only thing in this project that requires the emulator. See the root `CLAUDE.md` for the production-default workflow and how to deploy `firestore.rules`.
+
 Two test layers: **unit tests** (no emulator) and **integration tests** (Firestore emulator).
 
 ## Unit Tests
