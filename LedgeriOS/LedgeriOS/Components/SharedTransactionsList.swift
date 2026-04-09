@@ -212,15 +212,15 @@ enum TransactionFilterSortCalculations {
         switch option {
         case .dateDesc:
             return { a, b in
-                let dateA = a.transactionDate ?? ""
-                let dateB = b.transactionDate ?? ""
+                let dateA = a.effectiveSortDate
+                let dateB = b.effectiveSortDate
                 if dateA != dateB { return dateA > dateB }
                 return (a.id ?? "") > (b.id ?? "")
             }
         case .dateAsc:
             return { a, b in
-                let dateA = a.transactionDate ?? ""
-                let dateB = b.transactionDate ?? ""
+                let dateA = a.effectiveSortDate
+                let dateB = b.effectiveSortDate
                 if dateA != dateB { return dateA < dateB }
                 return (a.id ?? "") < (b.id ?? "")
             }

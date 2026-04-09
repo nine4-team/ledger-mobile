@@ -101,7 +101,7 @@ struct TransactionCard: View {
                 Text("Date: ")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                FindableText(TransactionCardCalculations.formattedDate(transaction.effectiveSortDate))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
@@ -128,7 +128,7 @@ struct TransactionCard: View {
                 Text("Date: ")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                FindableText(TransactionCardCalculations.formattedDate(transaction.transactionDate))
+                FindableText(TransactionCardCalculations.formattedDate(transaction.effectiveSortDate))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 

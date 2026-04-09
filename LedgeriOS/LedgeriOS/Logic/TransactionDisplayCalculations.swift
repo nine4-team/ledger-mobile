@@ -90,7 +90,7 @@ enum TransactionDisplayCalculations {
 
     /// Formats transaction date as "MMM d, yyyy". Returns empty string if nil.
     static func formattedDate(for transaction: Transaction) -> String {
-        TransactionCardCalculations.formattedDate(transaction.transactionDate)
+        TransactionCardCalculations.formattedDate(transaction.effectiveSortDate)
     }
 
     // MARK: - Canonical Type Label

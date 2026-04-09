@@ -556,7 +556,7 @@ struct TransactionDetailView: View {
                     amountCents: currentTransaction.amountCents,
                     transactionType: currentTransaction.transactionType
                 ))
-                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
+                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(currentTransaction.effectiveSortDate))
                 DetailRow(label: "Status", value: displayStatus(currentTransaction.status))
                 DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))

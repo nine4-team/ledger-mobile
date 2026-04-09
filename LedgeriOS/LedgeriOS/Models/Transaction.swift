@@ -66,12 +66,28 @@ struct Transaction: Codable, Identifiable, Hashable {
              itemIds, status, purchasedBy, reimbursementType, notes,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
              needsReview, isComplete, audit, taxRatePct, subtotalCents,
-             ingestionSource, ingestionStatus, ingestionMeta, triggerEvent, billingStatus
+             ingestionSource, ingestionStatus, ingestionMeta, triggerEvent, billingStatus,
+             createdAt, updatedAt
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"
     }
 
     var isReturnTransaction: Bool {
         transactionType == .return
+    }
+
+    /// Sort/display key: explicit `transactionDate` if set, otherwise a `yyyy-MM-dd`
+    /// rendering of `createdAt`. Canonical sale transactions (created programmatically
+    /// by inventory operations) never set `transactionDate`, so they fall back to createdAt.
+    var effectiveSortDate: String {
+        if let d = transactionDate, !d.isEmpty { return d }
+        if let c = createdAt {
+            let f = DateFormatter()
+            f.dateFormat = "yyyy-MM-dd"
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.timeZone = TimeZone(identifier: "UTC")
+            return f.string(from: c)
+        }
+        return ""
     }
 }

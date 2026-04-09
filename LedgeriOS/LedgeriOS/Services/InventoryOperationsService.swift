@@ -57,9 +57,11 @@ struct InventoryOperationsService {
                 categoryId: groupKey.categoryId
             )
             let amountDelta = Self.amountDelta(for: groupItems) // H11
-            // setData(merge:true) creates doc if missing, updates fields if exists.
-            // FieldValue.arrayUnion + increment handle idempotent accumulation.
-            batch.setData([
+            let saleDocPath = "\(txPath)/\(saleId)"
+            // `createdAt` must only be written on first insert — merge:true would
+            // otherwise clobber it on every subsequent sale into this canonical doc.
+            let isNew = try await !batch.documentExists(atPath: saleDocPath)
+            var fields: [String: Any] = [
                 "projectId": groupKey.projectId,
                 "type": TransactionType.sale.rawValue,                           // C1: use "type" not "transactionType"
                 "isCanonicalInventorySale": true,
@@ -67,9 +69,10 @@ struct InventoryOperationsService {
                 "budgetCategoryId": groupKey.categoryId,
                 "itemIds": FieldValue.arrayUnion(groupItems.compactMap(\.id)),
                 "amountCents": FieldValue.increment(Int64(amountDelta)),  // H11
-                "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp(),
-            ] as [String: Any], forDocumentAt: "\(txPath)/\(saleId)", merge: true)
+            ]
+            if isNew { fields["createdAt"] = FieldValue.serverTimestamp() }
+            batch.setData(fields, forDocumentAt: saleDocPath, merge: true)
         }
 
         for item in items {
@@ -160,7 +163,9 @@ struct InventoryOperationsService {
                     direction: "project_to_business",   // C2: valid direction
                     categoryId: srcCatId
                 )
-                batch.setData([
+                let srcPath = "\(txPath)/\(srcSaleId)"
+                let srcIsNew = try await !batch.documentExists(atPath: srcPath)
+                var srcFields: [String: Any] = [
                     "projectId": srcProjectId,
                     "type": TransactionType.sale.rawValue,                     // C1
                     "isCanonicalInventorySale": true,
@@ -168,9 +173,10 @@ struct InventoryOperationsService {
                     "budgetCategoryId": srcCatId,
                     "itemIds": FieldValue.arrayUnion([itemId]),
                     "amountCents": FieldValue.increment(Int64(amountDelta)),
-                    "createdAt": FieldValue.serverTimestamp(),
                     "updatedAt": FieldValue.serverTimestamp(),
-                ] as [String: Any], forDocumentAt: "\(txPath)/\(srcSaleId)", merge: true)
+                ]
+                if srcIsNew { srcFields["createdAt"] = FieldValue.serverTimestamp() }
+                batch.setData(srcFields, forDocumentAt: srcPath, merge: true)
             }
 
             // Hop 2: business inventory → destination project
@@ -179,7 +185,9 @@ struct InventoryOperationsService {
                 direction: "business_to_project",       // C2: valid direction (M17)
                 categoryId: dstCatId
             )
-            batch.setData([
+            let dstPath = "\(txPath)/\(dstSaleId)"
+            let dstIsNew = try await !batch.documentExists(atPath: dstPath)
+            var dstFields: [String: Any] = [
                 "projectId": destinationProjectId,
                 "type": TransactionType.sale.rawValue,                         // C1
                 "isCanonicalInventorySale": true,
@@ -188,9 +196,10 @@ struct InventoryOperationsService {
                 "source": "Business Inventory",  // inventory-source-naming spec
                 "itemIds": FieldValue.arrayUnion([itemId]),
                 "amountCents": FieldValue.increment(Int64(amountDelta)),
-                "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp(),
-            ] as [String: Any], forDocumentAt: "\(txPath)/\(dstSaleId)", merge: true)
+            ]
+            if dstIsNew { dstFields["createdAt"] = FieldValue.serverTimestamp() }
+            batch.setData(dstFields, forDocumentAt: dstPath, merge: true)
 
             // Update item: move to destination, link to destination canonical sale
             var itemUpdate: [String: Any] = [

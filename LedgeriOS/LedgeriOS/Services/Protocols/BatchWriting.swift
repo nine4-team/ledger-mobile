@@ -10,6 +10,11 @@ protocol BatchWriting {
     func setDataAutoId(_ fields: [String: Any], inCollection collectionPath: String)
     func deleteDocument(atPath path: String)
     func commit() async throws
+
+    /// Returns `true` if the document exists at `path`. Used by writers that need
+    /// set-if-missing semantics (e.g., `createdAt` on canonical sale transactions —
+    /// only written on first insert, preserved by subsequent merges).
+    func documentExists(atPath path: String) async throws -> Bool
 }
 
 // MARK: - Production Implementation
@@ -41,5 +46,10 @@ struct FirestoreBatchWriter: BatchWriting, @unchecked Sendable {
 
     func commit() async throws {
         try await batch.commit()
+    }
+
+    func documentExists(atPath path: String) async throws -> Bool {
+        let snap = try await db.document(path).getDocument()
+        return snap.exists
     }
 }

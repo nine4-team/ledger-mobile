@@ -30,6 +30,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
     private(set) var deletes: [DeleteOperation] = []
     private(set) var commitCalled = false
 
+    /// Paths that should report as already-existing from `documentExists`.
+    /// Tests can preload this to simulate canonical sale docs that already exist.
+    var existingPaths: Set<String> = []
+
     func setData(_ fields: [String: Any], forDocumentAt path: String, merge: Bool) {
         sets.append(SetOperation(fields: fields, path: path, merge: merge))
     }
@@ -48,6 +52,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
 
     func commit() async throws {
         commitCalled = true
+    }
+
+    func documentExists(atPath path: String) async throws -> Bool {
+        existingPaths.contains(path)
     }
 
     // MARK: - Query Helpers
