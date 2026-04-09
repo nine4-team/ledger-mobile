@@ -5,18 +5,7 @@ struct ItemsTabView: View {
     @Environment(AccountContext.self) private var accountContext
 
     @State private var selectedItemIds: Set<String> = []
-
-    // Single-item action target
-    @State private var actionTargetItem: Item?
-
-    // Single-item action modals
-    @State private var showSingleStatusPicker = false
-    @State private var showSingleSetSpace = false
-    @State private var showSingleTransactionPicker = false
-    @State private var showSingleSellToBusiness = false
-    @State private var sellToProjectItem: Item?
-    @State private var showSingleReassign = false
-    @State private var showSingleDeleteConfirmation = false
+    @State private var itemActions = ItemActionsController()
 
     // Bulk action modals
     @State private var showBulkStatusPicker = false
@@ -50,53 +39,12 @@ struct ItemsTabView: View {
             useNavigationLinks: true,
             emptyIcon: "cube.box"
         )
-        // Single-item action sheets
-        .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
-            StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
-                updateItemField(actionTargetItem, fields: ["status": status.rawValue])
-            }
-        }
-        .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
-            SetSpaceModal(
-                spaces: projectContext.spaces,
-                currentSpaceId: actionTargetItem?.spaceId,
-                onSelect: { space in
-                    let fields: [String: Any] = space?.id != nil ? ["spaceId": space!.id!] : ["spaceId": NSNull()]
-                    updateItemField(actionTargetItem, fields: fields)
-                }
-            )
-        }
-        .adaptivePresentation(isPresented: $showSingleTransactionPicker, style: .picker) {
-            TransactionPickerModal(
-                transactions: projectContext.transactions,
-                selectedId: actionTargetItem?.transactionId,
-                onSelect: { tx in
-                    if let txId = tx.id {
-                        updateItemField(actionTargetItem, fields: ["transactionId": txId])
-                    }
-                }
-            )
-        }
-        .adaptivePresentation(isPresented: $showSingleSellToBusiness, style: .form) {
-            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
-                SellToBusinessModal(items: [item], accountId: accountId) {}
-            }
-        }
-        .adaptivePresentation(item: $sellToProjectItem, style: .form) { item in
-            if let accountId = accountContext.currentAccountId {
-                SellToProjectModal(items: [item], accountId: accountId) {}
-            }
-        }
-        .adaptivePresentation(isPresented: $showSingleReassign, style: .form) {
-            if let item = actionTargetItem {
-                ReassignToProjectModal(items: [item]) {}
-            }
-        }
-        .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {
-            Button("Delete", role: .destructive) { deleteSingleItem() }
-        } message: {
-            Text("This action cannot be undone.")
-        }
+        .itemActionSheets(
+            itemActions,
+            spaces: projectContext.spaces,
+            transactions: projectContext.transactions,
+            accountId: accountContext.currentAccountId
+        )
         // Bulk action sheets
         .adaptivePresentation(isPresented: $showBulkStatusPicker, style: .quickMenu) {
             StatusPickerModal { status in updateStatusForSelected(status) }
@@ -153,22 +101,11 @@ struct ItemsTabView: View {
 
     private func singleItemMenuItems(for item: Item) -> [ActionMenuItem] {
         guard let itemId = item.id else { return [] }
-        return ItemMenuBuilder.buildSingleItemMenu(
-            context: .list,
+        return itemActions.buildMenu(
+            for: item,
             scope: .project,
-            callbacks: SingleItemMenuCallbacks(
-                onSelect: { selectedItemIds.insert(itemId) },
-                onStatusChange: { _ in actionTargetItem = item; showSingleStatusPicker = true },
-                onSetTransaction: { actionTargetItem = item; showSingleTransactionPicker = true },
-                onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
-                onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
-                onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
-                onSellToBusiness: { actionTargetItem = item; showSingleSellToBusiness = true },
-                onSellToProject: { sellToProjectItem = item },
-                onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
-                onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
-            ),
-            currentStatus: item.status?.rawValue
+            accountId: accountContext.currentAccountId,
+            onSelect: { selectedItemIds.insert(itemId) }
         )
     }
 
@@ -189,23 +126,6 @@ struct ItemsTabView: View {
                 onDelete: { showBulkDeleteConfirmation = true }
             )
         )
-    }
-
-    // MARK: - Single-Item Actions
-
-    private func updateItemField(_ item: Item?, fields: [String: Any]) {
-        guard let accountId = accountContext.currentAccountId,
-              let itemId = item?.id else { return }
-        let service = ItemsService()
-        nonisolated(unsafe) let f = fields
-        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: f) }
-    }
-
-    private func deleteSingleItem() {
-        guard let accountId = accountContext.currentAccountId,
-              let item = actionTargetItem else { return }
-        let service = ItemsService()
-        Task { try? await service.deleteItem(accountId: accountId, item: item) }
     }
 
     // MARK: - Bulk Actions

@@ -262,6 +262,8 @@
 		FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */; };
 		FF91DFDBB6CA2A40D621D60B /* InventoryItemsSubTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2C9EB2F2B72BF798FCD1CD /* InventoryItemsSubTab.swift */; };
 		IMB00200000000000L0001 /* ItemMenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMB00100000000000L0001 /* ItemMenuBuilder.swift */; };
+		IAC00200000000000L0001 /* ItemActionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = IAC00100000000000L0001 /* ItemActionsController.swift */; };
+		IAS00200000000000L0001 /* ItemActionSheetsModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = IAS00100000000000L0001 /* ItemActionSheetsModifier.swift */; };
 		IMB00400000000000T0001 /* ItemMenuBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = IMB00300000000000T0001 /* ItemMenuBuilderTests.swift */; };
 		NLCB0001B001 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = NLCB0001F001 /* NativeListControlBar.swift */; };
 		PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFT0001000000000000F001 /* PDFThumbnailTile.swift */; };
@@ -596,6 +598,8 @@
 		FF6FFF09FC0D100A59CF5BB8 /* AccountPresetsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccountPresetsService.swift; sourceTree = "<group>"; };
 		FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditNotesModal.swift; sourceTree = "<group>"; };
 		IMB00100000000000L0001 /* ItemMenuBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Logic/ItemMenuBuilder.swift; sourceTree = SOURCE_ROOT; };
+		IAC00100000000000L0001 /* ItemActionsController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Logic/ItemActionsController.swift; sourceTree = SOURCE_ROOT; };
+		IAS00100000000000L0001 /* ItemActionSheetsModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Components/ItemActionSheetsModifier.swift; sourceTree = SOURCE_ROOT; };
 		IMB00300000000000T0001 /* ItemMenuBuilderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemMenuBuilderTests.swift; sourceTree = "<group>"; };
 		NLCB0001F001 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
 		PDFT0001000000000000F001 /* PDFThumbnailTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFThumbnailTile.swift; sourceTree = "<group>"; };
@@ -767,6 +771,8 @@
 				WP07F00100000000000L0001 /* TransactionCardCalculations.swift */,
 				35948E498E737612AB645098 /* TransactionExportCalculations.swift */,
 				IMB00100000000000L0001 /* ItemMenuBuilder.swift */,
+				IAC00100000000000L0001 /* ItemActionsController.swift */,
+				IAS00100000000000L0001 /* ItemActionSheetsModifier.swift */,
 				TMB00100000000000L0001 /* TransactionMenuBuilder.swift */,
 				C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */,
 				05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */,
@@ -1531,6 +1537,8 @@
 				812FF2207D742F67E3870934 /* ProjectPreferencesService.swift in Sources */,
 				D7A04F61BEE513200213BF35 /* TransactionExportCalculations.swift in Sources */,
 				IMB00200000000000L0001 /* ItemMenuBuilder.swift in Sources */,
+				IAC00200000000000L0001 /* ItemActionsController.swift in Sources */,
+				IAS00200000000000L0001 /* ItemActionSheetsModifier.swift in Sources */,
 				TMB00200000000000L0001 /* TransactionMenuBuilder.swift in Sources */,
 				RTPM000200000000000M0001 /* ReassignTransactionToProjectModal.swift in Sources */,
 				7EF3313AC9CDE6AEB528A13A /* TransactionsTabView.swift in Sources */,

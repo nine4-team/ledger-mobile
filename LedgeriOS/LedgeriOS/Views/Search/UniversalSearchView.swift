@@ -21,13 +21,7 @@ struct UniversalSearchView: View {
     @State private var showItemMoveToProject = false
     @State private var showItemDeleteConfirmation = false
 
-    // Single-item action target
-    @State private var actionTargetItem: Item?
-    @State private var showSingleStatusPicker = false
-    @State private var showSingleSetSpace = false
-    @State private var showSingleTransactionPicker = false
-    @State private var showSingleReassign = false
-    @State private var showSingleDeleteConfirmation = false
+    @State private var itemActions = ItemActionsController()
 
     // Transaction selection
     @State private var selectedTransactionIds: Set<String> = []
@@ -183,43 +177,12 @@ struct UniversalSearchView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        // Single-item action sheets
-        .adaptivePresentation(isPresented: $showSingleStatusPicker, style: .quickMenu) {
-            StatusPickerModal(currentStatus: actionTargetItem?.status) { status in
-                updateItemField(actionTargetItem, fields: ["status": status.rawValue])
-            }
-        }
-        .adaptivePresentation(isPresented: $showSingleSetSpace, style: .picker) {
-            SetSpaceModal(
-                spaces: accountContext.allSpaces,
-                currentSpaceId: actionTargetItem?.spaceId,
-                onSelect: { space in
-                    let fields: [String: Any] = space?.id != nil ? ["spaceId": space!.id!] : ["spaceId": NSNull()]
-                    updateItemField(actionTargetItem, fields: fields)
-                }
-            )
-        }
-        .adaptivePresentation(isPresented: $showSingleTransactionPicker, style: .picker) {
-            TransactionPickerModal(
-                transactions: accountContext.allTransactions,
-                selectedId: actionTargetItem?.transactionId,
-                onSelect: { tx in
-                    if let txId = tx.id {
-                        updateItemField(actionTargetItem, fields: ["transactionId": txId])
-                    }
-                }
-            )
-        }
-        .adaptivePresentation(isPresented: $showSingleReassign, style: .form) {
-            if let item = actionTargetItem {
-                ReassignToProjectModal(items: [item]) {}
-            }
-        }
-        .confirmationDialog("Delete item?", isPresented: $showSingleDeleteConfirmation) {
-            Button("Delete", role: .destructive) { deleteSingleItem() }
-        } message: {
-            Text("This action cannot be undone.")
-        }
+        .itemActionSheets(
+            itemActions,
+            spaces: accountContext.allSpaces,
+            transactions: accountContext.allTransactions,
+            accountId: accountContext.currentAccountId
+        )
     }
 
     // MARK: - Search Bar
@@ -406,20 +369,13 @@ struct UniversalSearchView: View {
         guard let item = searchResults.items.first(where: { $0.id == itemId }) else { return [] }
         // Search scope — sell modals need ProjectContext which isn't available here,
         // so we omit sell callbacks. Reassign to Project works via AccountContext.
-        return ItemMenuBuilder.buildSingleItemMenu(
-            context: .list,
+        return itemActions.buildMenu(
+            for: item,
             scope: .search,
-            callbacks: SingleItemMenuCallbacks(
-                onSelect: { selectedItemIds.insert(itemId) },
-                onStatusChange: { _ in actionTargetItem = item; showSingleStatusPicker = true },
-                onSetTransaction: { actionTargetItem = item; showSingleTransactionPicker = true },
-                onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
-                onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
-                onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
-                onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
-                onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
-            ),
-            currentStatus: item.status?.rawValue
+            accountId: accountContext.currentAccountId,
+            onSelect: { selectedItemIds.insert(itemId) },
+            includeSellToBusiness: false,
+            includeSellToProject: false
         )
     }
 
@@ -504,23 +460,6 @@ struct UniversalSearchView: View {
         let items = Array(selectedItems)
         Task { try? await service.deleteItems(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
-    }
-
-    // MARK: - Single-Item Actions
-
-    private func updateItemField(_ item: Item?, fields: [String: Any]) {
-        guard let accountId = accountContext.currentAccountId,
-              let itemId = item?.id else { return }
-        let service = ItemsService()
-        nonisolated(unsafe) let f = fields
-        Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: f) }
-    }
-
-    private func deleteSingleItem() {
-        guard let accountId = accountContext.currentAccountId,
-              let item = actionTargetItem else { return }
-        let service = ItemsService()
-        Task { try? await service.deleteItem(accountId: accountId, item: item) }
     }
 
     private func clearSpaceForSelectedItems() {
