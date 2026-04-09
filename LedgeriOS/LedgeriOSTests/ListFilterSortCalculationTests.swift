@@ -443,26 +443,26 @@ struct ListFilterSortCalculationTests {
 
     // MARK: - Available Filters
 
-    @Test("Project scope returns all 10 filter options")
+    @Test("Project scope returns all 11 filter options")
     func availableFiltersProjectScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .project("proj-1"))
-        #expect(filters.count == 10)
+        #expect(filters.count == 11)
         #expect(filters == ItemFilterOption.allCases)
     }
 
-    @Test("Inventory scope returns 7 filter options excluding project-specific ones")
+    @Test("Inventory scope returns 8 filter options excluding project-specific ones")
     func availableFiltersInventoryScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .inventory)
-        #expect(filters.count == 7)
+        #expect(filters.count == 8)
         #expect(!filters.contains(.fromInventory))
         #expect(!filters.contains(.toReturn))
         #expect(!filters.contains(.returned))
     }
 
-    @Test("All scope returns all 10 filter options")
+    @Test("All scope returns all 11 filter options")
     func availableFiltersAllScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .all)
-        #expect(filters.count == 10)
+        #expect(filters.count == 11)
         #expect(filters == ItemFilterOption.allCases)
     }
 
