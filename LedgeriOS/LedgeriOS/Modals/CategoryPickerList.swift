@@ -5,6 +5,11 @@ struct CategoryPickerList: View {
     let categories: [BudgetCategory]
     let selectedId: String?
     let onSelect: (BudgetCategory?) -> Void
+    /// When true (default), the picker dismisses itself after a selection —
+    /// appropriate when presented as its own sheet. Set to `false` when
+    /// embedded inline inside another modal, where dismissing would tear
+    /// down the parent sheet.
+    var autoDismissOnSelect: Bool = true
 
     @Environment(\.dismiss) private var dismiss
 
@@ -37,7 +42,7 @@ struct CategoryPickerList: View {
                     // "No Category" option
                     categoryRow(name: "No Category", isSelected: selectedId == nil) {
                         onSelect(nil)
-                        dismiss()
+                        if autoDismissOnSelect { dismiss() }
                     }
 
                     ForEach(visibleCategories) { category in
@@ -46,7 +51,7 @@ struct CategoryPickerList: View {
                             isSelected: category.id == selectedId
                         ) {
                             onSelect(category)
-                            dismiss()
+                            if autoDismissOnSelect { dismiss() }
                         }
                     }
                 }

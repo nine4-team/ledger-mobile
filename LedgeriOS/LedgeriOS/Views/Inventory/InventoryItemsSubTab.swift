@@ -79,6 +79,9 @@ struct InventoryItemsSubTab: View {
         .adaptivePresentation(isPresented: $showSingleSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
                 SellToProjectModal(items: [item], accountId: accountId) {}
+            } else {
+                Color.red
+                    .overlay(Text("DEBUG: missing \(accountContext.currentAccountId == nil ? "accountId" : "item")").foregroundStyle(.white))
             }
         }
         .adaptivePresentation(isPresented: $showSingleReassign, style: .form) {
@@ -145,7 +148,10 @@ struct InventoryItemsSubTab: View {
                 onClearTransaction: { updateItemField(item, fields: ["transactionId": NSNull()]) },
                 onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
                 onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
-                onSellToProject: { actionTargetItem = item; showSingleSellToProject = true },
+                onSellToProject: {
+                    actionTargetItem = item
+                    showSingleSellToProject = true
+                },
                 onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
                 onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
             ),

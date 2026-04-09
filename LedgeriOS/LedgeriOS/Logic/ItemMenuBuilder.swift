@@ -187,7 +187,10 @@ enum ItemMenuBuilder {
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
-            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: onSellToProject))
+            let wrapped: () -> Void = {
+                onSellToProject()
+            }
+            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: wrapped))
         }
         if !sellSubactions.isEmpty {
             items.append(ActionMenuItem(

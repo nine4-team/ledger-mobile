@@ -51,7 +51,8 @@ struct SellToBusinessModal: View {
                             selectedId: selectedCategoryId,
                             onSelect: { category in
                                 selectedCategoryId = category?.id
-                            }
+                            },
+                            autoDismissOnSelect: false
                         )
                         .frame(maxHeight: 200)
                     }

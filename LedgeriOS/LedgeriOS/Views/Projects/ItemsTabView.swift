@@ -14,7 +14,7 @@ struct ItemsTabView: View {
     @State private var showSingleSetSpace = false
     @State private var showSingleTransactionPicker = false
     @State private var showSingleSellToBusiness = false
-    @State private var showSingleSellToProject = false
+    @State private var sellToProjectItem: Item?
     @State private var showSingleReassign = false
     @State private var showSingleDeleteConfirmation = false
 
@@ -82,8 +82,8 @@ struct ItemsTabView: View {
                 SellToBusinessModal(items: [item], accountId: accountId) {}
             }
         }
-        .adaptivePresentation(isPresented: $showSingleSellToProject, style: .form) {
-            if let accountId = accountContext.currentAccountId, let item = actionTargetItem {
+        .adaptivePresentation(item: $sellToProjectItem, style: .form) { item in
+            if let accountId = accountContext.currentAccountId {
                 SellToProjectModal(items: [item], accountId: accountId) {}
             }
         }
@@ -164,7 +164,7 @@ struct ItemsTabView: View {
                 onSetSpace: { actionTargetItem = item; showSingleSetSpace = true },
                 onClearSpace: { updateItemField(item, fields: ["spaceId": NSNull()]) },
                 onSellToBusiness: { actionTargetItem = item; showSingleSellToBusiness = true },
-                onSellToProject: { actionTargetItem = item; showSingleSellToProject = true },
+                onSellToProject: { sellToProjectItem = item },
                 onReassignToProject: { actionTargetItem = item; showSingleReassign = true },
                 onDelete: { actionTargetItem = item; showSingleDeleteConfirmation = true }
             ),

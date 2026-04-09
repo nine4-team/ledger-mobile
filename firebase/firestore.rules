@@ -165,7 +165,8 @@ service cloud.firestore {
     // Clients may read for UI ("sold/returned/where did it go?") but cannot forge history.
     match /accounts/{accountId}/lineageEdges/{edgeId} {
       allow read: if isAccountMember(accountId);
-      allow create, update, delete: if false;
+      allow create: if isAccountMember(accountId);
+      allow update, delete: if false;
     }
   }
 }

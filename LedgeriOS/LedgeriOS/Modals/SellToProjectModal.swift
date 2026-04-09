@@ -121,7 +121,8 @@ struct SellToProjectModal: View {
                 onSelect: { category in
                     destinationCategoryId = category?.id
                     step = 3
-                }
+                },
+                autoDismissOnSelect: false
             )
         }
     }
@@ -147,7 +148,8 @@ struct SellToProjectModal: View {
                 selectedId: sourceCategoryId,
                 onSelect: { category in
                     sourceCategoryId = category?.id
-                }
+                },
+                autoDismissOnSelect: false
             )
 
             Spacer()
@@ -202,7 +204,7 @@ struct SellToProjectModal: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to complete sale. Please try again."
+                    errorMessage = "Failed: \(error.localizedDescription)"
                     isSaving = false
                 }
             }

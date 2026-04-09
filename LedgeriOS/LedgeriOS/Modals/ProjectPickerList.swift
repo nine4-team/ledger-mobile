@@ -41,11 +41,11 @@ struct ProjectPickerList: View {
                     projectList
                 }
             }
-            .task { await setupListener() }
-            .onDisappear {
-                listener?.remove()
-                listener = nil
-            }
+        }
+        .task { await setupListener() }
+        .onDisappear {
+            listener?.remove()
+            listener = nil
         }
     }
 
