@@ -18,14 +18,14 @@ enum TransactionDisplayCalculations {
     // MARK: - Display Name
 
     /// Resolves the display name for a transaction.
-    /// Priority: source → canonical inventory sale label → ID prefix → "Untitled Transaction".
+    /// Priority: source → legacy canonical inventory sale label → ID prefix → "Untitled Transaction".
     static func displayName(for transaction: Transaction) -> String {
         // 1. Source if non-nil and non-empty
         if let source = transaction.source, !source.trimmingCharacters(in: .whitespaces).isEmpty {
             return source
         }
 
-        // 2. Canonical inventory sale label
+        // 2. Legacy canonical inventory sale label
         if transaction.isCanonicalInventorySale == true {
             if let direction = transaction.inventorySaleDirection {
                 switch direction {

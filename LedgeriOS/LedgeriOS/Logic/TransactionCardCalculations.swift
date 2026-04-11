@@ -30,13 +30,14 @@ enum TransactionCardCalculations {
 
         // 2. Transaction type badge
         if let type = transactionType {
-            // Canonical inventory sales: business_to_project shows "Purchase" badge with primary color
             let label: String
             let color: Color
             if isCanonicalInventorySale == true, inventorySaleDirection == .businessToProject {
+                // Legacy canonical: business_to_project shows "Purchase" badge
                 label = TransactionType.purchase.displayLabel
                 color = BrandColors.primary
             } else {
+                // New per-batch Sales show "Sale", everything else uses its own label
                 label = type.displayLabel
                 switch type {
                 case .sale:      color = StatusColors.atRiskBar

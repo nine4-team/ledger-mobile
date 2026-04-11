@@ -399,9 +399,12 @@ struct AddExistingItemsPicker: View {
             let ops = InventoryOperationsService()
             Task {
                 do {
+                    // Use the item's existing budgetCategoryId or "uncategorized"
+                    let categoryId = routing.crossScope.compactMap(\.budgetCategoryId).first ?? "uncategorized"
                     try await ops.sellToProject(
                         items: routing.crossScope,
                         destinationProjectId: destProjectId,
+                        budgetCategoryId: categoryId,
                         accountId: accountId
                     )
                     // After sell completes, set spaceId

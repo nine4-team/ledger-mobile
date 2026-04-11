@@ -292,9 +292,9 @@ struct ItemEntryFlowView: View {
                 try await service.sellToProject(
                     items: itemsToSell,
                     destinationProjectId: projectId,
+                    budgetCategoryId: budgetCategoryId ?? "uncategorized",
                     accountId: accountId,
-                    userId: authManager.currentUser?.uid,
-                    destinationCategoryId: budgetCategoryId
+                    userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {
                     dismiss()

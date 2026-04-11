@@ -7,7 +7,7 @@ enum ItemDetailCalculations {
     /// Actions that can be performed on an item from its detail screen.
     enum ItemAction: String, CaseIterable {
         case changeStatus, setSpace, clearSpace, setTransaction, clearTransaction
-        case sellToBusiness, sellToProject, reassignToProject, reassignToInventory
+        case returnToInventory, sellToProject, moveToProject, reassignToProject
         case moveToReturn, makeCopies, bookmark, unbookmark, delete
     }
 
@@ -30,17 +30,17 @@ enum ItemDetailCalculations {
             actions.append(.clearTransaction)
         }
 
-        // Sale and reassign operations — visibility depends on scope (H21)
-        // Items in a project can be sold out or reassigned within the project.
+        // Move/sell operations — visibility depends on scope
+        // Items in a project can be returned to inventory, sold/moved to another project,
+        // or reassigned within the same project.
         // Items in inventory (no projectId) can only be sold into a project.
         let inProject = item.projectId != nil
         if inProject {
-            actions.append(.sellToBusiness)
+            actions.append(.returnToInventory)
             actions.append(.sellToProject)
+            actions.append(.moveToProject)
             actions.append(.reassignToProject)
-            actions.append(.reassignToInventory)
         } else {
-            // Inventory item: can only move into a project (sell to project)
             actions.append(.sellToProject)
         }
         actions.append(.moveToReturn)

@@ -74,17 +74,24 @@ enum ReimbursementDirection {
 
 enum ReportAggregationCalculations {
 
-    /// Determines reimbursement direction from explicit field or canonical sale direction.
+    /// Determines reimbursement direction from explicit field, canonical sale direction,
+    /// or new per-batch Sale type.
     static func reimbursementDirection(for tx: Transaction) -> ReimbursementDirection? {
         if tx.reimbursementType == "owed-to-company" { return .owedToCompany }
         if tx.reimbursementType == "owed-to-client" { return .owedToClient }
 
+        // Legacy canonical sales — direction-based
         if tx.isCanonicalInventorySale == true {
             switch tx.inventorySaleDirection {
             case .businessToProject: return .owedToCompany
             case .projectToBusiness: return .owedToClient
             case nil: return nil
             }
+        }
+
+        // New per-batch Sales — always business → project → owed to company
+        if tx.transactionType == .sale {
+            return .owedToCompany
         }
 
         return nil

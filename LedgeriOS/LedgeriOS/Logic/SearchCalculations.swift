@@ -133,7 +133,7 @@ enum SearchCalculations {
             return source
         }
 
-        // 2. Canonical inventory sale label
+        // 2. Legacy canonical inventory sale label
         if transaction.isCanonicalInventorySale == true {
             if let direction = transaction.inventorySaleDirection {
                 switch direction {
