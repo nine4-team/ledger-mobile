@@ -24,17 +24,16 @@ struct InventoryOperationsIntegrationTests {
     var txPath: String { FirestoreTestHelper.transactionsPath(accountId: accountId) }
     var edgesPath: String { FirestoreTestHelper.lineageEdgesPath(accountId: accountId) }
 
-    // MARK: - sellToBusiness
+    // MARK: - returnToInventory
 
-    @Test("sellToBusiness — item cleared, canonical sale created, source tx updated, lineage edge created")
-    func sellToBusinessSingleItem() async throws {
+    @Test("returnToInventory — item cleared, Return tx created, source tx updated, lineage edge created")
+    func returnToInventorySingleItem() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
         let sourceTxId = UUID().uuidString
         let projectId = "proj-\(UUID().uuidString)"
         let categoryId = "catFurnishings"
 
-        // Seed: item in a project with a source transaction
         let item = makeItem(
             id: itemId,
             projectId: projectId,
@@ -47,32 +46,32 @@ struct InventoryOperationsIntegrationTests {
         try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
         try FirestoreTestHelper.write(sourceTx, toCollection: txPath, id: sourceTxId)
 
-        // Execute
-        try await service.sellToBusiness(
+        try await service.returnToInventory(
             items: [item],
             accountId: accountId
         )
 
-        // Verify: item cleared from project
+        // Verify: item cleared from project, budgetCategoryId wiped
         let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
         #expect(resultItem.projectId == nil)
+        #expect(resultItem.budgetCategoryId == nil)
         #expect(resultItem.spaceId == nil)
         #expect(resultItem.status == .purchased)
 
-        // Verify: item linked to canonical sale
-        let expectedSaleId = "SALE_\(projectId)_project_to_business_\(categoryId)"
-        #expect(resultItem.transactionId == expectedSaleId)
+        // Verify: item linked to Return transaction (auto-ID, not SALE_ prefix)
+        let returnTxId = try #require(resultItem.transactionId)
+        #expect(!returnTxId.hasPrefix("SALE_"))
 
-        // Verify: canonical sale transaction exists with correct fields
-        let sale: LedgeriOS.Transaction? = try await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: expectedSaleId)
-        let resultSale = try #require(sale)
-        #expect(resultSale.isCanonicalInventorySale == true)
+        // Verify: Return transaction exists with correct fields
+        let returnTx = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: returnTxId))
+        #expect(returnTx.transactionType == .return)
+        #expect(returnTx.source == "Business Inventory")
 
-        // Verify raw field to check the "type" CodingKey
-        let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(expectedSaleId)"))
-        #expect(rawSale["inventorySaleDirection"] as? String == "project_to_business")
-        #expect(rawSale["isCanonicalInventorySale"] as? Bool == true)
-        #expect(rawSale["type"] as? String == "sale")
+        // Verify raw field
+        let rawReturn = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(returnTxId)"))
+        #expect(rawReturn["type"] as? String == "Return")
+        #expect(rawReturn["isCanonicalInventorySale"] == nil)
+        #expect(rawReturn["inventorySaleDirection"] == nil)
 
         // Verify: source transaction no longer has this item
         let resultSourceTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: sourceTxId))
@@ -85,64 +84,27 @@ struct InventoryOperationsIntegrationTests {
             .getDocuments()
         #expect(edges.documents.count >= 1)
         let edgeData = edges.documents.first?.data()
-        #expect(edgeData?["movementKind"] as? String == "sold")
+        #expect(edgeData?["movementKind"] as? String == "returned")
         #expect(edgeData?["fromProjectId"] as? String == projectId)
-    }
-
-    @Test("sellToBusiness — multiple items in different categories create separate canonical sales")
-    func sellToBusinessMultipleCategories() async throws {
-        try await FirestoreTestHelper.signIn()
-        let projectId = "proj-\(UUID().uuidString)"
-
-        let item1 = makeItem(
-            id: UUID().uuidString,
-            projectId: projectId,
-            purchasePriceCents: 10000,
-            budgetCategoryId: "catA"
-        )
-        let item2 = makeItem(
-            id: UUID().uuidString,
-            projectId: projectId,
-            purchasePriceCents: 20000,
-            budgetCategoryId: "catB"
-        )
-
-        try FirestoreTestHelper.write(item1, toCollection: itemsPath, id: item1.id!)
-        try FirestoreTestHelper.write(item2, toCollection: itemsPath, id: item2.id!)
-
-        try await service.sellToBusiness(items: [item1, item2], accountId: accountId)
-
-        // Two separate canonical sales should exist
-        let saleA: LedgeriOS.Transaction? = try await FirestoreTestHelper.read(
-            LedgeriOS.Transaction.self, fromCollection: txPath,
-            id: "SALE_\(projectId)_project_to_business_catA"
-        )
-        let saleB: LedgeriOS.Transaction? = try await FirestoreTestHelper.read(
-            LedgeriOS.Transaction.self, fromCollection: txPath,
-            id: "SALE_\(projectId)_project_to_business_catB"
-        )
-
-        #expect(saleA != nil)
-        #expect(saleB != nil)
     }
 
     // MARK: - sellToProject
 
-    @Test("sellToProject — item moves to destination, two canonical sales created")
-    func sellToProjectTwoHop() async throws {
+    @Test("sellToProject — item moves to destination, per-batch Sale created")
+    func sellToProjectPerBatch() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
         let sourceTxId = UUID().uuidString
-        let sourceProjectId = "projA-\(UUID().uuidString)"
         let destProjectId = "projB-\(UUID().uuidString)"
         let categoryId = "catFurnishings"
 
         let item = makeItem(
             id: itemId,
-            projectId: sourceProjectId,
+            projectId: nil,
             transactionId: sourceTxId,
             purchasePriceCents: 25000,
-            budgetCategoryId: categoryId
+            projectPriceCents: 30000,
+            budgetCategoryId: nil
         )
         let sourceTx = makeTransaction(id: sourceTxId, itemIds: [itemId])
 
@@ -152,26 +114,32 @@ struct InventoryOperationsIntegrationTests {
         try await service.sellToProject(
             items: [item],
             destinationProjectId: destProjectId,
+            budgetCategoryId: categoryId,
             accountId: accountId
         )
 
         // Verify: item moved to destination project
         let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
         #expect(resultItem.projectId == destProjectId)
+        #expect(resultItem.budgetCategoryId == categoryId)
         #expect(resultItem.spaceId == nil)
+        #expect(resultItem.status == .purchased)
 
-        // Verify: hop 1 canonical sale (source project → business)
-        let hop1Id = "SALE_\(sourceProjectId)_project_to_business_\(categoryId)"
-        let hop1: LedgeriOS.Transaction? = try await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: hop1Id)
-        #expect(hop1 != nil)
+        // Verify: item linked to per-batch Sale (auto-ID, not SALE_ prefix)
+        let saleTxId = try #require(resultItem.transactionId)
+        #expect(!saleTxId.hasPrefix("SALE_"))
 
-        // Verify: hop 2 canonical sale (business → destination project)
-        let hop2Id = "SALE_\(destProjectId)_business_to_project_\(categoryId)"
-        let hop2: LedgeriOS.Transaction? = try await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: hop2Id)
-        #expect(hop2 != nil)
-
-        // Verify: item linked to destination canonical sale
-        #expect(resultItem.transactionId == hop2Id)
+        // Verify: Sale transaction exists with correct shape
+        let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
+        #expect(rawSale["type"] as? String == "Sale")
+        #expect(rawSale["source"] as? String == "Business Inventory")
+        #expect(rawSale["projectId"] as? String == destProjectId)
+        #expect(rawSale["budgetCategoryId"] as? String == categoryId)
+        #expect(rawSale["status"] as? String == "completed")
+        #expect(rawSale["isComplete"] as? Bool == true)
+        // No canonical sale fields
+        #expect(rawSale["isCanonicalInventorySale"] == nil)
+        #expect(rawSale["inventorySaleDirection"] == nil)
 
         // Verify: source transaction updated
         let resultSourceTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: sourceTxId))
@@ -249,44 +217,5 @@ struct InventoryOperationsIntegrationTests {
                 accountId: accountId
             )
         }
-    }
-
-    // MARK: - reassignToInventory
-
-    @Test("reassignToInventory — item cleared from project, source tx updated, lineage edge created")
-    func reassignToInventory() async throws {
-        try await FirestoreTestHelper.signIn()
-        let itemId = UUID().uuidString
-        let sourceTxId = UUID().uuidString
-        let projectId = "proj-\(UUID().uuidString)"
-
-        let item = makeItem(id: itemId, projectId: projectId, transactionId: sourceTxId)
-        let sourceTx = makeTransaction(id: sourceTxId, itemIds: [itemId])
-
-        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
-        try FirestoreTestHelper.write(sourceTx, toCollection: txPath, id: sourceTxId)
-
-        try await service.reassignToInventory(
-            items: [item],
-            accountId: accountId
-        )
-
-        // Verify: item's projectId cleared
-        let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
-        #expect(resultItem.projectId == nil)
-
-        // Verify: source transaction updated
-        let resultSourceTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: sourceTxId))
-        #expect(resultSourceTx.itemIds?.contains(itemId) != true)
-
-        // Verify: lineage edge
-        let edges = try await Firestore.firestore()
-            .collection(edgesPath)
-            .whereField("itemId", isEqualTo: itemId)
-            .getDocuments()
-        #expect(edges.documents.count >= 1)
-        let edgeData = edges.documents.first?.data()
-        #expect(edgeData?["movementKind"] as? String == "correction")
-        #expect(edgeData?["fromProjectId"] as? String == projectId)
     }
 }

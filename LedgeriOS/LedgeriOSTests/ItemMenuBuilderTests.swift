@@ -19,9 +19,9 @@ struct ItemMenuBuilderTests {
             onMoveToReturnTransaction: {},
             onSetSpace: {},
             onClearSpace: {},
-            onSellToBusiness: {},
+            onReturnToInventory: {},
             onSellToProject: {},
-            onReassignToInventory: {},
+            onMoveToProject: {},
             onReassignToProject: {},
             onMakeCopies: {},
             onDelete: {}
@@ -36,9 +36,9 @@ struct ItemMenuBuilderTests {
             onMoveToReturnTransaction: {},
             onSetSpace: {},
             onClearSpace: {},
-            onSellToBusiness: {},
+            onReturnToInventory: {},
             onSellToProject: {},
-            onReassignToInventory: {},
+            onMoveToProject: {},
             onReassignToProject: {},
             onDelete: {}
         )
@@ -99,13 +99,12 @@ struct ItemMenuBuilderTests {
         #expect(ids(menu).contains("make-copies"))
     }
 
-    @Test("Detail context includes Clear Status in status submenu")
-    func detailContextClearStatus() {
+    @Test("Detail context omits Status submenu (dedicated toolbar capsule handles status)")
+    func detailContextNoStatusSubmenu() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .detail, scope: .project, callbacks: allCallbacks()
         )
-        let statusSubs = subIds(of: menu, parent: "status")
-        #expect(statusSubs?.contains("clear-status") == true)
+        #expect(!ids(menu).contains("status"))
     }
 
     @Test("Detail context includes Set and Clear Transaction")
@@ -177,54 +176,53 @@ struct ItemMenuBuilderTests {
             context: .list, scope: .project, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("sell-to-business") == true)
+        #expect(sellSubs?.contains("return-to-inventory") == true)
         #expect(sellSubs?.contains("sell-to-project") == true)
     }
 
-    @Test("Project scope shows Reassign to Inventory and Reassign to Project")
+    @Test("Project scope shows Reassign to Project")
     func projectScopeReassign() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: allCallbacks()
         )
         let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-inventory") == true)
         #expect(reassignSubs?.contains("reassign-to-project") == true)
     }
 
     // MARK: - Scope: Inventory
 
-    @Test("Inventory scope hides Sell to Business")
-    func inventoryScopeNoSellToBusiness() {
+    @Test("Inventory scope hides Return to Inventory and Move to Project")
+    func inventoryScopeNoReturnOrMove() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .inventory, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("sell-to-business") == false)
+        #expect(sellSubs?.contains("return-to-inventory") == false)
+        #expect(sellSubs?.contains("move-to-project") == false)
         #expect(sellSubs?.contains("sell-to-project") == true)
     }
 
-    @Test("Inventory scope hides Reassign to Inventory")
-    func inventoryScopeNoReassignToInventory() {
+    @Test("Inventory scope still shows Reassign to Project")
+    func inventoryScopeReassign() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .inventory, callbacks: allCallbacks()
         )
         let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-inventory") == false)
         #expect(reassignSubs?.contains("reassign-to-project") == true)
     }
 
     // MARK: - Scope: Search
 
-    @Test("Search scope shows all sell and reassign options")
+    @Test("Search scope shows all sell/move and reassign options")
     func searchScopeAll() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .search, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("sell-to-business") == true)
+        #expect(sellSubs?.contains("return-to-inventory") == true)
         #expect(sellSubs?.contains("sell-to-project") == true)
+        #expect(sellSubs?.contains("move-to-project") == true)
         let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-inventory") == true)
         #expect(reassignSubs?.contains("reassign-to-project") == true)
     }
 
@@ -264,8 +262,9 @@ struct ItemMenuBuilderTests {
     @Test("Missing sell callbacks omit sell submenu entirely")
     func noSellCallbacksNoSellMenu() {
         var cb = allCallbacks()
-        cb.onSellToBusiness = nil
+        cb.onReturnToInventory = nil
         cb.onSellToProject = nil
+        cb.onMoveToProject = nil
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: cb
         )
@@ -286,13 +285,16 @@ struct ItemMenuBuilderTests {
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Bulk menu inventory scope hides Sell to Business and Reassign to Inventory")
+    @Test("Bulk menu inventory scope hides Return to Inventory and Move to Project")
     func bulkMenuInventoryScope() {
         let menu = ItemMenuBuilder.buildBulkMenu(scope: .inventory, callbacks: allBulkCallbacks())
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("sell-to-business") == false)
+        #expect(sellSubs?.contains("return-to-inventory") == false)
+        #expect(sellSubs?.contains("move-to-project") == false)
+        #expect(sellSubs?.contains("sell-to-project") == true)
+        // Reassign is still available
         let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-inventory") == false)
+        #expect(reassignSubs?.contains("reassign-to-project") == true)
     }
 
     @Test("Bulk menu space context uses 'Move to Another Space' label")

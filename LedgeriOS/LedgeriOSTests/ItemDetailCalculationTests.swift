@@ -57,10 +57,10 @@ struct ItemDetailCalculationTests {
         #expect(actions.contains(.changeStatus))
         #expect(actions.contains(.setSpace))
         #expect(actions.contains(.setTransaction))
-        #expect(actions.contains(.sellToBusiness))
+        #expect(actions.contains(.returnToInventory))
         #expect(actions.contains(.sellToProject))
         #expect(actions.contains(.reassignToProject))
-        #expect(actions.contains(.reassignToInventory))
+        #expect(actions.contains(.moveToProject))
         #expect(actions.contains(.moveToReturn))
         #expect(actions.contains(.makeCopies))
         #expect(actions.contains(.bookmark))
@@ -73,7 +73,7 @@ struct ItemDetailCalculationTests {
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
-        #expect(actions.contains(.sellToBusiness))
+        #expect(actions.contains(.returnToInventory))
         #expect(actions.contains(.delete))
     }
 
@@ -83,7 +83,7 @@ struct ItemDetailCalculationTests {
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
-        #expect(actions.contains(.sellToBusiness))
+        #expect(actions.contains(.returnToInventory))
         #expect(actions.contains(.delete))
         #expect(actions.count > 2)
     }
@@ -94,7 +94,7 @@ struct ItemDetailCalculationTests {
         let actions = ItemDetailCalculations.availableActions(for: item)
 
         #expect(actions.contains(.changeStatus))
-        #expect(actions.contains(.sellToBusiness))
+        #expect(actions.contains(.returnToInventory))
         #expect(actions.contains(.delete))
         #expect(actions.count > 2)
     }
