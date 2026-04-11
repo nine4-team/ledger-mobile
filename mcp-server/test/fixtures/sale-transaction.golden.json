@@ -1,0 +1,66 @@
+{
+  "_comment": "Shape-parity fixture for Sale transactions. Both MCP and iOS tests assert that their sell-items implementation produces a Sale transaction whose non-timestamp, non-auto-ID fields match this shape exactly. Update this file and both test suites in the same commit — it is the canonical contract.",
+  "input": {
+    "items": [
+      {
+        "id": "item_a",
+        "name": "Item A",
+        "purchasePriceCents": 10000,
+        "projectPriceCents": 12000,
+        "taxRatePct": 8.25
+      },
+      {
+        "id": "item_b",
+        "name": "Item B",
+        "purchasePriceCents": 5000,
+        "projectPriceCents": 6000,
+        "taxRatePct": 8.25
+      }
+    ],
+    "destinationProjectId": "proj_dest",
+    "budgetCategoryId": "cat_furnishings",
+    "notes": "4/9 — shape parity test"
+  },
+  "expectedSaleTransaction": {
+    "type": "Sale",
+    "source": "Business Inventory",
+    "projectId": "proj_dest",
+    "budgetCategoryId": "cat_furnishings",
+    "subtotalCents": 18000,
+    "amountCents": 19485,
+    "itemIds": ["item_a", "item_b"],
+    "status": "completed",
+    "isComplete": true,
+    "notes": "4/9 — shape parity test"
+  },
+  "expectedItemUpdates": [
+    {
+      "itemId": "item_a",
+      "projectId": "proj_dest",
+      "budgetCategoryId": "cat_furnishings",
+      "status": "purchased"
+    },
+    {
+      "itemId": "item_b",
+      "projectId": "proj_dest",
+      "budgetCategoryId": "cat_furnishings",
+      "status": "purchased"
+    }
+  ],
+  "expectedAmountCalculation": {
+    "rule": "amountCents = sum(item.projectPriceCents * (1 + item.taxRatePct / 100))",
+    "itemA": "12000 * 1.0825 = 12990",
+    "itemB": "6000 * 1.0825 = 6495",
+    "total": "12990 + 6495 = 19485"
+  },
+  "expectedItemUpdatesCount": 2,
+  "expectedLineageEdgeCount": 2,
+  "frozenFields": [
+    "type",
+    "source",
+    "projectId",
+    "budgetCategoryId",
+    "amountCents",
+    "itemIds"
+  ]
+}
