@@ -131,7 +131,7 @@ struct TransactionAuditPanel: View {
                 Text("SKU")
                     .frame(width: 80, alignment: .leading)
             }
-            .font(.system(size: 10, weight: .medium))
+            .font(Typography.microLabel)
             .foregroundStyle(BrandColors.textSecondary)
 
             // Item rows

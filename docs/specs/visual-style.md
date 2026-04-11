@@ -1,5 +1,5 @@
 # Visual Style (Desktop & Mobile)
-Status: modify (colors + borders + full typography shipped; only the icon-call-site audit remains)
+Status: shipped (all visible work complete as of 2026-04-11)
 Last updated: 2026-04-11
 
 > **Note on web-parity scope:** The original spec treated the web app as the
@@ -18,8 +18,13 @@ Last updated: 2026-04-11
 >     - **Avenir Next** handles everything except screen titles — system font on all Apple platforms, no bundling needed. Weight map: h2/h3/button/buttonSmall/label/sectionLabel → DemiBold, body/small/caption/input → Regular.
 >     - **Playfair Display** handles screen titles (`h1` at 26pt, Regular weight). Bundled as the Google Fonts variable TTF at [Resources/Fonts/PlayfairDisplay.ttf](LedgeriOS/LedgeriOS/Resources/Fonts/PlayfairDisplay.ttf). Wired into `project.pbxproj` with build file ID `FA7F0100000000000F0001AA` (Resources phase) and file ref ID `FA7F0200000000000F0001AA`. Registered for both platforms via `UIAppFonts` (iOS) and `ATSApplicationFontsPath = "."` (macOS) in [Info.plist](LedgeriOS/LedgeriOS/Info.plist). Runtime-verified via `CTFontManagerRegisterFontsForURL` — `PlayfairDisplay-Regular` resolves correctly (not falling back to Helvetica) on macOS. iOS uses the same registration path through `UIAppFonts`.
 >
-> **Still pending**:
-> - **Direct `.font(.system(size: N))` call sites** — ~75 call sites across 46 files still use `.font(.system(...))` directly (most are SF Symbol icon sizing, but some render text). These bypass the Typography tokens and should be audited — icon usage stays, any text usage should migrate to Typography tokens. Out of scope for the initial typography pass.
+> **Icon call-site audit** (2026-04-11) — Walked all 75 `.font(.system(size: N))` call sites. 70 of them were SF Symbol icon sizing on `Image(systemName:)` (or on a Button container wrapping an icon) and were left alone — icons aren't text. The 5 text-rendering sites were migrated:
+>     - [Badge.swift](LedgeriOS/LedgeriOS/Components/Badge.swift): 11pt semibold → new `Typography.badge` token (Avenir Next DemiBold 11pt).
+>     - [NativeListControlBar.swift](LedgeriOS/LedgeriOS/Components/NativeListControlBar.swift), [TransactionAuditPanel.swift](LedgeriOS/LedgeriOS/Views/Projects/TransactionAuditPanel.swift): 10pt medium column/button labels → new `Typography.microLabel` token (Avenir Next Medium 10pt).
+>     - [ProgressRing.swift](LedgeriOS/LedgeriOS/Components/ProgressRing.swift): dynamic `size * 0.28` percentage text → inline `.custom("AvenirNext-Bold", size: size * 0.28)` (parameterized, not token-worthy).
+>     - [MakeCopiesModal.swift](LedgeriOS/LedgeriOS/Modals/MakeCopiesModal.swift): 48pt bold counter — dropped system-rounded design in favor of `.custom("AvenirNext-Bold", size: 48)` for brand-font consistency.
+>
+> Every site that renders text now routes through either a `Typography` token or an inline `.custom("AvenirNext-*", …)` call, so no Avenir-Next-branded surface is silently falling back to system fonts.
 
 ## Summary
 The desktop app's color palette and UI chrome (borders, outlines, button styling) need to be updated to match the lighter, sleeker look and feel of the web app. The mobile app's colors are closer but the red specifically feels too dark/gloomy and should also align with the web app's palette. The app's typography across all platforms should adopt the 1584 Design brand fonts: Playfair Display and Avenir.

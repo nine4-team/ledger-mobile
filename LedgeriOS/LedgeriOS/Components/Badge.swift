@@ -8,7 +8,7 @@ struct Badge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold))
+            .font(Typography.badge)
             .foregroundStyle(color)
             .lineLimit(1)
             .truncationMode(.tail)

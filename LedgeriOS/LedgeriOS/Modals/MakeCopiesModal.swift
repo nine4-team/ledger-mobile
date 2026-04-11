@@ -45,7 +45,7 @@ struct MakeCopiesModal: View {
                     .disabled(copyCount <= minCount)
 
                     Text("\(copyCount)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(.custom("AvenirNext-Bold", size: 48))
                         .foregroundStyle(BrandColors.textPrimary)
                         .frame(minWidth: 60, alignment: .center)
 

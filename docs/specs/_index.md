@@ -28,7 +28,7 @@ Last updated: 2026-04-11
 - [shipped] [List Layout](list-layout.md) — macOS item and transaction lists default to single-column stacked rows via `Dimensions.listColumns` platform branch. Shipped 2026-04-03 (commit 2358be7b). List/grid toggle nice-to-have deferred.
 
 ### Visual Style
-- [modify] [Visual Style](visual-style.md) — Color palette, border/outline styling, and typography across all platforms. **Shipped**: status colors brightened (2026-04-03); macOS hairline borders + dark-mode-adaptive soft border color (2026-04-10); atRiskBar/overflowBar retinted to rust family (2026-04-10); full typography — Avenir Next workhorse + Playfair Display screen titles (2026-04-10). Color palette now considered final — no further web-app cross-check. **Still pending**: audit of ~75 direct `.font(.system(...))` call sites to migrate any that render text (icons stay as-is).
+- [shipped] [Visual Style](visual-style.md) — Color palette, border/outline styling, and typography across all platforms. Ships across 2026-04-03 → 2026-04-11: status colors brightened; macOS hairline borders + dark-mode-adaptive soft border color; atRiskBar/overflowBar retinted to rust family; Avenir Next workhorse + Playfair Display screen titles; icon call-site audit complete (70 SF Symbol sites kept, 5 text sites migrated to new `Typography.badge`/`microLabel` tokens or inline `.custom("AvenirNext-*", …)`). Web-parity framing dropped as stale.
 
 ### Project Charges & Fees
 - [new] [Project Charges](project-charges.md) — Service fees, design fees, and planned costs created within a project (distinct from inventory items and pass-through expenses)

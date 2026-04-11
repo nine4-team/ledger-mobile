@@ -62,6 +62,16 @@ enum Typography {
 
     /// Uppercase section label — 13pt semibold. Apply with `.sectionLabelStyle()`.
     static let sectionLabel: Font = .custom(avenirDemiBold, size: 13, relativeTo: .caption)
+
+    // MARK: - Micro
+
+    /// Badge text — 11pt semibold. Small pill labels inside `Badge`.
+    /// Intentionally smaller than `caption` so badges stay compact.
+    static let badge: Font = .custom(avenirDemiBold, size: 11, relativeTo: .caption)
+
+    /// Micro label — 10pt medium. Used for tiny column headers and
+    /// labels under icon buttons where vertical space is tight.
+    static let microLabel: Font = .custom(avenirMedium, size: 10, relativeTo: .caption)
 }
 
 // MARK: - View Modifiers

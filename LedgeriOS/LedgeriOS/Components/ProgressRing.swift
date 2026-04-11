@@ -21,7 +21,7 @@ struct ProgressRing: View {
                 .animation(.easeInOut(duration: 0.3), value: progress)
 
             Text("\(percentage)%")
-                .font(.system(size: size * 0.28, weight: .bold))
+                .font(.custom("AvenirNext-Bold", size: size * 0.28))
                 .foregroundStyle(BrandColors.primary)
         }
         .frame(width: size, height: size)

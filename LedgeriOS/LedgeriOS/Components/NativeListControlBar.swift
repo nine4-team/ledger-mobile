@@ -147,7 +147,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 .frame(height: 24)
                 .frame(minWidth: 44)
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(Typography.microLabel)
                 .foregroundStyle(BrandColors.textSecondary)
         }
         .frame(minHeight: 44)
