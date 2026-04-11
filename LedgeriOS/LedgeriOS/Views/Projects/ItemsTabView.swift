@@ -123,6 +123,7 @@ struct ItemsTabView: View {
                 onReturnToInventory: { showBulkReturnToInventory = true },
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
+                onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
             )
         )

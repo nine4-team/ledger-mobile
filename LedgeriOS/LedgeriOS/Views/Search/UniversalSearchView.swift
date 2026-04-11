@@ -404,6 +404,7 @@ struct UniversalSearchView: View {
                 onSetSpace: { showItemSetSpace = true },
                 onClearSpace: { clearSpaceForSelectedItems() },
                 onReassignToProject: { showItemMoveToProject = true },
+                onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showItemDeleteConfirmation = true }
             )
         )
@@ -412,6 +413,7 @@ struct UniversalSearchView: View {
     private var transactionBulkActionMenuItems: [ActionMenuItem] {
         TransactionMenuBuilder.buildBulkMenu(
             callbacks: BulkTransactionMenuCallbacks(
+                onCopyIDs: { Clipboard.copyLines(selectedTransactionIds) },
                 onDelete: { showTransactionDeleteConfirmation = true }
             )
         )

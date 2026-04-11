@@ -110,6 +110,7 @@ struct InventoryItemsSubTab: View {
                 onClearSpace: { clearSpaceForSelected() },
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
+                onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
             )
         )

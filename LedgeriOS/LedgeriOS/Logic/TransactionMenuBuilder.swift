@@ -15,6 +15,7 @@ struct SingleTransactionMenuCallbacks {
 
 /// Callbacks for bulk transaction menu actions.
 struct BulkTransactionMenuCallbacks {
+    var onCopyIDs: (() -> Void)?
     var onDelete: (() -> Void)?
 }
 
@@ -123,6 +124,14 @@ enum TransactionMenuBuilder {
         callbacks: BulkTransactionMenuCallbacks
     ) -> [ActionMenuItem] {
         var items: [ActionMenuItem] = []
+        if let onCopyIDs = callbacks.onCopyIDs {
+            items.append(ActionMenuItem(
+                id: "copy-ids",
+                label: "Copy IDs",
+                icon: "doc.on.clipboard",
+                onPress: onCopyIDs
+            ))
+        }
         if let onDelete = callbacks.onDelete {
             items.append(ActionMenuItem(
                 id: "delete",

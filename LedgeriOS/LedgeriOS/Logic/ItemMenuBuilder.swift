@@ -58,6 +58,7 @@ struct BulkItemMenuCallbacks {
     var onSellToProject: (() -> Void)?
     var onMoveToProject: (() -> Void)?
     var onReassignToProject: (() -> Void)?
+    var onCopyIDs: (() -> Void)?
     var onDelete: (() -> Void)?
 }
 
@@ -327,6 +328,11 @@ enum ItemMenuBuilder {
                 subactions: reassignSubactions,
                 isActionOnly: true
             ))
+        }
+
+        // Copy IDs
+        if let onCopyIDs = callbacks.onCopyIDs {
+            items.append(ActionMenuItem(id: "copy-ids", label: "Copy IDs", icon: "doc.on.clipboard", onPress: onCopyIDs))
         }
 
         // Delete (always last)

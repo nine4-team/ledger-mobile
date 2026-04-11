@@ -269,6 +269,7 @@ struct TransactionsTabView: View {
     private var bulkActionMenuItems: [ActionMenuItem] {
         TransactionMenuBuilder.buildBulkMenu(
             callbacks: BulkTransactionMenuCallbacks(
+                onCopyIDs: { Clipboard.copyLines(selectedIds) },
                 onDelete: { showBulkDeleteConfirmation = true }
             )
         )
