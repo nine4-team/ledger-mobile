@@ -136,6 +136,7 @@
 		A1000101000000000000AA01 /* LedgerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA01 /* LedgerApp.swift */; };
 		A1000101000000000000AA03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA03 /* Assets.xcassets */; };
 		A1000101000000000000AA04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA04 /* GoogleService-Info.plist */; };
+		FA7F0100000000000F0001AA /* PlayfairDisplay.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FA7F0200000000000F0001AA /* PlayfairDisplay.ttf */; };
 		A1000101000000000000AA05 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA05 /* AuthManager.swift */; };
 		A1000101000000000000AA08 /* BrandColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA08 /* BrandColors.swift */; };
 		A1000101000000000000AA09 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA09 /* AuthView.swift */; };
@@ -461,6 +462,7 @@
 		A1000201000000000000AA01 /* LedgerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerApp.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA03 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1000201000000000000AA04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		FA7F0200000000000F0001AA /* PlayfairDisplay.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Resources/Fonts/PlayfairDisplay.ttf"; sourceTree = "<group>"; };
 		A1000201000000000000AA05 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA08 /* BrandColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandColors.swift; sourceTree = "<group>"; };
 		A1000201000000000000AA09 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
@@ -1001,6 +1003,7 @@
 				A1000201000000000000AA0E /* LedgeriOS.entitlements */,
 				A1000201000000000000AA03 /* Assets.xcassets */,
 				A1000201000000000000AA04 /* GoogleService-Info.plist */,
+				FA7F0200000000000F0001AA /* PlayfairDisplay.ttf */,
 				4EDD5E8B700DE9763AFB2C52 /* Models */,
 				51B80CCC8A7048E0DEED3075 /* Services */,
 				41E4C3E7AD3CB291B4D14E08 /* Logic */,
@@ -1359,6 +1362,7 @@
 			files = (
 				A1000101000000000000AA03 /* Assets.xcassets in Resources */,
 				A1000101000000000000AA04 /* GoogleService-Info.plist in Resources */,
+				FA7F0100000000000F0001AA /* PlayfairDisplay.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
