@@ -34,13 +34,32 @@ enum InventoryOperationError: Error {
 ///
 /// ## Returning to Inventory
 /// Items moving from a project back to business inventory create a Return
-/// transaction with source: "Business Inventory". Items have their budgetCategoryId
-/// wiped (inventory items have no category).
+/// transaction. The `source` label defaults to `"Business Inventory"`, but
+/// callers can pass `inventoryLabel: "[Account Name] Inventory"` (built via
+/// `InventoryOperationsService.inventoryLabel(for:)`) for a branded label.
+/// Items have their budgetCategoryId wiped (inventory items have no category).
 ///
 /// ## Batch Cap
 /// All operations are capped at 100 items per call.
 struct InventoryOperationsService {
     private static let maxBatchItems = 100
+
+    /// Default source label used when a caller doesn't supply one.
+    /// Kept as the static fallback for accounts without a configured name.
+    static let defaultInventoryLabel = "Business Inventory"
+
+    /// Produces the source label for inventory-originating Sale and Return
+    /// transactions. Prefers `"[Account Name] Inventory"` when a non-empty
+    /// account name is provided, otherwise falls back to
+    /// `defaultInventoryLabel` (`"Business Inventory"`).
+    ///
+    /// Whitespace-only names are treated as empty. The trailing " Inventory"
+    /// suffix is always appended so the resulting label is recognizable as
+    /// an inventory source in transaction filters.
+    static func inventoryLabel(for accountName: String?) -> String {
+        let trimmed = accountName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? defaultInventoryLabel : "\(trimmed) Inventory"
+    }
 
     private let makeBatch: @Sendable () -> any BatchWriting
 
@@ -60,6 +79,7 @@ struct InventoryOperationsService {
         destinationProjectId: String,
         budgetCategoryId: String,
         accountId: String,
+        inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil
     ) async throws {
@@ -83,7 +103,7 @@ struct InventoryOperationsService {
         let today = Self.todayDateString()
         var saleFields: [String: Any] = [
             "type": "Sale",
-            "source": "Business Inventory",
+            "source": inventoryLabel,
             "projectId": destinationProjectId,
             "budgetCategoryId": budgetCategoryId,
             "amountCents": totals.amountCents,
@@ -154,11 +174,13 @@ struct InventoryOperationsService {
     // MARK: - Return to Inventory
 
     /// Moves items from a project back to business inventory.
-    /// Creates a Return transaction with source: "Business Inventory".
+    /// Creates a Return transaction whose `source` defaults to
+    /// `"Business Inventory"`; pass `inventoryLabel` for a branded label.
     /// Items have budgetCategoryId and projectId wiped (inventory invariant).
     func returnToInventory(
         items: [Item],
         accountId: String,
+        inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil
     ) async throws {
@@ -184,7 +206,7 @@ struct InventoryOperationsService {
         let today = Self.todayDateString()
         var returnFields: [String: Any] = [
             "type": "Return",
-            "source": "Business Inventory",
+            "source": inventoryLabel,
             "projectId": sourceProjectId,
             "amountCents": returnAmount,
             "itemIds": items.compactMap(\.id),
@@ -246,6 +268,7 @@ struct InventoryOperationsService {
         destinationProjectId: String,
         destinationCategoryId: String,
         accountId: String,
+        inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil
     ) async throws {
@@ -282,7 +305,7 @@ struct InventoryOperationsService {
         let returnId = UUID().uuidString
         var returnFields: [String: Any] = [
             "type": "Return",
-            "source": "Business Inventory",
+            "source": inventoryLabel,
             "projectId": sourceProjectId,
             "amountCents": returnAmount,
             "itemIds": itemIdList,
@@ -299,7 +322,7 @@ struct InventoryOperationsService {
         let saleId = UUID().uuidString
         var saleFields: [String: Any] = [
             "type": "Sale",
-            "source": "Business Inventory",
+            "source": inventoryLabel,
             "projectId": destinationProjectId,
             "budgetCategoryId": destinationCategoryId,
             "amountCents": totals.amountCents,

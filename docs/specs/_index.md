@@ -19,7 +19,7 @@ Last updated: 2026-04-11
 
 ### Transactions & Item Entry
 - [shipped] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing: itemized categories go through inventory, non-itemized expenses go directly to projects (commit 322cf420, 2026-04-07)
-- [modify] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. **Phase 1 shipped 2026-04-07** (sale transactions now carry "Business Inventory" source label). Client-facing masking, item origin badges, and dynamic business-name labels still pending.
+- [modify] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. **Shipped**: Phase 1 static label (2026-04-07); dynamic `[Account Name] Inventory` label via `InventoryOperationsService.inventoryLabel(for:)` (2026-04-11). **Still pending**: client-facing source masking, item "From Inventory" origin badge, return-source revert open question.
 
 ### Billing & Invoicing
 - [shipped] [Billing & Invoicing](billing-invoicing.md) — Item-level billing status (unbilled → invoiced → paid), selective mid-project invoicing, invoice-level payment cascade. Auto-payment detection (email/MCP stretch goal) **deferred**. Shipped 2026-04-07.

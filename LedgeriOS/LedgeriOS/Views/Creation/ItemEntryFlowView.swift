@@ -286,6 +286,7 @@ struct ItemEntryFlowView: View {
         }
 
         let service = InventoryOperationsService()
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
 
         Task {
             do {
@@ -294,6 +295,7 @@ struct ItemEntryFlowView: View {
                     destinationProjectId: projectId,
                     budgetCategoryId: budgetCategoryId ?? "uncategorized",
                     accountId: accountId,
+                    inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {

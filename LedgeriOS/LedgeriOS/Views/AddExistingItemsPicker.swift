@@ -397,6 +397,7 @@ struct AddExistingItemsPicker: View {
         // Cross-scope: sell first, then set spaceId
         if !routing.crossScope.isEmpty, let destProjectId = projectId {
             let ops = InventoryOperationsService()
+            let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
             Task {
                 do {
                     // Use the item's existing budgetCategoryId or "uncategorized"
@@ -405,7 +406,8 @@ struct AddExistingItemsPicker: View {
                         items: routing.crossScope,
                         destinationProjectId: destProjectId,
                         budgetCategoryId: categoryId,
-                        accountId: accountId
+                        accountId: accountId,
+                        inventoryLabel: inventoryLabel
                     )
                     // After sell completes, set spaceId
                     let batch = FirestoreBatchWriter()

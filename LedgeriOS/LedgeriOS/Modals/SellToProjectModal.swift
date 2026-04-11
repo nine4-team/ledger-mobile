@@ -10,6 +10,7 @@ struct SellToProjectModal: View {
     let onComplete: () -> Void
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(AccountContext.self) private var accountContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var step = 1
@@ -153,6 +154,7 @@ struct SellToProjectModal: View {
         let service = InventoryOperationsService()
         let itemsToSell = items
         let acctId = accountId
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
                 try await service.sellToProject(
@@ -160,6 +162,7 @@ struct SellToProjectModal: View {
                     destinationProjectId: projectId,
                     budgetCategoryId: categoryId,
                     accountId: acctId,
+                    inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {

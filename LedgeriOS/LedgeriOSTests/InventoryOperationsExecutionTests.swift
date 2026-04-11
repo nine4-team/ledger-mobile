@@ -778,3 +778,109 @@ struct NormalizeTransactionAmountTests {
         #expect(BudgetTabCalculations.normalizeTransactionAmount(tx) == 1500)
     }
 }
+
+// MARK: - Inventory Label Helper
+
+@Suite("InventoryOperationsService.inventoryLabel(for:)")
+struct InventoryLabelTests {
+
+    @Test("nil account name → default 'Business Inventory'")
+    func nilName() {
+        #expect(InventoryOperationsService.inventoryLabel(for: nil) == "Business Inventory")
+    }
+
+    @Test("empty account name → default 'Business Inventory'")
+    func emptyName() {
+        #expect(InventoryOperationsService.inventoryLabel(for: "") == "Business Inventory")
+    }
+
+    @Test("whitespace-only account name → default 'Business Inventory'")
+    func whitespaceName() {
+        #expect(InventoryOperationsService.inventoryLabel(for: "   \n\t") == "Business Inventory")
+    }
+
+    @Test("named account → '[Name] Inventory' with whitespace trimmed")
+    func namedAccount() {
+        #expect(InventoryOperationsService.inventoryLabel(for: "1584 Design") == "1584 Design Inventory")
+        #expect(InventoryOperationsService.inventoryLabel(for: "  1584 Design  ") == "1584 Design Inventory")
+    }
+}
+
+// MARK: - Custom inventoryLabel passthrough
+
+@Suite("sellToProject / returnToInventory / moveBetweenProjects — custom inventoryLabel")
+struct InventoryLabelPassthroughTests {
+
+    @Test("sellToProject writes custom source label on the Sale transaction")
+    func sellToProjectCustomLabel() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000)]
+
+        try await service.sellToProject(
+            items: items,
+            destinationProjectId: "dstProj",
+            budgetCategoryId: "cat1",
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
+        #expect(sale?["source"] as? String == "1584 Design Inventory")
+    }
+
+    @Test("sellToProject defaults to 'Business Inventory' when label not provided")
+    func sellToProjectDefaultLabel() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000)]
+
+        try await service.sellToProject(
+            items: items,
+            destinationProjectId: "dstProj",
+            budgetCategoryId: "cat1",
+            accountId: acct
+        )
+
+        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
+        #expect(sale?["source"] as? String == "Business Inventory")
+    }
+
+    @Test("returnToInventory writes custom source label on the Return transaction")
+    func returnToInventoryCustomLabel() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [makeItem(id: "i1", projectId: "proj1", purchasePriceCents: 1000)]
+
+        try await service.returnToInventory(
+            items: items,
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        let ret = batch.sets.first { ($0.fields["type"] as? String) == "Return" }?.fields
+        #expect(ret?["source"] as? String == "1584 Design Inventory")
+    }
+
+    @Test("moveBetweenProjects writes custom source label on both Return and Sale")
+    func moveBetweenProjectsCustomLabel() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 1000, projectPriceCents: 1200),
+        ]
+
+        try await service.moveBetweenProjects(
+            items: items,
+            destinationProjectId: "dstProj",
+            destinationCategoryId: "cat1",
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        let ret = batch.sets.first { ($0.fields["type"] as? String) == "Return" }?.fields
+        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
+        #expect(ret?["source"] as? String == "1584 Design Inventory")
+        #expect(sale?["source"] as? String == "1584 Design Inventory")
+    }
+}

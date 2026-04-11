@@ -8,6 +8,7 @@ struct ReturnToInventoryModal: View {
     let onComplete: () -> Void
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(AccountContext.self) private var accountContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var isSaving = false
@@ -41,11 +42,13 @@ struct ReturnToInventoryModal: View {
         let service = InventoryOperationsService()
         let itemsToReturn = items
         let acctId = accountId
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
                 try await service.returnToInventory(
                     items: itemsToReturn,
                     accountId: acctId,
+                    inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {

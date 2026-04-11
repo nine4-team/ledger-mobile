@@ -968,11 +968,13 @@ struct TransactionDetailView: View {
         guard let accountId = accountContext.currentAccountId else { return }
         let items = transactionItems
         guard !items.isEmpty else { return }
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
                 try await InventoryOperationsService().returnToInventory(
                     items: items,
-                    accountId: accountId
+                    accountId: accountId,
+                    inventoryLabel: inventoryLabel
                 )
                 await MainActor.run { dismiss() }
             } catch {

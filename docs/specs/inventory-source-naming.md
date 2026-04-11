@@ -1,10 +1,15 @@
 # Inventory Source & Naming Conventions
-Status: modify (Phase 1 shipped 2026-04-07)
-Last updated: 2026-04-07
+Status: modify (Phase 1 + dynamic label shipped; origin badge and masking still pending)
+Last updated: 2026-04-11
 
-> **Phase 1 shipped 2026-04-07** — Sale transactions created by `InventoryOperationsService.sellToProject` (Hop 2, `business_to_project`) now carry `source: "Business Inventory"` (Option B static label). Hop 1 (`project_to_business`) is intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
+> **Shipped**:
+> - **Phase 1 — static source label** (2026-04-07). Sale/Return transactions created by `InventoryOperationsService` carry a populated `source` field instead of leaving it blank. Hop 1 (`project_to_business`, legacy) was intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
+> - **Option A — dynamic `[Account Name] Inventory` label** (2026-04-11). `InventoryOperationsService` now takes an `inventoryLabel: String` parameter on `sellToProject`, `returnToInventory`, and `moveBetweenProjects`, defaulting to `"Business Inventory"`. A static helper `InventoryOperationsService.inventoryLabel(for: accountName:)` builds `"[Name] Inventory"` from the account's display name, trimming whitespace and falling back to `"Business Inventory"` when the name is empty. All six production call sites (SellToProjectModal, SellToBusinessModal, ReassignToProjectModal, AddExistingItemsPicker, ItemEntryFlowView, TransactionDetailView) now pass the helper-derived label through `accountContext.account?.name`. Existing tests that pin the default `"Business Inventory"` still pass because of the parameter default; new tests cover both the helper and passthrough for each method.
 >
-> Still pending: client-facing source masking on invoices/closeout reports, item "From Inventory" badge/origin indicator, dynamic business-name label (Option A), and source revert behavior on returns.
+> **Still pending**:
+> - Client-facing source masking on invoices / closeout reports (blocked on the unbuilt closeout report spec).
+> - Item "From Inventory" badge / origin indicator.
+> - Source revert behavior on returns (open design question — should a Return back to inventory revert the displayed source to the original vendor, or keep the inventory label?).
 
 ## Summary
 When items are sold from business inventory into a project, the resulting sale transaction currently has a blank source field — no label at all. This spec defines how those transactions should be labeled, how the original acquisition source (the store the business bought the item from) should be preserved and surfaced internally, and how source information should be masked in any client-facing context.

@@ -57,6 +57,7 @@ struct ReassignToProjectModal: View {
         isSaving = true
         let service = InventoryOperationsService()
         let itemsToMove = items
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
                 try await service.moveBetweenProjects(
@@ -64,6 +65,7 @@ struct ReassignToProjectModal: View {
                     destinationProjectId: projectId,
                     destinationCategoryId: categoryId,
                     accountId: accountId,
+                    inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {
