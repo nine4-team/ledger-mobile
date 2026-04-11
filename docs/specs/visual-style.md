@@ -1,6 +1,12 @@
 # Visual Style (Desktop & Mobile)
-Status: modify (colors + borders + full typography shipped; color verification + icon audit pending)
-Last updated: 2026-04-10
+Status: modify (colors + borders + full typography shipped; only the icon-call-site audit remains)
+Last updated: 2026-04-11
+
+> **Note on web-parity scope:** The original spec treated the web app as the
+> visual source of truth for colors and chrome. That framing is now stale —
+> the iOS/macOS app's color palette is considered final on its own terms,
+> and no cross-check against the web app is needed. The "Reference" and
+> "Scope" sections below are preserved as historical context only.
 
 > **Shipped**:
 > - **Status colors** (2026-04-03) — Red/green/yellow + background variants brightened and normalized via asset catalog colorsets (commits dfa8e49a, 33eb5442). See StatusColors.swift and Assets.xcassets/Colors/.
@@ -14,7 +20,6 @@ Last updated: 2026-04-10
 >
 > **Still pending**:
 > - **Direct `.font(.system(size: N))` call sites** — ~75 call sites across 46 files still use `.font(.system(...))` directly (most are SF Symbol icon sizing, but some render text). These bypass the Typography tokens and should be audited — icon usage stays, any text usage should migrate to Typography tokens. Out of scope for the initial typography pass.
-> - **Color verification** — red/green/yellow hex values were calibrated independently; not yet cross-checked against the web app as source of truth.
 
 ## Summary
 The desktop app's color palette and UI chrome (borders, outlines, button styling) need to be updated to match the lighter, sleeker look and feel of the web app. The mobile app's colors are closer but the red specifically feels too dark/gloomy and should also align with the web app's palette. The app's typography across all platforms should adopt the 1584 Design brand fonts: Playfair Display and Avenir.
