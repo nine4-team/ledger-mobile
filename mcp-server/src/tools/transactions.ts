@@ -22,6 +22,42 @@ function txTypeName(tx: Transaction): string {
   return tx.type ?? "";
 }
 
+/**
+ * Server-side defense matching Firestore rules: Sale transactions created
+ * under the per-batch redesign have frozen shape fields (amountCents, itemIds,
+ * budgetCategoryId, type, source, projectId). Legacy canonical sales
+ * (isCanonicalInventorySale == true) are exempt so cancel_transaction, etc.
+ * still work on historical docs.
+ *
+ * Returns null if the update is allowed, or an error tool-response otherwise.
+ */
+const FROZEN_SALE_FIELDS = [
+  "amountCents",
+  "itemIds",
+  "budgetCategoryId",
+  "type",
+  "source",
+  "projectId",
+] as const;
+
+function checkSaleImmutability(
+  existing: Transaction & { id: string },
+  updates: Record<string, unknown>
+) {
+  if (existing.type !== "Sale") return null;
+  if (existing.isCanonicalInventorySale === true) return null; // legacy exempt
+
+  const violated = FROZEN_SALE_FIELDS.filter((f) => f in updates);
+  if (violated.length === 0) return null;
+
+  return validation(
+    `Sale transaction ${existing.id} has frozen shape fields; cannot update: ${violated.join(", ")}.`,
+    "Per-batch Sale transactions are immutable after creation. If the sale needs to be " +
+      "corrected, cancel it via cancel_transaction and issue a new one via sell_items. " +
+      "Mutable fields on a Sale: notes, status, updatedAt."
+  );
+}
+
 function formatAttachment(ref: AttachmentRef) {
   return {
     url: ref.url,
@@ -62,7 +98,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
-      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, To Inventory)"),
+      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale). 'To Inventory' is legacy — use 'Return' + source: 'Business Inventory' for new data."),
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
@@ -256,7 +292,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, To Inventory. For Sale transactions, use the sell_items tool instead."),
+      type: z.string().default("Purchase").describe("Transaction type: Purchase or Return. Sale transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — Home Depot receipt'"),
@@ -341,7 +377,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
-      type: z.string().optional().describe("Transaction type: Purchase, Return, Sale, To Inventory"),
+      type: z.string().optional().describe("Transaction type: Purchase or Return. Cannot update to/from 'Sale' — it's a frozen field on per-batch sales. 'To Inventory' is legacy."),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
       notes: z.string().describe("REQUIRED dated audit note for this update, e.g. '4/6 — corrected category to lighting'"),
@@ -371,6 +407,11 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (key === "notes") continue;
         if (value !== undefined) updates[key] = value;
       }
+
+      // Server-side guard matching Firestore rules — reject writes to Sale
+      // shape fields on new per-batch sales. Legacy canonical sales are exempt.
+      const immutabilityError = checkSaleImmutability(existing, updates);
+      if (immutabilityError) return immutabilityError;
 
       await accountCollection(db, "transactions").doc(transactionId).update(updates);
       return { content: [{ type: "text", text: `Updated transaction ${transactionId}` }] };
@@ -423,6 +464,22 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
+      // Sale immutability preflight: reject the whole call if any matched
+      // doc is a per-batch Sale and the update touches a frozen field.
+      const violations: string[] = [];
+      for (const doc of snapshot.docs) {
+        const data = doc.data() as Transaction;
+        const existing = { ...data, id: doc.id };
+        const err = checkSaleImmutability(existing, updates);
+        if (err) violations.push(doc.id);
+      }
+      if (violations.length > 0) {
+        return validation(
+          `Bulk update would touch frozen shape fields on ${violations.length} Sale transaction(s): ${violations.slice(0, 3).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          "Per-batch Sale transactions are immutable after creation. Narrow the filter to exclude Sale type, or drop the frozen field from the update."
+        );
+      }
+
       // Batch writes (Firestore max 500 per batch)
       let processed = 0;
       let batch = db.batch();
@@ -450,7 +507,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── cancel_transaction ─────────────────────────────────────────────────────
   server.tool(
     "cancel_transaction",
-    "Mark a transaction as canceled. Canceled transactions contribute $0 to budget calculations.",
+    "Mark a transaction as canceled. Canceled transactions contribute $0 to budget calculations. " +
+      "Per-batch Sale transactions cancel cleanly with just a status flip — no item shuffling, no " +
+      "amount recomputation. Legacy canonical sales also cancel via status.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       await accountCollection(db, "transactions").doc(transactionId).update({

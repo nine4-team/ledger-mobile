@@ -15,7 +15,75 @@ import {
   asToolResponse,
   pickFields,
 } from "../util/projections.js";
-import { requireAuditNote, notFound } from "../util/errors.js";
+import { requireAuditNote, notFound, validation } from "../util/errors.js";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inventory invariant helpers (per-batch sale redesign).
+//
+// Rule: (item.projectId == null) ↔ (item.budgetCategoryId == null)
+// Items in business inventory have no budget category. Categories are
+// resolved at sell-into-project time. See docs/specs/sale-transactions.md
+// and docs/specs/inventory-as-store.md.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Reject create payloads that violate the inventory invariant. */
+function checkCreateInvariant(
+  projectId: string | undefined | null,
+  budgetCategoryId: string | undefined | null
+): string | null {
+  const inInventory = projectId == null || projectId === "";
+  if (inInventory && budgetCategoryId != null && budgetCategoryId !== "") {
+    return (
+      "Cannot create an inventory item (no projectId) with a budgetCategoryId. " +
+      "Items in business inventory have no budget category — omit budgetCategoryId, " +
+      "or set projectId to put the item in a project first."
+    );
+  }
+  return null;
+}
+
+/**
+ * Reject update payloads that violate the inventory invariant.
+ * `updates` is the incoming delta (only keys that were explicitly provided).
+ */
+function checkUpdateInvariant(
+  existing: { projectId?: string | null; budgetCategoryId?: string | null },
+  updates: Record<string, unknown>
+): string | null {
+  const hasProjectIdUpdate = "projectId" in updates;
+  const hasCategoryUpdate = "budgetCategoryId" in updates;
+
+  const nextProjectId = hasProjectIdUpdate
+    ? (updates.projectId as string | null | undefined)
+    : (existing.projectId ?? null);
+  const nextCategory = hasCategoryUpdate
+    ? (updates.budgetCategoryId as string | null | undefined)
+    : (existing.budgetCategoryId ?? null);
+
+  const nextInInventory = nextProjectId == null || nextProjectId === "";
+  const nextHasCategory = nextCategory != null && nextCategory !== "";
+
+  if (nextInInventory && nextHasCategory) {
+    return (
+      "Cannot set budgetCategoryId on an item that is in business inventory (projectId: null). " +
+      "Items in inventory have no category. Either set projectId in the same update, or " +
+      "clear budgetCategoryId by passing null."
+    );
+  }
+
+  // Moving an item from inventory INTO a project requires a category.
+  const wasInInventory = existing.projectId == null || existing.projectId === "";
+  const isMovingIntoProject =
+    wasInInventory && hasProjectIdUpdate && !nextInInventory;
+  if (isMovingIntoProject && !nextHasCategory) {
+    return (
+      "Moving an item from business inventory into a project requires a budgetCategoryId. " +
+      "Pass both projectId and budgetCategoryId in the same update, or use sell_items instead."
+    );
+  }
+
+  return null;
+}
 
 function formatItem(item: Item & { id: string }) {
   return {
@@ -166,6 +234,21 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (resolvedBudgetCategoryId === undefined && tx?.budgetCategoryId) resolvedBudgetCategoryId = tx.budgetCategoryId;
       }
 
+      // If the item is going into business inventory (no projectId), strip any
+      // inherited or provided category — inventory items have no category.
+      if (!projectId) {
+        resolvedBudgetCategoryId = undefined;
+      }
+
+      // Enforce the invariant on the final resolved values.
+      const invariantError = checkCreateInvariant(projectId, resolvedBudgetCategoryId);
+      if (invariantError) {
+        return validation(
+          invariantError,
+          "Pass a projectId together with budgetCategoryId, or omit budgetCategoryId for inventory items."
+        );
+      }
+
       const data: Record<string, unknown> = {
         name,
         status,
@@ -256,6 +339,16 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           if (tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
         }
 
+        // Inventory invariant: strip category when item is going to inventory.
+        const categoryIn = resolvedProjectId ? item.budgetCategoryId : undefined;
+        const invariantError = checkCreateInvariant(resolvedProjectId, categoryIn);
+        if (invariantError) {
+          return validation(
+            `Item ${items.indexOf(item)} (${item.name}): ${invariantError}`,
+            "Pass a projectId together with budgetCategoryId, or omit budgetCategoryId for inventory items."
+          );
+        }
+
         const data: Record<string, unknown> = {
           name: item.name,
           status: item.status,
@@ -269,7 +362,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (item.sku) data.sku = item.sku;
         if (item.notes) data.notes = item.notes;
         if (item.spaceId) data.spaceId = item.spaceId;
-        if (item.budgetCategoryId) data.budgetCategoryId = item.budgetCategoryId;
+        if (categoryIn) data.budgetCategoryId = categoryIn;
         if (resolvedTransactionId) data.transactionId = resolvedTransactionId;
         if (resolvedTaxRate !== undefined) data.taxRatePct = resolvedTaxRate;
 
@@ -315,7 +408,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── update_item ────────────────────────────────────────────────────────────
   server.tool(
     "update_item",
-    "[mutating] Update item fields. Requires a dated audit note in `notes`.",
+    "[mutating] Update item fields. Requires a dated audit note in `notes`.\n\n" +
+      "Inventory invariant: items in business inventory (projectId: null) must have " +
+      "budgetCategoryId: null. Pass null explicitly to either field to clear it. Moving " +
+      "an item from inventory into a project requires passing both projectId AND " +
+      "budgetCategoryId in the same update.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -326,9 +423,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
       notes: z.string().describe("REQUIRED dated audit note for this update, appended to existing notes"),
-      projectId: z.string().optional().describe("Project ID — set to reassign item to a different project"),
-      spaceId: z.string().optional().describe("Space ID"),
-      budgetCategoryId: z.string().optional().describe("Budget category ID"),
+      projectId: z.string().nullable().optional().describe("Project ID — set to reassign item. Pass null to move into business inventory (budgetCategoryId is wiped automatically if needed)."),
+      spaceId: z.string().nullable().optional().describe("Space ID. Pass null to clear."),
+      budgetCategoryId: z.string().nullable().optional().describe("Budget category ID. Pass null to clear (required when projectId is null)."),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       bookmark: z.boolean().optional().describe("Bookmark flag"),
       quantity: z.coerce.number().optional().describe("Quantity (defaults to 1)"),
@@ -345,6 +442,21 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       for (const [key, value] of Object.entries(fields)) {
         if (key === "notes") continue;
         if (value !== undefined) updates[key] = value;
+      }
+
+      // If the caller is clearing projectId and didn't explicitly clear
+      // budgetCategoryId, wipe it as well so the invariant holds.
+      if ("projectId" in updates && updates.projectId == null && !("budgetCategoryId" in updates)) {
+        updates.budgetCategoryId = null;
+      }
+
+      // Enforce the inventory invariant before writing.
+      const invariantError = checkUpdateInvariant(existing, updates);
+      if (invariantError) {
+        return validation(
+          invariantError,
+          "Items in business inventory have no budget category. Pass null, or set projectId."
+        );
       }
 
       // If transactionId is changing, sync itemIds on both old and new transactions
@@ -378,7 +490,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── bulk_update_items ───────────────────────────────────────────────────────
   server.tool(
     "bulk_update_items",
-    "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.",
+    "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
     {
       filter: z.object({
         projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
@@ -398,9 +510,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         source: z.string().optional(),
         sku: z.string().optional(),
         notes: z.string().optional(),
-        projectId: z.string().optional(),
-        spaceId: z.string().optional(),
-        budgetCategoryId: z.string().optional(),
+        projectId: z.string().nullable().optional().describe("Pass null to move matched items to inventory (budgetCategoryId is wiped automatically)."),
+        spaceId: z.string().nullable().optional(),
+        budgetCategoryId: z.string().nullable().optional().describe("Pass null to clear."),
         bookmark: z.boolean().optional(),
         quantity: z.coerce.number().optional(),
         taxRatePct: z.coerce.number().optional(),
@@ -431,6 +543,25 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
+      // If the update clears projectId and didn't touch budgetCategoryId, wipe it.
+      if ("projectId" in updates && updates.projectId == null && !("budgetCategoryId" in updates)) {
+        updates.budgetCategoryId = null;
+      }
+
+      // Preflight: validate the invariant against every matched item.
+      const violations: string[] = [];
+      for (const doc of snapshot.docs) {
+        const existing = doc.data() as { projectId?: string | null; budgetCategoryId?: string | null };
+        const err = checkUpdateInvariant(existing, updates);
+        if (err) violations.push(doc.id);
+      }
+      if (violations.length > 0) {
+        return validation(
+          `Bulk update would violate the inventory invariant on ${violations.length} item(s): ${violations.slice(0, 5).join(", ")}${violations.length > 5 ? "…" : ""}`,
+          "Narrow the filter, or split the update so inventory items and project items are handled separately."
+        );
+      }
+
       let processed = 0;
       let batch = db.batch();
       let batchCount = 0;
@@ -459,7 +590,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── bulk_update_items_by_id ────────────────────────────────────────────────
   server.tool(
     "bulk_update_items_by_id",
-    "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.",
+    "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
     {
       updates: z.array(z.object({
         id: z.string().describe("Item document ID"),
@@ -471,9 +602,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         source: z.string().optional(),
         sku: z.string().optional(),
         notes: z.string().optional(),
-        projectId: z.string().optional(),
-        spaceId: z.string().optional(),
-        budgetCategoryId: z.string().optional(),
+        projectId: z.string().nullable().optional().describe("Pass null to move to inventory."),
+        spaceId: z.string().nullable().optional(),
+        budgetCategoryId: z.string().nullable().optional().describe("Pass null to clear."),
         bookmark: z.boolean().optional(),
         quantity: z.coerce.number().optional(),
         taxRatePct: z.coerce.number().optional(),
@@ -485,16 +616,57 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }
 
       const itemsCol = accountCollection(db, "items");
-      let processed = 0;
-      let batch = db.batch();
-      let batchCount = 0;
+
+      // Preflight: fetch current state of each item, validate invariant,
+      // and build the final updates payload. Reject the entire call if any
+      // item would violate the invariant.
+      type PreparedUpdate = { id: string; data: Record<string, unknown> };
+      const prepared: PreparedUpdate[] = [];
+      const notFoundIds: string[] = [];
+      const violations: Array<{ id: string; error: string }> = [];
 
       for (const { id, ...fields } of updates) {
+        const existing = await getDoc<Item>(db, "items", id);
+        if (!existing) {
+          notFoundIds.push(id);
+          continue;
+        }
+
         const itemUpdates: Record<string, unknown> = { updatedAt: new Date() };
         for (const [key, value] of Object.entries(fields)) {
           if (value !== undefined) itemUpdates[key] = value;
         }
-        batch.update(itemsCol.doc(id), itemUpdates);
+
+        // Wipe category when clearing projectId.
+        if ("projectId" in itemUpdates && itemUpdates.projectId == null && !("budgetCategoryId" in itemUpdates)) {
+          itemUpdates.budgetCategoryId = null;
+        }
+
+        const err = checkUpdateInvariant(existing, itemUpdates);
+        if (err) {
+          violations.push({ id, error: err });
+          continue;
+        }
+
+        prepared.push({ id, data: itemUpdates });
+      }
+
+      if (notFoundIds.length > 0) {
+        return notFound("Items", notFoundIds.join(", "), "get_items");
+      }
+      if (violations.length > 0) {
+        return validation(
+          `${violations.length} update(s) would violate the inventory invariant: ${violations.slice(0, 3).map((v) => v.id).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          "Items in business inventory have no budget category. Pass null for budgetCategoryId on inventory items."
+        );
+      }
+
+      let processed = 0;
+      let batch = db.batch();
+      let batchCount = 0;
+
+      for (const { id, data } of prepared) {
+        batch.update(itemsCol.doc(id), data);
         batchCount++;
         if (batchCount === 500) {
           await batch.commit();

@@ -7,6 +7,11 @@
  * contract can never drift from what tools actually accept.
  */
 
+/**
+ * Transaction types. "To Inventory" is legacy — new writes use type: "Return"
+ * with source: "Business Inventory" instead. It remains here so queries against
+ * historical docs still work.
+ */
 export const transactionTypes = ["Purchase", "Return", "Sale", "To Inventory"] as const;
 export type TransactionType = (typeof transactionTypes)[number];
 
@@ -25,10 +30,17 @@ export type ItemStatus = (typeof itemStatuses)[number];
 export const movementKinds = ["sold", "returned", "transferred"] as const;
 export type MovementKind = (typeof movementKinds)[number];
 
+/**
+ * @deprecated Legacy canonical-sale direction. Only present on historical
+ * `isCanonicalInventorySale: true` transactions. New per-batch sales always
+ * go business → project and never set this field. Kept for legacy reads.
+ * See docs/specs/canonical-sales.md.
+ */
 export const inventorySaleDirections = [
   "project_to_business",
   "business_to_project",
 ] as const;
+/** @deprecated See `inventorySaleDirections` comment. */
 export type InventorySaleDirection = (typeof inventorySaleDirections)[number];
 
 export const categoryTypes = ["general", "labor", "materials", "fees", "reimbursable"] as const;
@@ -45,7 +57,9 @@ export const ENUMS: EnumSpec[] = [
   {
     name: "transactionType",
     values: transactionTypes,
-    description: "Transaction type. Sale transactions are created via sell_items, not create_transaction.",
+    description:
+      "Transaction type. Sale transactions are created via sell_items, not create_transaction. " +
+      "'To Inventory' is legacy — for new writes use 'Return' with source: 'Business Inventory'.",
   },
   {
     name: "transactionStatus",
@@ -75,7 +89,9 @@ export const ENUMS: EnumSpec[] = [
   {
     name: "inventorySaleDirection",
     values: inventorySaleDirections,
-    description: "Direction of a canonical inventory sale transaction.",
+    description:
+      "DEPRECATED — legacy canonical-sale direction. Only present on historical " +
+      "transactions with isCanonicalInventorySale: true. New per-batch sales never set this field.",
   },
   {
     name: "categoryType",

@@ -24,17 +24,21 @@ const ENTITIES: Record<string, EntitySchema> = {
   transaction: {
     name: "transaction",
     description:
-      "A purchase, return, sale, or inventory move. Owned by an account; may belong to a project. " +
-      "Completeness (`isComplete`) is computed server-side — do not set manually.",
+      "A purchase, return, or sale. Owned by an account; may belong to a project. " +
+      "Completeness (`isComplete`) is computed server-side — do not set manually. " +
+      "Sale transactions are per-batch and immutable after creation (amountCents, " +
+      "itemIds, budgetCategoryId, type, source, projectId are frozen).",
     requiredOnCreate: ["budgetCategoryId", "amountCents", "type", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
       { name: "projectId", type: "string?", description: "Null = business inventory." },
-      { name: "type", type: "enum(transactionType)", description: "Sale transactions: use sell_items, not create_transaction." },
-      { name: "amountCents", type: "number", description: "Total amount including tax, in cents." },
+      { name: "type", type: "enum(transactionType)", description: "Sale: created via sell_items only, immutable after creation. Return to inventory: source == 'Business Inventory'." },
+      { name: "source", type: "string", description: "Vendor for Purchases; 'Business Inventory' for inventory-origin sales and returns." },
+      { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on Sale transactions." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
-      { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId." },
+      { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId. FROZEN at creation on Sale transactions." },
+      { name: "budgetCategoryId", type: "string?", description: "Budget category. FROZEN at creation on Sale transactions." },
       { name: "isComplete", type: "boolean", description: "Computed server-side; false means items don't match subtotal within ±1% or missing data." },
       { name: "notes", type: "string", description: "REQUIRED on writes — dated audit note." },
     ],
@@ -42,24 +46,32 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Every mutation must include a dated audit note in `notes`.",
       "Canceled transactions contribute $0 to budget calculations.",
+      "Sale transaction shape fields (amountCents, itemIds, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. Only notes, status, and updatedAt are mutable.",
+      "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
     ],
   },
   item: {
     name: "item",
     description:
       "A single line item (physical good) tracked across projects, inventory, and sales. " +
-      "Moved between scopes via sell_items / return_items (never manually edit transactionId for moves).",
+      "Moved between scopes via sell_items / return_items / move_items_between_projects " +
+      "(never manually edit transactionId for moves).",
     requiredOnCreate: ["name", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID." },
-      { name: "projectId", type: "string?", description: "Null = business inventory." },
+      { name: "projectId", type: "string?", description: "Null = business inventory. MUST be null for inventory items." },
       { name: "spaceId", type: "string?", description: "Optional space within a project." },
+      { name: "budgetCategoryId", type: "string?", description: "MUST be null when projectId is null (invariant: items in inventory have no category). Resolved at sell-into-project time." },
       { name: "transactionId", type: "string?", description: "Current owning transaction. NOT authoritative for reverse lookups — use transaction.itemIds." },
       { name: "purchasePriceCents", type: "number?", description: "Pre-tax purchase price in cents." },
       { name: "taxRatePct", type: "number?", description: "Auto-inherited from transaction if omitted on create." },
       { name: "status", type: "enum(itemStatus)", description: "Current lifecycle status." },
     ],
     enums: ["itemStatus"],
+    notes: [
+      "Invariant: (projectId == null) ↔ (budgetCategoryId == null). Enforced on write.",
+      "Items in business inventory have no budget category.",
+    ],
   },
   project: {
     name: "project",

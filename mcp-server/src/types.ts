@@ -42,7 +42,17 @@ export interface Transaction {
   transactionDate?: string;
   itemIds?: string[];
   notes?: string;
+  /**
+   * @deprecated Legacy canonical-sale aggregator marker. New per-batch Sale
+   * transactions never set this field. Readers must use the dual-read path in
+   * util/budget.ts — see docs/specs/canonical-sales.md for historical context.
+   */
   isCanonicalInventorySale?: boolean;
+  /**
+   * @deprecated Legacy canonical-sale direction. Only present on historical
+   * docs with isCanonicalInventorySale == true. New per-batch sales always go
+   * business → project and never set this field.
+   */
   inventorySaleDirection?: string;
   isCanonicalInventory?: boolean;
   canonicalKind?: string;

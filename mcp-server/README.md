@@ -72,8 +72,11 @@ Remove `FIRESTORE_EMULATOR_HOST` to connect to production.
 - `update_project_budget_allocation`, `enable_category_for_project`
 
 ### Inventory Operations
-- `sell_items` — Move items between scopes via canonical sale transactions (project → business, business → project, project → project). Creates deterministic sale transaction IDs, lineage edges, and updates item fields atomically.
-- `return_items` — Process item returns atomically: moves items from source transaction to a return transaction, sets status to "returned", and creates lineage edges.
+- `sell_items` — Sell items from business inventory into a project. Creates ONE new immutable Sale transaction per call (auto-ID, frozen shape). Cap: 100 items. One budget category applies to the whole batch. Per-batch design — no long-lived aggregators.
+- `return_items` — Return items to a vendor (attach to an existing Return transaction) or back to business inventory (new or reused Return transaction with `source: "Business Inventory"`; wipes item category). Cap: 100 items.
+- `move_items_between_projects` — Move items from one project directly to another in a single atomic batch (return-to-inventory + sell-into-destination). Cap: 100 items. One destination category per batch.
+
+Sale transaction shape fields (`amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId`) are frozen after creation — enforced by Firestore rules and server-side validation. Item invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.
 
 ### Analytics
 - `project_health` — Budget utilization, item counts, attention items

@@ -174,10 +174,10 @@ or { error: { code, message, hint } }</div>
 </details>
 
 <h3>4. Dry-run for destructive ops</h3>
-<p><code>sell_items</code> and <code>return_items</code> accept <code>dryRun: true</code>. You get the full plan — transactions that would be created, items that would be updated, lineage edges — with zero side effects.</p>
+<p><code>sell_items</code>, <code>return_items</code>, and <code>move_items_between_projects</code> accept <code>dryRun: true</code>. You get the full plan — the new Sale/Return transaction shape, item updates, source-transaction removals, lineage edges — with zero side effects.</p>
 <details>
   <summary>How it actually works</summary>
-  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, planning logic is extracted into a pure <code>planSale()</code> function returning <code>{ saleTransactions, itemUpdates, lineageEdges }</code>. When <code>dryRun: true</code>, the handler returns the plan verbatim; otherwise it commits the batch. The pure function is unit-testable without Firestore.</p>
+  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, each tool computes its plan (including the frozen <code>amountCents</code> snapshot and itemIds) and either returns it (<code>dryRun: true</code>) or commits a Firestore batch. Since the per-batch sale redesign, each sell/return produces one new immutable transaction — there are no long-lived aggregators to mutate.</p>
 </details>
 <details>
   <summary>Why</summary>
@@ -202,7 +202,7 @@ or { error: { code, message, hint } }</div>
   <tr><td>reconcile_transaction</td><td>Fetch tx + items, compute audit variance, return concrete suggested fixes with tool names.</td></tr>
   <tr><td>create_transaction_with_items</td><td>Atomic batched write — creates a transaction and its items in one call, rolls back on failure.</td></tr>
   <tr><td>triage_inbox</td><td>Ranked incomplete transactions with per-row reasons (needs review > missing category > largest amount).</td></tr>
-  <tr><td>sell_items / return_items</td><td>Inventory moves with canonical sale transactions + lineage edges + dryRun preview.</td></tr>
+  <tr><td>sell_items / return_items / move_items_between_projects</td><td>Per-batch immutable Sale transactions + lineage edges + dryRun preview. Each sell creates one new Sale doc (auto-ID); returns to inventory create a Return doc with source: "Business Inventory"; project-to-project moves emit both in one batch.</td></tr>
 </table>
 
 <details>
@@ -218,7 +218,7 @@ or { error: { code, message, hint } }</div>
   <tr><td>tools/transactions.ts</td><td>list / get / search / create / update / bulk-update / cancel.</td></tr>
   <tr><td>tools/items.ts</td><td>Item CRUD + bulk ops + items_needing_attention.</td></tr>
   <tr><td>tools/projects.ts</td><td>Project CRUD + health + budget breakdowns.</td></tr>
-  <tr><td>tools/inventory-operations.ts</td><td><code>sell_items</code>, <code>return_items</code> — destructive, dryRun-aware.</td></tr>
+  <tr><td>tools/inventory-operations.ts</td><td><code>sell_items</code>, <code>return_items</code>, <code>move_items_between_projects</code> — destructive, dryRun-aware, per-batch immutable.</td></tr>
   <tr><td>tools/composite.ts</td><td><code>reconcile_transaction</code>, <code>create_transaction_with_items</code>, <code>triage_inbox</code>.</td></tr>
   <tr><td>tools/bulk-getters.ts</td><td><code>get_transactions</code> / <code>get_items</code> / <code>get_projects</code> — up to 50 IDs, one round trip.</td></tr>
   <tr><td>tools/schema.ts</td><td><code>describe_schema</code> tool + <code>ledger://schema</code> resource.</td></tr>
