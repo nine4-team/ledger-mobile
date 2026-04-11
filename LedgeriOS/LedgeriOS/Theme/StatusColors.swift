@@ -32,10 +32,13 @@ enum StatusColors {
 
     // MARK: - At Risk / Overflow
 
-    /// At-risk bar — #dc2626 red-600 for >= 75% fill (same both modes)
-    static let atRiskBar = Color(red: 220/255, green: 38/255, blue: 38/255)
-    /// Overflow bar — #ef4444 red-500 for the over-budget segment (same both modes)
-    static let overflowBar = Color(red: 239/255, green: 68/255, blue: 68/255)
+    /// At-risk bar — #b94520 rust (matches Needs Review badge) for >= 75% fill.
+    /// Replaces the former #dc2626 red-600 which read as pink at low opacity.
+    static let atRiskBar = Color(red: 185/255, green: 69/255, blue: 32/255)
+    /// Overflow bar — #7a2e12 deep rust for the over-budget segment.
+    /// Darker than atRiskBar so the overflow stack is still visible when
+    /// rendered on top of the at-risk fill.
+    static let overflowBar = Color(red: 122/255, green: 46/255, blue: 18/255)
 
     // MARK: - Transaction Badge Semantic Colors
 
