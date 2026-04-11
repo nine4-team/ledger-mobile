@@ -1,0 +1,13 @@
+{
+  "name": "ledger-firestore-rules-tests",
+  "private": true,
+  "type": "module",
+  "description": "Standalone emulator-backed Firestore rules tests. Run with: npm test (requires firestore emulator already running on port 8181).",
+  "scripts": {
+    "test": "node rules.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.13.0"
+  }
+}
