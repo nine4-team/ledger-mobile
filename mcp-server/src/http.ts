@@ -7,6 +7,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { initFirebase } from "./firebase.js";
 import { verifyToken, resolveAccountId } from "./auth.js";
 import { requestContext } from "./context.js";
+import { getActiveAccountForUid } from "./userState.js";
 import { registerOAuthRoutes, verifyAccessToken } from "./oauth.js";
 import { registerProjectTools } from "./tools/projects.js";
 import { registerTransactionTools } from "./tools/transactions.js";
@@ -32,7 +33,8 @@ function createServer(): McpServer {
         "natural note in the `notes` field explaining what you did and why — written as if you're leaving a quick message " +
         "for a teammate. Always prefix with today's date. Example: '4/2 — Moved 3 lighting fixtures from inventory into Witzenman project, client approved selections.' " +
         "If the entity already has notes, append your note on a new line so existing context is preserved. " +
-        "This applies to every write operation, not just sales or moves.",
+        "This applies to every write operation, not just sales or moves.\n\n" +
+        "SALES AND INVENTORY: Every sell action creates ONE new immutable Sale transaction — no long-lived aggregators. Sale shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Sales always go business → project; returning items to inventory is a Return transaction via return_items. Project→project moves use move_items_between_projects.",
     },
   );
 
@@ -132,7 +134,12 @@ app.post(MCP_PATHS, async (req, res) => {
 
     console.error(`[ledger-mcp] POST ${req.path} uid=${auth.uid} account=${auth.accountId}`);
 
-    await requestContext.run(auth, async () => {
+    // Per-user active account override (set via switch_account, stored in Firestore).
+    // Survives stateless Cloud Run requests and Claude.ai reconnects.
+    const override = await getActiveAccountForUid(db, auth.uid);
+    const effective = override ? { ...auth, accountId: override } : auth;
+
+    await requestContext.run(effective, async () => {
       const server = createServer();
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,

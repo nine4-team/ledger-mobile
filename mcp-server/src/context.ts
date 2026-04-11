@@ -25,6 +25,16 @@ export function getActiveAccountId(): string | null {
  * Get the current account ID.
  * Priority: HTTP context > runtime switch > env var > dev default.
  */
+/**
+ * Get the current user UID.
+ * Priority: HTTP context (from OAuth) > env var > hardcoded dev default.
+ */
+export function getUid(): string {
+  const ctx = requestContext.getStore();
+  if (ctx) return ctx.uid;
+  return process.env.LEDGER_USER_UID || "sHuIe2M85WVOf3yzC0t61s3l10e2";
+}
+
 export function getAccountId(): string {
   // HTTP mode: per-request context
   const ctx = requestContext.getStore();

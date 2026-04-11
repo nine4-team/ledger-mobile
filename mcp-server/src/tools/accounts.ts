@@ -2,8 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
 import { resolveAllAccounts } from "../auth.js";
-import { getAccountId, getActiveAccountId, setActiveAccountId } from "../context.js";
-import { USER_UID } from "../config.js";
+import { getAccountId, getUid, setActiveAccountId } from "../context.js";
+import { setActiveAccountForUid } from "../userState.js";
 
 export function registerAccountTools(server: McpServer, db: Firestore) {
   // ── list_accounts ──────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ export function registerAccountTools(server: McpServer, db: Firestore) {
     "List all accounts the current user has access to. Shows which account is currently active.",
     {},
     async () => {
-      const uid = process.env.LEDGER_USER_UID || USER_UID;
+      const uid = getUid();
       const currentAccountId = getAccountId();
 
       try {
@@ -50,7 +50,7 @@ export function registerAccountTools(server: McpServer, db: Firestore) {
       accountId: z.string().describe("Account ID to switch to"),
     },
     async ({ accountId }) => {
-      const uid = process.env.LEDGER_USER_UID || USER_UID;
+      const uid = getUid();
 
       // Verify the user actually has access to this account
       try {
@@ -67,7 +67,10 @@ export function registerAccountTools(server: McpServer, db: Firestore) {
           };
         }
 
+        // Stdio mode: in-memory switch. HTTP mode: persist per-uid in Firestore
+        // so subsequent stateless requests pick up the change.
         setActiveAccountId(accountId);
+        await setActiveAccountForUid(db, uid, accountId);
 
         return {
           content: [{

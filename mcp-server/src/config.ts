@@ -4,4 +4,4 @@ export const ACCOUNT_ID =
 
 export const USER_UID =
   process.env.LEDGER_USER_UID ||
-  "4ef35958-597c-4aea-b99e-1ef62352a72d";
+  "sHuIe2M85WVOf3yzC0t61s3l10e2";
