@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onInventoryRequestCreated = exports.onProjectRequestCreated = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.onAccountRequestCreated = exports.repairCanonicalSaleTotals = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -47,575 +47,10 @@ exports.createWithQuota = (0, https_1.onCall)(async (request) => {
     });
     return result;
 });
-async function setRequestApplied(requestRef, extra = {}) {
-    await requestRef.update({
-        status: 'applied',
-        appliedAt: firestore_1.FieldValue.serverTimestamp(),
-        errorCode: firestore_1.FieldValue.delete(),
-        errorMessage: firestore_1.FieldValue.delete(),
-        ...extra
-    });
-}
-async function setRequestFailed(requestRef, errorCode, errorMessage) {
-    await requestRef.update({
-        status: 'failed',
-        errorCode,
-        errorMessage,
-        appliedAt: firestore_1.FieldValue.delete()
-    });
-}
-const requestHandlers = {};
-function assertCanonicalIdPart(value, label) {
-    if (!value) {
-        throw new https_1.HttpsError('invalid-argument', `Missing ${label}.`);
-    }
-    if (value.includes('_')) {
-        throw new https_1.HttpsError('invalid-argument', `${label} must not contain '_' for canonical sale ids.`);
-    }
-}
-function canonicalSaleTransactionId(projectId, direction, budgetCategoryId) {
-    assertCanonicalIdPart(projectId, 'projectId');
-    assertCanonicalIdPart(budgetCategoryId, 'budgetCategoryId');
-    return `SALE_${projectId}_${direction}_${budgetCategoryId}`;
-}
-function getItemValueCents(item) {
-    if (typeof item.projectPriceCents === 'number')
-        return item.projectPriceCents;
-    if (typeof item.purchasePriceCents === 'number')
-        return item.purchasePriceCents;
-    return 0;
-}
-function ensureCanonicalSaleTransaction(params) {
-    const { tx, accountId, transactionId, projectId, direction, budgetCategoryId, exists } = params;
-    const txRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/transactions/${transactionId}`);
-    const now = firestore_1.FieldValue.serverTimestamp();
-    const base = {
-        accountId,
-        projectId,
-        transactionDate: new Date().toISOString().slice(0, 10),
-        isCanonicalInventorySale: true,
-        inventorySaleDirection: direction,
-        budgetCategoryId,
-        source: direction === 'project_to_business' ? 'Sale to Inventory' : 'Purchase from Inventory',
-        updatedAt: now,
-    };
-    if (!exists) {
-        tx.set(txRef, {
-            ...base,
-            createdAt: now,
-        }, { merge: true });
-        return;
-    }
-    tx.set(txRef, base, { merge: true });
-}
-async function computeCanonicalSaleTotals(params) {
-    const { tx, accountId, transactionId, addItem, removeItem } = params;
-    const itemsRef = (0, firestore_1.getFirestore)().collection(`accounts/${accountId}/items`);
-    const snapshot = await tx.get(itemsRef.where('transactionId', '==', transactionId));
-    const items = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() ?? {} }));
-    let amountCents = items.reduce((sum, item) => sum + getItemValueCents(item.data), 0);
-    let itemIds = items.map((item) => item.id);
-    if (removeItem && itemIds.includes(removeItem.id)) {
-        amountCents -= getItemValueCents(removeItem.data);
-        itemIds = itemIds.filter((id) => id !== removeItem.id);
-    }
-    if (addItem && !itemIds.includes(addItem.id)) {
-        amountCents += getItemValueCents(addItem.data);
-        itemIds = [...itemIds, addItem.id];
-    }
-    return { amountCents: Math.max(0, amountCents), itemIds };
-}
-function persistCanonicalSaleTotals(params) {
-    const { tx, accountId, transactionId, totals } = params;
-    const txRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/transactions/${transactionId}`);
-    tx.set(txRef, {
-        amountCents: totals.amountCents,
-        itemIds: totals.itemIds,
-        updatedAt: firestore_1.FieldValue.serverTimestamp(),
-    }, { merge: true });
-}
-async function appendLineageEdge(params) {
-    const { tx, accountId, requestId, itemId, fromTransactionId, toTransactionId, createdBy, movementKind, source, note, fromProjectId, toProjectId, } = params;
-    const edgeId = `edge_${requestId}_${itemId}_${movementKind}`;
-    const edgeRef = (0, firestore_1.getFirestore)().doc(`accounts/${accountId}/lineageEdges/${edgeId}`);
-    tx.set(edgeRef, {
-        accountId,
-        itemId,
-        fromTransactionId: fromTransactionId ?? null,
-        toTransactionId: toTransactionId ?? null,
-        createdAt: firestore_1.FieldValue.serverTimestamp(),
-        updatedAt: firestore_1.FieldValue.serverTimestamp(),
-        deletedAt: null,
-        createdBy: createdBy ?? null,
-        movementKind,
-        source,
-        note: note ?? null,
-        fromProjectId: fromProjectId ?? null,
-        toProjectId: toProjectId ?? null,
-    }, { merge: true });
-}
-function getExpected(payload) {
-    const expected = payload?.expected ?? {};
-    return {
-        itemProjectId: expected.itemProjectId ?? null,
-        itemTransactionId: expected.itemTransactionId ?? null,
-    };
-}
-async function handleProjectToBusiness(context) {
-    const payload = context.requestData.payload ?? {};
-    const itemId = payload.itemId;
-    const sourceProjectId = payload.sourceProjectId;
-    const budgetCategoryId = payload.budgetCategoryId;
-    const note = payload.note;
-    if (!itemId || !sourceProjectId || !budgetCategoryId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, sourceProjectId, or budgetCategoryId.');
-        return;
-    }
-    const db = (0, firestore_1.getFirestore)();
-    const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
-    const { itemProjectId, itemTransactionId } = getExpected(payload);
-    await db.runTransaction(async (tx) => {
-        const itemSnap = await tx.get(itemRef);
-        if (!itemSnap.exists) {
-            throw new https_1.HttpsError('not-found', 'Item not found.');
-        }
-        const item = itemSnap.data() ?? {};
-        if (itemProjectId !== item.projectId) {
-            throw new https_1.HttpsError('failed-precondition', 'Item scope changed.');
-        }
-        if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
-            throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
-        }
-        if (item.budgetCategoryId && item.budgetCategoryId !== budgetCategoryId) {
-            throw new https_1.HttpsError('failed-precondition', 'Budget category mismatch for item.');
-        }
-        const previousTxId = item.transactionId ?? null;
-        const resolvedBudgetCategoryId = budgetCategoryId;
-        const allocationId = canonicalSaleTransactionId(sourceProjectId, 'business_to_project', resolvedBudgetCategoryId);
-        const saleId = canonicalSaleTransactionId(sourceProjectId, 'project_to_business', resolvedBudgetCategoryId);
-        if (previousTxId === allocationId) {
-            const totals = await computeCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                removeItem: { id: itemId, data: item },
-            });
-            const allocationRef = db.doc(`accounts/${context.accountId}/transactions/${allocationId}`);
-            const allocationSnap = await tx.get(allocationRef);
-            ensureCanonicalSaleTransaction({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                projectId: sourceProjectId,
-                direction: 'business_to_project',
-                budgetCategoryId: resolvedBudgetCategoryId,
-                exists: allocationSnap.exists,
-            });
-            persistCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                totals,
-            });
-            tx.set(itemRef, {
-                projectId: null,
-                transactionId: null,
-                spaceId: null,
-                budgetCategoryId: item.budgetCategoryId ?? resolvedBudgetCategoryId,
-                updatedAt: firestore_1.FieldValue.serverTimestamp(),
-                updatedBy: context.requestData.createdBy ?? null,
-                latestTransactionId: null,
-            }, { merge: true });
-            await appendLineageEdge({
-                tx,
-                accountId: context.accountId,
-                requestId: context.requestId,
-                itemId,
-                fromTransactionId: allocationId,
-                toTransactionId: null,
-                createdBy: context.requestData.createdBy,
-                movementKind: 'sold',
-                source: 'server',
-                note: note ?? null,
-                fromProjectId: sourceProjectId,
-                toProjectId: null,
-            });
-        }
-        else {
-            const totals = await computeCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                addItem: { id: itemId, data: item },
-            });
-            const saleRef = db.doc(`accounts/${context.accountId}/transactions/${saleId}`);
-            const saleSnap = await tx.get(saleRef);
-            ensureCanonicalSaleTransaction({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                projectId: sourceProjectId,
-                direction: 'project_to_business',
-                budgetCategoryId: resolvedBudgetCategoryId,
-                exists: saleSnap.exists,
-            });
-            persistCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                totals,
-            });
-            tx.set(itemRef, {
-                projectId: null,
-                transactionId: saleId,
-                spaceId: null,
-                budgetCategoryId: item.budgetCategoryId ?? resolvedBudgetCategoryId,
-                updatedAt: firestore_1.FieldValue.serverTimestamp(),
-                updatedBy: context.requestData.createdBy ?? null,
-                latestTransactionId: saleId,
-            }, { merge: true });
-            await appendLineageEdge({
-                tx,
-                accountId: context.accountId,
-                requestId: context.requestId,
-                itemId,
-                fromTransactionId: previousTxId,
-                toTransactionId: saleId,
-                createdBy: context.requestData.createdBy,
-                movementKind: 'sold',
-                source: 'server',
-                note: note ?? null,
-                fromProjectId: sourceProjectId,
-                toProjectId: null,
-            });
-        }
-    });
-    await setRequestApplied(context.requestRef);
-}
-async function handleBusinessToProject(context) {
-    const payload = context.requestData.payload ?? {};
-    const itemId = payload.itemId;
-    const targetProjectId = payload.targetProjectId;
-    const budgetCategoryId = payload.budgetCategoryId;
-    const note = payload.note;
-    if (!itemId || !targetProjectId || !budgetCategoryId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, targetProjectId, or budgetCategoryId.');
-        return;
-    }
-    const db = (0, firestore_1.getFirestore)();
-    const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
-    const { itemProjectId, itemTransactionId } = getExpected(payload);
-    await db.runTransaction(async (tx) => {
-        const itemSnap = await tx.get(itemRef);
-        if (!itemSnap.exists) {
-            throw new https_1.HttpsError('not-found', 'Item not found.');
-        }
-        const item = itemSnap.data() ?? {};
-        if (itemProjectId !== item.projectId) {
-            throw new https_1.HttpsError('failed-precondition', 'Item scope changed.');
-        }
-        if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
-            throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
-        }
-        const previousTxId = item.transactionId ?? null;
-        const purchaseId = canonicalSaleTransactionId(targetProjectId, 'business_to_project', budgetCategoryId);
-        const totals = await computeCanonicalSaleTotals({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            addItem: { id: itemId, data: item },
-        });
-        const purchaseRef = db.doc(`accounts/${context.accountId}/transactions/${purchaseId}`);
-        const purchaseSnap = await tx.get(purchaseRef);
-        ensureCanonicalSaleTransaction({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            projectId: targetProjectId,
-            direction: 'business_to_project',
-            budgetCategoryId,
-            exists: purchaseSnap.exists,
-        });
-        persistCanonicalSaleTotals({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            totals,
-        });
-        tx.set(itemRef, {
-            projectId: targetProjectId,
-            transactionId: purchaseId,
-            status: item.status ?? 'purchased',
-            spaceId: null,
-            budgetCategoryId: budgetCategoryId,
-            updatedAt: firestore_1.FieldValue.serverTimestamp(),
-            updatedBy: context.requestData.createdBy ?? null,
-            latestTransactionId: purchaseId,
-        }, { merge: true });
-        await appendLineageEdge({
-            tx,
-            accountId: context.accountId,
-            requestId: context.requestId,
-            itemId,
-            fromTransactionId: previousTxId,
-            toTransactionId: purchaseId,
-            createdBy: context.requestData.createdBy,
-            movementKind: 'sold',
-            source: 'server',
-            note: note ?? null,
-            fromProjectId: null,
-            toProjectId: targetProjectId,
-        });
-    });
-    await setRequestApplied(context.requestRef);
-}
-async function handleProjectToProject(context) {
-    const payload = context.requestData.payload ?? {};
-    const itemId = payload.itemId;
-    const sourceProjectId = payload.sourceProjectId;
-    const targetProjectId = payload.targetProjectId;
-    const sourceBudgetCategoryId = payload.sourceBudgetCategoryId;
-    const destinationBudgetCategoryId = payload.destinationBudgetCategoryId;
-    const note = payload.note;
-    if (!itemId || !sourceProjectId || !targetProjectId || !sourceBudgetCategoryId || !destinationBudgetCategoryId) {
-        await setRequestFailed(context.requestRef, 'invalid', 'Missing itemId, project ids, or budget category ids.');
-        return;
-    }
-    const db = (0, firestore_1.getFirestore)();
-    const itemRef = db.doc(`accounts/${context.accountId}/items/${itemId}`);
-    const { itemProjectId, itemTransactionId } = getExpected(payload);
-    await db.runTransaction(async (tx) => {
-        const itemSnap = await tx.get(itemRef);
-        if (!itemSnap.exists) {
-            throw new https_1.HttpsError('not-found', 'Item not found.');
-        }
-        const item = itemSnap.data() ?? {};
-        if (itemProjectId !== item.projectId) {
-            throw new https_1.HttpsError('failed-precondition', 'Item scope changed.');
-        }
-        if (itemTransactionId != null && itemTransactionId !== (item.transactionId ?? null)) {
-            throw new https_1.HttpsError('failed-precondition', 'Item transaction changed.');
-        }
-        if (item.budgetCategoryId && item.budgetCategoryId !== sourceBudgetCategoryId) {
-            throw new https_1.HttpsError('failed-precondition', 'Budget category mismatch for item.');
-        }
-        const previousTxId = item.transactionId ?? null;
-        const allocationId = canonicalSaleTransactionId(sourceProjectId, 'business_to_project', sourceBudgetCategoryId);
-        const saleId = canonicalSaleTransactionId(sourceProjectId, 'project_to_business', sourceBudgetCategoryId);
-        const purchaseId = canonicalSaleTransactionId(targetProjectId, 'business_to_project', destinationBudgetCategoryId);
-        if (previousTxId === allocationId) {
-            const totals = await computeCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                removeItem: { id: itemId, data: item },
-            });
-            const allocationRef = db.doc(`accounts/${context.accountId}/transactions/${allocationId}`);
-            const allocationSnap = await tx.get(allocationRef);
-            ensureCanonicalSaleTransaction({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                projectId: sourceProjectId,
-                direction: 'business_to_project',
-                budgetCategoryId: sourceBudgetCategoryId,
-                exists: allocationSnap.exists,
-            });
-            persistCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: allocationId,
-                totals,
-            });
-        }
-        else {
-            const totals = await computeCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                addItem: { id: itemId, data: item },
-            });
-            const saleRef = db.doc(`accounts/${context.accountId}/transactions/${saleId}`);
-            const saleSnap = await tx.get(saleRef);
-            ensureCanonicalSaleTransaction({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                projectId: sourceProjectId,
-                direction: 'project_to_business',
-                budgetCategoryId: sourceBudgetCategoryId,
-                exists: saleSnap.exists,
-            });
-            persistCanonicalSaleTotals({
-                tx,
-                accountId: context.accountId,
-                transactionId: saleId,
-                totals,
-            });
-        }
-        const destinationTotals = await computeCanonicalSaleTotals({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            addItem: { id: itemId, data: item },
-        });
-        const purchaseRef = db.doc(`accounts/${context.accountId}/transactions/${purchaseId}`);
-        const purchaseSnap = await tx.get(purchaseRef);
-        ensureCanonicalSaleTransaction({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            projectId: targetProjectId,
-            direction: 'business_to_project',
-            budgetCategoryId: destinationBudgetCategoryId,
-            exists: purchaseSnap.exists,
-        });
-        persistCanonicalSaleTotals({
-            tx,
-            accountId: context.accountId,
-            transactionId: purchaseId,
-            totals: destinationTotals,
-        });
-        tx.set(itemRef, {
-            projectId: targetProjectId,
-            transactionId: purchaseId,
-            spaceId: null,
-            budgetCategoryId: destinationBudgetCategoryId,
-            updatedAt: firestore_1.FieldValue.serverTimestamp(),
-            updatedBy: context.requestData.createdBy ?? null,
-            latestTransactionId: purchaseId,
-        }, { merge: true });
-        const hopOneToTx = previousTxId === allocationId ? null : saleId;
-        await appendLineageEdge({
-            tx,
-            accountId: context.accountId,
-            requestId: `${context.requestId}_hop1`,
-            itemId,
-            fromTransactionId: previousTxId,
-            toTransactionId: hopOneToTx,
-            createdBy: context.requestData.createdBy,
-            movementKind: 'sold',
-            source: 'server',
-            note: note ?? null,
-            fromProjectId: sourceProjectId,
-            toProjectId: null,
-        });
-        await appendLineageEdge({
-            tx,
-            accountId: context.accountId,
-            requestId: `${context.requestId}_hop2`,
-            itemId,
-            fromTransactionId: hopOneToTx,
-            toTransactionId: purchaseId,
-            createdBy: context.requestData.createdBy,
-            movementKind: 'sold',
-            source: 'server',
-            note: note ?? null,
-            fromProjectId: null,
-            toProjectId: targetProjectId,
-        });
-    });
-    await setRequestApplied(context.requestRef);
-}
-requestHandlers.ITEM_SALE_PROJECT_TO_BUSINESS = handleProjectToBusiness;
-requestHandlers.ITEM_SALE_BUSINESS_TO_PROJECT = handleBusinessToProject;
-requestHandlers.ITEM_SALE_PROJECT_TO_PROJECT = handleProjectToProject;
-requestHandlers.PING = async ({ requestRef }) => {
-    await setRequestApplied(requestRef);
-};
-exports.repairCanonicalSaleTotals = (0, https_1.onCall)(async (request) => {
-    const uid = request.auth?.uid;
-    if (!uid) {
-        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
-    }
-    const { accountId, projectId, dryRun } = request.data ?? {};
-    if (!accountId) {
-        throw new https_1.HttpsError('invalid-argument', 'Missing accountId.');
-    }
-    const db = (0, firestore_1.getFirestore)();
-    let txQuery = db.collection(`accounts/${accountId}/transactions`).where('isCanonicalInventorySale', '==', true);
-    if (projectId) {
-        txQuery = txQuery.where('projectId', '==', projectId);
-    }
-    const snapshot = await txQuery.get();
-    const repairs = [];
-    for (const doc of snapshot.docs) {
-        const data = doc.data() ?? {};
-        const itemsSnapshot = await db
-            .collection(`accounts/${accountId}/items`)
-            .where('transactionId', '==', doc.id)
-            .get();
-        const amountCents = itemsSnapshot.docs.reduce((sum, itemDoc) => sum + getItemValueCents(itemDoc.data() ?? {}), 0);
-        const itemIds = itemsSnapshot.docs.map((itemDoc) => itemDoc.id);
-        const currentAmount = typeof data.amountCents === 'number' ? data.amountCents : 0;
-        const currentItems = Array.isArray(data.itemIds) ? data.itemIds : [];
-        const needsRepair = currentAmount !== amountCents || currentItems.length !== itemIds.length;
-        if (!needsRepair)
-            continue;
-        repairs.push({ transactionId: doc.id, before: currentAmount, after: amountCents, itemCount: itemIds.length });
-        if (!dryRun) {
-            await doc.ref.set({
-                amountCents,
-                itemIds,
-                updatedAt: firestore_1.FieldValue.serverTimestamp(),
-            }, { merge: true });
-        }
-    }
-    console.log(`[repairCanonicalSaleTotals] account=${accountId} project=${projectId ?? 'all'} repaired=${repairs.length}`);
-    return { repaired: repairs.length, repairs };
-});
-async function processRequestDoc(context) {
-    const { requestRef, requestData } = context;
-    if (!requestData) {
-        await setRequestFailed(requestRef, 'invalid', 'Request data missing.');
-        return;
-    }
-    if (requestData.status !== 'pending') {
-        // Ignore replays or client-mutations; server owns status transitions.
-        return;
-    }
-    const handler = requestHandlers[requestData.type];
-    if (!handler) {
-        await setRequestFailed(requestRef, 'unimplemented', `No handler for ${requestData.type}.`);
-        return;
-    }
-    try {
-        await handler(context);
-    }
-    catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error.';
-        await setRequestFailed(requestRef, 'handler_error', message);
-    }
-}
-exports.onAccountRequestCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/requests/{requestId}', async (event) => {
-    const requestRef = event.data?.ref;
-    const requestData = event.data?.data();
-    if (!requestRef) {
-        return;
-    }
-    const opId = requestData?.opId;
-    if (opId) {
-        const existing = await requestRef.parent
-            .where('opId', '==', opId)
-            .where('type', '==', requestData?.type ?? '')
-            .where('status', '==', 'applied')
-            .limit(1)
-            .get();
-        if (!existing.empty && existing.docs[0].id !== requestRef.id) {
-            await setRequestApplied(requestRef, { deduped: true });
-            return;
-        }
-    }
-    await processRequestDoc({
-        requestRef,
-        requestData: requestData ?? { status: 'failed', type: 'unknown' },
-        accountId: event.params.accountId,
-        requestId: event.params.requestId
-    });
-});
 /**
  * Append an association lineage edge whenever an item's transactionId changes.
- * This captures client-direct linking/unlinking and also complements request-doc operations.
+ * This captures client-direct linking/unlinking. Optional `returned` intent edge
+ * is appended when the destination transaction is a Return transaction.
  */
 exports.onItemTransactionIdChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
     const before = event.data?.before.data() ?? null;
@@ -729,8 +164,11 @@ exports.onLineageEdgeCreated = (0, firestore_2.onDocumentCreated)('accounts/{acc
     }
 });
 /**
- * Recompute canonical sale transaction totals when an item's price changes.
- * Also recomputes isComplete for any parent transactions that reference this item.
+ * Recompute isComplete for any parent transactions that reference this item
+ * when the item's price changes. Sale transactions are intentionally NOT touched:
+ * per the per-batch sale redesign, `amountCents` on Sale transactions is a frozen
+ * snapshot at creation time and must never be rewritten here. Legacy canonical
+ * sales are also frozen historical records. Both are skipped below.
  */
 exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
     const before = event.data?.before.data() ?? null;
@@ -746,23 +184,8 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
     const accountId = event.params.accountId;
     const itemId = event.params.itemId;
     const db = (0, firestore_1.getFirestore)();
-    // --- Existing: recompute SALE_ transaction totals ---
-    const transactionId = after.transactionId;
-    if (transactionId && transactionId.startsWith('SALE_')) {
-        const itemsSnapshot = await db
-            .collection(`accounts/${accountId}/items`)
-            .where('transactionId', '==', transactionId)
-            .get();
-        const amountCents = itemsSnapshot.docs.reduce((sum, doc) => sum + getItemValueCents(doc.data() ?? {}), 0);
-        const saleItemIds = itemsSnapshot.docs.map((doc) => doc.id);
-        await db.doc(`accounts/${accountId}/transactions/${transactionId}`).set({
-            amountCents: Math.max(0, amountCents),
-            itemIds: saleItemIds,
-            updatedAt: firestore_1.FieldValue.serverTimestamp(),
-        }, { merge: true });
-    }
-    // --- New: recompute isComplete for parent transactions ---
-    // Only if purchasePriceCents changed (that's what audit uses)
+    // Recompute isComplete for parent transactions — only if purchasePriceCents
+    // changed (that's what audit uses). Never touches Sale transactions.
     if (beforePurchase !== afterPurchase) {
         try {
             const parentTxSnapshot = await db
@@ -770,10 +193,16 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
                 .where('itemIds', 'array-contains', itemId)
                 .get();
             for (const txDoc of parentTxSnapshot.docs) {
-                // Skip SALE_ transactions — the write above already triggers onTransactionWritten
-                if (txDoc.id.startsWith('SALE_'))
-                    continue;
                 const txData = txDoc.data() ?? {};
+                // Skip Sale transactions: per-batch sales freeze amountCents at creation;
+                // legacy canonical sales (isCanonicalInventorySale == true) are historical
+                // records. Either way, this trigger must not rewrite them.
+                const rawType = (txData.type ?? txData.transactionType ?? null);
+                const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
+                if (isSale) {
+                    console.log(`[onItemPriceChanged] skipping Sale transaction ${txDoc.id} (frozen shape)`);
+                    continue;
+                }
                 const result = await computeIsComplete(db, accountId, txDoc.id, txData);
                 const currentIsComplete = txData.isComplete ?? null;
                 const currentAudit = txData.audit ?? null;
@@ -817,6 +246,11 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
                 const txItemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
                 if (txItemIds.includes(itemId))
                     continue;
+                // Skip Sale transactions: frozen historical records (see parent-branch comment).
+                const rawType = (txData.type ?? txData.transactionType ?? null);
+                const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
+                if (isSale)
+                    continue;
                 const result = await computeIsComplete(db, accountId, srcTxId, txData);
                 const currentIsComplete = txData.isComplete ?? null;
                 const currentAudit = txData.audit ?? null;
@@ -834,33 +268,6 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
             console.error(`[onItemPriceChanged] lineage-based isComplete recompute failed for item ${itemId}:`, err);
         }
     }
-});
-exports.onProjectRequestCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/projects/{projectId}/requests/{requestId}', async (event) => {
-    const requestRef = event.data?.ref;
-    const requestData = event.data?.data();
-    if (!requestRef) {
-        return;
-    }
-    await processRequestDoc({
-        requestRef,
-        requestData: requestData ?? { status: 'failed', type: 'unknown' },
-        accountId: event.params.accountId,
-        projectId: event.params.projectId,
-        requestId: event.params.requestId
-    });
-});
-exports.onInventoryRequestCreated = (0, firestore_2.onDocumentCreated)('accounts/{accountId}/inventory/requests/{requestId}', async (event) => {
-    const requestRef = event.data?.ref;
-    const requestData = event.data?.data();
-    if (!requestRef) {
-        return;
-    }
-    await processRequestDoc({
-        requestRef,
-        requestData: requestData ?? { status: 'failed', type: 'unknown' },
-        accountId: event.params.accountId,
-        requestId: event.params.requestId
-    });
 });
 /**
  * Phase 6: Space Deletion Cleanup Cloud Function
