@@ -7,6 +7,8 @@ struct SingleTransactionMenuCallbacks {
     // Reassign (detail context only)
     var onReassignToInventory: (() -> Void)?
     var onReassignToProject: (() -> Void)?
+    // Copy ID
+    var onCopyID: (() -> Void)?
     // Delete
     var onDelete: (() -> Void)?
 }
@@ -32,6 +34,14 @@ enum TransactionMenuBuilder {
         guard transaction.isCanonicalInventorySale != true else { return [] }
 
         var items: [ActionMenuItem] = []
+        if let onCopyID = callbacks.onCopyID {
+            items.append(ActionMenuItem(
+                id: "copy-id",
+                label: "Copy ID",
+                icon: "doc.on.clipboard",
+                onPress: onCopyID
+            ))
+        }
         if let onDelete = callbacks.onDelete {
             items.append(ActionMenuItem(
                 id: "delete",
@@ -86,6 +96,14 @@ enum TransactionMenuBuilder {
             }
         }
 
+        if let onCopyID = callbacks.onCopyID {
+            items.append(ActionMenuItem(
+                id: "copy-id",
+                label: "Copy ID",
+                icon: "doc.on.clipboard",
+                onPress: onCopyID
+            ))
+        }
         if let onDelete = callbacks.onDelete {
             items.append(ActionMenuItem(
                 id: "delete",

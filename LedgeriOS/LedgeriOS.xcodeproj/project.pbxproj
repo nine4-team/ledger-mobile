@@ -278,6 +278,7 @@
 		S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0001 /* PlatformPresenting.swift */; };
 		S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0002 /* PlatformModifiers.swift */; };
 		S009WP02B0000000000P0003 /* ShareHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0003 /* ShareHelper.swift */; };
+		S009WP02B0000000000P0004 /* Clipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP02F0000000000P0004 /* Clipboard.swift */; };
 		S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */; };
 		S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = S009WP05F0000000000P0002 /* LedgerCommands.swift */; };
 		SCB00001B001000000000001 /* SearchControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = SCB00001F001000000000001 /* SearchControlBar.swift */; };
@@ -615,6 +616,7 @@
 		S009WP02F0000000000P0001 /* PlatformPresenting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformPresenting.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0002 /* PlatformModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformModifiers.swift; sourceTree = "<group>"; };
 		S009WP02F0000000000P0003 /* ShareHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareHelper.swift; sourceTree = "<group>"; };
+		S009WP02F0000000000P0004 /* Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clipboard.swift; sourceTree = "<group>"; };
 		S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutNotifications.swift; sourceTree = "<group>"; };
 		S009WP05F0000000000P0002 /* LedgerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerCommands.swift; sourceTree = "<group>"; };
 		SCB00001F001000000000001 /* SearchControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchControlBar.swift; sourceTree = "<group>"; };
@@ -1215,6 +1217,7 @@
 				S009WP02F0000000000P0002 /* PlatformModifiers.swift */,
 				S009WP02F0000000000P0001 /* PlatformPresenting.swift */,
 				S009WP02F0000000000P0003 /* ShareHelper.swift */,
+				S009WP02F0000000000P0004 /* Clipboard.swift */,
 				BL00000000000000000F0016 /* PDFDownloadHelper.swift */,
 				S009WP05F0000000000P0001 /* KeyboardShortcutNotifications.swift */,
 				S009WP05F0000000000P0002 /* LedgerCommands.swift */,
@@ -1621,6 +1624,7 @@
 				S009WP02B0000000000P0001 /* PlatformPresenting.swift in Sources */,
 				S009WP02B0000000000P0002 /* PlatformModifiers.swift in Sources */,
 				S009WP02B0000000000P0003 /* ShareHelper.swift in Sources */,
+				S009WP02B0000000000P0004 /* Clipboard.swift in Sources */,
 				BL00000000000000000B0016 /* PDFDownloadHelper.swift in Sources */,
 				S009WP05B0000000000P0001 /* KeyboardShortcutNotifications.swift in Sources */,
 				S009WP05B0000000000P0002 /* LedgerCommands.swift in Sources */,

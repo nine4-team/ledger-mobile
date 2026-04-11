@@ -455,6 +455,7 @@ struct ItemDetailView: View {
                 onSellToProject: { showSellToProject = true },
                 onReassignToProject: { showReassign = true },
                 onMakeCopies: { showMakeCopies = true },
+                onCopyID: liveItem.id.map { id in { Clipboard.copy(id) } },
                 onDelete: { showDeleteConfirmation = true }
             ),
             currentStatus: liveItem.status?.rawValue

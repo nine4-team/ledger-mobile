@@ -65,6 +65,7 @@ final class ItemActionsController {
                 ? { [weak self] in self?.sellToProjectItem = item }
                 : nil,
             onReassignToProject: { [weak self] in self?.reassignItem = item },
+            onCopyID: item.id.map { id in { Clipboard.copy(id) } },
             onDelete: { [weak self] in self?.deleteConfirmItem = item }
         )
 

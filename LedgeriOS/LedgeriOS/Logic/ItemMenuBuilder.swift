@@ -40,6 +40,8 @@ struct SingleItemMenuCallbacks {
     var onReassignToProject: (() -> Void)?
     // Copies
     var onMakeCopies: (() -> Void)?
+    // Copy ID
+    var onCopyID: (() -> Void)?
     // Delete
     var onDelete: (() -> Void)?
 }
@@ -217,6 +219,11 @@ enum ItemMenuBuilder {
                 subactions: reassignSubactions,
                 isActionOnly: true
             ))
+        }
+
+        // --- Copy ID ---
+        if let onCopyID = callbacks.onCopyID {
+            items.append(ActionMenuItem(id: "copy-id", label: "Copy ID", icon: "doc.on.clipboard", onPress: onCopyID))
         }
 
         // --- Delete (always last) ---

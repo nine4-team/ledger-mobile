@@ -383,6 +383,7 @@ struct UniversalSearchView: View {
         TransactionMenuBuilder.buildCardMenu(
             transaction: transaction,
             callbacks: SingleTransactionMenuCallbacks(
+                onCopyID: { Clipboard.copy(txId) },
                 onDelete: {
                     actionTargetTransactionId = txId
                     showSingleTransactionDeleteConfirmation = true

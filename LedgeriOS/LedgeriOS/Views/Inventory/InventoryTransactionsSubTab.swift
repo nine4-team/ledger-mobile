@@ -214,6 +214,7 @@ struct InventoryTransactionsSubTab: View {
         TransactionMenuBuilder.buildCardMenu(
             transaction: transaction,
             callbacks: SingleTransactionMenuCallbacks(
+                onCopyID: { Clipboard.copy(txId) },
                 onDelete: {
                     actionTargetTransactionId = txId
                     showSingleDeleteConfirmation = true

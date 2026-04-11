@@ -745,6 +745,7 @@ struct TransactionDetailView: View {
             callbacks: SingleTransactionMenuCallbacks(
                 onReassignToInventory: { returnToInventory() },
                 onReassignToProject: { showReassign = true },
+                onCopyID: currentTransaction.id.map { id in { Clipboard.copy(id) } },
                 onDelete: { showDeleteConfirmation = true }
             )
         )

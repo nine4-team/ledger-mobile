@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-04-10
+Last updated: 2026-04-11
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -41,6 +41,9 @@ Last updated: 2026-04-10
 
 ### Search
 - [shipped] [Search Results](search-results.md) — Contextual mapping details on search rows and item detail. Project name surfaced on search cards; item detail hero now shows Project, Purchaser, Budget Category, Transaction, and Space. Purchaser row shipped 2026-04-10.
+
+### Developer & Debug
+- [shipped] [Copy Entity ID](ui/copy-entity-id.md) — `Copy ID` kebab-menu action on items and transactions (list cards + detail views). Uses shared `Clipboard` helper for iOS/macOS. Shipped 2026-04-11.
 
 ### Bug Fixes
 - [shipped] [Project List Bugs](project-list-bugs.md) — Business Inventory card on the Projects screen showed "0 items · 0 transactions" because `InventoryContext` was only activated from the Inventory tab. Fixed by activating it at `MainTabView` for the whole signed-in session. Shipped 2026-04-07.
