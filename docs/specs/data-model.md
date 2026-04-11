@@ -69,13 +69,13 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
 | transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"` |
 | status | string, nullable | One of: `"pending"`, `"completed"`, `"canceled"` |
-| source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field |
+| source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Sale transactions and return-to-inventory transactions use the literal `"Business Inventory"`.** |
 | transactionDate | string, nullable | Date of the transaction (stored as a string, not a timestamp) |
 | itemIds | array of string, nullable | **CANONICAL link to items.** List of Item document IDs associated with this transaction |
 | notes | string, nullable | |
 | ~~isCanceled~~ | ~~boolean~~ | **Removed.** Use `status == "canceled"` instead. Canceled transactions contribute $0 to all budget calculations |
-| isCanonicalInventorySale | boolean, nullable | True for system-generated sale transactions in the canonical sale system |
-| inventorySaleDirection | string, nullable | One of: "business_to_project", "project_to_business". Only set when isCanonicalInventorySale is true |
+| isCanonicalInventorySale | boolean, nullable | **LEGACY.** True only on legacy canonical sale transactions written before the per-batch redesign. New per-batch sales never set this flag. See [canonical-sales.md](canonical-sales.md). |
+| inventorySaleDirection | string, nullable | **LEGACY.** Only set when `isCanonicalInventorySale` is true. New per-batch sales have no direction (sales only go business → project). |
 | isCanonicalInventory | boolean, nullable | Legacy flag for older inventory operations |
 | canonicalKind | string, nullable | Legacy kind classifier |
 | needsReview | boolean, nullable | **Deprecated.** Replaced by `isComplete`. |
@@ -95,6 +95,25 @@ A financial event: a purchase, return, sale, or inventory transfer.
 
 **Why `type` is aliased to `transactionType`:** The Firestore field is named `type`, but application code maps it to `transactionType` to avoid collisions with language-reserved keywords and for clarity.
 
+#### Sale and Return-to-Inventory Immutability
+
+**Per-batch Sale transactions** (the new model — `type: "Sale"` with no `isCanonicalInventorySale` flag) and **Return-to-Inventory transactions** (`type: "Return"` with `source: "Business Inventory"`) are **immutable after creation** for their shape fields:
+
+- `type`
+- `source`
+- `projectId`
+- `amountCents`
+- `itemIds`
+- `budgetCategoryId`
+
+Mutable fields: `notes`, `status`, `updatedAt`. Cancellation works by setting `status: "canceled"` — the shape fields stay frozen.
+
+Enforced by Firestore security rules ([firebase/firestore.rules](../../firebase/firestore.rules)). Both clients additionally enforce on the write side. Legacy canonical sales (`isCanonicalInventorySale == true`) are exempt from this rule for backwards compatibility — see [canonical-sales.md](canonical-sales.md).
+
+See [sale-transactions.md](sale-transactions.md) for the full sale shape and the rationale.
+
+**Return-to-inventory coalescing exception:** A return-to-inventory transaction MAY be appended to within the same user session (multiple returns coalesce into one transaction via `arrayUnion` on `itemIds` and a recalculated `amountCents`). Once the user leaves the flow or 24h passes, the transaction is treated as closed and clients should create a new one for subsequent returns. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
+
 ---
 
 ### 2. Item
@@ -110,7 +129,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | projectId | string, nullable | FK to Project. Null means item is in business inventory |
 | transactionId | string, nullable | FK to Transaction. **Exists but is NOT reliably set.** Do not use for lookups (see Relationships warning) |
 | spaceId | string, nullable | FK to Space |
-| budgetCategoryId | string, nullable | FK to BudgetCategory. Persists across scope moves. Auto-inherited from transaction when null (on association or reassignment); set via prompting for cross-scope sells |
+| budgetCategoryId | string, nullable | FK to BudgetCategory. **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`** — items in business inventory have no category. Set when an item moves into a project (sell-to-project flow) and wiped when an item moves into inventory (return-to-inventory flow). See "Item Scope/Category Invariant" below. |
 | name | string, nullable | Primary display name |
 | description | string, nullable | Legacy field. Fallback display name when name is null |
 | sku | string, nullable | Stock-keeping unit identifier |
@@ -131,6 +150,22 @@ A physical or trackable object: furniture, material, supply, etc.
 | updatedAt | timestamp | |
 
 **Display name resolution:** Prefer `name`, fall back to `description`, then empty string.
+
+#### Item Scope/Category Invariant
+
+For every Item:
+
+```
+(item.projectId == null) ↔ (item.budgetCategoryId == null)
+```
+
+Items in business inventory (`projectId == null`) have `budgetCategoryId == null`. Items in a project have a `budgetCategoryId`. Both clients (iOS and MCP) enforce this on every write.
+
+**This replaces** the legacy "items carry their `budgetCategoryId` across scope moves" model. Under the new model, categories belong to projects — when an item moves into inventory, its category is wiped; when an item moves into a project, a category is acquired (resolved at sell time from user input).
+
+Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-management.md](budget-management.md) "Item Budget Category Attribution."
+
+**Existing inventory items with stale categories** (items currently in inventory with non-null `budgetCategoryId` from before the redesign) are left as-is. The next time one of them moves, the new flow takes over and either wipes or overwrites the field. No backfill is run.
 
 ---
 
@@ -413,9 +448,11 @@ Embedded within Checklist.
 
 > **WARNING: Transaction to Items lookup direction**
 >
-> The canonical way to find a transaction's items is to filter items whose `id` appears in `transaction.itemIds`. Do **NOT** filter items by `item.transactionId == transaction.id` -- this field exists on items but is **not reliably set** in Firestore.
+> The canonical way to find a transaction's items is to filter items whose `id` appears in `transaction.itemIds`. Do **NOT** filter items by `item.transactionId == transaction.id` -- this field exists on items but is **a cache back-reference, not the source of truth.** It is not reliably set and should not be used for forward lookups.
 >
 > Card and list views use `transaction.itemIds` for counts. Detail views must use the same source. This has caused bugs when the wrong lookup direction was used.
+>
+> **Per-batch sale immutability:** under the per-batch sale model (see [sale-transactions.md](sale-transactions.md)), `transaction.itemIds` is set once at sale creation and never mutated. The same applies to Return-to-Inventory transactions (with the documented coalescing exception). This makes `itemIds` reliably authoritative for these transaction types.
 
 ### Relationships Table
 
@@ -425,7 +462,7 @@ Embedded within Checklist.
 | Item | belongs to | Transaction | N:1 | `item.transactionId` | **EXISTS but UNRELIABLE.** Do not use for forward lookups from transaction to items. May be used for reverse lookups (given an item, find its transaction) with caution |
 | Item | belongs to | Project | N:1 | `item.projectId` | Null means business inventory. See Scope Semantics |
 | Item | belongs to | Space | N:1 | `item.spaceId` | Null means item is not in any space |
-| Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | Persists across scope moves. Auto-set from destination transaction when null (on association or reassignment); set during canonical sale category prompting for cross-scope sells |
+| Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.** Set when an item moves into a project (sell-to-project flow); wiped when an item moves into inventory (return-to-inventory flow). Auto-set from destination transaction on association or reassignment within a project. |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |
 | Space | belongs to | Project | N:1 | `space.projectId` | Null means business inventory scope |
@@ -516,6 +553,7 @@ function normalizeTransactionAmount(transaction):
 
     amount = transaction.amountCents or 0
 
+    # LEGACY canonical sale carve-out (historical docs only)
     if transaction.isCanonicalInventorySale is true:
         if transaction.inventorySaleDirection == "project_to_business":
             return -abs(amount)     // money back to business
@@ -523,11 +561,18 @@ function normalizeTransactionAmount(transaction):
             return abs(amount)      // money spent on project
         return amount               // fallback if direction unknown
 
+    # NEW per-batch sales: always +1
+    if transaction.transactionType == "sale":
+        return abs(amount)          // money spent on project (one direction only)
+
+    # Returns (vendor or inventory) subtract
     if transaction.transactionType == "return" OR amount < 0:
-        return -abs(amount)         // returns subtract from spend
+        return -abs(amount)
 
     return amount                   // purchases add to spend
 ```
+
+The dual-read path (legacy canonical sales vs. new per-batch sales) is the intentional cost of preserving historical financial records. Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`.
 
 **Overall budget computation:**
 
@@ -561,13 +606,14 @@ An entity with `projectId: null` belongs to **business inventory** -- the accoun
 
 **Scope transitions:**
 
-When an item moves between scopes (via sell or reassign operations), its `projectId` is updated:
-- **Sell to business:** `item.projectId` set to null, `item.spaceId` set to null, `item.status` set to "purchased"
-- **Sell to project:** `item.projectId` set to destination project ID, `item.spaceId` set to null
-- **Reassign to project:** `item.projectId` updated (no financial records created)
-- **Reassign to inventory:** `item.projectId` set to null
+When an item moves between scopes, its `projectId` and `budgetCategoryId` are updated together to preserve the invariant `(projectId == null) ↔ (budgetCategoryId == null)`:
 
-The `item.budgetCategoryId` **persists across scope moves**. This is intentional: when an item is sold between projects, its category assignment travels with it so budget tracking remains consistent.
+- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Sale transaction. See [sale-transactions.md](sale-transactions.md).
+- **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
+- **Move between projects** (`moveBetweenProjects`): atomic combination of return-to-inventory + sell-to-destination. Two transactions, one batch. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+- **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
+
+**The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
 
 ---
 
@@ -578,10 +624,13 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 ### Transaction amountCents
 
 - **Purchases:** Stored as positive. Adds to project spend.
-- **Returns:** Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
-- **Canonical sales, business_to_project:** Stored as positive. **Adds** to project spend (money going out of business into project).
-- **Canonical sales, project_to_business:** Stored as positive. **Multiplied by -1** in budget calculations (money coming back to business from project).
+- **Returns** (vendor or to inventory): Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
+- **Per-batch Sale transactions** (`type == "sale"`, no `isCanonicalInventorySale` flag): Stored as positive. **Adds** to project spend. There is only one direction (business → project); the reverse case is a Return.
+- **LEGACY canonical sales, `business_to_project`:** Stored as positive. **Adds** to project spend. Historical only.
+- **LEGACY canonical sales, `project_to_business`:** Stored as positive. **Multiplied by -1** in budget calculations. Historical only.
 - **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `status == "canceled"`.
+
+Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
 
 ### Item price fields
 

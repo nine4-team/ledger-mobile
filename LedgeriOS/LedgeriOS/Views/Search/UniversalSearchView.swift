@@ -374,7 +374,7 @@ struct UniversalSearchView: View {
             scope: .search,
             accountId: accountContext.currentAccountId,
             onSelect: { selectedItemIds.insert(itemId) },
-            includeSellToBusiness: false,
+            includeReturnToInventory: false,
             includeSellToProject: false
         )
     }

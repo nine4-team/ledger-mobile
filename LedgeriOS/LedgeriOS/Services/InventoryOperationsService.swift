@@ -6,137 +6,67 @@ enum InventoryOperationError: Error {
     /// Caller tried to use `reassignToProject` for a cross-scope (different project) move.
     /// Cross-scope moves are sells — use `sellToProject` instead.
     case crossScopeReassign
+
+    /// Batch exceeds the 100-item cap. Firestore batch writes allow 500 docs;
+    /// 100 items keeps us well under with item updates + txn writes + lineage edges.
+    case batchSizeExceeded
+
+    /// moveBetweenProjects requires all items to be in the same source project.
+    case mixedSourceProjects
+
+    /// moveBetweenProjects source and destination are the same project.
+    case sameSourceAndDestination
+
+    /// moveBetweenProjects requires all items to be in a project (not inventory).
+    case itemsNotInProject
 }
 
 // MARK: - Service
 
 /// Multi-step atomic Firestore operations for inventory movements:
-/// sell to business, sell to project, reassign (within-scope), reassign to inventory.
+/// sell to project, return to inventory, move between projects,
+/// reassign (within-scope), return to transaction.
 ///
-/// ## Canonical Sale Transactions
-/// Items moving between scopes (project ↔ business inventory) create or update a deterministic
-/// "canonical sale transaction" with ID: `SALE_{projectId}_{direction}_{budgetCategoryId}`.
-/// Items are grouped by budgetCategoryId — each group goes to its own canonical sale.
+/// ## Per-Batch Sale Transactions
+/// Each sell action creates ONE new immutable Sale transaction with an auto-ID.
+/// Shape fields (amountCents, itemIds, budgetCategoryId, type, source, projectId)
+/// are frozen at creation and never mutated. Sales only go business → project.
 ///
-/// ## Direction Rules (M17)
-/// - Items WITH a projectId → moving OUT of a project → direction: `project_to_business`
-/// - Items WITHOUT a projectId → moving INTO a project → direction: `business_to_project`
+/// ## Returning to Inventory
+/// Items moving from a project back to business inventory create a Return
+/// transaction with source: "Business Inventory". Items have their budgetCategoryId
+/// wiped (inventory items have no category).
+///
+/// ## Batch Cap
+/// All operations are capped at 100 items per call.
 struct InventoryOperationsService {
+    private static let maxBatchItems = 100
+
     private let makeBatch: @Sendable () -> any BatchWriting
 
     init(makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() }) {
         self.makeBatch = makeBatch
     }
 
-    // MARK: - Sell to Business
-
-    /// Moves items from a project into business inventory.
-    /// Creates or updates canonical sale transactions, grouped by budget category (H12).
-    /// Items without a `budgetCategoryId` fall back to `overrideCategoryId` (H13).
-    func sellToBusiness(
-        items: [Item],
-        accountId: String,
-        userId: String? = nil,
-        overrideCategoryId: String? = nil
-    ) async throws {
-        guard !items.isEmpty else { return }
-
-        let batch = makeBatch()
-        let itemsPath = "accounts/\(accountId)/items"
-        let txPath = "accounts/\(accountId)/transactions"
-        let edgesPath = "accounts/\(accountId)/lineageEdges"
-
-        // Group items by (projectId, resolvedCategoryId) so each group
-        // maps to exactly one canonical sale transaction (H12).
-        let groups = Self.groupForSale(items: items, override: overrideCategoryId)
-
-        for (groupKey, groupItems) in groups {
-            let saleId = Self.canonicalSaleId(
-                projectId: groupKey.projectId,
-                direction: "project_to_business",
-                categoryId: groupKey.categoryId
-            )
-            let amountDelta = Self.amountDelta(for: groupItems) // H11
-            let saleDocPath = "\(txPath)/\(saleId)"
-            // `createdAt` must only be written on first insert — merge:true would
-            // otherwise clobber it on every subsequent sale into this canonical doc.
-            let isNew = try await !batch.documentExists(atPath: saleDocPath)
-            var fields: [String: Any] = [
-                "projectId": groupKey.projectId,
-                "type": TransactionType.sale.rawValue,                           // C1: use "type" not "transactionType"
-                "isCanonicalInventorySale": true,
-                "inventorySaleDirection": "project_to_business",  // C2: only valid directions
-                "budgetCategoryId": groupKey.categoryId,
-                "itemIds": FieldValue.arrayUnion(groupItems.compactMap(\.id)),
-                "amountCents": FieldValue.increment(Int64(amountDelta)),  // H11
-                "updatedAt": FieldValue.serverTimestamp(),
-            ]
-            if isNew { fields["createdAt"] = FieldValue.serverTimestamp() }
-            batch.setData(fields, forDocumentAt: saleDocPath, merge: true)
-        }
-
-        for item in items {
-            guard let itemId = item.id,
-                  let projectId = item.projectId else { continue }
-
-            let categoryId = item.budgetCategoryId ?? overrideCategoryId ?? "uncategorized"
-            let saleId = Self.canonicalSaleId(
-                projectId: projectId,
-                direction: "project_to_business",
-                categoryId: categoryId
-            )
-
-            // Update item: clear projectId/spaceId, set status and link to canonical sale
-            batch.updateData([
-                "projectId": NSNull(),
-                "spaceId": NSNull(),
-                "status": "purchased",
-                "transactionId": saleId,
-                "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
-
-            // Remove item from its source transaction's itemIds (C5)
-            if let fromTxId = item.transactionId {
-                batch.updateData(
-                    ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocumentAt: "\(txPath)/\(fromTxId)"
-                )
-            }
-
-            // Lineage edge
-            var edge: [String: Any] = [
-                "accountId": accountId,
-                "itemId": itemId,
-                "fromProjectId": projectId,
-                "toTransactionId": saleId,
-                "movementKind": "sold",
-                "source": "app",
-                "createdAt": FieldValue.serverTimestamp(),
-            ]
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }  // M2
-            if let userId { edge["createdBy"] = userId }                                    // M3
-            batch.setDataAutoId(edge, inCollection: edgesPath)
-        }
-
-        try await batch.commit()
-    }
-
     // MARK: - Sell to Project
 
-    /// Two-hop sell: source project → business inventory → destination project.
-    /// Creates or updates canonical sales for BOTH hops, grouped by budget category (H12).
+    /// Sells items from business inventory (or another project) into a destination project.
+    /// Creates ONE new immutable Sale transaction per call. No long-lived aggregators.
     ///
-    /// - Items with their own `budgetCategoryId` use it for both hops.
-    /// - `sourceCategoryId` / `destinationCategoryId` are overrides for items without a category.
+    /// The Sale transaction's shape (amountCents, itemIds, budgetCategoryId, projectId,
+    /// type, source) is frozen at creation — Firestore security rules enforce this.
     func sellToProject(
         items: [Item],
         destinationProjectId: String,
+        budgetCategoryId: String,
         accountId: String,
         userId: String? = nil,
-        sourceCategoryId: String? = nil,
-        destinationCategoryId: String? = nil
+        notes: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
+        guard items.count <= Self.maxBatchItems else {
+            throw InventoryOperationError.batchSizeExceeded
+        }
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -144,69 +74,41 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        // Collect unique destination category IDs for auto-enable
-        var destinationCategoryIds: Set<String> = []
+        // Frozen amount snapshot
+        let totals = Self.computeBatchTotals(items)
 
+        // 1. Create new Sale transaction (auto-ID via UUID, frozen shape)
+        let saleId = UUID().uuidString
+        let saleDocPath = "\(txPath)/\(saleId)"
+        let today = Self.todayDateString()
+        var saleFields: [String: Any] = [
+            "type": "Sale",
+            "source": "Business Inventory",
+            "projectId": destinationProjectId,
+            "budgetCategoryId": budgetCategoryId,
+            "amountCents": totals.amountCents,
+            "subtotalCents": totals.subtotalCents,
+            "itemIds": items.compactMap(\.id),
+            "status": "completed",
+            "isComplete": true,
+            "transactionDate": today,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if let notes { saleFields["notes"] = notes }
+        if let userId { saleFields["createdBy"] = userId }
+        batch.setData(saleFields, forDocumentAt: saleDocPath, merge: false)
+
+        // 2. Update each item
         for item in items {
             guard let itemId = item.id else { continue }
 
-            let srcCatId = item.budgetCategoryId ?? sourceCategoryId ?? "uncategorized"
-            let dstCatId = item.budgetCategoryId ?? destinationCategoryId ?? "uncategorized"
-            let amountDelta = item.purchasePriceCents ?? 0
-
-            destinationCategoryIds.insert(dstCatId)
-
-            // Hop 1: source project → business inventory (only if item was in a project)
-            if let srcProjectId = item.projectId {
-                let srcSaleId = Self.canonicalSaleId(
-                    projectId: srcProjectId,
-                    direction: "project_to_business",   // C2: valid direction
-                    categoryId: srcCatId
-                )
-                let srcPath = "\(txPath)/\(srcSaleId)"
-                let srcIsNew = try await !batch.documentExists(atPath: srcPath)
-                var srcFields: [String: Any] = [
-                    "projectId": srcProjectId,
-                    "type": TransactionType.sale.rawValue,                     // C1
-                    "isCanonicalInventorySale": true,
-                    "inventorySaleDirection": "project_to_business",
-                    "budgetCategoryId": srcCatId,
-                    "itemIds": FieldValue.arrayUnion([itemId]),
-                    "amountCents": FieldValue.increment(Int64(amountDelta)),
-                    "updatedAt": FieldValue.serverTimestamp(),
-                ]
-                if srcIsNew { srcFields["createdAt"] = FieldValue.serverTimestamp() }
-                batch.setData(srcFields, forDocumentAt: srcPath, merge: true)
-            }
-
-            // Hop 2: business inventory → destination project
-            let dstSaleId = Self.canonicalSaleId(
-                projectId: destinationProjectId,
-                direction: "business_to_project",       // C2: valid direction (M17)
-                categoryId: dstCatId
-            )
-            let dstPath = "\(txPath)/\(dstSaleId)"
-            let dstIsNew = try await !batch.documentExists(atPath: dstPath)
-            var dstFields: [String: Any] = [
-                "projectId": destinationProjectId,
-                "type": TransactionType.sale.rawValue,                         // C1
-                "isCanonicalInventorySale": true,
-                "inventorySaleDirection": "business_to_project",
-                "budgetCategoryId": dstCatId,
-                "source": "Business Inventory",  // inventory-source-naming spec
-                "itemIds": FieldValue.arrayUnion([itemId]),
-                "amountCents": FieldValue.increment(Int64(amountDelta)),
-                "updatedAt": FieldValue.serverTimestamp(),
-            ]
-            if dstIsNew { dstFields["createdAt"] = FieldValue.serverTimestamp() }
-            batch.setData(dstFields, forDocumentAt: dstPath, merge: true)
-
-            // Update item: move to destination, link to destination canonical sale
             var itemUpdate: [String: Any] = [
                 "projectId": destinationProjectId,
+                "budgetCategoryId": budgetCategoryId,
+                "status": "purchased",
+                "transactionId": saleId,
                 "spaceId": NSNull(),
-                "status": "purchased",  // item-detail-view spec: auto-set on inventory→project move
-                "transactionId": dstSaleId,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
             // Backfill projectPriceCents for legacy items missing it
@@ -215,7 +117,7 @@ struct InventoryOperationsService {
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // Remove item from its source transaction's itemIds (C5)
+            // 3. Remove item from its source transaction's itemIds
             if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
@@ -223,30 +125,255 @@ struct InventoryOperationsService {
                 )
             }
 
-            // Lineage edge
+            // 4. Lineage edge (sold)
             var edge: [String: Any] = [
                 "accountId": accountId,
                 "itemId": itemId,
                 "toProjectId": destinationProjectId,
-                "toTransactionId": dstSaleId,
+                "toTransactionId": saleId,
                 "movementKind": "sold",
                 "source": "app",
                 "createdAt": FieldValue.serverTimestamp(),
             ]
-            if let srcProjectId = item.projectId { edge["fromProjectId"] = srcProjectId }
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }  // M2
-            if let userId { edge["createdBy"] = userId }                                    // M3
+            if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
+            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            if let userId { edge["createdBy"] = userId }
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
-        // Auto-enable: ensure ProjectBudgetCategory docs exist for all destination categories.
-        // Uses setData(merge:true) so existing docs (with budget amounts) are untouched.
-        for catId in destinationCategoryIds where catId != "uncategorized" {
-            var fields: [String: Any] = [
+        // 5. Auto-enable destination budget category
+        if budgetCategoryId != "uncategorized" {
+            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+            if let userId { catFields["updatedBy"] = userId }
+            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(budgetCategoryId)", merge: true)
+        }
+
+        try await batch.commit()
+    }
+
+    // MARK: - Return to Inventory
+
+    /// Moves items from a project back to business inventory.
+    /// Creates a Return transaction with source: "Business Inventory".
+    /// Items have budgetCategoryId and projectId wiped (inventory invariant).
+    func returnToInventory(
+        items: [Item],
+        accountId: String,
+        userId: String? = nil,
+        notes: String? = nil
+    ) async throws {
+        guard !items.isEmpty else { return }
+        guard items.count <= Self.maxBatchItems else {
+            throw InventoryOperationError.batchSizeExceeded
+        }
+
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
+
+        // Return amount uses purchasePriceCents (what the business actually paid)
+        let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+
+        // Determine source projectId for the Return transaction (budget impact)
+        let sourceProjectId: Any = items.first?.projectId as Any? ?? NSNull()
+
+        // 1. Create Return transaction
+        let returnId = UUID().uuidString
+        let returnDocPath = "\(txPath)/\(returnId)"
+        let today = Self.todayDateString()
+        var returnFields: [String: Any] = [
+            "type": "Return",
+            "source": "Business Inventory",
+            "projectId": sourceProjectId,
+            "amountCents": returnAmount,
+            "itemIds": items.compactMap(\.id),
+            "status": "completed",
+            "transactionDate": today,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if let notes { returnFields["notes"] = notes }
+        if let userId { returnFields["createdBy"] = userId }
+        batch.setData(returnFields, forDocumentAt: returnDocPath, merge: false)
+
+        // 2. Update each item
+        for item in items {
+            guard let itemId = item.id else { continue }
+
+            batch.updateData([
+                "projectId": NSNull(),
+                "budgetCategoryId": NSNull(),
+                "spaceId": NSNull(),
+                "status": "purchased",
+                "transactionId": returnId,
+                "updatedAt": FieldValue.serverTimestamp(),
+            ], forDocumentAt: "\(itemsPath)/\(itemId)")
+
+            // 3. Remove from source transaction's itemIds
+            if let fromTxId = item.transactionId {
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId])],
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
+                )
+            }
+
+            // 4. Lineage edge (returned)
+            var edge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "toTransactionId": returnId,
+                "movementKind": "returned",
+                "source": "app",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
+            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+            if let userId { edge["createdBy"] = userId }
+            batch.setDataAutoId(edge, inCollection: edgesPath)
+        }
+
+        try await batch.commit()
+    }
+
+    // MARK: - Move Between Projects
+
+    /// Moves items from one project to another in a single atomic batch.
+    /// Under the hood: one Return (from source) + one Sale (to destination).
+    /// All items must be in the same source project.
+    func moveBetweenProjects(
+        items: [Item],
+        destinationProjectId: String,
+        destinationCategoryId: String,
+        accountId: String,
+        userId: String? = nil,
+        notes: String? = nil
+    ) async throws {
+        guard !items.isEmpty else { return }
+        guard items.count <= Self.maxBatchItems else {
+            throw InventoryOperationError.batchSizeExceeded
+        }
+
+        // All items must be in a project
+        let stray = items.filter { $0.projectId == nil }
+        guard stray.isEmpty else { throw InventoryOperationError.itemsNotInProject }
+
+        // All items must be in the same source project
+        let sourceProjects = Set(items.compactMap(\.projectId))
+        guard sourceProjects.count == 1 else { throw InventoryOperationError.mixedSourceProjects }
+        let sourceProjectId = sourceProjects.first!
+
+        guard sourceProjectId != destinationProjectId else {
+            throw InventoryOperationError.sameSourceAndDestination
+        }
+
+        let batch = makeBatch()
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions"
+        let edgesPath = "accounts/\(accountId)/lineageEdges"
+        let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
+
+        let totals = Self.computeBatchTotals(items)
+        let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+        let itemIdList = items.compactMap(\.id)
+        let today = Self.todayDateString()
+
+        // 1a. Return transaction (from source project)
+        let returnId = UUID().uuidString
+        var returnFields: [String: Any] = [
+            "type": "Return",
+            "source": "Business Inventory",
+            "projectId": sourceProjectId,
+            "amountCents": returnAmount,
+            "itemIds": itemIdList,
+            "status": "completed",
+            "transactionDate": today,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if let notes { returnFields["notes"] = notes }
+        if let userId { returnFields["createdBy"] = userId }
+        batch.setData(returnFields, forDocumentAt: "\(txPath)/\(returnId)", merge: false)
+
+        // 1b. Sale transaction (to destination project)
+        let saleId = UUID().uuidString
+        var saleFields: [String: Any] = [
+            "type": "Sale",
+            "source": "Business Inventory",
+            "projectId": destinationProjectId,
+            "budgetCategoryId": destinationCategoryId,
+            "amountCents": totals.amountCents,
+            "subtotalCents": totals.subtotalCents,
+            "itemIds": itemIdList,
+            "status": "completed",
+            "isComplete": true,
+            "transactionDate": today,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if let notes { saleFields["notes"] = notes }
+        if let userId { saleFields["createdBy"] = userId }
+        batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
+
+        // 2. Update each item (lands in destination project)
+        for item in items {
+            guard let itemId = item.id else { continue }
+
+            var itemUpdate: [String: Any] = [
+                "projectId": destinationProjectId,
+                "budgetCategoryId": destinationCategoryId,
+                "status": "purchased",
+                "transactionId": saleId,
+                "spaceId": NSNull(),
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let userId { fields["updatedBy"] = userId }
-            batch.setData(fields, forDocumentAt: "\(pbcPath)/\(catId)", merge: true)
+            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
+                itemUpdate["projectPriceCents"] = purchasePrice
+            }
+            batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
+
+            // 3. Remove from source transaction's itemIds
+            if let fromTxId = item.transactionId {
+                batch.updateData(
+                    ["itemIds": FieldValue.arrayRemove([itemId])],
+                    forDocumentAt: "\(txPath)/\(fromTxId)"
+                )
+            }
+
+            // 4. Lineage edges — one "returned" + one "sold" per item
+            var returnEdge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "fromProjectId": sourceProjectId,
+                "toTransactionId": returnId,
+                "movementKind": "returned",
+                "source": "app",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromTxId = item.transactionId { returnEdge["fromTransactionId"] = fromTxId }
+            if let userId { returnEdge["createdBy"] = userId }
+            batch.setDataAutoId(returnEdge, inCollection: edgesPath)
+
+            var soldEdge: [String: Any] = [
+                "accountId": accountId,
+                "itemId": itemId,
+                "fromProjectId": sourceProjectId,
+                "toProjectId": destinationProjectId,
+                "toTransactionId": saleId,
+                "movementKind": "sold",
+                "source": "app",
+                "createdAt": FieldValue.serverTimestamp(),
+            ]
+            if let fromTxId = item.transactionId { soldEdge["fromTransactionId"] = fromTxId }
+            if let userId { soldEdge["createdBy"] = userId }
+            batch.setDataAutoId(soldEdge, inCollection: edgesPath)
+        }
+
+        // 5. Auto-enable destination budget category
+        if destinationCategoryId != "uncategorized" {
+            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+            if let userId { catFields["updatedBy"] = userId }
+            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(destinationCategoryId)", merge: true)
         }
 
         try await batch.commit()
@@ -327,51 +454,6 @@ struct InventoryOperationsService {
         try await batch.commit()
     }
 
-    // MARK: - Reassign to Inventory
-
-    /// Moves items back to business inventory without financial records.
-    func reassignToInventory(items: [Item], accountId: String, userId: String? = nil) async throws {
-        guard !items.isEmpty else { return }
-
-        let batch = makeBatch()
-        let itemsPath = "accounts/\(accountId)/items"
-        let txPath = "accounts/\(accountId)/transactions"
-        let edgesPath = "accounts/\(accountId)/lineageEdges"
-
-        for item in items {
-            guard let itemId = item.id else { continue }
-            batch.updateData([
-                "projectId": NSNull(),
-                "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
-
-            // C5: Remove item from its source transaction's itemIds
-            if let fromTxId = item.transactionId {
-                batch.updateData(
-                    ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocumentAt: "\(txPath)/\(fromTxId)"
-                )
-            }
-
-            // Correction intent edge (audit association edge is created server-side
-            // by onItemTransactionIdChanged when the item's transactionId changes)
-            var edge: [String: Any] = [
-                "accountId": accountId,
-                "itemId": itemId,
-                "movementKind": "correction",
-                "source": "app",
-                "note": "Reassigned to inventory",
-                "createdAt": FieldValue.serverTimestamp(),
-            ]
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
-            if let projectId = item.projectId { edge["fromProjectId"] = projectId }
-            if let userId { edge["createdBy"] = userId }
-            batch.setDataAutoId(edge, inCollection: edgesPath)
-        }
-
-        try await batch.commit()
-    }
-
     // MARK: - Return to Transaction
 
     /// Moves items to a return-type transaction within the same project.
@@ -444,35 +526,34 @@ struct InventoryOperationsService {
 
     // MARK: - Pure Helpers (internal for testability)
 
-    /// Builds the deterministic canonical sale transaction ID (H1).
-    static func canonicalSaleId(projectId: String, direction: String, categoryId: String) -> String {
-        "SALE_\(projectId)_\(direction)_\(categoryId)"
-    }
-
-    /// Sum of `purchasePriceCents` for a group of items (H11).
-    static func amountDelta(for items: [Item]) -> Int {
-        items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
-    }
-
-    /// Groups items by (projectId, resolvedCategoryId) for canonical sale batching (H12).
-    /// Items without a `projectId` are skipped (can't create a project_to_business sale).
-    static func groupForSale(
-        items: [Item],
-        override: String?
-    ) -> [SaleGroupKey: [Item]] {
-        var groups: [SaleGroupKey: [Item]] = [:]
+    /// Frozen amount snapshot for a batch of items.
+    /// Matches mcp-server/src/tools/inventory-operations.ts `computeBatchTotals`.
+    ///
+    /// - `subtotalCents`: sum of (projectPriceCents ?? purchasePriceCents ?? 0)
+    /// - `amountCents`: sum of per-item price-with-tax. If taxRatePct > 0,
+    ///   each item contributes round(price * (1 + taxRatePct / 100)). Otherwise, price.
+    static func computeBatchTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
+        var subtotalCents = 0
+        var amountCents = 0
         for item in items {
-            guard let projectId = item.projectId else { continue }
-            let categoryId = item.budgetCategoryId ?? override ?? "uncategorized"
-            let key = SaleGroupKey(projectId: projectId, categoryId: categoryId)
-            groups[key, default: []].append(item)
+            let price = item.projectPriceCents ?? item.purchasePriceCents ?? 0
+            let rate = item.taxRatePct ?? 0
+            subtotalCents += price
+            if rate > 0 {
+                amountCents += Int((Double(price) * (1 + rate / 100)).rounded())
+            } else {
+                amountCents += price
+            }
         }
-        return groups
+        return (subtotalCents, amountCents)
     }
 
-    /// Key for grouping items into a single canonical sale transaction.
-    struct SaleGroupKey: Hashable {
-        let projectId: String
-        let categoryId: String
+    /// Today's date as a yyyy-MM-dd string for `transactionDate`.
+    static func todayDateString() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f.string(from: Date())
     }
 }

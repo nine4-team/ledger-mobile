@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Sells items from a project into business inventory.
-/// Exact description text per FR-8.5.
-struct SellToBusinessModal: View {
+/// Returns items from a project back to business inventory.
+/// Creates a Return transaction; items have budgetCategoryId wiped.
+struct ReturnToInventoryModal: View {
     let items: [Item]
     let accountId: String
     let onComplete: () -> Void
@@ -13,38 +13,38 @@ struct SellToBusinessModal: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    private static let descriptionText = "This will move items from the project into business inventory. A sale record will be created for financial tracking. If you're just fixing a misallocation, use Reassign instead."
+    private static let descriptionText = "This will move items from the project back to business inventory. A return record will be created for financial tracking. The items' budget category will be cleared."
 
     var body: some View {
         FormSheet(
-            title: "Sell to Business",
+            title: "Return to Inventory",
             description: Self.descriptionText,
             primaryAction: FormSheetAction(
-                title: "Confirm Sale",
+                title: "Confirm Return",
                 isLoading: isSaving,
-                action: { performSale() }
+                action: { performReturn() }
             ),
             secondaryAction: FormSheetAction(title: "Cancel") {
                 dismiss()
             },
             error: errorMessage
         ) {
-            Text("\(items.count) item\(items.count == 1 ? "" : "s") will move to inventory")
+            Text("\(items.count) item\(items.count == 1 ? "" : "s") will return to inventory")
                 .font(Typography.body)
                 .foregroundStyle(BrandColors.textSecondary)
         }
     }
 
-    private func performSale() {
+    private func performReturn() {
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
-        let itemsToSell = items
+        let itemsToReturn = items
         let acctId = accountId
         Task {
             do {
-                try await service.sellToBusiness(
-                    items: itemsToSell,
+                try await service.returnToInventory(
+                    items: itemsToReturn,
                     accountId: acctId,
                     userId: authManager.currentUser?.uid
                 )
@@ -54,7 +54,7 @@ struct SellToBusinessModal: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to complete sale. Please try again."
+                    errorMessage = "Failed to return items. Please try again."
                     isSaving = false
                 }
             }

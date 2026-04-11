@@ -319,11 +319,7 @@ struct SharedItemsList: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xl)
         } else {
-            LazyVGrid(
-                columns: Dimensions.listColumns,
-                alignment: .leading,
-                spacing: Spacing.cardListGap
-            ) {
+            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 if showGrouped {
                     ForEach(groups) { group in
                         if group.count > 1 {

@@ -43,35 +43,42 @@ Lineage tracking maintains a complete audit trail of item movements across trans
 
 ### 2. Sold (`movementKind: "sold"`)
 
-**Trigger:** Item moves between business inventory and a project (in either direction) via the canonical sale system.
+**Trigger:** Item moves from business inventory into a project via the per-batch sale flow. (Under the per-batch sale model, "sold" only goes one direction; project → inventory is a `returned` edge, not `sold`.)
 
 **Semantics:**
 
-- `fromTransactionId`: the transaction the item was previously in (if any)
-- `toTransactionId`: the canonical sale transaction
-- `fromProjectId`: source project (null = business inventory)
-- `toProjectId`: destination project (null = business inventory)
+- `fromTransactionId`: the transaction the item was previously in (if any — null is valid)
+- `toTransactionId`: the new per-batch Sale transaction
+- `fromProjectId`: null (item was in business inventory)
+- `toProjectId`: destination project
 
 **When created:**
 
-- User sells items from business inventory to a project
-- User sells items from a project back to business inventory
+- User sells items from business inventory to a project (one edge per item)
+- The destination side of a project → project move (after the source side has produced a `returned` edge)
 - Bulk sale operations (one edge per item)
+
+**Legacy:** Sold edges produced by the legacy canonical-sale system may have `fromProjectId` set to a project (representing the deprecated `project_to_business` direction). New per-batch flows never produce edges in that direction — those are `returned` edges now.
 
 ### 3. Returned (`movementKind: "returned"`)
 
-**Trigger:** Item is returned from its current transaction back to a return transaction or its source.
+**Trigger:** Item is returned from its current transaction to a return transaction. Two flavors:
+
+1. **Vendor return:** the item goes back to the original vendor. `fromProjectId == toProjectId` — the project doesn't change because the item is leaving the system, not moving scopes.
+2. **Return to inventory:** the item moves from a project back to business inventory. `fromProjectId` is the source project, `toProjectId` is null. This is the path that replaces the legacy `project_to_business` canonical sale.
 
 **Semantics:**
 
 - `fromTransactionId`: the transaction the item is being returned from
-- `toTransactionId`: the return transaction (or the original source transaction)
-- `fromProjectId` / `toProjectId`: typically the same (returns don't change project scope by default)
+- `toTransactionId`: the return transaction (`source: "<vendor>"` for vendor returns, `source: "Business Inventory"` for return-to-inventory)
+- `fromProjectId`: source project
+- `toProjectId`: source project for vendor returns, null for return-to-inventory
 
 **When created:**
 
-- User marks an item as returned
-- User moves an item to a return-type transaction
+- User marks an item as returned (vendor return)
+- User returns items from a project to inventory (return-to-inventory)
+- Source side of a project → project move (the destination side produces a `sold` edge)
 - Return flow processes an item disposition
 
 ### 4. Correction (`movementKind: "correction"`)
@@ -172,9 +179,11 @@ Lineage edges with `movementKind` "returned" or "sold" are included in the sourc
 
 ## Relationship to Other Systems
 
-- **Canonical sales** (see canonical-sales.md): Every canonical sale creates "sold" lineage edges.
-- **Return flow** (see return-and-sale-tracking.md): Returns create "returned" lineage edges.
-- **Item membership** (see data-model.md): Lineage edges record the history of which transaction an item belonged to, complementing the current-state `itemIds` field on transactions.
+- **Per-batch sales** (see [sale-transactions.md](sale-transactions.md)): Every sale creates one `sold` lineage edge per item.
+- **Return flow** (see [return-and-sale-tracking.md](return-and-sale-tracking.md)): Vendor returns and returns-to-inventory both create `returned` lineage edges.
+- **Project → project moves** (see [sale-transactions.md](sale-transactions.md) "Project → Project Moves"): Each item produces TWO edges in one batch — a `returned` edge for the source-to-inventory hop and a `sold` edge for the inventory-to-destination hop.
+- **Legacy canonical sales** (see [canonical-sales.md](canonical-sales.md)): Historical canonical sales also created `sold` edges, but those edges may point at long-lived aggregator transactions and may have `fromProjectId` set (the deprecated `project_to_business` direction). New per-batch flows produce edges with stricter semantics.
+- **Item membership** (see [data-model.md](data-model.md)): Lineage edges record the history of which transaction an item belonged to, complementing the current-state `itemIds` field on transactions.
 
 ## Design Decision: Why a Separate Collection
 

@@ -16,7 +16,7 @@ final class ItemActionsController {
     var statusPickerItem: Item?
     var setSpaceItem: Item?
     var transactionPickerItem: Item?
-    var sellToBusinessItem: Item?
+    var returnToInventoryItem: Item?
     var sellToProjectItem: Item?
     var reassignItem: Item?
     var deleteConfirmItem: Item?
@@ -33,7 +33,7 @@ final class ItemActionsController {
     ///   - menuContext: Where the menu is surfaced (list vs. space vs. detail).
     ///   - accountId: Used for inline clear writes (clear space / clear transaction).
     ///   - onSelect: Optional bulk-selection callback (caller wires to its `Set<String>`).
-    ///   - includeSellToBusiness: Surface the "Sell to Business" action. Default: scope == .project.
+    ///   - includeReturnToInventory: Surface the "Return to Inventory" action. Default: scope == .project.
     ///   - includeSellToProject: Surface the "Sell to Project" action. Default: true for project/inventory.
     func buildMenu(
         for item: Item,
@@ -41,10 +41,10 @@ final class ItemActionsController {
         menuContext: ItemMenuContext = .list,
         accountId: String?,
         onSelect: (() -> Void)? = nil,
-        includeSellToBusiness: Bool? = nil,
+        includeReturnToInventory: Bool? = nil,
         includeSellToProject: Bool? = nil
     ) -> [ActionMenuItem] {
-        let wantsSellToBusiness = includeSellToBusiness ?? (scope == .project)
+        let wantsReturnToInventory = includeReturnToInventory ?? (scope == .project)
         let wantsSellToProject = includeSellToProject ?? (scope == .project || scope == .inventory)
 
         let callbacks = SingleItemMenuCallbacks(
@@ -58,8 +58,8 @@ final class ItemActionsController {
             onClearSpace: { [weak self] in
                 self?.updateItem(item, accountId: accountId, fields: ["spaceId": NSNull()])
             },
-            onSellToBusiness: wantsSellToBusiness
-                ? { [weak self] in self?.sellToBusinessItem = item }
+            onReturnToInventory: wantsReturnToInventory
+                ? { [weak self] in self?.returnToInventoryItem = item }
                 : nil,
             onSellToProject: wantsSellToProject
                 ? { [weak self] in self?.sellToProjectItem = item }

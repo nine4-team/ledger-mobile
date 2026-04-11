@@ -2,7 +2,12 @@
 
 ## Overview
 
-This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the interaction between returns and the canonical sale system.
+This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the **return-to-inventory** flow, which under the per-batch sale redesign replaces the legacy "sell from project to business inventory" path.
+
+> **Related specs:**
+> - [sale-transactions.md](sale-transactions.md) — the active sale transaction model (per-batch, immutable)
+> - [inventory-as-store.md](inventory-as-store.md) — why returning to inventory is a return, not a sale
+> - [canonical-sales.md](canonical-sales.md) — the legacy canonical-sale model (historical reads only)
 
 ## Item Status Lifecycle
 
@@ -59,8 +64,8 @@ This means a $100 return subtracts $100 from the budget category's spent amount.
 
 After an item is returned, it may go through several dispositions:
 
-1. **Returned to vendor**: Item goes back to the vendor. No further tracking needed.
-2. **Returned to business inventory**: Item moves to business inventory scope. This triggers a canonical sale (project → business) with `movementKind: "sold"` in lineage.
+1. **Returned to vendor**: Item goes back to the vendor. The return transaction has the vendor's name as `source`. No further tracking needed.
+2. **Returned to business inventory**: Item moves to business inventory scope via a Return transaction with `source: "Business Inventory"`. This is the **only** path back to inventory in the per-batch model — there is no longer a "sell to inventory" sale path. See [inventory-as-store.md](inventory-as-store.md). Creates a `returned` lineage edge and wipes the item's `budgetCategoryId`.
 3. **Replaced**: A new item is purchased to replace the returned one. The replacement is a new item linked to a new purchase transaction.
 4. **Refunded**: The financial impact is handled by the return transaction's negative amount in budget calculations.
 
@@ -97,17 +102,71 @@ The system surfaces incomplete returns to the user so they can:
 2. **Undo the status**: Change status back to `purchased` if the return was marked in error
 3. **Ignore**: Some items may be legitimately in a transitional state
 
-## Interaction with Canonical Sales
+## Returning to Inventory
 
-When a returned item needs to go back to business inventory:
-1. First, process the return (remove from source transaction, create return lineage edge)
-2. Then, process the canonical sale (project → business inventory, create sold lineage edge)
+In the per-batch model, returning an item from a project to business inventory is **a single return transaction**, not a sale. This replaces the legacy two-step (return + canonical sale) process.
 
-This creates two lineage edges for the item:
-- `returned`: from purchase transaction to return transaction
-- `sold`: from project to business inventory
+### What Happens
 
-The two operations are sequential — the return must complete before the scope change.
+When a user returns items from a project to business inventory, the flow:
+
+1. Creates (or reuses an open) Return transaction at `accounts/{accountId}/transactions/{auto-id}` with:
+   - `type: "Return"`
+   - `source: "Business Inventory"`
+   - `projectId: null` (inventory scope)
+   - `amountCents`: sum of `purchasePriceCents` of the returned items
+   - `itemIds`: the returned items
+2. For each item, updates `accounts/{accountId}/items/{itemId}`:
+   - `projectId` → null (back to inventory)
+   - `budgetCategoryId` → **null** (wiped on entry to inventory; this is the core invariant)
+   - `transactionId` → the new return transaction ID
+   - `status` → `"purchased"` (still owned, just back in stock)
+   - `spaceId` → null
+3. Removes each item from its prior project transaction's `itemIds` array.
+4. Creates one `returned` lineage edge per item:
+   - `fromTransactionId`: the item's prior transaction
+   - `toTransactionId`: the new return transaction
+   - `fromProjectId`: source project
+   - `toProjectId`: null
+   - `movementKind`: `"returned"`
+
+All in one Firestore batch. Atomic.
+
+### Coalescing Returns
+
+A return-to-inventory transaction can grow during a single user session — if the user returns 3 items, then 2 more in the same flow, both batches can write to the same Return transaction's `itemIds` (using `arrayUnion`) and recalculate `amountCents`. Once the user leaves the flow (or 24h passes), the transaction is treated as closed and clients should create a new one for subsequent returns.
+
+This is the only place mutation of a return-to-inventory transaction is allowed; otherwise these documents are immutable like Sale transactions.
+
+### Budget Impact
+
+Return-to-inventory transactions follow the existing return sign convention: `-1 * amountCents` against the source project's budget for the relevant category. This means the source project's spend decreases by the total of the returned items' purchase prices.
+
+The destination ("Business Inventory") has no budget — it doesn't appear in any rollup.
+
+### Lineage
+
+Two layers, as always (see [lineage-tracking.md](lineage-tracking.md)):
+
+- **Intent layer:** the `returned` edge created client-side by the return-to-inventory flow.
+- **Audit layer:** the `association` edge created server-side by `onItemTransactionIdChanged` when the item's `transactionId` changes.
+
+Both fire for every item in the batch.
+
+### Why a Single Step (Not Two)
+
+Under the legacy canonical-sale model, returning to inventory required two operations: a return transaction (vendor return) followed by a canonical sale (project → business). This created two budget impacts (one on the return, one on the canonical sale) that had to net out, plus two lineage edges (`returned` and `sold`) per item.
+
+The per-batch model collapses this to one return transaction with one budget impact and one lineage edge per item. Simpler, atomic, and accounting-correct: a return is a return, regardless of where the items end up.
+
+### Project → Project Moves
+
+A move from one project to another decomposes into two operations in one atomic batch:
+
+1. Return-to-inventory from the source project (this section).
+2. New per-batch sale from inventory to the destination project ([sale-transactions.md](sale-transactions.md)).
+
+Each item gets two lineage edges: one `returned` (source → inventory) and one `sold` (inventory → destination). The destination sale's category is collected from the user — the category is wiped during the return hop.
 
 ## Return Transaction Properties
 
@@ -128,9 +187,15 @@ Return transactions have specific characteristics:
 
 ## Sign Convention Summary
 
-| Transaction Type | amountCents Storage | Budget Multiplier | Budget Effect |
-|-----------------|--------------------|--------------------|---------------|
+| Transaction Type | Stored Amount | Budget Multiplier | Budget Effect |
+|-----------------|---------------|-------------------|---------------|
 | Purchase | Positive | +1 | Adds to spent |
-| Return | Positive | -1 | Subtracts from spent |
-| Sale (business→project) | Positive | +1 | Adds to spent |
-| Sale (project→business) | Positive | -1 | Subtracts from spent |
+| Return (vendor or inventory) | Positive | -1 | Subtracts from spent |
+| Per-batch Sale (`type: "Sale"`, no `isCanonicalInventorySale`) | Positive | +1 | Adds to spent |
+| **Legacy** canonical sale, `business_to_project` | Positive | +1 | Adds to spent |
+| **Legacy** canonical sale, `project_to_business` | Positive | -1 | Subtracts from spent |
+| Canceled (any type) | — | 0 | Excluded |
+
+The legacy canonical sale rows apply only to historical documents with `isCanonicalInventorySale: true`. New writes never produce these. See [canonical-sales.md](canonical-sales.md) for the legacy details.
+
+The sign convention is centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the logic.

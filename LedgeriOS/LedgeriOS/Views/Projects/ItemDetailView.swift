@@ -25,7 +25,7 @@ struct ItemDetailView: View {
     @State private var showEditNotes = false
     @State private var showSetSpace = false
     @State private var showReassign = false
-    @State private var showSellToBusiness = false
+    @State private var showReturnToInventory = false
     @State private var showSellToProject = false
     @State private var showTransactionPicker = false
     @State private var showReturnTransactionPicker = false
@@ -124,10 +124,10 @@ struct ItemDetailView: View {
         .adaptivePresentation(isPresented: $showReassign, style: .form) {
             ReassignToProjectModal(items: [liveItem]) { }
         }
-        // Sell to Business
-        .adaptivePresentation(isPresented: $showSellToBusiness, style: .form) {
+        // Return to Inventory
+        .adaptivePresentation(isPresented: $showReturnToInventory, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                SellToBusinessModal(items: [liveItem], accountId: accountId) {
+                ReturnToInventoryModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
             }
@@ -220,6 +220,7 @@ struct ItemDetailView: View {
             }
 
             heroDetailRow(label: "Project", value: linkedProjectName)
+            heroDetailRow(label: "Purchaser", value: purchaserLabel)
             heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
             HStack(spacing: Spacing.xs) {
                 Text("Transaction:")
@@ -299,6 +300,14 @@ struct ItemDetailView: View {
         return projectContext.budgetCategories.first(where: { $0.id == categoryId })?.name ?? "None"
     }
 
+    private var purchaserLabel: String {
+        let raw = liveItem.purchasedBy?.trimmingCharacters(in: .whitespaces) ?? ""
+        if raw.isEmpty {
+            return liveItem.projectId == nil ? "Business" : "Client"
+        }
+        return raw.lowercased().contains("business") ? "Business" : "Client"
+    }
+
     // MARK: - Collapsible Sections
 
     private var sectionsArea: some View {
@@ -321,7 +330,11 @@ struct ItemDetailView: View {
             Divider()
                 .padding(.vertical, Spacing.xs)
 
-            CollapsibleSection(title: "DETAILS", isExpanded: $isDetailsExpanded) {
+            CollapsibleSection(
+                title: "DETAILS",
+                isExpanded: $isDetailsExpanded,
+                onEdit: { showEditDetails = true }
+            ) {
                 detailsContent
             }
         }
@@ -368,6 +381,7 @@ struct ItemDetailView: View {
     private var detailsContent: some View {
         VStack(spacing: 0) {
             DetailRow(label: "Status", value: liveItem.status?.displayLabel ?? "—")
+            DetailRow(label: "Billing", value: liveItem.billingStatus?.displayLabel ?? "—")
             DetailRow(label: "Space", value: spaceNameForDetails)
             DetailRow(label: "Source", value: liveItem.source ?? "—")
             DetailRow(label: "SKU", value: liveItem.sku ?? "—")
@@ -423,42 +437,28 @@ struct ItemDetailView: View {
     }
 
     private var actionMenuItems: [ActionMenuItem] {
-        // Detail-specific actions first
-        var items: [ActionMenuItem] = [
-            ActionMenuItem(id: "edit", label: "Edit Details", icon: "pencil", onPress: {
-                showEditDetails = true
-            }),
-            ActionMenuItem(id: "notes", label: "Edit Notes", icon: "note.text", onPress: {
-                showEditNotes = true
-            }),
-        ]
-
-        // Shared actions via builder (Status, Transaction, Space, Sell, Reassign, Delete)
-        let hasStatus = liveItem.status != nil
+        // Edit Details, Edit Notes, and Status each have dedicated affordances
+        // (Details pencil, Notes pencil, toolbar status capsule) — the kebab
+        // is reserved for Make Copies, relational actions, and Delete.
         let hasTx = liveItem.transactionId != nil
         let hasSpace = liveItem.spaceId != nil
-        items += ItemMenuBuilder.buildSingleItemMenu(
+        return ItemMenuBuilder.buildSingleItemMenu(
             context: .detail,
             scope: itemScope,
             callbacks: SingleItemMenuCallbacks(
-                onStatusChange: { _ in showStatusPicker = true },
-                onClearStatus: hasStatus ? { clearItemField("status") } : nil,
                 onSetTransaction: { showTransactionPicker = true },
                 onClearTransaction: hasTx ? { clearItemField("transactionId") } : nil,
                 onMoveToReturnTransaction: { showReturnTransactionPicker = true },
                 onSetSpace: { showSetSpace = true },
                 onClearSpace: hasSpace ? { clearItemField("spaceId") } : nil,
-                onSellToBusiness: itemScope == .project ? { showSellToBusiness = true } : nil,
+                onReturnToInventory: itemScope == .project ? { showReturnToInventory = true } : nil,
                 onSellToProject: { showSellToProject = true },
-                onReassignToInventory: itemScope == .project ? { showReassign = true } : nil,
                 onReassignToProject: { showReassign = true },
                 onMakeCopies: { showMakeCopies = true },
                 onDelete: { showDeleteConfirmation = true }
             ),
             currentStatus: liveItem.status?.rawValue
         )
-
-        return items
     }
 
     // MARK: - Helpers

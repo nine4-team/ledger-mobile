@@ -8,8 +8,14 @@ Last updated: 2026-04-10
 - [shipped] — Spec implemented (note any deferred stretch goals inline)
 - [remove] — Currently exists, should be removed
 - [tbd] — Needs further discussion
+- [superseded] — Replaced by another spec; preserved for historical context
 
 ## Feature Areas
+
+### Sale Transactions & Inventory (Per-Batch Redesign)
+- [new] [Sale Transactions](sale-transactions.md) — **Active.** Per-batch sale transactions: every user sell action creates one new immutable Sale transaction. Replaces the canonical-sale aggregator model.
+- [new] [Inventory as a Store](inventory-as-store.md) — **Active.** Conceptual model: business inventory is treated like any vendor/store. Items in inventory have `budgetCategoryId == null`. Project → inventory is a Return, not a Sale.
+- [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 
 ### Transactions & Item Entry
 - [shipped] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing: itemized categories go through inventory, non-itemized expenses go directly to projects (commit 322cf420, 2026-04-07)

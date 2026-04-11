@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Moves items to a different project.
-/// Per spec (reassign-vs-sell.md), moving between projects is always a cross-scope SELL
-/// (project → inventory → project). This modal delegates to `sellToProject` accordingly.
-/// Items use their own `budgetCategoryId` — no category selection step is shown here.
+/// Moves items from their current project to a different project.
+/// Uses `moveBetweenProjects` (Return + Sale) under the new per-batch model.
+/// Carries forward the items' existing budgetCategoryId for the destination.
 struct ReassignToProjectModal: View {
     let items: [Item]
     let onComplete: () -> Void
@@ -51,16 +50,19 @@ struct ReassignToProjectModal: View {
     private func move(to project: Project) {
         guard let accountId = accountContext.currentAccountId,
               let projectId = project.id else { return }
+
+        // Use the first item's budgetCategoryId as default for the destination
+        let categoryId = items.compactMap(\.budgetCategoryId).first ?? "uncategorized"
+
         isSaving = true
         let service = InventoryOperationsService()
-        let itemsToSell = items
+        let itemsToMove = items
         Task {
             do {
-                // Moving to a different project is a sell (cross-scope), not a reassign.
-                // See reassign-vs-sell.md: reassign = same scope, sell = different scope.
-                try await service.sellToProject(
-                    items: itemsToSell,
+                try await service.moveBetweenProjects(
+                    items: itemsToMove,
                     destinationProjectId: projectId,
+                    destinationCategoryId: categoryId,
                     accountId: accountId,
                     userId: authManager.currentUser?.uid
                 )

@@ -4,9 +4,9 @@ import SwiftUI
 /// `ItemActionsController`. Pair with `ItemActionsController.buildMenu(for:)`
 /// to get the matching kebab menu items.
 ///
-/// All seven sheets are wired unconditionally. Views that don't surface a
-/// given action (e.g. InventoryItemsSubTab omits `Sell to Business`) simply
-/// never flip the corresponding `Item?`, so the unused sheet stays dormant.
+/// All sheets are wired unconditionally. Views that don't surface a
+/// given action simply never flip the corresponding `Item?`, so the
+/// unused sheet stays dormant.
 private struct ItemActionSheetsModifier: ViewModifier {
     @Bindable var controller: ItemActionsController
     let spaces: [Space]
@@ -51,9 +51,9 @@ private struct ItemActionSheetsModifier: ViewModifier {
                     }
                 )
             }
-            .adaptivePresentation(item: $controller.sellToBusinessItem, style: .form) { item in
+            .adaptivePresentation(item: $controller.returnToInventoryItem, style: .form) { item in
                 if let accountId {
-                    SellToBusinessModal(items: [item], accountId: accountId) {
+                    ReturnToInventoryModal(items: [item], accountId: accountId) {
                         onActionComplete?()
                     }
                 }

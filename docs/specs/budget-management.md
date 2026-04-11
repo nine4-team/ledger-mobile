@@ -114,15 +114,19 @@ Project creation uses a 3-step form:
 categorySpentCents = sum of (amountCents * multiplier) for all non-canceled transactions
                      where budgetCategoryId matches this category
 
-transactionType values: "purchase", "return", "sale", "to-inventory"
+transactionType values: "purchase", "return", "sale"
   (legacy data may use title case — comparisons should be case-insensitive)
-inventorySaleDirection values: "business_to_project", "project_to_business"
+inventorySaleDirection values: "business_to_project", "project_to_business" (LEGACY only)
 
-multiplier rules:
+multiplier rules (in order — first match wins):
   if transactionType is "return": -1
-  if isCanonicalInventorySale AND inventorySaleDirection is "project_to_business": -1
-  otherwise: +1
+  if isCanonicalInventorySale AND inventorySaleDirection is "project_to_business": -1   # legacy carve-out
+  if isCanonicalInventorySale AND inventorySaleDirection is "business_to_project": +1   # legacy carve-out
+  if transactionType is "sale": +1                                                      # new per-batch sales
+  otherwise: +1                                                                          # purchases
 ```
+
+See the "Sign Conventions" section below for the canonical reference.
 
 ### Per-Category Percentage
 
@@ -153,13 +157,24 @@ overallPercentage = (overallSpentCents / overallBudgetCents) * 100
 
 ## Sign Conventions
 
+The system handles two generations of sale transactions: new per-batch sales and legacy canonical sales. The dual-read path lives in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
+
+### Sign convention for Sale transactions
+
+- **Legacy canonical sales** (`isCanonicalInventorySale == true`): sign depends on `inventorySaleDirection`. `business_to_project` → +1. `project_to_business` → -1. These are historical documents only; no new code writes them.
+- **New per-batch sales** (no `isCanonicalInventorySale` flag): always +1. There is no `project_to_business` sale in the new model — that case is a Return transaction with `source: "Business Inventory"`. See [sale-transactions.md](sale-transactions.md) and [inventory-as-store.md](inventory-as-store.md).
+- **Returns** (`type == "Return"`): always -1. Includes both vendor returns and return-to-inventory transactions.
+
+### Full table
+
 | Transaction Type | Multiplier | Effect on Budget |
 |-----------------|------------|------------------|
 | Purchase | +1 | Adds to spent |
-| Return | -1 | Subtracts from spent |
-| Sale (business to project) | +1 | Adds to spent |
-| Sale (project to business) | -1 | Subtracts from spent |
-| Canceled transactions | excluded | No effect |
+| Return (vendor or inventory) | -1 | Subtracts from spent |
+| Per-batch Sale (`type: "Sale"`, no `isCanonicalInventorySale`) | +1 | Adds to spent |
+| **Legacy** canonical sale, `business_to_project` | +1 | Adds to spent |
+| **Legacy** canonical sale, `project_to_business` | -1 | Subtracts from spent |
+| Canceled transactions (`status == "canceled"`, any type) | excluded | No effect |
 
 ## Fee Category Differences
 
@@ -244,25 +259,35 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 ## Transaction Budget Attribution
 
-- **Non-canonical transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
-- **Canonical inventory sales**: Category derived from the item's `budgetCategoryId`, not from user selection. This is what makes canonical sale grouping deterministic.
+- **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
+- **Per-batch Sale transactions** (new model): Category collected from the user at sell time and applied to every item in the batch. One category per Sale transaction; no per-item category. See [sale-transactions.md](sale-transactions.md).
+- **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution
 
-Items carry a persistent `budgetCategoryId` field. Once set, this field stays with the item across scope moves.
+Items have a `budgetCategoryId` that follows this invariant:
+
+**`(item.projectId == null) ↔ (item.budgetCategoryId == null)`**
+
+Items in business inventory have no category. Items in a project have a category. This invariant is enforced on every write by both clients (iOS and MCP) and is the core change from the legacy "categories persist across scope moves" model.
 
 **Setting rules:**
 
-1. When linking an item to a transaction: `item.budgetCategoryId = transaction.budgetCategoryId`
-2. When moving to a different scope: if item has no category or category is not enabled in destination, prompt user to select. Note: "enabled in destination" only applies to project destinations — business inventory doesn't have per-project enabled categories, so only "missing" is checked.
+1. **When creating an item with `projectId == null`** (in business inventory): `budgetCategoryId` is forced to null. Any value passed by the caller is ignored or rejected.
+2. **When creating an item linked to a project transaction**: `item.budgetCategoryId = transaction.budgetCategoryId`.
+3. **When selling from inventory to a project**: the user picks a category for the whole batch, which is set on every item AND on the new Sale transaction.
+4. **When returning from a project to inventory**: `item.budgetCategoryId` is wiped to null.
+5. **When reassigning within the same project**: `item.budgetCategoryId` may be updated to match the new transaction's category, but the projectId does not change.
 
 **Auto-enable on transfer:** When items or transactions are moved to a destination project, the system automatically creates `ProjectBudgetCategory` documents for any budget category IDs that don't already have one in the destination (using `setData(merge: true)` to avoid overwriting existing budget amounts). This applies to:
-- `sellToProject` — auto-enables categories for all destination category IDs in the item batch
+- `sellToProject` — auto-enables the chosen batch category in the destination project
 - `reassignTransactionToProject` — auto-enables the transaction's `budgetCategoryId` in the destination project
 
 This ensures transferred spend always appears in the destination project's budget display without requiring manual category setup.
 
-**Why persistent:** This enables deterministic canonical sale grouping — the system always knows which sale transaction an item belongs to without prompting the user again.
+**Why the invariant matters:** Categories belong to projects. An item sitting in inventory has no project, so it has no category. Re-resolving the category at sell time makes the relationship explicit and eliminates a class of drift bugs that came from items carrying stale categories across scope moves. See [inventory-as-store.md](inventory-as-store.md) for the full rationale.
+
+**Existing inventory items with stale categories.** Items currently in inventory that have a non-null `budgetCategoryId` from before the redesign are left as-is. The next time one of them moves (return or sell), the new flow takes over. No backfill is run.
 
 ## Enabled Categories Determination
 

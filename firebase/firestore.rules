@@ -153,8 +153,26 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    // Sale transaction immutability (per-batch sale redesign).
+    // New per-batch Sale transactions are frozen after creation — `amountCents`,
+    // `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId` must never
+    // change. Mutable fields: `notes`, `status`, `updatedAt`, `isComplete`,
+    // `audit`, any other non-shape fields.
+    // Legacy canonical sales (`isCanonicalInventorySale == true`) are exempt so
+    // existing flows (cancel_transaction, etc.) continue to work.
+    // Non-Sale transactions are unrestricted (current behavior).
     match /accounts/{accountId}/transactions/{transactionId} {
-      allow read, create, update, delete: if isAccountMember(accountId);
+      allow read, create, delete: if isAccountMember(accountId);
+
+      allow update: if isAccountMember(accountId)
+        && (resource.data.get('type', '') != 'Sale'
+            || resource.data.get('isCanonicalInventorySale', false) == true
+            || (request.resource.data.amountCents == resource.data.amountCents
+                && request.resource.data.itemIds == resource.data.itemIds
+                && request.resource.data.budgetCategoryId == resource.data.budgetCategoryId
+                && request.resource.data.type == resource.data.type
+                && request.resource.data.source == resource.data.source
+                && request.resource.data.projectId == resource.data.projectId));
     }
 
     match /accounts/{accountId}/invoices/{invoiceId} {

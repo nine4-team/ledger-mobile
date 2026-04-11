@@ -153,8 +153,20 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    // Sale transaction immutability (per-batch sale redesign).
+    // Mirrors firestore.rules — see that file for full commentary.
     match /accounts/{accountId}/transactions/{transactionId} {
-      allow read, create, update, delete: if isAccountMember(accountId);
+      allow read, create, delete: if isAccountMember(accountId);
+
+      allow update: if isAccountMember(accountId)
+        && (resource.data.get('type', '') != 'Sale'
+            || resource.data.get('isCanonicalInventorySale', false) == true
+            || (request.resource.data.amountCents == resource.data.amountCents
+                && request.resource.data.itemIds == resource.data.itemIds
+                && request.resource.data.budgetCategoryId == resource.data.budgetCategoryId
+                && request.resource.data.type == resource.data.type
+                && request.resource.data.source == resource.data.source
+                && request.resource.data.projectId == resource.data.projectId));
     }
 
     match /accounts/{accountId}/invoices/{invoiceId} {

@@ -10,7 +10,7 @@ struct ItemsTabView: View {
     // Bulk action modals
     @State private var showBulkStatusPicker = false
     @State private var showBulkSetSpace = false
-    @State private var showBulkSellToBusiness = false
+    @State private var showBulkReturnToInventory = false
     @State private var showBulkSellToProject = false
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
@@ -65,9 +65,9 @@ struct ItemsTabView: View {
                 }
             )
         }
-        .adaptivePresentation(isPresented: $showBulkSellToBusiness, style: .form) {
+        .adaptivePresentation(isPresented: $showBulkReturnToInventory, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                SellToBusinessModal(items: selectedItems, accountId: accountId) {
+                ReturnToInventoryModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
             }
@@ -120,7 +120,7 @@ struct ItemsTabView: View {
                 onClearTransaction: { clearTransactionForSelected() },
                 onSetSpace: { showBulkSetSpace = true },
                 onClearSpace: { clearSpaceForSelected() },
-                onSellToBusiness: { showBulkSellToBusiness = true },
+                onReturnToInventory: { showBulkReturnToInventory = true },
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
                 onDelete: { showBulkDeleteConfirmation = true }

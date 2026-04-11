@@ -23,7 +23,8 @@ enum TransactionMenuBuilder {
     // MARK: Card Menu
 
     /// Menu for a transaction card in a list view.
-    /// Canonical inventory sale transactions are system-generated — no actions are shown.
+    /// Legacy canonical inventory sales: no actions.
+    /// New per-batch Sales: delete only (shape fields are immutable).
     static func buildCardMenu(
         transaction: Transaction,
         callbacks: SingleTransactionMenuCallbacks
@@ -46,15 +47,17 @@ enum TransactionMenuBuilder {
     // MARK: Detail Menu
 
     /// Menu for the transaction detail toolbar.
-    /// Canonical sales suppress Reassign but still allow Delete.
+    /// Legacy canonical sales: suppress Reassign, allow Delete.
+    /// New per-batch Sales: suppress Reassign (shape is immutable), allow Delete.
     static func buildDetailMenu(
         transaction: Transaction,
         callbacks: SingleTransactionMenuCallbacks
     ) -> [ActionMenuItem] {
         let isCanonical = transaction.isCanonicalInventorySale == true
+        let isPerBatchSale = transaction.transactionType == .sale && !isCanonical
         var items: [ActionMenuItem] = []
 
-        if !isCanonical {
+        if !isCanonical && !isPerBatchSale {
             var reassignSubactions: [ActionMenuSubitem] = []
             if let onReassignToInventory = callbacks.onReassignToInventory {
                 reassignSubactions.append(ActionMenuSubitem(

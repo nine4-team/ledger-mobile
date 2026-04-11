@@ -4,7 +4,7 @@
 
 When users are inside a transaction or space, they can pull items from anywhere in the account — other transactions in the same project, other projects, or business inventory. The system determines the correct operation (reassign or sell) based on whether the source and destination are in the same scope, then applies the appropriate field updates and audit trail entries.
 
-This spec covers the picker scoping rules, conflict detection, scope change routing, and field update semantics. For reassign vs sell business rules, see reassign-vs-sell.md. For the canonical sale transaction system, see canonical-sales.md.
+This spec covers the picker scoping rules, conflict detection, scope change routing, and field update semantics. For reassign vs sell business rules, see [reassign-vs-sell.md](reassign-vs-sell.md). For the per-batch sale transaction model, see [sale-transactions.md](sale-transactions.md). For return-to-inventory, see [return-and-sale-tracking.md](return-and-sale-tracking.md).
 
 ## Entry Points
 
@@ -120,11 +120,11 @@ The system determines the operation automatically based on source and destinatio
 
 | Source Scope | Destination Scope | Operation | Reference |
 |-------------|-------------------|-----------|-----------|
-| Same project | Same project | Direct reassign | reassign-vs-sell.md §Reassign |
-| Business inventory | Business inventory | Direct reassign | reassign-vs-sell.md §Reassign |
-| Business inventory | Project | Sell (business_to_project) | canonical-sales.md |
-| Project | Business inventory | Sell (project_to_business) | canonical-sales.md |
-| Project A | Project B | Two-hop sell (A→inventory→B) | reassign-vs-sell.md §Project-to-Project |
+| Same project | Same project | Direct reassign | [reassign-vs-sell.md](reassign-vs-sell.md) §Reassign |
+| Business inventory | Business inventory | Direct reassign | [reassign-vs-sell.md](reassign-vs-sell.md) §Reassign |
+| Business inventory | Project | **Sell** (per-batch) | [sale-transactions.md](sale-transactions.md) |
+| Project | Business inventory | **Return to Inventory** | [return-and-sale-tracking.md](return-and-sale-tracking.md) §Returning to Inventory |
+| Project A | Project B | **Move Between Projects** (return + sell, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
 
 ### Bulk Selection Across Scopes
 
@@ -156,19 +156,35 @@ This is a reassign. All writes are client-side (Tier 1: fire-and-forget).
 
 ### Adding Item to a Transaction (Cross-Scope)
 
-This is a sell. Uses request doc pattern (Tier 2). See canonical-sales.md for the full write sequence.
+This is a sell or return-to-inventory, depending on direction. Each is one Firestore batch (the destination transaction is a brand-new immutable document, not an aggregator). See [sale-transactions.md](sale-transactions.md) and [return-and-sale-tracking.md](return-and-sale-tracking.md) for the full write sequences.
+
+**Inventory → project (per-batch Sale):**
 
 | Field | Update |
 |-------|--------|
-| `item.projectId` | Updated to destination project ID (or null for inventory) |
-| `item.transactionId` | Set to canonical sale transaction ID |
+| `item.projectId` | Set to destination project ID |
+| `item.transactionId` | Set to the new Sale transaction ID |
 | `item.spaceId` | Cleared (null) — spaces are project-scoped |
-| `item.budgetCategoryId` | Resolved per budget category resolution rules (see below) |
-| Source `transaction.itemIds` | Remove item ID |
-| Canonical sale `transaction.itemIds` | Add item ID |
-| Canonical sale `transaction.amountCents` | Recalculated (sum of all linked item `purchasePriceCents`) |
+| `item.budgetCategoryId` | Set to the chosen batch category |
+| `item.status` | Set to `"purchased"` |
+| Source `transaction.itemIds` | Remove item ID (if any prior transaction) |
+| New Sale transaction | Created with `itemIds` and `amountCents` frozen at this batch |
 
-**Lineage:** A `sold` edge is created server-side by the Cloud Function.
+**Lineage:** A `sold` edge is created client-side per item.
+
+**Project → inventory (Return-to-Inventory):**
+
+| Field | Update |
+|-------|--------|
+| `item.projectId` | Set to null |
+| `item.transactionId` | Set to the Return transaction ID |
+| `item.spaceId` | Cleared (null) |
+| `item.budgetCategoryId` | **Wiped to null** (the inventory invariant) |
+| `item.status` | Set to `"purchased"` |
+| Source `transaction.itemIds` | Remove item ID |
+| Return transaction | Created or coalesced (within session) |
+
+**Lineage:** A `returned` edge is created client-side per item.
 
 ### Adding Item to a Space
 
@@ -184,15 +200,23 @@ Simple field update (Tier 1: fire-and-forget).
 
 ## Budget Category Resolution
 
-Required for cross-scope operations only. Same-scope reassigns do not require category resolution.
+### Inventory → Project (Sell)
 
-Resolution order (same as canonical-sales.md §Budget Category Resolution):
+Inventory items have **no `budgetCategoryId`** (the inventory invariant). The user must pick exactly one category for the whole batch before the sale can proceed:
 
-1. **Item already has `budgetCategoryId`** → use it directly
-2. **Item has no category** → prompt user to select one before the operation can proceed
-3. **Item's category is not enabled in the destination project** → prompt user to either enable the category or select a different one
+1. The picker shows categories enabled in the destination project.
+2. If the chosen category is not yet enabled, the system auto-enables it (`setData(merge: true)` on the `ProjectBudgetCategory` doc, preserving any existing budget amount).
+3. The chosen category is set on the new Sale transaction AND on every item in the batch.
 
-**Same-scope convenience:** When pulling same-scope items that lack a `budgetCategoryId`, the destination transaction's category is applied as a convenience default — not a hard requirement.
+There is no per-item override and no mixed-category batches. See [sale-transactions.md](sale-transactions.md) D4a.
+
+### Project → Inventory (Return)
+
+No category selection is needed. The item's existing `budgetCategoryId` is **wiped to null** as part of the return.
+
+### Same-Scope (Reassign)
+
+When pulling same-scope items that lack a `budgetCategoryId`, the destination transaction's category is applied as a convenience default. Otherwise the item's existing category is preserved.
 
 ## Atomicity
 

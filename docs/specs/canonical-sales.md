@@ -1,35 +1,100 @@
-# Canonical Sales
+# Canonical Sales (Legacy)
 
-## Overview
+> **⚠️ Status:** Superseded by [sale-transactions.md](sale-transactions.md). This document describes the legacy canonical-sale model that existed before the per-batch redesign. It is preserved for two reasons:
+>
+> 1. **Historical data still uses this shape.** Existing sale transactions written under the canonical model remain in Firestore as immutable historical records. Readers must understand this shape to render them correctly.
+> 2. **The dual-read path in [util/budget.ts](../../mcp-server/src/util/budget.ts) depends on the sign convention documented here.**
+>
+> **For all new sale-related work, see [sale-transactions.md](sale-transactions.md) and [inventory-as-store.md](inventory-as-store.md).**
 
-When items move between a project and business inventory, the system creates or updates a "canonical sale transaction" to represent the financial impact. This is the mechanism that tracks money flow when items cross scope boundaries.
+## Quick Links
 
-## The Two Scopes
+- [sale-transactions.md](sale-transactions.md) — the active sale transaction spec
+- [inventory-as-store.md](inventory-as-store.md) — the conceptual shift that replaced this model
+- [return-and-sale-tracking.md](return-and-sale-tracking.md) — how returns work, including return-to-inventory
 
-Every item and space belongs to one of two scopes:
+## What Replaced This Model
+
+| Legacy concept | Replacement |
+|---|---|
+| Long-lived canonical sale transaction per `(project, direction, category)` | New per-batch Sale transaction per user action ([sale-transactions.md](sale-transactions.md)) |
+| `inventorySaleDirection: "business_to_project"` | The only direction. No flag needed. |
+| `inventorySaleDirection: "project_to_business"` | Replaced by Return transactions with `source: "Business Inventory"` |
+| Items carrying `budgetCategoryId` across scope moves | Items in inventory have `budgetCategoryId == null`; category resolved at sell time |
+| Two-hop project → project moves | Return-to-inventory + new sale to destination, atomic |
+| `arrayUnion` / `arrayRemove` mutations on long-lived sale documents | Each sale is an immutable per-batch document |
+
+## Legacy Shape (For Historical Reads)
+
+Legacy canonical sale transactions are identified by:
+
+```
+isCanonicalInventorySale: true
+inventorySaleDirection: "business_to_project" | "project_to_business"
+type: "Sale"
+```
+
+They have a deterministic ID of the form `SALE_{projectId}_{direction}_{budgetCategoryId}` and an `itemIds` array that may have grown over time as items were added to the aggregator. Their `amountCents` is the sum of linked item prices, frozen as of the last `onItemPriceChanged` invocation before that trigger was disabled for Sale transactions.
+
+### Sign Convention (Legacy)
+
+The dual-read path in [util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount` handles legacy canonical sales like this:
+
+```
+if tx.isCanonicalInventorySale and tx.inventorySaleDirection:
+    if tx.inventorySaleDirection == "business_to_project":
+        return +abs(tx.amountCents)    // money spent on project
+    if tx.inventorySaleDirection == "project_to_business":
+        return -abs(tx.amountCents)    // money returned from project
+```
+
+New per-batch sales (no `isCanonicalInventorySale` flag) are always `+abs(amountCents)`. See [budget-management.md](budget-management.md) Sign Conventions section for the full table.
+
+## Why Not Migrate
+
+Legacy canonical sales are not converted to per-batch shape. Reasons:
+
+1. **Rewriting historical financial records is risky.** Even with care, the migration could mask or introduce bugs in budget rollups.
+2. **Frozen records are accounting-correct.** Once frozen (post-trigger-removal), legacy canonical sales reflect what was true at the time they were last updated. That's a defensible historical position.
+3. **The dual-read tax is small and bounded.** One function (`normalizeSpendAmount`) and one branch in tests. Cheaper than the migration risk.
+
+If the legacy doc count becomes problematic in the future, a one-time migration script can be considered as a follow-up. See "Out of Scope" in [the implementation plan](/Users/benjaminmackenzie/.claude/plans/steady-wiggling-cosmos.md).
+
+## What the Legacy Model Looked Like
+
+The remainder of this section is preserved verbatim for historical context. **None of it describes current behavior.** Read [sale-transactions.md](sale-transactions.md) for the current model.
+
+---
+
+### (Historical) Overview
+
+When items moved between a project and business inventory, the system created or updated a "canonical sale transaction" to represent the financial impact. This was the mechanism that tracked money flow when items crossed scope boundaries.
+
+### (Historical) The Two Scopes
+
+Every item and space belonged to one of two scopes:
 
 - **Project scope**: Assigned to a specific project (has a `projectId`)
 - **Business inventory scope**: Account-wide, not in any project (`projectId` is null)
 
-Items can move between scopes. When they do, the financial impact must be tracked.
+Items could move between scopes. When they did, the financial impact had to be tracked.
 
-## Sale Directions
+### (Historical) Sale Directions
 
-There are exactly two sale directions:
+There were exactly two sale directions:
 
-1. **Business to Project** (`business_to_project`): Moving items FROM business inventory INTO a project. This ADDS to the project's budget spend (the project is "buying" from inventory).
+1. **Business to Project** (`business_to_project`): Moving items FROM business inventory INTO a project. This ADDED to the project's budget spend (the project was "buying" from inventory).
+2. **Project to Business** (`project_to_business`): Moving items FROM a project BACK TO business inventory. This SUBTRACTED from the project's budget spend (the project was "returning" to inventory). **In the new model, this case is a Return transaction, not a Sale.**
 
-2. **Project to Business** (`project_to_business`): Moving items FROM a project BACK TO business inventory. This SUBTRACTS from the project's budget spend (the project is "returning" to inventory).
+### (Historical) Deterministic Transaction Identity
 
-## Deterministic Transaction Identity
-
-A canonical sale transaction is uniquely identified by three fields:
+A canonical sale transaction was uniquely identified by three fields:
 
 - `projectId` — the project involved
-- `inventorySaleDirection` — which direction the items are moving
+- `inventorySaleDirection` — which direction the items were moving
 - `budgetCategoryId` — the budget category of the items being moved
 
-**Identity rule:** For a given (projectId, direction, budgetCategoryId) triple, there is exactly ONE canonical sale transaction. If one already exists, new items moving in that direction under that category are added to the existing transaction rather than creating a new one.
+**Identity rule:** For a given (projectId, direction, budgetCategoryId) triple, there was exactly ONE canonical sale transaction. New items moving in that direction under that category were added to the existing transaction rather than creating a new one.
 
 **Transaction ID formula:**
 
@@ -37,118 +102,19 @@ A canonical sale transaction is uniquely identified by three fields:
 transactionId = "SALE_" + projectId + "_" + direction + "_" + budgetCategoryId
 ```
 
-Example: `SALE_proj123_business_to_project_catFurnishings`
+### (Historical) Why It Was Replaced
 
-**Why deterministic IDs:** This prevents duplicate transactions when multiple items move in the same direction under the same category. It also makes the system idempotent — processing the same sale request twice won't create a duplicate transaction.
+The aggregator pattern caused drift bugs. Multiple writers (iOS, MCP server) mutated the same long-lived documents via `arrayUnion`/`arrayRemove`, and divergence between them produced incorrect `itemIds` lists. The most visible failure: a "Beige Linen Sofa" sold from Brianhead Cabin to Hawaii Apartment continued to appear in Brianhead's purchase transaction because the cleanup code on the sell path read `item.transactionId` (which was nil at sell time) instead of querying which transaction contained the item.
 
-## Canonical Sale Transaction Fields
+The per-batch redesign eliminates this entire class of bug by making each sale an immutable document. There's no shared mutable state to drift.
 
-When a canonical sale transaction is created or updated, it has these distinctive fields:
+### (Historical) Display
 
-- `isCanonicalInventorySale: true` — marks it as system-generated (not user-created)
-- `inventorySaleDirection` — "business_to_project" or "project_to_business"
-- `transactionType: "Sale"`
-- `projectId` — the project involved
-- `budgetCategoryId` — inherited from the items being moved
-- `amountCents` — sum of all item purchase prices in this transaction
-- `itemIds` — array of all item IDs that have been moved via this sale
-
-## The Two-Hop Model
-
-Moving items between scopes is a two-step process ("two hops"):
-
-### Hop 1: Remove from Source
-
-- If the item was in a project transaction, remove it from that transaction's `itemIds`
-- Clear the item's `transactionId`
-- If moving to business inventory: set the item's `projectId` to null
-
-### Hop 2: Add to Destination
-
-- Find or create the canonical sale transaction for this (projectId, direction, budgetCategoryId) triple
-- Add the item's ID to the canonical sale transaction's `itemIds`
-- Set the item's `transactionId` to the canonical sale transaction's ID
-- If moving to a project: set the item's `projectId` to the project ID
-- Recalculate the canonical sale transaction's `amountCents` as the sum of all linked item purchase prices
-
-## Amount Calculation
-
-The canonical sale transaction's amount is always recalculated as:
-
-```
-amountCents = sum of purchasePriceCents for all items in itemIds
-```
-
-This means the amount updates every time an item is added to or removed from the sale.
-
-## Budget Category Resolution
-
-When an item moves between scopes, it needs a budget category for the canonical sale transaction. Resolution order:
-
-1. **Item already has a `budgetCategoryId`**: Use it directly
-2. **Item has no category**: Prompt the user to select one before the move can proceed
-3. **Item's category is not enabled in the destination project**: Prompt the user to either enable the category or select a different one
-
-**Why items carry persistent `budgetCategoryId`:** Once set, an item's budget category stays with it across scope moves. This ensures deterministic canonical sale grouping — the system always knows which sale transaction an item belongs to without asking the user again.
-
-## Sign Conventions in Budget Calculations
-
-- `business_to_project`: The canonical sale transaction's amount is counted as POSITIVE spend against the project's budget (the project is acquiring items)
-- `project_to_business`: The canonical sale transaction's amount is counted as NEGATIVE spend (subtracted from the project's budget, because the project is releasing items)
-
-This is implemented via a multiplier in budget progress calculation:
-
-```
-if direction is "business_to_project": multiplier = +1
-if direction is "project_to_business": multiplier = -1
-
-budget_impact = amountCents * multiplier
-```
-
-## Lineage Tracking
-
-Every canonical sale creates a lineage edge (see lineage-tracking.md):
-
-- `movementKind: "sold"`
-- `itemId`: the item being moved
-- `fromProjectId`: source project ID (or null for business inventory)
-- `toProjectId`: destination project ID (or null for business inventory)
-- `fromTransactionId`: the item's previous transaction (if any)
-- `toTransactionId`: the canonical sale transaction
-
-## Atomicity
-
-Canonical sale operations use the request-doc pattern (see write-tiers.md, Tier 2) because they involve multiple document updates:
-
-1. Update item fields (projectId, transactionId, budgetCategoryId)
-2. Update source transaction's itemIds (remove)
-3. Create or update canonical sale transaction (add to itemIds, recalculate amount)
-4. Create lineage edge
-
-All four operations must succeed or fail together. The Cloud Function processes the request doc and executes all writes in a Firestore transaction.
-
-## Bulk Sales
-
-Multiple items can be sold in a single operation. Items are grouped by `budgetCategoryId` — each group goes to its own canonical sale transaction (per the deterministic identity rule).
-
-Example: Selling 5 items where 3 have category "Furnishings" and 2 have category "Install":
-
-- Items with "Furnishings" go to canonical sale `SALE_proj123_business_to_project_catFurnishings`
-- Items with "Install" go to canonical sale `SALE_proj123_business_to_project_catInstall`
-
-## Edge Cases
-
-1. **Item with no purchase price**: Contributes $0 to the canonical sale amount. The item is still moved and linked.
-2. **Selling an item that's already in the destination scope**: No-op. The item is already where it needs to be.
-3. **Canonical sale transaction already exists with items**: New items are appended to `itemIds`, and `amountCents` is recalculated from all linked items.
-4. **All items removed from a canonical sale**: The transaction remains with `itemIds: []` and `amountCents: 0`. It is not deleted (preserves audit trail).
-5. **Item's category not enabled in destination project**: User must resolve before the sale can proceed. Options: enable the category in the project, or change the item's category.
-
-## Display
-
-Canonical sale transactions appear in the transaction list like regular transactions but with distinctive visual treatment:
+Canonical sale transactions appeared in the transaction list with:
 
 - Badge: "Sale"
-- Display name: "Sale to Inventory" (project_to_business) or "Purchase from Inventory" (business_to_project). Labels read from the project's perspective — the project is the subject.
-- Amount: Shows the computed total from all linked item prices
-- They are NOT editable by users (system-generated)
+- Display name: "Sale to Inventory" (project_to_business) or "Purchase from Inventory" (business_to_project)
+- Amount: the computed total from all linked item prices
+- Not editable by users
+
+This display logic still applies to legacy canonical sales for historical readability.

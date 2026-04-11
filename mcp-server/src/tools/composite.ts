@@ -136,7 +136,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           projectId: z.string().optional().describe("Project ID (omit for business inventory)"),
           budgetCategoryId: z.string().describe("Budget category ID"),
           amountCents: z.coerce.number().describe("Total amount in cents"),
-          type: z.string().default("Purchase").describe("Purchase, Return, or To Inventory (never Sale)"),
+          type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
           source: z.string().optional(),
           transactionDate: z.string().optional(),
           subtotalCents: z.coerce.number().optional(),

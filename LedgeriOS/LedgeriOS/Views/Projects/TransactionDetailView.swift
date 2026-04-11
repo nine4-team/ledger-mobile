@@ -743,7 +743,7 @@ struct TransactionDetailView: View {
         TransactionMenuBuilder.buildDetailMenu(
             transaction: currentTransaction,
             callbacks: SingleTransactionMenuCallbacks(
-                onReassignToInventory: { reassignToInventory() },
+                onReassignToInventory: { returnToInventory() },
                 onReassignToProject: { showReassign = true },
                 onDelete: { showDeleteConfirmation = true }
             )
@@ -963,16 +963,19 @@ struct TransactionDetailView: View {
 
     // MARK: - Actions
 
-    private func reassignToInventory() {
-        guard let accountId = accountContext.currentAccountId,
-              let transactionId = transaction.id else { return }
+    private func returnToInventory() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let items = transactionItems
+        guard !items.isEmpty else { return }
         Task {
             do {
-                try await TransactionsService()
-                    .updateTransaction(accountId: accountId, transactionId: transactionId, fields: ["projectId": NSNull()])
+                try await InventoryOperationsService().returnToInventory(
+                    items: items,
+                    accountId: accountId
+                )
                 await MainActor.run { dismiss() }
             } catch {
-                print("🔴 reassignToInventory failed: \(error)")
+                print("🔴 returnToInventory failed: \(error)")
             }
         }
     }

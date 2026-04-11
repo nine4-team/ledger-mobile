@@ -1,31 +1,27 @@
 import SwiftUI
 import FirebaseFirestore
 
-/// Multi-step flow for selling items to another project.
-/// Steps: (1) pick destination project, (2) destination category, (3) source category.
-/// Exact description text per FR-8.6.
+/// Two-step flow for selling items to a project.
+/// Steps: (1) pick destination project, (2) pick budget category + confirm.
+/// One category applies to the entire batch.
 struct SellToProjectModal: View {
     let items: [Item]
     let accountId: String
     let onComplete: () -> Void
 
-    @Environment(ProjectContext.self) private var projectContext
     @Environment(AuthManager.self) private var authManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var step = 1
     @State private var destinationProject: Project?
     @State private var destinationCategoryId: String?
-    @State private var sourceCategoryId: String?
     @State private var isSaving = false
     @State private var errorMessage: String?
     /// Budget categories fetched independently for the destination project step.
-    /// Categories are account-level presets, but we fetch them separately to avoid
-    /// coupling to the source project's ProjectContext.
     @State private var accountCategories: [BudgetCategory] = []
     @State private var categoriesListener: ListenerRegistration?
 
-    private static let descriptionText = "Sale and purchase records will be created for financial tracking. If you're just fixing a misallocation, use Reassign instead."
+    private static let descriptionText = "A sale record will be created for financial tracking. One budget category applies to all items in this batch."
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,9 +31,7 @@ struct SellToProjectModal: View {
             case 1:
                 step1DestinationProject
             case 2:
-                step2DestinationCategory
-            case 3:
-                step3SourceCategory
+                step2CategoryAndConfirm
             default:
                 EmptyView()
             }
@@ -83,8 +77,7 @@ struct SellToProjectModal: View {
     private var stepTitle: String {
         switch step {
         case 1: return "Sell to Project"
-        case 2: return "Destination Category"
-        case 3: return "Source Category"
+        case 2: return "Budget Category"
         default: return "Sell to Project"
         }
     }
@@ -106,32 +99,11 @@ struct SellToProjectModal: View {
         }
     }
 
-    // MARK: - Step 2: Destination category
+    // MARK: - Step 2: Category + confirm
 
-    private var step2DestinationCategory: some View {
+    private var step2CategoryAndConfirm: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Select a budget category in \(destinationProject?.name ?? "destination project") (optional)")
-                .font(Typography.small)
-                .foregroundStyle(BrandColors.textSecondary)
-                .padding(.horizontal, Spacing.screenPadding)
-
-            CategoryPickerList(
-                categories: accountCategories,
-                selectedId: destinationCategoryId,
-                onSelect: { category in
-                    destinationCategoryId = category?.id
-                    step = 3
-                },
-                autoDismissOnSelect: false
-            )
-        }
-    }
-
-    // MARK: - Step 3: Source category + confirm
-
-    private var step3SourceCategory: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Select a budget category in the source project (optional)")
+            Text("Select a budget category in \(destinationProject?.name ?? "destination project")")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
                 .padding(.horizontal, Spacing.screenPadding)
@@ -144,10 +116,10 @@ struct SellToProjectModal: View {
             }
 
             CategoryPickerList(
-                categories: projectContext.budgetCategories,
-                selectedId: sourceCategoryId,
+                categories: accountCategories,
+                selectedId: destinationCategoryId,
                 onSelect: { category in
-                    sourceCategoryId = category?.id
+                    destinationCategoryId = category?.id
                 },
                 autoDismissOnSelect: false
             )
@@ -160,9 +132,6 @@ struct SellToProjectModal: View {
                     isLoading: isSaving,
                     action: { performSale() }
                 )
-                AppButton(title: "Skip", variant: .secondary) {
-                    performSale()
-                }
             }
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.bottom, Spacing.screenPadding)
@@ -174,29 +143,24 @@ struct SellToProjectModal: View {
     private func performSale() {
         guard let project = destinationProject, let projectId = project.id else { return }
 
-        // L16: If any item lacks its own budgetCategoryId, a destination category must be selected
-        // so the items can be properly tracked in the destination project's budget.
-        let hasUncategorizedItems = items.contains { $0.budgetCategoryId == nil || ($0.budgetCategoryId?.isEmpty == true) }
-        if hasUncategorizedItems && destinationCategoryId == nil {
-            errorMessage = "Select a destination category — some items don't have a budget category assigned."
+        guard let categoryId = destinationCategoryId, !categoryId.isEmpty else {
+            errorMessage = "Select a budget category for this sale."
             return
         }
+
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
         let itemsToSell = items
         let acctId = accountId
-        let srcCatId = sourceCategoryId
-        let destCatId = destinationCategoryId
         Task {
             do {
                 try await service.sellToProject(
                     items: itemsToSell,
                     destinationProjectId: projectId,
+                    budgetCategoryId: categoryId,
                     accountId: acctId,
-                    userId: authManager.currentUser?.uid,
-                    sourceCategoryId: srcCatId,
-                    destinationCategoryId: destCatId
+                    userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {
                     onComplete()
