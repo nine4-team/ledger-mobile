@@ -23,7 +23,7 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].borderOpacity == 0.20)
     }
 
-    @Test("Return produces destructive-colored badge")
+    @Test("Return badge matches the Needs Review rust-red color")
     func badgeItemsReturn() {
         let badges = TransactionCardCalculations.badgeItems(
             transactionType: .return,
@@ -34,7 +34,7 @@ struct TransactionCardCalculationTests {
         )
         #expect(badges.count == 1)
         #expect(badges[0].text == "Return")
-        #expect(badges[0].color == StatusColors.atRiskBar)
+        #expect(badges[0].color == StatusColors.badgeNeedsReview)
         #expect(badges[0].backgroundOpacity == 0.10)
         #expect(badges[0].borderOpacity == 0.20)
     }

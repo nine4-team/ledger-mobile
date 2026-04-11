@@ -38,7 +38,11 @@ enum TransactionCardCalculations {
                 color = BrandColors.primary
             } else {
                 label = type.displayLabel
-                color = (type == .sale || type == .return) ? StatusColors.atRiskBar : BrandColors.primary
+                switch type {
+                case .sale:      color = StatusColors.atRiskBar
+                case .return:    color = StatusColors.badgeNeedsReview
+                default:         color = BrandColors.primary
+                }
             }
             badges.append(CardBadge(text: label, color: color))
         }
