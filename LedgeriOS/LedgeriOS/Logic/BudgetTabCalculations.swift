@@ -132,18 +132,26 @@ enum BudgetTabCalculations {
     // MARK: - Transaction-Based Spend Normalization
 
     /// Normalizes a single transaction's contribution to category spend.
+    /// Dual-read path matching mcp-server/src/util/budget.ts `normalizeSpendAmount`.
     ///
-    /// Rules (FR-3.8):
-    /// - `status == .canceled` → $0
-    /// - `transactionType == .return` OR negative `amountCents` → subtracts (negative contribution)
-    /// - `isCanonicalInventorySale == true` AND `inventorySaleDirection == .projectToBusiness` → subtracts
-    /// - `isCanonicalInventorySale == true` AND `inventorySaleDirection == .businessToProject` → adds
-    /// - All others → adds
+    /// Cases:
+    /// 1. `status == .canceled` → 0
+    /// 2. `type == .return` → -abs(amount)
+    /// 3. Legacy canonical sale (`isCanonicalInventorySale == true`) → direction-based sign
+    /// 4. New per-batch `type == .sale` → +abs(amount) (sales always go business → project)
+    /// 5. Everything else (Purchase, etc.) → amount as-stored
     static func normalizeTransactionAmount(_ transaction: Transaction) -> Int {
+        // Case 1: Canceled
         guard transaction.status != .canceled else { return 0 }
 
         let amount = transaction.amountCents ?? 0
 
+        // Case 2: Returns — always negative
+        if transaction.transactionType == .return {
+            return -abs(amount)
+        }
+
+        // Case 3: Legacy canonical sales — direction-based sign
         if transaction.isCanonicalInventorySale == true {
             switch transaction.inventorySaleDirection {
             case .projectToBusiness:
@@ -155,10 +163,12 @@ enum BudgetTabCalculations {
             }
         }
 
-        if transaction.transactionType == .return || amount < 0 {
-            return -abs(amount)
+        // Case 4: New per-batch Sale — always positive
+        if transaction.transactionType == .sale {
+            return abs(amount)
         }
 
+        // Case 5: Everything else (Purchase, etc.) — as-stored
         return amount
     }
 
