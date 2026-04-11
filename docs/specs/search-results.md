@@ -1,6 +1,8 @@
 # Search Results & Item Detail — Contextual Details
-Status: modify
-Last updated: 2026-04-02
+Status: shipped
+Last updated: 2026-04-10
+
+> **Shipped 2026-04-10** — Search result rows display the project name (UniversalSearchView.swift line 278 passes `projectName(for: item.projectId)` into ItemCard, rendered at ItemCardCalculations.swift lines 59-61 as "Project: {name}"). Item detail hero card now shows Project, Purchaser, Budget Category, Transaction, and Space. The Purchaser row (ItemDetailView.swift `purchaserLabel`) reads `item.purchasedBy` if set and normalizes to "Client" or "Business"; when unset it falls back to scope (no project → Business, has project → Client).
 
 ## Summary
 When searching for items across the app, the user needs enough context to identify which item they're looking at — specifically, which project it belongs to. The full mapping details (location, transaction, purchaser, etc.) should be accessible when the user clicks into the item detail view, not necessarily crammed into the search result row itself.

@@ -1,10 +1,18 @@
 # Item Detail View
-Status: modify (auto-status sub-task shipped 2026-04-07)
-Last updated: 2026-04-07
+Status: shipped (one open question remains on auto-status edge cases)
+Last updated: 2026-04-10
 
-> **Auto-status sub-task shipped 2026-04-07** — `InventoryOperationsService.sellToProject` now sets `status: "purchased"` on each item in the destination-project update batch, matching the existing `sellToBusiness` behavior. Decision on the open question "should already-'to return' items still flip to 'purchased'?": yes for now — selling a to-return item is unusual, and assigning it to a project is a clear signal that it's purchased. Revisit if this causes confusion in practice.
+> **Shipped**:
+> - **Auto-status on inventory-to-project move** (2026-04-07) — `InventoryOperationsService.sellToProject` now sets `status: "purchased"` on each item in the destination-project update batch, matching the existing `sellToBusiness` behavior. Decision on the open question "should already-'to return' items still flip to 'purchased'?": yes for now — selling a to-return item is unusual, and assigning it to a project is a clear signal that it's purchased. Revisit if this causes confusion in practice.
+> - **Status editing pulled out of three-dot menu** — Status is a prominent capsule button in the top-right toolbar (ItemDetailView.swift `dispositionButton`) that opens StatusPickerModal directly.
+> - **Notes section pencil-per-section edit** — CollapsibleSection `onEdit` wired on the NOTES section.
+> - **Details section pencil-per-section edit** (2026-04-10) — CollapsibleSection `onEdit` wired on the DETAILS section, opens `EditItemDetailsModal`.
+> - **Three-dot menu reduction** (2026-04-10) — Edit Details and Edit Notes removed from the kebab (now covered by pencil icons); Status submenu suppressed for `context == .detail` in `ItemMenuBuilder.buildSingleItemMenu` (covered by the toolbar capsule). Kebab now only contains Make Copies, Transaction, Space, Move/Sell, Reassign, and Delete.
+> - **Two-track status — UI display** (2026-04-10) — Details section now renders `Billing` as a `DetailRow` alongside `Status`, reading `liveItem.billingStatus?.displayLabel`. Item.swift has the `billingStatus: BillingStatus?` field (unbilled / invoiced / paid, Enums.swift `BillingStatus`), shipped alongside billing-invoicing.md.
 >
-> Still pending: editing UX revamp (pencil-per-section, status pulled out of three-dot menu), two-track designer-workflow vs. billing status model, and the rest of the section-level edit affordances.
+> **Deferred**:
+> - **Clear Status from detail** — removing the Status submenu from the detail kebab also removed the "Clear Status" path. StatusPickerModal does not currently offer a "No Status" option. Accept for now; if clearing becomes common, add a "No Status" entry to StatusPickerModal.
+> - **Auto-status edge case** (open question from original spec) — whether moving an already-"to return" item to a different project should still flip it to "purchased". Current behavior: yes. Revisit if it causes real-world confusion.
 
 ## Summary
 The item detail view shows all information about a single item — its details, status, images, location, and history. This spec covers two areas: (1) making the editing experience more consistent and accessible, and (2) clarifying item status definitions and automation.

@@ -1,6 +1,10 @@
 # List Layout (Desktop)
-Status: modify
-Last updated: 2026-04-02
+Status: shipped (core shipped 2026-04-03; list/grid toggle deferred)
+Last updated: 2026-04-10
+
+> **Core shipped 2026-04-03** (commit 2358be7b) — macOS item and transaction lists default to single-column stacked rows via `Dimensions.listColumns` with `#if os(macOS)` branching (Theme/Dimensions.swift lines 39-45). Applied through `LazyVGrid(columns: Dimensions.listColumns)` in SharedItemsList.swift, SharedTransactionsList.swift, and TransactionsTabView.swift. iOS keeps its adaptive grid unchanged.
+>
+> The nice-to-have list/grid view toggle was not implemented and is deferred — the grid layout is not currently accessible via any toggle.
 
 ## Summary
 Anywhere items or transactions are displayed in the desktop app, the default layout should use a single-column stacked list (one item per row) instead of the current tile/grid layout (multiple items per row). This brings the desktop app in line with how the web app already displays these lists.

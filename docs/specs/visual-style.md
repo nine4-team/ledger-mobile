@@ -1,6 +1,20 @@
 # Visual Style (Desktop & Mobile)
-Status: modify
-Last updated: 2026-04-03
+Status: modify (colors + borders + full typography shipped; color verification + icon audit pending)
+Last updated: 2026-04-10
+
+> **Shipped**:
+> - **Status colors** (2026-04-03) — Red/green/yellow + background variants brightened and normalized via asset catalog colorsets (commits dfa8e49a, 33eb5442). See StatusColors.swift and Assets.xcassets/Colors/.
+> - **macOS border reduction** (2026-04-10) — Two coordinated changes in [Theme/](LedgeriOS/LedgeriOS/Theme/):
+>     - `Dimensions.borderWidth` is now platform-aware — **0.5pt hairline on macOS**, 1pt on iOS. Every card, modal, form field, segmented control, and divider picks this up automatically (all ~50 call sites go through `Dimensions.borderWidth`).
+>     - `BrandColors.softBorder` is now dark-mode adaptive on macOS via `NSColor(name:)` — gray-200 (#E5E7EB) in light, gray-700-ish (#3E4148) in dark. Previously hardcoded to the light value only, which read wrong against dark surfaces. iOS still uses `.separator`.
+>   Net effect on macOS: cards and modals render as filled surfaces with a hairline edge rather than outlined boxes.
+> - **Full typography swap** (2026-04-10) — [Typography.swift](LedgeriOS/LedgeriOS/Theme/Typography.swift) now routes every token through `.custom("AvenirNext-*"|"PlayfairDisplay-Regular", size:, relativeTo:)`. Dynamic Type scaling preserved via the `relativeTo:` argument.
+>     - **Avenir Next** handles everything except screen titles — system font on all Apple platforms, no bundling needed. Weight map: h2/h3/button/buttonSmall/label/sectionLabel → DemiBold, body/small/caption/input → Regular.
+>     - **Playfair Display** handles screen titles (`h1` at 26pt, Regular weight). Bundled as the Google Fonts variable TTF at [Resources/Fonts/PlayfairDisplay.ttf](LedgeriOS/LedgeriOS/Resources/Fonts/PlayfairDisplay.ttf). Wired into `project.pbxproj` with build file ID `FA7F0100000000000F0001AA` (Resources phase) and file ref ID `FA7F0200000000000F0001AA`. Registered for both platforms via `UIAppFonts` (iOS) and `ATSApplicationFontsPath = "."` (macOS) in [Info.plist](LedgeriOS/LedgeriOS/Info.plist). Runtime-verified via `CTFontManagerRegisterFontsForURL` — `PlayfairDisplay-Regular` resolves correctly (not falling back to Helvetica) on macOS. iOS uses the same registration path through `UIAppFonts`.
+>
+> **Still pending**:
+> - **Direct `.font(.system(size: N))` call sites** — ~75 call sites across 46 files still use `.font(.system(...))` directly (most are SF Symbol icon sizing, but some render text). These bypass the Typography tokens and should be audited — icon usage stays, any text usage should migrate to Typography tokens. Out of scope for the initial typography pass.
+> - **Color verification** — red/green/yellow hex values were calibrated independently; not yet cross-checked against the web app as source of truth.
 
 ## Summary
 The desktop app's color palette and UI chrome (borders, outlines, button styling) need to be updated to match the lighter, sleeker look and feel of the web app. The mobile app's colors are closer but the red specifically feels too dark/gloomy and should also align with the web app's palette. The app's typography across all platforms should adopt the 1584 Design brand fonts: Playfair Display and Avenir.
