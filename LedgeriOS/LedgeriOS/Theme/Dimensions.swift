@@ -14,8 +14,16 @@ enum Dimensions {
 
     // MARK: - Border Width
 
-    /// Standard border/divider — 1pt
-    static let borderWidth: CGFloat = 1
+    /// Standard border/divider. macOS uses a 0.5pt hairline so cards and
+    /// modals read as filled surfaces rather than outlined boxes — iOS keeps
+    /// the 1pt stroke since touch targets benefit from a slightly heavier edge.
+    static var borderWidth: CGFloat {
+        #if os(macOS)
+        0.5
+        #else
+        1
+        #endif
+    }
     /// Selection highlight border — 2pt
     static let selectionBorderWidth: CGFloat = 2
 

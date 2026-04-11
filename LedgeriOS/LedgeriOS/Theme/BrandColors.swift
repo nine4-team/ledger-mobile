@@ -33,11 +33,16 @@ enum BrandColors {
     /// Secondary border (subtle dividers)
     static let borderSecondary = softBorder
 
-    /// Soft border — uses a lighter gray on macOS to match the web app's gray-200 treatment,
-    /// while iOS keeps the standard separator.
+    /// Soft border — matches the web app's gray-200 treatment on macOS (and
+    /// its darker equivalent in dark mode), while iOS keeps the standard
+    /// adaptive `.separator` color.
     private static var softBorder: Color {
         #if os(macOS)
-        Color(red: 229/255, green: 231/255, blue: 235/255)
+        Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(srgbRed: 62/255, green: 65/255, blue: 72/255, alpha: 1)   // gray-700-ish
+                : NSColor(srgbRed: 229/255, green: 231/255, blue: 235/255, alpha: 1) // gray-200
+        })
         #else
         platformColor(.separator)
         #endif
