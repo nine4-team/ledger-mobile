@@ -57,7 +57,7 @@ enum ItemCardCalculations {
             }
         }
         if let project = projectName, !project.isEmpty {
-            lines.append("Project: \(project)")
+            lines.append(project)
         }
         if let location = locationLabel, !location.isEmpty {
             lines.append("Location: \(location)")

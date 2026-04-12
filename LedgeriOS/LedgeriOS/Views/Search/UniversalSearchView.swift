@@ -275,7 +275,7 @@ struct UniversalSearchView: View {
                             CurrencyFormatting.formatCentsWithDecimals($0)
                         },
                         budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                        projectName: projectName(for: item.projectId),
+                        projectName: projectName(for: item.projectId) ?? (item.projectId == nil ? "Inventory" : nil),
                         isSelected: isSelected,
                         menuItems: selectedItemIds.isEmpty ? singleItemMenuItems(for: itemId) : []
                     )

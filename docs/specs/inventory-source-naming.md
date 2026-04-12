@@ -1,15 +1,15 @@
 # Inventory Source & Naming Conventions
-Status: modify (Phase 1 + dynamic label shipped; origin badge and masking still pending)
+Status: shipped (all pending items resolved as of 2026-04-11)
 Last updated: 2026-04-11
 
 > **Shipped**:
 > - **Phase 1 — static source label** (2026-04-07). Sale/Return transactions created by `InventoryOperationsService` carry a populated `source` field instead of leaving it blank. Hop 1 (`project_to_business`, legacy) was intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
 > - **Option A — dynamic `[Account Name] Inventory` label** (2026-04-11). `InventoryOperationsService` now takes an `inventoryLabel: String` parameter on `sellToProject`, `returnToInventory`, and `moveBetweenProjects`, defaulting to `"Business Inventory"`. A static helper `InventoryOperationsService.inventoryLabel(for: accountName:)` builds `"[Name] Inventory"` from the account's display name, trimming whitespace and falling back to `"Business Inventory"` when the name is empty. All six production call sites (SellToProjectModal, SellToBusinessModal, ReassignToProjectModal, AddExistingItemsPicker, ItemEntryFlowView, TransactionDetailView) now pass the helper-derived label through `accountContext.account?.name`. Existing tests that pin the default `"Business Inventory"` still pass because of the parameter default; new tests cover both the helper and passthrough for each method.
->
-> **Still pending**:
-> - Client-facing source masking on invoices / closeout reports (blocked on the unbuilt closeout report spec).
-> - Item "From Inventory" badge / origin indicator.
-> - Source revert behavior on returns (open design question — should a Return back to inventory revert the displayed source to the original vendor, or keep the inventory label?).
+> - **Two-field source split** (2026-04-11). `item.source` is the original vendor (set at creation, never overwritten by scope moves — preserved for returns). `item.currentSource` is the immediate/mutable source denormalized from the item's current transaction for fast display. `InventoryOperationsService` writes `currentSource = inventoryLabel` on sell-to-project, return-to-inventory, and move-between-projects. At creation time, callers set `currentSource = source`. Legacy items pre-dating this field fall back to `source` in all display callers. See `data-model.md` for the full field contract.
+> - **Client-facing source masking** (2026-04-11). Reports (ClientSummaryReportView, ReportHTMLBuilder, PropertyManagementReportView) read `item.currentSource ?? item.source`, so inventory-sourced items display the inventory label instead of the original vendor. No separate masking layer needed — `currentSource` is the mask.
+> - **Search inventory indicator** (2026-04-11). Universal search cards show `currentSource` as the source line (immediate origin) and display "Inventory" for items with `projectId == nil`. No badge — the source field itself is the origin indicator.
+> - **Source revert on returns** — decided: `currentSource` is set to the inventory label on return-to-inventory (item is "from Inventory" after returning). `source` (original vendor) is always preserved, so the designer can still trace back for vendor returns via the item detail view's Source field.
+> - **Backfill** (2026-04-11). `backfill-item-current-source.mjs` populated `currentSource` for 2,456 existing items in production, deriving the value from each item's linked transaction source.
 
 ## Summary
 When items are sold from business inventory into a project, the resulting sale transaction currently has a blank source field — no label at all. This spec defines how those transactions should be labeled, how the original acquisition source (the store the business bought the item from) should be preserved and surfaced internally, and how source information should be masked in any client-facing context.
@@ -40,8 +40,8 @@ Individual items in inventory may be associated with a transaction that has a so
 - **Sale transactions get a proper source label.** When items are sold from inventory to a project, the sale transaction's source field is populated with a clear, identifiable label (see naming options below) instead of being left blank.
 
 ### Adding
-- **Inventory origin indicator on items.** Items in a project that came from inventory should have a visible marker (tag, badge, or metadata field) so the design team can immediately distinguish them from items purchased directly for the project.
-- **Client-facing source masking.** Any context where a client might see transaction or item details (invoices, closeout reports, shared project views) shows only the business inventory label — never the original acquisition vendor.
+- ~~**Inventory origin indicator on items.**~~ **Shipped.** Items display `currentSource` on cards and search results. For inventory-sourced items in a project, this shows the inventory label (e.g., "1584 Design Inventory"). No badge — the source field itself is the indicator.
+- ~~**Client-facing source masking.**~~ **Shipped.** Reports and search cards read `currentSource ?? source`. Since `currentSource` is set to the inventory label on sell/return/move, client-facing surfaces automatically show the inventory label instead of the original vendor.
 
 ### Removing
 - Nothing removed.
