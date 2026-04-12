@@ -135,7 +135,7 @@ struct PropertyManagementReportView: View {
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textPrimary)
                         HStack(spacing: Spacing.sm) {
-                            if let source = item.source {
+                            if let source = item.currentSource ?? item.source {
                                 FindableText(source)
                                     .font(Typography.caption)
                                     .foregroundStyle(BrandColors.textTertiary)

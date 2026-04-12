@@ -137,7 +137,8 @@ A physical or trackable object: furniture, material, supply, etc.
 | projectPriceCents | number, nullable | Price charged to/for the project (in cents) |
 | marketValueCents | number, nullable | Estimated market value |
 | status | string, nullable | One of: `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"`. `"sold"` is system-set by sale operations |
-| source | string, nullable | Vendor/source name |
+| source | string, nullable | **Original vendor** — where the item was first acquired (e.g. "Homegoods", "Wayfair"). Set once at item creation and **never overwritten** by scope moves. Used for routing returns back to the original store, grouping by vendor, and the editable "Source" field in the item detail modal |
+| currentSource | string, nullable | **Immediate source** — denormalized from the item's current transaction `source` so search cards can render the origin without a per-row transaction lookup. Written by `InventoryOperationsService` on `sellToProject` / `returnToInventory` / `moveBetweenProjects` (set to the inventory label). `reassignToProject` and `returnToTransaction` do not touch it (within-project moves don't change the immediate source). At creation time, callers set `currentSource = source`. Legacy items pre-dating this field have `currentSource == nil`; display callers fall back to `source` |
 | notes | string, nullable | |
 | bookmark | boolean, nullable | User-set bookmark flag |
 | purchasedBy | string, nullable | |

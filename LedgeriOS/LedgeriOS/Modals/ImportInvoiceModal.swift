@@ -367,6 +367,7 @@ struct ImportInvoiceModal: View {
                 newItem.purchasePriceCents = InvoiceMoneyParsing.parseCentsFromDollarString(draftItem.unitPrice)
                 newItem.quantity = draftItem.qty
                 newItem.source = source
+                newItem.currentSource = source
                 newItem.sku = draftItem.sku
                 newItem.status = .purchased
                 newItem.budgetCategoryId = selectedCategoryId

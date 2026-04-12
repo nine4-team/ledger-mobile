@@ -587,7 +587,7 @@ struct SharedItemsList: View {
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
-            sourceLabel: summaryItem?.source,
+            sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
             priceLabel: displayedPriceLabel,
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
@@ -604,7 +604,7 @@ struct SharedItemsList: View {
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
-            sourceLabel: summaryItem?.source,
+            sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
             priceLabel: displayedPriceLabel,
             isExpanded: Binding(
                 get: { expandedGroups.contains(group.id) },

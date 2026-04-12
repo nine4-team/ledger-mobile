@@ -41,7 +41,10 @@ struct ItemCard: View {
         ItemCardCalculations.metadataLines(
             name: item.name,
             sku: item.sku,
-            sourceLabel: item.source,
+            // Show the immediate source ("Inventory" for items sold from inventory)
+            // with a fallback to the original vendor for legacy items written
+            // before `currentSource` existed.
+            sourceLabel: item.currentSource ?? item.source,
             locationLabel: locationLabel,
             priceLabel: priceLabel,
             projectName: projectName,

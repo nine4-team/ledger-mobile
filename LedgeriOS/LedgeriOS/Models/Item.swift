@@ -9,7 +9,39 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     var description: String?
     var notes: String?
     var status: ItemStatus?
+
+    /// **Original vendor** — where the item was first acquired (e.g. "Homegoods",
+    /// "Wayfair"). Free-form string set once at item creation and **never
+    /// overwritten** by scope moves (sell-to-project, return-to-inventory,
+    /// move-between-projects). Used for: routing returns back to the original
+    /// store, grouping items by vendor, the editable "Source" field in the item
+    /// detail modal, and picker filters that match items to a transaction's
+    /// vendor. **Not what you want on a search card** — use `currentSource` for
+    /// "where it came from right now".
     var source: String?
+
+    /// **Immediate/current source** — where the item came from on its most recent
+    /// scope move. Mutable: denormalized from the item's current transaction
+    /// `source` so search cards can render the immediate origin without a
+    /// per-row transaction lookup.
+    ///
+    /// Update rules (all written by `InventoryOperationsService`):
+    /// - `sellToProject`: set to the inventory label (e.g. "Business Inventory"
+    ///   or "1584 Design Inventory") — items sold from inventory are "from
+    ///   Inventory" from the project's perspective.
+    /// - `returnToInventory`: set to the inventory label (items returning home).
+    /// - `moveBetweenProjects`: set to the inventory label (the move is
+    ///   modeled internally as Return + Sale via inventory).
+    /// - `reassignToProject` / `returnToTransaction`: **not touched** (within-
+    ///   project moves don't change the immediate source).
+    ///
+    /// At creation time, callers set `currentSource = source` because the
+    /// immediate source IS the original vendor on day one.
+    ///
+    /// Legacy items pre-dating this field have `currentSource == nil`; display
+    /// callers should fall back to `source`.
+    var currentSource: String?
+
     var sku: String?
     var transactionId: String?
     var purchasePriceCents: Int?
@@ -35,7 +67,8 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, accountId, projectId, spaceId, name, description, notes, status, source, sku,
+        case id, accountId, projectId, spaceId, name, description, notes, status,
+             source, currentSource, sku,
              transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
              purchasedBy, bookmark, budgetCategoryId, quantity,
              taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,

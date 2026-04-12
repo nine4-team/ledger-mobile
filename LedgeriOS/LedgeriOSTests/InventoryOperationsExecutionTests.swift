@@ -884,3 +884,130 @@ struct InventoryLabelPassthroughTests {
         #expect(sale?["source"] as? String == "1584 Design Inventory")
     }
 }
+
+// MARK: - currentSource denormalization
+
+@Suite("sellToProject / returnToInventory / moveBetweenProjects — currentSource denormalization")
+struct CurrentSourceDenormalizationTests {
+
+    @Test("sellToProject writes currentSource=inventoryLabel on each item update")
+    func sellToProjectWritesCurrentSource() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000),
+            makeItem(id: "i2", projectId: nil, purchasePriceCents: 2000),
+        ]
+
+        try await service.sellToProject(
+            items: items,
+            destinationProjectId: "dstProj",
+            budgetCategoryId: "cat1",
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        for id in ["i1", "i2"] {
+            let updates = batch.updatesForPath("accounts/\(acct)/items/\(id)")
+            #expect(updates.count == 1)
+            #expect(updates.first?.fields["currentSource"] as? String == "1584 Design Inventory")
+            // Original `source` must NOT be in the update dict — preserved for returns.
+            #expect(updates.first?.fields["source"] == nil)
+        }
+    }
+
+    @Test("sellToProject defaults currentSource to 'Business Inventory' when label not provided")
+    func sellToProjectDefaultsCurrentSource() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [makeItem(id: "i1", projectId: nil, purchasePriceCents: 1000)]
+
+        try await service.sellToProject(
+            items: items,
+            destinationProjectId: "dstProj",
+            budgetCategoryId: "cat1",
+            accountId: acct
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first
+        #expect(update?.fields["currentSource"] as? String == "Business Inventory")
+    }
+
+    @Test("returnToInventory writes currentSource=inventoryLabel on each item update")
+    func returnToInventoryWritesCurrentSource() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [makeItem(id: "i1", projectId: "proj1", purchasePriceCents: 1000)]
+
+        try await service.returnToInventory(
+            items: items,
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first
+        #expect(update?.fields["currentSource"] as? String == "1584 Design Inventory")
+        #expect(update?.fields["source"] == nil)
+    }
+
+    @Test("moveBetweenProjects writes currentSource=inventoryLabel on each item update")
+    func moveBetweenProjectsWritesCurrentSource() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(
+                id: "i1", projectId: "srcProj",
+                purchasePriceCents: 1000,
+                projectPriceCents: 1200
+            ),
+        ]
+
+        try await service.moveBetweenProjects(
+            items: items,
+            destinationProjectId: "dstProj",
+            destinationCategoryId: "cat1",
+            accountId: acct,
+            inventoryLabel: "1584 Design Inventory"
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first
+        #expect(update?.fields["currentSource"] as? String == "1584 Design Inventory")
+    }
+
+    @Test("reassignToProject does NOT touch currentSource (within-project move)")
+    func reassignToProjectLeavesCurrentSourceAlone() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", transactionId: "oldTx"),
+        ]
+
+        try await service.reassignToProject(
+            items: items,
+            destinationTransactionId: "newTx",
+            destinationProjectId: "proj1",
+            accountId: acct
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first
+        #expect(update?.fields["currentSource"] == nil)
+    }
+
+    @Test("returnToTransaction does NOT touch currentSource (within-project move)")
+    func returnToTransactionLeavesCurrentSourceAlone() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", transactionId: "oldTx"),
+        ]
+
+        try await service.returnToTransaction(
+            items: items,
+            destinationTransactionId: "retTx",
+            accountId: acct
+        )
+
+        let update = batch.updatesForPath("accounts/\(acct)/items/i1").first
+        #expect(update?.fields["currentSource"] == nil)
+    }
+}

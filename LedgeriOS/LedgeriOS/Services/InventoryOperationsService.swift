@@ -129,6 +129,9 @@ struct InventoryOperationsService {
                 "status": "purchased",
                 "transactionId": saleId,
                 "spaceId": NSNull(),
+                // Immediate source denormalized for search. Original `source`
+                // (vendor) is intentionally left untouched — preserved for returns.
+                "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
             // Backfill projectPriceCents for legacy items missing it
@@ -229,6 +232,11 @@ struct InventoryOperationsService {
                 "spaceId": NSNull(),
                 "status": "purchased",
                 "transactionId": returnId,
+                // Immediate source becomes the inventory label now that the
+                // item is back in inventory. Original `source` (vendor) is
+                // preserved so the designer can still route a return to the
+                // store it was originally bought from.
+                "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
@@ -348,6 +356,9 @@ struct InventoryOperationsService {
                 "status": "purchased",
                 "transactionId": saleId,
                 "spaceId": NSNull(),
+                // moveBetweenProjects is modeled internally as Return+Sale via
+                // inventory, so the immediate source lands on the inventory label.
+                "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
             if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {

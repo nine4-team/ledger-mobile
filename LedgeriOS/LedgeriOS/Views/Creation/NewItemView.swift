@@ -504,6 +504,8 @@ struct NewItemView: View {
         item.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         item.source = source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : source.trimmingCharacters(in: .whitespacesAndNewlines)
+        // On day one the immediate source IS the original vendor.
+        item.currentSource = item.source
         item.sku = sku.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : sku.trimmingCharacters(in: .whitespacesAndNewlines)
         item.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

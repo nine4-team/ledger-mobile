@@ -57,11 +57,20 @@ struct EditItemDetailsModal: View {
     // MARK: - Actions
 
     private func saveChanges() {
+        let trimmedSource = source.trimmingCharacters(in: .whitespacesAndNewlines)
         var fields: [String: Any] = [
             "name": name.trimmingCharacters(in: .whitespacesAndNewlines),
-            "source": source.trimmingCharacters(in: .whitespacesAndNewlines),
+            "source": trimmedSource,
             "sku": sku.trimmingCharacters(in: .whitespacesAndNewlines),
         ]
+
+        // If the item has never been moved (currentSource still tracks source),
+        // cascade the edit to currentSource so search still shows the corrected
+        // vendor. Once a scope move has shifted currentSource to an inventory
+        // label, editing the original source must not stomp it.
+        if item.currentSource == item.source {
+            fields["currentSource"] = trimmedSource
+        }
 
         if let cents = parseCents(purchasePrice) {
             fields["purchasePriceCents"] = cents

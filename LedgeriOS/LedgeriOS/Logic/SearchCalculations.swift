@@ -37,8 +37,8 @@ enum SearchCalculations {
 
         let categoryName = categories.first(where: { $0.id == item.budgetCategoryId })?.name
 
-        // Text fields: ID, name, source, SKU (raw), notes, budget category name
-        let textFields: [String?] = [item.id, item.displayName, item.source, item.sku, item.notes, categoryName]
+        // Text fields: ID, name, original + current source, SKU (raw), notes, budget category name
+        let textFields: [String?] = [item.id, item.displayName, item.source, item.currentSource, item.sku, item.notes, categoryName]
         if textFields.contains(where: { textMatch(query: query, in: $0) }) {
             return true
         }

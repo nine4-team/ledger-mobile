@@ -89,7 +89,7 @@ struct ClientSummaryReportView: View {
                                         .font(Typography.body)
                                         .foregroundStyle(BrandColors.textPrimary)
                                     HStack(spacing: Spacing.sm) {
-                                        if let source = clientItem.item.source, !source.isEmpty {
+                                        if let source = clientItem.item.currentSource ?? clientItem.item.source, !source.isEmpty {
                                             FindableText(source)
                                                 .font(Typography.caption)
                                                 .foregroundStyle(BrandColors.textTertiary)

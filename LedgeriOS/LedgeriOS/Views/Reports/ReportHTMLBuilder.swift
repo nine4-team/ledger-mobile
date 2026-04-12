@@ -73,7 +73,7 @@ enum ReportHTMLBuilder {
                 return """
                 <tr>
                   <td>\(esc(ci.item.displayName))\(badge)</td>
-                  <td>\(esc(ci.item.source ?? ""))</td>
+                  <td>\(esc(ci.item.currentSource ?? ci.item.source ?? ""))</td>
                   <td>\(esc(ci.spaceName ?? ""))</td>
                   <td class="right">\(formatCents(priceCents))</td>
                 </tr>
@@ -308,7 +308,7 @@ enum ReportHTMLBuilder {
             return """
             <tr>
               <td>\(esc(item.displayName))</td>
-              <td>\(esc(item.source ?? ""))</td>
+              <td>\(esc(item.currentSource ?? item.source ?? ""))</td>
               <td class="right">\(valueStr)</td>
             </tr>
             """

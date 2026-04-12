@@ -687,7 +687,7 @@ struct TransactionDetailView: View {
                         countLabel: "×\(group.count)",
                         totalLabel: totalLabel,
                         sku: summaryItem?.sku,
-                        sourceLabel: summaryItem?.source,
+                        sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
                         priceLabel: totalLabel,
                         isExpanded: Binding(
                             get: { expandedGroups.wrappedValue.contains(group.id) },
