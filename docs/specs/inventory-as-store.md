@@ -30,6 +30,16 @@ For every item:
 
 Items in business inventory have no budget category. Items in a project have a budget category. Both clients enforce this on every write.
 
+### Transaction linkage
+
+```
+(item.projectId != null) → (item.transactionId != null)
+```
+
+Project items must be attached to a transaction — the sale, purchase, or move that placed them in the project. Inventory items may or may not have a `transactionId`. Enforced at the iOS and MCP write layers; not in Firestore security rules.
+
+Legacy orphan items (project items with `transactionId == null` from before this invariant existed) are not backfilled. They remain in place and surface through the Bulk Reassign UI ([BulkSaleResolutionCalculations.swift](../../LedgeriOS/LedgeriOS/Logic/BulkSaleResolutionCalculations.swift)), which lets users attach them to an existing sale.
+
 ## Why It Matters
 
 ### Mental model alignment

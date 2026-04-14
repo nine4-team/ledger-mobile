@@ -65,8 +65,12 @@ struct NewItemView: View {
     private let transactionsService = TransactionsService()
 
     private var isValid: Bool {
-        resolvedContext != nil &&
-        ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
+        guard resolvedContext != nil,
+              ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
+        else { return false }
+        // Project items must be attached to a transaction.
+        if projectId != nil && selectedTransactionId == nil { return false }
+        return true
     }
 
     private var projectId: String? {
@@ -238,6 +242,12 @@ struct NewItemView: View {
                             pickerButton(label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction")
                         }
                         .buttonStyle(.plain)
+
+                        if projectId != nil && selectedTransactionId == nil {
+                            Text("Select a transaction to add this item to the project.")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        }
                     }
                 }
 

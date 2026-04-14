@@ -96,6 +96,7 @@ Key invariants:
 - **Each sale is a new immutable transaction.** No long-lived aggregators. Sale transaction shape fields (`amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId`) are locked after creation by Firestore security rules. Mutable fields: `notes`, `status`, `updatedAt`.
 - **Project → inventory is a Return, not a Sale.** There is no longer a "sell to inventory" flow. Items return to inventory via a Return transaction with `source: "Business Inventory"`.
 - **Items in business inventory have no budget category.** Invariant: `(item.projectId == null) ↔ (item.budgetCategoryId == null)`. Categories are wiped on return-to-inventory and re-resolved at sell-from-inventory time.
+- **Project items must have a transaction.** Invariant: `(item.projectId != null) → (item.transactionId != null)`. Enforced at the iOS and MCP write layers, not in Firestore rules. Legacy orphans (pre-invariant) are repaired manually via the Bulk Reassign UI.
 - **One category per sale batch.** When selling from inventory to a project, the user picks one category that applies to every item in the batch.
 
 ### Navigation

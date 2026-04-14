@@ -20,10 +20,16 @@ import { requireAuditNote, notFound, validation } from "../util/errors.js";
 // ─────────────────────────────────────────────────────────────────────────────
 // Inventory invariant helpers (per-batch sale redesign).
 //
-// Rule: (item.projectId == null) ↔ (item.budgetCategoryId == null)
+// Rule 1: (item.projectId == null) ↔ (item.budgetCategoryId == null)
 // Items in business inventory have no budget category. Categories are
-// resolved at sell-into-project time. See docs/specs/sale-transactions.md
-// and docs/specs/inventory-as-store.md.
+// resolved at sell-into-project time.
+//
+// Rule 2: (item.projectId != null) → (item.transactionId != null)
+// Project items must be attached to a transaction. Inventory items may or
+// may not have one. Legacy orphans (project items with no transactionId)
+// are left as-is; the Bulk Reassign UI repairs them manually.
+//
+// See docs/specs/sale-transactions.md and docs/specs/inventory-as-store.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Reject create payloads that violate the inventory invariant. */
@@ -82,6 +88,53 @@ function checkUpdateInvariant(
     );
   }
 
+  return null;
+}
+
+/** Reject create payloads where a project item has no transactionId. */
+export function checkTransactionLinkageOnCreate(
+  projectId: string | undefined | null,
+  transactionId: string | undefined | null
+): string | null {
+  const hasProject = projectId != null && projectId !== "";
+  const hasTransaction = transactionId != null && transactionId !== "";
+  if (hasProject && !hasTransaction) {
+    return (
+      "Cannot create an item in a project (projectId set) without a transactionId. " +
+      "Project items must be attached to a transaction. Either pass transactionId, " +
+      "or omit projectId to create in business inventory."
+    );
+  }
+  return null;
+}
+
+/**
+ * Reject update payloads where the post-update state would leave a project
+ * item with no transactionId.
+ */
+export function checkTransactionLinkageOnUpdate(
+  existing: { projectId?: string | null; transactionId?: string | null },
+  updates: Record<string, unknown>
+): string | null {
+  const hasProjectIdUpdate = "projectId" in updates;
+  const hasTransactionIdUpdate = "transactionId" in updates;
+
+  const nextProjectId = hasProjectIdUpdate
+    ? (updates.projectId as string | null | undefined)
+    : (existing.projectId ?? null);
+  const nextTransactionId = hasTransactionIdUpdate
+    ? (updates.transactionId as string | null | undefined)
+    : (existing.transactionId ?? null);
+
+  const hasProject = nextProjectId != null && nextProjectId !== "";
+  const hasTransaction = nextTransactionId != null && nextTransactionId !== "";
+
+  if (hasProject && !hasTransaction) {
+    return (
+      "Cannot leave an item in a project (projectId set) without a transactionId. " +
+      "Either pass transactionId in the same update, or move the item to business inventory (projectId: null)."
+    );
+  }
   return null;
 }
 
@@ -207,7 +260,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── create_item ────────────────────────────────────────────────────────────
   server.tool(
     "create_item",
-    "[mutating] Create a new item. Requires a dated audit note in `notes`.",
+    "[mutating] Create a new item. Requires a dated audit note in `notes`.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. Items in a project (projectId set) must have a transactionId — pass both together, or omit projectId to create in inventory.",
     {
       name: z.string().describe("Item name"),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
@@ -246,6 +299,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return validation(
           invariantError,
           "Pass a projectId together with budgetCategoryId, or omit budgetCategoryId for inventory items."
+        );
+      }
+
+      const linkageError = checkTransactionLinkageOnCreate(projectId, transactionId);
+      if (linkageError) {
+        return validation(
+          linkageError,
+          "Pass transactionId alongside projectId, or omit projectId to create in business inventory."
         );
       }
 
@@ -349,6 +410,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           );
         }
 
+        const linkageError = checkTransactionLinkageOnCreate(resolvedProjectId, resolvedTransactionId);
+        if (linkageError) {
+          return validation(
+            `Item ${items.indexOf(item)} (${item.name}): ${linkageError}`,
+            "Pass transactionId alongside projectId, or omit projectId for inventory items."
+          );
+        }
+
         const data: Record<string, unknown> = {
           name: item.name,
           status: item.status,
@@ -412,7 +481,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "Inventory invariant: items in business inventory (projectId: null) must have " +
       "budgetCategoryId: null. Pass null explicitly to either field to clear it. Moving " +
       "an item from inventory into a project requires passing both projectId AND " +
-      "budgetCategoryId in the same update.",
+      "budgetCategoryId in the same update.\n\n" +
+      "Transaction-linkage invariant: items in a project (projectId set) must have a " +
+      "transactionId. Setting projectId on an orphan item (no current transactionId) " +
+      "requires passing transactionId in the same update.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -456,6 +528,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return validation(
           invariantError,
           "Items in business inventory have no budget category. Pass null, or set projectId."
+        );
+      }
+
+      const linkageError = checkTransactionLinkageOnUpdate(existing, updates);
+      if (linkageError) {
+        return validation(
+          linkageError,
+          "Pass transactionId in the same update, or clear projectId to move the item to business inventory."
         );
       }
 
@@ -550,15 +630,26 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       // Preflight: validate the invariant against every matched item.
       const violations: string[] = [];
+      const linkageViolations: string[] = [];
       for (const doc of snapshot.docs) {
-        const existing = doc.data() as { projectId?: string | null; budgetCategoryId?: string | null };
-        const err = checkUpdateInvariant(existing, updates);
-        if (err) violations.push(doc.id);
+        const existing = doc.data() as {
+          projectId?: string | null;
+          budgetCategoryId?: string | null;
+          transactionId?: string | null;
+        };
+        if (checkUpdateInvariant(existing, updates)) violations.push(doc.id);
+        if (checkTransactionLinkageOnUpdate(existing, updates)) linkageViolations.push(doc.id);
       }
       if (violations.length > 0) {
         return validation(
           `Bulk update would violate the inventory invariant on ${violations.length} item(s): ${violations.slice(0, 5).join(", ")}${violations.length > 5 ? "…" : ""}`,
           "Narrow the filter, or split the update so inventory items and project items are handled separately."
+        );
+      }
+      if (linkageViolations.length > 0) {
+        return validation(
+          `Bulk update would leave ${linkageViolations.length} item(s) in a project with no transactionId: ${linkageViolations.slice(0, 5).join(", ")}${linkageViolations.length > 5 ? "…" : ""}`,
+          "Project items must have a transactionId. Link those items to a transaction individually via update_item, or exclude them from this bulk update."
         );
       }
 
@@ -645,6 +736,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         const err = checkUpdateInvariant(existing, itemUpdates);
         if (err) {
           violations.push({ id, error: err });
+          continue;
+        }
+
+        const linkErr = checkTransactionLinkageOnUpdate(existing, itemUpdates);
+        if (linkErr) {
+          violations.push({ id, error: linkErr });
           continue;
         }
 
