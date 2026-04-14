@@ -1,5 +1,22 @@
 # Ledger Specs — Feedback Log
 
+## 2026-04-14
+
+### Raw Feedback (sell-to-inventory regression)
+"We need to restore the flow that allows us to sell to inventory… an item can originate as part of a project and we can sell it to inventory. So this is a… whenever this change happened, that was a huge deviation from spec. We need a plan to remediate that and we need a naming convention that makes it clear which direction one of these sale transactions corresponds to. The return thing is only relevant if an item comes from inventory into a project and then it goes back to inventory." Follow-up: "we already have source fields we can and should already be using for this" (origin detection). "The direction should be explicit, but it should not be in the form of a badge. I want you to propose a naming convention per my original ask."
+
+### What I Did With It
+- Restored `sellToInventory` in `InventoryOperationsService`. Added `moveToInventory` for origin-aware routing — items with `currentSource != source` take the Return path; items with `currentSource == source` (never touched inventory) take the Sale-to-Inventory path. Mixed batches write both atomically.
+- Refactored `moveBetweenProjects` so hop 1 branches by origin (Return for from-inventory items, Sale-to-Inventory for originated-here items).
+- Naming convention in `TransactionDisplayCalculations.displayName(for:)`:
+  - Sale with `budgetCategoryId` set → `"Purchase from [source]"`
+  - Sale without `budgetCategoryId` → `"Sale to [source]"`
+  - Return → `"Return to [source]"`
+- Direction is **implicit in the transaction shape**. No new field.
+- Updated specs: `sale-transactions.md`, `inventory-as-store.md`.
+
+---
+
 ## 2026-04-02
 
 ### Raw Feedback

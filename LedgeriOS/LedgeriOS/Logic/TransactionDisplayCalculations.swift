@@ -17,15 +17,48 @@ enum TransactionDisplayCalculations {
 
     // MARK: - Display Name
 
-    /// Resolves the display name for a transaction.
-    /// Priority: source → legacy canonical inventory sale label → ID prefix → "Untitled Transaction".
+    /// Resolves the display name for a transaction, from the project's point of view.
+    ///
+    /// Sale direction is derived implicitly from the transaction shape — no
+    /// dedicated field. A Sale's `budgetCategoryId` presence distinguishes
+    /// inventory → project (has a destination category) from project →
+    /// inventory (inventory items have no category). Legacy canonical sales
+    /// that carry `inventorySaleDirection` are honored as a fallback.
+    ///
+    /// Naming convention:
+    /// - Sale, inventory → project → `"Purchase from [source]"`
+    /// - Sale, project → inventory → `"Sale to [source]"`
+    /// - Return → `"Return to [source]"`
+    /// - Purchase / other → source as-is
+    /// - Legacy canonical sale with empty source → "Purchase from Inventory" /
+    ///   "Sale to Inventory" / "Inventory Transfer"
+    /// - Fallback → ID prefix, then "Untitled Transaction"
     static func displayName(for transaction: Transaction) -> String {
-        // 1. Source if non-nil and non-empty
-        if let source = transaction.source, !source.trimmingCharacters(in: .whitespaces).isEmpty {
-            return source
+        let source = transaction.source?.trimmingCharacters(in: .whitespaces) ?? ""
+
+        if !source.isEmpty {
+            switch transaction.transactionType {
+            case .sale:
+                if let direction = transaction.inventorySaleDirection {
+                    switch direction {
+                    case .projectToBusiness: return "Sale to \(source)"
+                    case .businessToProject: return "Purchase from \(source)"
+                    }
+                }
+                // No explicit direction — derive from budgetCategoryId presence.
+                // Sale-to-inventory has no category (inventory items are uncategorized).
+                if transaction.budgetCategoryId == nil {
+                    return "Sale to \(source)"
+                }
+                return "Purchase from \(source)"
+            case .return:
+                return "Return to \(source)"
+            default:
+                return source
+            }
         }
 
-        // 2. Legacy canonical inventory sale label
+        // Legacy canonical inventory sale with empty source
         if transaction.isCanonicalInventorySale == true {
             if let direction = transaction.inventorySaleDirection {
                 switch direction {
@@ -38,12 +71,11 @@ enum TransactionDisplayCalculations {
             return "Inventory Transfer"
         }
 
-        // 3. ID prefix (first 6 characters)
+        // ID prefix fallback
         if let id = transaction.id, !id.isEmpty {
             return String(id.prefix(6))
         }
 
-        // 4. Fallback
         return "Untitled Transaction"
     }
 

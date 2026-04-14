@@ -124,34 +124,9 @@ enum SearchCalculations {
 
     // MARK: - Helpers
 
-    /// Resolves the display name for a transaction.
-    /// Priority: source → canonical inventory sale label → ID prefix → "Untitled Transaction".
-    // TODO: Replace with TransactionDisplayCalculations.displayName(for:) after WP03 merges
+    /// Resolves the display name for a transaction. Delegates to the
+    /// canonical implementation so Search and detail views stay consistent.
     static func transactionDisplayName(for transaction: Transaction) -> String {
-        // 1. Source if non-nil and non-empty
-        if let source = transaction.source, !source.trimmingCharacters(in: .whitespaces).isEmpty {
-            return source
-        }
-
-        // 2. Legacy canonical inventory sale label
-        if transaction.isCanonicalInventorySale == true {
-            if let direction = transaction.inventorySaleDirection {
-                switch direction {
-                case .businessToProject:
-                    return "Purchase from Inventory"
-                case .projectToBusiness:
-                    return "Sale to Inventory"
-                }
-            }
-            return "Inventory Transfer"
-        }
-
-        // 3. ID prefix (first 6 characters)
-        if let id = transaction.id, !id.isEmpty {
-            return String(id.prefix(6))
-        }
-
-        // 4. Fallback
-        return "Untitled Transaction"
+        TransactionDisplayCalculations.displayName(for: transaction)
     }
 }

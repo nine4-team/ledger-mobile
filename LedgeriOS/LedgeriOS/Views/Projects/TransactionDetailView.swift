@@ -971,14 +971,14 @@ struct TransactionDetailView: View {
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
-                try await InventoryOperationsService().returnToInventory(
+                try await InventoryOperationsService().moveToInventory(
                     items: items,
                     accountId: accountId,
                     inventoryLabel: inventoryLabel
                 )
                 await MainActor.run { dismiss() }
             } catch {
-                print("🔴 returnToInventory failed: \(error)")
+                print("🔴 moveToInventory failed: \(error)")
             }
         }
     }

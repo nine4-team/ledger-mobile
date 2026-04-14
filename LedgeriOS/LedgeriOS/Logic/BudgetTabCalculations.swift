@@ -134,41 +134,42 @@ enum BudgetTabCalculations {
     /// Normalizes a single transaction's contribution to category spend.
     /// Dual-read path matching mcp-server/src/util/budget.ts `normalizeSpendAmount`.
     ///
-    /// Cases:
+    /// Cases (evaluated in order):
     /// 1. `status == .canceled` → 0
     /// 2. `type == .return` → -abs(amount)
-    /// 3. Legacy canonical sale (`isCanonicalInventorySale == true`) → direction-based sign
-    /// 4. New per-batch `type == .sale` → +abs(amount) (sales always go business → project)
-    /// 5. Everything else (Purchase, etc.) → amount as-stored
+    /// 3. `inventorySaleDirection` set → direction-based sign (covers both new
+    ///    per-batch sales and legacy canonical sales):
+    ///    - `.businessToProject` (inventory → project) → +abs(amount)
+    ///    - `.projectToBusiness` (project → inventory) → -abs(amount)
+    /// 4. Legacy canonical sale with no direction → amount as-stored
+    /// 5. `type == .sale` with no direction → +abs(amount) (pre-direction per-batch)
+    /// 6. Everything else (Purchase, etc.) → amount as-stored
     static func normalizeTransactionAmount(_ transaction: Transaction) -> Int {
-        // Case 1: Canceled
         guard transaction.status != .canceled else { return 0 }
 
         let amount = transaction.amountCents ?? 0
 
-        // Case 2: Returns — always negative
         if transaction.transactionType == .return {
             return -abs(amount)
         }
 
-        // Case 3: Legacy canonical sales — direction-based sign
-        if transaction.isCanonicalInventorySale == true {
-            switch transaction.inventorySaleDirection {
+        if let direction = transaction.inventorySaleDirection {
+            switch direction {
             case .projectToBusiness:
                 return -abs(amount)
             case .businessToProject:
                 return abs(amount)
-            case nil:
-                return amount
             }
         }
 
-        // Case 4: New per-batch Sale — always positive
+        if transaction.isCanonicalInventorySale == true {
+            return amount
+        }
+
         if transaction.transactionType == .sale {
             return abs(amount)
         }
 
-        // Case 5: Everything else (Purchase, etc.) — as-stored
         return amount
     }
 

@@ -15,7 +15,9 @@ private func makeItem(
     projectPriceCents: Int? = nil,
     taxRatePct: Double? = nil,
     spaceId: String? = nil,
-    status: ItemStatus? = nil
+    status: ItemStatus? = nil,
+    source: String? = nil,
+    currentSource: String? = nil
 ) -> Item {
     var item = Item()
     item.id = id
@@ -27,6 +29,8 @@ private func makeItem(
     item.taxRatePct = taxRatePct
     item.spaceId = spaceId
     item.status = status
+    item.source = source
+    item.currentSource = currentSource
     return item
 }
 
@@ -450,14 +454,17 @@ struct ReturnToInventoryExecutionTests {
 @Suite("InventoryOperationsService.moveBetweenProjects — per-batch")
 struct MoveBetweenProjectsExecutionTests {
 
-    // I4: moveBetweenProjects — 1 Return + 1 Sale, lineage edges cross-linked
-    @Test("1 Return + 1 Sale in one batch, budget math nets, lineage edges")
-    func happyPath() async throws {
+    // I4: moveBetweenProjects with from-inventory items — Return-leg first hop
+    @Test("From-inventory items: 1 Return + 1 destination Sale, lineage edges cross-linked")
+    func happyPathFromInventory() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
+        // currentSource != source ⇒ items previously passed through inventory
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx", projectPriceCents: 2500),
-            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx", projectPriceCents: 3500),
+            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+                     projectPriceCents: 2500, source: "Wayfair", currentSource: "Business Inventory"),
+            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+                     projectPriceCents: 3500, source: "Wayfair", currentSource: "Business Inventory"),
         ]
 
         try await service.moveBetweenProjects(
@@ -467,23 +474,20 @@ struct MoveBetweenProjectsExecutionTests {
 
         #expect(batch.commitCalled)
 
-        // 1 Return transaction
         let returnSets = batch.sets.filter { ($0.fields["type"] as? String) == "Return" }
         #expect(returnSets.count == 1)
         let ret = returnSets[0].fields
         #expect(ret["projectId"] as? String == "srcProj")
-        #expect(ret["amountCents"] as? Int == 5000) // sum of purchasePriceCents
+        #expect(ret["amountCents"] as? Int == 5000)
 
-        // 1 Sale transaction
         let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
         #expect(saleSets.count == 1)
         let sale = saleSets[0].fields
         #expect(sale["projectId"] as? String == "dstProj")
         #expect(sale["budgetCategoryId"] as? String == "cat1")
-        #expect(sale["amountCents"] as? Int == 6000) // sum of projectPriceCents (no tax)
+        #expect(sale["amountCents"] as? Int == 6000)
         #expect(sale["subtotalCents"] as? Int == 6000)
 
-        // Item updates — items land in destination project
         for itemId in ["i1", "i2"] {
             let updates = batch.updatesForPath("accounts/\(acct)/items/\(itemId)")
             #expect(updates.count == 1)
@@ -493,7 +497,6 @@ struct MoveBetweenProjectsExecutionTests {
             #expect(f["status"] as? String == "purchased")
         }
 
-        // 4 lineage edges total — 2 returned + 2 sold
         let edges = batch.lineageEdges(accountId: acct)
         #expect(edges.count == 4)
         let returned = edges.filter { ($0.fields["movementKind"] as? String) == "returned" }
@@ -501,18 +504,94 @@ struct MoveBetweenProjectsExecutionTests {
         #expect(returned.count == 2)
         #expect(sold.count == 2)
 
-        // Returned edges point from srcProj
         for edge in returned {
             #expect(edge.fields["fromProjectId"] as? String == "srcProj")
         }
-        // Sold edges point to dstProj
         for edge in sold {
             #expect(edge.fields["toProjectId"] as? String == "dstProj")
         }
 
-        // Auto-enable budget category
         let catSets = batch.setsForPath("accounts/\(acct)/projects/dstProj/budgetCategories/cat1")
         #expect(catSets.count == 1)
+    }
+
+    // Project-originated items take the Sale-to-Inventory path on hop 1
+    @Test("Originated-here items: Sale-to-Inventory + destination Sale, soldToInventory edges")
+    func happyPathOriginatedHere() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        // currentSource == source ⇒ items originated in srcProj, never touched inventory
+        let items = [
+            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+                     projectPriceCents: 2500, source: "Wayfair", currentSource: "Wayfair"),
+            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+                     projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
+        ]
+
+        try await service.moveBetweenProjects(
+            items: items, destinationProjectId: "dstProj",
+            destinationCategoryId: "cat1", accountId: acct, userId: "user1"
+        )
+
+        // No Return transaction — both items take the Sale-to-Inventory path
+        let returnSets = batch.sets.filter { ($0.fields["type"] as? String) == "Return" }
+        #expect(returnSets.isEmpty)
+
+        // Two Sale transactions: one for project→inventory (no budgetCategoryId)
+        // and one for inventory→destination (with budgetCategoryId = cat1)
+        let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
+        #expect(saleSets.count == 2)
+
+        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }
+        let toDest = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }
+        #expect(toInventory != nil)
+        #expect(toDest != nil)
+        #expect(toInventory?.fields["projectId"] as? String == "srcProj")
+        #expect(toDest?.fields["projectId"] as? String == "dstProj")
+
+        // Lineage: 2 soldToInventory (hop 1) + 2 sold (hop 2)
+        let edges = batch.lineageEdges(accountId: acct)
+        let soldToInventory = edges.filter { ($0.fields["movementKind"] as? String) == "soldToInventory" }
+        let sold = edges.filter { ($0.fields["movementKind"] as? String) == "sold" }
+        #expect(soldToInventory.count == 2)
+        #expect(sold.count == 2)
+    }
+
+    // Mixed origin: one Return + one Sale-to-Inventory + one destination Sale
+    @Test("Mixed origin items: Return + Sale-to-Inventory + destination Sale")
+    func mixedOriginHop1() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let items = [
+            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+                     projectPriceCents: 2500, source: "Wayfair", currentSource: "Business Inventory"),
+            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+                     projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
+        ]
+
+        try await service.moveBetweenProjects(
+            items: items, destinationProjectId: "dstProj",
+            destinationCategoryId: "cat1", accountId: acct, userId: "user1"
+        )
+
+        let returnSets = batch.sets.filter { ($0.fields["type"] as? String) == "Return" }
+        let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
+        #expect(returnSets.count == 1)
+        #expect(saleSets.count == 2)
+
+        // Return covers only i1 (the from-inventory item)
+        let returnItemIds = returnSets[0].fields["itemIds"] as? [String] ?? []
+        #expect(returnItemIds == ["i1"])
+
+        // Sale-to-Inventory (no budgetCategoryId) covers only i2
+        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }!
+        let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
+        #expect(toInventoryItemIds == ["i2"])
+
+        // Destination Sale covers both items
+        let toDest = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!
+        let toDestItemIds = toDest.fields["itemIds"] as? [String] ?? []
+        #expect(Set(toDestItemIds) == Set(["i1", "i2"]))
     }
 
     @Test("items in different source projects — throws mixedSourceProjects")
@@ -866,8 +945,11 @@ struct InventoryLabelPassthroughTests {
     func moveBetweenProjectsCustomLabel() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
+        // From-inventory item — triggers the Return-leg first hop
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 1000, projectPriceCents: 1200),
+            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 1000,
+                     projectPriceCents: 1200, source: "Wayfair",
+                     currentSource: "Business Inventory"),
         ]
 
         try await service.moveBetweenProjects(

@@ -124,10 +124,10 @@ struct ItemDetailView: View {
         .adaptivePresentation(isPresented: $showReassign, style: .form) {
             ReassignToProjectModal(items: [liveItem]) { }
         }
-        // Return to Inventory
+        // Move to Inventory (origin-aware: Return or Sale)
         .adaptivePresentation(isPresented: $showReturnToInventory, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                ReturnToInventoryModal(items: [liveItem], accountId: accountId) {
+                MoveToInventoryModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
             }

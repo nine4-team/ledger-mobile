@@ -65,31 +65,35 @@ Sell moves items **from business inventory into a project**. Under the per-batch
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch sale flow.
 
-## Return to Inventory (Project → Inventory)
+## Move to Inventory (Project → Inventory) — Origin-Aware
 
-### Definition
+A single user action — "Move to Inventory" — routes each item to one of two transaction types based on its origin:
 
-Returning items from a project to business inventory creates a **Return transaction** (`type: "Return"`, `source: "Business Inventory"`). This is the path that replaced the legacy "sell to inventory" direction. See [return-and-sale-tracking.md](return-and-sale-tracking.md) "Returning to Inventory."
+### Return to Inventory (item came from inventory)
 
-### What Changes
+When `item.currentSource != item.source`, the item passed through inventory before landing in this project. A Return transaction is created (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
+
+### Sale to Inventory (item originated in the project)
+
+When `item.currentSource == item.source` (or `currentSource == nil`), the item has never been in inventory. The business is acquiring it now — creates a **Sale** transaction (`type: "Sale"`, `source: "[Account] Inventory"`, **no `budgetCategoryId`**). This is the restored sell-to-inventory path.
+
+### Mixed Batches
+
+The UI confirms the split before writing, then writes both transactions in a single atomic Firestore batch.
+
+### What Changes (both paths)
 
 - `item.projectId` set to null
-- `item.budgetCategoryId` **wiped to null** (the inventory invariant)
-- `item.transactionId` set to the Return transaction ID
-- `item.status` set to `"purchased"` (still owned, just in stock)
-- A new Return transaction is created (or coalesced into an open one within the same session)
-- Items removed from prior project transaction's `itemIds`
-- One `"returned"` lineage edge per item
-- Source project's budget for the relevant category decreases
+- `item.budgetCategoryId` wiped to null (inventory invariant)
+- `item.transactionId` set to the new transaction ID
+- `item.status` set to `"purchased"` (still owned, now in inventory)
+- `item.currentSource` set to the inventory label
+- Source project's budget decreases by `-1 × amountCents`
 
-### When to Use
+### Lineage
 
-- A project no longer needs items it acquired from inventory
-- A project wraps up and excess inventory goes back to stock
-
-### Budget Impact
-
-- Subtracts from source project's budget for the relevant category
+- Return path emits a `"returned"` edge.
+- Sale-to-Inventory path emits a `"soldToInventory"` edge.
 
 ## Decision Matrix
 
@@ -97,18 +101,19 @@ Returning items from a project to business inventory creates a **Return transact
 |--------|-------------|-----------|------------------|
 | Project A, Transaction X | Project A, Transaction Y | Reassign | None |
 | Business Inventory, Txn X | Business Inventory, Txn Y | Reassign | None |
-| Business Inventory | Project A | **Sell** (per-batch) | Adds to Project A budget |
-| Project A | Business Inventory | **Return to Inventory** | Subtracts from Project A budget |
-| Project A | Project B | **Move Between Projects** (return + sell, atomic) | Subtracts from A, adds to B |
+| Business Inventory | Project A | **Sell to Project** (inventory → project Sale) | Adds to Project A budget |
+| Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Subtracts from Project A budget |
+| Project A | Business Inventory (item originated in A) | **Sale to Inventory** (project → inventory Sale) | Subtracts from Project A budget |
+| Project A | Project B | **Move Between Projects** (origin-aware hop 1 + destination Sale, atomic) | Subtracts from A, adds to B |
 
 ### Project-to-Project Moves
 
-Moving items between two different projects is a single user action that decomposes into **two transactions in one atomic batch**:
+Moving items between projects is a single user action that decomposes into a **two-hop** atomic batch. The first hop is origin-aware:
 
-1. Return-to-Inventory from Project A (creates a Return transaction with `source: "Business Inventory"`, wipes item categories, subtracts from A's budget)
-2. New per-batch Sale into Project B (creates a Sale transaction, sets new categories, adds to B's budget)
+1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory (no `budgetCategoryId`) against Project A. Mixed batches write both.
+2. **Hop 2.** One Sale into Project B (`budgetCategoryId` set), covering all items.
 
-Both writes happen in the same Firestore batch and are linked by lineage edges. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
 ## Menu Visibility Rules
 

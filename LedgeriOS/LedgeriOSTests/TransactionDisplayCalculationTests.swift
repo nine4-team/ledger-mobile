@@ -79,14 +79,56 @@ struct TransactionDisplayCalculationTests {
         #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Inventory")
     }
 
-    // E7: New per-batch Sale with source renders source as display name
-    @Test("Display name for per-batch Sale uses source")
-    func displayNamePerBatchSale() {
+    // New per-batch Sale with source + businessToProject direction renders "Purchase from [source]"
+    @Test("Display name for Sale businessToProject prefixes 'Purchase from'")
+    func displayNamePerBatchSalePurchase() {
+        let txn = makeTransaction(
+            source: "1584 Design Inventory",
+            inventorySaleDirection: .businessToProject,
+            transactionType: .sale
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Purchase from 1584 Design Inventory")
+    }
+
+    // Sale with projectToBusiness direction renders "Sale to [source]"
+    @Test("Display name for Sale projectToBusiness prefixes 'Sale to'")
+    func displayNameSaleToInventory() {
+        let txn = makeTransaction(
+            source: "1584 Design Inventory",
+            inventorySaleDirection: .projectToBusiness,
+            transactionType: .sale
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to 1584 Design Inventory")
+    }
+
+    // Return with source renders "Return to [source]"
+    @Test("Display name for Return prefixes 'Return to'")
+    func displayNameReturn() {
+        let txn = makeTransaction(
+            source: "Wayfair",
+            transactionType: .return
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Return to Wayfair")
+    }
+
+    // Sale shape without explicit direction: budgetCategoryId presence determines direction
+    @Test("Sale with budgetCategoryId → 'Purchase from [source]'")
+    func displayNameSaleWithCategoryIsPurchase() {
+        let txn = makeTransaction(
+            source: "Business Inventory",
+            transactionType: .sale,
+            budgetCategoryId: "cat1"
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Purchase from Business Inventory")
+    }
+
+    @Test("Sale without budgetCategoryId → 'Sale to [source]'")
+    func displayNameSaleWithoutCategoryIsSale() {
         let txn = makeTransaction(
             source: "Business Inventory",
             transactionType: .sale
         )
-        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Business Inventory")
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Business Inventory")
     }
 
     // E7: Legacy canonical sale without source still renders direction-based label

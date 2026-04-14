@@ -1,8 +1,14 @@
 import SwiftUI
 
-/// Returns items from a project back to business inventory.
-/// Creates a Return transaction; items have budgetCategoryId wiped.
-struct ReturnToInventoryModal: View {
+/// Moves items from a project to business inventory. Routes each item based on
+/// origin:
+///   - Items that previously passed through inventory → `Return` transaction
+///   - Items that originated in this project → `Sale` (direction
+///     `.projectToBusiness`), because the business is acquiring them
+///
+/// Mixed-origin batches write both transactions atomically and show a preview
+/// of the split before the user confirms.
+struct MoveToInventoryModal: View {
     let items: [Item]
     let accountId: String
     let onComplete: () -> Void
@@ -14,39 +20,80 @@ struct ReturnToInventoryModal: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    private static let descriptionText = "This will move items from the project back to business inventory. A return record will be created for financial tracking. The items' budget category will be cleared."
+    private var split: (returnItems: [Item], saleItems: [Item]) {
+        InventoryOperationsService.splitByOrigin(items)
+    }
+
+    private var title: String {
+        let (returns, sales) = split
+        switch (returns.isEmpty, sales.isEmpty) {
+        case (false, true):  return "Return to Inventory"
+        case (true, false):  return "Sale to Inventory"
+        default:             return "Move to Inventory"
+        }
+    }
+
+    private var description: String {
+        let (returns, sales) = split
+        if !returns.isEmpty && sales.isEmpty {
+            return "These items originally came from inventory and will return there. A Return transaction will be recorded; the source project's budget decreases."
+        }
+        if returns.isEmpty && !sales.isEmpty {
+            return "These items originated in this project. The business will acquire them as inventory. A Sale transaction will be recorded; the project's budget decreases."
+        }
+        return "Some items came from inventory (recorded as a Return) and others originated in this project (recorded as a Sale to inventory). Both are written atomically and the project's budget decreases by the total."
+    }
+
+    private var primaryActionTitle: String {
+        let (returns, sales) = split
+        switch (returns.isEmpty, sales.isEmpty) {
+        case (false, true):  return "Confirm Return"
+        case (true, false):  return "Confirm Sale"
+        default:             return "Confirm Move"
+        }
+    }
 
     var body: some View {
         FormSheet(
-            title: "Return to Inventory",
-            description: Self.descriptionText,
+            title: title,
+            description: description,
             primaryAction: FormSheetAction(
-                title: "Confirm Return",
+                title: primaryActionTitle,
                 isLoading: isSaving,
-                action: { performReturn() }
+                action: { performMove() }
             ),
             secondaryAction: FormSheetAction(title: "Cancel") {
                 dismiss()
             },
             error: errorMessage
         ) {
-            Text("\(items.count) item\(items.count == 1 ? "" : "s") will return to inventory")
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textSecondary)
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                let (returns, sales) = split
+                if !returns.isEmpty {
+                    Text("\(returns.count) item\(returns.count == 1 ? "" : "s") → Return to inventory")
+                        .font(Typography.body)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+                if !sales.isEmpty {
+                    Text("\(sales.count) item\(sales.count == 1 ? "" : "s") → Sale to inventory")
+                        .font(Typography.body)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
         }
     }
 
-    private func performReturn() {
+    private func performMove() {
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
-        let itemsToReturn = items
+        let itemsToMove = items
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
-                try await service.returnToInventory(
-                    items: itemsToReturn,
+                try await service.moveToInventory(
+                    items: itemsToMove,
                     accountId: acctId,
                     inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
@@ -57,7 +104,7 @@ struct ReturnToInventoryModal: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to return items. Please try again."
+                    errorMessage = "Failed to move items. Please try again."
                     isSaving = false
                 }
             }

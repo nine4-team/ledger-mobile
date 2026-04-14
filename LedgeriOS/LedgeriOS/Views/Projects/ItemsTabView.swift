@@ -67,7 +67,7 @@ struct ItemsTabView: View {
         }
         .adaptivePresentation(isPresented: $showBulkReturnToInventory, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                ReturnToInventoryModal(items: selectedItems, accountId: accountId) {
+                MoveToInventoryModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
             }

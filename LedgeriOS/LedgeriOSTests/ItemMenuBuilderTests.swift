@@ -176,7 +176,7 @@ struct ItemMenuBuilderTests {
             context: .list, scope: .project, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("return-to-inventory") == true)
+        #expect(sellSubs?.contains("move-to-inventory") == true)
         #expect(sellSubs?.contains("sell-to-project") == true)
     }
 
@@ -191,13 +191,13 @@ struct ItemMenuBuilderTests {
 
     // MARK: - Scope: Inventory
 
-    @Test("Inventory scope hides Return to Inventory and Move to Project")
+    @Test("Inventory scope hides Move to Inventory and Move to Project")
     func inventoryScopeNoReturnOrMove() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .inventory, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("return-to-inventory") == false)
+        #expect(sellSubs?.contains("move-to-inventory") == false)
         #expect(sellSubs?.contains("move-to-project") == false)
         #expect(sellSubs?.contains("sell-to-project") == true)
     }
@@ -219,7 +219,7 @@ struct ItemMenuBuilderTests {
             context: .list, scope: .search, callbacks: allCallbacks()
         )
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("return-to-inventory") == true)
+        #expect(sellSubs?.contains("move-to-inventory") == true)
         #expect(sellSubs?.contains("sell-to-project") == true)
         #expect(sellSubs?.contains("move-to-project") == true)
         let reassignSubs = subIds(of: menu, parent: "reassign")
@@ -289,7 +289,7 @@ struct ItemMenuBuilderTests {
     func bulkMenuInventoryScope() {
         let menu = ItemMenuBuilder.buildBulkMenu(scope: .inventory, callbacks: allBulkCallbacks())
         let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("return-to-inventory") == false)
+        #expect(sellSubs?.contains("move-to-inventory") == false)
         #expect(sellSubs?.contains("move-to-project") == false)
         #expect(sellSubs?.contains("sell-to-project") == true)
         // Reassign is still available

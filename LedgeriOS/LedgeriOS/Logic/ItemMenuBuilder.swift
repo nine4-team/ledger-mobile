@@ -190,7 +190,7 @@ enum ItemMenuBuilder {
         var sellSubactions: [ActionMenuSubitem] = []
         if scope == .project || scope == .search {
             if let onReturnToInventory = callbacks.onReturnToInventory {
-                sellSubactions.append(ActionMenuSubitem(id: "return-to-inventory", label: "Return to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
+                sellSubactions.append(ActionMenuSubitem(id: "move-to-inventory", label: "Move to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
@@ -298,7 +298,7 @@ enum ItemMenuBuilder {
         var sellSubactions: [ActionMenuSubitem] = []
         if scope == .project || scope == .search {
             if let onReturnToInventory = callbacks.onReturnToInventory {
-                sellSubactions.append(ActionMenuSubitem(id: "return-to-inventory", label: "Return to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
+                sellSubactions.append(ActionMenuSubitem(id: "move-to-inventory", label: "Move to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
             }
         }
         if let onSellToProject = callbacks.onSellToProject {

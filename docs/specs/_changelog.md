@@ -1,5 +1,11 @@
 # Ledger Specs — Changelog
 
+## 2026-04-14
+- **Restored Sell-to-Inventory as a bidirectional Sale path.** The 2026-04-11 per-batch-sale redesign had removed sell-to-inventory on the "inventory is a store; you don't sell back to it" metaphor. That was a semantic regression: items that originated in a project are never "returning" when the business acquires them — they're being sold. Restored `sellToInventory` in `InventoryOperationsService`; `moveToInventory` now routes per-item based on origin (`item.currentSource != item.source` → Return; otherwise → Sale-to-Inventory). Mixed batches write both transactions atomically. `moveBetweenProjects` takes the origin-aware first hop too.
+- **Direction is shape-derived, not a field.** A Sale with `budgetCategoryId` set is inventory → project; a Sale with `budgetCategoryId` absent is project → inventory. No new field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.
+- **Naming convention.** Display name resolution renders direction explicitly: `"Purchase from [source]"` (inventory → project), `"Sale to [source]"` (project → inventory), `"Return to [source]"` (any Return). Updated in `TransactionDisplayCalculations`; `SearchCalculations.transactionDisplayName` now delegates to it.
+- Updated `sale-transactions.md`, `inventory-as-store.md` to reflect two Sale directions and the shape-derived rule.
+
 ## 2026-04-02
 - Initial spec setup: created folder structure, index, app map, feedback log
 - Created `list-layout.md` spec from first feedback session — desktop app should switch from tile/grid layout to single-column stacked rows (matching the web app)

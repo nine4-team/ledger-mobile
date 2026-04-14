@@ -4,16 +4,17 @@
 
 ## The Idea
 
-**Business inventory is treated like any other store.** When a project needs something from inventory, it "buys" it (a sale transaction). When a project no longer needs something from inventory, it "returns" it (a return transaction). The mechanics mirror how the project would interact with any external vendor.
+**Business inventory is a store the business stocks via two paths.** Projects can buy from inventory (a Sale, inventory → project) and projects can return to inventory (a Return, project → inventory) when an item is going home. But projects can also **sell** items into inventory — when an item originated in the project and the business is acquiring it for future use. That acquisition is also a Sale (project → inventory), not a Return. A Return is reserved for items that came from inventory to begin with.
 
-This replaces an earlier model where business inventory was a special scope with bidirectional sales (project ↔ inventory) and where items in inventory carried budget categories that travelled with them across moves.
+Inventory items have no budget category; categories belong to projects. Items moving into inventory lose their category; items moving out acquire one.
 
 ## What Changed
 
 | Concept | Legacy model | New model |
 |---|---|---|
-| Inventory → project | Sale transaction (`business_to_project` direction) | Sale transaction (the only direction) |
-| Project → inventory | Sale transaction (`project_to_business` direction) | **Return transaction** (`source: "Business Inventory"`) |
+| Inventory → project | Sale transaction (`business_to_project` direction) | Sale transaction, `budgetCategoryId` set |
+| Project → inventory (item came from inventory) | Sale transaction (`project_to_business` direction) | **Return transaction** |
+| Project → inventory (item originated in project) | Sale transaction (`project_to_business` direction) | **Sale transaction, `budgetCategoryId` absent** |
 | Items in inventory | Carry their `budgetCategoryId` across scope moves | Have `budgetCategoryId == null` |
 | Category at sell-from-inventory time | Inherited from the item | **Re-resolved** from user input at sell time |
 | Category at return-to-inventory time | Preserved on the item | **Wiped** from the item |
@@ -65,13 +66,18 @@ A return transaction is a return transaction, whether the items go back to a ven
 - **No category-specific organization.** They're a flat pool, organized by name, source, and space (warehouse spaces, etc.).
 - **Created with `budgetCategoryId == null`.** If a caller passes a category when creating an item with `projectId: null`, the value is ignored or rejected.
 
-### Moving into inventory (return-to-inventory)
+### Moving into inventory — routed by item origin
 
-- **Triggered by:** the user choosing to return items from a project, with the destination being inventory rather than the original vendor.
-- **Creates a return transaction** with `type: "Return"` and `source: "Business Inventory"`. May coalesce with an existing open return transaction within the same session.
-- **Wipes `budgetCategoryId`** on each item. This is a hard rule, not optional.
-- **Creates a `returned` lineage edge** from the item's prior project transaction to the new return transaction.
-- **Sign convention:** budget impact is `-1 * amountCents` on the source project (matches all returns).
+The user performs a single "Move to Inventory" action. The service routes each item based on origin:
+
+- **Item came from inventory (`item.currentSource != item.source`)** → creates a **Return** transaction (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
+- **Item originated in the project (`item.currentSource == item.source`, or `currentSource == nil`)** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
+
+Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both emit a lineage edge — `returned` for the Return path, `soldToInventory` for the Sale-to-Inventory path.
+
+**Mixed batches** create both transactions atomically in a single Firestore batch. The UI confirms the split before writing.
+
+**Sign convention:** both paths subtract from the source project's budget (`-1 × amountCents`).
 
 ### Moving out of inventory (sell-to-project)
 
@@ -83,12 +89,15 @@ A return transaction is a return transaction, whether the items go back to a ven
 
 ### Moving between projects
 
-The new model has no direct project-to-project transfer. The flow is:
+The model has no direct project-to-project transfer. The flow is a two-hop routing through inventory, with the first hop origin-aware:
 
-1. Return items from the source project to inventory (creates a return tx, wipes the category).
-2. Sell items from inventory to the destination project (creates a new sale tx, sets a fresh category).
+1. **First hop** — items exit the source project. Each item's path depends on origin:
+   - From-inventory items → Return transaction against the source project.
+   - Originated-in-project items → Sale-to-Inventory transaction against the source project.
+   - Mixed batches produce both transactions in the same Firestore batch.
+2. **Second hop** — all items land in the destination project via one Sale transaction (`budgetCategoryId` set).
 
-Both happen in one atomic batch when the user invokes "move to project." The UI presents this as one action; the data model records it as two transactions linked by lineage edges.
+All hops commit atomically when the user invokes "move to project." Lineage edges link the path.
 
 ## Display
 
@@ -98,7 +107,7 @@ What changes:
 
 - **Items in inventory have no category badge.** UI components that previously displayed a category for inventory items should hide the badge when `projectId == null`.
 - **Inventory item filters by category** are removed. There's no category to filter by.
-- **The "Sell to inventory" action** is removed from project-context item menus and replaced with "Return to inventory."
+- **The project-context "Move to Inventory" action** replaces the earlier "Return to Inventory" action. The modal shows which items will go as a Return and which as a Sale-to-Inventory based on origin.
 
 ## Edge Cases
 

@@ -21,22 +21,34 @@ This is different from the legacy canonical-sale model, where one long-lived tra
 
 ## Sale Direction
 
-There is exactly **one** direction for sale transactions: **business inventory → project.**
+Sales go in **both directions** between business inventory and a project:
 
-The reverse direction (project → business inventory) is no longer a sale. It's a **return**. See [return-and-sale-tracking.md](return-and-sale-tracking.md) for the return flow.
+1. **Business inventory → project** (a Purchase from Inventory, from the project's POV). Items leave inventory and land in the project with a `budgetCategoryId`. The project's budget for that category increases.
+2. **Project → business inventory** (a Sale to Inventory, from the project's POV). Items that **originated in the project** are acquired into inventory. The project's budget decreases. This is distinct from a Return — Returns are reserved for items that came from inventory and are going home.
 
-This is the biggest semantic change from the legacy model. Treat business inventory as a store: you buy from it (sale) and you return to it (return). You don't sell back to it.
+Direction is not stored as a dedicated field. It is **implicit in the transaction shape**:
+
+| Direction | `type` | `source` | `budgetCategoryId` | Project's budget |
+|---|---|---|---|---|
+| Inventory → Project | `Sale` | inventory label | set (destination category) | **increases** |
+| Project → Inventory | `Sale` | inventory label | absent | **decreases** |
+
+This leverages the core invariant `item.projectId == null ↔ item.budgetCategoryId == null`: inventory items have no category, so a Sale involving inventory as destination cannot carry one.
+
+**Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
 ## Sale Transaction Shape
 
 ```typescript
 interface SaleTransaction {
   type: "Sale";
-  projectId: string;                    // destination project (required, non-null)
-  budgetCategoryId: string;             // required, must be enabled in destination project
+  projectId: string;                    // project side of the transaction (required)
+  //                                    // inventory → project: the destination
+  //                                    // project → inventory: the source
+  budgetCategoryId?: string;            // present = inventory → project; absent = project → inventory
   amountCents: number;                  // frozen at creation; sum of item projectPriceCents
   itemIds: string[];                    // frozen at creation, length 1..100
-  source: "Business Inventory";
+  source: "[Account] Inventory";        // inventory label, the non-project side
   notes?: string;                       // optional audit note
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -55,8 +67,9 @@ The following invariants are enforced by Firestore security rules and by tests i
 1. **Immutability after creation.** `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on a Sale transaction after it's created. Mutable fields: `notes`, `status`, `updatedAt`.
 2. **Batch size cap.** `itemIds.length >= 1 && itemIds.length <= 100`. Both clients enforce locally; the cap exists because Firestore batch writes have a 500-doc limit and a sale of 100 items touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
-4. **Category must be enabled.** `budgetCategoryId` must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the sale. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
-5. **One category per batch.** A sale transaction has exactly one `budgetCategoryId`. There's no per-item category override. Users wanting mixed categories must sell in separate batches.
+4. **Direction is shape-derived.** `budgetCategoryId` presence distinguishes inventory → project (set) from project → inventory (absent). The direction is derivable from `(type, source, budgetCategoryId)` alone — no dedicated field.
+5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the sale. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
+6. **One category per batch.** An inventory → project sale has exactly one `budgetCategoryId`. There's no per-item category override. Users wanting mixed categories must sell in separate batches. Project → inventory sales have no category (items leave the project's category system entirely).
 
 ## The Sell Flow
 
@@ -113,14 +126,17 @@ One batch, all-or-nothing:
 
 ## Project → Project Moves
 
-Moving items from one project to another is **two transactions** in one batch:
+Moving items from one project to another is a **two-hop** operation in a single atomic batch. The first hop is origin-aware:
 
-1. A **return-to-inventory transaction** for the source project (item's category is wiped on the item).
-2. A **new per-batch sale transaction** for the destination project (category re-resolved from user input).
+1. **First hop (per-item, per origin):**
+   - From-inventory items (`currentSource != source`) → a **Return** transaction against the source project.
+   - Items that originated in the source project (`currentSource == source`) → a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`) against the source project.
+   - Mixed batches produce **both** first-hop transactions in the same Firestore batch.
+2. **Second hop:** one **Sale-to-Project** transaction (`type: "Sale"`, with `budgetCategoryId`) against the destination project. Covers every item in the batch.
 
-The iOS UI presents this as a single "move to project" action. Under the hood, the service layer issues both writes in the same Firestore batch, atomically. Lineage edges link them.
+The iOS UI presents this as a single "move to project" action. The service layer issues all hops in one atomic Firestore batch. Lineage edges link each hop.
 
-The category for the destination sale is collected from the user — items don't carry a category through the inventory hop.
+The destination category is collected from the user — items don't carry a category through the inventory hop.
 
 ## Lineage Edges
 
@@ -146,24 +162,33 @@ If an item has neither `projectPriceCents` nor `purchasePriceCents` at sell time
 
 ## Sign Convention
 
-Per-batch sales contribute **positively** to the destination project's budget for the chosen category. There is no negative direction — that case is a Return.
-
-| Transaction | Multiplier | Effect |
+| Transaction | Multiplier on project budget | Effect |
 |---|---|---|
-| Per-batch Sale (`type: "Sale"`, no `isCanonicalInventorySale`) | +1 | Adds to project spend |
-| Return (`type: "Return"`) | -1 | Subtracts from project spend |
+| Sale, inventory → project (`type: "Sale"`, `budgetCategoryId` set) | +1 | Adds to project spend (destination category) |
+| Sale, project → inventory (`type: "Sale"`, `budgetCategoryId` absent) | –1 | Items leave the project; item-level category is wiped on the item |
+| Return (`type: "Return"`) | –1 | Subtracts from project spend; items leave |
 | Legacy canonical sale (`isCanonicalInventorySale: true`) | direction-based | See "Legacy Canonical Sales" below |
 
 The sign convention is centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
 
-## Display
+## Display — Naming Convention
 
-Sale transactions appear in the destination project's transaction list with:
+Sale direction is rendered in the transaction's **display name**, from the project's point of view. There is no direction badge — direction lives in the name.
 
-- **Type badge:** "Sale"
-- **Source:** "Business Inventory"
-- **Amount:** the frozen `amountCents`
-- **Items:** rendered from `itemIds`
+| Direction | Display name | Example |
+|---|---|---|
+| Inventory → Project (Sale with `budgetCategoryId`) | `Purchase from [source]` | `Purchase from 1584 Design Inventory` |
+| Project → Inventory (Sale without `budgetCategoryId`) | `Sale to [source]` | `Sale to 1584 Design Inventory` |
+| Return to inventory (`type: "Return"`) | `Return to [source]` | `Return to 1584 Design Inventory` |
+| Return to vendor (`type: "Return"`) | `Return to [source]` | `Return to Wayfair` |
+
+Resolution is implemented in `TransactionDisplayCalculations.displayName(for:)` and mirrored in `SearchCalculations.transactionDisplayName(for:)` for search cards.
+
+**Other display:**
+- **Type badge:** "Sale" or "Return" (type only — never direction).
+- **Source field:** the inventory label for inventory-involved transactions, the vendor name for vendor transactions.
+- **Amount:** the frozen `amountCents`.
+- **Items:** rendered from `itemIds`.
 
 Sale transactions are NOT user-editable. The shape fields are immutable. Users can edit `notes` and add/cancel via `status`.
 

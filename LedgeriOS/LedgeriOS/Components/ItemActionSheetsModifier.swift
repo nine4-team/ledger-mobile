@@ -53,7 +53,7 @@ private struct ItemActionSheetsModifier: ViewModifier {
             }
             .adaptivePresentation(item: $controller.returnToInventoryItem, style: .form) { item in
                 if let accountId {
-                    ReturnToInventoryModal(items: [item], accountId: accountId) {
+                    MoveToInventoryModal(items: [item], accountId: accountId) {
                         onActionComplete?()
                     }
                 }
