@@ -34,6 +34,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
     /// Tests can preload this to simulate canonical sale docs that already exist.
     var existingPaths: Set<String> = []
 
+    /// Map of document path → `type` field value. Used by `stringField("type", ...)`
+    /// so tests can classify source transactions as Sale/Return/Purchase.
+    var stringFieldByPath: [String: [String: String]] = [:]
+
     func setData(_ fields: [String: Any], forDocumentAt path: String, merge: Bool) {
         sets.append(SetOperation(fields: fields, path: path, merge: merge))
     }
@@ -56,6 +60,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
 
     func documentExists(atPath path: String) async throws -> Bool {
         existingPaths.contains(path)
+    }
+
+    func stringField(_ field: String, atPath path: String) async throws -> String? {
+        stringFieldByPath[path]?[field]
     }
 
     // MARK: - Query Helpers

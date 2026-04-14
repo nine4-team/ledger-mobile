@@ -14,7 +14,10 @@ import Testing
 ///   --only auth,firestore,storage \
 ///   --config firebase.test.json
 /// ```
-@Suite("Inventory Operations — Emulator Integration", .tags(.integration))
+/// `.serialized` is required because the E6 test toggles the shared Firestore
+/// network state (`disableNetwork()`/`enableNetwork()`). Running tests in parallel
+/// would let E6 disable the network while other tests are mid-flight, hanging them.
+@Suite("Inventory Operations — Emulator Integration", .tags(.integration), .serialized)
 struct InventoryOperationsIntegrationTests {
     let accountId = FirestoreTestHelper.testAccountId
     /// Uses real FirestoreBatchWriter — writes go to the emulator.
@@ -217,5 +220,254 @@ struct InventoryOperationsIntegrationTests {
                 accountId: accountId
             )
         }
+    }
+
+    // MARK: - E4: Price change after sale
+
+    /// E4: Updating an item's purchasePriceCents after a sale must NOT change
+    /// the Sale transaction's amountCents. Verifies `onItemPriceChanged`'s guard.
+    ///
+    /// Requires the **Functions emulator** in addition to Firestore. Boot with:
+    /// ```
+    /// firebase emulators:start --config firebase.test.json
+    /// ```
+    @Test("E4: price change on sold item does not mutate Sale tx amountCents")
+    func priceChangeDoesNotMutateSaleAmount() async throws {
+        try await FirestoreTestHelper.signIn()
+        let itemId = UUID().uuidString
+        let destProjectId = "projE4-\(UUID().uuidString)"
+        let categoryId = "catFurnishings"
+
+        // Seed: item in inventory with known prices
+        let item = makeItem(
+            id: itemId,
+            purchasePriceCents: 10000,
+            projectPriceCents: 12000
+        )
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+
+        // E1 precondition: sell the item to create a Sale transaction
+        try await service.sellToProject(
+            items: [item],
+            destinationProjectId: destProjectId,
+            budgetCategoryId: categoryId,
+            accountId: accountId
+        )
+
+        let itemAfterSale: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+        let saleTxId = try #require(itemAfterSale.transactionId)
+        let originalSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
+        let originalAmountCents = try #require(originalSale["amountCents"] as? Int)
+        #expect(originalAmountCents == 12000)
+
+        // E4 action: change the item's purchasePriceCents (triggers onItemPriceChanged)
+        try await Firestore.firestore()
+            .document("\(itemsPath)/\(itemId)")
+            .updateData(["purchasePriceCents": 99999])
+
+        // Wait for the Cloud Function trigger to fire (and short-circuit on Sale tx)
+        try await Task.sleep(nanoseconds: 3_000_000_000) // 3s
+
+        // Verify: Sale tx amountCents is unchanged
+        let saleAfter = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
+        let amountAfter = try #require(saleAfter["amountCents"] as? Int)
+        #expect(amountAfter == originalAmountCents,
+                "Sale.amountCents changed from \(originalAmountCents) to \(amountAfter) — onItemPriceChanged guard failed")
+    }
+
+    // MARK: - E6: Offline sell, reconnect
+
+    /// E6: With the network disabled, a sell write queues in the Firestore SDK
+    /// cache. After `enableNetwork()`, the write syncs and appears on the server.
+    ///
+    /// This does not require device airplane mode — `Firestore.disableNetwork()`
+    /// exercises the same offline-queueing code path.
+    @Test("E6: offline sell queues locally, syncs on reconnect")
+    func offlineSellSyncsOnReconnect() async throws {
+        try await FirestoreTestHelper.signIn()
+        let itemId = UUID().uuidString
+        let destProjectId = "projE6-\(UUID().uuidString)"
+        let categoryId = "catFurnishings"
+
+        // Seed: item in inventory (while online)
+        let item = makeItem(
+            id: itemId,
+            purchasePriceCents: 5000,
+            projectPriceCents: 6000
+        )
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+
+        defer {
+            // Ensure network is re-enabled even on failure so later tests aren't affected.
+            Task { try? await Firestore.firestore().enableNetwork() }
+        }
+
+        // Go offline
+        try await Firestore.firestore().disableNetwork()
+
+        // Kick off the sell in the background. While offline, `batch.commit()` does
+        // not resolve its await until the network is back — Firestore queues writes
+        // locally but the commit future stays pending. So we don't `await` the
+        // service call here; we launch it as a Task and verify the queued state
+        // via cache read.
+        let sellTask = Task {
+            try await service.sellToProject(
+                items: [item],
+                destinationProjectId: destProjectId,
+                budgetCategoryId: categoryId,
+                accountId: accountId
+            )
+        }
+
+        // Give the SDK a moment to process the queued writes into the cache.
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+
+        // Cache read — confirms queued state is visible locally while offline.
+        let cachedSnap = try await Firestore.firestore()
+            .document("\(itemsPath)/\(itemId)")
+            .getDocument(source: .cache)
+        #expect(cachedSnap.exists)
+        let cachedItem = try cachedSnap.data(as: Item.self)
+        #expect(cachedItem.projectId == destProjectId)
+        #expect(cachedItem.budgetCategoryId == categoryId)
+        let saleTxId = try #require(cachedItem.transactionId)
+
+        // Reconnect — queued writes sync to the server, sellTask's await resolves.
+        try await Firestore.firestore().enableNetwork()
+        try await sellTask.value
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s for final sync
+
+        // Server read: confirm the sale actually landed on the emulator (not just cache).
+        let serverSnap = try await Firestore.firestore()
+            .document("\(txPath)/\(saleTxId)")
+            .getDocument(source: .server)
+        #expect(serverSnap.exists)
+        let serverFields = try #require(serverSnap.data())
+        #expect(serverFields["type"] as? String == "Sale")
+        #expect(serverFields["projectId"] as? String == destProjectId)
+        #expect(serverFields["amountCents"] as? Int == 6000)
+    }
+
+    // MARK: - E1→E2→E3 Chained Flow
+
+    @Test("E1→E2→E3: sell 3 to project A, return 2 to inventory, sell 1 to project B")
+    func chainedSellReturnSell() async throws {
+        try await FirestoreTestHelper.signIn()
+        let projectA = "projA-\(UUID().uuidString)"
+        let projectB = "projB-\(UUID().uuidString)"
+        let catFurnishings = "catFurnishings"
+        let catInstall = "catInstall"
+
+        // Seed: 3 items in inventory (no projectId)
+        let item1 = makeItem(id: UUID().uuidString, purchasePriceCents: 10000, projectPriceCents: 12000)
+        let item2 = makeItem(id: UUID().uuidString, purchasePriceCents: 15000, projectPriceCents: 18000)
+        let item3 = makeItem(id: UUID().uuidString, purchasePriceCents: 20000, projectPriceCents: 24000)
+
+        for item in [item1, item2, item3] {
+            try FirestoreTestHelper.write(item, toCollection: itemsPath, id: item.id!)
+        }
+
+        // ── E1: Sell 3 items from inventory to Project A under Furnishings ──
+
+        try await service.sellToProject(
+            items: [item1, item2, item3],
+            destinationProjectId: projectA,
+            budgetCategoryId: catFurnishings,
+            accountId: accountId
+        )
+
+        // Verify: all 3 items in Project A with correct category
+        for item in [item1, item2, item3] {
+            let result: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item.id!))
+            #expect(result.projectId == projectA)
+            #expect(result.budgetCategoryId == catFurnishings)
+            #expect(result.status == .purchased)
+        }
+
+        // Verify: 1 Sale tx exists for Project A
+        let item1After: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
+        let saleTxId = try #require(item1After.transactionId)
+        let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
+        #expect(rawSale["type"] as? String == "Sale")
+        #expect(rawSale["source"] as? String == "Business Inventory")
+        #expect(rawSale["projectId"] as? String == projectA)
+        #expect(rawSale["budgetCategoryId"] as? String == catFurnishings)
+        // amountCents = 12000 + 18000 + 24000 = 54000 (no tax)
+        #expect(rawSale["amountCents"] as? Int == 54000)
+        let saleItemIds = rawSale["itemIds"] as? [String] ?? []
+        #expect(Set(saleItemIds) == Set([item1.id!, item2.id!, item3.id!]))
+        // No canonical sale fields
+        #expect(rawSale["isCanonicalInventorySale"] == nil)
+
+        // ── E2: Return 2 items from Project A to inventory ──
+
+        // Re-read items so transactionId is current
+        let item1ForReturn: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
+        let item2ForReturn: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item2.id!))
+
+        try await service.returnToInventory(
+            items: [item1ForReturn, item2ForReturn],
+            accountId: accountId
+        )
+
+        // Verify: 2 items back in inventory, budgetCategoryId wiped
+        for itemId in [item1.id!, item2.id!] {
+            let result: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+            #expect(result.projectId == nil)
+            #expect(result.budgetCategoryId == nil)
+            #expect(result.status == .purchased)
+        }
+
+        // Verify: item3 still in Project A (untouched)
+        let item3Still: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item3.id!))
+        #expect(item3Still.projectId == projectA)
+        #expect(item3Still.budgetCategoryId == catFurnishings)
+
+        // Verify: Return tx exists
+        let item1Returned: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
+        let returnTxId = try #require(item1Returned.transactionId)
+        let rawReturn = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(returnTxId)"))
+        #expect(rawReturn["type"] as? String == "Return")
+        #expect(rawReturn["source"] as? String == "Business Inventory")
+
+        // ── E3: Sell one returned item to Project B under Install ──
+
+        // Re-read item1 so transactionId is current
+        let item1ForSell: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
+
+        try await service.sellToProject(
+            items: [item1ForSell],
+            destinationProjectId: projectB,
+            budgetCategoryId: catInstall,
+            accountId: accountId
+        )
+
+        // Verify: item1 now in Project B with Install category
+        let item1Final: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
+        #expect(item1Final.projectId == projectB)
+        #expect(item1Final.budgetCategoryId == catInstall)
+
+        // Verify: second Sale tx (independent from first)
+        let secondSaleTxId = try #require(item1Final.transactionId)
+        #expect(secondSaleTxId != saleTxId) // different transaction
+        let rawSale2 = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(secondSaleTxId)"))
+        #expect(rawSale2["type"] as? String == "Sale")
+        #expect(rawSale2["projectId"] as? String == projectB)
+        #expect(rawSale2["budgetCategoryId"] as? String == catInstall)
+        #expect(rawSale2["amountCents"] as? Int == 12000)
+
+        // Verify: original Sale tx unchanged (E1 sale still has its original amountCents)
+        let rawSaleRecheck = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
+        #expect(rawSaleRecheck["amountCents"] as? Int == 54000)
+
+        // Verify: lineage edges — at least 6 total (3 sold + 2 returned + 1 sold)
+        let allEdges = try await Firestore.firestore()
+            .collection(edgesPath)
+            .whereField("itemId", in: [item1.id!, item2.id!, item3.id!])
+            .getDocuments()
+        let soldEdges = allEdges.documents.filter { ($0.data()["movementKind"] as? String) == "sold" }
+        let returnedEdges = allEdges.documents.filter { ($0.data()["movementKind"] as? String) == "returned" }
+        #expect(soldEdges.count >= 4) // 3 from E1 + 1 from E3
+        #expect(returnedEdges.count >= 2) // 2 from E2
     }
 }

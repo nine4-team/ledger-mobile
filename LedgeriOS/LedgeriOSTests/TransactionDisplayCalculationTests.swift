@@ -79,6 +79,40 @@ struct TransactionDisplayCalculationTests {
         #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Inventory")
     }
 
+    // E7: New per-batch Sale with source renders source as display name
+    @Test("Display name for per-batch Sale uses source")
+    func displayNamePerBatchSale() {
+        let txn = makeTransaction(
+            source: "Business Inventory",
+            transactionType: .sale
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Business Inventory")
+    }
+
+    // E7: Legacy canonical sale without source still renders direction-based label
+    @Test("E7: Legacy canonical sale without source renders correctly")
+    func displayNameLegacyCanonicalNoSource() {
+        // businessToProject
+        let txn1 = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .businessToProject
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn1) == "Purchase from Inventory")
+
+        // projectToBusiness
+        let txn2 = makeTransaction(
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: .projectToBusiness
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn2) == "Sale to Inventory")
+
+        // direction nil
+        let txn3 = makeTransaction(
+            isCanonicalInventorySale: true
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn3) == "Inventory Transfer")
+    }
+
     @Test("Display name falls back to ID prefix")
     func displayNameIdPrefix() {
         let txn = makeTransaction(id: "abcdef123456")

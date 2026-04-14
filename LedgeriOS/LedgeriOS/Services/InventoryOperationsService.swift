@@ -94,6 +94,12 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
+        // Pre-fetch source tx types — frozen types (Sale, Return) must not have
+        // their itemIds array mutated (Firestore rules reject; spec says immutable).
+        let frozenSources = try await Self.frozenSourceTxIds(
+            items: items, batch: batch, txPath: txPath
+        )
+
         // Frozen amount snapshot
         let totals = Self.computeBatchTotals(items)
 
@@ -140,8 +146,9 @@ struct InventoryOperationsService {
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove item from its source transaction's itemIds
-            if let fromTxId = item.transactionId {
+            // 3. Remove item from its source transaction's itemIds — skipped
+            // when source is a frozen Sale/Return (itemIds is immutable there).
+            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -197,6 +204,10 @@ struct InventoryOperationsService {
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
+        let frozenSources = try await Self.frozenSourceTxIds(
+            items: items, batch: batch, txPath: txPath
+        )
+
         // Return amount uses purchasePriceCents (what the business actually paid)
         let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
 
@@ -240,8 +251,9 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove from source transaction's itemIds
-            if let fromTxId = item.transactionId {
+            // 3. Remove from source transaction's itemIds — skipped for
+            // frozen Sale/Return sources.
+            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -303,6 +315,10 @@ struct InventoryOperationsService {
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
+
+        let frozenSources = try await Self.frozenSourceTxIds(
+            items: items, batch: batch, txPath: txPath
+        )
 
         let totals = Self.computeBatchTotals(items)
         let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
@@ -366,8 +382,8 @@ struct InventoryOperationsService {
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove from source transaction's itemIds
-            if let fromTxId = item.transactionId {
+            // 3. Remove from source transaction's itemIds — skipped for frozen sources.
+            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -580,6 +596,29 @@ struct InventoryOperationsService {
             }
         }
         return (subtotalCents, amountCents)
+    }
+
+    /// Returns the set of source transaction IDs whose `type` is "Sale" or
+    /// "Return" — these have frozen shape fields per Firestore rules, so
+    /// the service must not attempt `arrayRemove` on their `itemIds`.
+    ///
+    /// Deduplicates across items so the same source is fetched once.
+    static func frozenSourceTxIds(
+        items: [Item],
+        batch: any BatchWriting,
+        txPath: String
+    ) async throws -> Set<String> {
+        let uniqueSourceIds = Set(items.compactMap(\.transactionId))
+        guard !uniqueSourceIds.isEmpty else { return [] }
+
+        var frozen: Set<String> = []
+        for txId in uniqueSourceIds {
+            let type = try await batch.stringField("type", atPath: "\(txPath)/\(txId)")
+            if type == "Sale" || type == "Return" {
+                frozen.insert(txId)
+            }
+        }
+        return frozen
     }
 
     /// Today's date as a yyyy-MM-dd string for `transactionDate`.

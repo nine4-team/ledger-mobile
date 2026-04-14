@@ -15,6 +15,11 @@ protocol BatchWriting {
     /// set-if-missing semantics (e.g., `createdAt` on canonical sale transactions —
     /// only written on first insert, preserved by subsequent merges).
     func documentExists(atPath path: String) async throws -> Bool
+
+    /// Returns the value of a single string field on a document, or nil if the
+    /// document or field is missing. Used to classify source transactions before
+    /// writes (e.g., "don't arrayRemove from a Sale's itemIds").
+    func stringField(_ field: String, atPath path: String) async throws -> String?
 }
 
 // MARK: - Production Implementation
@@ -51,5 +56,11 @@ struct FirestoreBatchWriter: BatchWriting, @unchecked Sendable {
     func documentExists(atPath path: String) async throws -> Bool {
         let snap = try await db.document(path).getDocument()
         return snap.exists
+    }
+
+    func stringField(_ field: String, atPath path: String) async throws -> String? {
+        let snap = try await db.document(path).getDocument()
+        guard snap.exists else { return nil }
+        return snap.data()?[field] as? String
     }
 }

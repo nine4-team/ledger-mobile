@@ -23,7 +23,9 @@ cd LedgeriOS && xcodebuild test -scheme "LedgeriOS (Emulator)" \
 
 Write real data to the Firestore emulator, read it back, verify every field survives the round-trip. Tagged with `.integration` via Swift Testing `@Tag`.
 
-**Require emulators running with test rules** (opens lineage edge writes for client-side batch operations):
+**Require emulators running with test rules** (opens lineage edge writes for client-side batch operations).
+
+The `E4: price change` test requires the **Functions emulator** in addition to Firestore/Auth (to fire `onItemPriceChanged`). `firebase.test.json` already includes functions — the `--config` flag boots them all together:
 
 ```bash
 # Terminal 1: start emulators with test rules

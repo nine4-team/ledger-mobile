@@ -85,6 +85,23 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].color == StatusColors.atRiskBar)
     }
 
+    // E7: New per-batch Sale (no isCanonicalInventorySale) shows "Sale" badge
+    @Test("Per-batch Sale shows Sale badge with atRiskBar color")
+    func badgeItemsPerBatchSale() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .sale,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: true,
+            status: nil,
+            isCanonicalInventorySale: nil,
+            inventorySaleDirection: nil
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Sale")
+        #expect(badges[0].color == StatusColors.atRiskBar)
+    }
+
     @Test("To-inventory produces no badge")
     func badgeItemsToInventoryRemoved() {
         let badges = TransactionCardCalculations.badgeItems(
