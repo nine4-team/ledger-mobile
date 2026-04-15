@@ -12,6 +12,7 @@ struct InventoryTransactionsSubTab: View {
     @State private var showNewTransaction = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
+    @State private var createdTransaction: Transaction?
 
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
@@ -101,7 +102,13 @@ struct InventoryTransactionsSubTab: View {
         }
         .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
             let _ = print("🟢 [TxSubTab] NewTransactionView sheet body evaluated")
-            NewTransactionView(context: .inventory)
+            NewTransactionView(
+                context: .inventory,
+                onCreated: { createdTransaction = $0 }
+            )
+        }
+        .navigationDestination(item: $createdTransaction) { tx in
+            TransactionDetailView(transaction: tx)
         }
         .background(SortMenu(
             isPresented: $showSortMenu,

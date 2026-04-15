@@ -9,6 +9,7 @@ struct UniversalAddModifier: ViewModifier {
     @State private var showNewProject = false
     @State private var showNewItem = false
     @State private var showNewTransaction = false
+    @State private var createdTransaction: Transaction?
 
     func body(content: Content) -> some View {
         content
@@ -53,7 +54,13 @@ struct UniversalAddModifier: ViewModifier {
             }
             .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 let _ = print("🔵 [UniversalAdd] NewTransactionView sheet body evaluated")
-                NewTransactionView(context: .inventory)
+                NewTransactionView(
+                    context: .inventory,
+                    onCreated: { createdTransaction = $0 }
+                )
+            }
+            .navigationDestination(item: $createdTransaction) { tx in
+                TransactionDetailView(transaction: tx)
             }
     }
 }

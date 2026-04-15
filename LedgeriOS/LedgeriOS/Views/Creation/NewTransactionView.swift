@@ -10,6 +10,7 @@ enum TransactionCreationContext {
 /// Step 1: Type selection → Step 2: Destination → Step 3: Budget Category (project only) → Step 4: Details.
 struct NewTransactionView: View {
     let context: TransactionCreationContext
+    var onCreated: ((Transaction) -> Void)?
 
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
@@ -355,6 +356,8 @@ struct NewTransactionView: View {
             if routeThroughInventory {
                 createdTransactionId = txId
             } else {
+                transaction.id = txId
+                onCreated?(transaction)
                 dismiss()
             }
         } catch {

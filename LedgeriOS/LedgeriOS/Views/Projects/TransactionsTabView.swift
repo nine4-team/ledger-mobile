@@ -16,6 +16,7 @@ struct TransactionsTabView: View {
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
     @State private var exportedFileURL: URL?
+    @State private var createdTransaction: Transaction?
 
     // Bulk actions
     @State private var showBulkDeleteConfirmation = false
@@ -119,8 +120,14 @@ struct TransactionsTabView: View {
         }
         .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
             if let projectId = projectContext.currentProjectId {
-                NewTransactionView(context: .project(projectId))
+                NewTransactionView(
+                    context: .project(projectId),
+                    onCreated: { createdTransaction = $0 }
+                )
             }
+        }
+        .navigationDestination(item: $createdTransaction) { tx in
+            TransactionDetailView(transaction: tx)
         }
 
 
