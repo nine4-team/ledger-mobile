@@ -194,8 +194,29 @@ struct NewProjectView: View {
                             }
                         }
                     }
+
+                    Divider()
+
+                    HStack {
+                        Text("Overall Budget")
+                            .font(Typography.body.weight(.semibold))
+                            .foregroundStyle(BrandColors.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text(BudgetDisplayCalculations.formatCentsAsDollars(overallBudgetCents))
+                            .font(Typography.body.weight(.semibold))
+                            .foregroundStyle(BrandColors.textPrimary)
+                    }
                 }
             }
+        }
+    }
+
+    private var overallBudgetCents: Int {
+        selectedCategories.reduce(0) { total, category in
+            guard category.metadata?.excludeFromOverallBudget != true,
+                  let catId = category.id else { return total }
+            return total + parseDollarsToCents(budgetAllocations[catId] ?? "")
         }
     }
 
