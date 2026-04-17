@@ -6,6 +6,7 @@ struct TransactionCard: View {
 
     // Cross-collection lookup — not on Transaction model
     var budgetCategoryName: String?
+    var assignmentLabel: String?
 
     // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
@@ -78,7 +79,7 @@ struct TransactionCard: View {
 
     @ViewBuilder
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             // Source + Amount row
             HStack(alignment: .firstTextBaseline) {
                 FindableText(TransactionDisplayCalculations.displayName(for: transaction))
@@ -94,6 +95,9 @@ struct TransactionCard: View {
                     .lineLimit(1)
                     .layoutPriority(1)
             }
+
+            // Detail rows
+            VStack(alignment: .leading, spacing: Spacing.xs) {
 
             // Date + item count + category (collapsed on macOS)
             #if os(macOS)
@@ -152,6 +156,17 @@ struct TransactionCard: View {
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
+
+            if let label = assignmentLabel {
+                HStack(spacing: 0) {
+                    Text("Assigned To: ")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    Text(label)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
             #endif
 
             // Notes
@@ -163,18 +178,10 @@ struct TransactionCard: View {
                         .foregroundStyle(BrandColors.textSecondary)
                         .lineLimit(1)
                 } else {
-                    #if os(macOS)
                     EmptyView()
-                    #else
-                    // Reserve space for consistent card heights in grid on iOS
-                    Text(" ")
-                        .font(Typography.small)
-                        .italic()
-                        .lineLimit(1)
-                        .opacity(0)
-                    #endif
                 }
             }
+            } // end detail rows VStack
         }
         .padding(Spacing.cardPadding)
     }
