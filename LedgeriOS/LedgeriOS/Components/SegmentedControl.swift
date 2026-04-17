@@ -52,7 +52,6 @@ struct SegmentedControl<T: Hashable>: View {
             }
         }
         .frame(height: 36)
-        .background(BrandColors.surface)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(BrandColors.borderSecondary)

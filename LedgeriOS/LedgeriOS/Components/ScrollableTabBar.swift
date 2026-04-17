@@ -8,13 +8,6 @@ struct TabBarItem: Identifiable {
 struct ScrollableTabBar: View {
     @Binding var selectedId: String
     let items: [TabBarItem]
-    @Namespace private var tabNamespace
-    @State private var contentWidth: CGFloat = 0
-    @State private var containerWidth: CGFloat = 0
-
-    private var contentOverflows: Bool {
-        contentWidth > containerWidth
-    }
 
     var body: some View {
         ScrollViewReader { scrollProxy in
@@ -27,31 +20,26 @@ struct ScrollableTabBar: View {
                                 selectedId = item.id
                             }
                         } label: {
-                            Text(item.label)
-                                .font(isSelected ? Typography.buttonSmall : Typography.small)
-                                .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textPrimary)
-                                .padding(.horizontal, Spacing.md)
-                                .padding(.vertical, Spacing.sm)
-                                .frame(minHeight: 36)
-                                .contentShape(Capsule())
-                                .background {
-                                    if isSelected {
-                                        Capsule()
-                                            .fill(BrandColors.primary.opacity(0.35))
-                                            .matchedGeometryEffect(id: "selection", in: tabNamespace)
-                                    }
-                                }
+                            VStack(spacing: 0) {
+                                Spacer(minLength: 0)
+                                Text(item.label)
+                                    .font(isSelected ? Typography.button : Typography.small)
+                                    .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
+                                    .padding(.horizontal, Spacing.md)
+                                    .lineLimit(1)
+                                    .fixedSize(horizontal: true, vertical: false)
+                                Spacer(minLength: 0)
+                                RoundedRectangle(cornerRadius: 1)
+                                    .fill(isSelected ? BrandColors.primary : Color.clear)
+                                    .frame(height: 2)
+                            }
+                            .frame(height: 36)
+                            .contentShape(Rectangle())
                         }
                         .id(item.id)
                         .buttonStyle(.plain)
                         .accessibilityAddTraits(isSelected ? .isSelected : [])
                     }
-                }
-                .padding(2)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.size.width
-                } action: { newValue in
-                    contentWidth = newValue
                 }
             }
             .onChange(of: selectedId) { _, newId in
@@ -60,26 +48,12 @@ struct ScrollableTabBar: View {
                 }
             }
         }
-        .onGeometryChange(for: CGFloat.self) { proxy in
-            proxy.size.width
-        } action: { newValue in
-            containerWidth = newValue
+        .frame(height: 36)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: Dimensions.borderWidth)
         }
-        .overlay(alignment: .trailing) {
-            if contentOverflows {
-                LinearGradient(
-                    colors: [Color(.tertiarySystemFill).opacity(0), Color(.tertiarySystemFill)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: 32)
-                .clipShape(Capsule())
-                .allowsHitTesting(false)
-            }
-        }
-        .background(Color(.tertiarySystemFill), in: Capsule())
-        .padding(.horizontal, Spacing.screenPadding)
-        .padding(.vertical, Spacing.sm)
     }
 }
 
