@@ -16,6 +16,17 @@ final class CameraEngine: NSObject, @unchecked Sendable {
     var onSessionStarted: (@MainActor () -> Void)?
     var onCapture: (@MainActor (UIImage, Data) -> Void)?
     var onFocusStateChanged: (@MainActor (Bool) -> Void)?
+    var onZoomCapabilities: (@MainActor (ZoomCapabilities) -> Void)?
+
+    /// Display-space zoom info. "Display" means what Apple shows users (0.5×, 1×, 2×),
+    /// which differs from `AVCaptureDevice.videoZoomFactor` on multi-lens virtual devices
+    /// where 1.0 is the widest lens — so display-1× maps to the first switch-over factor.
+    struct ZoomCapabilities: Sendable {
+        var baseWideFactor: CGFloat  // actual zoom that corresponds to display-1×
+        var minDisplayZoom: CGFloat
+        var maxDisplayZoom: CGFloat
+        var presets: [CGFloat]       // display-space presets, e.g. [0.5, 1, 2]
+    }
 
     func start() {
         sessionQueue.async { [self] in
@@ -63,7 +74,13 @@ final class CameraEngine: NSObject, @unchecked Sendable {
                 device.focusMode = .continuousAutoFocus
                 device.exposureMode = .continuousAutoExposure
                 device.isSubjectAreaChangeMonitoringEnabled = true
+                // Start at display-1× (wide lens) on multi-lens devices.
+                let baseWide = Self.baseWideFactor(for: device)
+                device.videoZoomFactor = min(max(baseWide, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
                 device.unlockForConfiguration()
+
+                let caps = Self.zoomCapabilities(for: device)
+                Task { @MainActor [weak self] in self?.onZoomCapabilities?(caps) }
             }
 
             // Re-trigger AF when scene changes (combats drift)
@@ -102,6 +119,53 @@ final class CameraEngine: NSObject, @unchecked Sendable {
             settings.photoQualityPrioritization = .speed
             photoOutput.capturePhoto(with: settings, delegate: self)
         }
+    }
+
+    /// Sets zoom in display space (0.5, 1, 2, …). Clamped to device limits.
+    func setDisplayZoom(_ displayFactor: CGFloat, animated: Bool = false) {
+        sessionQueue.async { [self] in
+            guard let device = (session.inputs.first as? AVCaptureDeviceInput)?.device else { return }
+            let baseWide = Self.baseWideFactor(for: device)
+            let target = displayFactor * baseWide
+            let clamped = min(max(target, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+            do {
+                try device.lockForConfiguration()
+                if animated {
+                    device.ramp(toVideoZoomFactor: clamped, withRate: 4.0)
+                } else {
+                    device.videoZoomFactor = clamped
+                }
+                device.unlockForConfiguration()
+            } catch { return }
+        }
+    }
+
+    private static func baseWideFactor(for device: AVCaptureDevice) -> CGFloat {
+        // On a virtual multi-lens device, the first switch-over factor is where the
+        // wide (1×) lens takes over. Single-lens devices return [] and default to 1.0.
+        device.virtualDeviceSwitchOverVideoZoomFactors.first.map { CGFloat(truncating: $0) } ?? 1.0
+    }
+
+    private static func zoomCapabilities(for device: AVCaptureDevice) -> ZoomCapabilities {
+        let baseWide = baseWideFactor(for: device)
+        let minDisplay = device.minAvailableVideoZoomFactor / baseWide
+        let maxDisplay = device.maxAvailableVideoZoomFactor / baseWide
+        var presets: [CGFloat] = []
+        if minDisplay < 0.95 { presets.append(0.5) }
+        presets.append(1.0)
+        if maxDisplay >= 2.0 { presets.append(2.0) }
+        if device.virtualDeviceSwitchOverVideoZoomFactors.count >= 2 {
+            let tele = CGFloat(truncating: device.virtualDeviceSwitchOverVideoZoomFactors[1]) / baseWide
+            if tele >= 2.5, !presets.contains(where: { abs($0 - tele) < 0.1 }) {
+                presets.append(tele.rounded())
+            }
+        }
+        return ZoomCapabilities(
+            baseWideFactor: baseWide,
+            minDisplayZoom: minDisplay,
+            maxDisplayZoom: maxDisplay,
+            presets: presets
+        )
     }
 
     func focus(at devicePoint: CGPoint) {
@@ -189,6 +253,12 @@ final class CameraManager {
     var permissionDenied = false
     var isAdjustingFocus = false
 
+    /// Current zoom in display space (0.5, 1, 2, …).
+    var displayZoom: CGFloat = 1.0
+    var zoomPresets: [CGFloat] = [1.0]
+    var minDisplayZoom: CGFloat = 1.0
+    var maxDisplayZoom: CGFloat = 1.0
+
     private let engine = CameraEngine()
 
     var session: AVCaptureSession { engine.session }
@@ -210,6 +280,19 @@ final class CameraManager {
         engine.onFocusStateChanged = { [weak self] isAdjusting in
             self?.isAdjustingFocus = isAdjusting
         }
+        engine.onZoomCapabilities = { [weak self] caps in
+            guard let self else { return }
+            zoomPresets = caps.presets
+            minDisplayZoom = caps.minDisplayZoom
+            maxDisplayZoom = caps.maxDisplayZoom
+            displayZoom = 1.0
+        }
+    }
+
+    func setDisplayZoom(_ factor: CGFloat, animated: Bool = false) {
+        let clamped = min(max(factor, minDisplayZoom), maxDisplayZoom)
+        displayZoom = clamped
+        engine.setDisplayZoom(clamped, animated: animated)
     }
 
     func checkPermissionAndStart() async {
@@ -339,6 +422,8 @@ struct CameraCapture: View {
     @State private var focusPoint: CGPoint?
     /// Changing this UUID forces FocusIndicator to re-create and re-animate.
     @State private var focusId = UUID()
+    /// Zoom at the start of the current pinch gesture — pinch is multiplicative against this.
+    @State private var pinchBaseZoom: CGFloat?
 
     var body: some View {
         ZStack {
@@ -356,6 +441,15 @@ struct CameraCapture: View {
                     }
                 )
                 .ignoresSafeArea()
+                .gesture(
+                    MagnifyGesture()
+                        .onChanged { value in
+                            let base = pinchBaseZoom ?? manager.displayZoom
+                            if pinchBaseZoom == nil { pinchBaseZoom = base }
+                            manager.setDisplayZoom(base * value.magnification)
+                        }
+                        .onEnded { _ in pinchBaseZoom = nil }
+                )
                 .overlay {
                     // Overlay shares CameraPreview's coordinate space; UIKit tap
                     // coordinates match, so focusPoint maps directly to .position.
@@ -385,7 +479,12 @@ struct CameraCapture: View {
             if manager.isSessionRunning { topBar }
         }
         .overlay(alignment: .bottom) {
-            if manager.isSessionRunning { bottomBar }
+            if manager.isSessionRunning {
+                VStack(spacing: Spacing.md) {
+                    if manager.zoomPresets.count > 1 { zoomBar }
+                    bottomBar
+                }
+            }
         }
         .task { await manager.checkPermissionAndStart() }
         .onDisappear { manager.stopSession() }
@@ -419,6 +518,43 @@ struct CameraCapture: View {
         }
         .padding(.horizontal, Spacing.lg)
         .padding(.top, Spacing.sm)
+    }
+
+    // MARK: - Zoom Bar
+
+    private var zoomBar: some View {
+        HStack(spacing: Spacing.sm) {
+            ForEach(manager.zoomPresets, id: \.self) { preset in
+                zoomButton(preset: preset)
+            }
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
+        .background(Color.black.opacity(0.4), in: Capsule())
+    }
+
+    private func zoomButton(preset: CGFloat) -> some View {
+        let isActive = abs(manager.displayZoom - preset) < 0.05
+        return Button {
+            manager.setDisplayZoom(preset, animated: true)
+        } label: {
+            Text(zoomLabel(for: preset, isActive: isActive))
+                .font(.system(size: isActive ? 13 : 11, weight: .semibold))
+                .foregroundStyle(isActive ? BrandColors.primary : .white)
+                .frame(width: 36, height: 36)
+                .background(Color.white.opacity(isActive ? 0.15 : 0.08), in: Circle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func zoomLabel(for preset: CGFloat, isActive: Bool) -> String {
+        // Active preset shows the live zoom with ×; inactive shows the preset value.
+        if isActive {
+            let z = manager.displayZoom
+            let formatted = z < 1 ? String(format: "%.1f", z) : (z.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(z))" : String(format: "%.1f", z))
+            return "\(formatted)×"
+        }
+        return preset < 1 ? String(format: "%.1f", preset) : "\(Int(preset))"
     }
 
     // MARK: - Bottom Bar

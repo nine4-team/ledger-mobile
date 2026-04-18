@@ -581,14 +581,9 @@ struct TransactionDetailView: View {
         }
     }
 
-    // 5. Items — collapsible header + SharedItemsList with pinned control bar
+    // 5. Items — composite pinned header (items label + control bar)
     @ViewBuilder
     private var itemsSection: some View {
-        Section {
-            EmptyView()
-        } header: {
-            itemsSectionHeader
-        }
         if expandedSections.contains("items") {
             SharedItemsList(
                 mode: .embedded(items: activeItems, onItemPress: { _ in }),
@@ -596,9 +591,11 @@ struct TransactionDetailView: View {
                 onAdd: { showAddItemMenu = true },
                 useNavigationLinks: true,
                 filterScope: .project,
-                inline: true
+                inline: true,
+                inlineSectionHeader: AnyView(itemsSectionHeader)
             )
-            .padding(.top, Spacing.xs)
+        } else {
+            itemsSectionHeader
         }
     }
 

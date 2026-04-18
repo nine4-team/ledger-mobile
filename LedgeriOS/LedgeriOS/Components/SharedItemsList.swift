@@ -17,6 +17,7 @@ struct SharedItemsList: View {
     var filterScope: ItemFilterScope?
     var inline: Bool = false
     var pickerItems: [Item]?
+    var inlineSectionHeader: AnyView? = nil
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -117,10 +118,15 @@ struct SharedItemsList: View {
                 Section {
                     inlineContent
                 } header: {
-                    controlBar
-                        .textCase(nil)
-                        .background(BrandColors.background
-                            .padding(.horizontal, -Spacing.screenPadding))
+                    VStack(spacing: 0) {
+                        if let inlineSectionHeader {
+                            inlineSectionHeader
+                        }
+                        controlBar
+                    }
+                    .textCase(nil)
+                    .background(BrandColors.background
+                        .padding(.horizontal, -Spacing.screenPadding))
                 }
             } else {
                 VStack(spacing: 0) {

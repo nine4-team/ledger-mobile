@@ -184,6 +184,16 @@ Sub-agents fabricate plausible details. When they produce specs, docs, or code t
 
 Button labels use title case with lowercase prepositions: `Save to Draft`, `Add New Item`.
 
+## Implementation Documents
+
+Implementation docs are separate from specs and feature docs. They are **delegation documents** — self-contained documents that a managing agent (senior dev / PM) uses to execute a piece of work end-to-end: break it into tasks, spin up junior dev agents, and review their output.
+
+They may reference specs and feature docs as context, but they are not those things.
+
+**Audience model:**
+- **The document is for the managing agent.** Structure, scope, and acceptance criteria are written for a senior dev/PM who delegates and reviews. They should be able to scan the doc, understand the full scope, and know what "done" looks like.
+- **Task-level detail is for junior agents.** Every task the managing agent would hand off should be described at a level where a junior dev agent can execute without asking clarifying questions — explicit file paths, function signatures, which patterns to follow, where to find examples. No assumed familiarity with the codebase or SwiftUI idioms.
+
 ## Feature Documentation
 
 Each feature area gets a doc file at `docs/features/[name].md`. These capture what's specific to that feature — what the root CLAUDE.md doesn't already cover. The template is at `docs/features/_template.md`.

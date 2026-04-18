@@ -90,7 +90,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, usesCircleButtons ? Spacing.sm : Spacing.lg)
-            .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
+            .padding(.vertical, style == .plain ? 0 : (usesCircleButtons ? Spacing.sm : 14))
             .modifier(containerModifier)
 
             if isSearchExpanded {
@@ -110,6 +110,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         .frame(maxWidth: Dimensions.contentMaxWidth)
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.sm)
+        .background(style == .plain ? BrandColors.background : .clear)
         .onChange(of: isSearchExpanded) { _, expanded in
             if expanded {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
