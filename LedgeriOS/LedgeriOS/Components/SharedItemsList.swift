@@ -245,8 +245,7 @@ struct SharedItemsList: View {
         HStack(spacing: Spacing.sm) {
             SearchField(
                 text: $searchText,
-                placeholder: "Search items...",
-                style: .overlay
+                placeholder: "Search items..."
             )
 
             Button { showSortMenu = true } label: {

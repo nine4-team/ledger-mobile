@@ -27,8 +27,7 @@ struct SearchControlBar: View {
             SearchField(
                 text: $searchText,
                 placeholder: searchPlaceholder,
-                isFocused: $isFocused,
-                style: .overlay
+                isFocused: $isFocused
             )
 
             if let onAdd {
