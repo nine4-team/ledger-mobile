@@ -9,6 +9,7 @@ struct UniversalAddModifier: ViewModifier {
     @State private var showNewProject = false
     @State private var showNewItem = false
     @State private var showNewTransaction = false
+    @State private var showQuickNote = false
     @State private var createdTransaction: Transaction?
 
     func body(content: Content) -> some View {
@@ -31,6 +32,11 @@ struct UniversalAddModifier: ViewModifier {
                             showNewTransaction = true
                         } label: {
                             Label("New Transaction", systemImage: "creditcard")
+                        }
+                        Button {
+                            showQuickNote = true
+                        } label: {
+                            Label("Quick Note", systemImage: "note.text")
                         }
                     } label: {
                         Image(systemName: "plus")
@@ -59,6 +65,9 @@ struct UniversalAddModifier: ViewModifier {
                     onCreated: { createdTransaction = $0 }
                 )
             }
+            .adaptivePresentation(isPresented: $showQuickNote, style: .form) {
+                QuickNoteModal()
+            }
             .navigationDestination(item: $createdTransaction) { tx in
                 TransactionDetailView(transaction: tx)
             }
@@ -75,6 +84,7 @@ struct UniversalAddSheetModifier: ViewModifier {
     @State private var showNewProject = false
     @State private var showNewItem = false
     @State private var showNewTransaction = false
+    @State private var showQuickNote = false
 
     func body(content: Content) -> some View {
         content
@@ -118,6 +128,12 @@ struct UniversalAddSheetModifier: ViewModifier {
                             icon: "creditcard",
                             onPress: { showNewTransaction = true }
                         ),
+                        ActionMenuItem(
+                            id: "note",
+                            label: "Quick Note",
+                            icon: "note.text",
+                            onPress: { showQuickNote = true }
+                        ),
                     ],
                     onSelectAction: { action in
                         pendingCreationAction = action
@@ -132,6 +148,9 @@ struct UniversalAddSheetModifier: ViewModifier {
             }
             .adaptivePresentation(isPresented: $showNewTransaction, style: .form) {
                 NewTransactionView(context: .inventory)
+            }
+            .adaptivePresentation(isPresented: $showQuickNote, style: .form) {
+                QuickNoteModal()
             }
     }
 }

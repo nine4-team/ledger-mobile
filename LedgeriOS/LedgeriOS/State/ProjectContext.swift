@@ -13,6 +13,7 @@ final class ProjectContext {
     var projectBudgetCategories: [ProjectBudgetCategory] = []
     var budgetProgress: BudgetProgress?
     var projectPreferences: ProjectPreferences?
+    var notes: [ProjectNote] = []
 
     private var listeners: [ListenerRegistration] = []
     private let projectService: ProjectServiceProtocol
@@ -23,6 +24,7 @@ final class ProjectContext {
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol
     private let budgetProgressService: BudgetProgressService
     private let projectPreferencesService: ProjectPreferencesService
+    private let projectNotesService: ProjectNotesServiceProtocol
 
     init(
         projectService: ProjectServiceProtocol,
@@ -32,7 +34,8 @@ final class ProjectContext {
         budgetCategoriesService: BudgetCategoriesServiceProtocol,
         projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol,
         budgetProgressService: BudgetProgressService = BudgetProgressService(),
-        projectPreferencesService: ProjectPreferencesService = ProjectPreferencesService()
+        projectPreferencesService: ProjectPreferencesService = ProjectPreferencesService(),
+        projectNotesService: ProjectNotesServiceProtocol = ProjectNotesService()
     ) {
         self.projectService = projectService
         self.transactionsService = transactionsService
@@ -42,6 +45,7 @@ final class ProjectContext {
         self.projectBudgetCategoriesService = projectBudgetCategoriesService
         self.budgetProgressService = budgetProgressService
         self.projectPreferencesService = projectPreferencesService
+        self.projectNotesService = projectNotesService
     }
 
     /// Activate subscriptions for a project. Call from `.task(id: projectId)` —
@@ -127,6 +131,18 @@ final class ProjectContext {
                 }
             )
         }
+
+        // 9. Notes scoped to project
+        listeners.append(
+            projectNotesService.subscribeToProjectNotes(
+                accountId: accountId,
+                projectId: projectId
+            ) { [weak self] notes in
+                Task { @MainActor in
+                    self?.notes = notes
+                }
+            }
+        )
     }
 
     func deleteProject(accountId: String, projectId: String) async throws {
@@ -140,6 +156,16 @@ final class ProjectContext {
             projectId: projectId,
             fields: ["isArchived": isArchived]
         )
+    }
+
+    func addNote(accountId: String, projectId: String, text: String, source: String, userId: String?, userName: String?) async throws {
+        var note = ProjectNote()
+        note.text = text
+        note.source = source
+        note.createdBy = userId ?? ""
+        note.createdByName = userName ?? ""
+        note.createdAt = Date()
+        try await projectNotesService.addProjectNote(accountId: accountId, projectId: projectId, note: note)
     }
 
     func stopListeners() {
@@ -158,6 +184,7 @@ final class ProjectContext {
         projectBudgetCategories = []
         budgetProgress = nil
         projectPreferences = nil
+        notes = []
     }
 
     /// Budget categories enabled for this project (have a ProjectBudgetCategory document).

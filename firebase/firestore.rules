@@ -149,6 +149,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/projects/{projectId}/notes/{noteId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     match /accounts/{accountId}/spaces/{spaceId} {
       allow read, create, update, delete: if isAccountMember(accountId);
     }

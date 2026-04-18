@@ -134,7 +134,7 @@ struct InventoryTransactionsSubTab: View {
                 print("🟡 [TxSubTab] inline + tapped, setting showNewTransaction = true")
                 showNewTransaction = true
             },
-            style: .card
+            style: .plain
         ) {
             if !processedTransactions.isEmpty {
                 Button {

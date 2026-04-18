@@ -41,13 +41,15 @@ struct SearchControlBar: View {
                 .tint(.secondary)
                 .font(.system(size: 16))
                 .imageScale(.medium)
-                .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+                .background(BrandColors.surface, in: Circle())
+                .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+                .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
                 .accessibilityLabel("Add")
             }
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
-        .modifier(CardGlassModifier())
+        .modifier(TransparentModifier())
         .frame(maxWidth: Dimensions.contentMaxWidth)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.screenPadding)

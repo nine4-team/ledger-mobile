@@ -142,7 +142,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── create_project ─────────────────────────────────────────────────────────
   server.tool(
     "create_project",
-    "[mutating] Create a new project. Requires a dated audit note in `notes`.",
+    "[mutating] Create a new project. Requires a dated audit note in `notes` — written to the project's notes subcollection.",
     {
       name: z.string().describe("Project name"),
       clientName: z.string().default("").describe("Client name"),
@@ -160,9 +160,19 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
         updatedAt: new Date(),
       };
       if (description) data.description = description;
-      if (notes) data.notes = notes;
 
       const ref = await accountCollection(db, "projects").add(data);
+
+      if (notes) {
+        await subcollection(db, "projects", ref.id, "notes").add({
+          text: notes,
+          source: "mcp",
+          createdBy: "mcp-agent",
+          createdByName: "AI Assistant",
+          createdAt: new Date(),
+        });
+      }
+
       return { content: [{ type: "text", text: `Created project ${ref.id}` }] };
     }
   );
@@ -170,7 +180,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── update_project ─────────────────────────────────────────────────────────
   server.tool(
     "update_project",
-    "[mutating] Update project fields. Requires a dated audit note in `notes` — appended to existing notes.",
+    "[mutating] Update project fields. Requires a dated audit note in `notes` — written to the project's notes subcollection (not the legacy string field).",
     {
       projectId: z.string().describe("Project document ID"),
       name: z.string().optional().describe("New project name"),
@@ -183,14 +193,22 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
       if (noteError) return noteError;
       const existing = await getDoc<Project>(db, "projects", projectId);
       if (!existing) return notFound("Project", projectId);
-      const mergedNotes = existing.notes ? `${existing.notes}\n${notes}` : notes;
 
-      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
       if (clientName !== undefined) updates.clientName = clientName;
       if (description !== undefined) updates.description = description;
 
       await accountCollection(db, "projects").doc(projectId).update(updates);
+
+      await subcollection(db, "projects", projectId, "notes").add({
+        text: notes,
+        source: "mcp",
+        createdBy: "mcp-agent",
+        createdByName: "AI Assistant",
+        createdAt: new Date(),
+      });
+
       return { content: [{ type: "text", text: `Updated project ${projectId}` }] };
     }
   );

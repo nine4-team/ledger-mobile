@@ -382,7 +382,7 @@ struct SharedTransactionsList: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            style: .card
+            style: .plain
         ) {
             if !processedTransactions.isEmpty {
                 Button {

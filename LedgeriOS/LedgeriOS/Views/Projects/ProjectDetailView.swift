@@ -16,6 +16,7 @@ struct ProjectDetailView: View {
     @State private var showExportSheetAllTransactions = false
     @State private var exportedFileURL: URL?
     @State private var errorMessage: String?
+    @State private var showQuickNote = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +27,7 @@ struct ProjectDetailView: View {
                 SegmentOption(id: "items", label: "Items"),
                 SegmentOption(id: "transactions", label: "Transactions"),
                 SegmentOption(id: "spaces", label: "Spaces"),
+                SegmentOption(id: "notes", label: "Notes"),
                 SegmentOption(id: "finances", label: "Finances"),
             ])
             .frame(maxWidth: Dimensions.contentMaxWidth)
@@ -50,6 +52,8 @@ struct ProjectDetailView: View {
                         .navigationDestination(for: Space.self) { space in
                             SpaceDetailView(space: space)
                         }
+                case "notes":
+                    NotesTabView()
                 case "finances":
                     FinancesTabView()
                         .navigationDestination(for: Invoice.self) { invoice in
@@ -78,6 +82,14 @@ struct ProjectDetailView: View {
                 }
             }
             #endif
+            ToolbarItem(placement: .trailingNavBar) {
+                Button {
+                    showQuickNote = true
+                } label: {
+                    Image(systemName: "note.text")
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
             ToolbarItem(placement: .trailingNavBar) {
                 Button {
                     showingMenu = true
@@ -124,6 +136,9 @@ struct ProjectDetailView: View {
                     menuPendingAction = action
                 }
             )
+        }
+        .adaptivePresentation(isPresented: $showQuickNote, style: .form) {
+            QuickNoteModal()
         }
         .adaptivePresentation(isPresented: $showingEditProject, style: .form) {
             EditProjectModal(

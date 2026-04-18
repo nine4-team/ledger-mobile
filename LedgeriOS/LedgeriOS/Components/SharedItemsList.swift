@@ -114,9 +114,13 @@ struct SharedItemsList: View {
     var body: some View {
         Group {
             if inline {
-                VStack(spacing: 0) {
-                    controlBar
+                Section {
                     inlineContent
+                } header: {
+                    controlBar
+                        .textCase(nil)
+                        .background(BrandColors.background
+                            .padding(.horizontal, -Spacing.screenPadding))
                 }
             } else {
                 VStack(spacing: 0) {
@@ -192,7 +196,7 @@ struct SharedItemsList: View {
     private var controlBar: some View {
         // Backup styles: .capsule (original labeled icons in glass pill),
         // .plain (circle buttons with no background container)
-        controlBarInstance(style: .card)
+        controlBarInstance(style: .plain)
     }
 
     @ViewBuilder
@@ -253,7 +257,9 @@ struct SharedItemsList: View {
             .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
-            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
 
             Button { showFilterMenu = true } label: {
                 Image(systemName: "line.3.horizontal.decrease")
@@ -263,18 +269,13 @@ struct SharedItemsList: View {
             .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
-            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
-        .background(BrandColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
-        )
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         .frame(maxWidth: Dimensions.contentMaxWidth)
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.sm)

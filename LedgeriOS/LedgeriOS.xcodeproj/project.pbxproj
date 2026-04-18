@@ -83,6 +83,7 @@
 		5AE28A9EEA613E88BB36775A /* ImageThumbnailGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2DD58065490913562F0CD4 /* ImageThumbnailGenerator.swift */; };
 		5B4FF7903607E7F99C33FE95 /* UsersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE5748E2943183F32FE6124 /* UsersView.swift */; };
 		5BADB6A67B1F469BAD694F6F /* ProjectPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735D35058B9B023DFF14D776 /* ProjectPickerList.swift */; };
+		5C1A2B3D4E5F6A7B8C9D0E1F /* QuickNoteModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D2B3C4E5F6A7B8C9D0E1F2A /* QuickNoteModal.swift */; };
 		5E5F53EA937468D990B8E42F /* SpaceTemplateManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0FBA594B36A6B1037EA47B /* SpaceTemplateManagementView.swift */; };
 		5E935CB0BD60643258398CF9 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4551FEFFD9F3B79C7DC829B /* NewProjectView.swift */; };
 		5FFCCF119D1AFDE04768B6FD /* InvoiceDateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CA5CA236FBB37B8B4ED80C /* InvoiceDateParsing.swift */; };
@@ -132,6 +133,7 @@
 		9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */; };
 		949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */; };
 		95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4222455FCC3471031DA93 /* SpacesTabView.swift */; };
+		NT0001010000000000000001 /* NotesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = NT0002010000000000000001 /* NotesTabView.swift */; };
 		96212F452F89463B9E156E3D /* MediaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63426CD1523A4E8D9D239F04 /* MediaService.swift */; };
 		A1000101000000000000AA01 /* LedgerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA01 /* LedgerApp.swift */; };
 		A1000101000000000000AA03 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000201000000000000AA03 /* Assets.xcassets */; };
@@ -243,6 +245,9 @@
 		E95BEA371D8AB6BB4EC53141 /* CategoryPickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */; };
 		E9E5857CC5B1B42516862B32 /* SellToBusinessModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BA49B4393B3684496475B /* SellToBusinessModal.swift */; };
 		EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */; };
+		PN00000000000000000B0001 /* ProjectNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0001 /* ProjectNote.swift */; };
+		PN00000000000000000B0002 /* ProjectNotesServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0002 /* ProjectNotesServiceProtocol.swift */; };
+		PN00000000000000000B0003 /* ProjectNotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PN00000000000000000F0003 /* ProjectNotesService.swift */; };
 		EABB457123AEA19069EE5474 /* ScrollableTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815EB3F60590B98FBFE19030 /* ScrollableTabBar.swift */; };
 		EB68FE991FC989138FA16DBF /* RelationshipIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C176668FF08876772F68C5 /* RelationshipIntegrationTests.swift */; };
 		EC3AC233EDCA8D6130DA984D /* SpacesServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD524C3A177A74084F555003 /* SpacesServiceProtocol.swift */; };
@@ -435,6 +440,7 @@
 		6DD312026960C03CC6B34CB6 /* PdfTextExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PdfTextExtractor.swift; sourceTree = "<group>"; };
 		72FB2AE7B011092E46E9D316 /* SpaceDetailCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceDetailCalculations.swift; sourceTree = "<group>"; };
 		735D35058B9B023DFF14D776 /* ProjectPickerList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectPickerList.swift; sourceTree = "<group>"; };
+		6D2B3C4E5F6A7B8C9D0E1F2A /* QuickNoteModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickNoteModal.swift; sourceTree = "<group>"; };
 		74D430C4EF4DEF29859EE5D0 /* SpaceTemplatesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceTemplatesService.swift; sourceTree = "<group>"; };
 		75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SelectableImageGrid.swift; sourceTree = "<group>"; };
 		76455EE6E54DDCB6AD97B37B /* RepositoryProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RepositoryProtocol.swift; sourceTree = "<group>"; };
@@ -443,6 +449,7 @@
 		7A236AC84A96923802C4A151 /* ReturnTransactionPickerModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReturnTransactionPickerModal.swift; sourceTree = "<group>"; };
 		7ADAE9E51DEE7B480EB69657 /* VendorDefaultsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaultsView.swift; sourceTree = "<group>"; };
 		7BF4222455FCC3471031DA93 /* SpacesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpacesTabView.swift; sourceTree = "<group>"; };
+		NT0002010000000000000001 /* NotesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotesTabView.swift; sourceTree = "<group>"; };
 		7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategory.swift; sourceTree = "<group>"; };
 		7DF70475B44565FA9BB2B1F6 /* SpaceFormValidation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceFormValidation.swift; sourceTree = "<group>"; };
 		7E665AF5D09BF06D144848C6 /* RenameItemModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RenameItemModal.swift; sourceTree = "<group>"; };
@@ -517,6 +524,9 @@
 		B74CC761A05322C4486E9543 /* AddExistingItemsPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddExistingItemsPicker.swift; sourceTree = "<group>"; };
 		B9F2960084B07BFD00F2FE6F /* ProjectContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectContext.swift; sourceTree = "<group>"; };
 		BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectBudgetCategory.swift; sourceTree = "<group>"; };
+		PN00000000000000000F0001 /* ProjectNote.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNote.swift; sourceTree = "<group>"; };
+		PN00000000000000000F0002 /* ProjectNotesServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNotesServiceProtocol.swift; sourceTree = "<group>"; };
+		PN00000000000000000F0003 /* ProjectNotesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectNotesService.swift; sourceTree = "<group>"; };
 		BBC22444E1A1B5E94733132F /* TransactionCRUDIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCRUDIntegrationTests.swift; sourceTree = "<group>"; };
 		BE243B592ABD484D8B319501 /* ReportAggregationCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportAggregationCalculationTests.swift; sourceTree = "<group>"; };
 		BF4E46A20653940A8B96A7A9 /* SpaceCRUDIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpaceCRUDIntegrationTests.swift; sourceTree = "<group>"; };
@@ -753,6 +763,7 @@
 				9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */,
 				AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */,
 				7BF4222455FCC3471031DA93 /* SpacesTabView.swift */,
+				NT0002010000000000000001 /* NotesTabView.swift */,
 				4745C15BA2924A183A82E249 /* ItemsTabView.swift */,
 				2F74BE7B5D06201352DB914C /* SpaceDetailView.swift */,
 			);
@@ -837,6 +848,7 @@
 				1A548983AC0E6196622B4719 /* Space.swift */,
 				7DE90BBEE4C7A51598822FE2 /* BudgetCategory.swift */,
 				BB69ABE50D02A2298312DAB8 /* ProjectBudgetCategory.swift */,
+				PN00000000000000000F0001 /* ProjectNote.swift */,
 				857F2893750ABBED0530AF4C /* BudgetProgress.swift */,
 				A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */,
 				F923BE246BDFE7441513642E /* Invite.swift */,
@@ -873,6 +885,7 @@
 				50623E68F8E8A1789A9C2132 /* SpacesService.swift */,
 				B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */,
 				D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */,
+				PN00000000000000000F0003 /* ProjectNotesService.swift */,
 				C18788219656392644ADD4F3 /* BudgetProgressService.swift */,
 				CFFD7C48C59A953E37ACAF5D /* AccountMembersService.swift */,
 				5CE461E5CE01EC26784E658E /* ProjectPreferencesService.swift */,
@@ -975,6 +988,7 @@
 				CD603C3D64F77EC36777BED8 /* SettingsServiceProtocols.swift */,
 				AF876F4BCCF157A3367AC517 /* BatchWriting.swift */,
 				BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */,
+				PN00000000000000000F0002 /* ProjectNotesServiceProtocol.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -1259,6 +1273,7 @@
 				D7184640FD902E9E64F1779F /* EditItemDetailsModal.swift */,
 				082B142DF68203AFD6FBA3DE /* SetSpaceModal.swift */,
 				735D35058B9B023DFF14D776 /* ProjectPickerList.swift */,
+				6D2B3C4E5F6A7B8C9D0E1F2A /* QuickNoteModal.swift */,
 				AA11BB22CC33DD44EE55FF66 /* DestinationPickerSheet.swift */,
 				033D7CD21A568DA7AC4CDBFA /* MakeCopiesModal.swift */,
 				0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */,
@@ -1432,6 +1447,7 @@
 				C199091B0339E9DDE0585615 /* Space.swift in Sources */,
 				8583FD6B918D281D32B8451C /* BudgetCategory.swift in Sources */,
 				EA6D5CA590F641D012BC5AC8 /* ProjectBudgetCategory.swift in Sources */,
+				PN00000000000000000B0001 /* ProjectNote.swift in Sources */,
 				C1D89C99D303AB6FA6612474 /* BudgetProgress.swift in Sources */,
 				41B2552FC78E15C5FCD73414 /* RepositoryProtocol.swift in Sources */,
 				F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */,
@@ -1439,6 +1455,7 @@
 				177FD354262F86665FDC15E8 /* TransactionsServiceProtocol.swift in Sources */,
 				EC3AC233EDCA8D6130DA984D /* SpacesServiceProtocol.swift in Sources */,
 				65F1A00A24D917B71321D40A /* BudgetServiceProtocols.swift in Sources */,
+				PN00000000000000000B0002 /* ProjectNotesServiceProtocol.swift in Sources */,
 				6F72A4A5B67D935329EC7C21 /* FirestoreRepository.swift in Sources */,
 				E6BB3B6D6F4E2339F3A86967 /* AccountsService.swift in Sources */,
 				B1C4A97139A51FB63D155638 /* ProjectService.swift in Sources */,
@@ -1449,6 +1466,7 @@
 				E0C8E2D81869D3725ED4AD47 /* SpacesService.swift in Sources */,
 				2A0FFA5D67FDC59A60F67326 /* BudgetCategoriesService.swift in Sources */,
 				3A8B8DAC00216F5F5F3B1FE0 /* ProjectBudgetCategoriesService.swift in Sources */,
+				PN00000000000000000B0003 /* ProjectNotesService.swift in Sources */,
 				ED5F1144F9E2B45A1AAB3A18 /* BudgetProgressService.swift in Sources */,
 				CDCF267F298296A2AAB6C652 /* AccountMembersService.swift in Sources */,
 				1FF76A00B3E83084EB65CBF2 /* ScopeFilters.swift in Sources */,
@@ -1600,6 +1618,7 @@
 				1947BCA3E47420ACAB476C75 /* EditItemDetailsModal.swift in Sources */,
 				F100517684382B0A3E771B46 /* SetSpaceModal.swift in Sources */,
 				5BADB6A67B1F469BAD694F6F /* ProjectPickerList.swift in Sources */,
+				5C1A2B3D4E5F6A7B8C9D0E1F /* QuickNoteModal.swift in Sources */,
 				BB22CC33DD44EE55FF6677AA /* DestinationPickerSheet.swift in Sources */,
 				ABB7F45B9ED5117D6C9910DD /* MakeCopiesModal.swift in Sources */,
 				F8CC9F1287A1E194B2B7DC7F /* TransactionPickerModal.swift in Sources */,
@@ -1616,6 +1635,7 @@
 				5E5F53EA937468D990B8E42F /* SpaceTemplateManagementView.swift in Sources */,
 				82E2369EAFDA2C4773AF0CC0 /* ItemDetailView.swift in Sources */,
 				95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */,
+				NT0001010000000000000001 /* NotesTabView.swift in Sources */,
 				F1A8091E7D2EAF253BF66A93 /* ItemsTabView.swift in Sources */,
 				31D8FBEE0A5ED549A350D7D4 /* SpaceDetailView.swift in Sources */,
 				51B1E75522767B0F669583A3 /* UniversalSearchView.swift in Sources */,

@@ -88,8 +88,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                     }
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, usesCircleButtons ? Spacing.xl : Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, usesCircleButtons ? Spacing.sm : Spacing.lg)
             .padding(.vertical, usesCircleButtons ? Spacing.sm : 14)
             .modifier(containerModifier)
 
@@ -161,7 +161,9 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .tint(BrandColors.textSecondary)
             .font(.system(size: 16))
             .imageScale(.medium)
-            .overlay(Circle().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }
 

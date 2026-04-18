@@ -170,7 +170,7 @@ struct TransactionsTabView: View {
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
             onAdd: { showNewTransaction = true },
-            style: .card
+            style: .plain
         ) {
             if !processedTransactions.isEmpty {
                 Button {

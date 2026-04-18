@@ -20,7 +20,6 @@ struct EditProjectModal: View {
     @State private var name: String
     @State private var clientName: String
     @State private var descriptionText: String
-    @State private var notesText: String
     @State private var heroImageItem: PhotosPickerItem?
     @State private var heroImageData: Data?
     @State private var existingImageUrl: String?
@@ -51,7 +50,6 @@ struct EditProjectModal: View {
         _name = State(initialValue: project.name)
         _clientName = State(initialValue: project.clientName)
         _descriptionText = State(initialValue: project.description ?? "")
-        _notesText = State(initialValue: project.notes ?? "")
         _existingImageUrl = State(initialValue: project.mainImageUrl)
         _existingImageThumbUrlMd = State(initialValue: project.mainImageThumbUrlMd)
 
@@ -135,8 +133,6 @@ struct EditProjectModal: View {
                 FormField(text: $name, placeholder: "Project name *")
                 FormField(text: $clientName, placeholder: "Client name *")
                 FormField(text: $descriptionText, placeholder: "Description", axis: .vertical)
-
-                FormField(text: $notesText, placeholder: "Notes", axis: .vertical)
 
                 heroImageSection
             }
@@ -391,13 +387,6 @@ struct EditProjectModal: View {
             fields["description"] = NSNull()
         } else {
             fields["description"] = trimmedDesc
-        }
-
-        let trimmedNotes = notesText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedNotes.isEmpty {
-            fields["notes"] = NSNull()
-        } else {
-            fields["notes"] = trimmedNotes
         }
 
         // Dismiss immediately (optimistic UI)

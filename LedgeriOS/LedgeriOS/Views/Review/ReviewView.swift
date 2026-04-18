@@ -104,7 +104,7 @@ struct ReviewView: View {
         NativeListControlBar(
             searchText: $searchText,
             searchPlaceholder: "Search transactions...",
-            style: .card
+            style: .plain
         ) {
             EmptyView()
         } sortMenu: {

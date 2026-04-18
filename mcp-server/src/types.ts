@@ -187,6 +187,16 @@ export interface LineageEdge {
   createdAt?: FirebaseFirestore.Timestamp;
 }
 
+export interface ProjectNote {
+  id: string;
+  projectId?: string;
+  text: string;
+  createdBy: string;
+  createdByName: string;
+  source: string;
+  createdAt?: FirebaseFirestore.Timestamp;
+}
+
 export interface AttachmentRef {
   url: string;
   thumbnailUrlSm?: string;
