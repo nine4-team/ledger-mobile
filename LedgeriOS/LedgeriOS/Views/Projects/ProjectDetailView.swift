@@ -23,12 +23,12 @@ struct ProjectDetailView: View {
             PinnedBudgetsSection()
                 .frame(maxWidth: Dimensions.contentMaxWidth)
                 .frame(maxWidth: .infinity)
-            SegmentedControl(selection: $selectedTab, options: [
-                SegmentOption(id: "items", label: "Items"),
-                SegmentOption(id: "transactions", label: "Transactions"),
-                SegmentOption(id: "spaces", label: "Spaces"),
-                SegmentOption(id: "notes", label: "Notes"),
-                SegmentOption(id: "finances", label: "Finances"),
+            ScrollableTabBar(selectedId: $selectedTab, items: [
+                TabBarItem(id: "items", label: "Items"),
+                TabBarItem(id: "transactions", label: "Transactions"),
+                TabBarItem(id: "spaces", label: "Spaces"),
+                TabBarItem(id: "notes", label: "Notes"),
+                TabBarItem(id: "finances", label: "Finances"),
             ])
             .frame(maxWidth: Dimensions.contentMaxWidth)
             .frame(maxWidth: .infinity)

@@ -109,7 +109,8 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         }
         .frame(maxWidth: Dimensions.contentMaxWidth)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.sm)
+        .padding(.top, Spacing.sm)
+        .padding(.bottom, style == .plain ? Spacing.md : Spacing.sm)
         .background(style == .plain ? BrandColors.background : .clear)
         .onChange(of: isSearchExpanded) { _, expanded in
             if expanded {
