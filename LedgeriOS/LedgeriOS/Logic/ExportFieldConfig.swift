@@ -39,7 +39,7 @@ enum ExportFields {
         ExportFieldConfig(id: "notes", label: "Notes", defaultSelected: true) { tx, _, _ in
             tx.notes ?? ""
         },
-        ExportFieldConfig(id: "reimbursementType", label: "Reimbursement Type", defaultSelected: false) { tx, _, _ in
+        ExportFieldConfig(id: "reimbursementType", label: "Payable", defaultSelected: false) { tx, _, _ in
             tx.reimbursementType ?? ""
         },
         ExportFieldConfig(id: "status", label: "Status", defaultSelected: false) { tx, _, _ in

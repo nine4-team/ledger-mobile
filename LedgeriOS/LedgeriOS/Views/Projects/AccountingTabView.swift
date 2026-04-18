@@ -27,7 +27,7 @@ struct AccountingTabView: View {
         ScrollView {
             AdaptiveContentWidth {
                 VStack(spacing: Spacing.cardListGap) {
-                    // Responsive grid for reimbursement summary cards
+                    // Responsive grid for payable summary cards
                     LazyVGrid(
                         columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.cardListGap), count: columnCount),
                         spacing: Spacing.cardListGap
@@ -35,7 +35,7 @@ struct AccountingTabView: View {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Owed to Design Business")
+                                    Text("Payable to Business")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(owedToCompanyCents))
@@ -49,7 +49,7 @@ struct AccountingTabView: View {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Owed to Client")
+                                    Text("Payable to Client")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(owedToClientCents))

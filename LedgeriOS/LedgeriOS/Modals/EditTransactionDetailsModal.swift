@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Bottom sheet for editing all transaction detail fields in the correct order (FR-5.6).
 /// Field order: Vendor/Source → Amount → Date → Status → Purchased By →
-/// Transaction Type → Reimbursement Type → Budget Category → Email Receipt →
+/// Transaction Type → Payable → Budget Category → Email Receipt →
 /// (conditional) Subtotal → Tax Rate.
 struct EditTransactionDetailsModal: View {
     let transaction: Transaction
@@ -100,11 +100,11 @@ struct EditTransactionDetailsModal: View {
                     TransactionType.allCases.map { ($0.rawValue, $0.displayLabel) }
                 )
 
-                // 7. Reimbursement Type
-                FormSelect(label: "Reimbursement Type", selection: $reimbursementType, options: [
+                // 7. Payable
+                FormSelect(label: "Payable", selection: $reimbursementType, options: [
                     ("none", "None"),
-                    ("owed-to-client", "Owed to Client"),
-                    ("owed-to-company", "Owed to Business"),
+                    ("owed-to-client", "To Client"),
+                    ("owed-to-company", "To Business"),
                 ])
 
                 // 8. Budget Category

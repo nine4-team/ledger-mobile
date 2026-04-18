@@ -7,7 +7,7 @@ import SwiftUI
 /// but works with any `Hashable` type.
 ///
 /// Use this for form fields with 2–4 fixed options (e.g. "Purchased By",
-/// "Reimbursement", yes/no toggles). For tab-style navigation, use
+/// "Payable", yes/no toggles). For tab-style navigation, use
 /// `SegmentedControl` instead.
 struct InlineOptionPicker<T: Hashable>: View {
     @Binding var selection: T

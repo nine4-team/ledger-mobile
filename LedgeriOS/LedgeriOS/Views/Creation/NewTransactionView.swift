@@ -269,13 +269,13 @@ struct NewTransactionView: View {
                     }
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Reimbursement")
+                        Text("Payable")
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
                         InlineOptionPicker(selection: $reimbursementType, options: [
                             InlineOption(id: "none", label: "None"),
-                            InlineOption(id: "owed-to-client", label: "Owed to Client"),
-                            InlineOption(id: "owed-to-company", label: "Owed to Company"),
+                            InlineOption(id: "owed-to-client", label: "To Client"),
+                            InlineOption(id: "owed-to-company", label: "To Business"),
                         ])
                     }
                 }

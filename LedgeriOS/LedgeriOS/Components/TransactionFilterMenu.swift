@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Grouped multi-select filter menu for transactions.
 /// 8 filter groups matching the React Native app:
-/// Status, Reimbursement Status, Email Receipt, Transaction Type,
+/// Status, Payable, Email Receipt, Transaction Type,
 /// Completeness, Budget Category, Purchased By, Source.
 struct TransactionFilterMenu: View {
     @Binding var isPresented: Bool
@@ -40,13 +40,13 @@ struct TransactionFilterMenu: View {
 
         items.append(filterGroup(
             id: "reimbursement",
-            label: "Reimbursement Status",
+            label: "Payable",
             group: .reimbursementStatus,
             options: [
                 ("all", "All"),
                 ("none", "None"),
-                ("owed-to-client", "Owed to Client"),
-                ("owed-to-company", "Owed to Business"),
+                ("owed-to-client", "To Client"),
+                ("owed-to-company", "To Business"),
             ]
         ))
 

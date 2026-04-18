@@ -560,7 +560,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Status", value: displayStatus(currentTransaction.status))
                 DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
-                DetailRow(label: "Reimbursement", value: displayReimbursement(currentTransaction.reimbursementType))
+                DetailRow(label: "Payable", value: displayPayable(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
                 if selectedCategory?.metadata?.categoryType == .itemized {
                     DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
@@ -581,22 +581,24 @@ struct TransactionDetailView: View {
         }
     }
 
-    // 5. Items — Section with pinned composite header + SharedItemsList
+    // 5. Items — collapsible header + SharedItemsList with pinned control bar
+    @ViewBuilder
     private var itemsSection: some View {
         Section {
-            if expandedSections.contains("items") {
-                SharedItemsList(
-                    mode: .embedded(items: activeItems, onItemPress: { _ in }),
-                    emptyMessage: "No items yet",
-                    onAdd: { showAddItemMenu = true },
-                    useNavigationLinks: true,
-                    filterScope: .project,
-                    inline: true
-                )
-                .padding(.top, Spacing.xs)
-            }
+            EmptyView()
         } header: {
             itemsSectionHeader
+        }
+        if expandedSections.contains("items") {
+            SharedItemsList(
+                mode: .embedded(items: activeItems, onItemPress: { _ in }),
+                emptyMessage: "No items yet",
+                onAdd: { showAddItemMenu = true },
+                useNavigationLinks: true,
+                filterScope: .project,
+                inline: true
+            )
+            .padding(.top, Spacing.xs)
         }
     }
 
@@ -859,10 +861,10 @@ struct TransactionDetailView: View {
         value?.displayLabel ?? "—"
     }
 
-    private func displayReimbursement(_ value: String?) -> String {
+    private func displayPayable(_ value: String?) -> String {
         switch value?.lowercased() {
-        case "owed-to-client": return "Owed to Client"
-        case "owed-to-company": return "Owed to Business"
+        case "owed-to-client": return "To Client"
+        case "owed-to-company": return "To Business"
         case "none": return "None"
         default: return "—"
         }
