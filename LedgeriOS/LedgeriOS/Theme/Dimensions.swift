@@ -57,3 +57,20 @@ enum Dimensions {
     /// Width of the pinned image sidebar on regular-width displays (iPad)
     static let pinnedSidebarWidth: CGFloat = 384
 }
+
+// MARK: - Form Input Container
+
+extension View {
+    /// Standard bordered input container — matches `FormField` styling.
+    /// Applies horizontal padding, 44pt min height, input radius, and border stroke.
+    func formInputStyle() -> some View {
+        self
+            .padding(.horizontal, Spacing.md)
+            .frame(minHeight: 44)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
+    }
+}

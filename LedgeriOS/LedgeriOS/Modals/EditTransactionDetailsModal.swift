@@ -80,21 +80,15 @@ struct EditTransactionDetailsModal: View {
                     .platformKeyboardType(.decimalPad)
 
                 // 3. Date
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Date")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-                    DatePicker("", selection: $transactionDate, displayedComponents: .date)
-                        .labelsHidden()
-                }
+                FormDateField(label: "Date", date: $transactionDate)
 
                 // 4. Status
-                pickerField(label: "Status", selection: $status, options:
+                FormSelect(label: "Status", selection: $status, options:
                     TransactionStatus.allCases.map { ($0.rawValue, $0.displayLabel) }
                 )
 
                 // 5. Purchased By
-                pickerField(label: "Purchased By", selection: $purchasedBy, options: [
+                FormSelect(label: "Purchased By", selection: $purchasedBy, options: [
                     ("", "—"),
                     ("client-card", "Client Card"),
                     ("design-business", "Design Business"),
@@ -102,54 +96,28 @@ struct EditTransactionDetailsModal: View {
                 ])
 
                 // 6. Transaction Type
-                pickerField(label: "Transaction Type", selection: $transactionType, options:
+                FormSelect(label: "Transaction Type", selection: $transactionType, options:
                     TransactionType.allCases.map { ($0.rawValue, $0.displayLabel) }
                 )
 
                 // 7. Reimbursement Type
-                pickerField(label: "Reimbursement Type", selection: $reimbursementType, options: [
+                FormSelect(label: "Reimbursement Type", selection: $reimbursementType, options: [
                     ("none", "None"),
                     ("owed-to-client", "Owed to Client"),
                     ("owed-to-company", "Owed to Business"),
                 ])
 
                 // 8. Budget Category
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Budget Category")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
-
-                    Button {
-                        showCategoryPicker = true
-                    } label: {
-                        HStack {
-                            Text(selectedCategory?.name ?? "No Category")
-                                .font(Typography.body)
-                                .foregroundStyle(
-                                    selectedCategory != nil ? BrandColors.textPrimary : BrandColors.textTertiary
-                                )
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(BrandColors.textTertiary)
-                        }
-                        .padding(.horizontal, Spacing.md)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                        )
-                    }
-                    .buttonStyle(.plain)
+                FormPicker(
+                    label: "Budget Category",
+                    value: selectedCategory?.name ?? "",
+                    placeholder: "No Category"
+                ) {
+                    showCategoryPicker = true
                 }
 
                 // 9. Email Receipt
-                Toggle("Email Receipt", isOn: $hasEmailReceipt)
-                    .font(Typography.body)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .tint(BrandColors.primary)
+                FormToggle(label: "Email Receipt", isOn: $hasEmailReceipt)
 
                 // 10-11. Conditional: Subtotal + Tax Rate (only for itemized categories)
                 if isItemizedCategory {
@@ -172,25 +140,6 @@ struct EditTransactionDetailsModal: View {
                     budgetCategoryId = category?.id
                 }
             )
-        }
-    }
-
-    // MARK: - Picker Helper
-
-    @ViewBuilder
-    private func pickerField(label: String, selection: Binding<String>, options: [(String, String)]) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(label)
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
-
-            Picker(label, selection: selection) {
-                ForEach(options, id: \.0) { value, display in
-                    Text(display).tag(value)
-                }
-            }
-            .pickerStyle(.menu)
-            .tint(BrandColors.textPrimary)
         }
     }
 

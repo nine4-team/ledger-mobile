@@ -185,6 +185,10 @@
 		C5A0010100000000000C0001 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0001 /* Card.swift */; };
 		C5A0010100000000000C0002 /* AppButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0002 /* AppButton.swift */; };
 		C5A0010100000000000C0003 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0003 /* FormField.swift */; };
+		FS01F00100000000000C0001 /* FormSelect.swift in Sources */ = {isa = PBXBuildFile; fileRef = FS02F00100000000000C0001 /* FormSelect.swift */; };
+		FS01F00100000000000C0002 /* FormDateField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FS02F00100000000000C0002 /* FormDateField.swift */; };
+		FS01F00100000000000C0003 /* FormToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FS02F00100000000000C0003 /* FormToggle.swift */; };
+		FS01F00100000000000C0004 /* FormPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FS02F00100000000000C0004 /* FormPicker.swift */; };
 		C5A0010100000000000C0004 /* DetailRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0004 /* DetailRow.swift */; };
 		C5A0010100000000000C0005 /* SelectorCircle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0005 /* SelectorCircle.swift */; };
 		C5A0010100000000000C0006 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A0020100000000000C0006 /* Badge.swift */; };
@@ -526,6 +530,10 @@
 		C5A0020100000000000C0001 /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0002 /* AppButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppButton.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0003 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
+		FS02F00100000000000C0001 /* FormSelect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSelect.swift; sourceTree = "<group>"; };
+		FS02F00100000000000C0002 /* FormDateField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormDateField.swift; sourceTree = "<group>"; };
+		FS02F00100000000000C0003 /* FormToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormToggle.swift; sourceTree = "<group>"; };
+		FS02F00100000000000C0004 /* FormPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormPicker.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0004 /* DetailRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailRow.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0005 /* SelectorCircle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectorCircle.swift; sourceTree = "<group>"; };
 		C5A0020100000000000C0006 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
@@ -1121,6 +1129,10 @@
 				DED4E4B064794F2389C7F8A0 /* BulkSelectionBar.swift */,
 				C0B11EEACD474613AA9E9F1D /* ActionMenuSheet.swift */,
 				C5A0020100000000000C0003 /* FormField.swift */,
+				FS02F00100000000000C0001 /* FormSelect.swift */,
+				FS02F00100000000000C0002 /* FormDateField.swift */,
+				FS02F00100000000000C0003 /* FormToggle.swift */,
+				FS02F00100000000000C0004 /* FormPicker.swift */,
 				C5A0020100000000000C0004 /* DetailRow.swift */,
 				C5A0020100000000000C0005 /* SelectorCircle.swift */,
 				C5A0020100000000000C0006 /* Badge.swift */,
@@ -1475,6 +1487,10 @@
 				1F29D02FA11041168CC832D8 /* BulkSelectionBar.swift in Sources */,
 				A86B6E2253FF4B81875DE743 /* ActionMenuSheet.swift in Sources */,
 				C5A0010100000000000C0003 /* FormField.swift in Sources */,
+				FS01F00100000000000C0001 /* FormSelect.swift in Sources */,
+				FS01F00100000000000C0002 /* FormDateField.swift in Sources */,
+				FS01F00100000000000C0003 /* FormToggle.swift in Sources */,
+				FS01F00100000000000C0004 /* FormPicker.swift in Sources */,
 				C5A0010100000000000C0004 /* DetailRow.swift in Sources */,
 				C5A0010100000000000C0005 /* SelectorCircle.swift in Sources */,
 				C5A0010100000000000C0006 /* Badge.swift in Sources */,
