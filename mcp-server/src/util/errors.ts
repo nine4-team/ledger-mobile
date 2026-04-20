@@ -66,25 +66,27 @@ export function validation(
 }
 
 /**
- * Enforce that a mutation call carries a dated audit note.
+ * Require a non-empty `notes` string on tools that create a brand-new audit
+ * record whose notes field IS the primary description (sell_items, return_items,
+ * move_items_between_projects, create_*_with_items, add_project_note).
+ *
  * Returns a ToolErrorResponse if invalid; null if valid.
  *
- * Accepted format: anything starting with a digit (month) — e.g. "4/6 — moved 3 fixtures…".
- * Minimum length 8 chars so we reject "x" or empty strings.
+ * History: an earlier version of this helper required notes to begin with a
+ * date literal (e.g. "4/6 — …"). That regex was removed in 2026-04 — it
+ * fought the actual convention, which is: user-authored prose at the top of
+ * the notes field, AI-authored audit lines (if any) BELOW the prose with a
+ * blank-line separator. Forcing a date to the top pushed user prose below and
+ * produced unreadable records. The createdAt/updatedAt timestamps on the
+ * document already capture "when"; the notes field should capture "what" in
+ * the reader's natural order.
  */
-export function requireAuditNote(notes: string | undefined, toolName: string): ToolErrorResponse | null {
-  if (!notes || notes.trim().length < 8) {
+export function requireNonEmptyNote(notes: string | undefined, toolName: string): ToolErrorResponse | null {
+  if (!notes || notes.trim().length < 3) {
     return validation(
-      "`notes` is required and must be a short dated audit note.",
-      `Include a dated note like "4/6 — short description of what changed and why". This preserves the audit trail on every mutation.`,
+      "`notes` is required and cannot be empty.",
+      `Provide a short description of what this record represents — a sentence or two is fine. The createdAt timestamp records the date; the notes field should describe what, not when.`,
       { tool: toolName }
-    );
-  }
-  if (!/^\s*\d/.test(notes)) {
-    return validation(
-      "`notes` must begin with a date.",
-      `Prefix the note with today's date, e.g. "4/6 — moved 3 fixtures to Witzenman".`,
-      { tool: toolName, received: notes.slice(0, 40) }
     );
   }
   return null;

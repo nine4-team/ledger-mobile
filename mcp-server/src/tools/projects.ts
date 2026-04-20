@@ -12,7 +12,7 @@ import {
   asToolResponse,
   pickFields,
 } from "../util/projections.js";
-import { requireAuditNote, notFound } from "../util/errors.js";
+import { notFound } from "../util/errors.js";
 
 export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── list_projects ──────────────────────────────────────────────────────────
@@ -142,16 +142,14 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── create_project ─────────────────────────────────────────────────────────
   server.tool(
     "create_project",
-    "[mutating] Create a new project. Requires a dated audit note in `notes` — written to the project's notes subcollection.",
+    "[mutating] Create a new project. Optional `notes` is written as the first entry in the project's notes subcollection.",
     {
       name: z.string().describe("Project name"),
       clientName: z.string().default("").describe("Client name"),
       description: z.string().optional().describe("Project description"),
-      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — New Witzenman 2nd home project, signed contract'. May also contain receipt-matching hints."),
+      notes: z.string().optional().describe("Optional first note for the project (e.g. 'New Witzenman 2nd home — signed contract, card last-4 4321'). Free-form. Use add_project_note later to append more."),
     },
     async ({ name, clientName, description, notes }) => {
-      const noteError = requireAuditNote(notes, "create_project");
-      if (noteError) return noteError;
       const data: Record<string, unknown> = {
         name,
         clientName,
@@ -180,17 +178,15 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── update_project ─────────────────────────────────────────────────────────
   server.tool(
     "update_project",
-    "[mutating] Update project fields. Requires a dated audit note in `notes` — written to the project's notes subcollection (not the legacy string field).",
+    "[mutating] Update project fields. `notes` is optional — if provided, appended to the project's notes subcollection (not replaced). updatedAt records the audit trail; use add_project_note directly if you want to add context without other field changes.",
     {
       projectId: z.string().describe("Project document ID"),
       name: z.string().optional().describe("New project name"),
       clientName: z.string().optional().describe("New client name"),
       description: z.string().optional().describe("New description"),
-      notes: z.string().describe("REQUIRED dated audit note for this update"),
+      notes: z.string().optional().describe("Optional note appended to the project's notes subcollection."),
     },
     async ({ projectId, name, clientName, description, notes }) => {
-      const noteError = requireAuditNote(notes, "update_project");
-      if (noteError) return noteError;
       const existing = await getDoc<Project>(db, "projects", projectId);
       if (!existing) return notFound("Project", projectId);
 
@@ -201,13 +197,15 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
 
       await accountCollection(db, "projects").doc(projectId).update(updates);
 
-      await subcollection(db, "projects", projectId, "notes").add({
-        text: notes,
-        source: "mcp",
-        createdBy: "mcp-agent",
-        createdByName: "AI Assistant",
-        createdAt: new Date(),
-      });
+      if (notes) {
+        await subcollection(db, "projects", projectId, "notes").add({
+          text: notes,
+          source: "mcp",
+          createdBy: "mcp-agent",
+          createdByName: "AI Assistant",
+          createdAt: new Date(),
+        });
+      }
 
       return { content: [{ type: "text", text: `Updated project ${projectId}` }] };
     }

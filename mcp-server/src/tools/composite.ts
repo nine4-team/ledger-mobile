@@ -10,7 +10,8 @@ import {
   itemSummary,
   capResponse,
 } from "../util/projections.js";
-import { notFound, requireAuditNote, validation } from "../util/errors.js";
+import { notFound, validation } from "../util/errors.js";
+import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 
 /**
@@ -163,12 +164,10 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         .describe("Items to create and link to the new transaction"),
       notes: z
         .string()
-        .describe("REQUIRED dated audit note — e.g. '4/6 — Home Depot receipt, 5 fixtures for Witzenman'"),
+        .optional()
+        .describe("Optional prose describing the transaction (e.g. 'Home Depot receipt — 5 fixtures for Witzenman'). Free-form. createdAt/createdBy records the audit trail."),
     },
     withTelemetry("create_transaction_with_items", async ({ transaction, items, notes }) => {
-      const noteError = requireAuditNote(notes, "create_transaction_with_items");
-      if (noteError) return noteError;
-
       if (transaction.type === "Sale") {
         return validation(
           "Cannot create Sale transactions here — use sell_items instead.",
@@ -187,6 +186,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       const batch = db.batch();
 
+      const taggedNotes = notes ? tagNotesAsAi(notes) : undefined;
       const txData: Record<string, unknown> = {
         budgetCategoryId: transaction.budgetCategoryId,
         amountCents: transaction.amountCents,
@@ -194,7 +194,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         status: "completed",
         isComplete: false,
         itemIds,
-        notes,
+        ...(taggedNotes ? { notes: taggedNotes } : {}),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -214,7 +214,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           name: item.name,
           status: item.status,
           transactionId: txRef.id,
-          notes,
+          ...(taggedNotes ? { notes: taggedNotes } : {}),
           createdAt: new Date(),
           updatedAt: new Date(),
         };

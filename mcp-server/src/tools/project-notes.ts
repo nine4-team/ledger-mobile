@@ -3,19 +3,19 @@ import type { Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { ProjectNote } from "../types.js";
 import { subcollection, queryDocs } from "../util/query.js";
-import { requireAuditNote } from "../util/errors.js";
+import { requireNonEmptyNote } from "../util/errors.js";
 
 export function registerProjectNoteTools(server: McpServer, db: Firestore) {
   // ── add_project_note ────────────────────────────────────────────────────────
   server.tool(
     "add_project_note",
-    "[mutating] Add a note to a project. Requires a dated audit note in `text`.",
+    "[mutating] Add a note to a project. Each note is a separate document in the project's notes subcollection with its own createdAt timestamp — no date prefix needed in the text.",
     {
       projectId: z.string().describe("Project document ID"),
-      text: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — Client approved tile selections'"),
+      text: z.string().describe("The note content. Free-form, non-empty. createdAt is set automatically."),
     },
     async ({ projectId, text }) => {
-      const noteError = requireAuditNote(text, "add_project_note");
+      const noteError = requireNonEmptyNote(text, "add_project_note");
       if (noteError) return noteError;
 
       const ref = await subcollection(db, "projects", projectId, "notes").add({

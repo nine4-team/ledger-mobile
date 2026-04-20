@@ -15,7 +15,8 @@ import {
   asToolResponse,
   pickFields,
 } from "../util/projections.js";
-import { requireAuditNote, notFound, validation } from "../util/errors.js";
+import { notFound, validation } from "../util/errors.js";
+import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 
 function txTypeName(tx: Transaction): string {
@@ -98,7 +99,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
-      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale). 'To Inventory' is legacy — use 'Return' + source: 'Business Inventory' for new data."),
+      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, Fee, Expense). 'Fee' and 'Expense' were added in the taxonomy migration. 'To Inventory' is legacy — use 'Return' + source: 'Business Inventory' for new data."),
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
@@ -176,7 +177,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── get_transaction ────────────────────────────────────────────────────────
   server.tool(
     "get_transaction",
-    "Get a single transaction with all linked, returned, and sold items resolved. Returns three item arrays: items (currently linked via itemIds), returnedItems (items that LEFT this transaction via return, resolved from lineage edges — still count toward audit total), soldItems (items that LEFT via sale, resolved from lineage edges — still count toward audit total). Audit object: resolvedSubtotalCents, itemsSumCents (linked + returned + sold), linkedItemsSumCents, returnedItemsSumCents/returnedItemsCount, soldItemsSumCents/soldItemsCount, varianceCents, variancePercent. Diagnostic guidance: if returnedItemsCount > 0 but returnedItems is empty, items may have been deleted or lineage edges are orphaned. isComplete == false means items don't match pre-tax subtotal within ±1% (app shows 'Needs Review' badge). Use get_item_history for full movement history of a specific item.",
+    "Get a single transaction with all linked, returned, and sold items resolved. Returns three item arrays: items (currently linked via itemIds), returnedItems (items that LEFT this transaction via return, resolved from lineage edges — still count toward audit total), soldItems (items that LEFT via sale, resolved from lineage edges — still count toward audit total). Audit object: resolvedSubtotalCents, itemsSumCents (linked + returned + sold), linkedItemsSumCents, returnedItemsSumCents/returnedItemsCount, soldItemsSumCents/soldItemsCount, varianceCents, variancePercent. Diagnostic guidance: if returnedItemsCount > 0 but returnedItems is empty, items may have been deleted or lineage edges are orphaned. isComplete == false means items don't match pre-tax subtotal within ±1% (app shows 'Needs Review' badge). Use get_item_history for full movement history of a specific item. Attachments: receiptImages[].url and otherImages[].url are public HTTPS download URLs (Firebase Storage token URLs, alt=media&token=...) — fetch directly with curl/WebFetch, no auth required. Do NOT use gsutil or gcloud for these.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {
       const tx = await getDoc<Transaction>(db, "transactions", transactionId);
@@ -287,15 +288,15 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── create_transaction ─────────────────────────────────────────────────────
   server.tool(
     "create_transaction",
-    "[mutating] Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function. Requires a dated audit note in `notes`.",
+    "[mutating] Create a new transaction. Starts with isComplete: false — auto-updates when completeness criteria are met via Cloud Function.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the transaction (what it is, what it covers). Plain prose. The createdAt/createdBy audit trail is separate — don't try to record 'what you did' in notes; record WHAT the transaction is.",
     {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase or Return. Sale transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
+      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
-      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — Home Depot receipt'"),
+      notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25)"),
@@ -317,8 +318,6 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }).optional().describe("Email ingestion metadata: email ID, subject, inbox, match confidence/reason, order number, linked transaction IDs for split shipments."),
     },
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
-      const noteError = requireAuditNote(notes, "create_transaction");
-      if (noteError) return noteError;
       if (txType === "Sale") {
         return validation(
           "Cannot create Sale transactions directly — use sell_items instead.",
@@ -338,7 +337,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (projectId) data.projectId = projectId;
       if (source) data.source = source;
       if (transactionDate) data.transactionDate = transactionDate;
-      if (notes) data.notes = notes;
+      if (notes) data.notes = tagNotesAsAi(notes);
       if (itemIds?.length) data.itemIds = itemIds;
       if (subtotalCents !== undefined) data.subtotalCents = subtotalCents;
       if (taxRatePct !== undefined) data.taxRatePct = taxRatePct;
@@ -371,16 +370,17 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── update_transaction ─────────────────────────────────────────────────────
   server.tool(
     "update_transaction",
-    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function. Requires a dated audit note in `notes`.",
+    "[mutating] Update transaction fields. isComplete recomputes automatically via Cloud Function.\n\nNOTES CONVENTION: The `notes` field on a transaction is a single string shared between user-authored prose (at the top) and AI-authored audit lines (at the bottom, separated by a blank line). Two ways to edit it:\n  • `notes` — REPLACES the entire notes field. Use only when the user explicitly asks you to rewrite the notes or when consolidating your own prior stale audit lines. Preserve user prose verbatim when you do this.\n  • `aiAuditAppend` — appends a one-line AI audit entry to the bottom of existing notes, tagged '[AI M/D/YYYY] …'. If the last line is already an AI line from today, it's REPLACED (no stacking of stale same-day edits). Use this to record what you did, not to describe what the transaction is.\nMost field edits don't need either — createdAt/updatedAt already record the audit trail. Touch notes only when the content of the notes field itself should change.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
-      type: z.string().optional().describe("Transaction type: Purchase or Return. Cannot update to/from 'Sale' — it's a frozen field on per-batch sales. 'To Inventory' is legacy."),
+      type: z.string().optional().describe("Transaction type: Purchase, Return, Fee, or Expense. Cannot update to/from 'Sale' — it's a frozen field on per-batch sales. 'To Inventory' is legacy."),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
-      notes: z.string().describe("REQUIRED dated audit note for this update, e.g. '4/6 — corrected category to lighting'"),
+      notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead if you just want to add a one-line audit entry."),
+      aiAuditAppend: z.string().optional().describe("A short one-line audit entry describing what you (AI) just did. Server appends it to the bottom of existing notes with an '[AI M/D/YYYY]' prefix and blank-line separator from user prose. If the last line is already an AI line from today, it is REPLACED rather than stacked. Mutually compatible with `notes` — if both are passed, `notes` is applied first, then `aiAuditAppend`."),
       budgetCategoryId: z.string().optional().describe("Budget category ID"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       itemIds: z.array(z.string()).optional().describe("Item IDs linked to this transaction (replaces existing list)"),
@@ -392,19 +392,23 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       ingestionStatus: z.string().optional().describe("Update ingestion status: 'confirmed' (user verified), 'needs_review', 'auto_matched'"),
     },
     async ({ transactionId, ...fields }) => {
-      const noteError = requireAuditNote(fields.notes, "update_transaction");
-      if (noteError) return noteError;
-
-      // Append dated note to existing notes so context is preserved.
       const existing = await getDoc<Transaction>(db, "transactions", transactionId);
       if (!existing) return notFound("Transaction", transactionId);
-      const mergedNotes = existing.notes
-        ? `${existing.notes}\n${fields.notes}`
-        : fields.notes;
 
-      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
+      // Merge notes: `notes` replaces outright; `aiAuditAppend` appends/revises
+      // a tagged AI line below whatever notes ends up being after replacement.
+      let mergedNotes = existing.notes;
+      if (fields.notes !== undefined) mergedNotes = fields.notes;
+      if (fields.aiAuditAppend !== undefined) {
+        mergedNotes = appendOrReviseAiAuditLine(mergedNotes, fields.aiAuditAppend);
+      }
+
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      if (fields.notes !== undefined || fields.aiAuditAppend !== undefined) {
+        updates.notes = mergedNotes;
+      }
       for (const [key, value] of Object.entries(fields)) {
-        if (key === "notes") continue;
+        if (key === "notes" || key === "aiAuditAppend") continue;
         if (value !== undefined) updates[key] = value;
       }
 
@@ -523,7 +527,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── attach_transaction_file ────────────────────────────────────────────────
   server.tool(
     "attach_transaction_file",
-    "Attach an image or PDF to a transaction. Uploads to Firebase Storage and appends an AttachmentRef to the transaction's receipt or other images array. For images, generates sm (300px) and md (800px) thumbnails.",
+    "Attach an image or PDF to a transaction. Uploads to Firebase Storage and appends an AttachmentRef to the transaction's receipt or other images array. For images, generates sm (300px) and md (800px) thumbnails. Returned URLs are public HTTPS download URLs (Firebase Storage token URLs) — fetch directly with curl/WebFetch later, no auth required.",
     {
       transactionId: z.string().describe("Transaction document ID"),
       fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),

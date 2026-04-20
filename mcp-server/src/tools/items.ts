@@ -15,7 +15,8 @@ import {
   asToolResponse,
   pickFields,
 } from "../util/projections.js";
-import { requireAuditNote, notFound, validation } from "../util/errors.js";
+import { notFound, validation } from "../util/errors.js";
+import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inventory invariant helpers (per-batch sale redesign).
@@ -157,6 +158,12 @@ function formatItem(item: Item & { id: string }) {
     taxRatePct: item.taxRatePct ?? null,
     notes: item.notes ?? "",
     imageCount: item.images?.length ?? 0,
+    images: (item.images ?? []).map((ref: AttachmentRef) => ({
+      url: ref.url,
+      kind: ref.kind ?? "image",
+      fileName: ref.fileName ?? null,
+      contentType: ref.contentType ?? null,
+    })),
   };
 }
 
@@ -219,7 +226,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── get_item ───────────────────────────────────────────────────────────────
   server.tool(
     "get_item",
-    "Get a single item with all details.",
+    "Get a single item with all details. Includes images[] array — each entry's url is a public HTTPS download URL (Firebase Storage token URL), fetch directly with curl/WebFetch, no auth required.",
     { itemId: z.string().describe("Item document ID") },
     async ({ itemId }) => {
       const item = await getDoc<Item>(db, "items", itemId);
@@ -260,7 +267,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── create_item ────────────────────────────────────────────────────────────
   server.tool(
     "create_item",
-    "[mutating] Create a new item. Requires a dated audit note in `notes`.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. Items in a project (projectId set) must have a transactionId — pass both together, or omit projectId to create in inventory.",
+    "[mutating] Create a new item.\n\nNOTES CONVENTION: `notes` is the optional user-facing description of the item (what it is — finish, size, room, etc.). Plain prose, no required format.\n\nInvariants: items in business inventory (no projectId) must have no budgetCategoryId. Items in a project (projectId set) must have a transactionId — pass both together, or omit projectId to create in inventory.",
     {
       name: z.string().describe("Item name"),
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match an item to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
@@ -269,15 +276,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       status: z.string().default("purchased").describe("Status: to purchase, purchased, to return, returned"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
-      notes: z.string().describe("REQUIRED dated audit note, e.g. '4/6 — added chair from Restoration Hardware receipt'"),
+      notes: z.string().optional().describe("Optional prose describing the item (finish, size, room, etc.). Free-form, no required format."),
       spaceId: z.string().optional().describe("Space ID"),
       budgetCategoryId: z.string().optional().describe("Budget category ID. Auto-inherited from the linked transaction if not provided."),
       transactionId: z.string().optional().describe("Transaction ID to link this item to"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375). Auto-inherited from the linked transaction if not provided."),
     },
     async ({ name, projectId, purchasePriceCents, projectPriceCents, status, source, sku, notes, spaceId, budgetCategoryId, transactionId, taxRatePct }) => {
-      const noteError = requireAuditNote(notes, "create_item");
-      if (noteError) return noteError;
       // Auto-inherit taxRatePct and budgetCategoryId from transaction if not explicitly provided
       let resolvedTaxRate = taxRatePct;
       let resolvedBudgetCategoryId = budgetCategoryId;
@@ -321,7 +326,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (projectPriceCents !== undefined) data.projectPriceCents = projectPriceCents;
       if (source) data.source = source;
       if (sku) data.sku = sku;
-      if (notes) data.notes = notes;
+      if (notes) data.notes = tagNotesAsAi(notes);
       if (spaceId) data.spaceId = spaceId;
       if (resolvedBudgetCategoryId) data.budgetCategoryId = resolvedBudgetCategoryId;
       if (transactionId) data.transactionId = transactionId;
@@ -429,7 +434,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         if (item.projectPriceCents !== undefined) data.projectPriceCents = item.projectPriceCents;
         if (item.source) data.source = item.source;
         if (item.sku) data.sku = item.sku;
-        if (item.notes) data.notes = item.notes;
+        if (item.notes) data.notes = tagNotesAsAi(item.notes);
         if (item.spaceId) data.spaceId = item.spaceId;
         if (categoryIn) data.budgetCategoryId = categoryIn;
         if (resolvedTransactionId) data.transactionId = resolvedTransactionId;
@@ -477,7 +482,15 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── update_item ────────────────────────────────────────────────────────────
   server.tool(
     "update_item",
-    "[mutating] Update item fields. Requires a dated audit note in `notes`.\n\n" +
+    "[mutating] Update item fields.\n\n" +
+      "NOTES CONVENTION: The `notes` field is a single string shared between user-authored " +
+      "prose (at the top) and AI-authored audit lines (at the bottom, blank-line separated). " +
+      "Two ways to edit it:\n" +
+      "  • `notes` — REPLACES the entire field. Use only when the user asks you to rewrite it " +
+      "or when consolidating your own prior stale AI lines. Preserve user prose verbatim.\n" +
+      "  • `aiAuditAppend` — appends a tagged '[AI M/D/YYYY] …' line to the bottom. If the " +
+      "last line is already an AI line from today, it's REPLACED (no stacking).\n" +
+      "Most field edits don't need either — updatedAt already records the audit trail.\n\n" +
       "Inventory invariant: items in business inventory (projectId: null) must have " +
       "budgetCategoryId: null. Pass null explicitly to either field to clear it. Moving " +
       "an item from inventory into a project requires passing both projectId AND " +
@@ -494,7 +507,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       marketValueCents: z.coerce.number().optional().describe("Market value in cents"),
       source: z.string().optional().describe("Vendor/source"),
       sku: z.string().optional().describe("SKU"),
-      notes: z.string().describe("REQUIRED dated audit note for this update, appended to existing notes"),
+      notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead to add a one-line audit entry without touching user prose."),
+      aiAuditAppend: z.string().optional().describe("A short one-line AI audit entry. Server appends with '[AI M/D/YYYY]' prefix; revises (not stacks) same-day entries. Mutually compatible with `notes` — if both passed, `notes` applied first, then `aiAuditAppend`."),
       projectId: z.string().nullable().optional().describe("Project ID — set to reassign item. Pass null to move into business inventory (budgetCategoryId is wiped automatically if needed)."),
       spaceId: z.string().nullable().optional().describe("Space ID. Pass null to clear."),
       budgetCategoryId: z.string().nullable().optional().describe("Budget category ID. Pass null to clear (required when projectId is null)."),
@@ -504,15 +518,23 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (e.g. 8.375)"),
     },
     async ({ itemId, ...fields }) => {
-      const noteError = requireAuditNote(fields.notes, "update_item");
-      if (noteError) return noteError;
       const existing = await getDoc<Item>(db, "items", itemId);
       if (!existing) return notFound("Item", itemId);
-      const mergedNotes = existing.notes ? `${existing.notes}\n${fields.notes}` : fields.notes;
 
-      const updates: Record<string, unknown> = { updatedAt: new Date(), notes: mergedNotes };
+      // Merge notes: `notes` replaces outright; `aiAuditAppend` appends/revises
+      // a tagged AI line below whatever notes ends up being after replacement.
+      let mergedNotes = existing.notes;
+      if (fields.notes !== undefined) mergedNotes = fields.notes;
+      if (fields.aiAuditAppend !== undefined) {
+        mergedNotes = appendOrReviseAiAuditLine(mergedNotes, fields.aiAuditAppend);
+      }
+
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      if (fields.notes !== undefined || fields.aiAuditAppend !== undefined) {
+        updates.notes = mergedNotes;
+      }
       for (const [key, value] of Object.entries(fields)) {
-        if (key === "notes") continue;
+        if (key === "notes" || key === "aiAuditAppend") continue;
         if (value !== undefined) updates[key] = value;
       }
 
@@ -827,7 +849,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── attach_item_image ───────────────────────────────────────────────────────
   server.tool(
     "attach_item_image",
-    "Attach an image or file to an item. Uploads to Firebase Storage and appends an AttachmentRef to the item's images array. For images, generates sm (300px) and md (800px) thumbnails.",
+    "Attach an image or file to an item. Uploads to Firebase Storage and appends an AttachmentRef to the item's images array. For images, generates sm (300px) and md (800px) thumbnails. Returned URLs are public HTTPS download URLs (Firebase Storage token URLs) — fetch directly with curl/WebFetch later, no auth required.",
     {
       itemId: z.string().describe("Item document ID"),
       fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),

@@ -529,17 +529,8 @@ struct TransactionDetailView: View {
             isExpanded: sectionBinding("notes"),
             onEdit: { showEditNotes = true }
         ) {
-            if let notes = currentTransaction.notes, !notes.isEmpty {
-                FindableText(notes)
-                    .font(Typography.body)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .padding(.top, Spacing.xs)
-            } else {
-                Text("No notes")
-                    .font(Typography.small)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .padding(.top, Spacing.xs)
-            }
+            NotesContent(notes: currentTransaction.notes)
+                .padding(.top, Spacing.xs)
         }
     }
 
@@ -562,7 +553,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
                 DetailRow(label: "Payable", value: displayPayable(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
-                if selectedCategory?.metadata?.categoryType == .itemized {
+                if selectedCategory?.isItemsCategory == true {
                     DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
                     DetailRow(
                         label: "Subtotal",
@@ -719,7 +710,7 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var transactionAuditSection: some View {
         if let audit = storedAudit,
-           selectedCategory?.metadata?.categoryType == .itemized {
+           selectedCategory?.isItemsCategory == true {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),

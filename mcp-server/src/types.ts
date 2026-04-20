@@ -104,6 +104,8 @@ export interface Item {
   notes?: string;
   status?: string;
   source?: string;
+  /** Denormalized immediate source. Set to the inventory label when the item lands in inventory; preserves the original vendor until then. `currentSource != source` means the item has passed through inventory — used for origin-aware routing in project→inventory moves. */
+  currentSource?: string;
   sku?: string;
   transactionId?: string;
   purchasePriceCents?: number;
@@ -154,6 +156,12 @@ export interface BudgetCategory {
   isArchived: boolean;
   order?: number;
   metadata?: BudgetCategoryMetadata;
+  /**
+   * New-model field: transaction kinds this category accepts (e.g. ["fee"],
+   * ["expense"], ["purchase","return"]). Absent on legacy docs — derive from
+   * metadata.categoryType in that case. See docs/specs/transaction-type.md.
+   */
+  supportedTypes?: string[];
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }

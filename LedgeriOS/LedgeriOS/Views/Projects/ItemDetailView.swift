@@ -364,17 +364,8 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private var notesContent: some View {
-        if let notes = liveItem.notes, !notes.isEmpty {
-            FindableText(notes)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
-                .padding(.top, Spacing.xs)
-        } else {
-            Text("No notes")
-                .font(Typography.small)
-                .foregroundStyle(BrandColors.textSecondary)
-                .padding(.top, Spacing.xs)
-        }
+        NotesContent(notes: liveItem.notes)
+            .padding(.top, Spacing.xs)
     }
 
     @ViewBuilder
