@@ -22,7 +22,7 @@ Last updated: 2026-04-20
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.
 
 ### Billing & Invoicing
-- [new] [Billing & Invoicing v2](billing-invoicing-v2.md) — **Active.** Collapses paid-state onto the invoice, makes invoices bidirectional (charges + credits, netted), and derives billable-membership instead of storing `billingStatus`. Adds a To Invoice / Invoiced / Paid pipeline on the project Billing subtab. Supersedes v1. Drafted 2026-04-20.
+- [Billing & Invoicing v2](billing-invoicing-v2.md) — **Shipped 2026-04-21.** Collapses paid-state onto the invoice, makes invoices bidirectional (charges + credits, netted), and derives billable-membership instead of storing `billingStatus`. Adds a To Invoice / Invoiced / Paid pipeline on the project Billing subtab. Supersedes v1.
 - [superseded] [Billing & Invoicing (v1)](billing-invoicing.md) — **Legacy.** Item-level billing status (unbilled → invoiced → paid), selective mid-project invoicing, invoice-level payment cascade. Shipped 2026-04-07; superseded by v2 on 2026-04-20.
 
 ### Lists & Layout

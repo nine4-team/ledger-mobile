@@ -1,6 +1,6 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: Phases 1–4 shipped (2026-04-21); Phase 5 pending
+Status: Shipped 2026-04-21 (all phases)
 Last updated: 2026-04-21
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))
 
@@ -141,7 +141,18 @@ Changes:
 
 **Task 4.4 — (Optional) Aggregate running balance across projects for a Reports landing page.** Spec implies the cards are aggregated across projects; current AccountingTabView is project-scoped. If the Reports tab needs a cross-project view, defer to [reports-tab-rework.md](reports-tab-rework.md) — that is a separate in-progress plan and should not block this one. Flag as an open question (§8).
 
-### Phase 5 — Migration + cleanup
+### Phase 5 — Migration + cleanup — **SHIPPED 2026-04-21**
+
+Outcome across all sub-tasks:
+
+- 5.1 (invoice `lines` backfill): script added at [scripts/backfill-invoice-lines.mjs](../../scripts/backfill-invoice-lines.mjs). One draft invoice was accidentally backfilled and reverted on the spot; script updated to skip drafts. Net effect on production: zero invoices needed backfill (drafts skipped; no sent/paid v1 invoices existed).
+- 5.2 (Swift `BillingStatus` delete): enum and both `billingStatus` fields removed. Build green → Phase 2 reader cutover was complete.
+- 5.3 (Firestore export): `gs://ledger-nine4-backups/pre-billing-v2-20260421-105733`, operationState=SUCCESSFUL. Rollback anchor in place before destructive steps.
+- 5.4 (strip `billingStatus`): 2 items across all accounts. Zero transactions. Script at [scripts/strip-billing-status.mjs](../../scripts/strip-billing-status.mjs).
+- 5.5 (legacy transaction status): 392 legacy `pending` / `completed` values cleared from Firestore; `TransactionStatus` enum collapsed to `case canceled` only. Script at [scripts/clear-legacy-transaction-status.mjs](../../scripts/clear-legacy-transaction-status.mjs). Build green.
+- 5.6 (docs): v2 spec marked shipped; `_index.md` updated; this plan's header and phase banners updated. No dedicated feature doc was created — v2 is small enough that the spec + this plan cover it.
+
+A separate code issue surfaced during 5.1 and spun off as a follow-up: drafts currently freeze their `lines` snapshot when created. The correct behavior is to leave `lines == nil` on drafts and materialize them at `markSent`. Tracked separately.
 
 Revised 2026-04-21 after senior-review pass. Key changes vs. the original draft:
 

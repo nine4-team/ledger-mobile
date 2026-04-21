@@ -1,7 +1,8 @@
 # Billing & Invoicing v2
 
-Status: draft
-Last updated: 2026-04-20
+Status: shipped
+Last updated: 2026-04-21
+Implemented: 2026-04-21
 Supersedes: [billing-invoicing.md](billing-invoicing.md) (shipped 2026-04-07)
 Grounding: [../plans/money-story.md](../plans/money-story.md), [../plans/invoicing-reconciliation-decisions.md](../plans/invoicing-reconciliation-decisions.md)
 

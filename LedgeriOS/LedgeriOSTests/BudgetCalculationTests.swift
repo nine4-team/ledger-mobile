@@ -22,7 +22,6 @@ struct BudgetCalculationTests {
     func normalTransactionReturnsAmount() {
         var tx = Transaction()
         tx.amountCents = 5000
-        tx.status = .completed
 
         #expect(service.normalizeSpendAmount(tx) == 5000)
     }

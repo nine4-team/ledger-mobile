@@ -17,7 +17,7 @@ struct ExportFieldConfigTests {
         paymentMethod: String? = "credit_card",
         notes: String? = "Test notes",
         reimbursementType: String? = nil,
-        status: TransactionStatus? = .completed,
+        status: TransactionStatus? = nil,
         hasEmailReceipt: Bool? = false,
         taxRatePct: Double? = 8.25,
         subtotalCents: Int? = 13950,
@@ -170,8 +170,8 @@ struct ExportFieldConfigTests {
     @Test("status field extracts status")
     func statusField() {
         let field = ExportFields.all.first { $0.id == "status" }!
-        let tx = makeTransaction(status: .completed)
-        #expect(field.getValue(tx, [], []) == "Completed")
+        let tx = makeTransaction(status: .canceled)
+        #expect(field.getValue(tx, [], []) == "Canceled")
     }
 
     @Test("status field returns Canceled for canceled status")

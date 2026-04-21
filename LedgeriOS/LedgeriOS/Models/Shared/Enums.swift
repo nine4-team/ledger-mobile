@@ -66,21 +66,13 @@ enum TransactionType: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     var displayLabel: String { rawValue.capitalized }
 }
 
-/// Transaction lifecycle state. **Only `.canceled` is written by v2 code.**
-///
-/// `.pending` and `.completed` are legacy values preserved for read
-/// compatibility with Firestore documents written before the v2 billing
-/// rework. They are never produced by the app today. Readers treat both
-/// as "effectively nil" — i.e. an active transaction. The "Needs Review"
-/// signal is driven by `Transaction.isComplete`, not this field.
-///
-/// Once the destructive Phase 5 migration strips legacy values from
-/// production, the `.pending` and `.completed` cases and their aliases
-/// can be removed.
+/// Transaction lifecycle state. Only `.canceled` is a real value; nil means
+/// an active transaction. "Needs Review" is driven by `Transaction.isComplete`,
+/// not this field.
 enum TransactionStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
-    case pending, completed, canceled
+    case canceled
     var displayLabel: String { rawValue.capitalized }
-    static let legacyAliases = ["complete": "completed", "cancelled": "canceled"]
+    static let legacyAliases = ["cancelled": "canceled"]
 }
 
 enum InvoiceStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {

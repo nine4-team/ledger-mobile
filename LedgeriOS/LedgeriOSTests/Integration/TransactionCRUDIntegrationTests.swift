@@ -74,7 +74,7 @@ struct TransactionCRUDIntegrationTests {
             isCanonicalInventorySale: true,
             inventorySaleDirection: .businessToProject,
             itemIds: ["item1", "item2", "item3"],
-            status: .completed,
+            status: .canceled,
             purchasedBy: "user1",
             reimbursementType: "owed_to_client",
             notes: "Living room furniture",
@@ -99,7 +99,7 @@ struct TransactionCRUDIntegrationTests {
         #expect(result.isCanonicalInventorySale == true)
         #expect(result.inventorySaleDirection == .businessToProject)
         #expect(result.itemIds == ["item1", "item2", "item3"])
-        #expect(result.status == .completed)
+        #expect(result.status == .canceled)
         #expect(result.purchasedBy == "user1")
         #expect(result.reimbursementType == "owed_to_client")
         #expect(result.notes == "Living room furniture")
