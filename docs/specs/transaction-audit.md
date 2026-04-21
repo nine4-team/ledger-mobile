@@ -84,15 +84,13 @@ When both `amountCents` and `subtotalCents` are set:
 taxAmount = amountCents - subtotalCents
 ```
 
-## The `isComplete` Flag (replaces `needsReview`)
+## The `isComplete` Flag
 
 Transactions have an `isComplete` boolean field, auto-computed by a Cloud Function. The app shows a "Needs Review" badge when `isComplete` is `false` or `null`.
 
 The Cloud Function is the **single source of truth** — no client recomputes completeness. The stored `audit` object contains the computed numbers (resolvedSubtotalCents, itemsSumCents, varianceCents, variancePercent) so all clients read stored data.
 
 **Full spec:** `docs/specs/transaction-completeness.md`
-
-The legacy `needsReview` field is deprecated and should not be used.
 
 ## Stored Entity: TransactionAudit
 

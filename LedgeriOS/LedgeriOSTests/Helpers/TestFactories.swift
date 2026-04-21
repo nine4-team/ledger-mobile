@@ -83,7 +83,6 @@ func makeTransaction(
     receiptImages: [AttachmentRef]? = nil,
     otherImages: [AttachmentRef]? = nil,
     transactionImages: [AttachmentRef]? = nil,
-    needsReview: Bool? = nil,
     isComplete: Bool? = nil,
     taxRatePct: Double? = nil,
     subtotalCents: Int? = nil,
@@ -112,7 +111,6 @@ func makeTransaction(
     tx.receiptImages = receiptImages
     tx.otherImages = otherImages
     tx.transactionImages = transactionImages
-    tx.needsReview = needsReview
     tx.isComplete = isComplete
     tx.taxRatePct = taxRatePct
     tx.subtotalCents = subtotalCents

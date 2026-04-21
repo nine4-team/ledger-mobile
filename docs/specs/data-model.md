@@ -78,7 +78,7 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | inventorySaleDirection | string, nullable | **LEGACY.** Only set when `isCanonicalInventorySale` is true. New per-batch sales have no direction (sales only go business → project). |
 | isCanonicalInventory | boolean, nullable | Legacy flag for older inventory operations |
 | canonicalKind | string, nullable | Legacy kind classifier |
-| needsReview | boolean, nullable | **Deprecated.** Replaced by `isComplete`. |
+| ~~needsReview~~ | ~~boolean~~ | **Removed.** Replaced by `isComplete`. |
 | isComplete | boolean, nullable | Auto-computed by Cloud Function. `true` = complete, `false` = needs review (shows badge). See `docs/specs/transaction-completeness.md` |
 | audit | TransactionAudit, nullable | Stored completeness audit data. Contains `resolvedSubtotalCents`, `itemsSumCents`, `varianceCents`, `variancePercent`. Null for non-itemized categories. See `docs/specs/transaction-completeness.md` |
 | purchasedBy | string, nullable | Who made the purchase |

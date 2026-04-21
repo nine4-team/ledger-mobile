@@ -491,8 +491,7 @@ struct SharedTransactionsList: View {
             amountCents: 14194,
             source: "Amazon",
             notes: "1 king sham for MBR, ochre king quilt set",
-            transactionType: .purchase,
-            needsReview: true
+            transactionType: .purchase
         ),
         Transaction(
             transactionDate: "2026-01-28",

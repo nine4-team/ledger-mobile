@@ -1317,7 +1317,7 @@ async function computeIsComplete(
 }
 
 /** Fields that, when they are the ONLY changes, should not re-trigger isComplete computation. */
-const IS_COMPLETE_LOOP_GUARD_FIELDS = new Set(['isComplete', 'audit', 'updatedAt', 'needsReview']);
+const IS_COMPLETE_LOOP_GUARD_FIELDS = new Set(['isComplete', 'audit', 'updatedAt']);
 
 function onlyLoopGuardFieldsChanged(before: DocumentData | undefined, after: DocumentData | undefined): boolean {
   if (!before || !after) return false;

@@ -82,7 +82,6 @@ struct TransactionCRUDIntegrationTests {
             budgetCategoryId: "catFurnishings",
             paymentMethod: "credit_card",
             hasEmailReceipt: true,
-            needsReview: false,
             taxRatePct: 8.25,
             subtotalCents: 78500,
             triggerEvent: "manual"
@@ -108,7 +107,6 @@ struct TransactionCRUDIntegrationTests {
         #expect(result.budgetCategoryId == "catFurnishings")
         #expect(result.paymentMethod == "credit_card")
         #expect(result.hasEmailReceipt == true)
-        #expect(result.needsReview == false)
         #expect(result.taxRatePct == 8.25)
         #expect(result.subtotalCents == 78500)
         #expect(result.triggerEvent == "manual")
@@ -234,8 +232,7 @@ struct TransactionCRUDIntegrationTests {
                 "varianceCents": 0,
                 "resolvedSubtotalCents": 13697
             ] as [String: Any],
-            "itemIds": ["item1", "item2", "item3"],
-            "needsReview": false
+            "itemIds": ["item1", "item2", "item3"]
         ], toDocument: "\(txPath)/\(id)")
 
         let result: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: id))

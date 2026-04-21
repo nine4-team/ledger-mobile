@@ -47,7 +47,6 @@ struct Transaction: Codable, Identifiable, Hashable {
     var receiptImages: [AttachmentRef]?
     var otherImages: [AttachmentRef]?
     var transactionImages: [AttachmentRef]?
-    var needsReview: Bool?
     var isComplete: Bool?
     var audit: TransactionAudit?
     var taxRatePct: Double?
@@ -65,7 +64,7 @@ struct Transaction: Codable, Identifiable, Hashable {
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
-             needsReview, isComplete, audit, taxRatePct, subtotalCents,
+             isComplete, audit, taxRatePct, subtotalCents,
              ingestionSource, ingestionStatus, ingestionMeta, triggerEvent, billingStatus,
              createdAt, updatedAt
         case transactionType = "type"

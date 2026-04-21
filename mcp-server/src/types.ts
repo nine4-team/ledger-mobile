@@ -58,7 +58,6 @@ export interface Transaction {
   inventorySaleDirection?: string;
   isCanonicalInventory?: boolean;
   canonicalKind?: string;
-  needsReview?: boolean;
   isComplete?: boolean;
   audit?: {
     resolvedSubtotalCents: number;

@@ -17,11 +17,7 @@ The app shows a **"Needs Review" badge** when `isComplete === false`.
 
 ### Replaces `needsReview`
 
-`isComplete` replaces the legacy `needsReview` field. The semantics are inverted:
-- Old: `needsReview: true` → show badge
-- New: `isComplete: false` → show badge
-
-The `needsReview` field is deprecated and should not be read or written by new code.
+`isComplete` replaced the legacy `needsReview` field. Semantics are inverted: old `needsReview: true` → new `isComplete: false`. The `needsReview` field has been removed from the model and stripped from stored documents.
 
 ## Completeness Criteria
 
@@ -150,7 +146,7 @@ New transactions start with `isComplete: false`. The Cloud Function recomputes i
 
 ### `bulk_update_transactions`
 
-Filter supports `isComplete` (renamed from `needsReview`). `isComplete` is not in the update payload — system-managed only.
+Filter supports `isComplete`. `isComplete` is not in the update payload — system-managed only.
 
 ## UI Badge Mapping
 
