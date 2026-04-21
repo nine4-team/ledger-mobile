@@ -190,7 +190,34 @@ struct InvoiceDetailView: View {
         guard let id = liveInvoice.id else { return }
         let acctId = accountContext.currentAccountId ?? ""
         let userId = authManager.currentUser?.uid
-        runService { try await InvoiceService().markSent(invoiceId: id, accountId: acctId, userId: userId) }
+
+        // Materialize the snapshot: build signed lines from the current item /
+        // transaction state. Drafts intentionally store no lines; sending is the
+        // moment they freeze.
+        let itemIdSet = Set(liveInvoice.itemIds ?? [])
+        let txIdSet = Set(liveInvoice.transactionIds ?? [])
+        var lines: [InvoiceLine] = []
+        for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(item: item) {
+                lines.append(line)
+            }
+        }
+        for tx in projectContext.transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
+                lines.append(line)
+            }
+        }
+        let total = InvoiceLineCalculations.netTotalCents(lines: lines)
+
+        runService {
+            try await InvoiceService().markSent(
+                invoiceId: id,
+                accountId: acctId,
+                lines: lines,
+                totalCents: total,
+                userId: userId
+            )
+        }
     }
 
     private func performMarkPaid() {

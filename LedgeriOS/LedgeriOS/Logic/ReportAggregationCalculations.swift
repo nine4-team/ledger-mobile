@@ -229,33 +229,43 @@ enum ReportAggregationCalculations {
             return InvoiceReportData(chargeLines: chargeLines, creditLines: creditLines)
         }
 
-        // Legacy: invoice has no stored lines. Render everything as charges.
+        // No stored lines — this is either a v2 draft (live preview) or a legacy
+        // v1 invoice. Build entries directly from the membership index, using the
+        // current item / transaction state. Items are always charges; transaction
+        // sign is derived from shape via InvoiceLineCalculations.
         var chargeLines: [InvoiceLineEntry] = []
+        var creditLines: [InvoiceLineEntry] = []
 
         for itemId in invoice.itemIds ?? [] {
             guard let item = itemMap[itemId] else { continue }
             let projectPrice = item.projectPriceCents ?? 0
             let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
             let isMissing = projectPrice == 0
-            chargeLines.append(InvoiceLineEntry(
+            let entry = InvoiceLineEntry(
                 name: item.displayName.isEmpty ? "Unnamed Item" : item.displayName,
                 priceCents: priceCents,
                 isMissingPrice: isMissing
-            ))
+            )
+            chargeLines.append(entry)
         }
 
         for txId in invoice.transactionIds ?? [] {
             guard let tx = txMap[txId] else { continue }
-            chargeLines.append(InvoiceLineEntry(
+            let entry = InvoiceLineEntry(
                 name: tx.source ?? tx.notes ?? "Adjustment",
                 priceCents: tx.amountCents ?? 0,
                 isMissingPrice: false
-            ))
+            )
+            switch InvoiceLineCalculations.sign(for: tx) {
+            case .credit: creditLines.append(entry)
+            case .charge, .none: chargeLines.append(entry)
+            }
         }
 
         chargeLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        creditLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-        return InvoiceReportData(chargeLines: chargeLines, creditLines: [])
+        return InvoiceReportData(chargeLines: chargeLines, creditLines: creditLines)
     }
 
     /// Build a PDF line entry from a stored signed InvoiceLine. Prefer the

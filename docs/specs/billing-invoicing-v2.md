@@ -75,8 +75,8 @@ The Reports-tab running-balance cards derive from the same underlying query, agg
 
 Unchanged from v1 in transitions, changed in what the transitions do.
 
-- `draft`: invoice exists, lines can be added or removed, not yet sent to the client.
-- `sent`: invoice has been issued. Lines are frozen. `dateSent` set.
+- `draft`: invoice exists, lines can be added or removed, not yet sent to the client. **Drafts are live previews** — the document stores only the membership index (`itemIds`, `transactionIds`). Every reader recomputes amounts and signs from the current item / transaction state, so editing an item's price outside the invoice flow is reflected immediately in the draft.
+- `sent`: invoice has been issued. The signed `lines` array and net `totalCents` are materialized at this moment from the then-current state and written atomically with the status transition and `dateSent`. From this point on the invoice is a frozen snapshot — later edits to the underlying items or transactions do not change what the client sees.
 - `paid`: client has paid. `datePaid` set. No cascade — nothing else to update.
 - `voided`: invoice withdrawn. Its lines return to the unbilled pool. `dateVoided` set.
 
