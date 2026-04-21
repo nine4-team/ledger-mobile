@@ -9,7 +9,6 @@ enum ReportType: Hashable {
 struct AccountingTabView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
-    @State private var columnCount: Int = 1
 
     private var owedToCompanyCents: Int {
         projectContext.transactions
@@ -29,13 +28,13 @@ struct AccountingTabView: View {
                 VStack(spacing: Spacing.cardListGap) {
                     // Responsive grid for payable summary cards
                     LazyVGrid(
-                        columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.cardListGap), count: columnCount),
+                        columns: Array(repeating: GridItem(.flexible(), spacing: Spacing.cardListGap), count: 2),
                         spacing: Spacing.cardListGap
                     ) {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Payable to Business")
+                                    Text("Owed to Business")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(owedToCompanyCents))
@@ -49,7 +48,7 @@ struct AccountingTabView: View {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Payable to Client")
+                                    Text("Owed to Client")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
                                     Text(CurrencyFormatting.formatCentsWithDecimals(owedToClientCents))
@@ -60,12 +59,6 @@ struct AccountingTabView: View {
                             }
                         }
                     }
-                    .onGeometryChange(for: Int.self) { proxy in
-                        max(1, Int(proxy.size.width / Dimensions.cardMinWidth))
-                    } action: { newCount in
-                        columnCount = newCount
-                    }
-                    .animation(.default, value: columnCount)
 
                     // Report navigation
                     Text("Reports")
