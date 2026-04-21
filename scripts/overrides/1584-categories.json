@@ -1,0 +1,27 @@
+{
+  "_comment": "Per-category supportedTypes for the 1584 Design account. Reviewed against live transaction data on 2026-04-20. See docs/plans/transaction-type-migration.md §Script 2.",
+
+  "b0df89f8-7610-4f10-8651-0358330e95e2": ["fee"],
+  "_design-fee": "Design Fee — categoryType=fee (explicit, no override strictly needed).",
+
+  "da556858-1df8-40be-b10c-b15710d7cc9a": ["purchase", "return"],
+  "_furnishings": "Furnishings — categoryType=itemized, 313 txns with subtotals + tax rates + Item docs. Clean items category.",
+
+  "fb9858a6-072a-4073-b7d6-b2e7167993f3": ["expense"],
+  "_fuel": "Fuel — 7 gas transactions for shopping trips, no items, classic expense.",
+
+  "9ccb3137-8704-441d-a92d-6a1f520864a0": ["expense"],
+  "_storage-receiving": "Storage & Receiving — 1 Wayfair shipping-fee txn, no items.",
+
+  "1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0": ["purchase", "return", "expense"],
+  "_additional-requests": "Additional Requests — mixed: TVs + washers (items) AND TV installer (service). Mixed category.",
+
+  "e1a7af0c-407a-4fd0-9c21-573b90374b53": ["purchase", "return", "expense"],
+  "_install": "Install — mixed: Lowe's supplies (items) + movers/wallpaper installer/ACH cash for contractors (expenses).",
+
+  "c7aab919-08c3-4407-a6ba-7c20d9e7f6ea": ["purchase", "return", "expense"],
+  "_kitchen": "Kitchen — 2 txns to Deni's Kitchens noted 'Kitchen Supplies & Install'. No Item docs exist but cabinets are items-shaped. Treat as Mixed so both items and install-labor can live here.",
+
+  "359df887-409c-4dd7-a4b8-e09d007cd8ab": ["expense"],
+  "_games-entertainment": "Games and Entertainment — 0 txns, default Expense."
+}

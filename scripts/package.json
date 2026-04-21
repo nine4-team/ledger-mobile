@@ -1,0 +1,9 @@
+{
+  "name": "ledger-migration-scripts",
+  "private": true,
+  "type": "module",
+  "description": "One-off migration scripts. Install deps with: cd scripts && npm install",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
