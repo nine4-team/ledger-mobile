@@ -19,13 +19,15 @@ struct ProjectCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    FindableText(project.name.isEmpty ? "Project" : project.name)
-                        .font(Typography.h3)
-                        .foregroundStyle(BrandColors.textPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        FindableText(project.name.isEmpty ? "Project" : project.name)
+                            .font(Typography.h3)
+                            .foregroundStyle(BrandColors.textPrimary)
 
-                    FindableText(project.clientName.isEmpty ? "No client" : project.clientName)
-                        .font(Typography.small)
-                        .foregroundStyle(BrandColors.textSecondary)
+                        FindableText(project.clientName.isEmpty ? "No client" : project.clientName)
+                            .font(Typography.small)
+                            .foregroundStyle(BrandColors.textSecondary)
+                    }
 
                     if !budgetPreview.isEmpty {
                         VStack(alignment: .leading, spacing: Spacing.sm) {
