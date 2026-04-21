@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Single-select picker filtered to return-type transactions with status != "completed".
-/// Used when linking an item to an in-progress return transaction.
+/// Single-select picker filtered to return-type transactions that still need
+/// review (isComplete != true). Used when linking an item to an in-progress
+/// return transaction.
 struct ReturnTransactionPickerModal: View {
     let transactions: [Transaction]
     var selectedId: String?
@@ -14,7 +15,7 @@ struct ReturnTransactionPickerModal: View {
         transactions
             .filter { tx in
                 let isReturn = tx.isReturnTransaction
-                let isIncomplete = tx.status != .completed
+                let isIncomplete = tx.isComplete != true
                 let isNotCanceled = tx.status != .canceled
                 return isReturn && isIncomplete && isNotCanceled
             }

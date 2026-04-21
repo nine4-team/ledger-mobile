@@ -1,6 +1,6 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: Phases 1–2 shipped (2026-04-21); Phases 3–5 pending
+Status: Phases 1–3 shipped (2026-04-21); Phases 4–5 pending
 Last updated: 2026-04-21
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))
 
@@ -100,7 +100,21 @@ All seven tasks landed. Build green; the `BillingSummaryCalculationTests` suite 
 
 **Task 2.7 — Switch per-invoice PDF builder to read stored signed lines.** At [Logic/ReportAggregationCalculations.swift:194-240](../../LedgeriOS/LedgeriOS/Logic/ReportAggregationCalculations.swift), the `computeInvoiceReport(for:items:transactions:)` overload currently pushes every line into `chargeLines`. Rewrite to read the invoice's new `lines: [InvoiceLine]?` and sort them into `chargeLines` vs `creditLines` by sign. For v1 invoices (no `lines`), fall back to the existing all-charges logic so historical PDFs still render. Acceptance: a v2 invoice with one credit line renders a Credits section in the PDF and a correct net total. Dependencies: 1.1.
 
-### Phase 3 — TransactionStatus collapse
+### Phase 3 — TransactionStatus collapse — **SHIPPED 2026-04-21**
+
+Decision on Task 3.1: **keep all three cases** in `TransactionStatus` (`pending`, `completed`, `canceled`) for read-compat with legacy Firestore documents; document `pending` / `completed` as legacy-only. Writers stop producing either, readers stop branching on either. This is what the Migration Strategy already recommends — legacy values become "effectively nil" at every call site, and the enum cases can be dropped once Phase 5.3-equivalent data cleanup runs.
+
+Rationale: reducing to a single case would force a custom `Transaction.init(from:)` to swallow `DecodingError`s on legacy values. Given that no reader checks the legacy values any more, that complexity is unjustified.
+
+Changes:
+- `InventoryOperationsService` — all eight `"status": "completed"` writes deleted (sale/return/sell/reassign paths).
+- `NewTransactionView` — removed the default `@State status = .completed` and the `transaction.status = status` assignment in the save path.
+- `ImportInvoiceModal` — removed `tx.status = .pending`.
+- `ReturnTransactionPickerModal` — switched the "in-progress return" predicate from `tx.status != .completed` to `tx.isComplete != true`.
+- `EditTransactionDetailsModal` — replaced the Status dropdown with a single "Canceled" toggle; save path writes `status: "canceled"` or `NSNull()` to clear.
+- `Enums.swift` — doc comment on `TransactionStatus` flagging `pending` and `completed` as legacy; enum shape unchanged.
+
+
 
 **Task 3.1 — Decide the collapsed shape.** Spec leaves the representation "TBD at implementation time" — either `isCanceled: Bool` or a single-case enum. Recommend: keep `TransactionStatus` as an enum with one case (`canceled`) to minimize call-site churn; callers that currently write `.completed` just stop writing that field. Treat nil as "active." This preserves Firestore back-compat for reads. Document the decision inline in `Enums.swift`. Acceptance: decision recorded. Dependencies: none.
 

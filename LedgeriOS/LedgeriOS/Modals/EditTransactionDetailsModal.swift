@@ -15,7 +15,7 @@ struct EditTransactionDetailsModal: View {
     @State private var source: String
     @State private var amountText: String
     @State private var transactionDate: Date
-    @State private var status: String
+    @State private var isCanceled: Bool
     @State private var purchasedBy: String
     @State private var transactionType: String
     @State private var reimbursementType: String
@@ -35,7 +35,7 @@ struct EditTransactionDetailsModal: View {
         _source = State(initialValue: transaction.source ?? "")
         _amountText = State(initialValue: Self.centsToText(transaction.amountCents))
         _transactionDate = State(initialValue: Self.parseDate(transaction.transactionDate) ?? Date())
-        _status = State(initialValue: transaction.status?.rawValue ?? "pending")
+        _isCanceled = State(initialValue: transaction.status == .canceled)
         _purchasedBy = State(initialValue: transaction.purchasedBy ?? "")
         _transactionType = State(initialValue: transaction.transactionType?.rawValue ?? "purchase")
         _reimbursementType = State(initialValue: transaction.reimbursementType ?? "none")
@@ -84,10 +84,8 @@ struct EditTransactionDetailsModal: View {
                 // 3. Date
                 FormDateField(label: "Date", date: $transactionDate)
 
-                // 4. Status
-                FormSelect(label: "Status", selection: $status, options:
-                    TransactionStatus.allCases.map { ($0.rawValue, $0.displayLabel) }
-                )
+                // 4. Canceled toggle
+                Toggle("Canceled", isOn: $isCanceled)
 
                 // 5. Purchased By
                 FormSelect(label: "Purchased By", selection: $purchasedBy, options: [
@@ -155,7 +153,7 @@ struct EditTransactionDetailsModal: View {
         var fields: [String: Any] = [
             "source": source,
             "transactionDate": dateFormatter.string(from: transactionDate),
-            "status": status,
+            "status": isCanceled ? "canceled" : NSNull(),
             "purchasedBy": purchasedBy,
             "transactionType": transactionType,
             "reimbursementType": reimbursementType,

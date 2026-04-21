@@ -51,7 +51,6 @@ struct NewTransactionView: View {
     @State private var source = ""
     @State private var transactionDate = Date()
     @State private var amount = ""
-    @State private var status: TransactionStatus = .completed
     @State private var purchasedBy = "design-business"
     @State private var needsReimbursement = false
     @State private var notes = ""
@@ -492,7 +491,6 @@ struct NewTransactionView: View {
         transaction.source = effectiveSource.trimmingCharacters(in: .whitespacesAndNewlines)
         transaction.transactionDate = dateFormatter.string(from: transactionDate)
         transaction.amountCents = parseCents(amount)
-        transaction.status = status
         transaction.purchasedBy = purchasedBy
         transaction.reimbursementType = resolvedReimbursementType
         transaction.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

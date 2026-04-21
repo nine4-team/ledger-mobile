@@ -389,7 +389,6 @@ struct ImportInvoiceModal: View {
             tx.source = source
             tx.transactionDate = txDate
             tx.amountCents = totalCents
-            tx.status = .pending
             tx.itemIds = itemIds
             tx.budgetCategoryId = selectedCategoryId
 
