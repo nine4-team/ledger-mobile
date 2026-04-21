@@ -951,11 +951,29 @@ export const acceptInvite = onCall<AcceptInviteRequest>(
 // Maintains a precomputed `budgetSummary` on each project document so the
 // projects list can display budget progress without extra queries.
 
+/**
+ * Derive supportedTypes for a legacy category from `metadata.categoryType`.
+ * Mirrors Swift `BudgetCategory.resolvedSupportedTypes` and the MCP util.
+ * See docs/specs/transaction-type.md.
+ */
+function deriveSupportedTypesFromLegacyCategoryType(legacy: string | null): string[] {
+  switch (legacy) {
+    case 'fee': return ['fee'];
+    case 'expense': return ['expense'];
+    case 'general': return ['expense'];
+    case 'itemized': return ['purchase', 'return'];
+    // Missing/unknown: widest safe default so the category matches any wizard filter.
+    default: return ['purchase', 'return', 'expense'];
+  }
+}
+
 type BudgetSummaryCategory = {
   budgetCents: number;
   spentCents: number;
   name: string;
+  /** @deprecated Retained for Phase 2/3 clients. Phase 4 removes this. */
   categoryType: string | null;
+  supportedTypes: string[];
   excludeFromOverallBudget: boolean;
   isArchived: boolean;
 };
@@ -986,6 +1004,7 @@ async function recalculateProjectBudgetSummary(
     {
       name: string;
       categoryType: string | null;
+      supportedTypes: string[];
       excludeFromOverallBudget: boolean;
       isArchived: boolean;
     }
@@ -996,10 +1015,19 @@ async function recalculateProjectBudgetSummary(
       data.metadata && typeof data.metadata === 'object'
         ? (data.metadata as Record<string, unknown>)
         : {};
+    const explicitSupported = Array.isArray(data.supportedTypes)
+      ? (data.supportedTypes as unknown[]).filter((v): v is string => typeof v === 'string')
+      : [];
+    const supportedTypes = explicitSupported.length > 0
+      ? explicitSupported
+      : deriveSupportedTypesFromLegacyCategoryType(
+          typeof metadata.categoryType === 'string' ? metadata.categoryType : null
+        );
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
       categoryType:
         typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+      supportedTypes,
       excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
       isArchived: data.isArchived === true,
     };
@@ -1076,6 +1104,7 @@ async function recalculateProjectBudgetSummary(
       spentCents,
       name: catMeta?.name ?? '',
       categoryType: catMeta?.categoryType ?? null,
+      supportedTypes: catMeta?.supportedTypes ?? ['purchase', 'return', 'expense'],
       excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
       isArchived: catMeta?.isArchived ?? false,
     };
@@ -1144,34 +1173,16 @@ async function computeIsComplete(
     };
   }
 
-  // 2. Check budget category type
-  const budgetCategoryId =
-    typeof txData.budgetCategoryId === 'string' ? txData.budgetCategoryId.trim() : null;
-  if (budgetCategoryId) {
-    // Find the account ID to look up the category
-    const catDoc = await db
-      .doc(`accounts/${accountId}/presets/default/budgetCategories/${budgetCategoryId}`)
-      .get();
-    if (catDoc.exists) {
-      const catData = catDoc.data() ?? {};
-      const metadata =
-        catData.metadata && typeof catData.metadata === 'object'
-          ? (catData.metadata as Record<string, unknown>)
-          : {};
-      const categoryType = typeof metadata.categoryType === 'string' ? metadata.categoryType : null;
-      if (categoryType !== 'itemized') {
-        return { isComplete: true, audit: null };
-      }
-    } else {
-      // Category not found — treat as non-itemized
-      return { isComplete: true, audit: null };
-    }
-  } else {
-    // No budget category — treat as non-itemized
+  // 2. Audit gate is now tx-type-based (not category-based). A category can
+  //    be Mixed (items + expenses); whether a specific transaction needs
+  //    tax/subtotal is a property of the transaction's own type.
+  //    See docs/specs/transaction-type.md §"Transaction audit gate".
+  const txType = typeof txData.type === 'string' ? txData.type.trim().toLowerCase() : null;
+  if (txType !== 'purchase' && txType !== 'return') {
     return { isComplete: true, audit: null };
   }
 
-  // From here: category is itemized
+  // From here: tx is purchase or return — needs tax/subtotal audit
 
   // 3. Check tax data presence (strict null check — taxRatePct: 0 is valid)
   const hasSubtotal = txData.subtotalCents !== null && txData.subtotalCents !== undefined;
@@ -1440,69 +1451,29 @@ export const onAccountBudgetCategoryWritten = onDocumentWritten(
           ? (after.metadata as Record<string, unknown>)
           : {};
 
+      // Relevant fields for budget-summary denormalization. `supportedTypes` is
+      // included so the denormalized summary stays in sync with category shape.
+      // `categoryType` stays listed until Phase 4 clears the field; after that
+      // this line becomes dead.
+      const beforeSupported = JSON.stringify(before.supportedTypes ?? null);
+      const afterSupported = JSON.stringify(after.supportedTypes ?? null);
+
       const relevantFieldsChanged =
         before.name !== after.name ||
         before.isArchived !== after.isArchived ||
         beforeMeta.categoryType !== afterMeta.categoryType ||
-        beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget;
+        beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget ||
+        beforeSupported !== afterSupported;
 
       if (!relevantFieldsChanged) return;
     }
 
     const db = getFirestore();
-    const categoryId = event.params.categoryId;
 
-    // --- New: Handle categoryType changes for isComplete ---
-    if (before && after) {
-      const beforeMeta =
-        before.metadata && typeof before.metadata === 'object'
-          ? (before.metadata as Record<string, unknown>)
-          : {};
-      const afterMeta =
-        after.metadata && typeof after.metadata === 'object'
-          ? (after.metadata as Record<string, unknown>)
-          : {};
-      const beforeCategoryType = typeof beforeMeta.categoryType === 'string' ? beforeMeta.categoryType : null;
-      const afterCategoryType = typeof afterMeta.categoryType === 'string' ? afterMeta.categoryType : null;
-
-      if (beforeCategoryType !== afterCategoryType) {
-        try {
-          const txSnapshot = await db
-            .collection(`accounts/${accountId}/transactions`)
-            .where('budgetCategoryId', '==', categoryId)
-            .get();
-
-          if (!txSnapshot.empty) {
-            const isNowItemized = afterCategoryType === 'itemized';
-            const TX_BATCH_SIZE = 500;
-            for (let i = 0; i < txSnapshot.docs.length; i += TX_BATCH_SIZE) {
-              const txBatch = db.batch();
-              const slice = txSnapshot.docs.slice(i, i + TX_BATCH_SIZE);
-              for (const txDoc of slice) {
-                txBatch.set(
-                  txDoc.ref,
-                  {
-                    isComplete: !isNowItemized, // non-itemized = true, itemized = false (needs review)
-                    audit: null,
-                    updatedAt: FieldValue.serverTimestamp(),
-                  },
-                  { merge: true }
-                );
-              }
-              await txBatch.commit();
-            }
-            console.log(
-              `[onAccountBudgetCategoryWritten] Updated isComplete on ${txSnapshot.size} transactions for category ${categoryId} (now ${afterCategoryType})`
-            );
-          }
-        } catch (err) {
-          console.error(
-            `[onAccountBudgetCategoryWritten] isComplete fan-out failed for category ${categoryId}:`,
-            err
-          );
-        }
-      }
-    }
+    // Note: the audit gate is now tx-type-based (see computeIsComplete and
+    // docs/specs/transaction-type.md §"Transaction audit gate"). We no longer
+    // fan out isComplete recomputes when a category's shape changes, because
+    // isComplete depends on the transaction's own type, not the category's.
 
     // --- Existing: recalculate budget summaries for all projects ---
     const projectsSnapshot = await db
