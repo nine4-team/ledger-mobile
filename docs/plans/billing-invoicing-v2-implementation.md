@@ -1,6 +1,6 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: draft
+Status: Phase 1 shipped (2026-04-20, commit 19e18cc4); Phases 2–5 pending
 Last updated: 2026-04-20
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))
 
@@ -53,7 +53,10 @@ The v1 model ships with these concrete surfaces, which the managing agent should
 
 The phases are sequenced so the app remains shippable at the end of every phase. Phase 1 adds the new writes alongside the old ones. Phase 2 flips readers to the new model. Phase 3 removes the now-unused v1 fields. Phase 4 layers on the pipeline UI and Reports rework. Phase 5 migrates production data and removes read-compat shims.
 
-### Phase 1 — Data model additions (non-destructive)
+### Phase 1 — Data model additions (non-destructive) — **SHIPPED 2026-04-20 (commit 19e18cc4)**
+
+All seven tasks landed in one commit. Build green; unit tests pass (47 integration failures were pre-existing emulator-offline errors, not related to these changes). Task 1.7 shipped with a safe default — `paidInvoiceItemIds: Set<String> = []` — so existing callers are no-ops until Phase 2 wires `accountContext.allInvoices` through `SellToBusinessModal` and `TransactionDetailView`.
+
 
 **Task 1.1 — Add `InvoiceLine` and signed-lines to `Invoice`.** Introduce a new nested `InvoiceLine` type (`sourceType: "item" | "transaction"`, `sourceId: String`, `amountCents: Int`, `sign: +1 | -1`, `snapshotName: String?`). Add `lines: [InvoiceLine]?` to the `Invoice` struct at [Models/Invoice.swift](../../LedgeriOS/LedgeriOS/Models/Invoice.swift). Keep `itemIds`, `transactionIds`, `totalCents` alongside — `totalCents` becomes net (charges minus credits) rather than gross sum. Follow the Codable + `CodingKeys` + legacy-field pattern documented in the repo's root CLAUDE.md §"Firestore Models". Acceptance: new invoices round-trip through Firestore; reading a v1 invoice (no `lines` field) returns an `Invoice` with `lines == nil`. Dependencies: none.
 
