@@ -42,3 +42,5 @@ ui-debug.log
 
 # Worktrees
 .worktrees/
+scripts/migration-logs/
+scripts/node_modules/
