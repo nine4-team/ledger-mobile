@@ -83,11 +83,6 @@ enum TransactionStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum
     static let legacyAliases = ["complete": "completed", "cancelled": "canceled"]
 }
 
-enum BillingStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
-    case unbilled, invoiced, paid
-    var displayLabel: String { rawValue.capitalized }
-}
-
 enum InvoiceStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     case draft, sent, paid, voided
     var displayLabel: String { rawValue.capitalized }

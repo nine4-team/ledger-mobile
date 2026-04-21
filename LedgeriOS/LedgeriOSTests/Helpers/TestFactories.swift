@@ -26,7 +26,6 @@ func makeItem(
     taxAmountPurchasePriceCents: Int? = nil,
     taxAmountProjectPriceCents: Int? = nil,
     images: [AttachmentRef]? = nil,
-    billingStatus: BillingStatus? = nil,
     createdBy: String? = nil,
     updatedBy: String? = nil
 ) -> Item {
@@ -53,7 +52,6 @@ func makeItem(
     item.taxAmountPurchasePriceCents = taxAmountPurchasePriceCents
     item.taxAmountProjectPriceCents = taxAmountProjectPriceCents
     item.images = images
-    item.billingStatus = billingStatus
     item.createdBy = createdBy
     item.updatedBy = updatedBy
     return item
@@ -86,8 +84,7 @@ func makeTransaction(
     isComplete: Bool? = nil,
     taxRatePct: Double? = nil,
     subtotalCents: Int? = nil,
-    triggerEvent: String? = nil,
-    billingStatus: BillingStatus? = nil
+    triggerEvent: String? = nil
 ) -> Transaction {
     var tx = Transaction()
     tx.id = id ?? UUID().uuidString
@@ -115,7 +112,6 @@ func makeTransaction(
     tx.taxRatePct = taxRatePct
     tx.subtotalCents = subtotalCents
     tx.triggerEvent = triggerEvent
-    tx.billingStatus = billingStatus
     return tx
 }
 

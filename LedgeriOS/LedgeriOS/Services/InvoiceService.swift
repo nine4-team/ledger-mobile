@@ -3,10 +3,9 @@ import FirebaseFirestore
 /// CRUD + state-machine operations for `Invoice` documents (v2 model).
 ///
 /// v2 behavior: the invoice is the single source of truth for paid-state.
-/// No method in this service mutates `billingStatus` on items or transactions —
-/// those cascades existed in v1 and have been removed. `itemIds` / `transactionIds`
-/// are still written as a flat membership index (derived from `lines`) so
-/// "is this source on any invoice?" queries don't have to scan every line.
+/// `itemIds` / `transactionIds` are written as a flat membership index
+/// (derived from `lines`) so "is this source on any invoice?" queries don't
+/// have to scan every line.
 struct InvoiceService: InvoiceServiceProtocol {
     private let makeBatch: @Sendable () -> any BatchWriting
 

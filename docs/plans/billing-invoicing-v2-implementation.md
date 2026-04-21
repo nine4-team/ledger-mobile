@@ -143,17 +143,51 @@ Changes:
 
 ### Phase 5 — Migration + cleanup
 
-**Task 5.1 — Read-compat shim for legacy invoices.** Add a `lazy var effectiveLines: [InvoiceLine]` extension on `Invoice` that, when `lines == nil`, synthesizes all-positive lines from `itemIds` + `transactionIds` using item/transaction lookups. This lets Task 2.7's PDF path, the per-invoice total recompute, and any historical-data UI render v1 invoices correctly after we delete the write path. Acceptance: a v1 invoice document read fresh renders identically to pre-migration. Dependencies: 1.1.
+Revised 2026-04-21 after senior-review pass. Key changes vs. the original draft:
 
-**Task 5.2 — One-off backfill script: synthesize `lines` onto every v1 invoice.** New script at `scripts/migrate-invoices-v2.mjs` (pattern: the existing migration scripts referenced by `docs/plans/transaction-type-migration.md`; inspect `migration/` directory for the convention). For each document under `accounts/{id}/invoices/`, if `lines` is missing, compute all-charge lines from `itemIds` + `transactionIds` and write them back. Idempotent. Acceptance: dry-run report correct; production run is idempotent and safe to re-run. Dependencies: 5.1.
+- Dropped the `effectiveLines` read-compat shim. After the invoice backfill runs, no invoice lacks `lines`; the shim would be dead code the day it ships.
+- Flipped the cleanup order: delete the Swift field decls **first** so the compiler surfaces any straggling reader, **then** strip the Firestore field. The compiler is a stronger check than trust in Phase 2 completeness.
+- Added an explicit pre-flight Firestore export as a rollback anchor. The `FieldValue.delete()` step is the only irreversible action in this whole project.
+- Called out `snapshotName` policy on backfilled lines (leave nil — don't lie about historical names).
+- Dropped the "decide fate of `BillingSummaryCalculations`" task — it was decided in Phase 2 (kept, rewritten against invoice membership).
+- Added explicit handling for legacy `TransactionStatus` values so they don't become permanent cruft.
 
-**Task 5.3 — One-off backfill: strip `billingStatus` from items and transactions.** After Phases 2–4 land, write a second script to `FieldValue.delete()` the `billingStatus` field from every `accounts/{id}/items/*` and `accounts/{id}/transactions/*` doc. Safe because no reader depends on it at that point. Acceptance: post-run grep of Firestore export yields zero `billingStatus` fields. Dependencies: 2.1, 2.2, 2.3, 2.4, 2.5.
+**Task 5.1 — Backfill script: synthesize `lines` onto every v1 invoice.** New script at `scripts/migrate-invoices-v2.mjs` (follow the conventions in `migration/` and the pattern referenced by `docs/plans/transaction-type-migration.md`). For each document under `accounts/{id}/invoices/`:
 
-**Task 5.4 — Delete `BillingStatus` enum and all field declarations.** Remove `BillingStatus` from [Models/Shared/Enums.swift:75-78](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift), `billingStatus` from [Models/Item.swift:58,75](../../LedgeriOS/LedgeriOS/Models/Item.swift) and [Models/Transaction.swift:59,69](../../LedgeriOS/LedgeriOS/Models/Transaction.swift), and every remaining mention in `LedgeriOSTests/`. Acceptance: `grep -ri billingStatus LedgeriOS` returns zero hits. Dependencies: 5.3.
+- If `lines` is already present, skip.
+- Otherwise, build one `InvoiceLine` per entry in `itemIds` and `transactionIds`, all with `sign: .charge` (v1 had no credits by construction).
+- Use the current item/transaction `amountCents` for the line amount.
+- **Leave `snapshotName` nil.** Filling it from the *current* item/tx name would misrepresent what the invoice said when it was issued.
+- **Do not touch `totalCents`.** The stored net should already equal the sum of the synthesized charges for v1 invoices; if there's drift (rounding, manual edit), trust the stored value.
 
-**Task 5.5 — Delete `BillingSummaryCalculations` if no longer used, or rename.** The summary card may or may not survive the pipeline UI redesign. If it does, keep the v2 version from Task 2.2. If not, delete the file and its tests, and remove `BillingSummaryCard` from `FinancesTabView`. Dependencies: 4.1.
+Must support `--dry-run` printing a per-doc diff without writing. Idempotent: re-running on an already-backfilled doc is a no-op. Acceptance: dry-run on production data reports sensible output; production run is safe to re-execute. Dependencies: 1.1.
 
-**Task 5.6 — Update feature docs.** Touch `docs/features/` — if an invoicing feature doc exists, update per CLAUDE.md §"Feature Documentation"; if not, create one capturing the new pipeline and derivations. Mark the v1 spec as superseded in its header. Dependencies: everything else.
+**Task 5.2 — Delete `BillingStatus` enum and all Swift field declarations.** Code-only step, runs *before* the Firestore strip. Remove:
+
+- `BillingStatus` enum at [Models/Shared/Enums.swift:75-78](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift).
+- `billingStatus` field on [Models/Item.swift:58,75](../../LedgeriOS/LedgeriOS/Models/Item.swift) and [Models/Transaction.swift:59,69](../../LedgeriOS/LedgeriOS/Models/Transaction.swift).
+- All remaining mentions in `LedgeriOSTests/` (factories, fixtures, tests).
+
+The Swift compiler will flag any reader that Phase 2 missed. If `xcodebuild` is clean, Phase 2 is provably complete. Acceptance: `grep -ri billingStatus LedgeriOS` returns zero hits; build green; tests green. Dependencies: 2.1, 2.2, 2.3, 2.4, 2.5.
+
+**Task 5.3 — Pre-flight Firestore export.** Before running the destructive backfill in 5.4, take a full Firestore export to the existing backup bucket `gs://ledger-nine4-backups` (created 2026-04-20 for the transaction-type migration; 90-day auto-delete lifecycle in [firebase/backup-bucket-lifecycle.json](../../firebase/backup-bucket-lifecycle.json)):
+
+```
+gcloud firestore export gs://ledger-nine4-backups/pre-billing-v2-$(date +%Y%m%d-%H%M%S) --project=ledger-nine4
+```
+
+Restore path if needed: `gcloud firestore import gs://ledger-nine4-backups/<folder>/ --project=ledger-nine4`. Document the export folder in the migration PR description. Acceptance: export completes; folder name recorded. Dependencies: 5.2.
+
+**Task 5.4 — Backfill script: strip `billingStatus` from items and transactions.** New script at `scripts/strip-billing-status.mjs`. For every `accounts/{id}/items/*` and `accounts/{id}/transactions/*`, issue `FieldValue.delete()` on `billingStatus`. Safe because 5.2 has already proven no Swift reader depends on it. Must support `--dry-run`. Idempotent. Acceptance: post-run Firestore export contains zero `billingStatus` fields. Dependencies: 5.2, 5.3.
+
+**Task 5.5 — Clean up legacy `TransactionStatus` values.** Phase 3 stopped writing `"pending"` / `"completed"` but left legacy values in Firestore and the enum cases in Swift. To avoid indefinite cruft:
+
+- New script `scripts/clear-legacy-transaction-status.mjs`: for every transaction where `status in ("pending", "completed")`, issue `FieldValue.delete()` on `status`. Dry-run flag, idempotent.
+- After the script runs clean, delete `pending` and `completed` cases from `TransactionStatus` at [Models/Shared/Enums.swift](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift), leaving only `canceled`. Remove the `"complete": "completed"` legacy alias; keep `"cancelled": "canceled"`.
+
+Acceptance: grep for `.pending` / `.completed` across `LedgeriOS/` returns zero hits; test suite green against the reduced enum. Dependencies: 5.4 (share the export).
+
+**Task 5.6 — Update feature docs and spec headers.** Touch `docs/features/` — if an invoicing feature doc exists, update per CLAUDE.md §"Feature Documentation"; if not, create one capturing the pipeline and derivations. Mark the v1 spec [billing-invoicing.md](../specs/billing-invoicing.md) as superseded in its header, pointing at [billing-invoicing-v2.md](../specs/billing-invoicing-v2.md). Update `docs/specs/_index.md`. Dependencies: everything else.
 
 ## 6. Migration Strategy
 
@@ -163,7 +197,7 @@ For `TransactionStatus.pending` / `.completed`, Phase 3 stops writing both value
 
 No feature flag is required. The cutover is safe at every phase boundary because (a) signed lines are additive in Phase 1, (b) readers switch atomically in Phase 2 (PR-by-PR but the app compiles and behaves correctly at each step — the `BillingStatus` fields still exist and still round-trip, they simply go unread), (c) Phase 3 is an isolated enum collapse, (d) Phase 5 is the only destructive step and depends on everything else being green.
 
-Existing paid invoices continue to work because Task 5.1's compat shim synthesizes lines for any invoice without them. Their PDFs render identically. Their items and transactions, once Phase 5.3 strips `billingStatus`, are "known paid" only by membership in a paid invoice — the intended v2 behavior.
+Phase 5 runs in this order: backfill invoice `lines` (5.1, additive) → delete Swift `BillingStatus` decls (5.2, compiler validates Phase 2) → Firestore export (5.3, rollback anchor) → strip `billingStatus` from docs (5.4, irreversible) → clean up legacy transaction statuses (5.5) → docs (5.6). The code-before-data ordering means any reader Phase 2 missed is a build failure, not silent data loss.
 
 ## 7. Open Questions — Status
 
