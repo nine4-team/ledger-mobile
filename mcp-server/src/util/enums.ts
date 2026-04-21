@@ -8,11 +8,23 @@
  */
 
 /**
- * Transaction types. "To Inventory" is legacy — new writes use type: "Return"
- * with source: "Business Inventory" instead. It remains here so queries against
+ * Transaction types. Five canonical values. "Fee" and "Expense" were added in
+ * the taxonomy migration — see docs/specs/transaction-type.md. "Purchase" means
+ * itemized purchase; non-itemized payments to third parties use "Expense";
+ * money the business charges the client uses "Fee".
+ *
+ * "To Inventory" is legacy — new writes use type: "Return" with
+ * source: "Business Inventory" instead. It remains here so queries against
  * historical docs still work.
  */
-export const transactionTypes = ["Purchase", "Return", "Sale", "To Inventory"] as const;
+export const transactionTypes = [
+  "Purchase",
+  "Return",
+  "Sale",
+  "Fee",
+  "Expense",
+  "To Inventory",
+] as const;
 export type TransactionType = (typeof transactionTypes)[number];
 
 export const transactionStatuses = ["completed", "pending", "canceled", "returned"] as const;
@@ -58,8 +70,10 @@ export const ENUMS: EnumSpec[] = [
     name: "transactionType",
     values: transactionTypes,
     description:
-      "Transaction type. Sale transactions are created via sell_items, not create_transaction. " +
-      "'To Inventory' is legacy — for new writes use 'Return' with source: 'Business Inventory'.",
+      "Transaction type. 'Purchase' is itemized purchases; 'Expense' is non-itemized third-party " +
+      "costs; 'Fee' is money the business charges the client. Sale transactions are created via " +
+      "sell_items, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
+      "with source: 'Business Inventory'.",
   },
   {
     name: "transactionStatus",

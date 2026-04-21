@@ -24,7 +24,9 @@ export interface BudgetSummaryCategory {
   budgetCents?: number;
   spentCents?: number;
   name?: string;
+  /** @deprecated Phase 4 stops writing this; use `supportedTypes` instead. */
   categoryType?: string;
+  supportedTypes?: string[];
   isArchived: boolean;
   excludeFromOverallBudget?: boolean;
 }

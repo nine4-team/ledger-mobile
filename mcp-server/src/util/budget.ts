@@ -1,4 +1,37 @@
-import type { Transaction } from "../types.js";
+import type { BudgetCategory, Transaction } from "../types.js";
+
+/**
+ * Derive `supportedTypes` for a budget category, falling back to the legacy
+ * `metadata.categoryType` when the new field is absent. Mirrors the
+ * Swift-side `BudgetCategory.resolvedSupportedTypes`. See
+ * `docs/specs/transaction-type.md`.
+ */
+export function resolveSupportedTypes(c: BudgetCategory): string[] {
+  if (c.supportedTypes && c.supportedTypes.length > 0) return c.supportedTypes;
+  switch (c.metadata?.categoryType) {
+    case "fee":
+      return ["fee"];
+    case "expense":
+      return ["expense"];
+    case "itemized":
+      return ["purchase", "return"];
+    case "general":
+    default:
+      return ["expense"];
+  }
+}
+
+/**
+ * Human-readable category-type label derived from supportedTypes.
+ * "Fee" / "Expense" / "Items" / "General" — matches the iOS pill label.
+ */
+export function categoryPillLabel(c: BudgetCategory): string {
+  const supported = new Set(resolveSupportedTypes(c));
+  if (supported.size === 1 && supported.has("fee")) return "Fee";
+  if (supported.size === 1 && supported.has("expense")) return "Expense";
+  if (supported.has("purchase") && supported.has("return")) return "Items";
+  return "General";
+}
 
 /**
  * Sign convention for budget rollups.

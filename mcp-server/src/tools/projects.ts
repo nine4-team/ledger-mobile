@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Project, Transaction, BudgetCategory, ProjectBudgetCategory } from "../types.js";
 import { accountCollection, subcollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
-import { normalizeSpendAmount } from "../util/budget.js";
+import { normalizeSpendAmount, resolveSupportedTypes } from "../util/budget.js";
 import {
   ProjectionMode,
   projectSummary,
@@ -109,6 +109,7 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
           id: catId,
           name: cat?.name ?? "",
           categoryType: cat?.metadata?.categoryType ?? "general",
+          supportedTypes: cat ? resolveSupportedTypes(cat) : ["purchase", "return"],
           budget: formatCents(budgetCents),
           spent: formatCents(spentCents),
           variance: formatCents(variance),

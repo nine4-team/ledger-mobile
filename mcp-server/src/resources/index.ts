@@ -4,7 +4,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { Project, BudgetCategory, Item } from "../types.js";
 import { accountCollection, subcollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
-import { normalizeSpendAmount } from "../util/budget.js";
+import { normalizeSpendAmount, resolveSupportedTypes, categoryPillLabel } from "../util/budget.js";
 import type { Transaction, ProjectBudgetCategory } from "../types.js";
 
 export function registerResources(server: McpServer, db: Firestore) {
@@ -87,7 +87,7 @@ export function registerResources(server: McpServer, db: Firestore) {
         const spent = spentByCategory.get(alloc.id) ?? 0;
         const exclude = cat?.metadata?.excludeFromOverallBudget ?? false;
 
-        lines.push(`\n${cat?.name ?? alloc.id} (${cat?.metadata?.categoryType ?? "general"})`);
+        lines.push(`\n${cat?.name ?? alloc.id} (${cat ? categoryPillLabel(cat) : "General"})`);
         lines.push(`  Budget: ${formatCents(budget)}  |  Spent: ${formatCents(spent)}  |  Remaining: ${formatCents(budget - spent)}`);
         if (exclude) lines.push("  (excluded from overall budget)");
 
@@ -146,6 +146,7 @@ export function registerResources(server: McpServer, db: Firestore) {
         id: c.id,
         name: c.name,
         categoryType: c.metadata?.categoryType ?? "general",
+        supportedTypes: resolveSupportedTypes(c),
         excludeFromOverallBudget: c.metadata?.excludeFromOverallBudget ?? false,
         isArchived: c.isArchived,
       }));
