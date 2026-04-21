@@ -4,10 +4,19 @@ struct ProjectCard: View {
     let project: Project
     let budgetPreview: [BudgetProgress.CategoryProgress]
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var hasHeroImage: Bool {
+        if let url = project.mainImageUrl, !url.isEmpty { return true }
+        return false
+    }
+
     var body: some View {
         Card(padding: 0) {
             VStack(alignment: .leading, spacing: 0) {
-                heroImage
+                if horizontalSizeClass != .compact || hasHeroImage {
+                    heroImage
+                }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     FindableText(project.name.isEmpty ? "Project" : project.name)
