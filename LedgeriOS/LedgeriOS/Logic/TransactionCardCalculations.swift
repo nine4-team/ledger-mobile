@@ -14,7 +14,7 @@ enum TransactionCardCalculations {
         status: TransactionStatus?,
         isCanonicalInventorySale: Bool? = nil,
         inventorySaleDirection: InventorySaleDirection? = nil,
-        billingStatus: BillingStatus? = nil
+        invoiceStatus: InvoiceStatus? = nil
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
@@ -50,11 +50,13 @@ enum TransactionCardCalculations {
             badges.append(CardBadge(text: label, color: color))
         }
 
-        // Billing status badge — only for non-itemized transactions (itemized derive from children).
-        // The caller is responsible for passing nil when the transaction is itemized.
-        if let billing = billingStatus, billing != .unbilled {
-            let billingColor: Color = billing == .paid ? StatusColors.metText : StatusColors.inProgressText
-            badges.append(CardBadge(text: billing.displayLabel, color: billingColor))
+        // Invoice-derived badge — only for non-itemized transactions (itemized
+        // derive from children). The caller is responsible for passing nil
+        // when the transaction is itemized.
+        if let invoice = invoiceStatus, invoice != .voided {
+            let text = invoice == .paid ? "Paid" : "Invoiced"
+            let color: Color = invoice == .paid ? StatusColors.metText : StatusColors.inProgressText
+            badges.append(CardBadge(text: text, color: color))
         }
 
         return badges

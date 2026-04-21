@@ -18,12 +18,15 @@ struct TransactionCard: View {
     var onPress: (() -> Void)?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AccountContext.self) private var accountContext
 
     private var badges: [CardBadge] {
-        // Only show billing badge for non-itemized transactions on regular width (iPad/macOS).
+        // Only show invoice badge for non-itemized transactions on regular width (iPad/macOS).
         let isNonItemized = (transaction.itemIds ?? []).isEmpty
-        let billing: BillingStatus? =
-            (isNonItemized && horizontalSizeClass == .regular) ? transaction.billingStatus : nil
+        let invoice: InvoiceStatus? = {
+            guard isNonItemized, horizontalSizeClass == .regular, let id = transaction.id else { return nil }
+            return firstNonVoidedInvoiceStatus(forTransactionId: id, in: accountContext.allInvoices)
+        }()
         return TransactionCardCalculations.badgeItems(
             transactionType: transaction.transactionType,
             reimbursementType: transaction.reimbursementType,
@@ -32,7 +35,7 @@ struct TransactionCard: View {
             status: transaction.status,
             isCanonicalInventorySale: transaction.isCanonicalInventorySale,
             inventorySaleDirection: transaction.inventorySaleDirection,
-            billingStatus: billing
+            invoiceStatus: invoice
         )
     }
 

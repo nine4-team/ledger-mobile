@@ -185,3 +185,35 @@ enum InvoiceLineCalculations {
         lines.reduce(0) { $0 + $1.signedAmountCents }
     }
 }
+
+// MARK: - Invoice membership helpers
+
+/// Resolve the status of the first non-voided invoice that references the
+/// given item id. Returns nil when the item isn't on any invoice.
+/// Paid wins over sent/draft to drive the card badge priority.
+func firstNonVoidedInvoiceStatus(forItemId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
+    return resolveInvoiceStatus(matching: id, in: invoices) { $0.itemIds ?? [] }
+}
+
+/// Resolve the status of the first non-voided invoice that references the
+/// given transaction id. Returns nil when the transaction isn't on any invoice.
+func firstNonVoidedInvoiceStatus(forTransactionId id: String, in invoices: [Invoice]) -> InvoiceStatus? {
+    return resolveInvoiceStatus(matching: id, in: invoices) { $0.transactionIds ?? [] }
+}
+
+private func resolveInvoiceStatus(
+    matching id: String,
+    in invoices: [Invoice],
+    extract: (Invoice) -> [String]
+) -> InvoiceStatus? {
+    var best: InvoiceStatus? = nil
+    for invoice in invoices {
+        guard invoice.status != .voided else { continue }
+        guard extract(invoice).contains(id) else { continue }
+        let status = invoice.status ?? .draft
+        if status == .paid { return .paid }
+        if best == nil { best = status }
+        else if best == .draft && status == .sent { best = .sent }
+    }
+    return best
+}

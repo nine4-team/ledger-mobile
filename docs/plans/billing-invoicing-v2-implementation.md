@@ -1,7 +1,7 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: Phase 1 shipped (2026-04-20, commit 19e18cc4); Phases 2–5 pending
-Last updated: 2026-04-20
+Status: Phases 1–2 shipped (2026-04-21); Phases 3–5 pending
+Last updated: 2026-04-21
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))
 
 ## 1. Summary
@@ -72,7 +72,19 @@ All seven tasks landed in one commit. Build green; unit tests pass (47 integrati
 
 **Task 1.7 — Auto-credit on return of a previously-paid item.** In [Services/InventoryOperationsService.swift](../../LedgeriOS/LedgeriOS/Services/InventoryOperationsService.swift) `returnToInventory` and the mixed-batch return path around line 454 and 517-527, when an item being returned has an invoice ancestor whose `status == .paid` (query `AccountContext.allInvoices` before building the batch — same pattern as the `frozenSources` lookup at line 470), append a **credit transaction** to the project. Shape: `transactionType = .expense`, `reimbursementType = "owed-to-client"`, `amountCents = item.purchasePriceCents ?? 0` (or `projectPriceCents` — spec doesn't nail this; see open question Q2), `source = "Credit: returned \(item.displayName)"`, `isComplete = true`. No `status: "completed"` — see Task 3.2. The new credit transaction lands in the To Invoice pool automatically because billable-membership is derived. Acceptance: returning a paid-invoice item produces one new transaction on the project; returning a never-invoiced item produces none. Dependencies: 1.3.
 
-### Phase 2 — Reader cutover
+### Phase 2 — Reader cutover — **SHIPPED 2026-04-21**
+
+All seven tasks landed. Build green; the `BillingSummaryCalculationTests` suite was rewritten against invoice membership and passes. Notable choices:
+
+- Card badges: replaced `billingStatus: BillingStatus?` with `invoiceStatus: InvoiceStatus?`; card views derive via `firstNonVoidedInvoiceStatus(forItemId:in:)` / `(forTransactionId:in:)` over `accountContext.allInvoices`. Paid wins over sent wins over draft when an id appears on multiple invoices.
+- Picker pool in Create Invoice now uses `InvoiceLineCalculations.billableMembership(...).toInvoice`; transactions split into Charges / Credits sections; the selected total is signed net.
+- `BillingSummaryCalculations.summarize` signature became `(projectId:, items:, transactions:, invoices:)`. Voided invoices are excluded from both Invoiced and Collected.
+- `SharedTransactionsList.TransactionFilterState` dropped the `billingStatus` facet entirely; the corresponding Billing Status group was removed from `TransactionFilterMenu`.
+- `ItemDetailView` Billing row now renders the first non-voided invoice's status (or "Unbilled").
+- `InvoiceDetailView` mark-paid / void confirmation dialogs no longer claim a cascade.
+- `computeInvoiceReport(for:items:transactions:)` reads stored `Invoice.lines` when present, splitting into charge/credit sections by sign. Falls back to legacy all-charges for v1 invoices with no `lines`.
+
+
 
 **Task 2.1 — Reroute the Create Invoice picker.** Rewrite `billableItems` and `billableTransactions` in [Modals/CreateInvoiceModal.swift:43-65](../../LedgeriOS/LedgeriOS/Modals/CreateInvoiceModal.swift) to use `InvoiceLineCalculations.billableMembership(projectId:items:transactions:invoices:).toInvoice` from Task 1.3 rather than reading `billingStatus`. Render the selected total as a signed net — group rows into a Charges section and a Credits section based on Task 1.2's classifier. Acceptance: the picker shows the correct pool even for items/transactions whose `billingStatus` is nil, and correctly excludes items/transactions already on any draft/sent/paid invoice. Dependencies: 1.3.
 

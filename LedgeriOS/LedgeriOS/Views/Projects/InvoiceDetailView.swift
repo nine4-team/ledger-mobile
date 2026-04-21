@@ -87,7 +87,7 @@ struct InvoiceDetailView: View {
             Button("Mark Paid") { performMarkPaid() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("All items and expenses on this invoice will be updated to Paid.")
+            Text("Marks this invoice paid and stamps the payment date. Items and expenses are unchanged.")
         }
         .confirmationDialog(
             "Void this invoice?",
@@ -97,7 +97,7 @@ struct InvoiceDetailView: View {
             Button("Void Invoice", role: .destructive) { performVoid() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Items and expenses will revert to Unbilled. Anything already marked Paid will stay Paid.")
+            Text("Voided invoices are removed from totals. The items and expenses on this invoice become billable again.")
         }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },

@@ -26,14 +26,20 @@ struct ItemCard: View {
     var warningMessage: String?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AccountContext.self) private var accountContext
+
+    private var resolvedInvoiceStatus: InvoiceStatus? {
+        guard let id = item.id else { return nil }
+        return firstNonVoidedInvoiceStatus(forItemId: id, in: accountContext.allInvoices)
+    }
 
     private var badges: [CardBadge] {
         ItemCardCalculations.badgeItems(
             statusLabel: statusOverride ?? item.status?.displayLabel,
             budgetCategoryName: budgetCategoryName,
             indexLabel: indexLabel,
-            // Tight on iPhone — only show billing badge in regular width.
-            billingStatus: horizontalSizeClass == .regular ? item.billingStatus : nil
+            // Tight on iPhone — only show invoice badge in regular width.
+            invoiceStatus: horizontalSizeClass == .regular ? resolvedInvoiceStatus : nil
         )
     }
 

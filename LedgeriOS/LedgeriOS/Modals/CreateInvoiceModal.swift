@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Multi-step modal for creating an invoice from a project's unbilled items + non-itemized expenses.
+/// Multi-step modal for creating an invoice from a project's billable pool
+/// (items + non-itemized transactions not on any other non-voided invoice).
 /// Step 1: pick billables. Step 2: confirm + optional invoice number / notes.
-/// On Create, calls `InvoiceService.createInvoice` which cascades the selected items + transactions
-/// to `billingStatus = .invoiced` in one batch.
+/// On Create, `InvoiceService.createInvoice` writes signed lines onto the
+/// invoice document; items and transactions are not mutated.
 struct CreateInvoiceModal: View {
     let accountId: String
     let projectId: String
@@ -37,31 +38,44 @@ struct CreateInvoiceModal: View {
 
     // MARK: - Source data
 
-    /// Items eligible to be billed: persisted, unbilled, and not in a terminal "returned" state.
-    /// In edit mode, items already on this invoice (status `.invoiced`) are also included
-    /// so the user sees the current selection alongside the unbilled candidates.
+    /// Items and transactions eligible for this invoice: anything in the
+    /// project's `toInvoice` pool (not on any other non-voided invoice) plus,
+    /// in edit mode, the items/transactions already on this invoice.
+    private var membership: InvoiceLineCalculations.BillableMembership {
+        InvoiceLineCalculations.billableMembership(
+            projectId: projectId,
+            items: projectContext.items,
+            transactions: projectContext.transactions,
+            invoices: accountContext.allInvoices,
+            excludingInvoiceId: editingInvoice?.id
+        )
+    }
+
     private var billableItems: [Item] {
-        let onThisInvoice = Set(editingInvoice?.itemIds ?? [])
+        let pool = membership.toInvoiceItemIds
         return projectContext.items.filter { item in
             guard let id = item.id else { return false }
             guard item.status != .returned else { return false }
-            let billing = item.billingStatus ?? .unbilled
-            return billing == .unbilled || onThisInvoice.contains(id)
+            return pool.contains(id)
         }
     }
 
-    /// Transactions eligible to be billed: persisted, non-itemized (so we don't double-count items),
-    /// unbilled, and not canceled. "Needs review" transactions remain pickable but get a row badge.
-    /// In edit mode, transactions already on this invoice are also included.
     private var billableTransactions: [Transaction] {
-        let onThisInvoice = Set(editingInvoice?.transactionIds ?? [])
+        let pool = membership.toInvoiceTransactionIds
         return projectContext.transactions.filter { tx in
             guard let id = tx.id else { return false }
-            guard BillingSummaryCalculations.isNonItemized(tx) else { return false }
-            guard tx.status != .canceled else { return false }
-            let billing = tx.billingStatus ?? .unbilled
-            return billing == .unbilled || onThisInvoice.contains(id)
+            return pool.contains(id)
         }
+    }
+
+    /// Charges among filtered transactions — owed-to-company direction.
+    private var filteredCharges: [Transaction] {
+        filteredTransactions.filter { InvoiceLineCalculations.sign(for: $0) == .charge }
+    }
+
+    /// Credits among filtered transactions — owed-to-client direction.
+    private var filteredCredits: [Transaction] {
+        filteredTransactions.filter { InvoiceLineCalculations.sign(for: $0) == .credit }
     }
 
     private var trimmedSearch: String {
@@ -82,16 +96,21 @@ struct CreateInvoiceModal: View {
         }
     }
 
-    /// Totals iterate the *unfiltered* billable lists so selections made under one search query
-    /// remain counted after the user changes the query.
+    /// Signed net total. Selected items are always charges; selected transactions
+    /// contribute with the sign returned by InvoiceLineCalculations.sign(for:).
     private var totalCents: Int {
-        let itemTotal = billableItems
-            .filter { selectedItemIds.contains($0.id ?? "") }
-            .reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
-        let txTotal = billableTransactions
-            .filter { selectedTxIds.contains($0.id ?? "") }
-            .reduce(0) { $0 + ($1.amountCents ?? 0) }
-        return itemTotal + txTotal
+        var lines: [InvoiceLine] = []
+        for item in billableItems where selectedItemIds.contains(item.id ?? "") {
+            if let line = InvoiceLineCalculations.makeLine(item: item) {
+                lines.append(line)
+            }
+        }
+        for tx in billableTransactions where selectedTxIds.contains(tx.id ?? "") {
+            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
+                lines.append(line)
+            }
+        }
+        return InvoiceLineCalculations.netTotalCents(lines: lines)
     }
 
     private var hasSelection: Bool {
@@ -192,15 +211,30 @@ struct CreateInvoiceModal: View {
                 }
             }
 
-            if !filteredTransactions.isEmpty {
-                Text("Expenses")
+            if !filteredCharges.isEmpty {
+                Text("Charges")
                     .sectionLabelStyle()
-                ForEach(filteredTransactions, id: \.id) { tx in
+                ForEach(filteredCharges, id: \.id) { tx in
                     selectionRow(
                         isSelected: selectedTxIds.contains(tx.id ?? ""),
                         title: TransactionDisplayCalculations.displayName(for: tx),
                         subtitle: categoryName(forCategoryId: tx.budgetCategoryId),
                         cents: tx.amountCents ?? 0,
+                        needsReview: tx.isComplete != true,
+                        onToggle: { toggle(txId: tx.id ?? "") }
+                    )
+                }
+            }
+
+            if !filteredCredits.isEmpty {
+                Text("Credits")
+                    .sectionLabelStyle()
+                ForEach(filteredCredits, id: \.id) { tx in
+                    selectionRow(
+                        isSelected: selectedTxIds.contains(tx.id ?? ""),
+                        title: TransactionDisplayCalculations.displayName(for: tx),
+                        subtitle: categoryName(forCategoryId: tx.budgetCategoryId),
+                        cents: -(tx.amountCents ?? 0),
                         needsReview: tx.isComplete != true,
                         onToggle: { toggle(txId: tx.id ?? "") }
                     )

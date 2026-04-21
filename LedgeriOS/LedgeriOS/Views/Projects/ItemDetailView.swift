@@ -368,11 +368,19 @@ struct ItemDetailView: View {
             .padding(.top, Spacing.xs)
     }
 
+    private var derivedBillingLabel: String {
+        guard let id = liveItem.id else { return "Unbilled" }
+        if let status = firstNonVoidedInvoiceStatus(forItemId: id, in: accountContext.allInvoices) {
+            return status.displayLabel
+        }
+        return "Unbilled"
+    }
+
     @ViewBuilder
     private var detailsContent: some View {
         VStack(spacing: 0) {
             DetailRow(label: "Status", value: liveItem.status?.displayLabel ?? "—")
-            DetailRow(label: "Billing", value: liveItem.billingStatus?.displayLabel ?? "—")
+            DetailRow(label: "Billing", value: derivedBillingLabel)
             DetailRow(label: "Space", value: spaceNameForDetails)
             DetailRow(label: "Source", value: liveItem.source ?? "—")
             DetailRow(label: "SKU", value: liveItem.sku ?? "—")

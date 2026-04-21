@@ -4,11 +4,14 @@ import SwiftUI
 /// Reads project items + transactions from `ProjectContext`.
 struct BillingSummaryCard: View {
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(AccountContext.self) private var accountContext
 
     private var summary: BillingSummaryCalculations.Summary {
         BillingSummaryCalculations.summarize(
+            projectId: projectContext.currentProjectId,
             items: projectContext.items,
-            transactions: projectContext.transactions
+            transactions: projectContext.transactions,
+            invoices: accountContext.allInvoices
         )
     }
 

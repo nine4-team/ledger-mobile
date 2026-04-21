@@ -188,9 +188,12 @@ enum ReportAggregationCalculations {
         )
     }
 
-    /// Per-invoice aggregation: builds an InvoiceReportData containing exactly the
-    /// items and non-itemized expenses referenced by the given Invoice. Credits are
-    /// unused on this path (per-invoice billing is charges-only).
+    /// Per-invoice aggregation: builds an InvoiceReportData containing exactly
+    /// the items and non-itemized expenses referenced by the given Invoice.
+    ///
+    /// v2 invoices carry signed `lines`. Lines with sign == .credit render as
+    /// the Credits section of the PDF. v1 invoices (no `lines`) fall back to
+    /// the legacy all-charges path so historical PDFs still render.
     static func computeInvoiceReport(
         for invoice: Invoice,
         items: [Item],
@@ -211,6 +214,22 @@ enum ReportAggregationCalculations {
             uniquingKeysWith: { first, _ in first }
         )
 
+        if let lines = invoice.lines, !lines.isEmpty {
+            var chargeLines: [InvoiceLineEntry] = []
+            var creditLines: [InvoiceLineEntry] = []
+            for line in lines {
+                let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap)
+                switch line.sign {
+                case .charge: chargeLines.append(entry)
+                case .credit: creditLines.append(entry)
+                }
+            }
+            chargeLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            creditLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            return InvoiceReportData(chargeLines: chargeLines, creditLines: creditLines)
+        }
+
+        // Legacy: invoice has no stored lines. Render everything as charges.
         var chargeLines: [InvoiceLineEntry] = []
 
         for itemId in invoice.itemIds ?? [] {
@@ -237,6 +256,47 @@ enum ReportAggregationCalculations {
         chargeLines.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
         return InvoiceReportData(chargeLines: chargeLines, creditLines: [])
+    }
+
+    /// Build a PDF line entry from a stored signed InvoiceLine. Prefer the
+    /// live item/tx lookup for name and price (to reflect renames/repricing
+    /// after invoice creation); fall back to the stored snapshot name and
+    /// amount when the source has been deleted.
+    private static func invoiceLineEntry(
+        from line: InvoiceLine,
+        itemMap: [String: Item],
+        txMap: [String: Transaction]
+    ) -> InvoiceLineEntry {
+        switch line.sourceType {
+        case .item:
+            if let item = itemMap[line.sourceId] {
+                let projectPrice = item.projectPriceCents ?? 0
+                let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
+                let isMissing = projectPrice == 0
+                let name = item.displayName.isEmpty
+                    ? (line.snapshotName ?? "Unnamed Item")
+                    : item.displayName
+                return InvoiceLineEntry(name: name, priceCents: priceCents, isMissingPrice: isMissing)
+            }
+            return InvoiceLineEntry(
+                name: line.snapshotName ?? "Unnamed Item",
+                priceCents: line.amountCents,
+                isMissingPrice: false
+            )
+        case .transaction:
+            if let tx = txMap[line.sourceId] {
+                return InvoiceLineEntry(
+                    name: tx.source ?? tx.notes ?? line.snapshotName ?? "Adjustment",
+                    priceCents: tx.amountCents ?? line.amountCents,
+                    isMissingPrice: false
+                )
+            }
+            return InvoiceLineEntry(
+                name: line.snapshotName ?? "Adjustment",
+                priceCents: line.amountCents,
+                isMissingPrice: false
+            )
+        }
     }
 
     // MARK: - Client Summary
