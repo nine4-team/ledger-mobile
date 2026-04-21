@@ -70,6 +70,8 @@ struct TransactionFilterMenu: View {
                 ("purchase", "Purchase"),
                 ("return", "Return"),
                 ("sale", "Sale"),
+                ("fee", "Fee"),
+                ("expense", "Expense"),
             ]
         ))
 

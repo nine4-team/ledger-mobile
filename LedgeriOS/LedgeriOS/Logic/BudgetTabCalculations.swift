@@ -31,10 +31,10 @@ enum BudgetTabCalculations {
         _ categories: [BudgetProgress.CategoryProgress]
     ) -> [BudgetProgress.CategoryProgress] {
         let nonFee = categories
-            .filter { $0.categoryType != .fee }
+            .filter { !$0.isFeeCategory }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         let fee = categories
-            .filter { $0.categoryType == .fee }
+            .filter { $0.isFeeCategory }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         return nonFee + fee
     }
@@ -49,36 +49,31 @@ enum BudgetTabCalculations {
     static func remainingLabel(
         spentCents: Int,
         budgetCents: Int,
-        categoryType: BudgetCategoryType
+        isFeeCategory: Bool
     ) -> String {
         guard budgetCents != 0 else {
-            return spentLabel(spentCents: spentCents, categoryType: categoryType)
+            return spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
         }
         if spentCents <= budgetCents {
             let remaining = budgetCents - spentCents
             return "\(BudgetDisplayCalculations.formatCentsAsDollars(remaining)) remaining"
         } else {
             let over = spentCents - budgetCents
-            let suffix = categoryType == .fee ? "over received" : "over"
+            let suffix = isFeeCategory ? "over received" : "over"
             return "\(BudgetDisplayCalculations.formatCentsAsDollars(over)) \(suffix)"
         }
     }
 
-    /// Formats a spent/received label based on category type.
+    /// Formats a spent/received label based on whether the category is a fee category.
     ///
     /// - Fee categories: "$X received"
     /// - All others: "$X spent"
     static func spentLabel(
         spentCents: Int,
-        categoryType: BudgetCategoryType
+        isFeeCategory: Bool
     ) -> String {
         let formatted = BudgetDisplayCalculations.formatCentsAsDollars(spentCents)
-        switch categoryType {
-        case .fee:
-            return "\(formatted) received"
-        case .general, .itemized:
-            return "\(formatted) spent"
-        }
+        return isFeeCategory ? "\(formatted) received" : "\(formatted) spent"
     }
 
     // MARK: - Pinning
@@ -209,10 +204,10 @@ enum BudgetTabCalculations {
     /// Sorts raw BudgetCategory models: fee categories last, alphabetical within groups.
     static func sortRawCategories(_ categories: [BudgetCategory]) -> [BudgetCategory] {
         let nonFee = categories
-            .filter { ($0.metadata?.categoryType ?? .general) != .fee }
+            .filter { !$0.isFeeCategory }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         let fee = categories
-            .filter { ($0.metadata?.categoryType ?? .general) == .fee }
+            .filter { $0.isFeeCategory }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         return nonFee + fee
     }
@@ -239,6 +234,8 @@ enum BudgetTabCalculations {
         return sorted.compactMap { category -> BudgetCategoryRowData? in
             guard let id = category.id else { return nil }
             let catType = category.metadata?.categoryType ?? .general
+            let supported = category.resolvedSupportedTypes
+            let isFee = category.isFeeCategory
             let exclude = category.metadata?.excludeFromOverallBudget ?? false
             let budget = budgetById[id] ?? 0
             let spent = computeSpend(for: id, transactions: transactions)
@@ -249,6 +246,7 @@ enum BudgetTabCalculations {
                 budgetCents: budget,
                 spentCents: spent,
                 categoryType: catType,
+                supportedTypes: supported,
                 excludeFromOverallBudget: exclude
             )
 
@@ -258,8 +256,8 @@ enum BudgetTabCalculations {
                 spentCents: spent,
                 budgetCents: budget,
                 isOverBudget: BudgetDisplayCalculations.isOverBudget(spent: spent, budget: budget),
-                spendLabel: spentLabel(spentCents: spent, categoryType: catType),
-                remainingLabel: remainingLabel(spentCents: spent, budgetCents: budget, categoryType: catType)
+                spendLabel: spentLabel(spentCents: spent, isFeeCategory: isFee),
+                remainingLabel: remainingLabel(spentCents: spent, budgetCents: budget, isFeeCategory: isFee)
             )
         }
     }
@@ -285,8 +283,8 @@ enum BudgetTabCalculations {
             spentCents: totalSpent,
             budgetCents: totalBudget,
             isOverBudget: BudgetDisplayCalculations.isOverBudget(spent: totalSpent, budget: totalBudget),
-            spendLabel: spentLabel(spentCents: totalSpent, categoryType: .general),
-            remainingLabel: remainingLabel(spentCents: totalSpent, budgetCents: totalBudget, categoryType: .general)
+            spendLabel: spentLabel(spentCents: totalSpent, isFeeCategory: false),
+            remainingLabel: remainingLabel(spentCents: totalSpent, budgetCents: totalBudget, isFeeCategory: false)
         )
     }
 }

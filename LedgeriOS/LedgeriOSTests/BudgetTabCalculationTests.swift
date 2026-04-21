@@ -130,7 +130,7 @@ struct BudgetTabCalculationTests {
     @Test("Under budget shows remaining")
     func remainingUnderBudget() {
         let label = BudgetTabCalculations.remainingLabel(
-            spentCents: 30000, budgetCents: 50000, categoryType: .general
+            spentCents: 30000, budgetCents: 50000, isFeeCategory: false
         )
         #expect(label == "$200 remaining")
     }
@@ -138,7 +138,7 @@ struct BudgetTabCalculationTests {
     @Test("Over budget shows over")
     func remainingOverBudget() {
         let label = BudgetTabCalculations.remainingLabel(
-            spentCents: 60000, budgetCents: 50000, categoryType: .general
+            spentCents: 60000, budgetCents: 50000, isFeeCategory: false
         )
         #expect(label == "$100 over")
     }
@@ -146,7 +146,7 @@ struct BudgetTabCalculationTests {
     @Test("Fee over budget shows over received")
     func remainingFeeOverBudget() {
         let label = BudgetTabCalculations.remainingLabel(
-            spentCents: 60000, budgetCents: 50000, categoryType: .fee
+            spentCents: 60000, budgetCents: 50000, isFeeCategory: true
         )
         #expect(label == "$100 over received")
     }
@@ -154,7 +154,7 @@ struct BudgetTabCalculationTests {
     @Test("Zero budget delegates to spent label")
     func remainingZeroBudgetDelegatesToSpent() {
         let label = BudgetTabCalculations.remainingLabel(
-            spentCents: 15000, budgetCents: 0, categoryType: .general
+            spentCents: 15000, budgetCents: 0, isFeeCategory: false
         )
         #expect(label == "$150 spent")
     }
@@ -164,7 +164,7 @@ struct BudgetTabCalculationTests {
     @Test("Non-fee category shows spent")
     func spentLabelGeneral() {
         let label = BudgetTabCalculations.spentLabel(
-            spentCents: 25000, categoryType: .general
+            spentCents: 25000, isFeeCategory: false
         )
         #expect(label == "$250 spent")
     }
@@ -172,7 +172,7 @@ struct BudgetTabCalculationTests {
     @Test("Fee category shows received")
     func spentLabelFee() {
         let label = BudgetTabCalculations.spentLabel(
-            spentCents: 10000, categoryType: .fee
+            spentCents: 10000, isFeeCategory: true
         )
         #expect(label == "$100 received")
     }
@@ -309,13 +309,13 @@ struct BudgetTabCalculationTests {
 
     @Test("Fee category label is received")
     func feeCategoryLabelIsReceived() {
-        let label = BudgetTabCalculations.spentLabel(spentCents: 5000, categoryType: .fee)
+        let label = BudgetTabCalculations.spentLabel(spentCents: 5000, isFeeCategory: true)
         #expect(label == "$50 received")
     }
 
     @Test("General category label is spent")
     func generalCategoryLabelIsSpent() {
-        let label = BudgetTabCalculations.spentLabel(spentCents: 5000, categoryType: .general)
+        let label = BudgetTabCalculations.spentLabel(spentCents: 5000, isFeeCategory: false)
         #expect(label == "$50 spent")
     }
 

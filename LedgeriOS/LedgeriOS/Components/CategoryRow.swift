@@ -3,24 +3,11 @@ import SwiftUI
 /// Single budget category row for settings/management screens.
 struct CategoryRow: View {
     let name: String
-    let categoryType: BudgetCategoryType
+    let supportedTypes: [TransactionType]
     var onTap: (() -> Void)?
 
-    private var typeLabel: String {
-        switch categoryType {
-        case .general: "General"
-        case .itemized: "Itemized"
-        case .fee: "Fee"
-        }
-    }
-
-    private var typeColor: Color {
-        switch categoryType {
-        case .general: BrandColors.primary
-        case .itemized: StatusColors.badgeInfo
-        case .fee: StatusColors.badgeWarning
-        }
-    }
+    private var typeLabel: String { CategoryDisplay.pillLabel(for: supportedTypes) }
+    private var typeColor: Color { CategoryDisplay.pillColor(for: supportedTypes) }
 
     var body: some View {
         let content = HStack(spacing: Spacing.md) {
@@ -53,22 +40,22 @@ struct CategoryRow: View {
     }
 }
 
-#Preview("General") {
-    CategoryRow(name: "Materials", categoryType: .general)
+#Preview("Expense") {
+    CategoryRow(name: "Materials", supportedTypes: [.expense])
         .padding(Spacing.screenPadding)
 }
 
-#Preview("Itemized") {
-    CategoryRow(name: "Appliances", categoryType: .itemized)
+#Preview("Items") {
+    CategoryRow(name: "Appliances", supportedTypes: [.purchase, .return])
         .padding(Spacing.screenPadding)
 }
 
 #Preview("Fee") {
-    CategoryRow(name: "Architect Fee", categoryType: .fee)
+    CategoryRow(name: "Architect Fee", supportedTypes: [.fee])
         .padding(Spacing.screenPadding)
 }
 
 #Preview("Tappable") {
-    CategoryRow(name: "Materials", categoryType: .general, onTap: {})
+    CategoryRow(name: "Materials", supportedTypes: [.expense], onTap: {})
         .padding(Spacing.screenPadding)
 }

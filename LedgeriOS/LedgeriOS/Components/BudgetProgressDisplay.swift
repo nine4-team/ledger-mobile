@@ -14,7 +14,7 @@ struct BudgetProgressDisplay: View {
                         name: category.name,
                         spentCents: category.spentCents,
                         budgetCents: category.budgetCents,
-                        categoryType: category.categoryType
+                        isFeeCategory: category.isFeeCategory
                     )
 
                     if index < categories.count - 1 {

@@ -159,6 +159,7 @@ struct ProjectsListView: View {
                 budgetCents: catData.budgetCents ?? 0,
                 spentCents: catData.spentCents ?? 0,
                 categoryType: BudgetCategoryType(rawValue: catData.categoryType ?? "") ?? .general,
+                supportedTypes: catData.resolvedSupportedTypes,
                 excludeFromOverallBudget: catData.excludeFromOverallBudget ?? false
             )
         }

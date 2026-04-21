@@ -50,7 +50,9 @@ struct EditTransactionDetailsModal: View {
     }
 
     private var isItemizedCategory: Bool {
-        selectedCategory?.metadata?.categoryType == .itemized
+        // Audit/itemized gate is tx-type-based now — a category can be Mixed
+        // and hold both items and expenses. See docs/specs/transaction-type.md.
+        transaction.needsItemizedAudit
     }
 
     private var computedTaxAmount: String {

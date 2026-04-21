@@ -6,7 +6,7 @@ struct BudgetCategoryTracker: View {
     let name: String
     let spentCents: Int
     let budgetCents: Int
-    var categoryType: BudgetCategoryType = .general
+    var isFeeCategory: Bool = false
 
     private var overBudget: Bool {
         BudgetTrackerCalculations.isOverBudget(spentCents: spentCents, budgetCents: budgetCents)
@@ -21,11 +21,11 @@ struct BudgetCategoryTracker: View {
     }
 
     private var fillColor: Color {
-        BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: categoryType)
+        BudgetTrackerCalculations.progressColor(percentage: percentage, isFeeCategory: isFeeCategory)
     }
 
     private var remainingColor: Color {
-        BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: categoryType)
+        BudgetTrackerCalculations.remainingTextColor(percentage: percentage, isFeeCategory: isFeeCategory)
     }
 
     var body: some View {
@@ -35,14 +35,14 @@ struct BudgetCategoryTracker: View {
                 .foregroundStyle(BrandColors.textPrimary)
 
             HStack {
-                Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, categoryType: categoryType))
+                Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
 
                 Spacer()
 
                 Text(BudgetTrackerCalculations.remainingLabel(
-                    spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType
+                    spentCents: spentCents, budgetCents: budgetCents, isFeeCategory: isFeeCategory
                 ))
                 .font(Typography.small)
                 .fontWeight(.regular)
@@ -80,17 +80,17 @@ struct BudgetCategoryTracker: View {
 }
 
 #Preview("Fee — Green (≥ 75%)") {
-    BudgetCategoryTracker(name: "Architect Fee", spentCents: 40000, budgetCents: 50000, categoryType: .fee)
+    BudgetCategoryTracker(name: "Architect Fee", spentCents: 40000, budgetCents: 50000, isFeeCategory: true)
         .padding(Spacing.screenPadding)
 }
 
 #Preview("Fee — Yellow (50–74%)") {
-    BudgetCategoryTracker(name: "Architect Fee", spentCents: 30000, budgetCents: 50000, categoryType: .fee)
+    BudgetCategoryTracker(name: "Architect Fee", spentCents: 30000, budgetCents: 50000, isFeeCategory: true)
         .padding(Spacing.screenPadding)
 }
 
 #Preview("Fee — Red (< 50%)") {
-    BudgetCategoryTracker(name: "Architect Fee", spentCents: 20000, budgetCents: 50000, categoryType: .fee)
+    BudgetCategoryTracker(name: "Architect Fee", spentCents: 20000, budgetCents: 50000, isFeeCategory: true)
         .padding(Spacing.screenPadding)
 }
 

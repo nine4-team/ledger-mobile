@@ -103,10 +103,10 @@ struct EditProjectModal: View {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeBudgetCategories.map(\.name)
-            ) { name, categoryType, excludeFromBudget in
+            ) { name, supportedTypes, excludeFromBudget in
                 createCategoryOnTheFly(
                     name: name,
-                    categoryType: categoryType,
+                    supportedTypes: supportedTypes,
                     excludeFromBudget: excludeFromBudget
                 )
             }
@@ -317,12 +317,10 @@ struct EditProjectModal: View {
                     .font(Typography.body)
                     .foregroundStyle(BrandColors.textPrimary)
 
-                if let type = category.metadata?.categoryType, type != .general {
-                    Badge(
-                        text: type == .itemized ? "Itemized" : "Fee",
-                        color: type == .itemized ? StatusColors.badgeInfo : StatusColors.badgeWarning
-                    )
-                }
+                Badge(
+                    text: CategoryDisplay.pillLabel(for: category),
+                    color: CategoryDisplay.pillColor(for: category)
+                )
 
                 Spacer()
             }
@@ -334,7 +332,7 @@ struct EditProjectModal: View {
 
     private func createCategoryOnTheFly(
         name: String,
-        categoryType: BudgetCategoryType,
+        supportedTypes: [TransactionType],
         excludeFromBudget: Bool
     ) {
         guard let accountId = accountContext.currentAccountId else { return }
@@ -344,9 +342,10 @@ struct EditProjectModal: View {
         category.slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
         category.order = (activeBudgetCategories.last?.order ?? 0) + 1
         category.metadata = BudgetCategoryMetadata(
-            categoryType: categoryType,
+            categoryType: nil,
             excludeFromOverallBudget: excludeFromBudget
         )
+        category.supportedTypes = supportedTypes
 
         do {
             let newCategoryId = try budgetCategoriesService.createBudgetCategory(

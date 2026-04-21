@@ -6,18 +6,18 @@ import SwiftUI
 enum BudgetTrackerCalculations {
 
     /// Spent label — "$X spent" or "$X received" for fee categories.
-    static func spentLabel(spentCents: Int, categoryType: BudgetCategoryType) -> String {
-        BudgetTabCalculations.spentLabel(spentCents: spentCents, categoryType: categoryType)
+    static func spentLabel(spentCents: Int, isFeeCategory: Bool) -> String {
+        BudgetTabCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory)
     }
 
     /// Remaining label relative to budget.
     /// - Under/at budget: "$X remaining"
     /// - Over budget: "$X over" / "$X over received"
     /// - Zero budget: "No budget set"
-    static func remainingLabel(spentCents: Int, budgetCents: Int, categoryType: BudgetCategoryType) -> String {
+    static func remainingLabel(spentCents: Int, budgetCents: Int, isFeeCategory: Bool) -> String {
         guard budgetCents != 0 else { return "No budget set" }
         return BudgetTabCalculations.remainingLabel(
-            spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType
+            spentCents: spentCents, budgetCents: budgetCents, isFeeCategory: isFeeCategory
         )
     }
 
@@ -44,8 +44,8 @@ enum BudgetTrackerCalculations {
     /// Progress bar fill color based on spend percentage and category type.
     /// Normal budgets: green < 50%, yellow 50–74%, red ≥ 75%.
     /// Fee categories: reversed — green ≥ 75%, yellow 50–74%, red < 50%.
-    static func progressColor(percentage: Double, categoryType: BudgetCategoryType) -> Color {
-        if categoryType == .fee {
+    static func progressColor(percentage: Double, isFeeCategory: Bool) -> Color {
+        if isFeeCategory {
             if percentage >= 75 { return StatusColors.metBarComplete }
             if percentage >= 50 { return StatusColors.inProgressBar }
             return StatusColors.atRiskBar
@@ -58,8 +58,8 @@ enum BudgetTrackerCalculations {
     /// Remaining-label text color based on spend percentage and category type.
     /// Same thresholds as progressColor, but uses systemRed when actually over budget
     /// for better text legibility in both light and dark modes.
-    static func remainingTextColor(percentage: Double, categoryType: BudgetCategoryType) -> Color {
-        if categoryType == .fee {
+    static func remainingTextColor(percentage: Double, isFeeCategory: Bool) -> Color {
+        if isFeeCategory {
             if percentage >= 75 { return StatusColors.metBarComplete }
             if percentage >= 50 { return StatusColors.inProgressBar }
             return percentage > 100 ? Color(.systemRed) : StatusColors.atRiskBar

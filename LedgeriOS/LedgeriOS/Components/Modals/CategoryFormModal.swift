@@ -6,16 +6,55 @@ struct CategoryFormModal: View {
         case edit(BudgetCategory)
     }
 
+    /// The four user-pickable category kinds. Plural because a category
+    /// collects many transactions. Maps to `supportedTypes: [TransactionType]`.
+    /// See `docs/specs/transaction-type.md` for why `mixed` exists.
+    enum Kind: Hashable {
+        case fees
+        case expenses
+        case itemsPurchasesReturns
+        case mixed
+
+        var label: String {
+            switch self {
+            case .fees: return "Fees"
+            case .expenses: return "Expenses"
+            case .itemsPurchasesReturns: return "Purchases/Returns (items)"
+            case .mixed: return "Mixed (items + expenses)"
+            }
+        }
+
+        var supportedTypes: [TransactionType] {
+            switch self {
+            case .fees: return [.fee]
+            case .expenses: return [.expense]
+            case .itemsPurchasesReturns: return [.purchase, .return]
+            case .mixed: return [.purchase, .return, .expense]
+            }
+        }
+
+        /// Best-effort initialization from an existing category. Drives off
+        /// `resolvedSupportedTypes` so it works for both new-model docs and
+        /// legacy docs (which derive supportedTypes from metadata.categoryType).
+        init(from category: BudgetCategory) {
+            let supported = Set(category.resolvedSupportedTypes)
+            if supported == [.fee] { self = .fees }
+            else if supported == [.purchase, .return] { self = .itemsPurchasesReturns }
+            else if supported.contains(.purchase) && supported.contains(.expense) { self = .mixed }
+            else { self = .expenses }
+        }
+    }
+
     let mode: Mode
-    let onSave: (String, BudgetCategoryType, Bool) -> Void
+    /// Callback fires with (name, supportedTypes, excludeFromBudget).
+    let onSave: (String, [TransactionType], Bool) -> Void
     /// Names of existing categories (excluding the one being edited) for uniqueness validation (L14).
     let existingNames: [String]
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String
-    @State private var isItemized: Bool
-    @State private var isFee: Bool
+    @State private var kind: Kind
     @State private var excludeFromOverallBudget: Bool
     @State private var validationError: String?
     @State private var hasSubmitted = false
@@ -23,7 +62,7 @@ struct CategoryFormModal: View {
     init(
         mode: Mode,
         existingNames: [String] = [],
-        onSave: @escaping (String, BudgetCategoryType, Bool) -> Void
+        onSave: @escaping (String, [TransactionType], Bool) -> Void
     ) {
         self.mode = mode
         self.existingNames = existingNames
@@ -32,13 +71,11 @@ struct CategoryFormModal: View {
         switch mode {
         case .create:
             _name = State(initialValue: "")
-            _isItemized = State(initialValue: false)
-            _isFee = State(initialValue: false)
+            _kind = State(initialValue: .expenses)
             _excludeFromOverallBudget = State(initialValue: false)
         case .edit(let category):
             _name = State(initialValue: category.name)
-            _isItemized = State(initialValue: category.metadata?.categoryType == .itemized)
-            _isFee = State(initialValue: category.metadata?.categoryType == .fee)
+            _kind = State(initialValue: Kind(from: category))
             _excludeFromOverallBudget = State(initialValue: category.metadata?.excludeFromOverallBudget ?? false)
         }
     }
@@ -46,12 +83,6 @@ struct CategoryFormModal: View {
     private var isEditing: Bool {
         if case .edit = mode { return true }
         return false
-    }
-
-    private var categoryType: BudgetCategoryType {
-        if isItemized { return .itemized }
-        if isFee { return .fee }
-        return .general
     }
 
     var body: some View {
@@ -75,26 +106,22 @@ struct CategoryFormModal: View {
                     errorText: hasSubmitted ? nameError : nil
                 )
 
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Toggle("Itemized", isOn: $isItemized)
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .onChange(of: isItemized) { _, newValue in
-                            if newValue { isFee = false }
-                        }
-
-                    Toggle("Fee", isOn: $isFee)
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .onChange(of: isFee) { _, newValue in
-                            if newValue { isItemized = false }
-                        }
-
-                    Toggle("Exclude from Overall Budget", isOn: $excludeFromOverallBudget)
-                        .font(Typography.body)
-                        .foregroundStyle(BrandColors.textPrimary)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Type")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    InlineOptionPicker(selection: $kind, options: [
+                        InlineOption(id: .fees, label: Kind.fees.label),
+                        InlineOption(id: .expenses, label: Kind.expenses.label),
+                        InlineOption(id: .itemsPurchasesReturns, label: Kind.itemsPurchasesReturns.label),
+                        InlineOption(id: .mixed, label: Kind.mixed.label),
+                    ])
                 }
-                .tint(BrandColors.primary)
+
+                Toggle("Exclude from Overall Budget", isOn: $excludeFromOverallBudget)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .tint(BrandColors.primary)
             }
         }
     }
@@ -123,9 +150,6 @@ struct CategoryFormModal: View {
 
     private func validate() -> String? {
         if let error = nameError { return error }
-        if isItemized && isFee {
-            return "A category cannot be both Itemized and Fee"
-        }
         return nil
     }
 
@@ -135,23 +159,27 @@ struct CategoryFormModal: View {
         validationError = error
         guard error == nil else { return }
 
-        onSave(name.trimmingCharacters(in: .whitespaces), categoryType, excludeFromOverallBudget)
+        onSave(
+            name.trimmingCharacters(in: .whitespaces),
+            kind.supportedTypes,
+            excludeFromOverallBudget
+        )
         dismiss()
     }
 }
 
 #Preview("Create") {
-    CategoryFormModal(mode: .create) { name, type, exclude in
-        print("Create: \(name), \(type), exclude: \(exclude)")
+    CategoryFormModal(mode: .create) { name, supportedTypes, exclude in
+        print("Create: \(name), \(supportedTypes), exclude: \(exclude)")
     }
 }
 
 #Preview("Edit") {
     var category = BudgetCategory()
     category.name = "Materials"
-    category.metadata = BudgetCategoryMetadata(categoryType: .general, excludeFromOverallBudget: false)
+    category.supportedTypes = [.expense]
 
-    return CategoryFormModal(mode: .edit(category)) { name, type, exclude in
-        print("Edit: \(name), \(type), exclude: \(exclude)")
+    return CategoryFormModal(mode: .edit(category)) { name, supportedTypes, exclude in
+        print("Edit: \(name), \(supportedTypes), exclude: \(exclude)")
     }
 }

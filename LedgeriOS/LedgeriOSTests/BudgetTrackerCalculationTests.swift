@@ -9,19 +9,19 @@ struct BudgetTrackerCalculationTests {
 
     @Test("General category shows spent")
     func spentLabelGeneral() {
-        let label = BudgetTrackerCalculations.spentLabel(spentCents: 25000, categoryType: .general)
+        let label = BudgetTrackerCalculations.spentLabel(spentCents: 25000, isFeeCategory: false)
         #expect(label == "$250 spent")
     }
 
     @Test("Fee category shows received")
     func spentLabelFee() {
-        let label = BudgetTrackerCalculations.spentLabel(spentCents: 10000, categoryType: .fee)
+        let label = BudgetTrackerCalculations.spentLabel(spentCents: 10000, isFeeCategory: true)
         #expect(label == "$100 received")
     }
 
     @Test("Zero spent shows $0")
     func spentLabelZero() {
-        let label = BudgetTrackerCalculations.spentLabel(spentCents: 0, categoryType: .general)
+        let label = BudgetTrackerCalculations.spentLabel(spentCents: 0, isFeeCategory: false)
         #expect(label == "$0 spent")
     }
 
@@ -30,7 +30,7 @@ struct BudgetTrackerCalculationTests {
     @Test("Under budget shows remaining")
     func remainingUnderBudget() {
         let label = BudgetTrackerCalculations.remainingLabel(
-            spentCents: 30000, budgetCents: 50000, categoryType: .general
+            spentCents: 30000, budgetCents: 50000, isFeeCategory: false
         )
         #expect(label == "$200 remaining")
     }
@@ -38,7 +38,7 @@ struct BudgetTrackerCalculationTests {
     @Test("Over budget shows over")
     func remainingOverBudget() {
         let label = BudgetTrackerCalculations.remainingLabel(
-            spentCents: 60000, budgetCents: 50000, categoryType: .general
+            spentCents: 60000, budgetCents: 50000, isFeeCategory: false
         )
         #expect(label == "$100 over")
     }
@@ -46,7 +46,7 @@ struct BudgetTrackerCalculationTests {
     @Test("Fee over budget shows over received")
     func remainingFeeOverBudget() {
         let label = BudgetTrackerCalculations.remainingLabel(
-            spentCents: 60000, budgetCents: 50000, categoryType: .fee
+            spentCents: 60000, budgetCents: 50000, isFeeCategory: true
         )
         #expect(label == "$100 over received")
     }
@@ -54,7 +54,7 @@ struct BudgetTrackerCalculationTests {
     @Test("Zero budget shows no budget set")
     func remainingZeroBudget() {
         let label = BudgetTrackerCalculations.remainingLabel(
-            spentCents: 15000, budgetCents: 0, categoryType: .general
+            spentCents: 15000, budgetCents: 0, isFeeCategory: false
         )
         #expect(label == "No budget set")
     }
@@ -62,7 +62,7 @@ struct BudgetTrackerCalculationTests {
     @Test("At budget shows $0 remaining")
     func remainingAtBudget() {
         let label = BudgetTrackerCalculations.remainingLabel(
-            spentCents: 50000, budgetCents: 50000, categoryType: .general
+            spentCents: 50000, budgetCents: 50000, isFeeCategory: false
         )
         #expect(label == "$0 remaining")
     }

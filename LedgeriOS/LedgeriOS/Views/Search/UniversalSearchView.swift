@@ -125,7 +125,11 @@ struct UniversalSearchView: View {
             selectedTransactionIds.removeAll()
         }
         .universalAddButton()
-        .background(BrandColors.background)
+        .background(
+            BrandColors.background
+                .contentShape(Rectangle())
+                .onTapGesture { searchFocused = false }
+        )
         // Item bulk action sheets
         .adaptivePresentation(isPresented: $showItemBulkActions, style: .quickMenu) {
             ActionMenuSheet(
@@ -250,6 +254,7 @@ struct UniversalSearchView: View {
                 .padding(.vertical, Spacing.md)
             }
             .scrollContentTopFade()
+            .scrollDismissesKeyboard(.immediately)
         }
     }
 

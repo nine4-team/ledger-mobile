@@ -30,7 +30,7 @@ extension CaseInsensitiveStringEnum {
 // MARK: - Enums
 
 enum BudgetCategoryType: String, Codable, CaseInsensitiveStringEnum {
-    case general, itemized, fee
+    case general, itemized, fee, expense
     static let legacyAliases = ["standard": "general"]
 }
 
@@ -52,8 +52,16 @@ enum ItemStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     var displayLabel: String { rawValue.capitalized }
 }
 
+/// The kind of a transaction. Five values covering both money-out (fee/expense/purchase)
+/// and money-in-or-item-movement (sale/return) flows.
+///
+/// - `purchase` means **itemized purchase only** — items that flow through the inventory/item
+///   model. Pre-migration, legacy `purchase` documents may semantically be a fee or expense;
+///   use `TransactionTaxonomy.resolve(...)` at read time to normalize.
+/// - `fee` and `expense` were added in the taxonomy migration. See
+///   `docs/specs/transaction-type.md`.
 enum TransactionType: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
-    case purchase, sale
+    case purchase, sale, fee, expense
     case `return` = "return"
     var displayLabel: String { rawValue.capitalized }
 }

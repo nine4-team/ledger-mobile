@@ -25,7 +25,7 @@ struct ProjectCard: View {
                                     categoryName: cat.name,
                                     spentCents: cat.spentCents,
                                     budgetCents: cat.budgetCents,
-                                    categoryType: cat.categoryType
+                                    isFeeCategory: cat.isFeeCategory
                                 )
                             }
                         }

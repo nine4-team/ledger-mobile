@@ -76,6 +76,14 @@ struct Transaction: Codable, Identifiable, Hashable {
         transactionType == .return
     }
 
+    /// True when this transaction type carries physical items and therefore
+    /// gates on tax/subtotal data during the completeness audit. Drives the
+    /// "Needs Review" badge and the tax/subtotal Details-form fields. See
+    /// `docs/specs/transaction-type.md` §"Transaction audit gate".
+    var needsItemizedAudit: Bool {
+        transactionType == .purchase || transactionType == .return
+    }
+
     /// Sort/display key: explicit `transactionDate` if set, otherwise a `yyyy-MM-dd`
     /// rendering of `createdAt`. Canonical sale transactions (created programmatically
     /// by inventory operations) never set `transactionDate`, so they fall back to createdAt.

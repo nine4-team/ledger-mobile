@@ -553,7 +553,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
                 DetailRow(label: "Payable", value: displayPayable(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
-                if selectedCategory?.isItemsCategory == true {
+                if currentTransaction.needsItemizedAudit {
                     DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
                     DetailRow(
                         label: "Subtotal",
@@ -710,7 +710,7 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var transactionAuditSection: some View {
         if let audit = storedAudit,
-           selectedCategory?.isItemsCategory == true {
+           currentTransaction.needsItemizedAudit {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),

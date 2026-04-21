@@ -29,6 +29,8 @@ enum TransactionDisplayCalculations {
     /// - Sale, inventory → project → `"Purchase from [source]"`
     /// - Sale, project → inventory → `"Sale to [source]"`
     /// - Return → `"Return to [source]"`
+    /// - Fee → "Fee" (source is the business itself — no counterparty)
+    /// - Expense → source as-is (vendor name)
     /// - Purchase / other → source as-is
     /// - Legacy canonical sale with empty source → "Purchase from Inventory" /
     ///   "Sale to Inventory" / "Inventory Transfer"
@@ -53,9 +55,17 @@ enum TransactionDisplayCalculations {
                 return "Purchase from \(source)"
             case .return:
                 return "Return to \(source)"
-            default:
+            case .fee:
+                return "Fee"
+            case .purchase, .expense, nil:
                 return source
             }
+        }
+
+        // Empty source — Fee is the only type with a reliable default label
+        // (counterparty is implicitly the business).
+        if transaction.transactionType == .fee {
+            return "Fee"
         }
 
         // Legacy canonical inventory sale with empty source

@@ -108,18 +108,26 @@ enum ReportAggregationCalculations {
         items: [Item],
         categories: [BudgetCategory]
     ) -> InvoiceReportData {
-        // Fee categories (categoryType == .fee) represent income received from the client,
-        // not charges passed through to them. They are intentionally excluded from the invoice.
-        let feeCategoryIds = Set(
-            categories.compactMap { cat -> String? in
-                guard cat.metadata?.categoryType == .fee, let id = cat.id else { return nil }
-                return id
-            }
+        // Fee transactions represent income the business charges the client, not charges
+        // passed through on the invoice. Exclude them directly by type; also exclude any
+        // transaction that links to a fee-only category (covers legacy `.purchase`
+        // transactions stored against fee categories).
+        let categoryMap = Dictionary(
+            categories.compactMap { cat -> (String, BudgetCategory)? in
+                guard let id = cat.id else { return nil }
+                return (id, cat)
+            },
+            uniquingKeysWith: { first, _ in first }
         )
 
         let active = transactions.filter { tx in
             guard tx.status != .canceled else { return false }
-            if let catId = tx.budgetCategoryId, feeCategoryIds.contains(catId) { return false }
+            let category = tx.budgetCategoryId.flatMap { categoryMap[$0] }
+            let resolvedType = TransactionTaxonomy.resolve(
+                storedType: tx.transactionType ?? .purchase,
+                category: category
+            )
+            if resolvedType == .fee { return false }
             return true
         }
 

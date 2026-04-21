@@ -66,10 +66,10 @@ enum TransactionNextStepsCalculations {
             sfSymbol: "person"
         ))
 
-        // 6. Tax rate (only if budget category is itemized)
-        if hasBudgetCategory, let catId = transaction.budgetCategoryId,
-           let cat = budgetCategories[catId],
-           cat.metadata?.categoryType == .itemized {
+        // 6. Tax rate — only for tx types that carry items (purchase/return).
+        // Category shape is no longer the gate; a Mixed category can hold
+        // both items and expenses. See docs/specs/transaction-type.md.
+        if transaction.needsItemizedAudit {
             let hasTaxRate = (transaction.taxRatePct ?? 0) > 0
             steps.append(NextStep(
                 id: "tax-rate",

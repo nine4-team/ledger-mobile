@@ -102,23 +102,23 @@ struct BudgetTabView: View {
                     .foregroundStyle(BrandColors.textPrimary)
 
                 HStack {
-                    Text(BudgetTabCalculations.spentLabel(spentCents: overallSpentCents, categoryType: .general))
+                    Text(BudgetTabCalculations.spentLabel(spentCents: overallSpentCents, isFeeCategory: false))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                     Spacer()
                     Text(BudgetTabCalculations.remainingLabel(
                         spentCents: overallSpentCents,
                         budgetCents: overallBudgetCents,
-                        categoryType: .general
+                        isFeeCategory: false
                     ))
                     .font(Typography.small)
                     .fontWeight(.regular)
-                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: pct, categoryType: .general))
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: pct, isFeeCategory: false))
                 }
 
                 ProgressBar(
                     percentage: pct,
-                    fillColor: BudgetTrackerCalculations.progressColor(percentage: pct, categoryType: .general),
+                    fillColor: BudgetTrackerCalculations.progressColor(percentage: pct, isFeeCategory: false),
                     overflowPercentage: overflow > 0 ? overflow : nil,
                     overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                 )
@@ -213,7 +213,7 @@ private struct BudgetCategoryRow: View {
     }
 
     private var displayName: String {
-        category.categoryType == .fee ? category.name : "\(category.name) Budget"
+        category.isFeeCategory ? category.name : "\(category.name) Budget"
     }
 
     var body: some View {
@@ -226,7 +226,7 @@ private struct BudgetCategoryRow: View {
                 HStack {
                     Text(BudgetTabCalculations.spentLabel(
                         spentCents: category.spentCents,
-                        categoryType: category.categoryType
+                        isFeeCategory: category.isFeeCategory
                     ))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
@@ -236,17 +236,17 @@ private struct BudgetCategoryRow: View {
                     Text(BudgetTabCalculations.remainingLabel(
                         spentCents: category.spentCents,
                         budgetCents: category.budgetCents,
-                        categoryType: category.categoryType
+                        isFeeCategory: category.isFeeCategory
                     ))
                     .font(Typography.small)
                     .fontWeight(.regular)
-                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: category.categoryType))
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, isFeeCategory: category.isFeeCategory))
                 }
 
                 if category.budgetCents > 0 {
                     ProgressBar(
                         percentage: percentage,
-                        fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: category.categoryType),
+                        fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, isFeeCategory: category.isFeeCategory),
                         overflowPercentage: overflow > 0 ? overflow : nil,
                         overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
                     )

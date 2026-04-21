@@ -42,7 +42,9 @@ enum TransactionCardCalculations {
                 switch type {
                 case .sale:      color = StatusColors.atRiskBar
                 case .return:    color = StatusColors.badgeNeedsReview
-                default:         color = BrandColors.primary
+                case .fee:       color = StatusColors.badgeWarning
+                case .expense:   color = BrandColors.primary
+                case .purchase:  color = BrandColors.primary
                 }
             }
             badges.append(CardBadge(text: label, color: color))

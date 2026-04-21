@@ -6,7 +6,7 @@ struct BudgetProgressPreview: View {
     let categoryName: String
     let spentCents: Int
     let budgetCents: Int
-    var categoryType: BudgetCategoryType = .general
+    var isFeeCategory: Bool = false
 
     private var overBudget: Bool {
         BudgetTrackerCalculations.isOverBudget(spentCents: spentCents, budgetCents: budgetCents)
@@ -21,7 +21,7 @@ struct BudgetProgressPreview: View {
     }
 
     private var remainingLabel: String {
-        BudgetTrackerCalculations.remainingLabel(spentCents: spentCents, budgetCents: budgetCents, categoryType: categoryType)
+        BudgetTrackerCalculations.remainingLabel(spentCents: spentCents, budgetCents: budgetCents, isFeeCategory: isFeeCategory)
     }
 
     var body: some View {
@@ -31,19 +31,19 @@ struct BudgetProgressPreview: View {
                 .foregroundStyle(BrandColors.textPrimary)
 
             HStack {
-                Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, categoryType: categoryType))
+                Text(BudgetTrackerCalculations.spentLabel(spentCents: spentCents, isFeeCategory: isFeeCategory))
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                 Spacer()
                 Text(remainingLabel)
                     .font(Typography.small)
                     .fontWeight(.regular)
-                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, categoryType: categoryType))
+                    .foregroundStyle(BudgetTrackerCalculations.remainingTextColor(percentage: percentage, isFeeCategory: isFeeCategory))
             }
 
             ProgressBar(
                 percentage: percentage,
-                fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, categoryType: categoryType),
+                fillColor: BudgetTrackerCalculations.progressColor(percentage: percentage, isFeeCategory: isFeeCategory),
                 overflowPercentage: overflow > 0 ? overflow : nil,
                 overflowColor: overflow > 0 ? StatusColors.overflowBar : nil
             )
@@ -76,13 +76,13 @@ struct BudgetProgressPreview: View {
 }
 
 #Preview("Fee — Green (≥ 75%)") {
-    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 40000, budgetCents: 50000, categoryType: .fee)
+    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 40000, budgetCents: 50000, isFeeCategory: true)
         .padding(Spacing.screenPadding)
         .preferredColorScheme(.dark)
 }
 
 #Preview("Fee — Red (< 50%)") {
-    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 20000, budgetCents: 50000, categoryType: .fee)
+    BudgetProgressPreview(categoryName: "Architect Fee", spentCents: 20000, budgetCents: 50000, isFeeCategory: true)
         .padding(Spacing.screenPadding)
         .preferredColorScheme(.dark)
 }

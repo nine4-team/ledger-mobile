@@ -95,16 +95,16 @@ struct BudgetCategoryManagementView: View {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeCategories.map(\.name)
-            ) { name, categoryType, excludeFromBudget in
-                createCategory(name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
+            ) { name, supportedTypes, excludeFromBudget in
+                createCategory(name: name, supportedTypes: supportedTypes, excludeFromBudget: excludeFromBudget)
             }
         }
         .adaptivePresentation(item: $editingCategory, style: .form) { category in
             CategoryFormModal(
                 mode: .edit(category),
                 existingNames: activeCategories.filter { $0.id != category.id }.map(\.name)
-            ) { name, categoryType, excludeFromBudget in
-                updateCategory(category, name: name, categoryType: categoryType, excludeFromBudget: excludeFromBudget)
+            ) { name, supportedTypes, excludeFromBudget in
+                updateCategory(category, name: name, supportedTypes: supportedTypes, excludeFromBudget: excludeFromBudget)
             }
         }
         .confirmationDialog(
@@ -135,7 +135,7 @@ struct BudgetCategoryManagementView: View {
         }
     }
 
-    private func createCategory(name: String, categoryType: BudgetCategoryType, excludeFromBudget: Bool) {
+    private func createCategory(name: String, supportedTypes: [TransactionType], excludeFromBudget: Bool) {
         guard let accountId = accountContext.currentAccountId else { return }
         var category = BudgetCategory()
         category.accountId = accountId
@@ -143,21 +143,20 @@ struct BudgetCategoryManagementView: View {
         category.slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
         category.order = (activeCategories.last?.order ?? 0) + 1
         category.metadata = BudgetCategoryMetadata(
-            categoryType: categoryType,
+            categoryType: nil,
             excludeFromOverallBudget: excludeFromBudget
         )
+        category.supportedTypes = supportedTypes
         _ = try? service.createBudgetCategory(accountId: accountId, category: category)
     }
 
-    private func updateCategory(_ category: BudgetCategory, name: String, categoryType: BudgetCategoryType, excludeFromBudget: Bool) {
+    private func updateCategory(_ category: BudgetCategory, name: String, supportedTypes: [TransactionType], excludeFromBudget: Bool) {
         guard let accountId = accountContext.currentAccountId, let id = category.id else { return }
         nonisolated(unsafe) let fields: [String: Any] = [
             "name": name,
             "slug": name.lowercased().replacingOccurrences(of: " ", with: "-"),
-            "metadata": [
-                "categoryType": categoryType.rawValue,
-                "excludeFromOverallBudget": excludeFromBudget
-            ],
+            "metadata.excludeFromOverallBudget": excludeFromBudget,
+            "supportedTypes": supportedTypes.map(\.rawValue),
             "updatedAt": FieldValue.serverTimestamp()
         ]
         Task { try? await service.updateBudgetCategory(accountId: accountId, categoryId: id, fields: fields) }
@@ -195,11 +194,7 @@ private struct CategoryManagementRow: View {
     let onArchive: () -> Void
 
     private var typePill: String {
-        switch category.metadata?.categoryType {
-        case .itemized: return "Itemized"
-        case .fee: return "Fee"
-        default: return "General"
-        }
+        CategoryDisplay.pillLabel(for: category)
     }
 
     var body: some View {

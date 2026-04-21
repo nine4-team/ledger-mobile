@@ -50,7 +50,7 @@ struct PinnedBudgetsSection: View {
                         categoryName: category.name,
                         spentCents: category.spentCents,
                         budgetCents: category.budgetCents,
-                        categoryType: category.categoryType
+                        isFeeCategory: category.isFeeCategory
                     )
                 }
                 if let overall {
@@ -58,7 +58,7 @@ struct PinnedBudgetsSection: View {
                         categoryName: overall.name,
                         spentCents: overall.spentCents,
                         budgetCents: overall.budgetCents,
-                        categoryType: overall.categoryType
+                        isFeeCategory: overall.isFeeCategory
                     )
                 }
             }
