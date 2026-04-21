@@ -70,7 +70,11 @@ private struct BillingSubTab: View {
                     } else {
                         ForEach(projectInvoices, id: \.id) { invoice in
                             NavigationLink(value: invoice) {
-                                InvoiceRow(invoice: invoice)
+                                InvoiceRow(
+                                    invoice: invoice,
+                                    items: projectContext.items,
+                                    transactions: projectContext.transactions
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -204,8 +208,29 @@ private struct BillingPipelineSection: View {
 
 private struct InvoiceRow: View {
     let invoice: Invoice
+    let items: [Item]
+    let transactions: [Transaction]
 
     private var status: InvoiceStatus { invoice.status ?? .draft }
+
+    /// Drafts are live previews — compute the displayed total from the current
+    /// item / transaction state. Sent / paid / voided invoices use the frozen
+    /// `totalCents` snapshot written at `markSent`.
+    private var displayedTotalCents: Int {
+        if status == .draft {
+            let itemIdSet = Set(invoice.itemIds ?? [])
+            let txIdSet = Set(invoice.transactionIds ?? [])
+            var lines: [InvoiceLine] = []
+            for item in items where item.id.map({ itemIdSet.contains($0) }) ?? false {
+                if let line = InvoiceLineCalculations.makeLine(item: item) { lines.append(line) }
+            }
+            for tx in transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
+                if let line = InvoiceLineCalculations.makeLine(transaction: tx) { lines.append(line) }
+            }
+            return InvoiceLineCalculations.netTotalCents(lines: lines)
+        }
+        return invoice.totalCents ?? 0
+    }
 
     private var statusColor: Color {
         switch status {
@@ -239,7 +264,7 @@ private struct InvoiceRow: View {
                     }
                 }
                 Spacer()
-                Text(CurrencyFormatting.formatCents(invoice.totalCents ?? 0))
+                Text(CurrencyFormatting.formatCents(displayedTotalCents))
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .monospacedDigit()

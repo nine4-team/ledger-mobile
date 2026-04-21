@@ -4,9 +4,13 @@ import FirebaseFirestore
 ///
 /// v2 behavior: the invoice is the single source of truth for paid-state.
 /// No method in this service mutates `billingStatus` on items or transactions —
-/// those cascades existed in v1 and have been removed. `itemIds` / `transactionIds`
-/// are still written as a flat membership index (derived from `lines`) so
-/// "is this source on any invoice?" queries don't have to scan every line.
+/// those cascades existed in v1 and have been removed.
+///
+/// **Draft drafts are live previews.** While an invoice is `status == .draft`,
+/// the document stores only `itemIds` / `transactionIds` — the membership index.
+/// `lines` and `totalCents` are materialized at `markSent` from the then-current
+/// item / transaction state. Readers of a draft recompute the displayed total
+/// from that live state; readers of a sent / paid invoice read the frozen snapshot.
 struct InvoiceService: InvoiceServiceProtocol {
     private let makeBatch: @Sendable () -> any BatchWriting
 
@@ -45,13 +49,13 @@ struct InvoiceService: InvoiceServiceProtocol {
         repo(accountId: accountId).subscribe(id: invoiceId, onChange: onChange)
     }
 
-    // MARK: - Create
+    // MARK: - Create (draft — live preview, no stored lines/total)
 
     func createInvoice(
         accountId: String,
         projectId: String,
-        lines: [InvoiceLine],
-        totalCents: Int,
+        itemIds: [String],
+        transactionIds: [String],
         invoiceNumber: String?,
         notes: String?,
         userId: String?
@@ -62,16 +66,12 @@ struct InvoiceService: InvoiceServiceProtocol {
         let invoiceId = UUID().uuidString
         let invoicePath = "\(Self.invoicesPath(accountId))/\(invoiceId)"
 
-        let (itemIds, transactionIds) = Self.membership(from: lines)
-
         var invoiceFields: [String: Any] = [
             "accountId": accountId,
             "projectId": projectId,
             "status": InvoiceStatus.draft.rawValue,
             "itemIds": itemIds,
             "transactionIds": transactionIds,
-            "lines": lines.map(Self.encodeLine),
-            "totalCents": totalCents,
             "dateIssued": now,
             "createdAt": now,
             "updatedAt": now,
@@ -93,8 +93,8 @@ struct InvoiceService: InvoiceServiceProtocol {
     func updateSelections(
         invoice: Invoice,
         accountId: String,
-        newLines: [InvoiceLine],
-        newTotalCents: Int,
+        newItemIds: [String],
+        newTransactionIds: [String],
         invoiceNumber: String?,
         notes: String?,
         userId: String?
@@ -103,13 +103,13 @@ struct InvoiceService: InvoiceServiceProtocol {
 
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
-        let (itemIds, transactionIds) = Self.membership(from: newLines)
 
         var invoiceFields: [String: Any] = [
-            "itemIds": itemIds,
-            "transactionIds": transactionIds,
-            "lines": newLines.map(Self.encodeLine),
-            "totalCents": newTotalCents,
+            "itemIds": newItemIds,
+            "transactionIds": newTransactionIds,
+            // Clear any stale snapshot fields — drafts render live from membership.
+            "lines": FieldValue.delete(),
+            "totalCents": FieldValue.delete(),
             "updatedAt": now,
         ]
         invoiceFields["invoiceNumber"] = (invoiceNumber?.isEmpty == false) ? invoiceNumber! : FieldValue.delete()
@@ -120,15 +120,27 @@ struct InvoiceService: InvoiceServiceProtocol {
         try await batch.commit()
     }
 
-    // MARK: - Mark Sent
+    // MARK: - Mark Sent (materialize the snapshot)
 
-    func markSent(invoiceId: String, accountId: String, userId: String?) async throws {
+    func markSent(
+        invoiceId: String,
+        accountId: String,
+        lines: [InvoiceLine],
+        totalCents: Int,
+        userId: String?
+    ) async throws {
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
+
+        let (itemIds, transactionIds) = Self.membership(from: lines)
 
         var fields: [String: Any] = [
             "status": InvoiceStatus.sent.rawValue,
             "dateSent": now,
+            "lines": lines.map(Self.encodeLine),
+            "totalCents": totalCents,
+            "itemIds": itemIds,
+            "transactionIds": transactionIds,
             "updatedAt": now,
         ]
         if let userId { fields["updatedBy"] = userId }

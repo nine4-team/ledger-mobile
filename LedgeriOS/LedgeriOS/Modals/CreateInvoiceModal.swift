@@ -342,28 +342,16 @@ struct CreateInvoiceModal: View {
         errorMessage = nil
         let service = InvoiceService()
 
-        // Build signed lines from the current selection. Items are always charges;
-        // transactions use InvoiceLineCalculations.sign to derive charge vs credit.
-        let selectedItems = projectContext.items.filter {
-            guard let id = $0.id else { return false }
-            return selectedItemIds.contains(id)
+        // Drafts are live previews — store only membership; lines/total are
+        // materialized at markSent from the then-current item/tx state.
+        let itemIds = projectContext.items.compactMap { item -> String? in
+            guard let id = item.id, selectedItemIds.contains(id) else { return nil }
+            return id
         }
-        let selectedTxs = projectContext.transactions.filter {
-            guard let id = $0.id else { return false }
-            return selectedTxIds.contains(id)
+        let txIds = projectContext.transactions.compactMap { tx -> String? in
+            guard let id = tx.id, selectedTxIds.contains(id) else { return nil }
+            return id
         }
-        var lines: [InvoiceLine] = []
-        for item in selectedItems {
-            if let line = InvoiceLineCalculations.makeLine(item: item) {
-                lines.append(line)
-            }
-        }
-        for tx in selectedTxs {
-            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
-                lines.append(line)
-            }
-        }
-        let total = InvoiceLineCalculations.netTotalCents(lines: lines)
 
         let number = invoiceName.trimmingCharacters(in: .whitespaces)
         let trimmedNotes = notes.trimmingCharacters(in: .whitespaces)
@@ -380,8 +368,8 @@ struct CreateInvoiceModal: View {
                     try await service.updateSelections(
                         invoice: snapshot,
                         accountId: acctId,
-                        newLines: lines,
-                        newTotalCents: total,
+                        newItemIds: itemIds,
+                        newTransactionIds: txIds,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                         userId: userId
@@ -390,8 +378,8 @@ struct CreateInvoiceModal: View {
                     _ = try await service.createInvoice(
                         accountId: acctId,
                         projectId: projId,
-                        lines: lines,
-                        totalCents: total,
+                        itemIds: itemIds,
+                        transactionIds: txIds,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                         userId: userId

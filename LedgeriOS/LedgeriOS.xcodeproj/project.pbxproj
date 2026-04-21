@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01261AFE5A0846848B96077B /* InventoryOperationsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */; };
+		INV00000000000000000001 /* InvoiceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = INV00000000000000000002 /* InvoiceServiceTests.swift */; };
 		03E68728F43F4ACCADD856B2 /* ListStateControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3C7C65046E4899AAED93D1 /* ListStateControls.swift */; };
 		0449C4DD1929A68C58F08BF9 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2DEE2253E6548620BEA565 /* AccountView.swift */; };
 		0491897D47F0AAE29CDD0C50 /* Invite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F923BE246BDFE7441513642E /* Invite.swift */; };
@@ -572,6 +573,7 @@
 		C89F38C225B3ABEBCDDF68A0 /* BulkSaleResolutionCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BulkSaleResolutionCalculations.swift; sourceTree = "<group>"; };
 		CAC6CAA659769069DED37219 /* FirestoreRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirestoreRepository.swift; sourceTree = "<group>"; };
 		CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InventoryOperationsServiceTests.swift; sourceTree = "<group>"; };
+		INV00000000000000000002 /* InvoiceServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceServiceTests.swift; sourceTree = "<group>"; };
 		CB6ABADE720F40838B737A0E /* PropertyManagementReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PropertyManagementReportView.swift; sourceTree = "<group>"; };
 		CB824CDC4C59576E33CF96FD /* VendorDefaults.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VendorDefaults.swift; sourceTree = "<group>"; };
 		CC01F00100000000000C0001 /* CameraCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
@@ -944,6 +946,7 @@
 				BL00000000000000000F0015 /* InvoiceReportAggregationTests.swift */,
 				BE243B592ABD484D8B319501 /* ReportAggregationCalculationTests.swift */,
 				CAFC25A1633A4BFEA2196AEC /* InventoryOperationsServiceTests.swift */,
+				INV00000000000000000002 /* InvoiceServiceTests.swift */,
 				A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */,
 				785E5497EFB8B8751D7F88C9 /* ModelCodableTests.swift */,
 				0CA6C9EEDFF7E6AAFDB60F58 /* BudgetCalculationTests.swift */,
@@ -1707,6 +1710,7 @@
 				BL00000000000000000B0014 /* BillingSummaryCalculationTests.swift in Sources */,
 				BL00000000000000000B0015 /* InvoiceReportAggregationTests.swift in Sources */,
 				01261AFE5A0846848B96077B /* InventoryOperationsServiceTests.swift in Sources */,
+				INV00000000000000000001 /* InvoiceServiceTests.swift in Sources */,
 				E7A8A953E96FF2276DB8233A /* ModelCodableTests.swift in Sources */,
 				FD77559BC59D7CFA314B0727 /* BudgetCalculationTests.swift in Sources */,
 				536AE658682D45DB9E6984E7 /* ItemCardCalculationTests.swift in Sources */,
