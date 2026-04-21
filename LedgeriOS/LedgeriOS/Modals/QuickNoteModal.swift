@@ -30,7 +30,9 @@ struct QuickNoteModal: View {
                 .padding(.top, Spacing.md)
             }
             .navigationTitle("Quick Note")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
