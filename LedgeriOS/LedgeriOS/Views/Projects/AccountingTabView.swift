@@ -10,16 +10,16 @@ struct AccountingTabView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
 
-    private var owedToCompanyCents: Int {
-        projectContext.transactions
-            .filter { $0.status != .canceled && ReportAggregationCalculations.reimbursementDirection(for: $0) == .owedToCompany }
-            .reduce(0) { $0 + ($1.amountCents ?? 0) }
-    }
-
-    private var owedToClientCents: Int {
-        projectContext.transactions
-            .filter { $0.status != .canceled && ReportAggregationCalculations.reimbursementDirection(for: $0) == .owedToClient }
-            .reduce(0) { $0 + ($1.amountCents ?? 0) }
+    private var payableBalance: InvoiceLineCalculations.PayableBalance {
+        guard let pid = projectContext.currentProjectId else {
+            return .init(toBusinessCents: 0, toClientCents: 0)
+        }
+        return InvoiceLineCalculations.payableBalance(
+            projectId: pid,
+            items: projectContext.items,
+            transactions: projectContext.transactions,
+            invoices: accountContext.allInvoices
+        )
     }
 
     var body: some View {
@@ -34,10 +34,10 @@ struct AccountingTabView: View {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Owed to Business")
+                                    Text("Payable to Business")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
-                                    Text(CurrencyFormatting.formatCentsWithDecimals(owedToCompanyCents))
+                                    Text(CurrencyFormatting.formatCentsWithDecimals(payableBalance.toBusinessCents))
                                         .font(Typography.h2)
                                         .foregroundStyle(BrandColors.textPrimary)
                                 }
@@ -48,10 +48,10 @@ struct AccountingTabView: View {
                         Card {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                                    Text("Owed to Client")
+                                    Text("Payable to Client")
                                         .font(Typography.small)
                                         .foregroundStyle(BrandColors.textSecondary)
-                                    Text(CurrencyFormatting.formatCentsWithDecimals(owedToClientCents))
+                                    Text(CurrencyFormatting.formatCentsWithDecimals(payableBalance.toClientCents))
                                         .font(Typography.h2)
                                         .foregroundStyle(BrandColors.textPrimary)
                                 }

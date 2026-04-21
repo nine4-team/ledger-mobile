@@ -1,6 +1,6 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: Phases 1–3 shipped (2026-04-21); Phases 4–5 pending
+Status: Phases 1–4 shipped (2026-04-21); Phase 5 pending
 Last updated: 2026-04-21
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))
 
@@ -124,11 +124,18 @@ Changes:
 
 **Task 3.4 — Update `TransactionStatus` enum and legacy aliases.** At [Models/Shared/Enums.swift:69-73](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift), reduce to `case canceled` (plus alias `"cancelled" → "canceled"`). Add `"pending" → "canceled"` and `"completed" → "canceled"` only if we want legacy reads to not throw — but a cleaner path is to make the enum tolerant by catching the decoding error and yielding nil. Decide per the axiom-codable skill. Acceptance: reads of existing production documents with `status: "completed"` succeed and land as `nil`. Dependencies: 3.3.
 
-### Phase 4 — Billing subtab pipeline + Reports rework
+### Phase 4 — Billing subtab pipeline + Reports rework — **SHIPPED 2026-04-21**
+
+- Task 4.1 shipped as a new private `BillingPipelineSection` inside `FinancesTabView`, appended below the existing summary card and Invoice list. Three segments — `To Invoice` / `Invoiced` / `Paid` — driven by `InvoiceLineCalculations.billableMembership`. Rows use the existing `ItemCard` / `TransactionCard` with `NavigationLink(value:)` into the already-registered `Item` / `Transaction` destinations on `ProjectDetailView`.
+- Task 4.2 dropped (see note above): Create Invoice button stayed in its current spot.
+- Task 4.3 shipped. New pure helper `InvoiceLineCalculations.payableBalance(projectId:items:transactions:invoices:)` returns `PayableBalance { toBusinessCents, toClientCents }`. `AccountingTabView` replaced its raw-sum `owedToCompanyCents` / `owedToClientCents` with this. Labels already read "Payable to Business" / "Payable to Client".
+- Task 4.4 (cross-project aggregation) deferred — out of scope for v2; lives in [reports-tab-rework.md](reports-tab-rework.md).
+
+
 
 **Task 4.1 — Build the three-tab pipeline UI.** In [Views/Projects/FinancesTabView.swift](../../LedgeriOS/LedgeriOS/Views/Projects/FinancesTabView.swift), below the existing `BillingSummaryCard` and `Invoices` list inside `BillingSubTab` (lines 44-78), insert a new `SegmentedControl` with three segments — `to-invoice`, `invoiced`, `paid` — and three list views driven by `InvoiceLineCalculations.billableMembership(...)`. Each row renders an existing-pattern card: use `ItemCard` / `TransactionCard` as-is. Pattern to follow: the segmented control wiring already in `FinancesTabView` at line 8. Acceptance: the three tabs show correct contents for a seeded project. Dependencies: 1.3, 2.3.
 
-**Task 4.2 — Wire Create Invoice to the To Invoice tab's selection.** The spec says "Create Invoice is a button on [the To Invoice] tab and opens a picker against this list." Move or duplicate the `showingCreateInvoice` button currently at [FinancesTabView.swift:53-60](../../LedgeriOS/LedgeriOS/Views/Projects/FinancesTabView.swift) to appear on the To Invoice tab. Acceptance: Create Invoice only visible while the To Invoice tab is active. Dependencies: 4.1.
+**Task 4.2 — ~~Wire Create Invoice to the To Invoice tab's selection.~~ Dropped 2026-04-21.** The Create Invoice button stays where it is today (project-wide on the Billing subtab). Moving it onto the pipeline's To Invoice segment traded a stable affordance for a context-dependent one, and the picker already scopes to the same pool the segment would show. No action.
 
 **Task 4.3 — Derive the Reports-tab running-balance cards.** Rewrite the `owedToCompanyCents` / `owedToClientCents` computed props in [Views/Projects/AccountingTabView.swift:13-23](../../LedgeriOS/LedgeriOS/Views/Projects/AccountingTabView.swift). Per spec §"Running balance is derived" and [reports-tab-rework.md](reports-tab-rework.md): `owedToBusiness = sum of +lines on sent-but-unpaid invoices for this project + sum of charge-signed unbilled billable activity`. `owedToClient = sum of −lines on sent-but-unpaid invoices + sum of credit-signed unbilled billable activity`. Sign conventions must line up with Task 1.2's classifier. Relabel the cards per [reports-tab-rework.md](reports-tab-rework.md): "Payable to Business" / "Payable to Client" (already correct in the AccountingTabView strings). Acceptance: cards on a project with one paid invoice, one sent invoice, and one unbilled sale show the correct net. Dependencies: 1.2, 1.3.
 

@@ -76,6 +76,8 @@ private struct BillingSubTab: View {
                         }
                     }
                 }
+
+                BillingPipelineSection()
             }
             .padding(Spacing.screenPadding)
             .frame(maxWidth: Dimensions.contentMaxWidth)
@@ -85,6 +87,114 @@ private struct BillingSubTab: View {
             if let accountId = accountContext.currentAccountId,
                let projectId = projectContext.currentProjectId {
                 CreateInvoiceModal(accountId: accountId, projectId: projectId)
+            }
+        }
+    }
+}
+
+// MARK: - Billing Pipeline Section
+
+/// Three-segment view of the project's billable pipeline:
+/// - To Invoice: items and non-itemized transactions not on any non-voided invoice.
+/// - Invoiced: everything on sent-but-unpaid invoices.
+/// - Paid: everything on paid invoices.
+/// Membership is derived via `InvoiceLineCalculations.billableMembership`.
+private struct BillingPipelineSection: View {
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(ProjectContext.self) private var projectContext
+    @State private var selectedSegment = "to-invoice"
+
+    private var projectId: String? { projectContext.currentProjectId }
+
+    private var membership: InvoiceLineCalculations.BillableMembership? {
+        guard let pid = projectId else { return nil }
+        return InvoiceLineCalculations.billableMembership(
+            projectId: pid,
+            items: projectContext.items,
+            transactions: projectContext.transactions,
+            invoices: accountContext.allInvoices
+        )
+    }
+
+    private func items(in ids: Set<String>) -> [Item] {
+        projectContext.items
+            .filter { $0.id.map { ids.contains($0) } ?? false }
+    }
+
+    private func transactions(in ids: Set<String>) -> [Transaction] {
+        projectContext.transactions
+            .filter { $0.id.map { ids.contains($0) } ?? false }
+    }
+
+    private var visibleItems: [Item] {
+        guard let m = membership else { return [] }
+        switch selectedSegment {
+        case "invoiced": return items(in: m.invoicedItemIds)
+        case "paid": return items(in: m.paidItemIds)
+        default: return items(in: m.toInvoiceItemIds)
+        }
+    }
+
+    private var visibleTransactions: [Transaction] {
+        guard let m = membership else { return [] }
+        switch selectedSegment {
+        case "invoiced": return transactions(in: m.invoicedTransactionIds)
+        case "paid": return transactions(in: m.paidTransactionIds)
+        default: return transactions(in: m.toInvoiceTransactionIds)
+        }
+    }
+
+    private var isEmpty: Bool {
+        visibleItems.isEmpty && visibleTransactions.isEmpty
+    }
+
+    private var emptyMessage: String {
+        switch selectedSegment {
+        case "invoiced":
+            return "Nothing is on a sent invoice yet."
+        case "paid":
+            return "Nothing is on a paid invoice yet."
+        default:
+            return "Everything in this project is already on an invoice."
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Pipeline").sectionLabelStyle()
+
+            SegmentedControl(selection: $selectedSegment, options: [
+                SegmentOption(id: "to-invoice", label: "To Invoice"),
+                SegmentOption(id: "invoiced", label: "Invoiced"),
+                SegmentOption(id: "paid", label: "Paid"),
+            ])
+
+            if isEmpty {
+                Card {
+                    Text(emptyMessage)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                if !visibleItems.isEmpty {
+                    Text("Items").sectionLabelStyle()
+                    ForEach(visibleItems, id: \.id) { item in
+                        NavigationLink(value: item) {
+                            ItemCard(item: item)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                if !visibleTransactions.isEmpty {
+                    Text("Transactions").sectionLabelStyle()
+                    ForEach(visibleTransactions, id: \.id) { tx in
+                        NavigationLink(value: tx) {
+                            TransactionCard(transaction: tx)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
     }

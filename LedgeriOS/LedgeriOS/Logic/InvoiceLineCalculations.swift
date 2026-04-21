@@ -184,6 +184,65 @@ enum InvoiceLineCalculations {
     static func netTotalCents(lines: [InvoiceLine]) -> Int {
         lines.reduce(0) { $0 + $1.signedAmountCents }
     }
+
+    // MARK: - Running balance
+
+    /// Net Payable-to-Business / Payable-to-Client running balance for a
+    /// project, derived from invoice membership and the unbilled billable pool.
+    ///
+    /// Payable-to-Business = +lines on sent-but-unpaid invoices + charge-signed
+    /// unbilled activity.
+    ///
+    /// Payable-to-Client = −lines on sent-but-unpaid invoices + credit-signed
+    /// unbilled activity (stored as positive magnitudes).
+    struct PayableBalance: Equatable {
+        var toBusinessCents: Int
+        var toClientCents: Int
+    }
+
+    static func payableBalance(
+        projectId: String,
+        items: [Item],
+        transactions: [Transaction],
+        invoices: [Invoice]
+    ) -> PayableBalance {
+        var toBusiness = 0
+        var toClient = 0
+
+        // Sent-but-unpaid invoices contribute their stored signed lines.
+        for invoice in invoices {
+            guard invoice.projectId == projectId else { continue }
+            guard invoice.status == .sent else { continue }
+            for line in invoice.lines ?? [] {
+                switch line.sign {
+                case .charge: toBusiness += line.amountCents
+                case .credit: toClient += line.amountCents
+                }
+            }
+        }
+
+        // Unbilled billable pool contributes by derived sign.
+        let membership = billableMembership(
+            projectId: projectId,
+            items: items,
+            transactions: transactions,
+            invoices: invoices
+        )
+        for item in items {
+            guard let id = item.id, membership.toInvoiceItemIds.contains(id) else { continue }
+            toBusiness += amountCents(for: item)
+        }
+        for tx in transactions {
+            guard let id = tx.id, membership.toInvoiceTransactionIds.contains(id) else { continue }
+            switch sign(for: tx) {
+            case .charge: toBusiness += tx.amountCents ?? 0
+            case .credit: toClient += tx.amountCents ?? 0
+            case .none: break
+            }
+        }
+
+        return PayableBalance(toBusinessCents: toBusiness, toClientCents: toClient)
+    }
 }
 
 // MARK: - Invoice membership helpers
