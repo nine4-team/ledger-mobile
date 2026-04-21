@@ -219,12 +219,18 @@ struct InventoryOperationsService {
     /// Creates a Return transaction whose `source` defaults to
     /// `"Business Inventory"`; pass `inventoryLabel` for a branded label.
     /// Items have budgetCategoryId and projectId wiped (inventory invariant).
+    ///
+    /// `paidInvoiceItemIds` — item IDs currently on any paid invoice. Any item
+    /// in `items` whose id is in this set triggers an auto-generated credit
+    /// transaction on the source project (billing-invoicing-v2, §"Returns
+    /// after a paid invoice"). Pass an empty set to disable.
     func returnToInventory(
         items: [Item],
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        paidInvoiceItemIds: Set<String> = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -306,6 +312,15 @@ struct InventoryOperationsService {
             if let userId { edge["createdBy"] = userId }
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
+
+        // 5. Auto-credit for items previously on a paid invoice.
+        Self.appendPaidReturnCredits(
+            items: items,
+            paidInvoiceItemIds: paidInvoiceItemIds,
+            batch: batch,
+            txPath: txPath,
+            userId: userId
+        )
 
         try await batch.commit()
     }
@@ -430,7 +445,8 @@ struct InventoryOperationsService {
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        paidInvoiceItemIds: Set<String> = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -456,7 +472,8 @@ struct InventoryOperationsService {
                 accountId: accountId,
                 inventoryLabel: inventoryLabel,
                 userId: userId,
-                notes: notes
+                notes: notes,
+                paidInvoiceItemIds: paidInvoiceItemIds
             )
             return
         }
@@ -579,6 +596,17 @@ struct InventoryOperationsService {
             if let userId { edge["createdBy"] = userId }
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
+
+        // Auto-credit for returning items previously on a paid invoice.
+        // Only applies to the Return leg — items originating in the project
+        // (the Sale leg) were never client-paid inventory.
+        Self.appendPaidReturnCredits(
+            items: split.returnItems,
+            paidInvoiceItemIds: paidInvoiceItemIds,
+            batch: batch,
+            txPath: txPath,
+            userId: userId
+        )
 
         try await batch.commit()
     }
@@ -994,5 +1022,41 @@ struct InventoryOperationsService {
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone(identifier: "UTC")
         return f.string(from: Date())
+    }
+
+    /// Append one owed-to-client credit transaction per returning item that
+    /// is currently on a paid invoice. Lands on the item's source project so
+    /// the derived billable-membership query picks it up in the To Invoice tab.
+    /// See `docs/specs/billing-invoicing-v2.md` §"Returns after a paid invoice".
+    static func appendPaidReturnCredits(
+        items: [Item],
+        paidInvoiceItemIds: Set<String>,
+        batch: any BatchWriting,
+        txPath: String,
+        userId: String?
+    ) {
+        guard !paidInvoiceItemIds.isEmpty else { return }
+        let today = todayDateString()
+        for item in items {
+            guard let itemId = item.id, paidInvoiceItemIds.contains(itemId) else { continue }
+            guard let projectId = item.projectId else { continue }
+
+            let amount = item.projectPriceCents ?? item.purchasePriceCents ?? 0
+            let name = item.displayName.isEmpty ? "item" : item.displayName
+
+            var creditFields: [String: Any] = [
+                "type": TransactionType.expense.rawValue,
+                "projectId": projectId,
+                "amountCents": amount,
+                "source": "Credit: returned \(name)",
+                "reimbursementType": "owed-to-client",
+                "transactionDate": today,
+                "isComplete": true,
+                "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let userId { creditFields["createdBy"] = userId }
+            batch.setDataAutoId(creditFields, inCollection: txPath)
+        }
     }
 }

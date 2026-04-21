@@ -51,10 +51,7 @@ struct LedgerApp: App {
         let spacesService = SpacesService()
         let budgetCategoriesService = BudgetCategoriesService()
         let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
-        let invoicesService = InvoiceService(
-            itemsService: itemsService,
-            transactionsService: transactionsService
-        )
+        let invoicesService = InvoiceService()
 
         _accountContext = State(initialValue: AccountContext(
             accountsService: accountsService,

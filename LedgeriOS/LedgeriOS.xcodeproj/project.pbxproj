@@ -46,6 +46,7 @@
 		BL00000000000000000B0002 /* InvoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0002 /* InvoiceService.swift */; };
 		BL00000000000000000B0003 /* InvoiceServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */; };
 		BL00000000000000000B0010 /* BillingSummaryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0010 /* BillingSummaryCalculations.swift */; };
+		BL00000000000000000B0020 /* InvoiceLineCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0020 /* InvoiceLineCalculations.swift */; };
 		BL00000000000000000B0011 /* BillingSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0011 /* BillingSummaryCard.swift */; };
 		BL00000000000000000B0012 /* CreateInvoiceModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0012 /* CreateInvoiceModal.swift */; };
 		BL00000000000000000B0013 /* InvoiceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0013 /* InvoiceDetailView.swift */; };
@@ -509,6 +510,7 @@
 		BL00000000000000000F0002 /* InvoiceService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceService.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceServiceProtocol.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0010 /* BillingSummaryCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BillingSummaryCalculations.swift; sourceTree = "<group>"; };
+		BL00000000000000000F0020 /* InvoiceLineCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceLineCalculations.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0011 /* BillingSummaryCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BillingSummaryCard.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0012 /* CreateInvoiceModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateInvoiceModal.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0013 /* InvoiceDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceDetailView.swift; sourceTree = "<group>"; };
@@ -776,6 +778,7 @@
 			isa = PBXGroup;
 			children = (
 				BL00000000000000000F0010 /* BillingSummaryCalculations.swift */,
+				BL00000000000000000F0020 /* InvoiceLineCalculations.swift */,
 				6186D40779AF445E9263F512 /* ReviewCalculations.swift */,
 				835A22100E144F61BDAF1F8D /* ReportAggregationCalculations.swift */,
 				011B2B991C66CB99379D3F13 /* ScopeFilters.swift */,
@@ -1444,6 +1447,7 @@
 				BL00000000000000000B0002 /* InvoiceService.swift in Sources */,
 				BL00000000000000000B0003 /* InvoiceServiceProtocol.swift in Sources */,
 				BL00000000000000000B0010 /* BillingSummaryCalculations.swift in Sources */,
+				BL00000000000000000B0020 /* InvoiceLineCalculations.swift in Sources */,
 				BL00000000000000000B0011 /* BillingSummaryCard.swift in Sources */,
 				BL00000000000000000B0012 /* CreateInvoiceModal.swift in Sources */,
 				BL00000000000000000B0013 /* InvoiceDetailView.swift in Sources */,

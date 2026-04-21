@@ -1,7 +1,9 @@
 # Billing & Invoicing
-Status: shipped (auto-payment detection deferred)
-Last updated: 2026-04-07
+Status: superseded by [billing-invoicing-v2.md](billing-invoicing-v2.md) (2026-04-20)
+Last updated: 2026-04-20
 Implemented: 2026-04-07
+
+> **Superseded.** This is the v1 spec, preserved for historical context. The shipped implementation still matches this doc, but new work should reference [billing-invoicing-v2.md](billing-invoicing-v2.md), which collapses paid-state onto the invoice and makes invoices bidirectional.
 
 ## Summary
 Progressive billing for projects — the ability to bill clients mid-project for approved items rather than waiting until the end. Items within a project transaction have individual billing statuses, invoices can be generated from selected items, and marking an invoice as paid automatically updates all items on it. Stretch goal: auto-detect payment via email integration.

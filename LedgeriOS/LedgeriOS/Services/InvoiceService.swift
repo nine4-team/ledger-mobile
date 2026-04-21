@@ -1,22 +1,18 @@
 import FirebaseFirestore
 
-/// CRUD + state-machine operations for `Invoice` documents.
+/// CRUD + state-machine operations for `Invoice` documents (v2 model).
 ///
-/// All multi-doc operations (create, mark paid, void) commit through an injected
-/// `BatchWriting` so they're atomic — the invoice and every cascaded item/transaction
-/// update either all succeed or all fail. Modeled on `InventoryOperationsService`.
+/// v2 behavior: the invoice is the single source of truth for paid-state.
+/// No method in this service mutates `billingStatus` on items or transactions —
+/// those cascades existed in v1 and have been removed. `itemIds` / `transactionIds`
+/// are still written as a flat membership index (derived from `lines`) so
+/// "is this source on any invoice?" queries don't have to scan every line.
 struct InvoiceService: InvoiceServiceProtocol {
     private let makeBatch: @Sendable () -> any BatchWriting
-    private let itemsService: ItemsServiceProtocol
-    private let transactionsService: TransactionsServiceProtocol
 
     init(
-        itemsService: ItemsServiceProtocol = ItemsService(),
-        transactionsService: TransactionsServiceProtocol = TransactionsService(),
         makeBatch: @escaping @Sendable () -> any BatchWriting = { FirestoreBatchWriter() }
     ) {
-        self.itemsService = itemsService
-        self.transactionsService = transactionsService
         self.makeBatch = makeBatch
     }
 
@@ -26,14 +22,6 @@ struct InvoiceService: InvoiceServiceProtocol {
 
     private static func invoicesPath(_ accountId: String) -> String {
         "accounts/\(accountId)/invoices"
-    }
-
-    private static func itemsPath(_ accountId: String) -> String {
-        "accounts/\(accountId)/items"
-    }
-
-    private static func transactionsPath(_ accountId: String) -> String {
-        "accounts/\(accountId)/transactions"
     }
 
     // MARK: - Read
@@ -57,13 +45,12 @@ struct InvoiceService: InvoiceServiceProtocol {
         repo(accountId: accountId).subscribe(id: invoiceId, onChange: onChange)
     }
 
-    // MARK: - Create (cascade items + transactions to .invoiced)
+    // MARK: - Create
 
     func createInvoice(
         accountId: String,
         projectId: String,
-        itemIds: [String],
-        transactionIds: [String],
+        lines: [InvoiceLine],
         totalCents: Int,
         invoiceNumber: String?,
         notes: String?,
@@ -72,13 +59,10 @@ struct InvoiceService: InvoiceServiceProtocol {
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
 
-        // Generate the invoice ID up front so the cascade writes can reference it
-        // and so the caller gets a stable ID back. Firestore client supports this
-        // via collection().document() — but BatchWriting only exposes setDataAutoId
-        // (which generates internally). To return an ID we use a freshly-generated UUID
-        // as the document ID via setData(merge:false).
         let invoiceId = UUID().uuidString
         let invoicePath = "\(Self.invoicesPath(accountId))/\(invoiceId)"
+
+        let (itemIds, transactionIds) = Self.membership(from: lines)
 
         var invoiceFields: [String: Any] = [
             "accountId": accountId,
@@ -86,6 +70,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             "status": InvoiceStatus.draft.rawValue,
             "itemIds": itemIds,
             "transactionIds": transactionIds,
+            "lines": lines.map(Self.encodeLine),
             "totalCents": totalCents,
             "dateIssued": now,
             "createdAt": now,
@@ -99,41 +84,16 @@ struct InvoiceService: InvoiceServiceProtocol {
         }
 
         batch.setData(invoiceFields, forDocumentAt: invoicePath, merge: false)
-
-        // Cascade: every referenced item → billingStatus = .invoiced
-        for itemId in itemIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.invoiced.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.itemsPath(accountId))/\(itemId)")
-        }
-
-        // Cascade: every referenced transaction → billingStatus = .invoiced
-        for txId in transactionIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.invoiced.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.transactionsPath(accountId))/\(txId)")
-        }
-
         try await batch.commit()
         return invoiceId
     }
 
-    // MARK: - Update Selections (add/remove items + tx, draft-only per UI gate)
+    // MARK: - Update Selections (draft-only per UI gate)
 
-    /// Replaces the items+transactions on a draft invoice and cascades billingStatus
-    /// changes for both removed (→ unbilled) and added (→ invoiced) entries.
-    /// Also updates the invoice's name (`invoiceNumber`), notes, and snapshot total.
     func updateSelections(
         invoice: Invoice,
         accountId: String,
-        newItemIds: [String],
-        newTransactionIds: [String],
+        newLines: [InvoiceLine],
         newTotalCents: Int,
         invoiceNumber: String?,
         notes: String?,
@@ -141,71 +101,26 @@ struct InvoiceService: InvoiceServiceProtocol {
     ) async throws {
         guard let invoiceId = invoice.id else { return }
 
-        let oldItemIds = Set(invoice.itemIds ?? [])
-        let oldTxIds = Set(invoice.transactionIds ?? [])
-        let newItemSet = Set(newItemIds)
-        let newTxSet = Set(newTransactionIds)
-
-        let removedItemIds = oldItemIds.subtracting(newItemSet)
-        let addedItemIds = newItemSet.subtracting(oldItemIds)
-        let removedTxIds = oldTxIds.subtracting(newTxSet)
-        let addedTxIds = newTxSet.subtracting(oldTxIds)
-
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
+        let (itemIds, transactionIds) = Self.membership(from: newLines)
 
-        // Invoice doc
         var invoiceFields: [String: Any] = [
-            "itemIds": newItemIds,
-            "transactionIds": newTransactionIds,
+            "itemIds": itemIds,
+            "transactionIds": transactionIds,
+            "lines": newLines.map(Self.encodeLine),
             "totalCents": newTotalCents,
             "updatedAt": now,
         ]
         invoiceFields["invoiceNumber"] = (invoiceNumber?.isEmpty == false) ? invoiceNumber! : FieldValue.delete()
         invoiceFields["notes"] = (notes?.isEmpty == false) ? notes! : FieldValue.delete()
         if let userId { invoiceFields["updatedBy"] = userId }
+
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
-
-        // Removed → unbilled
-        for itemId in removedItemIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.unbilled.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.itemsPath(accountId))/\(itemId)")
-        }
-        for txId in removedTxIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.unbilled.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.transactionsPath(accountId))/\(txId)")
-        }
-
-        // Added → invoiced
-        for itemId in addedItemIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.invoiced.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.itemsPath(accountId))/\(itemId)")
-        }
-        for txId in addedTxIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.invoiced.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.transactionsPath(accountId))/\(txId)")
-        }
-
         try await batch.commit()
     }
 
-    // MARK: - Mark Sent (status only, no cascade)
+    // MARK: - Mark Sent
 
     func markSent(invoiceId: String, accountId: String, userId: String?) async throws {
         let batch = makeBatch()
@@ -222,7 +137,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         try await batch.commit()
     }
 
-    // MARK: - Mark Paid (cascade items + transactions to .paid)
+    // MARK: - Mark Paid (status only — no cascade)
 
     func markPaid(invoice: Invoice, accountId: String, userId: String?) async throws {
         guard let invoiceId = invoice.id else { return }
@@ -237,50 +152,13 @@ struct InvoiceService: InvoiceServiceProtocol {
         ]
         if let userId { invoiceFields["updatedBy"] = userId }
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
-
-        for itemId in invoice.itemIds ?? [] {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.paid.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.itemsPath(accountId))/\(itemId)")
-        }
-
-        for txId in invoice.transactionIds ?? [] {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.paid.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.transactionsPath(accountId))/\(txId)")
-        }
-
         try await batch.commit()
     }
 
-    // MARK: - Void (revert .invoiced → .unbilled, skip .paid)
+    // MARK: - Void (status only — members return to pool via derived query)
 
     func voidInvoice(invoice: Invoice, accountId: String, userId: String?) async throws {
         guard let invoiceId = invoice.id else { return }
-
-        // Pre-batch reads: skip any item/transaction already at .paid (paid is terminal).
-        // Reads happen outside the batch — Firestore client batches don't support reads.
-        var revertItemIds: [String] = []
-        for itemId in invoice.itemIds ?? [] {
-            let item = try await itemsService.getItem(accountId: accountId, itemId: itemId)
-            if item?.billingStatus != .paid {
-                revertItemIds.append(itemId)
-            }
-        }
-
-        var revertTxIds: [String] = []
-        for txId in invoice.transactionIds ?? [] {
-            let tx = try await transactionsService.getTransaction(accountId: accountId, transactionId: txId)
-            if tx?.billingStatus != .paid {
-                revertTxIds.append(txId)
-            }
-        }
 
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
@@ -292,25 +170,39 @@ struct InvoiceService: InvoiceServiceProtocol {
         ]
         if let userId { invoiceFields["updatedBy"] = userId }
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
-
-        for itemId in revertItemIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.unbilled.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.itemsPath(accountId))/\(itemId)")
-        }
-
-        for txId in revertTxIds {
-            var update: [String: Any] = [
-                "billingStatus": BillingStatus.unbilled.rawValue,
-                "updatedAt": now,
-            ]
-            if let userId { update["updatedBy"] = userId }
-            batch.updateData(update, forDocumentAt: "\(Self.transactionsPath(accountId))/\(txId)")
-        }
-
         try await batch.commit()
+    }
+
+    // MARK: - Helpers
+
+    /// Derive the flat membership index (itemIds, transactionIds) from a list of
+    /// signed lines. Order preserved, duplicates stripped (shouldn't occur in
+    /// practice since the picker enforces single membership).
+    private static func membership(from lines: [InvoiceLine]) -> (itemIds: [String], transactionIds: [String]) {
+        var itemIds: [String] = []
+        var txIds: [String] = []
+        var seenItems: Set<String> = []
+        var seenTx: Set<String> = []
+        for line in lines {
+            switch line.sourceType {
+            case .item:
+                if seenItems.insert(line.sourceId).inserted { itemIds.append(line.sourceId) }
+            case .transaction:
+                if seenTx.insert(line.sourceId).inserted { txIds.append(line.sourceId) }
+            }
+        }
+        return (itemIds, txIds)
+    }
+
+    /// Encode an InvoiceLine as a plain `[String: Any]` for Firestore's untyped batch writer.
+    private static func encodeLine(_ line: InvoiceLine) -> [String: Any] {
+        var dict: [String: Any] = [
+            "sourceType": line.sourceType.rawValue,
+            "sourceId": line.sourceId,
+            "amountCents": line.amountCents,
+            "sign": line.sign.rawValue,
+        ]
+        if let name = line.snapshotName { dict["snapshotName"] = name }
+        return dict
     }
 }

@@ -1,0 +1,31 @@
+{
+  "query": "list_transactions hasItems=false per active project, fields including budgetCategoryId, purchasedBy, amountCents",
+  "date": "2026-04-20",
+  "categoryMap": {
+    "da556858-1df8-40be-b10c-b15710d7cc9a": { "name": "Furnishings", "categoryType": "itemized" },
+    "1aa4b56b-2ff2-4377-b5fa-f7b8650ca9c0": { "name": "Additional Requests", "categoryType": "general" },
+    "c7aab919-08c3-4407-a6ba-7c20d9e7f6ea": { "name": "Kitchen", "categoryType": "general" },
+    "e1a7af0c-407a-4fd0-9c21-573b90374b53": { "name": "Install", "categoryType": "general" },
+    "fb9858a6-072a-4073-b7d6-b2e7167993f3": { "name": "Fuel", "categoryType": "general" },
+    "b0df89f8-7610-4f10-8651-0358330e95e2": { "name": "Design Fee", "categoryType": "fee" },
+    "9ccb3137-8704-441d-a92d-6a1f520864a0": { "name": "Storage & Receiving", "categoryType": "general" },
+    "359df887-409c-4dd7-a4b8-e09d007cd8ab": { "name": "Games and Entertainment", "categoryType": "general" }
+  },
+  "note": "Key finding: direction is nearly always inferrable from `purchasedBy`. client-card = client already paid (not a billable line). design-business = client owes (charge). The tiny ambiguous group is transactions with no `purchasedBy` field at all.",
+  "projects": {
+    "Jessop": { "totalNonItemized": 24, "itemsAtRoundOne": "see round-1-non-itemized.json; all 24 have purchasedBy populated" },
+    "Witzenman": { "totalNonItemized": 26 },
+    "Sandra-BAHAMA": { "totalNonItemized": 22 }
+  },
+  "genuinelyAmbiguous": {
+    "count": 1,
+    "rows": [
+      { "id": "nvczC9GdYcroxocxoIs3", "project": "Witzenman", "source": "Amazon", "type": "purchase", "budgetCategory": "Furnishings", "reimbursementType": "missing", "purchasedBy": "missing", "amountCents": 3084, "whyAmbiguous": "No purchasedBy field, no reimbursementType. Category is Furnishings (itemized) but amount is $30.84 and it's an un-itemized purchase — shape alone doesn't tell sign." }
+    ]
+  },
+  "inferrableBreakdown": {
+    "clientCard_untagged": "~61 of 72 — client paid, not billable; nothing to invoice.",
+    "designBusiness_untagged": "~4 — client owes business; bills as a charge. (Sources: cTUXjumZ BLVD Home, hpVKZs Dean Berryessa wallpaper installer, plus a couple in Jessop/Sandra.)",
+    "explicitlyTagged": "7 — owed-to-company (4) or owed-to-client (3) via reimbursementType."
+  }
+}

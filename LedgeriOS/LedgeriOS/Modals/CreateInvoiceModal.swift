@@ -307,31 +307,46 @@ struct CreateInvoiceModal: View {
         isSaving = true
         errorMessage = nil
         let service = InvoiceService()
-        let itemIds = Array(selectedItemIds)
-        let txIds = Array(selectedTxIds)
-        let total = totalCents
+
+        // Build signed lines from the current selection. Items are always charges;
+        // transactions use InvoiceLineCalculations.sign to derive charge vs credit.
+        let selectedItems = projectContext.items.filter {
+            guard let id = $0.id else { return false }
+            return selectedItemIds.contains(id)
+        }
+        let selectedTxs = projectContext.transactions.filter {
+            guard let id = $0.id else { return false }
+            return selectedTxIds.contains(id)
+        }
+        var lines: [InvoiceLine] = []
+        for item in selectedItems {
+            if let line = InvoiceLineCalculations.makeLine(item: item) {
+                lines.append(line)
+            }
+        }
+        for tx in selectedTxs {
+            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
+                lines.append(line)
+            }
+        }
+        let total = InvoiceLineCalculations.netTotalCents(lines: lines)
+
         let number = invoiceName.trimmingCharacters(in: .whitespaces)
         let trimmedNotes = notes.trimmingCharacters(in: .whitespaces)
         let userId = authManager.currentUser?.uid
         let acctId = accountId
         let projId = projectId
-        // Snapshot only the bits we need so the closure isn't capturing a non-Sendable Invoice.
         let editingId = editingInvoice?.id
-        let editingItemIds = editingInvoice?.itemIds ?? []
-        let editingTxIds = editingInvoice?.transactionIds ?? []
 
         Task {
             do {
                 if let editingId {
                     var snapshot = Invoice()
                     snapshot.id = editingId
-                    snapshot.itemIds = editingItemIds
-                    snapshot.transactionIds = editingTxIds
                     try await service.updateSelections(
                         invoice: snapshot,
                         accountId: acctId,
-                        newItemIds: itemIds,
-                        newTransactionIds: txIds,
+                        newLines: lines,
                         newTotalCents: total,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
@@ -341,8 +356,7 @@ struct CreateInvoiceModal: View {
                     _ = try await service.createInvoice(
                         accountId: acctId,
                         projectId: projId,
-                        itemIds: itemIds,
-                        transactionIds: txIds,
+                        lines: lines,
                         totalCents: total,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,

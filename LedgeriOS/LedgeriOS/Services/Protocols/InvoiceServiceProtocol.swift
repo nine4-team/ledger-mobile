@@ -3,30 +3,44 @@ import FirebaseFirestore
 protocol InvoiceServiceProtocol: Sendable {
     func getInvoice(accountId: String, invoiceId: String) async throws -> Invoice?
 
-    /// Create a draft invoice referencing items + transactions.
-    /// Cascades referenced items + transactions to billingStatus = .invoiced in one batch.
-    /// Returns the new invoice document ID.
+    /// Create a draft invoice from pre-built signed lines (v2 model).
+    /// The service derives the flat `itemIds` / `transactionIds` membership index
+    /// from `lines` and writes the net `totalCents`. Returns the new invoice ID.
+    ///
+    /// Does **not** cascade any status to the referenced items / transactions —
+    /// v2 tracks paid-state only on the invoice.
     func createInvoice(
         accountId: String,
         projectId: String,
-        itemIds: [String],
-        transactionIds: [String],
+        lines: [InvoiceLine],
         totalCents: Int,
         invoiceNumber: String?,
         notes: String?,
         userId: String?
     ) async throws -> String
 
-    /// Status-only transition (no cascade). Updates invoice.status = .sent and stamps dateSent.
+    /// Replace the lines on a draft invoice. Derives the new membership index
+    /// from `newLines`. Does not cascade.
+    func updateSelections(
+        invoice: Invoice,
+        accountId: String,
+        newLines: [InvoiceLine],
+        newTotalCents: Int,
+        invoiceNumber: String?,
+        notes: String?,
+        userId: String?
+    ) async throws
+
+    /// Status-only transition. Updates `invoice.status = .sent` and stamps `dateSent`.
     func markSent(invoiceId: String, accountId: String, userId: String?) async throws
 
-    /// Cascade billingStatus = .paid to all referenced items + transactions in one batch.
-    /// Sets invoice.status = .paid and stamps datePaid.
+    /// Status-only transition. Updates `invoice.status = .paid` and stamps `datePaid`.
+    /// Does not cascade — v2 tracks paid-state only on the invoice.
     func markPaid(invoice: Invoice, accountId: String, userId: String?) async throws
 
-    /// Reverts referenced items + transactions from .invoiced → .unbilled
-    /// (skipping any already at .paid — paid is terminal).
-    /// Sets invoice.status = .voided and stamps dateVoided.
+    /// Status-only transition. Updates `invoice.status = .voided` and stamps `dateVoided`.
+    /// Does not cascade — voided invoices' members return to the unbilled pool
+    /// automatically via the derived billable-membership query.
     func voidInvoice(invoice: Invoice, accountId: String, userId: String?) async throws
 
     func subscribeToInvoices(
