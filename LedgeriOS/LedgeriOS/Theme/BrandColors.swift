@@ -71,8 +71,21 @@ enum BrandColors {
 
     // MARK: - Progress
 
-    /// Progress track background
-    static let progressTrack = platformColor(.secondarySystemFill)
+    /// Progress track background — distinct from card surface so the unfilled
+    /// portion of a progress bar is visible. On macOS, `secondarySystemFill`
+    /// maps to `NSColor.controlColor`, which is nearly identical to the card
+    /// background, so we use explicit per-appearance colors instead.
+    static var progressTrack: Color {
+        #if os(macOS)
+        Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(srgbRed: 58/255, green: 58/255, blue: 60/255, alpha: 1)   // ~iOS tertiarySystemFill dark
+                : NSColor(srgbRed: 209/255, green: 213/255, blue: 219/255, alpha: 1) // gray-300
+        })
+        #else
+        platformColor(.secondarySystemFill)
+        #endif
+    }
 }
 
 // MARK: - Platform Color Bridge
