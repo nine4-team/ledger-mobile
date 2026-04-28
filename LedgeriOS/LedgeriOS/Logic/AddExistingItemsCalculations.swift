@@ -107,26 +107,23 @@ enum AddExistingItemsCalculations {
                 }
             }
         case .project:
-            return projectItems.filter { item in
-                guard let id = item.id else { return false }
-                return !alreadyLinked.contains(id)
-            }
+            return projectItems.filter { $0.id != nil }
         case .outside:
             let projectId = transaction.projectId
             return allItems.filter { item in
-                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                guard item.id != nil else { return false }
                 return item.projectId != projectId
             }
         case .inventory:
             // Business inventory items (no projectId)
             return allItems.filter { item in
-                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                guard item.id != nil else { return false }
                 return item.projectId == nil
             }
         case .projects:
             // Items from any project
             return allItems.filter { item in
-                guard let id = item.id, !alreadyLinked.contains(id) else { return false }
+                guard item.id != nil else { return false }
                 return item.projectId != nil
             }
         }
@@ -140,14 +137,9 @@ enum AddExistingItemsCalculations {
         projectItems: [Item],
         allItems: [Item]
     ) -> [Item] {
-        let alreadyLinked = Set(projectItems.filter { $0.spaceId == space.id }.compactMap(\.id))
-
         switch tab {
         case .project:
-            return projectItems.filter { item in
-                guard let id = item.id else { return false }
-                return !alreadyLinked.contains(id)
-            }
+            return projectItems.filter { $0.id != nil }
         case .outside:
             return allItems.filter { item in
                 guard item.id != nil else { return false }

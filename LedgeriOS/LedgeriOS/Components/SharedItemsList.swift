@@ -543,7 +543,7 @@ struct SharedItemsList: View {
             }
             .buttonStyle(.plain)
             .disabled(!isEligible && !isAdded)
-            .opacity(isEligible || isAdded ? 1 : 0.5)
+            .opacity(isAdded ? 0.55 : (isEligible ? 1 : 0.5))
         }
     }
 
