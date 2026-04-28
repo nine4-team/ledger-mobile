@@ -27,6 +27,8 @@ struct AddExistingItemsPicker: View {
     @State private var pendingItems: [Item] = []
     @State private var showCategoryPicker = false
     @State private var itemsAwaitingCategory: [Item] = []
+    @State private var showSpaceMoveConfirm = false
+    @State private var spaceMoveConfirmCount = 0
 
     // MARK: - Computed
 
@@ -74,6 +76,16 @@ struct AddExistingItemsPicker: View {
         }
     }
 
+    /// For space context: returns the name of the OTHER space an item lives in,
+    /// nil if unassigned or already in the current space.
+    private func otherSpaceName(for item: Item) -> String? {
+        guard case .space(let currentSpace) = context,
+              let itemSpaceId = item.spaceId,
+              itemSpaceId != currentSpace.id
+        else { return nil }
+        return accountContext.allSpaces.first(where: { $0.id == itemSpaceId })?.name
+    }
+
     private var pickerItems: [Item] {
         switch context {
         case .transaction(let tx):
@@ -105,48 +117,57 @@ struct AddExistingItemsPicker: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if tabs.count > 1 {
-                    SegmentedControl(selection: $activeTab, options: tabs.map {
-                        SegmentOption(id: $0, label: tabLabel($0))
-                    })
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.sm)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(navigationTitle)
+                    .font(Typography.h2)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Spacer()
+                Button {
+                    onDismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .font(.title2)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
+            }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.top, Spacing.screenPadding)
+            .padding(.bottom, Spacing.md)
 
-                SharedItemsList(
-                    mode: .picker(
-                        scope: nil,
-                        eligibilityCheck: nil,
-                        onAddSingle: nil,
-                        addedIds: addedIds,
-                        onAddSelected: { handleAddSelected() }
-                    ),
-                    emptyMessage: emptyMessageForTab,
-                    selectedIds: $selectedIds,
-                    emptyIcon: "shippingbox",
-                    filterScope: (activeTab == .outside || activeTab == .projects) ? nil : (activeTab == .inventory ? .inventory : .project),
-                    pickerItems: pickerItems
-                )
+            if tabs.count > 1 {
+                SegmentedControl(selection: $activeTab, options: tabs.map {
+                    SegmentOption(id: $0, label: tabLabel($0))
+                })
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.vertical, Spacing.sm)
             }
-            .navigationTitle(navigationTitle)
-            .navBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        onDismiss()
-                    }
-                }
-            }
-            .onChange(of: activeTab) {
-                selectedIds.removeAll()
-            }
-            .onAppear {
-                // Default to first available tab
-                if let first = tabs.first {
-                    activeTab = first
-                }
+
+            SharedItemsList(
+                mode: .picker(
+                    scope: nil,
+                    eligibilityCheck: nil,
+                    onAddSingle: nil,
+                    addedIds: addedIds,
+                    onAddSelected: { handleAddSelected() },
+                    otherSpaceNameForItem: { item in otherSpaceName(for: item) }
+                ),
+                emptyMessage: emptyMessageForTab,
+                selectedIds: $selectedIds,
+                emptyIcon: "shippingbox",
+                filterScope: (activeTab == .outside || activeTab == .projects) ? nil : (activeTab == .inventory ? .inventory : .project),
+                pickerItems: pickerItems
+            )
+        }
+        .onChange(of: activeTab) {
+            selectedIds.removeAll()
+        }
+        .onAppear {
+            // Default to first available tab
+            if let first = tabs.first {
+                activeTab = first
             }
         }
         .adaptivePresentation(isPresented: $showConflictSheet, style: .quickMenu) {
@@ -157,6 +178,21 @@ struct AddExistingItemsPicker: View {
                 onReturn: destinationIsReturn ? { executeReturn(items: pendingItems) } : nil,
                 onCancel: { pendingItems.removeAll() }
             )
+        }
+        .alert(
+            "Move \(spaceMoveConfirmCount) item\(spaceMoveConfirmCount == 1 ? "" : "s") from other spaces?",
+            isPresented: $showSpaceMoveConfirm
+        ) {
+            Button("Move") {
+                let items = pendingItems
+                pendingItems.removeAll()
+                executeAdd(items: items)
+            }
+            Button("Cancel", role: .cancel) {
+                pendingItems.removeAll()
+            }
+        } message: {
+            Text("\(spaceMoveConfirmCount) selected item\(spaceMoveConfirmCount == 1 ? "" : "s") will be moved out of \(spaceMoveConfirmCount == 1 ? "its current space" : "their current spaces").")
         }
         .adaptivePresentation(isPresented: $showCategoryPicker, style: .form) {
             CategoryPickerList(
@@ -210,6 +246,21 @@ struct AddExistingItemsPicker: View {
         }
 
         guard !selectedItems.isEmpty else { return }
+
+        // Space move confirmation: if any selected items live in another space,
+        // confirm once before proceeding.
+        if case .space(let currentSpace) = context {
+            let movers = selectedItems.filter { item in
+                guard let sid = item.spaceId else { return false }
+                return sid != currentSpace.id
+            }
+            if !movers.isEmpty {
+                pendingItems = selectedItems
+                spaceMoveConfirmCount = movers.count
+                showSpaceMoveConfirm = true
+                return
+            }
+        }
 
         // Conflict detection (transaction context only)
         if case .transaction(let tx) = context {

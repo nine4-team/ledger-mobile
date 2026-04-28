@@ -14,6 +14,9 @@ struct ItemCard: View {
 
     // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
+    /// Soft accent border + tinted Space metadata line. Used by pickers to flag
+    /// items that live in another space (tap-to-move candidates).
+    var accent: Bool = false
 
     // Bookmark
     var onBookmarkPress: (() -> Void)?
@@ -43,6 +46,11 @@ struct ItemCard: View {
         )
     }
 
+    private var resolvedSpaceName: String? {
+        guard let spaceId = item.spaceId else { return nil }
+        return accountContext.allSpaces.first(where: { $0.id == spaceId })?.name
+    }
+
     private var metadata: [String] {
         ItemCardCalculations.metadataLines(
             name: item.name,
@@ -54,12 +62,13 @@ struct ItemCard: View {
             locationLabel: locationLabel,
             priceLabel: priceLabel,
             projectName: projectName,
+            spaceName: resolvedSpaceName,
             stackSkuAndSource: stackSkuAndSource
         )
     }
 
     var body: some View {
-        let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false) {
+        let base = Card(padding: 0, isSelected: isSelected?.wrappedValue ?? false, accent: accent) {
             VStack(alignment: .leading, spacing: 0) {
                 CardHeader(
                     isSelected: isSelected,
@@ -104,9 +113,15 @@ struct ItemCard: View {
                                 .font(Typography.h3)
                                 .foregroundStyle(BrandColors.textPrimary)
                         } else {
+                            let isSpaceLine = line.hasPrefix("Space: ")
                             FindableText(line)
                                 .font(Typography.small)
-                                .foregroundStyle(BrandColors.textSecondary)
+                                .fontWeight(isSpaceLine ? .bold : .regular)
+                                .foregroundStyle(
+                                    isSpaceLine
+                                        ? BrandColors.primary
+                                        : BrandColors.textSecondary
+                                )
                                 .lineLimit(2)
                         }
                     }

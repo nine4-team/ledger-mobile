@@ -39,6 +39,8 @@ struct SharedItemsList: View {
     @State private var isLoading = true
     @State private var error: String?
     @State private var listener: ListenerRegistration?
+    @State private var pendingMoveItem: Item?
+    @State private var pendingMoveFromSpaceName: String?
 
     // MARK: - Resolved Selection Binding
 
@@ -103,7 +105,7 @@ struct SharedItemsList: View {
         switch mode {
         case .standalone:
             return true
-        case .picker(let scope, _, _, _, _):
+        case .picker(let scope, _, _, _, _, _):
             return scope != nil
         case .embedded:
             return false
@@ -165,6 +167,26 @@ struct SharedItemsList: View {
         .onDisappear {
             listener?.remove()
             listener = nil
+        }
+        .alert(
+            "Move from \(pendingMoveFromSpaceName ?? "another space")?",
+            isPresented: Binding(
+                get: { pendingMoveItem != nil },
+                set: { if !$0 { pendingMoveItem = nil; pendingMoveFromSpaceName = nil } }
+            ),
+            presenting: pendingMoveItem
+        ) { item in
+            Button("Stage Move") {
+                if let id = item.id { toggleSelection(id) }
+                pendingMoveItem = nil
+                pendingMoveFromSpaceName = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingMoveItem = nil
+                pendingMoveFromSpaceName = nil
+            }
+        } message: { item in
+            Text("\(item.displayName) is currently in \(pendingMoveFromSpaceName ?? "another space"). Adding it here will move it.")
         }
         .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
             ActionMenuSheet(
@@ -516,12 +538,20 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private func pickerItemCard(for item: Item, itemId: String, isItemSelected: Bool) -> some View {
-        if case .picker(_, let eligibilityCheck, let onAddSingle, let addedIds, _) = mode {
+        if case .picker(_, let eligibilityCheck, let onAddSingle, let addedIds, _, let otherSpaceNameForItem) = mode {
             let isAdded = addedIds.contains(itemId)
             let isEligible = eligibilityCheck?(item) ?? true
+            let otherSpaceName = isAdded ? nil : otherSpaceNameForItem?(item)
+            let isInOtherSpace = otherSpaceName != nil
+            let statusOverride: String? = isAdded ? "Added" : nil
 
             Button {
                 if isAdded { return }
+                if let name = otherSpaceName, !isItemSelected {
+                    pendingMoveItem = item
+                    pendingMoveFromSpaceName = name
+                    return
+                }
                 if let onAddSingle {
                     onAddSingle(item)
                 } else if isEligible {
@@ -532,13 +562,21 @@ struct SharedItemsList: View {
                     item: item,
                     priceLabel: displayPrice(for: item),
                     budgetCategoryName: categoryName(for: item.budgetCategoryId),
-                    statusOverride: isAdded ? "Added" : nil,
+                    statusOverride: statusOverride,
                     isSelected: isAdded
                         ? .constant(true)
                         : Binding(
                             get: { isItemSelected },
-                            set: { _ in toggleSelection(itemId) }
-                        )
+                            set: { _ in
+                                if let name = otherSpaceName, !isItemSelected {
+                                    pendingMoveItem = item
+                                    pendingMoveFromSpaceName = name
+                                } else {
+                                    toggleSelection(itemId)
+                                }
+                            }
+                        ),
+                    accent: isInOtherSpace && !isItemSelected
                 )
             }
             .buttonStyle(.plain)
@@ -677,7 +715,7 @@ struct SharedItemsList: View {
 
     @ViewBuilder
     private var pickerBottomBar: some View {
-        if case .picker(_, _, _, _, let onAddSelected) = mode, !resolvedSelectedIds.wrappedValue.isEmpty {
+        if case .picker(_, _, _, _, let onAddSelected, _) = mode, !resolvedSelectedIds.wrappedValue.isEmpty {
             HStack {
                 Text("\(resolvedSelectedIds.wrappedValue.count) selected")
                     .font(Typography.body)
@@ -695,6 +733,7 @@ struct SharedItemsList: View {
             }
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.vertical, Spacing.sm)
+            .background(BrandColors.background)
         }
     }
 
@@ -707,7 +746,7 @@ struct SharedItemsList: View {
         case .embedded(let providedItems, _):
             items = providedItems
             isLoading = false
-        case .picker(let scope, _, _, _, _):
+        case .picker(let scope, _, _, _, _, _):
             if let pickerItems {
                 items = pickerItems
                 isLoading = false
@@ -835,7 +874,8 @@ struct SharedItemsList: View {
             eligibilityCheck: { _ in true },
             onAddSingle: nil,
             addedIds: [],
-            onAddSelected: { print("Add selected") }
+            onAddSelected: { print("Add selected") },
+            otherSpaceNameForItem: nil
         )
     )
 }

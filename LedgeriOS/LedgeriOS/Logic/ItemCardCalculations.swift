@@ -33,6 +33,7 @@ enum ItemCardCalculations {
         locationLabel: String?,
         priceLabel: String?,
         projectName: String? = nil,
+        spaceName: String? = nil,
         stackSkuAndSource: Bool
     ) -> [String] {
         var lines: [String] = []
@@ -59,6 +60,9 @@ enum ItemCardCalculations {
         }
         if let project = projectName, !project.isEmpty {
             lines.append(project)
+        }
+        if let space = spaceName, !space.isEmpty {
+            lines.append("Space: \(space)")
         }
         if let location = locationLabel, !location.isEmpty {
             lines.append("Location: \(location)")

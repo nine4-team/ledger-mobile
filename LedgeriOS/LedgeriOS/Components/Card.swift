@@ -3,6 +3,7 @@ import SwiftUI
 struct Card<Content: View>: View {
     let padding: CGFloat
     let isSelected: Bool
+    let accent: Bool
     let content: Content
 
     @State private var isHovered = false
@@ -10,11 +11,25 @@ struct Card<Content: View>: View {
     init(
         padding: CGFloat = Spacing.cardPadding,
         isSelected: Bool = false,
+        accent: Bool = false,
         @ViewBuilder content: () -> Content
     ) {
         self.padding = padding
         self.isSelected = isSelected
+        self.accent = accent
         self.content = content()
+    }
+
+    private var accentBorderColor: Color {
+        if isSelected || accent { return BrandColors.primary }
+        if isHovered { return BrandColors.primary.opacity(0.4) }
+        return .clear
+    }
+
+    private var accentBorderWidth: CGFloat {
+        if isSelected || accent { return Dimensions.selectionBorderWidth }
+        if isHovered { return Dimensions.borderWidth }
+        return 0
     }
 
     var body: some View {
@@ -29,10 +44,7 @@ struct Card<Content: View>: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Dimensions.cardRadius)
-                    .stroke(
-                        isSelected ? BrandColors.primary : (isHovered ? BrandColors.primary.opacity(0.4) : Color.clear),
-                        lineWidth: isSelected ? Dimensions.selectionBorderWidth : (isHovered ? Dimensions.borderWidth : 0)
-                    )
+                    .stroke(accentBorderColor, lineWidth: accentBorderWidth)
             )
             .shadow(
                 color: isHovered ? BrandColors.primary.opacity(0.12) : .black.opacity(0.05),
