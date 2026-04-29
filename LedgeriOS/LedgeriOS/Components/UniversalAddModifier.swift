@@ -39,13 +39,10 @@ struct UniversalAddModifier: ViewModifier {
                             Label("Quick Note", systemImage: "note.text")
                         }
                     } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
-                            .background(BrandColors.primary)
-                            .clipShape(Circle())
+                        UniversalAddIcon()
                     }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.circle)
                     .accessibilityLabel("Create new")
                 }
             }
@@ -93,13 +90,10 @@ struct UniversalAddSheetModifier: ViewModifier {
                     Button {
                         showAddMenu = true
                     } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 28, height: 28)
-                            .background(BrandColors.primary)
-                            .clipShape(Circle())
+                        UniversalAddIcon()
                     }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.circle)
                     .accessibilityLabel("Create new")
                 }
             }
@@ -152,6 +146,21 @@ struct UniversalAddSheetModifier: ViewModifier {
             .adaptivePresentation(isPresented: $showQuickNote, style: .form) {
                 QuickNoteModal()
             }
+    }
+}
+
+// MARK: - Universal Add Icon
+
+/// Branded "+" icon: white plus on a brand-primary disc. The surrounding
+/// circular chrome is supplied by the toolbar button via `.buttonStyle(.bordered)`
+/// + `.buttonBorderShape(.circle)`.
+struct UniversalAddIcon: View {
+    var body: some View {
+        Image(systemName: "plus")
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(.white)
+            .frame(width: 36, height: 36)
+            .background(BrandColors.primary, in: Circle())
     }
 }
 

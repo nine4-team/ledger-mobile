@@ -178,7 +178,7 @@ Full test suite documentation (unit tests, integration tests, emulator setup, he
 
 ## Verification After Delegation
 
-Sub-agents fabricate plausible details. When they produce specs, docs, or code that references data model facts (field names, status values, relationships, formulas), spot-check their output against source code before considering the work done.
+Sub-agents fabricate plausible details. Their summaries describe what they intended to find or do, not necessarily what is true. Never act on a sub-agent's description of something verifiable — read the source yourself before using it, and read the diff rather than trusting a "done" summary.
 
 ## UI Copy
 
