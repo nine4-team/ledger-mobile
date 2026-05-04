@@ -82,6 +82,22 @@ struct Transaction: Codable, Identifiable, Hashable {
         transactionType == .purchase || transactionType == .return
     }
 
+    /// True for transactions that move items between business inventory and
+    /// a project: any Sale (per-batch or legacy canonical, both directions,
+    /// including 2-hop second hops) and Returns whose source is the inventory
+    /// label. Vendor returns are excluded — they carry a real RMA receipt.
+    ///
+    /// The inventory-source signal is the `" Inventory"` suffix, which
+    /// `InventoryOperationsService.inventoryLabel(for:)` always appends.
+    var isInventoryMovement: Bool {
+        if transactionType == .sale { return true }
+        if transactionType == .return,
+           let src = source, src.hasSuffix(" Inventory") {
+            return true
+        }
+        return false
+    }
+
     /// Sort/display key: explicit `transactionDate` if set, otherwise a `yyyy-MM-dd`
     /// rendering of `createdAt`. Canonical sale transactions (created programmatically
     /// by inventory operations) never set `transactionDate`, so they fall back to createdAt.

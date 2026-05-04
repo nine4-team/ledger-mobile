@@ -39,14 +39,17 @@ enum TransactionNextStepsCalculations {
             sfSymbol: "dollarsign"
         ))
 
-        // 3. Receipt
-        let hasReceipt = !(transaction.receiptImages ?? []).isEmpty
-        steps.append(NextStep(
-            id: "receipt",
-            label: "Add a receipt",
-            completed: hasReceipt,
-            sfSymbol: "doc.text"
-        ))
+        // 3. Receipt — skipped for inventory movement transactions
+        // (sales and returns to inventory), which have no external receipt.
+        if !transaction.isInventoryMovement {
+            let hasReceipt = !(transaction.receiptImages ?? []).isEmpty
+            steps.append(NextStep(
+                id: "receipt",
+                label: "Add a receipt",
+                completed: hasReceipt,
+                sfSymbol: "doc.text"
+            ))
+        }
 
         // 4. Items
         let hasItems = itemCount > 0
@@ -57,19 +60,22 @@ enum TransactionNextStepsCalculations {
             sfSymbol: "shippingbox"
         ))
 
-        // 5. Purchased by
-        let hasPurchasedBy = !(transaction.purchasedBy ?? "").trimmingCharacters(in: .whitespaces).isEmpty
-        steps.append(NextStep(
-            id: "purchased-by",
-            label: "Set purchased by",
-            completed: hasPurchasedBy,
-            sfSymbol: "person"
-        ))
+        // 5. Purchased by — skipped for returns (no buyer to record).
+        if transaction.transactionType != .return {
+            let hasPurchasedBy = !(transaction.purchasedBy ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+            steps.append(NextStep(
+                id: "purchased-by",
+                label: "Set purchased by",
+                completed: hasPurchasedBy,
+                sfSymbol: "person"
+            ))
+        }
 
-        // 6. Tax rate — only for tx types that carry items (purchase/return).
+        // 6. Tax rate — only for tx types that carry items (purchase/return),
+        // and skipped for inventory movements (sales + return-to-inventory).
         // Category shape is no longer the gate; a Mixed category can hold
         // both items and expenses. See docs/specs/transaction-type.md.
-        if transaction.needsItemizedAudit {
+        if transaction.needsItemizedAudit && !transaction.isInventoryMovement {
             let hasTaxRate = (transaction.taxRatePct ?? 0) > 0
             steps.append(NextStep(
                 id: "tax-rate",

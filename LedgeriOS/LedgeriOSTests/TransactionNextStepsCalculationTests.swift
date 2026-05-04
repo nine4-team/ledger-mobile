@@ -12,7 +12,9 @@ struct TransactionNextStepsCalculationTests {
         amountCents: Int? = nil,
         receiptImages: [AttachmentRef]? = nil,
         purchasedBy: String? = nil,
-        taxRatePct: Double? = nil
+        taxRatePct: Double? = nil,
+        transactionType: TransactionType? = nil,
+        source: String? = nil
     ) -> Transaction {
         var tx = Transaction()
         tx.budgetCategoryId = budgetCategoryId
@@ -20,6 +22,8 @@ struct TransactionNextStepsCalculationTests {
         tx.receiptImages = receiptImages
         tx.purchasedBy = purchasedBy
         tx.taxRatePct = taxRatePct
+        tx.transactionType = transactionType
+        tx.source = source
         return tx
     }
 
@@ -246,5 +250,132 @@ struct TransactionNextStepsCalculationTests {
     @Test("allStepsComplete returns false for empty array")
     func allStepsCompleteEmptyArray() {
         #expect(!TransactionNextStepsCalculations.allStepsComplete([]))
+    }
+
+    // MARK: - Inventory movement (sale/return) skips receipt step
+
+    @Test("Sale transaction omits the receipt step")
+    func saleOmitsReceiptStep() {
+        let tx = makeTransaction(transactionType: .sale)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "receipt" })
+    }
+
+    @Test("Purchase transaction keeps the receipt step")
+    func purchaseKeepsReceiptStep() {
+        let tx = makeTransaction(transactionType: .purchase)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(steps.contains { $0.id == "receipt" })
+    }
+
+    @Test("Return to inventory omits the receipt step")
+    func returnToInventoryOmitsReceiptStep() {
+        let tx = makeTransaction(transactionType: .return, source: "Business Inventory")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "receipt" })
+    }
+
+    @Test("Return to vendor keeps the receipt step")
+    func returnToVendorKeepsReceiptStep() {
+        let tx = makeTransaction(transactionType: .return, source: "Wayfair")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(steps.contains { $0.id == "receipt" })
+    }
+
+    @Test("Return with branded inventory label omits the receipt step")
+    func returnToBrandedInventoryOmitsReceiptStep() {
+        let tx = makeTransaction(transactionType: .return, source: "1584 Design Inventory")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "receipt" })
+    }
+
+    // MARK: - Return omits the purchased-by step
+
+    @Test("Return to vendor omits the purchased-by step")
+    func returnToVendorOmitsPurchasedBy() {
+        let tx = makeTransaction(transactionType: .return, source: "Wayfair")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "purchased-by" })
+    }
+
+    @Test("Return to inventory omits the purchased-by step")
+    func returnToInventoryOmitsPurchasedBy() {
+        let tx = makeTransaction(transactionType: .return, source: "Business Inventory")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "purchased-by" })
+    }
+
+    @Test("Purchase keeps the purchased-by step")
+    func purchaseKeepsPurchasedBy() {
+        let tx = makeTransaction(transactionType: .purchase)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(steps.contains { $0.id == "purchased-by" })
+    }
+
+    // MARK: - Inventory movement omits the tax-rate step
+
+    @Test("Return to inventory omits the tax-rate step")
+    func returnToInventoryOmitsTaxRate() {
+        let tx = makeTransaction(transactionType: .return, source: "Business Inventory")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "tax-rate" })
+    }
+
+    @Test("Sale omits the tax-rate step")
+    func saleOmitsTaxRate() {
+        let tx = makeTransaction(transactionType: .sale)
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(!steps.contains { $0.id == "tax-rate" })
+    }
+
+    @Test("Return to vendor keeps the tax-rate step")
+    func returnToVendorKeepsTaxRate() {
+        let tx = makeTransaction(transactionType: .return, source: "Wayfair")
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: [:]
+        )
+        #expect(steps.contains { $0.id == "tax-rate" })
     }
 }
