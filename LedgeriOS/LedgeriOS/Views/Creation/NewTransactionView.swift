@@ -16,6 +16,12 @@ enum TransactionDestination: Hashable {
 
 /// Logical screens the New Transaction sheet can show. Ordering is defined by
 /// `NewTransactionView.orderedSteps` based on the current branch.
+/// How the user is supplying tax info on an itemized transaction.
+/// `.rate` — user types the %, subtotal is derived.
+/// `.subtotal` — user types the pre-tax subtotal, rate is derived.
+/// `.none` — no tax; subtotal equals the amount.
+enum TaxMode: Hashable { case none, rate, subtotal }
+
 enum TransactionCreationStep: Hashable {
     case typeSelection        // Fee / Expense / Purchase (items) / Return (items)
     case whoPaid              // Client / Design Business (Expense + Purchase)
@@ -49,7 +55,7 @@ struct NewTransactionView: View {
 
     // Details fields
     @State private var source = ""
-    @State private var transactionDate = Date()
+    @State private var transactionDate: Date? = nil
     @State private var amount = ""
     @State private var purchasedBy = "design-business"
     @State private var needsReimbursement = false
@@ -58,11 +64,18 @@ struct NewTransactionView: View {
     @State private var hasEmailReceipt = false
     @State private var subtotal = ""
     @State private var taxRate = ""
+    @State private var taxMode: TaxMode = .rate
 
     // Pickers
     @State private var showVendorPicker = false
 
+    // Categories enabled for the destination project (ids present in
+    // `accounts/{aid}/projects/{pid}/budgetCategories`). Subscribed to when
+    // `destinationProjectId` changes.
+    @State private var enabledCategoryIds: Set<String> = []
+
     private let transactionsService = TransactionsService()
+    private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol = ProjectBudgetCategoriesService()
 
     init(context: TransactionCreationContext, onCreated: ((Transaction) -> Void)? = nil) {
         self.context = context
@@ -148,14 +161,46 @@ struct NewTransactionView: View {
 
     /// Active (non-archived) categories for the currently selected destination project.
     private var destinationCategories: [BudgetCategory] {
-        guard let pid = destinationProjectId else { return [] }
+        guard destinationProjectId != nil else { return [] }
         return accountContext.allBudgetCategories
-            .filter { $0.projectId == pid && $0.isArchived != true }
+            .filter { cat in
+                guard let id = cat.id, enabledCategoryIds.contains(id) else { return false }
+                return cat.isArchived != true
+            }
             .sorted { ($0.order ?? 999) < ($1.order ?? 999) }
     }
 
     private var selectedCategory: BudgetCategory? {
         destinationCategories.first { $0.id == selectedCategoryId }
+    }
+
+    /// Composite key that drives re-subscription when the destination project
+    /// or the current account changes.
+    private var subscriptionKey: String {
+        "\(accountContext.currentAccountId ?? "")|\(destinationProjectId ?? "")"
+    }
+
+    private func subscribeToEnabledCategories() async {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = destinationProjectId else {
+            enabledCategoryIds = []
+            return
+        }
+        let listener = projectBudgetCategoriesService.subscribeToProjectBudgetCategories(
+            accountId: accountId,
+            projectId: projectId
+        ) { pbcs in
+            Task { @MainActor in
+                enabledCategoryIds = Set(pbcs.compactMap(\.id))
+            }
+        }
+        // Keep the listener alive until the task is cancelled (destination
+        // changes or view disappears), then tear it down.
+        await withTaskCancellationHandler {
+            try? await Task.sleep(nanoseconds: .max)
+        } onCancel: {
+            listener.remove()
+        }
     }
 
     var body: some View {
@@ -181,6 +226,20 @@ struct NewTransactionView: View {
             // Destination change invalidates the category pick — categories
             // are scoped to a project.
             selectedCategoryId = nil
+        }
+        .onChange(of: taxMode) { _, newMode in
+            switch newMode {
+            case .none:
+                subtotal = ""
+                taxRate = ""
+            case .rate:
+                subtotal = ""
+            case .subtotal:
+                taxRate = ""
+            }
+        }
+        .task(id: subscriptionKey) {
+            await subscribeToEnabledCategories()
         }
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
             VendorPickerModal(
@@ -208,10 +267,10 @@ struct NewTransactionView: View {
             primaryAction: FormSheetAction(title: "Cancel") { dismiss() }
         ) {
             VStack(spacing: Spacing.md) {
-                typeCard("Fee", icon: "banknote", type: .fee)
-                typeCard("Expense", icon: "tray", type: .expense)
                 typeCard("Purchase (items)", icon: "cart", type: .purchase)
                 typeCard("Return (items)", icon: "arrow.uturn.left", type: .return)
+                typeCard("Expense", icon: "tray", type: .expense)
+                typeCard("Fee", icon: "banknote", type: .fee)
             }
         }
     }
@@ -377,60 +436,114 @@ struct NewTransactionView: View {
             },
             secondaryAction: FormSheetAction(title: "Back") { goBack() }
         ) {
-            VStack(spacing: Spacing.xl) {
-                // MARK: Transaction Info
-                formSection("Transaction Info") {
-                    if transactionType != .fee {
-                        if !vendor.isEmpty {
-                            VendorPickerField(value: $vendor, label: "Source / Vendor", showPicker: $showVendorPicker)
-                        } else {
-                            VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
-                        }
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                if transactionType != .fee {
+                    if !vendor.isEmpty {
+                        VendorPickerField(value: $vendor, label: "Source / Vendor", showPicker: $showVendorPicker)
+                    } else {
+                        VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
                     }
-
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Date")
-                            .font(Typography.label)
-                            .foregroundStyle(BrandColors.textSecondary)
-                        DatePicker("", selection: $transactionDate, displayedComponents: .date)
-                            .labelsHidden()
-                    }
-
-                    FormField(label: "Amount", text: $amount, placeholder: "0.00")
-                        .platformKeyboardType(.decimalPad)
                 }
 
-                // MARK: Additional Details
-                formSection("Additional Details") {
-                    if isItemized {
-                        FormField(label: "Subtotal", text: $subtotal, placeholder: "0.00")
-                            .platformKeyboardType(.decimalPad)
-                        FormField(label: "Tax Rate (%)", text: $taxRate, placeholder: "0.00")
-                            .platformKeyboardType(.decimalPad)
-                    }
-
-                    if showsReimbursementToggle {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text("Does this need to be reimbursed?")
-                                .font(Typography.label)
-                                .foregroundStyle(BrandColors.textSecondary)
-                            InlineOptionPicker(selection: $needsReimbursement, options: [
-                                InlineOption(id: false, label: "No"),
-                                InlineOption(id: true, label: "Yes"),
-                            ])
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Date")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    if transactionDate == nil {
+                        Button {
+                            transactionDate = Date()
+                        } label: {
+                            HStack {
+                                Text("Select date")
+                                    .font(Typography.body)
+                                    .foregroundStyle(BrandColors.textSecondary)
+                                Spacer()
+                                Image(systemName: "calendar")
+                                    .foregroundStyle(BrandColors.textSecondary)
+                            }
+                            .padding(Spacing.sm)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                            )
                         }
+                        .buttonStyle(.plain)
+                    } else {
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { transactionDate ?? Date() },
+                                set: { transactionDate = $0 }
+                            ),
+                            displayedComponents: .date
+                        )
+                        .labelsHidden()
                     }
+                }
 
-                    FormField(text: $notes, placeholder: "Notes", axis: .vertical)
+                FormField(label: "Amount", text: $amount, placeholder: "0.00")
+                    .platformKeyboardType(.decimalPad)
 
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Email Receipt")
+                if isItemized {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        Text("Tax Rate")
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
-                        InlineOptionPicker(selection: $hasEmailReceipt, options: [
+
+                        if taxMode == .rate {
+                            Text("Don't know the %? Enter the subtotal and we'll calculate it.")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        }
+
+                        HStack(spacing: Spacing.xs) {
+                            horizontalOptionCard(selection: $taxMode, value: .rate, label: "Tax %")
+                            horizontalOptionCard(selection: $taxMode, value: .subtotal, label: "Subtotal")
+                            horizontalOptionCard(selection: $taxMode, value: .none, label: "No tax")
+                        }
+
+                        switch taxMode {
+                        case .none:
+                            EmptyView()
+                        case .rate:
+                            FormField(text: $taxRate, placeholder: "0.00")
+                                .platformKeyboardType(.decimalPad)
+                        case .subtotal:
+                            FormField(text: $subtotal, placeholder: "0.00")
+                                .platformKeyboardType(.decimalPad)
+                        }
+                    }
+                }
+
+                if showsReimbursementToggle {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Does this need to be reimbursed?")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+                        InlineOptionPicker(selection: $needsReimbursement, options: [
                             InlineOption(id: false, label: "No"),
                             InlineOption(id: true, label: "Yes"),
                         ])
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Notes")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FormField(text: $notes, placeholder: "Notes", axis: .vertical)
+                }
+
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    Text("Email Receipt")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    HStack(spacing: Spacing.xs) {
+                        horizontalOptionCard(selection: $hasEmailReceipt, value: true, label: "Yes")
+                        horizontalOptionCard(selection: $hasEmailReceipt, value: false, label: "No")
                     }
                 }
             }
@@ -465,15 +578,43 @@ struct NewTransactionView: View {
         )
     }
 
-    // MARK: - Section Helper
+    // MARK: - Horizontal Option Card
 
     @ViewBuilder
-    private func formSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text(title)
-                .sectionLabelStyle()
-            content()
+    private func horizontalOptionCard<T: Hashable>(selection: Binding<T>, value: T, label: String) -> some View {
+        let isSelected = selection.wrappedValue == value
+        Button {
+            selection.wrappedValue = value
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Circle()
+                    .strokeBorder(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: 2)
+                    .frame(width: 16, height: 16)
+                    .overlay {
+                        if isSelected {
+                            Circle()
+                                .fill(BrandColors.primary)
+                                .frame(width: 8, height: 8)
+                        }
+                    }
+                Text(label)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.sm)
+            .padding(.horizontal, Spacing.sm)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Actions
@@ -489,7 +630,9 @@ struct NewTransactionView: View {
         transaction.projectId = destinationProjectId
         transaction.transactionType = transactionType
         transaction.source = effectiveSource.trimmingCharacters(in: .whitespacesAndNewlines)
-        transaction.transactionDate = dateFormatter.string(from: transactionDate)
+        if let transactionDate {
+            transaction.transactionDate = dateFormatter.string(from: transactionDate)
+        }
         transaction.amountCents = parseCents(amount)
         transaction.purchasedBy = purchasedBy
         transaction.reimbursementType = resolvedReimbursementType
@@ -501,9 +644,24 @@ struct NewTransactionView: View {
 
         transaction.budgetCategoryId = selectedCategoryId
         if isItemized {
-            transaction.subtotalCents = parseCents(subtotal)
-            if let rate = Double(taxRate.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            let amountCents = transaction.amountCents ?? 0
+            switch taxMode {
+            case .none:
+                transaction.subtotalCents = amountCents
+                transaction.taxRatePct = 0
+            case .rate:
+                let rate = Double(taxRate.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
                 transaction.taxRatePct = rate
+                // subtotal = amount / (1 + rate/100)
+                let divisor = 1 + rate / 100
+                transaction.subtotalCents = divisor > 0 ? Int((Double(amountCents) / divisor).rounded()) : amountCents
+            case .subtotal:
+                let subtotalCents = parseCents(subtotal) ?? 0
+                transaction.subtotalCents = subtotalCents
+                // rate = (amount - subtotal) / subtotal * 100
+                transaction.taxRatePct = subtotalCents > 0
+                    ? (Double(amountCents - subtotalCents) / Double(subtotalCents)) * 100
+                    : 0
             }
         }
         if routeThroughInventory {
