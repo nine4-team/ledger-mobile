@@ -39,6 +39,7 @@ struct NewTransactionView: View {
 
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
     @Environment(AccountContext.self) private var accountContext
+    @Environment(MediaService.self) private var mediaService
     @Environment(\.dismiss) private var dismiss
 
     // Step management
@@ -65,6 +66,12 @@ struct NewTransactionView: View {
     @State private var subtotal = ""
     @State private var taxRate = ""
     @State private var taxMode: TaxMode = .rate
+    @State private var receiptImages: [AttachmentRef] = []
+
+    /// Pre-allocated Firestore doc ID. Used as the storage `entityId` for
+    /// receipt uploads so attachments live under the eventual transaction's
+    /// path even before the document is written. Resolved lazily on first use.
+    @State private var pendingTransactionId: String?
 
     // Pickers
     @State private var showVendorPicker = false
@@ -546,7 +553,59 @@ struct NewTransactionView: View {
                         horizontalOptionCard(selection: $hasEmailReceipt, value: false, label: "No")
                     }
                 }
+
+                MediaGallerySection(
+                    title: "Receipts",
+                    attachments: receiptImages,
+                    onUploadAttachment: { data in
+                        try await uploadReceiptImage(data)
+                    },
+                    onRemoveAttachment: { attachment in
+                        removeReceiptImage(attachment)
+                    },
+                    onSetPrimary: { attachment in
+                        setReceiptPrimary(attachment)
+                    }
+                )
             }
+        }
+    }
+
+    // MARK: - Receipt uploads
+
+    private func ensurePendingTransactionId() -> String? {
+        if let pendingTransactionId { return pendingTransactionId }
+        guard let accountId = accountContext.currentAccountId else { return nil }
+        let id = TransactionsService().newTransactionId(accountId: accountId)
+        pendingTransactionId = id
+        return id
+    }
+
+    private func uploadReceiptImage(_ data: Data) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let txId = ensurePendingTransactionId() else { return }
+        let filename = "\(UUID().uuidString).jpg"
+        let path = mediaService.uploadPath(
+            accountId: accountId,
+            entityType: "transactions",
+            entityId: txId,
+            filename: filename
+        )
+        let url = try await mediaService.uploadImage(data, path: path)
+        let isPrimary = receiptImages.isEmpty
+        receiptImages.append(AttachmentRef(url: url, isPrimary: isPrimary))
+    }
+
+    private func removeReceiptImage(_ attachment: AttachmentRef) {
+        receiptImages.removeAll { $0.url == attachment.url }
+        Task { try? await mediaService.deleteImage(url: attachment.url) }
+    }
+
+    private func setReceiptPrimary(_ attachment: AttachmentRef) {
+        receiptImages = receiptImages.map { img in
+            var copy = img
+            copy.isPrimary = (img.url == attachment.url)
+            return copy
         }
     }
 
@@ -639,6 +698,9 @@ struct NewTransactionView: View {
         transaction.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
         transaction.hasEmailReceipt = hasEmailReceipt
+        if !receiptImages.isEmpty {
+            transaction.receiptImages = receiptImages
+        }
 
         let routeThroughInventory = autoInventoryRouting
 
@@ -669,7 +731,19 @@ struct NewTransactionView: View {
         }
 
         do {
-            let txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
+            let txId: String
+            if let pendingTransactionId {
+                // A receipt upload allocated an ID — write the doc at that ID
+                // so the storage path matches.
+                try transactionsService.createTransaction(
+                    accountId: accountId,
+                    id: pendingTransactionId,
+                    transaction: transaction
+                )
+                txId = pendingTransactionId
+            } else {
+                txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
+            }
             if routeThroughInventory {
                 createdTransactionId = txId
             } else {

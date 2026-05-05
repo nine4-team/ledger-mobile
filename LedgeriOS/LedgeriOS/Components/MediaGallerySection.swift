@@ -67,7 +67,9 @@ struct MediaGallerySection: View {
                 }
             }
         } headerAction: {
-            if canAdd, onUploadAttachment != nil {
+            // The empty state shows a prominent centered Add CTA, so the
+            // header link is reserved for when there's already content.
+            if canAdd, onUploadAttachment != nil, !attachments.isEmpty {
                 if isUploading {
                     ProgressView()
                         .scaleEffect(0.7)
@@ -180,11 +182,36 @@ struct MediaGallerySection: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        Image(systemName: "photo.on.rectangle")
-            .font(.system(size: 28))
-            .foregroundStyle(BrandColors.textTertiary)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, Spacing.xl)
+        Group {
+            if canAdd, onUploadAttachment != nil {
+                if isUploading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, Spacing.xl)
+                } else {
+                    Button { showAddSourceMenu = true } label: {
+                        RoundedRectangle(cornerRadius: Dimensions.cardRadius / 2)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6]))
+                            .foregroundStyle(BrandColors.borderSecondary)
+                            .frame(width: 140, height: 140)
+                            .overlay {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 32, weight: .regular))
+                                    .foregroundStyle(BrandColors.textSecondary)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, Spacing.lg)
+                }
+            } else {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 28))
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, Spacing.xl)
+            }
+        }
     }
 
     // MARK: - Gallery Content

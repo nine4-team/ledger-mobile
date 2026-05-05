@@ -41,6 +41,16 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         return docRef.documentID
     }
 
+    /// Pre-allocate a fresh document ID without writing. Use when the caller needs
+    /// the ID upfront (e.g. for storage paths) before composing the document body.
+    func newDocumentId() -> String {
+        collectionRef.document().documentID
+    }
+
+    func create(id: String, _ item: T) throws {
+        try collectionRef.document(id).setData(from: item)
+    }
+
     func update(id: String, fields: [String: Any]) async throws {
         try await collectionRef.document(id).updateData(fields)
     }
