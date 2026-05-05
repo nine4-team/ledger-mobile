@@ -33,6 +33,26 @@ struct ItemEntryFlowView: View {
         accountContext.allItems.filter { $0.transactionId == transactionId }
     }
 
+    /// The project the transaction was started from, if any. When present this is
+    /// the obvious sell target — the user came from there and almost always wants
+    /// the items to land there.
+    private var originProject: Project? {
+        guard let originProjectId else { return nil }
+        return accountContext.allProjects.first { $0.id == originProjectId }
+    }
+
+    /// Routes the current `selectedItemIds` to the sell flow. When we know the
+    /// origin project the user came from, skip the picker and confirm directly;
+    /// otherwise show the picker so they can choose.
+    private func proceedToSellTarget() {
+        if let origin = originProject {
+            destinationProject = origin
+            showConfirmation = true
+        } else {
+            showProjectPicker = true
+        }
+    }
+
     var body: some View {
         Group {
             switch currentStep {
@@ -130,16 +150,30 @@ struct ItemEntryFlowView: View {
                         .foregroundStyle(StatusColors.missedText)
                 }
 
+                let itemCount = transactionItems.count
+                let itemNoun = itemCount == 1 ? "item" : "items"
+
                 sellOptionCard(
-                    "Sell All to a Project",
+                    originProject.map { "Sell All to \($0.name)" } ?? "Sell All to a Project",
                     icon: "arrow.right.circle",
-                    description: "\(transactionItems.count) \(transactionItems.count == 1 ? "item" : "items") will be sold"
+                    description: "\(itemCount) \(itemNoun) will be sold"
                 ) {
                     selectedItemIds = Set(transactionItems.compactMap(\.id))
-                    showProjectPicker = true
+                    proceedToSellTarget()
                 }
 
-                if transactionItems.count > 1 {
+                if originProject != nil {
+                    sellOptionCard(
+                        "Sell to a Different Project",
+                        icon: "arrow.triangle.branch",
+                        description: "Pick another project for these \(itemNoun)"
+                    ) {
+                        selectedItemIds = Set(transactionItems.compactMap(\.id))
+                        showProjectPicker = true
+                    }
+                }
+
+                if itemCount > 1 {
                     sellOptionCard(
                         "Select Items to Sell",
                         icon: "checklist",
@@ -163,7 +197,7 @@ struct ItemEntryFlowView: View {
                 title: "Next",
                 isDisabled: selectedItemIds.isEmpty
             ) {
-                showProjectPicker = true
+                proceedToSellTarget()
             },
             secondaryAction: FormSheetAction(title: "Back") {
                 selectedItemIds = []

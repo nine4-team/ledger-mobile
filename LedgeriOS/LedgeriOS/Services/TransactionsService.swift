@@ -10,9 +10,7 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, transaction: Transaction) throws -> String {
-        let id = try repo(accountId: accountId).create(transaction)
-        writeNullProjectIdIfNeeded(accountId: accountId, transactionId: id, transaction: transaction)
-        return id
+        try repo(accountId: accountId).create(transaction, additionalFields: extraFields(for: transaction))
     }
 
     /// Pre-allocate a transaction ID without writing. Lets callers (e.g. the
@@ -23,17 +21,17 @@ struct TransactionsService: TransactionsServiceProtocol {
     }
 
     func createTransaction(accountId: String, id: String, transaction: Transaction) throws {
-        try repo(accountId: accountId).create(id: id, transaction)
-        writeNullProjectIdIfNeeded(accountId: accountId, transactionId: id, transaction: transaction)
+        try repo(accountId: accountId).create(id: id, transaction, additionalFields: extraFields(for: transaction))
     }
 
-    private func writeNullProjectIdIfNeeded(accountId: String, transactionId: String, transaction: Transaction) {
-        // Firebase Codable encoder omits nil optionals instead of writing null.
-        // Inventory transactions need projectId: null so the inventory scope query matches.
-        guard transaction.projectId == nil else { return }
-        Firestore.firestore()
-            .document("accounts/\(accountId)/transactions/\(transactionId)")
-            .updateData(["projectId": NSNull()])
+    /// Inventory transactions need an explicit `projectId: null` so the inventory
+    /// scope query (`projectId == NSNull()`) matches. The Codable encoder would
+    /// otherwise omit the field. Returning these via `additionalFields` lets the
+    /// repository write them in the same `setData` call as the rest of the
+    /// document — splitting it across create + updateData races the snapshot
+    /// listener and can leave the doc invisible to scope queries.
+    private func extraFields(for transaction: Transaction) -> [String: Any] {
+        transaction.projectId == nil ? ["projectId": NSNull()] : [:]
     }
 
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws {

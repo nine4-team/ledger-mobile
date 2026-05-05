@@ -76,6 +76,9 @@ struct NewTransactionView: View {
     // Pickers
     @State private var showVendorPicker = false
 
+    // Submission error surfaced on the details step when create throws.
+    @State private var submissionError: String?
+
     // Categories enabled for the destination project (ids present in
     // `accounts/{aid}/projects/{pid}/budgetCategories`). Subscribed to when
     // `destinationProjectId` changes.
@@ -411,12 +414,15 @@ struct NewTransactionView: View {
             },
             secondaryAction: FormSheetAction(title: "Back") { goBack() }
         ) {
-            InlineVendorPicker(
-                selectedValue: $vendor,
-                otherMode: $otherVendorMode,
-                otherText: $otherVendorText,
-                otherFocused: $otherVendorFocused
-            )
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                autoInventoryRoutingNote
+                InlineVendorPicker(
+                    selectedValue: $vendor,
+                    otherMode: $otherVendorMode,
+                    otherText: $otherVendorText,
+                    otherFocused: $otherVendorFocused
+                )
+            }
         }
     }
 
@@ -430,6 +436,43 @@ struct NewTransactionView: View {
         }
     }
 
+    /// Surfaces the auto-inventory routing rule on the steps after Who Paid.
+    /// `purchase + design-business` always books to the business's inventory
+    /// first, even when the form was started from a project. Without this note
+    /// the routing is invisible and the post-create "Sell to Project?" sheet
+    /// looks like a non-sequitur.
+    @ViewBuilder
+    private var autoInventoryRoutingNote: some View {
+        if autoInventoryRouting {
+            let projectName = originProject?.name
+            let suffix = projectName.map { " You'll be offered to sell items to \($0) after." }
+                ?? " You'll be offered to sell items to a project after."
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(BrandColors.primary)
+                    .padding(.top, 2)
+                Text("This will be recorded as a business-inventory purchase.\(suffix)")
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+            .padding(Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
+        }
+    }
+
+    /// The project the user was inside when they opened the form, if any.
+    /// Used only for display messaging — the actual routing is decided by
+    /// `autoInventoryRouting` and the cleared `transaction.projectId`.
+    private var originProject: Project? {
+        guard let id = entryProjectId else { return nil }
+        return accountContext.allProjects.first { $0.id == id }
+    }
+
     // MARK: - Details
 
     private var stepDetails: some View {
@@ -441,9 +484,11 @@ struct NewTransactionView: View {
             primaryAction: FormSheetAction(title: "Create Transaction", isDisabled: !isReadyToSubmit) {
                 createTransaction()
             },
-            secondaryAction: FormSheetAction(title: "Back") { goBack() }
+            secondaryAction: FormSheetAction(title: "Back") { goBack() },
+            error: submissionError
         ) {
             VStack(alignment: .leading, spacing: Spacing.md) {
+                autoInventoryRoutingNote
                 if transactionType != .fee {
                     if !vendor.isEmpty {
                         VendorPickerField(value: $vendor, label: "Source / Vendor", showPicker: $showVendorPicker)
@@ -744,6 +789,7 @@ struct NewTransactionView: View {
             } else {
                 txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
             }
+            submissionError = nil
             if routeThroughInventory {
                 createdTransactionId = txId
             } else {
@@ -752,7 +798,7 @@ struct NewTransactionView: View {
                 dismiss()
             }
         } catch {
-            // Offline-first: should not fail
+            submissionError = "Couldn't save the transaction: \(error.localizedDescription)"
         }
     }
 

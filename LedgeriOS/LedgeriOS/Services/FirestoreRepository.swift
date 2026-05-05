@@ -41,6 +41,16 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
         return docRef.documentID
     }
 
+    /// Create with additional fields merged into the encoded document in a single write.
+    /// Use when a field needs an explicit value (e.g. `NSNull`) that the Codable encoder
+    /// would otherwise omit. A separate follow-up `updateData` would open a race where
+    /// snapshot listeners can fire on the partial document.
+    func create(_ item: T, additionalFields: [String: Any]) throws -> String {
+        let docRef = collectionRef.document()
+        try writeMerged(docRef: docRef, item: item, additionalFields: additionalFields)
+        return docRef.documentID
+    }
+
     /// Pre-allocate a fresh document ID without writing. Use when the caller needs
     /// the ID upfront (e.g. for storage paths) before composing the document body.
     func newDocumentId() -> String {
@@ -49,6 +59,22 @@ final class FirestoreRepository<T: Codable & Identifiable>: Repository {
 
     func create(id: String, _ item: T) throws {
         try collectionRef.document(id).setData(from: item)
+    }
+
+    func create(id: String, _ item: T, additionalFields: [String: Any]) throws {
+        try writeMerged(docRef: collectionRef.document(id), item: item, additionalFields: additionalFields)
+    }
+
+    private func writeMerged(docRef: DocumentReference, item: T, additionalFields: [String: Any]) throws {
+        if additionalFields.isEmpty {
+            try docRef.setData(from: item)
+        } else {
+            var data = try Firestore.Encoder().encode(item)
+            for (key, value) in additionalFields {
+                data[key] = value
+            }
+            docRef.setData(data)
+        }
     }
 
     func update(id: String, fields: [String: Any]) async throws {
