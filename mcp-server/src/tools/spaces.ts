@@ -1,8 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Firestore } from "firebase-admin/firestore";
+import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import type { Space, Item } from "../types.js";
-import { accountCollection, queryDocs, getDoc } from "../util/query.js";
+import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
+import { uploadToStorage, deleteFromStorage } from "../storage.js";
+import { generateThumbnails, thumbnailPath } from "../util/thumbnail.js";
 
 export function registerSpaceTools(server: McpServer, db: Firestore) {
   // ── list_spaces ────────────────────────────────────────────────────────────
@@ -78,6 +80,7 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
         projectId: space.projectId ?? null,
         notes: space.notes ?? "",
         isArchived: space.isArchived,
+        images: space.images ?? [],
         checklists,
         items: items.map((i) => ({
           id: i.id,
@@ -131,6 +134,166 @@ export function registerSpaceTools(server: McpServer, db: Firestore) {
 
       await accountCollection(db, "spaces").doc(spaceId).update(updates);
       return { content: [{ type: "text", text: `Updated space ${spaceId}` }] };
+    }
+  );
+
+  // ── attach_space_image ─────────────────────────────────────────────────────
+  server.tool(
+    "attach_space_image",
+    "Attach an image or file to a space. Uploads to Firebase Storage and appends an AttachmentRef to the space's images array. For images, generates sm (300px) and md (800px) thumbnails. Returned URLs are public HTTPS download URLs (Firebase Storage token URLs) — fetch directly with curl/WebFetch later, no auth required.",
+    {
+      spaceId: z.string().describe("Space document ID"),
+      fileData: z.string().optional().describe("Base64-encoded file content (provide this OR fileUrl, not both)"),
+      fileUrl: z.string().optional().describe("URL to fetch the file from (provide this OR fileData, not both)"),
+      fileName: z.string().describe("File name (e.g. 'photo.jpg', 'spec-sheet.pdf')"),
+      contentType: z.string().optional().describe("MIME type (e.g. 'image/jpeg', 'image/png', 'application/pdf'). Inferred from response headers when using fileUrl."),
+    },
+    async ({ spaceId, fileData, fileUrl, fileName, contentType }) => {
+      const space = await getDoc<Space>(db, "spaces", spaceId);
+      if (!space) {
+        return { content: [{ type: "text", text: `Space ${spaceId} not found.` }], isError: true };
+      }
+
+      if (!fileData && !fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not neither." }], isError: true };
+      }
+      if (fileData && fileUrl) {
+        return { content: [{ type: "text", text: "Provide either fileData (base64) or fileUrl, not both." }], isError: true };
+      }
+
+      let data: Buffer;
+      let resolvedContentType = contentType;
+
+      if (fileUrl) {
+        const res = await fetch(fileUrl);
+        if (!res.ok) {
+          return { content: [{ type: "text", text: `Failed to fetch file from URL: ${res.status} ${res.statusText}` }], isError: true };
+        }
+        data = Buffer.from(await res.arrayBuffer());
+        if (!resolvedContentType) {
+          resolvedContentType = res.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
+        }
+      } else {
+        data = Buffer.from(fileData!, "base64");
+      }
+
+      if (!resolvedContentType) {
+        resolvedContentType = "application/octet-stream";
+      }
+
+      const sizeMB = data.length / (1024 * 1024);
+      if (sizeMB > 10) {
+        return { content: [{ type: "text", text: `File too large (${sizeMB.toFixed(1)}MB). Maximum is 10MB.` }], isError: true };
+      }
+
+      const kind = resolvedContentType.startsWith("image/")
+        ? "image"
+        : resolvedContentType === "application/pdf"
+          ? "pdf"
+          : "file";
+
+      const storagePath = `${accountPath()}/spaces/${spaceId}/${fileName}`;
+      const url = await uploadToStorage(storagePath, data, resolvedContentType);
+
+      let thumbnailUrlSm: string | undefined;
+      let thumbnailUrlMd: string | undefined;
+
+      const thumbs = await generateThumbnails(data, resolvedContentType);
+      if (thumbs.sm) {
+        thumbnailUrlSm = await uploadToStorage(
+          thumbnailPath(storagePath, "sm"), thumbs.sm, "image/jpeg"
+        );
+      }
+      if (thumbs.md) {
+        thumbnailUrlMd = await uploadToStorage(
+          thumbnailPath(storagePath, "md"), thumbs.md, "image/jpeg"
+        );
+      }
+
+      const isPrimary = !space.images?.length;
+
+      const entry: Record<string, unknown> = {
+        url,
+        kind,
+        isPrimary,
+      };
+      if (fileName) entry.fileName = fileName;
+      if (resolvedContentType) entry.contentType = resolvedContentType;
+      if (thumbnailUrlSm) entry.thumbnailUrlSm = thumbnailUrlSm;
+      if (thumbnailUrlMd) entry.thumbnailUrlMd = thumbnailUrlMd;
+
+      try {
+        await accountCollection(db, "spaces").doc(spaceId).update({
+          images: FieldValue.arrayUnion(entry),
+          updatedAt: new Date(),
+        });
+      } catch (err) {
+        await deleteFromStorage(url).catch(() => {});
+        if (thumbnailUrlSm) await deleteFromStorage(thumbnailUrlSm).catch(() => {});
+        if (thumbnailUrlMd) await deleteFromStorage(thumbnailUrlMd).catch(() => {});
+        throw err;
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            message: `Attached ${fileName} to space ${spaceId}`,
+            url,
+            kind,
+            thumbnailUrlSm: thumbnailUrlSm ?? null,
+            thumbnailUrlMd: thumbnailUrlMd ?? null,
+          }, null, 2),
+        }],
+      };
+    }
+  );
+
+  // ── detach_space_image ─────────────────────────────────────────────────────
+  server.tool(
+    "detach_space_image",
+    "Remove an attachment from a space. Deletes the file and its thumbnails from Firebase Storage and removes the AttachmentRef from the space's images array. If the removed image was primary, promotes the next image.",
+    {
+      spaceId: z.string().describe("Space document ID"),
+      url: z.string().describe("The attachment URL to remove (matches the 'url' field in the AttachmentRef)"),
+    },
+    async ({ spaceId, url }) => {
+      const space = await getDoc<Space>(db, "spaces", spaceId);
+      if (!space) {
+        return { content: [{ type: "text", text: `Space ${spaceId} not found.` }], isError: true };
+      }
+
+      const attachments = space.images;
+      const entry = attachments?.find((a) => a.url === url);
+      if (!entry) {
+        return { content: [{ type: "text", text: "No attachment with that URL found in images." }], isError: true };
+      }
+
+      let remaining = attachments!.filter((a) => a.url !== url);
+      if (entry.isPrimary && remaining.length > 0) {
+        remaining = remaining.map((a, i) => i === 0 ? { ...a, isPrimary: true } : a);
+      }
+
+      await accountCollection(db, "spaces").doc(spaceId).update({
+        images: remaining,
+        updatedAt: new Date(),
+      });
+
+      const deleted: string[] = [];
+      try { await deleteFromStorage(url); deleted.push("primary"); } catch { /* ignore */ }
+      if (entry.thumbnailUrlSm) {
+        try { await deleteFromStorage(entry.thumbnailUrlSm); deleted.push("thumbnail-sm"); } catch { /* ignore */ }
+      }
+      if (entry.thumbnailUrlMd) {
+        try { await deleteFromStorage(entry.thumbnailUrlMd); deleted.push("thumbnail-md"); } catch { /* ignore */ }
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: `Removed attachment from space ${spaceId}. Deleted from storage: ${deleted.join(", ") || "none (files may have already been removed)"}`,
+        }],
+      };
     }
   );
 }

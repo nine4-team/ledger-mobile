@@ -71,6 +71,7 @@ export function registerAccountTools(server: McpServer, db: Firestore) {
         // so subsequent stateless requests pick up the change.
         setActiveAccountId(accountId);
         await setActiveAccountForUid(db, uid, accountId);
+        console.error(`[ledger-mcp] switch_account uid=${uid} -> ${accountId} (${match.accountName})`);
 
         return {
           content: [{

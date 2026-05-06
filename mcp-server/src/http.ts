@@ -78,9 +78,18 @@ async function authenticateRequest(
 ): Promise<{ accountId: string; uid: string } | null> {
   const authHeader = req.headers.authorization;
   const envAccountId = process.env.LEDGER_ACCOUNT_ID;
+  const staticBearer = process.env.MCP_STATIC_BEARER;
 
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
+
+    // Static bearer (for trusted server-to-server callers like managed agents).
+    // Constant-time compare; requires LEDGER_ACCOUNT_ID to scope the request.
+    if (staticBearer && envAccountId && token.length === staticBearer.length) {
+      let diff = 0;
+      for (let i = 0; i < token.length; i++) diff |= token.charCodeAt(i) ^ staticBearer.charCodeAt(i);
+      if (diff === 0) return { accountId: envAccountId, uid: "static-bearer" };
+    }
 
     // Try our OAuth access token first
     const oauthUser = verifyAccessToken(token);
@@ -132,12 +141,15 @@ app.post(MCP_PATHS, async (req, res) => {
     const auth = await authenticateRequest(req, res);
     if (!auth) return; // 401 already sent
 
-    console.error(`[ledger-mcp] POST ${req.path} uid=${auth.uid} account=${auth.accountId}`);
-
     // Per-user active account override (set via switch_account, stored in Firestore).
     // Survives stateless Cloud Run requests and Claude.ai reconnects.
     const override = await getActiveAccountForUid(db, auth.uid);
     const effective = override ? { ...auth, accountId: override } : auth;
+
+    console.error(
+      `[ledger-mcp] POST ${req.path} uid=${auth.uid} account=${effective.accountId}` +
+        (override ? ` (override of ${auth.accountId})` : "")
+    );
 
     await requestContext.run(effective, async () => {
       const server = createServer();
