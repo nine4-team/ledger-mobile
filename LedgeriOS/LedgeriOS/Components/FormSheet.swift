@@ -27,17 +27,20 @@ struct FormSheet<Content: View>: View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             // Header with dismiss button (only when not using nav bar)
             if showDismissButton {
-                HStack {
+                ZStack {
                     Text(title)
                         .font(Typography.h2)
                         .foregroundStyle(BrandColors.textPrimary)
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(BrandColors.textTertiary)
-                            .font(.title2)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    HStack {
+                        Spacer()
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(BrandColors.textTertiary)
+                                .font(.title2)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
 
