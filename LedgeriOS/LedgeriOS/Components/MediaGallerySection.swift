@@ -51,34 +51,29 @@ struct MediaGallerySection: View {
     }
 
     var body: some View {
-        TitledCard(title: title) {
-            VStack(spacing: Spacing.sm) {
-                if attachments.isEmpty {
-                    emptyState
-                } else {
-                    galleryContent
+        Group {
+            if title.isEmpty {
+                Card {
+                    galleryBody
                 }
-
-                if let uploadError {
-                    Text(uploadError)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.destructive)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        } headerAction: {
-            // The empty state shows a prominent centered Add CTA, so the
-            // header link is reserved for when there's already content.
-            if canAdd, onUploadAttachment != nil, !attachments.isEmpty {
-                if isUploading {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                } else {
-                    Button("Add") {
-                        showAddSourceMenu = true
+            } else {
+                TitledCard(title: title) {
+                    galleryBody
+                } headerAction: {
+                    // The empty state shows a prominent centered Add CTA, so the
+                    // header link is reserved for when there's already content.
+                    if canAdd, onUploadAttachment != nil, !attachments.isEmpty {
+                        if isUploading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        } else {
+                            Button("Add") {
+                                showAddSourceMenu = true
+                            }
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.primary)
+                        }
                     }
-                    .font(Typography.label)
-                    .foregroundStyle(BrandColors.primary)
                 }
             }
         }
@@ -151,6 +146,24 @@ struct MediaGallerySection: View {
                     await handlePickedItem(item)
                 }
                 pickerItems = []
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var galleryBody: some View {
+        VStack(spacing: Spacing.sm) {
+            if attachments.isEmpty {
+                emptyState
+            } else {
+                galleryContent
+            }
+
+            if let uploadError {
+                Text(uploadError)
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.destructive)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
