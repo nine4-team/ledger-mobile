@@ -75,6 +75,18 @@ enum TransactionStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum
     static let legacyAliases = ["cancelled": "canceled"]
 }
 
+extension KeyedDecodingContainer {
+    /// Legacy Firestore docs may carry `status: "pending"` or `status: "completed"` —
+    /// values that no longer exist on `TransactionStatus`. Treat any unknown string
+    /// as nil (active) instead of letting the whole `Transaction` fail to decode.
+    func decodeIfPresent(_ type: TransactionStatus.Type, forKey key: Key) throws -> TransactionStatus? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+        let raw = try decode(String.self, forKey: key)
+        let normalized = TransactionStatus.legacyAliases[raw.lowercased()] ?? raw.lowercased()
+        return TransactionStatus(rawValue: normalized)
+    }
+}
+
 enum InvoiceStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     case draft, sent, paid, voided
     var displayLabel: String { rawValue.capitalized }
