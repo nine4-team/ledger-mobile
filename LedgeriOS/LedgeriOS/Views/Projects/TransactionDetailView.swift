@@ -344,7 +344,7 @@ struct TransactionDetailView: View {
                     Text("Date:")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
-                    FindableText(TransactionDisplayCalculations.formattedDate(for: currentTransaction))
+                    FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -547,7 +547,8 @@ struct TransactionDetailView: View {
                     amountCents: currentTransaction.amountCents,
                     transactionType: currentTransaction.transactionType
                 ))
-                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(currentTransaction.effectiveSortDate))
+                DetailRow(label: "Date", value: TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
+                DetailRow(label: "Created", value: TransactionCardCalculations.formattedCreatedDate(currentTransaction.createdAt))
                 DetailRow(label: "Status", value: displayStatus(currentTransaction.status))
                 DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
                 DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))

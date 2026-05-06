@@ -26,12 +26,21 @@ struct TransactionsService: TransactionsServiceProtocol {
 
     /// Inventory transactions need an explicit `projectId: null` so the inventory
     /// scope query (`projectId == NSNull()`) matches. The Codable encoder would
-    /// otherwise omit the field. Returning these via `additionalFields` lets the
-    /// repository write them in the same `setData` call as the rest of the
-    /// document — splitting it across create + updateData races the snapshot
-    /// listener and can leave the doc invisible to scope queries.
+    /// otherwise omit the field. `createdAt`/`updatedAt` are server-stamped here
+    /// — `transactionDate` is a separate user-picked purchase date and must not
+    /// be confused with the creation timestamp. Returning these via
+    /// `additionalFields` lets the repository write them in the same `setData`
+    /// call as the rest of the document — splitting it across create + updateData
+    /// races the snapshot listener and can leave the doc invisible to scope queries.
     private func extraFields(for transaction: Transaction) -> [String: Any] {
-        transaction.projectId == nil ? ["projectId": NSNull()] : [:]
+        var fields: [String: Any] = [
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if transaction.projectId == nil {
+            fields["projectId"] = NSNull()
+        }
+        return fields
     }
 
     func updateTransaction(accountId: String, transactionId: String, fields: [String: Any]) async throws {

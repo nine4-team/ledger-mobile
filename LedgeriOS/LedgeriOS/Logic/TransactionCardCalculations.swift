@@ -99,6 +99,15 @@ enum TransactionCardCalculations {
         return display.string(from: parsed)
     }
 
+    /// Formats a `Date` (e.g. `createdAt`) as "MMM d, yyyy". Returns "—" if nil.
+    static func formattedCreatedDate(_ date: Date?) -> String {
+        guard let date else { return "—" }
+        let display = DateFormatter()
+        display.dateFormat = "MMM d, yyyy"
+        display.locale = Locale(identifier: "en_US_POSIX")
+        return display.string(from: date)
+    }
+
     /// Truncates notes to maxLength, appending "..." if truncated.
     /// Returns nil if notes is nil or empty.
     static func truncatedNotes(_ notes: String?, maxLength: Int = 100) -> String? {
