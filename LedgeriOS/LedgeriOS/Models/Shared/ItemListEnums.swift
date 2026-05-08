@@ -11,6 +11,7 @@ enum ItemFilterOption: String, CaseIterable {
     case noProjectPrice = "no-project-price"
     case noImage = "no-image"
     case noTransaction = "no-transaction"
+    case hasTransaction = "has-transaction"
     case uncategorized
 }
 

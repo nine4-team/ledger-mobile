@@ -8,7 +8,7 @@ enum ItemFilterScope {
     var options: [ItemFilterOption] {
         switch self {
         case .inventory:
-            return [.bookmarked, .uncategorized, .noSku, .noName, .noProjectPrice, .noImage, .noTransaction]
+            return [.bookmarked, .uncategorized, .noSku, .noName, .noProjectPrice, .noImage, .noTransaction, .hasTransaction]
         case .project:
             return ItemFilterOption.allCases.filter { $0 != .all }
         case .spaceDetail:
@@ -77,6 +77,7 @@ struct FilterMenu: View {
         case .noProjectPrice: return "No Project Price"
         case .noImage: return "No Image"
         case .noTransaction: return "No Transaction"
+        case .hasTransaction: return "Has Transaction"
         case .uncategorized: return "Uncategorized"
         }
     }
