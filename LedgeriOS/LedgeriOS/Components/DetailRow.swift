@@ -4,17 +4,21 @@ struct DetailRow<Value: View>: View {
     let label: String
     let showDivider: Bool
     let onTap: (() -> Void)?
+    let copyValue: String?
     @ViewBuilder let value: () -> Value
+    @State private var didCopy = false
 
     init(
         label: String,
         showDivider: Bool = true,
         onTap: (() -> Void)? = nil,
+        copyValue: String? = nil,
         @ViewBuilder value: @escaping () -> Value
     ) {
         self.label = label
         self.showDivider = showDivider
         self.onTap = onTap
+        self.copyValue = copyValue
         self.value = value
     }
 
@@ -27,9 +31,23 @@ struct DetailRow<Value: View>: View {
             }
             .buttonStyle(.plain)
         } else {
-            rowContent
-                .textSelection(.enabled)
+            copyableRowContent
         }
+    }
+
+    private var copyableRowContent: some View {
+        rowContent
+            .textSelection(.enabled)
+            .contextMenu {
+                if let copyValue, !copyValue.isEmpty {
+                    Button {
+                        copy(copyValue)
+                    } label: {
+                        Label("Copy \(label)", systemImage: "doc.on.doc")
+                    }
+                }
+            }
+            .accessibilityHint(copyValue == nil ? "" : "Long press for copy options.")
     }
 
     private var rowContent: some View {
@@ -50,11 +68,39 @@ struct DetailRow<Value: View>: View {
                 }
             }
             .padding(.vertical, Spacing.sm)
+            .overlay(alignment: .trailing) {
+                if didCopy {
+                    copiedBadge
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
+            }
+            .animation(.easeInOut(duration: 0.16), value: didCopy)
 
             if showDivider {
                 Rectangle()
                     .fill(BrandColors.borderSecondary)
                     .frame(height: Dimensions.borderWidth)
+            }
+        }
+    }
+
+    private var copiedBadge: some View {
+        Label("Copied \(label)", systemImage: "checkmark")
+            .font(Typography.caption.weight(.semibold))
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
+            .background(BrandColors.surface, in: Capsule())
+            .overlay(Capsule().stroke(BrandColors.border, lineWidth: Dimensions.borderWidth))
+            .foregroundStyle(BrandColors.primary)
+    }
+
+    private func copy(_ string: String) {
+        Clipboard.copy(string)
+        didCopy = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.4))
+            await MainActor.run {
+                didCopy = false
             }
         }
     }
@@ -67,7 +113,12 @@ extension DetailRow {
         showDivider: Bool = true,
         onTap: (() -> Void)? = nil
     ) where Value == AnyView {
-        self.init(label: label, showDivider: showDivider, onTap: onTap) {
+        self.init(
+            label: label,
+            showDivider: showDivider,
+            onTap: onTap,
+            copyValue: onTap == nil ? value : nil
+        ) {
             AnyView(
                 FindableText(value)
                     .font(Typography.body)
