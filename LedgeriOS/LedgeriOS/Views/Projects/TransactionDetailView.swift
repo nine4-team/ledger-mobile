@@ -341,6 +341,8 @@ struct TransactionDetailView: View {
     private var heroCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
+                heroDetailRow(label: "Project", value: assignedProjectName)
+
                 FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
@@ -895,6 +897,26 @@ struct TransactionDetailView: View {
         case "none": return "None"
         default: return "—"
         }
+    }
+
+    @ViewBuilder
+    private func heroDetailRow(label: String, value: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Text("\(label):")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+            FindableText(value)
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textPrimary)
+        }
+    }
+
+    private var assignedProjectName: String {
+        guard let projectId = currentTransaction.projectId else { return "Inventory" }
+        if projectContext.project?.id == projectId {
+            return projectContext.project?.name ?? "Unknown Project"
+        }
+        return accountContext.allProjects.first(where: { $0.id == projectId })?.name ?? "Unknown Project"
     }
 
     // MARK: - Image Pinning
