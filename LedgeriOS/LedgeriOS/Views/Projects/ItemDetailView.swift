@@ -221,8 +221,6 @@ struct ItemDetailView: View {
             }
 
             heroDetailRow(label: "Project", value: linkedProjectName)
-            heroDetailRow(label: "Purchaser", value: purchaserLabel)
-            heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
             HStack(spacing: Spacing.xs) {
                 Text("Transaction:")
                     .font(Typography.small)
@@ -255,6 +253,8 @@ struct ItemDetailView: View {
                         .foregroundStyle(BrandColors.textPrimary)
                 }
             }
+            heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
+            heroDetailRow(label: "Purchaser", value: purchaserLabel)
         }
         .cardStyle()
     }
