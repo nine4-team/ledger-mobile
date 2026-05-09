@@ -39,6 +39,7 @@ struct TransactionDetailView: View {
 
     // Items fetched outside project context (e.g. inventory items in project_to_business sales)
     @State private var resolvedExternalItems: [Item] = []
+    @State private var locallyCreatedItems: [Item] = []
 
     // Expanded groups within returned/sold sections
     @State private var expandedReturnedGroups: Set<String> = []
@@ -52,7 +53,15 @@ struct TransactionDetailView: View {
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
-        liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        var tx = liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        let localIds = locallyCreatedItems.compactMap(\.id)
+        if !localIds.isEmpty {
+            var ids = tx.itemIds ?? []
+            let existingIds = Set(ids)
+            ids.append(contentsOf: localIds.filter { !existingIds.contains($0) })
+            tx.itemIds = ids
+        }
+        return tx
     }
 
     private var transactionItems: [Item] {
@@ -60,11 +69,16 @@ struct TransactionDetailView: View {
         let idSet = Set(ids)
         let fromContext = projectContext.items.filter { idSet.contains($0.id ?? "") }
         let contextIds = Set(fromContext.compactMap(\.id))
-        let external = resolvedExternalItems.filter {
+        let local = locallyCreatedItems.filter {
             guard let id = $0.id else { return false }
             return idSet.contains(id) && !contextIds.contains(id)
         }
-        return fromContext + external
+        let resolvedIds = contextIds.union(local.compactMap(\.id))
+        let external = resolvedExternalItems.filter {
+            guard let id = $0.id else { return false }
+            return idSet.contains(id) && !resolvedIds.contains(id)
+        }
+        return fromContext + local + external
     }
 
     private var activeItems: [Item] {
@@ -161,6 +175,9 @@ struct TransactionDetailView: View {
         .task(id: transaction.id) {
             await loadLineageItems()
             await loadExternalItems()
+        }
+        .onChange(of: projectContext.items) { _, _ in
+            pruneLocallyCreatedItems()
         }
         .onAppear {
             guard let accountId = accountContext.currentAccountId,
@@ -1011,6 +1028,8 @@ struct TransactionDetailView: View {
         let batch = db.batch()
         var newItemIds: [String] = []
 
+        var newItems: [Item] = []
+
         for group in groups {
             var images = group.images
             if !images.isEmpty { images[0].isPrimary = true }
@@ -1023,9 +1042,18 @@ struct TransactionDetailView: View {
             item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
             item.images = images
-            _ = try? batch.setData(from: item, forDocument: ref)
+            do {
+                try batch.setData(from: item, forDocument: ref)
+            } catch {
+                print("🔴 createItemsFromImageGroups encode failed: \(error)")
+                return
+            }
+            item.id = ref.documentID
             newItemIds.append(ref.documentID)
+            newItems.append(item)
         }
+
+        applyCreatedItemsOptimistically(newItems, itemIds: newItemIds)
 
         let txRef = db.collection("accounts/\(accountId)/transactions").document(transactionId)
         batch.updateData([
@@ -1037,6 +1065,7 @@ struct TransactionDetailView: View {
             do {
                 try await batch.commit()
             } catch {
+                removeOptimisticCreatedItems(itemIds: newItemIds)
                 print("🔴 createItemsFromImageGroups batch failed: \(error)")
             }
         }
@@ -1044,8 +1073,12 @@ struct TransactionDetailView: View {
 
     private func createItemsFromParsed(_ parsedItems: [ReceiptListParser.ParsedItem]) {
         guard let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId else { return }
+              let projectId = projectContext.currentProjectId,
+              let transactionId = currentTransaction.id else { return }
         let service = ItemsService()
+        var newItemIds: [String] = []
+        var newItems: [Item] = []
+
         for parsed in parsedItems {
             var item = Item()
             item.accountId = accountId
@@ -1054,9 +1087,77 @@ struct TransactionDetailView: View {
             item.sku = parsed.sku
             item.purchasePriceCents = parsed.priceCents
             item.projectPriceCents = parsed.priceCents
-            item.transactionId = currentTransaction.id
+            item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
-            _ = try? service.createItem(accountId: accountId, item: item)
+            do {
+                let itemId = try service.createItem(accountId: accountId, item: item)
+                item.id = itemId
+                newItemIds.append(itemId)
+                newItems.append(item)
+            } catch {
+                print("🔴 createItemsFromParsed create failed: \(error)")
+            }
+        }
+
+        guard !newItemIds.isEmpty else { return }
+
+        applyCreatedItemsOptimistically(newItems, itemIds: newItemIds)
+
+        Task {
+            do {
+                try await TransactionsService().updateTransaction(
+                    accountId: accountId,
+                    transactionId: transactionId,
+                    fields: [
+                        "itemIds": FieldValue.arrayUnion(newItemIds),
+                        "updatedAt": FieldValue.serverTimestamp(),
+                    ]
+                )
+            } catch {
+                removeOptimisticCreatedItems(itemIds: newItemIds)
+                print("🔴 createItemsFromParsed transaction update failed: \(error)")
+            }
+        }
+    }
+
+    private func applyCreatedItemsOptimistically(_ items: [Item], itemIds: [String]) {
+        guard !items.isEmpty, !itemIds.isEmpty else { return }
+
+        var tx = currentTransaction
+        var ids = tx.itemIds ?? []
+        let existingIds = Set(ids)
+        ids.append(contentsOf: itemIds.filter { !existingIds.contains($0) })
+        tx.itemIds = ids
+        liveTransaction = tx
+
+        let existingLocalIds = Set(locallyCreatedItems.compactMap(\.id))
+        locallyCreatedItems.append(contentsOf: items.filter { item in
+            guard let id = item.id else { return false }
+            return !existingLocalIds.contains(id)
+        })
+
+        expandedSections.insert("items")
+    }
+
+    private func removeOptimisticCreatedItems(itemIds: [String]) {
+        guard !itemIds.isEmpty else { return }
+
+        let idSet = Set(itemIds)
+        locallyCreatedItems.removeAll { item in
+            guard let id = item.id else { return false }
+            return idSet.contains(id)
+        }
+
+        var tx = currentTransaction
+        tx.itemIds = (tx.itemIds ?? []).filter { !idSet.contains($0) }
+        liveTransaction = tx
+    }
+
+    private func pruneLocallyCreatedItems() {
+        let contextIds = Set(projectContext.items.compactMap(\.id))
+        locallyCreatedItems.removeAll { item in
+            guard let id = item.id else { return false }
+            return contextIds.contains(id)
         }
     }
 

@@ -8,11 +8,13 @@ Lets designers bulk-create items by grouping transaction photos into items — c
 - `Modals/ImageGroupingState.swift` — `@Observable` state class + `ImageGroup` model. Selection, grouping/ungrouping logic, URL deduplication.
 - `Modals/CreateItemsFromImagesModal.swift` — Full sheet UI: grouped item cards, ungrouped image pool, bottom bar with selection/create actions.
 - `Components/SelectableImageGrid.swift` — 3-column `LazyVGrid` with multi-select checkmark overlays. Reusable outside this feature.
-- `Views/Projects/TransactionDetailView.swift` — Integration: menu item in "Add Items" menu, sheet presentation, `createItemsFromImageGroups()` batch write.
+- `Views/Projects/TransactionDetailView.swift` — Integration: menu item in "Add Items" menu, sheet presentation, `createItemsFromImageGroups()` batch write, and an optimistic local item mirror so created items appear in the open transaction immediately.
 
 ## State
 
 `ImageGroupingState` is `@Observable` but **view-local** — created as `@State` inside `CreateItemsFromImagesModal`. Not injected via environment, not persisted. All state is lost on dismiss.
+
+`TransactionDetailView` also keeps `locallyCreatedItems: [Item]` for items created while the detail screen is open. The transaction view overlays those ids onto `currentTransaction.itemIds` until the project item listener receives the real documents, then prunes the local copies. This prevents the items section from showing stale "No items yet" state after the create sheet dismisses.
 
 | Property | Type | Purpose |
 |---|---|---|
