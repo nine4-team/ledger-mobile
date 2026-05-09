@@ -114,11 +114,12 @@ struct ItemCard: View {
                                 .foregroundStyle(BrandColors.textPrimary)
                         } else {
                             let isSpaceLine = line.hasPrefix("Space: ")
+                            let highlightSpaceLine = accent && isSpaceLine
                             FindableText(line)
                                 .font(Typography.small)
-                                .fontWeight(isSpaceLine ? .bold : .regular)
+                                .fontWeight(highlightSpaceLine ? .bold : .regular)
                                 .foregroundStyle(
-                                    isSpaceLine
+                                    highlightSpaceLine
                                         ? BrandColors.primary
                                         : BrandColors.textSecondary
                                 )

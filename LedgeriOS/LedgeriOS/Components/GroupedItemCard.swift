@@ -204,8 +204,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
                     if let spaceName, !spaceName.isEmpty {
                         FindableText("Space: \(spaceName)")
                             .font(Typography.small)
-                            .fontWeight(.bold)
-                            .foregroundStyle(BrandColors.primary)
+                            .foregroundStyle(BrandColors.textSecondary)
                             .lineLimit(2)
                     }
                     if let locationLabel, !locationLabel.isEmpty {
