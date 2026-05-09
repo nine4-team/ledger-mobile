@@ -382,7 +382,6 @@ struct ItemDetailView: View {
         VStack(spacing: 0) {
             DetailRow(label: "Status", value: liveItem.status?.displayLabel ?? "—")
             DetailRow(label: "Billing", value: derivedBillingLabel)
-            DetailRow(label: "Space", value: spaceNameForDetails)
             DetailRow(label: "Source", value: liveItem.source ?? "—")
             DetailRow(label: "SKU", value: liveItem.sku ?? "—")
             DetailRow(label: "Purchase Price", value: liveItem.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) } ?? "—")
@@ -477,11 +476,6 @@ struct ItemDetailView: View {
     private var spaceName: String {
         guard let spaceId = liveItem.spaceId else { return "None" }
         return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "None"
-    }
-
-    private var spaceNameForDetails: String {
-        guard let spaceId = liveItem.spaceId else { return "—" }
-        return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "—"
     }
 
     // MARK: - Image Management
