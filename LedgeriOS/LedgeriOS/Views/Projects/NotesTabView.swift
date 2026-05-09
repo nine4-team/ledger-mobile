@@ -65,9 +65,7 @@ struct NotesTabView: View {
 
     private func noteCard(_ note: ProjectNote) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(note.text)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
+            SelectableNoteText(text: note.text, style: .body)
 
             HStack(spacing: Spacing.sm) {
                 Image(systemName: sourceIcon(note.source))
@@ -104,9 +102,7 @@ struct NotesTabView: View {
             Text("Legacy Notes")
                 .font(Typography.caption)
                 .foregroundStyle(BrandColors.textTertiary)
-            Text(text)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textSecondary)
+            SelectableNoteText(text: text, style: .small)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.cardPadding)

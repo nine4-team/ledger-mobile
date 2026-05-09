@@ -98,9 +98,7 @@ struct InvoiceReportView: View {
                 if let notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Notes").sectionLabelStyle()
-                        Text(notes)
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textPrimary)
+                        SelectableNoteText(text: notes, style: .body)
                     }
                     .padding(.top, Spacing.md)
                 }
@@ -110,7 +108,6 @@ struct InvoiceReportView: View {
         }
         } // else
         } // Group
-        .textSelection(.enabled)
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
         .task {

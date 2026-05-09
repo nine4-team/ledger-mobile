@@ -29,13 +29,9 @@ struct NotesContent: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
                     if NotesContent.isAiTagged(paragraph) {
-                        FindableText(paragraph)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.textSecondary)
+                        SelectableNoteText(text: paragraph, style: .small)
                     } else {
-                        FindableText(paragraph)
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textPrimary)
+                        SelectableNoteText(text: paragraph, style: .body)
                     }
                 }
             }

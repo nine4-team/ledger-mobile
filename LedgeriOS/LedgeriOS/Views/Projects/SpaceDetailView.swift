@@ -66,7 +66,6 @@ struct SpaceDetailView: View {
             }
         }
         .findEntity(id: space.id)
-        .textSelection(.enabled)
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -216,9 +215,7 @@ struct SpaceDetailView: View {
     @ViewBuilder
     private var notesContent: some View {
         if let notes = liveSpace.notes, !notes.isEmpty {
-            FindableText(notes)
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
+            SelectableNoteText(text: notes, style: .body)
                 .padding(.top, Spacing.xs)
         } else {
             Text("No notes")

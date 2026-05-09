@@ -237,6 +237,7 @@
 		E57A8103EC4D73FB50EFEC11 /* ProjectListCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0C1D3A59BE5DF0B0DB0FAE /* ProjectListCalculationTests.swift */; };
 		2CBEFA12A9214AEBB0564350 /* FindableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5943A53A02D94A45B1D7271E /* FindableText.swift */; };
 		E53892DC2A0E41FF873FCFAD /* NotesContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C99960DF24F46D1BBBB3679 /* NotesContent.swift */; };
+		8F2B9C4D1E6A47B8A3C59102 /* SelectableNoteText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2B9C4D1E6A47B8A3C59101 /* SelectableNoteText.swift */; };
 		15C4E80CC76B4F5AB30468EA /* FindOverlayBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */; };
 		01E253341A7E4E01923816B2 /* FindMatchHighlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC03F3F9EB74C1994BF6F3C /* FindMatchHighlight.swift */; };
 		E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */; };
@@ -394,6 +395,7 @@
 		2A267D245751FF8566886407 /* ReportHTMLBuilder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportHTMLBuilder.swift; sourceTree = "<group>"; };
 		5943A53A02D94A45B1D7271E /* FindableText.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindableText.swift; sourceTree = "<group>"; };
 		7C99960DF24F46D1BBBB3679 /* NotesContent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotesContent.swift; sourceTree = "<group>"; };
+		8F2B9C4D1E6A47B8A3C59101 /* SelectableNoteText.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SelectableNoteText.swift; sourceTree = "<group>"; };
 		BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindOverlayBar.swift; sourceTree = "<group>"; };
 		0CC03F3F9EB74C1994BF6F3C /* FindMatchHighlight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FindMatchHighlight.swift; sourceTree = "<group>"; };
 		2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
@@ -1130,6 +1132,7 @@
 				C5A0020100000000000C0002 /* AppButton.swift */,
 				5943A53A02D94A45B1D7271E /* FindableText.swift */,
 				7C99960DF24F46D1BBBB3679 /* NotesContent.swift */,
+				8F2B9C4D1E6A47B8A3C59101 /* SelectableNoteText.swift */,
 				BA25E9BCDE794E07992D8662 /* FindOverlayBar.swift */,
 				0CC03F3F9EB74C1994BF6F3C /* FindMatchHighlight.swift */,
 				2AD45E2C17124EDB92DC29C6 /* ItemCard.swift */,
@@ -1490,6 +1493,7 @@
 				8807A168E2C64158BC463592 /* ItemCardCalculations.swift in Sources */,
 				2CBEFA12A9214AEBB0564350 /* FindableText.swift in Sources */,
 				E53892DC2A0E41FF873FCFAD /* NotesContent.swift in Sources */,
+				8F2B9C4D1E6A47B8A3C59102 /* SelectableNoteText.swift in Sources */,
 				15C4E80CC76B4F5AB30468EA /* FindOverlayBar.swift in Sources */,
 				01E253341A7E4E01923816B2 /* FindMatchHighlight.swift in Sources */,
 				E612A9BD362149A996A6D89C /* ItemCard.swift in Sources */,

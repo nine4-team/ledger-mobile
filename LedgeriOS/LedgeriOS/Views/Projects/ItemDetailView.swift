@@ -68,7 +68,6 @@ struct ItemDetailView: View {
             }
         }
         .findEntity(id: item.id)
-        .textSelection(.enabled)
         .background(BrandColors.background)
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {

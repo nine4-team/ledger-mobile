@@ -20,9 +20,7 @@ struct SpaceSearchDetailView: View {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Notes")
                             .sectionLabelStyle()
-                        FindableText(notes)
-                            .font(Typography.body)
-                            .foregroundStyle(BrandColors.textPrimary)
+                        SelectableNoteText(text: notes, style: .body)
                     }
                 }
 
@@ -61,7 +59,6 @@ struct SpaceSearchDetailView: View {
             }
             .padding(Spacing.screenPadding)
         }
-        .textSelection(.enabled)
         .background(BrandColors.background)
         .navigationTitle(space.name)
         .navBarTitleDisplayMode(.large)

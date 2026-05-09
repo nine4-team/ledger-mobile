@@ -167,7 +167,6 @@ struct TransactionDetailView: View {
             }
         }
         .findEntity(id: transaction.id)
-        .textSelection(.enabled)
         .background(BrandColors.background)
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
