@@ -342,11 +342,11 @@ struct TransactionDetailView: View {
     private var heroCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                heroDetailRow(label: "Project", value: assignedProjectName)
-
                 FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
+
+                heroDetailRow(label: "Project", value: assignedProjectName)
 
                 HStack(spacing: Spacing.xs) {
                     Text("Amount:")
