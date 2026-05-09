@@ -602,7 +602,8 @@ struct SharedItemsList: View {
             return combined.isEmpty ? nil : combined
         }()
 
-        let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+        let summaryItem = group.items.first(where: { ItemCardCalculations.primaryImage(from: $0.images) != nil }) ?? group.items.first
+        let summaryImage = ItemCardCalculations.primaryImage(from: summaryItem?.images)
         let spaceName = groupedSpaceName(for: group)
 
         let selectionBinding = Binding(
@@ -627,8 +628,8 @@ struct SharedItemsList: View {
         // macOS: tap opens centered overlay instead of inline expansion
         GroupedItemCard(
             name: group.name,
-            thumbnailUrl: summaryItem?.images?.first?.url,
-            thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
+            thumbnailUrl: summaryImage?.url,
+            thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
@@ -645,8 +646,8 @@ struct SharedItemsList: View {
         #else
         GroupedItemCard(
             name: group.name,
-            thumbnailUrl: summaryItem?.images?.first?.url,
-            thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
+            thumbnailUrl: summaryImage?.url,
+            thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
             countLabel: "×\(group.count)",
             totalLabel: totalLabel,
             sku: summaryItem?.sku,

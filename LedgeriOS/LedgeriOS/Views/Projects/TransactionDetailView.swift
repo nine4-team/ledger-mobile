@@ -686,13 +686,14 @@ struct TransactionDetailView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             ForEach(groups) { group in
                 if group.count > 1 {
-                    let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+                    let summaryItem = group.items.first(where: { ItemCardCalculations.primaryImage(from: $0.images) != nil }) ?? group.items.first
+                    let summaryImage = ItemCardCalculations.primaryImage(from: summaryItem?.images)
                     let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
                     let spaceName = groupedSpaceName(for: group)
                     GroupedItemCard(
                         name: group.name,
-                        thumbnailUrl: summaryItem?.images?.first?.url,
-                        thumbnailSmUrl: summaryItem?.images?.first?.thumbnailUrlSm,
+                        thumbnailUrl: summaryImage?.url,
+                        thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
                         countLabel: "×\(group.count)",
                         totalLabel: totalLabel,
                         sku: summaryItem?.sku,

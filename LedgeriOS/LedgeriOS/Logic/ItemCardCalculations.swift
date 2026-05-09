@@ -75,6 +75,11 @@ enum ItemCardCalculations {
         return URL(string: urlString)
     }
 
+    static func primaryImage(from images: [AttachmentRef]?) -> AttachmentRef? {
+        guard let images else { return nil }
+        return MediaGalleryCalculations.primaryImage(images.filter { !$0.url.isEmpty })
+    }
+
     /// Determines the display price for a grouped card's collapsed state.
     /// If totalLabel provided, uses it as the primary price.
     /// Adds " (X each)" suffix when total differs from a uniform per-item price.

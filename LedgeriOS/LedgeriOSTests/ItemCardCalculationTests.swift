@@ -175,6 +175,31 @@ struct ItemCardCalculationTests {
         #expect(url == nil)
     }
 
+    // MARK: - primaryImage
+
+    @Test("Primary image prefers starred attachment")
+    func primaryImagePrefersStarredAttachment() {
+        let images = [
+            AttachmentRef(url: "first", thumbnailUrlSm: "first-sm"),
+            AttachmentRef(url: "starred", thumbnailUrlSm: "starred-sm", isPrimary: true),
+        ]
+
+        let image = ItemCardCalculations.primaryImage(from: images)
+
+        #expect(image?.url == "starred")
+        #expect(image?.thumbnailUrlSm == "starred-sm")
+    }
+
+    @Test("Primary image falls back to first usable image")
+    func primaryImageFallsBackToFirstUsableImage() {
+        let images = [
+            AttachmentRef(url: "", isPrimary: true),
+            AttachmentRef(url: "usable"),
+        ]
+
+        #expect(ItemCardCalculations.primaryImage(from: images)?.url == "usable")
+    }
+
     // MARK: - groupedCollapsedPrice
 
     @Test("Total with uniform per-item price adds suffix")
