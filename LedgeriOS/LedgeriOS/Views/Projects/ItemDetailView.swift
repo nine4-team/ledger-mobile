@@ -271,10 +271,7 @@ struct ItemDetailView: View {
     }
 
     private var linkedTransactionLabel: String {
-        guard let transactionId = liveItem.transactionId else { return "None" }
-        guard let tx = projectContext.transactions.first(where: { $0.id == transactionId }) else {
-            return "None"
-        }
+        guard let tx = linkedTransaction else { return "None" }
         let source = tx.source ?? "Transaction"
         let amount = TransactionCardCalculations.formattedAmount(
             amountCents: tx.amountCents,
@@ -443,7 +440,7 @@ struct ItemDetailView: View {
         // Edit Details, Edit Notes, and Status each have dedicated affordances
         // (Details pencil, Notes pencil, toolbar status capsule) — the kebab
         // is reserved for Make Copies, relational actions, and Delete.
-        let hasTx = liveItem.transactionId != nil
+        let hasTx = normalizedTransactionId != nil
         let hasSpace = liveItem.spaceId != nil
         return ItemMenuBuilder.buildSingleItemMenu(
             context: .detail,
@@ -467,9 +464,18 @@ struct ItemDetailView: View {
 
     // MARK: - Helpers
 
+    private var normalizedTransactionId: String? {
+        guard let transactionId = liveItem.transactionId?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !transactionId.isEmpty else {
+            return nil
+        }
+        return transactionId
+    }
+
     private var linkedTransaction: Transaction? {
-        guard let transactionId = liveItem.transactionId else { return nil }
+        guard let transactionId = normalizedTransactionId else { return nil }
         return projectContext.transactions.first(where: { $0.id == transactionId })
+            ?? accountContext.allTransactions.first(where: { $0.id == transactionId })
     }
 
     private var linkedTransactionImages: [AttachmentRef] {
