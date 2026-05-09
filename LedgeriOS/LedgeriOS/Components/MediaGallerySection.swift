@@ -9,6 +9,7 @@ struct MediaGallerySection: View {
     /// Called when the user confirms image selection. Receives JPEG data; caller should upload
     /// via MediaService and append the resulting AttachmentRef to the entity's images array.
     var onUploadAttachment: ((Data) async throws -> Void)?
+    var onUploadDocument: ((Data, String) async throws -> Void)?
     var onRemoveAttachment: ((AttachmentRef) -> Void)?
     var onSetPrimary: ((AttachmentRef) -> Void)?
     var onPinImage: ((AttachmentRef) -> Void)?
@@ -24,6 +25,7 @@ struct MediaGallerySection: View {
     @State private var showAddSourceMenu = false
     @State private var showCamera = false
     @State private var showPhotoPicker = false
+    @State private var showDocumentPicker = false
     @State private var showPDFViewer = false
     @State private var selectedPDFAttachment: AttachmentRef?
 
@@ -132,6 +134,17 @@ struct MediaGallerySection: View {
             }
         }
         #endif
+        #if canImport(UIKit)
+        .fullScreenCover(isPresented: $showDocumentPicker) {
+            DocumentPicker { data, fileName in
+                Task {
+                    await handlePickedDocumentData(data, fileName: fileName)
+                }
+            } onDismiss: {
+                showDocumentPicker = false
+            }
+        }
+        #endif
         .photosPicker(
             isPresented: $showPhotoPicker,
             selection: $pickerItems,
@@ -187,6 +200,22 @@ struct MediaGallerySection: View {
 
         do {
             try await onUploadAttachment(data)
+        } catch {
+            uploadError = error.localizedDescription
+        }
+    }
+
+    private func handlePickedDocumentData(_ data: Data, fileName: String) async {
+        guard let onUploadDocument else { return }
+        isUploading = true
+        uploadError = nil
+        defer {
+            isUploading = false
+            showDocumentPicker = false
+        }
+
+        do {
+            try await onUploadDocument(data, fileName)
         } catch {
             uploadError = error.localizedDescription
         }
@@ -263,29 +292,50 @@ struct MediaGallerySection: View {
 
     private var addSourceMenu: some View {
         ActionMenuSheet(
-            title: "Add Image",
-            items: [
-                ActionMenuItem(
-                    id: "camera",
-                    label: "Camera",
-                    icon: "camera.fill",
-                    onPress: {
-                        showCamera = true
-                    }
-                ),
-                ActionMenuItem(
-                    id: "photo-library",
-                    label: "Photo Library",
-                    icon: "photo.on.rectangle",
-                    onPress: {
-                        showPhotoPicker = true
-                    }
-                ),
-            ],
+            title: "Add Attachment",
+            items: addSourceMenuItems,
             onSelectAction: { action in
                 menuPendingAction = action
             }
         )
+    }
+
+    private var addSourceMenuItems: [ActionMenuItem] {
+        var items = [
+            ActionMenuItem(
+                id: "camera",
+                label: "Camera",
+                icon: "camera.fill",
+                onPress: {
+                    showCamera = true
+                }
+            ),
+            ActionMenuItem(
+                id: "photo-library",
+                label: "Photo Library",
+                icon: "photo.on.rectangle",
+                onPress: {
+                    showPhotoPicker = true
+                }
+            ),
+        ]
+
+        #if canImport(UIKit)
+        if allowedKinds.contains(.pdf), onUploadDocument != nil {
+            items.append(
+                ActionMenuItem(
+                    id: "pdf",
+                    label: "PDF",
+                    icon: "doc.richtext",
+                    onPress: {
+                        showDocumentPicker = true
+                    }
+                )
+            )
+        }
+        #endif
+
+        return items
     }
 
     // MARK: - Attachment Menu
@@ -367,7 +417,8 @@ struct MediaGallerySection: View {
     MediaGallerySection(
         title: "IMAGES",
         attachments: [],
-        onUploadAttachment: { _ in }
+        onUploadAttachment: { _ in },
+        onUploadDocument: { _, _ in }
     )
     .padding(Spacing.screenPadding)
 }

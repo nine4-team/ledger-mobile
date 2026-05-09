@@ -481,6 +481,9 @@ struct TransactionDetailView: View {
                 onUploadAttachment: { data in
                     try await uploadReceiptImage(data)
                 },
+                onUploadDocument: { data, fileName in
+                    try await uploadReceiptPDF(data, fileName: fileName)
+                },
                 onRemoveAttachment: { attachment in
                     removeReceiptImage(attachment)
                 },
@@ -882,6 +885,29 @@ struct TransactionDetailView: View {
         var images = currentTransaction.receiptImages ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
+    }
+
+    private func uploadReceiptPDF(_ data: Data, fileName: String) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId = transaction.id else { return }
+        let storageFileName = "\(UUID().uuidString).pdf"
+        let path = mediaService.uploadPath(
+            accountId: accountId,
+            entityType: "transactions",
+            entityId: transactionId,
+            filename: storageFileName
+        )
+        let url = try await mediaService.uploadData(data, path: path, contentType: "application/pdf")
+        var images = currentTransaction.receiptImages ?? []
+        let isPrimary = images.isEmpty
+        images.append(AttachmentRef(
+            url: url,
+            kind: .pdf,
+            fileName: fileName,
+            contentType: "application/pdf",
+            isPrimary: isPrimary
+        ))
         updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
     }
 

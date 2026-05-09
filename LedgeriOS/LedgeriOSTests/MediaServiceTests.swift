@@ -92,6 +92,20 @@ struct MediaServiceTests {
         #expect(mock.lastUploadedContentType == "image/jpeg")
     }
 
+    @Test("uploadData passes PDF content type to storage")
+    func uploadDataPassesPDFMetadata() async throws {
+        let mock = MockStorageUploader()
+        let service = MediaService(uploader: mock)
+
+        let data = Data("%PDF-1.7".utf8)
+        let path = "accounts/acc1/transactions/tx1/receipt.pdf"
+        _ = try await service.uploadData(data, path: path, contentType: "application/pdf")
+
+        #expect(mock.lastUploadedPath == path)
+        #expect(mock.lastUploadedData == data)
+        #expect(mock.lastUploadedContentType == "application/pdf")
+    }
+
     @Test("uploadImage propagates storage errors")
     func uploadImagePropagatesError() async {
         let mock = MockStorageUploader()
