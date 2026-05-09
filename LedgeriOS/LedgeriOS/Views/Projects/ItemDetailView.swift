@@ -474,10 +474,17 @@ struct ItemDetailView: View {
 
     private var linkedTransactionImages: [AttachmentRef] {
         guard let linkedTransaction else { return [] }
+        var seenUrls = Set<String>()
         return ((linkedTransaction.receiptImages ?? [])
-            + (linkedTransaction.otherImages ?? [])
-            + (linkedTransaction.transactionImages ?? []))
-            .filter { $0.kind == .image && !$0.url.isEmpty }
+            + (linkedTransaction.otherImages ?? []))
+            .compactMap { attachment in
+                guard attachment.kind == .image,
+                      !attachment.url.isEmpty,
+                      seenUrls.insert(attachment.url).inserted else {
+                    return nil
+                }
+                return attachment
+            }
     }
 
     private var linkedSpace: Space? {

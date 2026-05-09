@@ -63,10 +63,18 @@ struct MediaGallerySection: View {
 
     private var availableSourceImages: [AttachmentRef] {
         let existingUrls = Set(attachments.map(\.url))
-        return sourceImages
-            .filter { $0.kind == .image && !$0.url.isEmpty && !existingUrls.contains($0.url) }
-            .prefix(remainingSlots)
-            .map { $0 }
+        var seenSourceUrls = Set<String>()
+        return sourceImages.compactMap { attachment in
+            guard attachment.kind == .image,
+                  !attachment.url.isEmpty,
+                  !existingUrls.contains(attachment.url),
+                  seenSourceUrls.insert(attachment.url).inserted else {
+                return nil
+            }
+            return attachment
+        }
+        .prefix(remainingSlots)
+        .map { $0 }
     }
 
     var body: some View {
