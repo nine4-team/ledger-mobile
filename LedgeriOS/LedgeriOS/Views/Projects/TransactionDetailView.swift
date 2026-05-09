@@ -674,6 +674,7 @@ struct TransactionDetailView: View {
                 if group.count > 1 {
                     let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
                     let totalLabel = group.totalCents > 0 ? CurrencyFormatting.formatCentsWithDecimals(group.totalCents) : nil
+                    let spaceName = groupedSpaceName(for: group)
                     GroupedItemCard(
                         name: group.name,
                         thumbnailUrl: summaryItem?.images?.first?.url,
@@ -682,6 +683,7 @@ struct TransactionDetailView: View {
                         totalLabel: totalLabel,
                         sku: summaryItem?.sku,
                         sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
+                        spaceName: spaceName,
                         priceLabel: totalLabel,
                         isExpanded: Binding(
                             get: { expandedGroups.wrappedValue.contains(group.id) },
@@ -707,6 +709,24 @@ struct TransactionDetailView: View {
                 }
             }
         }
+    }
+
+    private func groupedSpaceName(for group: ItemGroup) -> String? {
+        let names = Set(group.items.compactMap { item -> String? in
+            guard
+                let spaceId = item.spaceId,
+                let name = accountContext.allSpaces.first(where: { $0.id == spaceId })?.name,
+                !name.isEmpty
+            else {
+                return nil
+            }
+            return name
+        })
+
+        if names.count > 1 {
+            return "Multiple spaces"
+        }
+        return names.first
     }
 
     // 8. Transaction Audit (collapsed, conditional)
