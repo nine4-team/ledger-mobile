@@ -15,6 +15,7 @@ private struct MockItemsService: ItemsServiceProtocol {
 
     func getItem(accountId: String, itemId: String) async throws -> Item? { nil }
     func createItem(accountId: String, item: Item) throws -> String { "" }
+    func createItemsForTransaction(accountId: String, transactionId: String, items: [Item]) async throws -> [String] { [] }
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {}
     func deleteItem(accountId: String, item: Item) async throws {}
     func deleteItems(accountId: String, items: [Item]) async throws {}

@@ -8,7 +8,8 @@ Lets designers bulk-create items by grouping transaction photos into items — c
 - `Modals/ImageGroupingState.swift` — `@Observable` state class + `ImageGroup` model. Selection, grouping/ungrouping logic, URL deduplication.
 - `Modals/CreateItemsFromImagesModal.swift` — Full sheet UI: grouped item cards, ungrouped image pool, bottom bar with selection/create actions.
 - `Components/SelectableImageGrid.swift` — 3-column `LazyVGrid` with multi-select checkmark overlays. Reusable outside this feature.
-- `Views/Projects/TransactionDetailView.swift` — Integration: menu item in "Add Items" menu, sheet presentation, `createItemsFromImageGroups()` batch write.
+- `Views/Projects/TransactionDetailView.swift` — Integration: menu item in "Add Items" menu, sheet presentation, and conversion of image groups into item drafts.
+- `Services/ItemsService.swift` — Persists created items and links them to the transaction via `createItemsForTransaction()`.
 
 ## State
 
@@ -27,9 +28,12 @@ Lets designers bulk-create items by grouping transaction photos into items — c
 
 **Reads:** `transaction.receiptImages`, `transaction.otherImages`, `transaction.transactionImages` — flattened and deduplicated by URL.
 
-**Writes (atomic `WriteBatch`):**
+**Writes:** `ItemsService.createItemsForTransaction()` writes the item documents and updates the parent transaction in one service-layer batch.
+
 - Creates item documents at `accounts/{accountId}/items/{auto}` with: `accountId`, `projectId`, `status: "purchased"`, `transactionId`, `budgetCategoryId` (from transaction), `images` (group's images, first set as primary). No `name` — valid per item validation (requires name OR image).
 - Updates transaction at `accounts/{accountId}/transactions/{transactionId}` with `itemIds: FieldValue.arrayUnion(newIds)`.
+
+This is a same-scope transaction membership write: no scope move, no sale/return lineage, and no new budget-impacting transaction. It uses the same service-layer batch pattern as other same-scope item/transaction membership changes.
 
 ## Sheets & Navigation
 

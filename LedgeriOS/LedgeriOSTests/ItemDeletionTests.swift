@@ -18,8 +18,62 @@ private func makeService(batch: RecordingBatch) -> ItemsService {
     ItemsService(makeBatch: { batch })
 }
 
-@Suite("ItemsService.deleteItem — atomic batch operations")
+@Suite("ItemsService — transaction membership batch operations")
 struct ItemDeletionTests {
+
+    @Test("create items for transaction — creates item docs and links transaction itemIds")
+    func createItemsForTransaction() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var item1 = makeItem(id: nil)
+        item1.projectId = "project1"
+        item1.name = "Lamp"
+        item1.budgetCategoryId = "cat1"
+        var item2 = makeItem(id: nil)
+        item2.projectId = "project1"
+        item2.name = "Chair"
+        item2.budgetCategoryId = "cat1"
+
+        let ids = try await service.createItemsForTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            items: [item1, item2]
+        )
+
+        #expect(ids.count == 2)
+        #expect(Set(ids).count == 2)
+        #expect(batch.commitCalled)
+
+        #expect(batch.sets.count == 2)
+        for id in ids {
+            let itemSets = batch.setsForPath("accounts/\(acct)/items/\(id)")
+            #expect(itemSets.count == 1)
+            #expect(itemSets[0].fields["accountId"] as? String == acct)
+            #expect(itemSets[0].fields["transactionId"] as? String == "tx1")
+        }
+
+        let txUpdates = batch.updatesForPath("accounts/\(acct)/transactions/tx1")
+        #expect(txUpdates.count == 1)
+        #expect(txUpdates[0].fields.keys.contains("itemIds"))
+        #expect(txUpdates[0].fields.keys.contains("updatedAt"))
+    }
+
+    @Test("create empty item array — does not commit")
+    func createItemsForTransactionEmptyArray() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+
+        let ids = try await service.createItemsForTransaction(
+            accountId: acct,
+            transactionId: "tx1",
+            items: []
+        )
+
+        #expect(ids.isEmpty)
+        #expect(!batch.commitCalled)
+        #expect(batch.sets.isEmpty)
+        #expect(batch.updates.isEmpty)
+    }
 
     @Test("delete item with transactionId — deletes doc and removes from transaction itemIds")
     func deleteWithTransactionId() async throws {

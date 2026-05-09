@@ -20,6 +20,37 @@ struct ItemsService: ItemsServiceProtocol {
         return id
     }
 
+    func createItemsForTransaction(accountId: String, transactionId: String, items: [Item]) async throws -> [String] {
+        guard !items.isEmpty else { return [] }
+
+        let batch = makeBatch()
+        let itemRepo = repo(accountId: accountId)
+        let itemIds = items.map { _ in itemRepo.newDocumentId() }
+        let itemsPath = "accounts/\(accountId)/items"
+        let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
+
+        for (itemId, sourceItem) in zip(itemIds, items) {
+            var item = sourceItem
+            item.accountId = accountId
+            item.transactionId = transactionId
+
+            var fields = try Firestore.Encoder().encode(item)
+            fields["accountId"] = accountId
+            fields["transactionId"] = transactionId
+
+            batch.setData(fields, forDocumentAt: "\(itemsPath)/\(itemId)", merge: false)
+        }
+
+        batch.updateData(
+            ["itemIds": FieldValue.arrayUnion(itemIds),
+             "updatedAt": FieldValue.serverTimestamp()],
+            forDocumentAt: txPath
+        )
+
+        try await batch.commit()
+        return itemIds
+    }
+
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {
         try await repo(accountId: accountId).update(id: itemId, fields: fields)
     }

@@ -1053,15 +1053,10 @@ struct TransactionDetailView: View {
               let projectId = projectContext.currentProjectId,
               let transactionId = transaction.id else { return }
 
-        let db = Firestore.firestore()
-        let batch = db.batch()
-        var newItemIds: [String] = []
-
-        for group in groups {
+        let items = groups.map { group -> Item in
             var images = group.images
             if !images.isEmpty { images[0].isPrimary = true }
 
-            let ref = db.collection("accounts/\(accountId)/items").document()
             var item = Item()
             item.accountId = accountId
             item.projectId = projectId
@@ -1069,30 +1064,29 @@ struct TransactionDetailView: View {
             item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
             item.images = images
-            _ = try? batch.setData(from: item, forDocument: ref)
-            newItemIds.append(ref.documentID)
+            return item
         }
 
-        let txRef = db.collection("accounts/\(accountId)/transactions").document(transactionId)
-        batch.updateData([
-            "itemIds": FieldValue.arrayUnion(newItemIds),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ], forDocument: txRef)
-
+        expandedSections.insert("items")
         Task {
             do {
-                try await batch.commit()
+                _ = try await ItemsService().createItemsForTransaction(
+                    accountId: accountId,
+                    transactionId: transactionId,
+                    items: items
+                )
             } catch {
-                print("🔴 createItemsFromImageGroups batch failed: \(error)")
+                print("🔴 createItemsFromImageGroups failed: \(error)")
             }
         }
     }
 
     private func createItemsFromParsed(_ parsedItems: [ReceiptListParser.ParsedItem]) {
         guard let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId else { return }
-        let service = ItemsService()
-        for parsed in parsedItems {
+              let projectId = projectContext.currentProjectId,
+              let transactionId = currentTransaction.id else { return }
+
+        let items = parsedItems.map { parsed -> Item in
             var item = Item()
             item.accountId = accountId
             item.projectId = projectId
@@ -1100,9 +1094,22 @@ struct TransactionDetailView: View {
             item.sku = parsed.sku
             item.purchasePriceCents = parsed.priceCents
             item.projectPriceCents = parsed.priceCents
-            item.transactionId = currentTransaction.id
+            item.transactionId = transactionId
             item.budgetCategoryId = currentTransaction.budgetCategoryId
-            _ = try? service.createItem(accountId: accountId, item: item)
+            return item
+        }
+
+        expandedSections.insert("items")
+        Task {
+            do {
+                _ = try await ItemsService().createItemsForTransaction(
+                    accountId: accountId,
+                    transactionId: transactionId,
+                    items: items
+                )
+            } catch {
+                print("🔴 createItemsFromParsed failed: \(error)")
+            }
         }
     }
 
