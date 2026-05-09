@@ -95,7 +95,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── list_transactions ──────────────────────────────────────────────────────
   server.tool(
     "list_transactions",
-    "List transactions with optional filters. Supports pagination via offset + limit. Returns formatted amounts. Use isComplete: false to find transactions needing audit (app shows 'Needs Review' badge when isComplete is false). To understand WHY a transaction is incomplete, call get_transaction — it returns the audit object (variance numbers), resolved returned/sold items, and shows which fields are null (subtotalCents, taxRatePct, items).",
+    "List transactions by EXACT-match structured filters (projectId, type, source, budgetCategoryId, purchasedBy, isComplete, etc.). Supports pagination via offset + limit. Returns formatted amounts.\n\nPicking between this and search_transactions:\n- Exact vendor string, or other structured filters (type, isComplete, ingestionStatus) → list_transactions (here).\n- Partial vendor name, or any keyword that might appear in source or notes → search_transactions.\nDon't enumerate name variants by calling this tool in a loop.\n\nAudit workflow: isComplete: false finds transactions needing audit (app's 'Needs Review' badge); call get_transaction to see WHY (audit variance, null fields, resolved returned/sold items).",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
@@ -265,7 +265,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   // ── search_transactions ────────────────────────────────────────────────────
   server.tool(
     "search_transactions",
-    "Search transactions by source, type, notes, purchasedBy, or amount. Case-insensitive client-side filter. Supports pagination via offset + limit.",
+    "Substring filter across `source`, `type`, `notes`, `purchasedBy`, and `amount`. Case-insensitive.\n\nPicking between this and list_transactions:\n- Partial vendor name, or any keyword that might appear in source or notes → search_transactions (here).\n- Exact vendor string, or other structured filters (type, isComplete, ingestionStatus) → list_transactions.\nA single substring call beats looping list_transactions over a list of name variants.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project"),

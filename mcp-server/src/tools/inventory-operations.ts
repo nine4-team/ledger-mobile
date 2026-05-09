@@ -143,7 +143,12 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── sell_items ──────────────────────────────────────────────────────────────
   server.tool(
     "sell_items",
-    "[destructive] Create a Sale transaction moving items between inventory and a project. " +
+    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event (money changes hands, " +
+      "budgets move). Do NOT use it to satisfy a schema rule when an item was logged incorrectly. " +
+      "If you encounter project items with no transaction (legacy orphans, mis-entered items), " +
+      "the fix is `bulk_update_items` with `projectId: null` to relocate them to inventory as a CORRECTION " +
+      "— then sell from inventory normally. Inventing fake Sales to retroactively justify bad data pollutes the books.\n\n" +
+      "[destructive] Create a Sale transaction moving items between inventory and a project. " +
       "Sales are BIDIRECTIONAL — direction is derived from the arguments:\n\n" +
       "• INVENTORY → PROJECT (pass budgetCategoryId): items must currently be in business inventory " +
       "(projectId == null). Items land in destinationProjectId under the chosen category. The " +
@@ -330,7 +335,10 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── return_items ────────────────────────────────────────────────────────────
   server.tool(
     "return_items",
-    "[destructive] Return items. A Return is for items going HOME — either back to the vendor they " +
+    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event. Do NOT use it to fix " +
+      "data-entry mistakes (wrong project, wrong vendor on the original record). For corrections, use " +
+      "`bulk_update_items` to relocate items without creating a Return transaction.\n\n" +
+      "[destructive] Return items. A Return is for items going HOME — either back to the vendor they " +
       "came from, or back to business inventory (if they previously came from inventory).\n\n" +
       "• returnTo: 'vendor' — attaches items to an existing vendor Return transaction. Create the " +
       "Return transaction first via create_transaction (type: 'Return'), then pass its ID as " +
@@ -338,8 +346,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "• returnTo: 'inventory' — moves items from their current project back to business inventory. " +
       "ORIGIN REQUIREMENT: every item must have previously passed through inventory " +
       "(currentSource != source). Items that originated in the project and have never been in " +
-      "inventory before are NOT a return — they are a Sale-to-Inventory (use sell_items without " +
-      "budgetCategoryId instead). Creates a new Return transaction with source: 'Business Inventory' " +
+      "inventory before are NOT a return. For those, decide: was it a real business event " +
+      "(business is genuinely acquiring the items for the first time)? → sell_items without " +
+      "budgetCategoryId. Or was it a data-entry mistake (the item should never have been logged " +
+      "against the project)? → bulk_update_items with projectId: null (corrections doctrine). " +
+      "Creates a new Return transaction with source: 'Business Inventory' " +
       "(or appends to one if returnTransactionId is provided). Items have budgetCategoryId and " +
       "projectId cleared.\n\n" +
       "Cap: 100 items per call. Set dryRun: true to preview the plan.",
@@ -410,7 +421,10 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           if (originated.length > 0) {
             return validation(
               `${originated.length} item(s) originated in their current project (currentSource == source) — these are NOT a return: ${originated.map((i) => i.id).join(", ")}.`,
-              "Use sell_items without budgetCategoryId to Sale-to-Inventory for originated-in-project items. return_items (returnTo: 'inventory') is reserved for items going HOME to inventory."
+              "Decide first: REAL EVENT (business genuinely acquiring these for the first time) → sell_items " +
+                "without budgetCategoryId (Sale-to-Inventory). CORRECTION (the item should never have been " +
+                "logged against the project) → bulk_update_items with projectId: null. return_items " +
+                "(returnTo: 'inventory') is reserved for items going HOME to inventory."
             );
           }
         }
@@ -452,7 +466,11 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── move_items_between_projects ────────────────────────────────────────────
   server.tool(
     "move_items_between_projects",
-    "[destructive] Move items from one project to another. This is a real financial movement — NOT a " +
+    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event (the items physically " +
+      "moved between project sites, the budgets shift accordingly). Do NOT use it to fix data-entry " +
+      "mistakes (item logged on the wrong project from the start). For corrections, use " +
+      "`bulk_update_items` to relocate items without creating Sale/Return transactions.\n\n" +
+      "[destructive] Move items from one project to another. This is a real financial movement — NOT a " +
       "silent bookkeeping repoint. Implemented as an origin-aware two-hop atomic batch:\n\n" +
       "  FIRST HOP (per-item, origin-aware):\n" +
       "   • Items that previously passed through inventory (currentSource != source) → a Return " +

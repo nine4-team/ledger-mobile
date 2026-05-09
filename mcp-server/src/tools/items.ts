@@ -171,7 +171,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── list_items ─────────────────────────────────────────────────────────────
   server.tool(
     "list_items",
-    "List items with optional filters. Supports pagination via offset + limit. Use projectId='inventory' for business inventory items (no project).",
+    "List items by EXACT-match structured filters (projectId, status, budgetCategoryId, source, etc.). Use projectId='inventory' for business inventory (no project). Supports pagination via offset + limit.\n\nPicking between this and search_items:\n- Exact vendor string → list_items (here).\n- Partial vendor name, or any keyword that might appear in source or notes → search_items.\nDon't enumerate name variants by calling this tool in a loop.",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
       spaceId: z.string().optional().describe("Filter by space ID"),
@@ -240,7 +240,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── search_items ───────────────────────────────────────────────────────────
   server.tool(
     "search_items",
-    "Search items by name, description, SKU, source, notes, or amount. Case-insensitive client-side filter. Supports pagination via offset + limit.",
+    "Substring filter across `name`, `description`, `sku`, `source`, `notes`, and `amount`. Case-insensitive.\n\nPicking between this and list_items:\n- Partial vendor name, or any keyword that might appear in source or notes → search_items (here).\n- Exact vendor string, or other structured filters (status, projectId, budgetCategoryId) → list_items.\nA single substring call beats looping list_items over a list of name variants.",
     {
       query: z.string().describe("Search term"),
       projectId: z.string().optional().describe("Scope search to a project, or 'inventory' for business inventory"),
@@ -497,7 +497,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "budgetCategoryId in the same update.\n\n" +
       "Transaction-linkage invariant: items in a project (projectId set) must have a " +
       "transactionId. Setting projectId on an orphan item (no current transactionId) " +
-      "requires passing transactionId in the same update.",
+      "requires passing transactionId in the same update.\n\n" +
+      "If you hit this rejection while editing a legacy orphan item (one already in a project " +
+      "with no transactionId), STOP. Do not invent a fake transaction to satisfy the rule. " +
+      "The correct fix is a CORRECTION: use bulk_update_items to set projectId: null " +
+      "(which also clears budgetCategoryId), then re-record the real business event with " +
+      "sell_items inventory→project. See bulk_update_items doctrine.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -557,7 +562,10 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (linkageError) {
         return validation(
           linkageError,
-          "Pass transactionId in the same update, or clear projectId to move the item to business inventory."
+          "If this is a legacy orphan (item already in a project with no transactionId) and you're trying to " +
+            "edit fields like source/notes/price: STOP and use the corrections path instead — " +
+            "bulk_update_items with projectId: null moves it to inventory, then sell_items inventory→project " +
+            "creates the real Sale transaction. Do not invent a fake transactionId to satisfy this rule."
         );
       }
 
@@ -592,7 +600,14 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── bulk_update_items ───────────────────────────────────────────────────────
   server.tool(
     "bulk_update_items",
-    "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
+    "DOCTRINE — CORRECTIONS PRIMITIVE: This is the tool for fixing data-entry mistakes (wrong project, " +
+      "wrong category, wrong vendor on the original record) WITHOUT recording a financial event. " +
+      "Use it to relocate misfiled items — most commonly, pass `projectId: null` to move legacy orphans " +
+      "(items in a project with no transactionId) back to inventory as a correction; then re-record the " +
+      "real business event via sell_items inventory→project.\n\n" +
+      "For real business events (items actually changing hands, budgets actually shifting), use " +
+      "sell_items / return_items / move_items_between_projects instead.\n\n" +
+      "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
     {
       filter: z.object({
         projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
@@ -671,7 +686,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (linkageViolations.length > 0) {
         return validation(
           `Bulk update would leave ${linkageViolations.length} item(s) in a project with no transactionId: ${linkageViolations.slice(0, 5).join(", ")}${linkageViolations.length > 5 ? "…" : ""}`,
-          "Project items must have a transactionId. Link those items to a transaction individually via update_item, or exclude them from this bulk update."
+          "If these are legacy orphans you're trying to clean up, use the corrections path: bulk_update_items " +
+            "with projectId: null relocates them to inventory (no transaction needed), then sell_items " +
+            "inventory→project records the real Sale. Do not fabricate transactionIds to silence this rule."
         );
       }
 
@@ -703,7 +720,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── bulk_update_items_by_id ────────────────────────────────────────────────
   server.tool(
     "bulk_update_items_by_id",
-    "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
+    "DOCTRINE — CORRECTIONS PRIMITIVE (per-item variant): Like bulk_update_items, this is for fixing " +
+      "data-entry mistakes WITHOUT recording a financial event. Use it when each item needs different " +
+      "field values (filter-based bulk_update_items can't express that). Most common correction: pass " +
+      "`projectId: null` on legacy orphan items to relocate them to inventory, then re-record the real " +
+      "business event with sell_items inventory→project. For real business events (items actually " +
+      "changing hands, budgets actually shifting), use sell_items / return_items / move_items_between_projects.\n\n" +
+      "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
     {
       updates: z.array(z.object({
         id: z.string().describe("Item document ID"),

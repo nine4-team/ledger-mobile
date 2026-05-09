@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__claude_ai_Ledger__get_item_history",
+      "mcp__claude_ai_Ledger__cancel_transaction",
+      "mcp__claude_ai_Ledger__get_project",
+      "Bash(unset FIRESTORE_EMULATOR_HOST)",
+      "mcp__claude_ai_Ledger__inventory_summary",
+      "Read(//Users/benjaminmackenzie/Dev/ledger_mobile/**)",
+      "mcp__claude_ai_Ledger__switch_account"
+    ],
+    "additionalDirectories": [
+      "/Users/benjaminmackenzie/Dev/ledger_mobile/.git",
+      "/private/tmp",
+      "/Users/benjaminmackenzie/Dev/ledger_mobile/mcp-server"
     ]
   }
 }
