@@ -139,6 +139,61 @@ struct ItemDetailCalculationTests {
         #expect(!actions.contains(.setTransaction))
     }
 
+    @Test("blank transactionId includes setTransaction, not clearTransaction")
+    func availableActionsBlankTransactionId() {
+        let item = makeItem(transactionId: "   ")
+        let actions = ItemDetailCalculations.availableActions(for: item)
+
+        #expect(actions.contains(.setTransaction))
+        #expect(!actions.contains(.clearTransaction))
+    }
+
+    // MARK: - transactionLinkDisplayState
+
+    @Test("missing transactionId displays none")
+    func transactionLinkDisplayStateNone() {
+        let result = ItemDetailCalculations.transactionLinkDisplayState(
+            transactionId: nil,
+            hasResolvedTransaction: false,
+            lookupCompleted: false
+        )
+
+        #expect(result == .none)
+    }
+
+    @Test("resolved transactionId displays linked")
+    func transactionLinkDisplayStateLinked() {
+        let result = ItemDetailCalculations.transactionLinkDisplayState(
+            transactionId: "tx-1",
+            hasResolvedTransaction: true,
+            lookupCompleted: false
+        )
+
+        #expect(result == .linked)
+    }
+
+    @Test("unresolved transactionId displays loading before lookup completes")
+    func transactionLinkDisplayStateLoading() {
+        let result = ItemDetailCalculations.transactionLinkDisplayState(
+            transactionId: "tx-1",
+            hasResolvedTransaction: false,
+            lookupCompleted: false
+        )
+
+        #expect(result == .loading)
+    }
+
+    @Test("unresolved transactionId displays missing after lookup completes")
+    func transactionLinkDisplayStateMissing() {
+        let result = ItemDetailCalculations.transactionLinkDisplayState(
+            transactionId: "tx-1",
+            hasResolvedTransaction: false,
+            lookupCompleted: true
+        )
+
+        #expect(result == .missing)
+    }
+
     // MARK: - availableActions: bookmark toggle
 
     @Test("bookmarked item includes unbookmark, not bookmark")

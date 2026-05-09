@@ -18,6 +18,9 @@ struct ItemDetailView: View {
     // Live document subscription
     @State private var liveItemData: Item?
     @State private var itemListener: ListenerRegistration?
+    @State private var liveTransactionData: Transaction?
+    @State private var transactionListener: ListenerRegistration?
+    @State private var transactionLookupCompleted = false
 
     // Modal presentation
     @State private var showActionMenu = false
@@ -198,8 +201,19 @@ struct ItemDetailView: View {
         .navigationDestination(for: Space.self) { space in
             SpaceDetailView(space: space)
         }
-        .onAppear { startItemListener() }
-        .onDisappear { itemListener?.remove() }
+        .onAppear {
+            startItemListener()
+            startTransactionListener(for: normalizedTransactionId)
+        }
+        .onChange(of: normalizedTransactionId) { _, transactionId in
+            startTransactionListener(for: transactionId)
+        }
+        .onDisappear {
+            itemListener?.remove()
+            itemListener = nil
+            transactionListener?.remove()
+            transactionListener = nil
+        }
     }
 
     // MARK: - Hero Card
@@ -224,14 +238,25 @@ struct ItemDetailView: View {
                 Text("Transaction:")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
-                if let tx = linkedTransaction {
-                    NavigationLink(value: tx) {
-                        FindableText(linkedTransactionLabel)
-                            .font(Typography.small)
-                            .foregroundStyle(BrandColors.primary)
+                switch transactionLinkDisplayState {
+                case .linked:
+                    if let tx = linkedTransaction {
+                        NavigationLink(value: tx) {
+                            FindableText(linkedTransactionLabel)
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.primary)
+                        }
                     }
-                } else {
+                case .none:
                     Text("None")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                case .loading:
+                    Text("Loading...")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                case .missing:
+                    Text("Missing transaction")
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
@@ -465,16 +490,21 @@ struct ItemDetailView: View {
     // MARK: - Helpers
 
     private var normalizedTransactionId: String? {
-        guard let transactionId = liveItem.transactionId?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !transactionId.isEmpty else {
-            return nil
-        }
-        return transactionId
+        ItemDetailCalculations.normalizedTransactionId(liveItem.transactionId)
+    }
+
+    private var transactionLinkDisplayState: ItemDetailCalculations.TransactionLinkDisplayState {
+        ItemDetailCalculations.transactionLinkDisplayState(
+            transactionId: liveItem.transactionId,
+            hasResolvedTransaction: linkedTransaction != nil,
+            lookupCompleted: transactionLookupCompleted
+        )
     }
 
     private var linkedTransaction: Transaction? {
         guard let transactionId = normalizedTransactionId else { return nil }
-        return projectContext.transactions.first(where: { $0.id == transactionId })
+        return (liveTransactionData?.id == transactionId ? liveTransactionData : nil)
+            ?? projectContext.transactions.first(where: { $0.id == transactionId })
             ?? accountContext.allTransactions.first(where: { $0.id == transactionId })
     }
 
@@ -595,9 +625,26 @@ struct ItemDetailView: View {
     private func startItemListener() {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item.id else { return }
+        itemListener?.remove()
         itemListener = ItemsService()
             .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
                 self.liveItemData = updatedItem
+            }
+    }
+
+    private func startTransactionListener(for transactionId: String?) {
+        transactionListener?.remove()
+        transactionListener = nil
+        liveTransactionData = nil
+        transactionLookupCompleted = transactionId == nil
+
+        guard let accountId = accountContext.currentAccountId,
+              let transactionId else { return }
+
+        transactionListener = TransactionsService()
+            .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { transaction in
+                self.liveTransactionData = transaction
+                self.transactionLookupCompleted = true
             }
     }
 

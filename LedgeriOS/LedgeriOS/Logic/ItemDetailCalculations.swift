@@ -11,6 +11,32 @@ enum ItemDetailCalculations {
         case moveToReturn, makeCopies, bookmark, unbookmark, delete
     }
 
+    /// Display state for an item's transaction relationship in detail views.
+    enum TransactionLinkDisplayState: Equatable {
+        case none
+        case linked
+        case loading
+        case missing
+    }
+
+    static func normalizedTransactionId(_ transactionId: String?) -> String? {
+        guard let transactionId = transactionId?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !transactionId.isEmpty else {
+            return nil
+        }
+        return transactionId
+    }
+
+    static func transactionLinkDisplayState(
+        transactionId: String?,
+        hasResolvedTransaction: Bool,
+        lookupCompleted: Bool
+    ) -> TransactionLinkDisplayState {
+        guard normalizedTransactionId(transactionId) != nil else { return .none }
+        if hasResolvedTransaction { return .linked }
+        return lookupCompleted ? .missing : .loading
+    }
+
     /// Returns the available actions for an item based on its current state.
     /// All statuses get the full action menu — no status is terminal so users can correct mistakes.
     static func availableActions(for item: Item) -> [ItemAction] {
@@ -24,7 +50,7 @@ enum ItemDetailCalculations {
         }
 
         // Transaction: set or clear
-        if item.transactionId == nil || (item.transactionId?.isEmpty == true) {
+        if normalizedTransactionId(item.transactionId) == nil {
             actions.append(.setTransaction)
         } else {
             actions.append(.clearTransaction)
