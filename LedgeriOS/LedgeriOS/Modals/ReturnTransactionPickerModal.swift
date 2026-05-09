@@ -9,6 +9,7 @@ struct ReturnTransactionPickerModal: View {
     let onSelect: (Transaction) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
 
     /// Only incomplete return-type transactions.
     private var returnTransactions: [Transaction] {
@@ -19,11 +20,16 @@ struct ReturnTransactionPickerModal: View {
                 let isNotCanceled = tx.status != .canceled
                 return isReturn && isIncomplete && isNotCanceled
             }
+            .filter { SearchCalculations.transactionPickerMatches(transaction: $0, query: searchText) }
             .sorted { a, b in
                 let dateA = a.transactionDate ?? ""
                 let dateB = b.transactionDate ?? ""
                 return dateA > dateB
             }
+    }
+
+    private var hasSearchQuery: Bool {
+        !searchText.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -34,11 +40,17 @@ struct ReturnTransactionPickerModal: View {
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.top, Spacing.screenPadding)
 
+            SearchField(
+                text: $searchText,
+                placeholder: "Search source or amount"
+            )
+            .padding(.horizontal, Spacing.screenPadding)
+
             if returnTransactions.isEmpty {
                 ContentUnavailableView(
-                    "No pending returns",
-                    systemImage: "arrow.uturn.left",
-                    description: Text("There are no incomplete return transactions in this project.")
+                    hasSearchQuery ? "No matching returns" : "No pending returns",
+                    systemImage: hasSearchQuery ? "magnifyingglass" : "arrow.uturn.left",
+                    description: hasSearchQuery ? nil : Text("There are no incomplete return transactions in this project.")
                 )
                 .frame(maxHeight: .infinity)
             } else {

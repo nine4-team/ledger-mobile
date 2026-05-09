@@ -7,15 +7,21 @@ struct TransactionPickerModal: View {
     let onSelect: (Transaction) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
 
     private var visibleTransactions: [Transaction] {
         transactions
             .filter { $0.status != .canceled }
+            .filter { SearchCalculations.transactionPickerMatches(transaction: $0, query: searchText) }
             .sorted { a, b in
                 let dateA = a.transactionDate ?? ""
                 let dateB = b.transactionDate ?? ""
                 return dateA > dateB
             }
+    }
+
+    private var hasSearchQuery: Bool {
+        !searchText.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -35,19 +41,30 @@ struct TransactionPickerModal: View {
             .padding(.horizontal, Spacing.screenPadding)
             .padding(.top, Spacing.screenPadding)
 
+            SearchField(
+                text: $searchText,
+                placeholder: "Search source or amount"
+            )
+            .padding(.horizontal, Spacing.screenPadding)
+
             if visibleTransactions.isEmpty {
-                ContentUnavailableView("No transactions", systemImage: "arrow.left.arrow.right")
+                ContentUnavailableView(
+                    hasSearchQuery ? "No matching transactions" : "No transactions",
+                    systemImage: hasSearchQuery ? "magnifyingglass" : "arrow.left.arrow.right"
+                )
                     .frame(maxHeight: .infinity)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         // "No transaction" option
-                        transactionRow(
-                            label: "No Transaction",
-                            sublabel: nil,
-                            isSelected: selectedId == nil
-                        ) {
-                            dismiss()
+                        if !hasSearchQuery {
+                            transactionRow(
+                                label: "No Transaction",
+                                sublabel: nil,
+                                isSelected: selectedId == nil
+                            ) {
+                                dismiss()
+                            }
                         }
 
                         ForEach(visibleTransactions) { transaction in

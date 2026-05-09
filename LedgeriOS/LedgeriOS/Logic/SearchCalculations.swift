@@ -81,6 +81,21 @@ enum SearchCalculations {
         return false
     }
 
+    static func transactionPickerMatches(transaction: Transaction, query: String) -> Bool {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty { return true }
+
+        if textMatch(query: trimmed, in: transaction.source) {
+            return true
+        }
+
+        if let cents = transaction.amountCents, amountMatch(query: trimmed, cents: cents) {
+            return true
+        }
+
+        return false
+    }
+
     static func spaceMatches(space: Space, query: String) -> Bool {
         if query.isEmpty { return true }
 

@@ -566,6 +566,27 @@ struct TransactionDisplayNameTests {
         let result = SearchCalculations.transactionMatches(transaction: tx, query: "abc123", categories: [])
         #expect(result == true)
     }
+
+    @Test("Transaction picker search matches source")
+    func transactionPickerSearchMatchesSource() {
+        let tx = makeTransaction(source: "Home Depot", amountCents: 5000)
+        let result = SearchCalculations.transactionPickerMatches(transaction: tx, query: "depot")
+        #expect(result == true)
+    }
+
+    @Test("Transaction picker search matches amount")
+    func transactionPickerSearchMatchesAmount() {
+        let tx = makeTransaction(source: "Home Depot", amountCents: 167143)
+        let result = SearchCalculations.transactionPickerMatches(transaction: tx, query: "$1,671")
+        #expect(result == true)
+    }
+
+    @Test("Transaction picker search ignores unrelated fields")
+    func transactionPickerSearchIgnoresUnrelatedFields() {
+        let tx = makeTransaction(id: "abc123def456", transactionType: .purchase, notes: "sofa", amountCents: 5000)
+        let result = SearchCalculations.transactionPickerMatches(transaction: tx, query: "sofa")
+        #expect(result == false)
+    }
 }
 
 // MARK: - Centralized Search Path Tests
