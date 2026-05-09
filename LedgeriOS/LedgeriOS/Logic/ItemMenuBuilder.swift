@@ -168,21 +168,14 @@ enum ItemMenuBuilder {
             }
         }
 
-        // --- Space submenu ---
-        let spaceSetLabel = context == .space ? "Move to Space" : "Set Space"
-        let spaceClearLabel = context == .space ? "Remove from Space" : "Clear Space"
-        var spaceSubactions: [ActionMenuSubitem] = []
+        // --- Space picker ---
+        // The picker includes "No Space", so the menu can jump straight there.
         if let onSet = callbacks.onSetSpace {
-            spaceSubactions.append(ActionMenuSubitem(id: "set-space", label: spaceSetLabel, icon: "mappin.and.ellipse", onPress: onSet))
-        }
-        if let onClear = callbacks.onClearSpace {
-            spaceSubactions.append(ActionMenuSubitem(id: "clear-space", label: spaceClearLabel, icon: "xmark.circle", onPress: onClear))
-        }
-        if !spaceSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "space", label: "Space", icon: "mappin.and.ellipse",
-                subactions: spaceSubactions,
-                isActionOnly: true
+                id: "space",
+                label: "Space",
+                icon: "mappin.and.ellipse",
+                onPress: onSet
             ))
         }
 
@@ -276,21 +269,13 @@ enum ItemMenuBuilder {
             ))
         }
 
-        // Space submenu
-        let spaceSetLabel = context == .space ? "Move to Another Space" : "Set Space"
-        let spaceClearLabel = context == .space ? "Remove from Space" : "Clear Space"
-        var spaceSubactions: [ActionMenuSubitem] = []
+        // Space picker
         if let onSet = callbacks.onSetSpace {
-            spaceSubactions.append(ActionMenuSubitem(id: "set-space", label: spaceSetLabel, icon: "mappin.and.ellipse", onPress: onSet))
-        }
-        if let onClear = callbacks.onClearSpace {
-            spaceSubactions.append(ActionMenuSubitem(id: "clear-space", label: spaceClearLabel, icon: "xmark.circle", onPress: onClear))
-        }
-        if !spaceSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "space", label: "Space", icon: "mappin.and.ellipse",
-                subactions: spaceSubactions,
-                isActionOnly: true
+                id: "space",
+                label: "Space",
+                icon: "mappin.and.ellipse",
+                onPress: onSet
             ))
         }
 

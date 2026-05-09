@@ -119,14 +119,15 @@ struct ItemMenuBuilderTests {
 
     // MARK: - Space Context
 
-    @Test("Space context uses 'Move to Space' / 'Remove from Space' labels")
-    func spaceContextLabels() {
+    @Test("Space context opens Space picker directly")
+    func spaceContextSpacePickerDirectAction() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .space, scope: .project, callbacks: allCallbacks()
         )
-        let spaceSubs = menu.first(where: { $0.id == "space" })?.subactions
-        #expect(spaceSubs?.first(where: { $0.id == "set-space" })?.label == "Move to Space")
-        #expect(spaceSubs?.first(where: { $0.id == "clear-space" })?.label == "Remove from Space")
+        let spaceItem = menu.first(where: { $0.id == "space" })
+        #expect(spaceItem?.label == "Space")
+        #expect(spaceItem?.subactions == nil)
+        #expect(spaceItem?.onPress != nil)
     }
 
     @Test("Space context includes Open but not Select")
@@ -297,12 +298,13 @@ struct ItemMenuBuilderTests {
         #expect(reassignSubs?.contains("reassign-to-project") == true)
     }
 
-    @Test("Bulk menu space context uses 'Move to Another Space' label")
-    func bulkMenuSpaceLabels() {
+    @Test("Bulk menu opens Space picker directly")
+    func bulkMenuSpacePickerDirectAction() {
         let menu = ItemMenuBuilder.buildBulkMenu(context: .space, scope: .project, callbacks: allBulkCallbacks())
-        let spaceSubs = menu.first(where: { $0.id == "space" })?.subactions
-        #expect(spaceSubs?.first(where: { $0.id == "set-space" })?.label == "Move to Another Space")
-        #expect(spaceSubs?.first(where: { $0.id == "clear-space" })?.label == "Remove from Space")
+        let spaceItem = menu.first(where: { $0.id == "space" })
+        #expect(spaceItem?.label == "Space")
+        #expect(spaceItem?.subactions == nil)
+        #expect(spaceItem?.onPress != nil)
     }
 
     @Test("Bulk menu delete is last and destructive")
