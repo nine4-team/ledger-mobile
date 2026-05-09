@@ -48,11 +48,20 @@ struct TransactionDetailView: View {
     // fire after updateData on an already-matching document).
     @State private var liveTransaction: Transaction?
     @State private var transactionListener: ListenerRegistration?
+    @State private var pendingCreatedItems: [Item] = []
 
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
-        liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        var tx = liveTransaction ?? projectContext.transactions.first(where: { $0.id == transaction.id }) ?? transaction
+        let pendingIds = pendingCreatedItems.compactMap(\.id)
+        if !pendingIds.isEmpty {
+            var ids = tx.itemIds ?? []
+            let existingIds = Set(ids)
+            ids.append(contentsOf: pendingIds.filter { !existingIds.contains($0) })
+            tx.itemIds = ids
+        }
+        return tx
     }
 
     private var transactionItems: [Item] {
@@ -64,7 +73,12 @@ struct TransactionDetailView: View {
             guard let id = $0.id else { return false }
             return idSet.contains(id) && !contextIds.contains(id)
         }
-        return fromContext + external
+        let resolvedIds = contextIds.union(external.compactMap(\.id))
+        let pending = pendingCreatedItems.filter {
+            guard let id = $0.id else { return false }
+            return idSet.contains(id) && !resolvedIds.contains(id)
+        }
+        return fromContext + external + pending
     }
 
     private var activeItems: [Item] {
@@ -1068,16 +1082,21 @@ struct TransactionDetailView: View {
         }
 
         expandedSections.insert("items")
-        Task {
-            do {
-                _ = try await ItemsService().createItemsForTransaction(
-                    accountId: accountId,
-                    transactionId: transactionId,
-                    items: items
-                )
-            } catch {
-                print("🔴 createItemsFromImageGroups failed: \(error)")
-            }
+        do {
+            let createdItems = try ItemsService().createItemsForTransaction(
+                accountId: accountId,
+                transactionId: transactionId,
+                items: items,
+                onCommitError: { itemIds, error in
+                    Task { @MainActor in
+                        removePendingCreatedItemIds(itemIds)
+                        print("🔴 createItemsFromImageGroups failed: \(error)")
+                    }
+                }
+            )
+            mergeCreatedItems(createdItems)
+        } catch {
+            print("🔴 createItemsFromImageGroups failed: \(error)")
         }
     }
 
@@ -1100,16 +1119,45 @@ struct TransactionDetailView: View {
         }
 
         expandedSections.insert("items")
-        Task {
-            do {
-                _ = try await ItemsService().createItemsForTransaction(
-                    accountId: accountId,
-                    transactionId: transactionId,
-                    items: items
-                )
-            } catch {
-                print("🔴 createItemsFromParsed failed: \(error)")
-            }
+        do {
+            let createdItems = try ItemsService().createItemsForTransaction(
+                accountId: accountId,
+                transactionId: transactionId,
+                items: items,
+                onCommitError: { itemIds, error in
+                    Task { @MainActor in
+                        removePendingCreatedItemIds(itemIds)
+                        print("🔴 createItemsFromParsed failed: \(error)")
+                    }
+                }
+            )
+            mergeCreatedItems(createdItems)
+        } catch {
+            print("🔴 createItemsFromParsed failed: \(error)")
+        }
+    }
+
+    private func mergeCreatedItems(_ items: [Item]) {
+        pendingCreatedItems.append(contentsOf: items)
+        mergeCreatedItemIds(items.compactMap(\.id))
+    }
+
+    private func mergeCreatedItemIds(_ itemIds: [String]) {
+        guard !itemIds.isEmpty else { return }
+
+        var tx = currentTransaction
+        var ids = tx.itemIds ?? []
+        let existingIds = Set(ids)
+        ids.append(contentsOf: itemIds.filter { !existingIds.contains($0) })
+        tx.itemIds = ids
+        liveTransaction = tx
+    }
+
+    private func removePendingCreatedItemIds(_ itemIds: [String]) {
+        let ids = Set(itemIds)
+        pendingCreatedItems.removeAll { item in
+            guard let id = item.id else { return true }
+            return ids.contains(id)
         }
     }
 

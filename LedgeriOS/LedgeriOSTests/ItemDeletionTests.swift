@@ -34,14 +34,18 @@ struct ItemDeletionTests {
         item2.name = "Chair"
         item2.budgetCategoryId = "cat1"
 
-        let ids = try await service.createItemsForTransaction(
+        let createdItems = try service.createItemsForTransaction(
             accountId: acct,
             transactionId: "tx1",
-            items: [item1, item2]
+            items: [item1, item2],
+            onCommitError: { _, _ in }
         )
+        let ids = createdItems.compactMap(\.id)
 
         #expect(ids.count == 2)
         #expect(Set(ids).count == 2)
+        #expect(createdItems.allSatisfy { $0.accountId == acct })
+        #expect(createdItems.allSatisfy { $0.transactionId == "tx1" })
         #expect(batch.commitCalled)
 
         #expect(batch.sets.count == 2)
@@ -63,13 +67,14 @@ struct ItemDeletionTests {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
 
-        let ids = try await service.createItemsForTransaction(
+        let createdItems = try service.createItemsForTransaction(
             accountId: acct,
             transactionId: "tx1",
-            items: []
+            items: [],
+            onCommitError: { _, _ in }
         )
 
-        #expect(ids.isEmpty)
+        #expect(createdItems.isEmpty)
         #expect(!batch.commitCalled)
         #expect(batch.sets.isEmpty)
         #expect(batch.updates.isEmpty)

@@ -58,6 +58,10 @@ final class RecordingBatch: BatchWriting, @unchecked Sendable {
         commitCalled = true
     }
 
+    func commit(onError: @escaping @Sendable (Error) -> Void) {
+        commitCalled = true
+    }
+
     func documentExists(atPath path: String) async throws -> Bool {
         existingPaths.contains(path)
     }

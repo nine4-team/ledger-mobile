@@ -20,19 +20,29 @@ struct ItemsService: ItemsServiceProtocol {
         return id
     }
 
-    func createItemsForTransaction(accountId: String, transactionId: String, items: [Item]) async throws -> [String] {
+    func createItemsForTransaction(
+        accountId: String,
+        transactionId: String,
+        items: [Item],
+        onCommitError: @escaping @Sendable ([String], Error) -> Void = { _, error in
+            print("🔴 createItemsForTransaction failed: \(error)")
+        }
+    ) throws -> [Item] {
         guard !items.isEmpty else { return [] }
 
         let batch = makeBatch()
         let itemRepo = repo(accountId: accountId)
         let itemIds = items.map { _ in itemRepo.newDocumentId() }
+        var createdItems: [Item] = []
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
 
         for (itemId, sourceItem) in zip(itemIds, items) {
             var item = sourceItem
+            item.id = itemId
             item.accountId = accountId
             item.transactionId = transactionId
+            createdItems.append(item)
 
             var fields = try Firestore.Encoder().encode(item)
             fields["accountId"] = accountId
@@ -47,8 +57,10 @@ struct ItemsService: ItemsServiceProtocol {
             forDocumentAt: txPath
         )
 
-        try await batch.commit()
-        return itemIds
+        batch.commit { error in
+            onCommitError(itemIds, error)
+        }
+        return createdItems
     }
 
     func updateItem(accountId: String, itemId: String, fields: [String: Any]) async throws {
