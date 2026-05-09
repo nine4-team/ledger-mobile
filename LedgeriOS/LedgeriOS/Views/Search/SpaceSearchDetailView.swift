@@ -20,10 +20,9 @@ struct SpaceSearchDetailView: View {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         Text("Notes")
                             .sectionLabelStyle()
-                        Text(notes)
+                        FindableText(notes)
                             .font(Typography.body)
                             .foregroundStyle(BrandColors.textPrimary)
-                            .textSelection(.enabled)
                     }
                 }
 
@@ -43,14 +42,14 @@ struct SpaceSearchDetailView: View {
                             .sectionLabelStyle()
                         ForEach(checklists) { checklist in
                             VStack(alignment: .leading, spacing: Spacing.xs) {
-                                Text(checklist.name)
+                                FindableText(checklist.name)
                                     .font(Typography.h3)
                                     .foregroundStyle(BrandColors.textPrimary)
                                 ForEach(checklist.items) { item in
                                     HStack(spacing: Spacing.sm) {
                                         Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
                                             .foregroundStyle(item.isChecked ? BrandColors.primary : BrandColors.textTertiary)
-                                        Text(item.text)
+                                        FindableText(item.text)
                                             .font(Typography.body)
                                             .foregroundStyle(BrandColors.textPrimary)
                                     }
@@ -62,6 +61,7 @@ struct SpaceSearchDetailView: View {
             }
             .padding(Spacing.screenPadding)
         }
+        .textSelection(.enabled)
         .background(BrandColors.background)
         .navigationTitle(space.name)
         .navBarTitleDisplayMode(.large)

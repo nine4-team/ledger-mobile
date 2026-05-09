@@ -66,6 +66,7 @@ struct SpaceDetailView: View {
             }
         }
         .findEntity(id: space.id)
+        .textSelection(.enabled)
         .navBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {

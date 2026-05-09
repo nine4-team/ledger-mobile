@@ -110,6 +110,7 @@ struct InvoiceReportView: View {
         }
         } // else
         } // Group
+        .textSelection(.enabled)
         .navigationTitle("Invoice")
         .navBarTitleDisplayMode(.inline)
         .task {

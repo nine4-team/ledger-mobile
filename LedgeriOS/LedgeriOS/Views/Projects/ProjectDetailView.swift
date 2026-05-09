@@ -64,6 +64,7 @@ struct ProjectDetailView: View {
                 }
             }
         }
+        .textSelection(.enabled)
         .navBarTitleDisplayMode(.inline)
         #if os(macOS)
         .navigationTitle(project.name.isEmpty ? "Project" : project.name)

@@ -58,6 +58,7 @@ struct InvoiceDetailView: View {
                 showsDownloadAction: false
             )
         }
+        .textSelection(.enabled)
         .background(BrandColors.background)
         .navBarTitleDisplayMode(.inline)
         .navigationTitle(liveInvoice.invoiceNumber ?? "Invoice")
