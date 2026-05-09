@@ -253,8 +253,8 @@ struct ItemDetailView: View {
                         .foregroundStyle(BrandColors.textPrimary)
                 }
             }
-            heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
             heroDetailRow(label: "Purchaser", value: purchaserLabel)
+            heroDetailRow(label: "Budget Category", value: linkedBudgetCategoryName)
         }
         .cardStyle()
     }
