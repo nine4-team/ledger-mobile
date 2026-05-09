@@ -27,6 +27,8 @@ enum ListFilterSortCalculations {
             return { !hasMeaningfulProjectPrice($0) }
         case .noImage:
             return { $0.images == nil || $0.images?.isEmpty == true }
+        case .noSpace:
+            return { $0.spaceId == nil || $0.spaceId?.trimmingCharacters(in: .whitespaces).isEmpty == true }
         case .noTransaction:
             return { $0.transactionId == nil }
         case .hasTransaction:
@@ -222,6 +224,7 @@ enum ListFilterSortCalculations {
         case .noName: return "No Name"
         case .noProjectPrice: return "No Project Price"
         case .noImage: return "No Image"
+        case .noSpace: return "No Space"
         case .noTransaction: return "No Transaction"
         case .hasTransaction: return "Has Transaction"
         case .uncategorized: return "Uncategorized"

@@ -12,6 +12,7 @@ private func makeItem(
     status: ItemStatus? = nil,
     source: String? = nil,
     projectId: String? = nil,
+    spaceId: String? = nil,
     projectPriceCents: Int? = nil,
     purchasePriceCents: Int? = nil,
     images: [AttachmentRef]? = nil,
@@ -27,6 +28,7 @@ private func makeItem(
     item.status = status
     item.source = source
     item.projectId = projectId
+    item.spaceId = spaceId
     item.projectPriceCents = projectPriceCents
     item.purchasePriceCents = purchasePriceCents
     item.images = images
@@ -165,6 +167,21 @@ struct ListFilterSortCalculationTests {
         let result = ListFilterSortCalculations.applyFilter(items, filter: .noImage)
         #expect(result.count == 2)
         #expect(!result.map(\.name).contains("Has images"))
+    }
+
+    // MARK: - Filter: .noSpace
+
+    @Test("No space filter returns items without a spaceId")
+    func noSpaceFilter() {
+        let items = [
+            makeItem(name: "No space nil"),
+            makeItem(name: "No space empty", spaceId: ""),
+            makeItem(name: "No space whitespace", spaceId: "  "),
+            makeItem(name: "Has space", spaceId: "space-1"),
+        ]
+        let result = ListFilterSortCalculations.applyFilter(items, filter: .noSpace)
+        #expect(result.count == 3)
+        #expect(!result.map(\.name).contains("Has space"))
     }
 
     // MARK: - Filter: .noTransaction
@@ -443,26 +460,23 @@ struct ListFilterSortCalculationTests {
 
     // MARK: - Available Filters
 
-    @Test("Project scope returns all 11 filter options")
+    @Test("Project scope returns all filter options")
     func availableFiltersProjectScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .project("proj-1"))
-        #expect(filters.count == 11)
         #expect(filters == ItemFilterOption.allCases)
     }
 
-    @Test("Inventory scope returns 8 filter options excluding project-specific ones")
+    @Test("Inventory scope excludes project-specific filters")
     func availableFiltersInventoryScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .inventory)
-        #expect(filters.count == 8)
         #expect(!filters.contains(.fromInventory))
         #expect(!filters.contains(.toReturn))
         #expect(!filters.contains(.returned))
     }
 
-    @Test("All scope returns all 11 filter options")
+    @Test("All scope returns all filter options")
     func availableFiltersAllScope() {
         let filters = ListFilterSortCalculations.availableFilters(for: .all)
-        #expect(filters.count == 11)
         #expect(filters == ItemFilterOption.allCases)
     }
 
