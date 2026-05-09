@@ -136,8 +136,9 @@ struct ItemCardCalculationTests {
             priceLabel: nil,
             stackSkuAndSource: false
         )
-        #expect(lines.count == 1)
-        #expect(lines[0] == "SKU: ABC123")
+        #expect(lines.count == 2)
+        #expect(lines[0] == "$—")
+        #expect(lines[1] == "SKU: ABC123")
     }
 
     @Test("Only source with combined mode")
@@ -150,8 +151,24 @@ struct ItemCardCalculationTests {
             priceLabel: nil,
             stackSkuAndSource: false
         )
-        #expect(lines.count == 1)
-        #expect(lines[0] == "Source: Target")
+        #expect(lines.count == 2)
+        #expect(lines[0] == "$—")
+        #expect(lines[1] == "Source: Target")
+    }
+
+    @Test("Missing price inserts placeholder before source")
+    func metadataLinesMissingPricePlaceholder() {
+        let lines = ItemCardCalculations.metadataLines(
+            name: "Pillow",
+            sku: nil,
+            sourceLabel: "Business Inventory",
+            locationLabel: nil,
+            priceLabel: nil,
+            stackSkuAndSource: true
+        )
+        #expect(lines.count == 2)
+        #expect(lines[0] == "$—")
+        #expect(lines[1] == "Source: Business Inventory")
     }
 
     // MARK: - thumbnailUrl

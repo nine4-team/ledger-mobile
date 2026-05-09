@@ -39,6 +39,14 @@ enum ItemCardCalculations {
         var lines: [String] = []
         if let price = priceLabel, !price.isEmpty {
             lines.append(price)
+        } else if hasMetadataAfterPrice(
+            sku: sku,
+            sourceLabel: sourceLabel,
+            locationLabel: locationLabel,
+            projectName: projectName,
+            spaceName: spaceName
+        ) {
+            lines.append("$—")
         }
         if stackSkuAndSource {
             if let source = sourceLabel, !source.isEmpty {
@@ -70,6 +78,20 @@ enum ItemCardCalculations {
         return lines
     }
 
+    private static func hasMetadataAfterPrice(
+        sku: String?,
+        sourceLabel: String?,
+        locationLabel: String?,
+        projectName: String?,
+        spaceName: String?
+    ) -> Bool {
+        [sku, sourceLabel, locationLabel, projectName, spaceName]
+            .contains { value in
+                guard let value else { return false }
+                return !value.isEmpty
+            }
+    }
+
     static func thumbnailUrl(from urlString: String?) -> URL? {
         guard let urlString, !urlString.isEmpty else { return nil }
         return URL(string: urlString)
@@ -93,7 +115,7 @@ enum ItemCardCalculations {
         let uniformPerItemPrice: String? = uniquePrices.count == 1 ? filtered[0] : nil
 
         if let total = totalLabel {
-            let suffix = uniformPerItemPrice.map { " (\($0) ea)" }
+            let suffix = uniformPerItemPrice.map { " (\($0) each)" }
             return (total, suffix)
         }
         return (uniformPerItemPrice, nil)
