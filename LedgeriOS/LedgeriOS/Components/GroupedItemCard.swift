@@ -29,6 +29,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
     var totalLabel: String?
     var sku: String?
     var sourceLabel: String?
+    var spaceName: String?
     var locationLabel: String?
     var priceLabel: String?
     var microcopyWhenCollapsed: String? = "View All"
@@ -50,6 +51,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         totalLabel: String? = nil,
         sku: String? = nil,
         sourceLabel: String? = nil,
+        spaceName: String? = nil,
         locationLabel: String? = nil,
         priceLabel: String? = nil,
         microcopyWhenCollapsed: String? = "View All",
@@ -68,6 +70,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         self.totalLabel = totalLabel
         self.sku = sku
         self.sourceLabel = sourceLabel
+        self.spaceName = spaceName
         self.locationLabel = locationLabel
         self.priceLabel = priceLabel
         self.microcopyWhenCollapsed = microcopyWhenCollapsed
@@ -198,6 +201,13 @@ struct GroupedItemCard<ExpandedContent: View>: View {
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.textSecondary)
                     }
+                    if let spaceName, !spaceName.isEmpty {
+                        FindableText("Space: \(spaceName)")
+                            .font(Typography.small)
+                            .fontWeight(.bold)
+                            .foregroundStyle(BrandColors.primary)
+                            .lineLimit(2)
+                    }
                     if let locationLabel, !locationLabel.isEmpty {
                         FindableText("Location: \(locationLabel)")
                             .font(Typography.small)
@@ -257,6 +267,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         totalLabel: "$1,450",
         sku: "SF-001",
         sourceLabel: "West Elm",
+        spaceName: "Living Room",
         priceLabel: "$1,450",
         itemCount: 3
     ) {

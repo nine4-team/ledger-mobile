@@ -603,6 +603,7 @@ struct SharedItemsList: View {
         }()
 
         let summaryItem = group.items.first(where: { $0.images?.first?.url != nil }) ?? group.items.first
+        let spaceName = groupedSpaceName(for: group)
 
         let selectionBinding = Binding(
             get: { groupSelected },
@@ -632,6 +633,7 @@ struct SharedItemsList: View {
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
             sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
+            spaceName: spaceName,
             priceLabel: displayedPriceLabel,
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
@@ -649,6 +651,7 @@ struct SharedItemsList: View {
             totalLabel: totalLabel,
             sku: summaryItem?.sku,
             sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
+            spaceName: spaceName,
             priceLabel: displayedPriceLabel,
             isExpanded: Binding(
                 get: { expandedGroups.contains(group.id) },
@@ -661,6 +664,24 @@ struct SharedItemsList: View {
             groupedCardExpandedContent(for: group)
         }
         #endif
+    }
+
+    private func groupedSpaceName(for group: ItemGroup) -> String? {
+        let names = Set(group.items.compactMap { item -> String? in
+            guard
+                let spaceId = item.spaceId,
+                let name = accountContext.allSpaces.first(where: { $0.id == spaceId })?.name,
+                !name.isEmpty
+            else {
+                return nil
+            }
+            return name
+        })
+
+        if names.count > 1 {
+            return "Multiple spaces"
+        }
+        return names.first
     }
 
     @ViewBuilder
