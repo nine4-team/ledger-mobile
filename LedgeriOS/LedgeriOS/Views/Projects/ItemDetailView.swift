@@ -349,6 +349,11 @@ struct ItemDetailView: View {
             onUploadAttachment: { data in
                 try await uploadImage(data)
             },
+            sourceImages: linkedTransactionImages,
+            sourceImagesTitle: "Transaction Images",
+            onAddSourceImages: { attachments in
+                addImagesFromTransaction(attachments)
+            },
             onRemoveAttachment: { attachment in
                 removeImage(attachment)
             },
@@ -467,6 +472,14 @@ struct ItemDetailView: View {
         return projectContext.transactions.first(where: { $0.id == transactionId })
     }
 
+    private var linkedTransactionImages: [AttachmentRef] {
+        guard let linkedTransaction else { return [] }
+        return ((linkedTransaction.receiptImages ?? [])
+            + (linkedTransaction.otherImages ?? [])
+            + (linkedTransaction.transactionImages ?? []))
+            .filter { $0.kind == .image && !$0.url.isEmpty }
+    }
+
     private var linkedSpace: Space? {
         guard let spaceId = liveItem.spaceId else { return nil }
         return projectContext.spaces.first(where: { $0.id == spaceId })
@@ -530,6 +543,26 @@ struct ItemDetailView: View {
         updateItem(fields: ["images": images.map(attachmentDict)])
     }
 
+    private func addImagesFromTransaction(_ attachments: [AttachmentRef]) {
+        guard !attachments.isEmpty else { return }
+
+        var images = liveItem.images ?? []
+        var existingUrls = Set(images.map(\.url))
+        var shouldMarkPrimary = !images.contains { $0.isPrimary == true }
+
+        for attachment in attachments where !existingUrls.contains(attachment.url) {
+            var copy = attachment
+            copy.kind = .image
+            copy.isUploading = nil
+            copy.isPrimary = shouldMarkPrimary
+            shouldMarkPrimary = false
+            images.append(copy)
+            existingUrls.insert(attachment.url)
+        }
+
+        updateItem(fields: ["images": images.map(attachmentDict)])
+    }
+
     private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
         var dict: [String: Any] = [
             "url": ref.url,
@@ -539,6 +572,8 @@ struct ItemDetailView: View {
         if let contentType = ref.contentType { dict["contentType"] = contentType }
         if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
         if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
+        if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
+        if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
         return dict
     }
 

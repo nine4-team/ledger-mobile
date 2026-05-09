@@ -1,15 +1,21 @@
 import SwiftUI
+#if canImport(UIKit)
+import Photos
+import UIKit
+#endif
 
 struct ImageGallery: View {
     let images: [AttachmentRef]
     var initialIndex: Int = 0
     @Binding var isPresented: Bool
     var onPinImage: ((AttachmentRef) -> Void)?
+    var onSaveImage: ((AttachmentRef) async throws -> Void)? = ImageSaveHelper.saveToDevice
 
     @State private var currentIndex: Int = 0
     @State private var controlsVisible: Bool = true
     @State private var hideControlsTask: Task<Void, Never>?
     @State private var currentZoom: CGFloat = 1.0
+    @State private var saveAlertMessage: String?
 
     // Swipe-to-dismiss state
     @State private var dismissOffset: CGFloat = 0
@@ -43,7 +49,7 @@ struct ImageGallery: View {
                 .animation(.easeInOut(duration: 0.15), value: isDraggingToDismiss)
                 .allowsHitTesting(controlsVisible && !isDraggingToDismiss)
 
-            // Close + Pin buttons — ALWAYS visible
+            // Primary image actions stay visible while the image is open.
             VStack {
                 HStack {
                     closeButton
@@ -51,6 +57,8 @@ struct ImageGallery: View {
                         pinButton
                     }
                     Spacer()
+                    saveButton
+                    shareButton
                 }
                 .padding(.horizontal, Spacing.md)
                 .padding(.top, Spacing.sm)
@@ -70,6 +78,14 @@ struct ImageGallery: View {
         }
         .onDisappear {
             hideControlsTask?.cancel()
+        }
+        .alert("Image", isPresented: .init(
+            get: { saveAlertMessage != nil },
+            set: { if !$0 { saveAlertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { saveAlertMessage = nil }
+        } message: {
+            Text(saveAlertMessage ?? "")
         }
     }
 
@@ -145,17 +161,6 @@ struct ImageGallery: View {
 
     private var controlsOverlay: some View {
         ZStack {
-            // Top bar (share button only — close button is outside this overlay)
-            VStack {
-                HStack {
-                    Spacer()
-                    shareButton
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.top, Spacing.sm)
-                Spacer()
-            }
-
             // Prev/Next navigation
             if images.count > 1 {
                 HStack {
@@ -215,6 +220,20 @@ struct ImageGallery: View {
         .accessibilityLabel("Pin image for reference")
     }
 
+    // MARK: - Save Button
+
+    @ViewBuilder
+    private var saveButton: some View {
+        if currentIndex < images.count, onSaveImage != nil {
+            Button {
+                saveCurrentImage()
+            } label: {
+                controlButtonLabel(systemName: "square.and.arrow.down")
+            }
+            .accessibilityLabel("Save image to device")
+        }
+    }
+
     // MARK: - Share Button
 
     @ViewBuilder
@@ -222,6 +241,19 @@ struct ImageGallery: View {
         if currentIndex < images.count, let url = URL(string: images[currentIndex].url) {
             ShareLink(item: url) {
                 controlButtonLabel(systemName: "square.and.arrow.up")
+            }
+        }
+    }
+
+    private func saveCurrentImage() {
+        guard currentIndex < images.count, let onSaveImage else { return }
+        let attachment = images[currentIndex]
+        Task {
+            do {
+                try await onSaveImage(attachment)
+                saveAlertMessage = "Image saved to Photos."
+            } catch {
+                saveAlertMessage = error.localizedDescription
             }
         }
     }
@@ -324,6 +356,58 @@ struct ImageGallery: View {
                 }
             }
         }
+    }
+}
+
+enum ImageSaveError: LocalizedError {
+    case unsupportedPlatform
+    case missingURL
+    case permissionDenied
+    case invalidImageData
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedPlatform:
+            return "Saving images is not supported on this device."
+        case .missingURL:
+            return "This image is not available yet."
+        case .permissionDenied:
+            return "Ledger does not have permission to save to Photos."
+        case .invalidImageData:
+            return "This file could not be saved as an image."
+        }
+    }
+}
+
+enum ImageSaveHelper {
+    static func saveToDevice(_ attachment: AttachmentRef) async throws {
+        #if canImport(UIKit)
+        guard let resolvedURL = await StorageURLResolver.resolve(attachment.url) else {
+            throw ImageSaveError.missingURL
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: resolvedURL)
+        if let httpResponse = response as? HTTPURLResponse,
+           !(200...299).contains(httpResponse.statusCode) {
+            throw ImageSaveError.missingURL
+        }
+
+        guard UIImage(data: data) != nil else {
+            throw ImageSaveError.invalidImageData
+        }
+
+        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard status == .authorized || status == .limited else {
+            throw ImageSaveError.permissionDenied
+        }
+
+        try await PHPhotoLibrary.shared().performChanges {
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: data, options: nil)
+        }
+        #else
+        throw ImageSaveError.unsupportedPlatform
+        #endif
     }
 }
 

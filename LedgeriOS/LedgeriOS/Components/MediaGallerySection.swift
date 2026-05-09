@@ -10,9 +10,13 @@ struct MediaGallerySection: View {
     /// via MediaService and append the resulting AttachmentRef to the entity's images array.
     var onUploadAttachment: ((Data) async throws -> Void)?
     var onUploadDocument: ((Data, String) async throws -> Void)?
+    var sourceImages: [AttachmentRef] = []
+    var sourceImagesTitle: String = "Transaction Images"
+    var onAddSourceImages: (([AttachmentRef]) -> Void)?
     var onRemoveAttachment: ((AttachmentRef) -> Void)?
     var onSetPrimary: ((AttachmentRef) -> Void)?
     var onPinImage: ((AttachmentRef) -> Void)?
+    var onSaveImage: ((AttachmentRef) async throws -> Void)? = ImageSaveHelper.saveToDevice
 
     @State private var showGallery = false
     @State private var galleryIndex: Int = 0
@@ -28,6 +32,9 @@ struct MediaGallerySection: View {
     @State private var showDocumentPicker = false
     @State private var showPDFViewer = false
     @State private var selectedPDFAttachment: AttachmentRef?
+    @State private var showSourceImagePicker = false
+    @State private var selectedSourceImageUrls: Set<String> = []
+    @State private var saveAlertMessage: String?
 
     private var canAdd: Bool {
         MediaGalleryCalculations.canAddAttachment(current: attachments, maxAttachments: maxAttachments)
@@ -46,10 +53,20 @@ struct MediaGallerySection: View {
             hasSetPrimary: onSetPrimary != nil,
             hasRemove: onRemoveAttachment != nil
         )
+        || onPinImage != nil
+        || onSaveImage != nil
     }
 
     private var remainingSlots: Int {
         max(0, maxAttachments - attachments.count)
+    }
+
+    private var availableSourceImages: [AttachmentRef] {
+        let existingUrls = Set(attachments.map(\.url))
+        return sourceImages
+            .filter { $0.kind == .image && !$0.url.isEmpty && !existingUrls.contains($0.url) }
+            .prefix(remainingSlots)
+            .map { $0 }
     }
 
     var body: some View {
@@ -85,7 +102,8 @@ struct MediaGallerySection: View {
                 images: imageOnlyAttachments,
                 initialIndex: galleryIndex,
                 isPresented: $showGallery,
-                onPinImage: onPinImage
+                onPinImage: onPinImage,
+                onSaveImage: onSaveImage
             )
         }
         .fullScreenCover(isPresented: $showPDFViewer) {
@@ -99,7 +117,8 @@ struct MediaGallerySection: View {
                 images: imageOnlyAttachments,
                 initialIndex: galleryIndex,
                 isPresented: $showGallery,
-                onPinImage: onPinImage
+                onPinImage: onPinImage,
+                onSaveImage: onSaveImage
             )
         }
         .adaptivePresentation(isPresented: $showPDFViewer, style: .viewer) {
@@ -122,6 +141,18 @@ struct MediaGallerySection: View {
             menuPendingAction = nil
         }) {
             addSourceMenu
+        }
+        .adaptivePresentation(isPresented: $showSourceImagePicker, style: .fullSheet) {
+            SourceImagePickerModal(
+                title: sourceImagesTitle,
+                attachments: availableSourceImages,
+                selectedUrls: $selectedSourceImageUrls,
+                onAdd: { selected in
+                    onAddSourceImages?(selected)
+                    selectedSourceImageUrls = []
+                    showSourceImagePicker = false
+                }
+            )
         }
         #if canImport(UIKit)
         .fullScreenCover(isPresented: $showCamera) {
@@ -160,6 +191,14 @@ struct MediaGallerySection: View {
                 }
                 pickerItems = []
             }
+        }
+        .alert("Image", isPresented: .init(
+            get: { saveAlertMessage != nil },
+            set: { if !$0 { saveAlertMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { saveAlertMessage = nil }
+        } message: {
+            Text(saveAlertMessage ?? "")
         }
     }
 
@@ -320,6 +359,19 @@ struct MediaGallerySection: View {
             ),
         ]
 
+        if onAddSourceImages != nil, !availableSourceImages.isEmpty {
+            items.append(
+                ActionMenuItem(
+                    id: "source-images",
+                    label: sourceImagesTitle,
+                    icon: "photo.stack",
+                    onPress: {
+                        showSourceImagePicker = true
+                    }
+                )
+            )
+        }
+
         #if canImport(UIKit)
         if allowedKinds.contains(.pdf), onUploadDocument != nil {
             items.append(
@@ -389,6 +441,17 @@ struct MediaGallerySection: View {
             ))
         }
 
+        if attachment.kind == .image, onSaveImage != nil {
+            items.append(ActionMenuItem(
+                id: "save",
+                label: "Save to Device",
+                icon: "square.and.arrow.down",
+                onPress: {
+                    saveImage(attachment)
+                }
+            ))
+        }
+
         if onRemoveAttachment != nil {
             items.append(ActionMenuItem(
                 id: "remove",
@@ -408,6 +471,91 @@ struct MediaGallerySection: View {
                 menuPendingAction = action
             }
         )
+    }
+
+    private func saveImage(_ attachment: AttachmentRef) {
+        guard let onSaveImage else { return }
+        Task {
+            do {
+                try await onSaveImage(attachment)
+                saveAlertMessage = "Image saved to Photos."
+            } catch {
+                saveAlertMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct SourceImagePickerModal: View {
+    let title: String
+    let attachments: [AttachmentRef]
+    @Binding var selectedUrls: Set<String>
+    let onAdd: ([AttachmentRef]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var selectedAttachments: [AttachmentRef] {
+        attachments.filter { selectedUrls.contains($0.url) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    if attachments.isEmpty {
+                        Text("No available images.")
+                            .font(Typography.body)
+                            .foregroundStyle(BrandColors.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.vertical, Spacing.xl)
+                    } else {
+                        SelectableImageGrid(
+                            attachments: attachments,
+                            selectedUrls: $selectedUrls
+                        )
+                    }
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.md)
+                .padding(.bottom, Spacing.xxxl)
+            }
+            .safeAreaInset(edge: .bottom) {
+                if !selectedUrls.isEmpty {
+                    bottomBar
+                }
+            }
+            .background(BrandColors.background)
+            .navigationTitle(title)
+            .navBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        selectedUrls = []
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private var bottomBar: some View {
+        HStack {
+            Button("Clear") {
+                selectedUrls = []
+            }
+            .font(Typography.label)
+            .foregroundStyle(BrandColors.textSecondary)
+
+            Spacer()
+
+            AppButton(title: "Add \(selectedUrls.count)") {
+                onAdd(selectedAttachments)
+            }
+            .fixedSize()
+        }
+        .padding(.horizontal, Spacing.screenPadding)
+        .padding(.vertical, Spacing.sm)
+        .background(BrandColors.background)
     }
 }
 

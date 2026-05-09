@@ -35,6 +35,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Ledger uses your camera to capture photos of items and spaces.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ledger saves selected item and transaction images to your photo library.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UIAppFonts</key>
