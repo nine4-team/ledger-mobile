@@ -65,6 +65,7 @@ struct ImageGallery: View {
         #endif
         .onAppear {
             currentIndex = initialIndex
+            currentZoom = 1.0
             resetHideTimer()
         }
         .onDisappear {

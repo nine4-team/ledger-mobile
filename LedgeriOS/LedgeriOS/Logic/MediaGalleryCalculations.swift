@@ -64,6 +64,18 @@ enum MediaGalleryCalculations {
         currentZoom > 1.01
     }
 
+    /// Converts app zoom state to the scroll view's platform zoom scale.
+    /// App zoom is relative to the fitted image size, so 1.0 means "fit to container".
+    static func platformZoomScale(logicalZoom: CGFloat, fitScale: CGFloat) -> CGFloat {
+        max(fitScale, fitScale * logicalZoom)
+    }
+
+    /// Converts the scroll view's platform zoom scale back to app zoom state.
+    static func logicalZoomScale(platformZoom: CGFloat, fitScale: CGFloat) -> CGFloat {
+        guard fitScale > 0 else { return 1.0 }
+        return max(1.0, platformZoom / fitScale)
+    }
+
     // MARK: - Navigation
 
     /// Returns the previous image index, wrapping to the end.

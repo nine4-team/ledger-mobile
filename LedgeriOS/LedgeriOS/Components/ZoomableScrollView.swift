@@ -77,9 +77,14 @@ struct ZoomableScrollView: UIViewRepresentable {
             context.coordinator.loadImage(url: url)
         }
 
-        // Sync zoom from SwiftUI → UIKit (from zoom buttons)
-        if abs(scrollView.zoomScale - zoomScale) > 0.01 {
-            scrollView.setZoomScale(zoomScale, animated: true)
+        // Sync logical zoom from SwiftUI → UIKit. In SwiftUI state, 1.0 means
+        // fitted-to-container; UIScrollView's actual scale may be below 1.0.
+        let targetScale = MediaGalleryCalculations.platformZoomScale(
+            logicalZoom: zoomScale,
+            fitScale: scrollView.minimumZoomScale
+        )
+        if abs(scrollView.zoomScale - targetScale) > 0.01 {
+            scrollView.setZoomScale(targetScale, animated: true)
         }
     }
 
@@ -110,8 +115,11 @@ struct ZoomableScrollView: UIViewRepresentable {
 
         func scrollViewDidZoom(_ scrollView: UIScrollView) {
             centerImage(in: scrollView)
-            // Report zoom back to SwiftUI
-            let scale = scrollView.zoomScale
+            // Report zoom back to SwiftUI as a logical scale where 1.0 means fit.
+            let scale = MediaGalleryCalculations.logicalZoomScale(
+                platformZoom: scrollView.zoomScale,
+                fitScale: scrollView.minimumZoomScale
+            )
             if abs(scale - parent.zoomScale) > 0.01 {
                 DispatchQueue.main.async {
                     self.parent.zoomScale = scale
@@ -120,8 +128,12 @@ struct ZoomableScrollView: UIViewRepresentable {
         }
 
         func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+            let logicalScale = MediaGalleryCalculations.logicalZoomScale(
+                platformZoom: scale,
+                fitScale: scrollView.minimumZoomScale
+            )
             DispatchQueue.main.async {
-                self.parent.zoomScale = scale
+                self.parent.zoomScale = logicalScale
             }
         }
 
@@ -152,9 +164,12 @@ struct ZoomableScrollView: UIViewRepresentable {
                 // Zoom out to 1x
                 scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
             } else {
-                // Zoom to 2.5x centered on tap point
+                // Zoom to 2.5x relative to fit, centered on tap point
                 let tapPoint = recognizer.location(in: imageView)
-                let targetScale: CGFloat = 2.5
+                let targetScale = MediaGalleryCalculations.platformZoomScale(
+                    logicalZoom: 2.5,
+                    fitScale: scrollView.minimumZoomScale
+                )
                 let zoomRect = zoomRectForScale(targetScale, center: tapPoint, in: scrollView)
                 scrollView.zoom(to: zoomRect, animated: true)
             }
@@ -232,9 +247,6 @@ struct ZoomableScrollView: UIViewRepresentable {
             let imageSize = image.size
             imageView.frame = CGRect(origin: .zero, size: imageSize)
             scrollView.contentSize = imageSize
-
-            // Reset zoom
-            scrollView.zoomScale = 1.0
 
             // Fit image to screen
             let scrollBounds = scrollView.bounds
@@ -355,9 +367,13 @@ struct ZoomableScrollView: NSViewRepresentable {
         // KVO on magnification to sync zoom back to SwiftUI
         context.coordinator.magnificationObservation = scrollView.observe(\.magnification, options: [.new]) { [weak coordinator = context.coordinator] scrollView, change in
             guard let coordinator, let newValue = change.newValue else { return }
-            if abs(newValue - coordinator.parent.zoomScale) > 0.01 {
+            let logicalScale = MediaGalleryCalculations.logicalZoomScale(
+                platformZoom: newValue,
+                fitScale: scrollView.minMagnification
+            )
+            if abs(logicalScale - coordinator.parent.zoomScale) > 0.01 {
                 MainActor.assumeIsolated {
-                    coordinator.parent.zoomScale = newValue
+                    coordinator.parent.zoomScale = logicalScale
                 }
             }
         }
@@ -376,9 +392,14 @@ struct ZoomableScrollView: NSViewRepresentable {
             context.coordinator.loadImage(url: url)
         }
 
-        // Sync zoom from SwiftUI → AppKit (from zoom buttons)
-        if abs(scrollView.magnification - zoomScale) > 0.01 {
-            scrollView.animator().magnification = zoomScale
+        // Sync logical zoom from SwiftUI → AppKit. In SwiftUI state, 1.0 means
+        // fitted-to-container; NSScrollView's actual magnification may be below 1.0.
+        let targetScale = MediaGalleryCalculations.platformZoomScale(
+            logicalZoom: zoomScale,
+            fitScale: scrollView.minMagnification
+        )
+        if abs(scrollView.magnification - targetScale) > 0.01 {
+            scrollView.animator().magnification = targetScale
         }
     }
 
@@ -435,9 +456,12 @@ struct ZoomableScrollView: NSViewRepresentable {
                 // Zoom out to fit
                 scrollView.animator().magnification = scrollView.minMagnification
             } else {
-                // Zoom to 2.5x centered on click point
+                // Zoom to 2.5x relative to fit, centered on click point
                 let clickPoint = recognizer.location(in: scrollView)
-                let targetScale: CGFloat = 2.5
+                let targetScale = MediaGalleryCalculations.platformZoomScale(
+                    logicalZoom: 2.5,
+                    fitScale: scrollView.minMagnification
+                )
                 scrollView.setMagnification(targetScale, centeredAt: clickPoint)
             }
         }
@@ -517,7 +541,7 @@ struct ZoomableScrollView: NSViewRepresentable {
             scrollView.magnification = fitScale
 
             DispatchQueue.main.async {
-                self.parent.zoomScale = fitScale
+                self.parent.zoomScale = 1.0
             }
 
             layoutOverlays()

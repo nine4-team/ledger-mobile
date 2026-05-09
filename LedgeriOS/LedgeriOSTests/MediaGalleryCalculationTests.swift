@@ -183,6 +183,24 @@ struct MediaGalleryCalculationTests {
         #expect(!MediaGalleryCalculations.shouldShowResetZoom(currentZoom: 1.0))
     }
 
+    // MARK: - logical/platform zoom mapping
+
+    @Test("Logical default zoom maps to fitted platform scale")
+    func logicalDefaultZoomMapsToFitScale() {
+        #expect(MediaGalleryCalculations.platformZoomScale(logicalZoom: 1.0, fitScale: 0.25) == 0.25)
+    }
+
+    @Test("Platform fit scale maps back to logical default zoom")
+    func platformFitScaleMapsToLogicalDefaultZoom() {
+        #expect(MediaGalleryCalculations.logicalZoomScale(platformZoom: 0.25, fitScale: 0.25) == 1.0)
+    }
+
+    @Test("Logical zoom maps relative to fitted scale")
+    func logicalZoomMapsRelativeToFitScale() {
+        #expect(MediaGalleryCalculations.platformZoomScale(logicalZoom: 2.5, fitScale: 0.25) == 0.625)
+        #expect(MediaGalleryCalculations.logicalZoomScale(platformZoom: 0.625, fitScale: 0.25) == 2.5)
+    }
+
     // MARK: - shouldShowAddTile
 
     @Test("Add tile visible when under limit with handler")

@@ -54,6 +54,7 @@ struct PinnedImagePanel: View {
             }
         }
         .onAppear {
+            zoomScale = 1.0
             currentIndex = allImages.firstIndex(where: { $0.url == attachment.url }) ?? 0
         }
         .onChange(of: attachment.url) { _, newURL in
