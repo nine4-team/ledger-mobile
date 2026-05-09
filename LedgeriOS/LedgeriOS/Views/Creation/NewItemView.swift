@@ -88,6 +88,13 @@ struct NewItemView: View {
         scopedTransactions.first { $0.id == selectedTransactionId }
     }
 
+    private var quantityBinding: Binding<Int> {
+        Binding(
+            get: { quantity },
+            set: { quantity = min(max($0, 1), 9999) }
+        )
+    }
+
     private var destinationLabel: String {
         switch resolvedContext {
         case .project:
@@ -280,10 +287,13 @@ struct NewItemView: View {
                         .foregroundStyle(BrandColors.textSecondary)
 
                     HStack(spacing: 0) {
-                        Text("\(quantity)")
+                        TextField("1", value: quantityBinding, format: .number)
                             .font(Typography.input)
                             .foregroundStyle(BrandColors.textPrimary)
+                            .platformKeyboardType(.numberPad)
+                            .multilineTextAlignment(.leading)
                             .padding(.leading, Spacing.sm)
+                            .frame(width: 96, alignment: .leading)
 
                         Spacer()
 
