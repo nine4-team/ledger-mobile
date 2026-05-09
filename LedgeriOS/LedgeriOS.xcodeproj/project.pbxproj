@@ -132,7 +132,6 @@
 		91546636B6396B2F37B01783 /* EditSpaceDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */; };
 		92C7FB032A3C1D4B227CBB78 /* InventoryOperationsIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BBAE7CADF9EB10A095711FF /* InventoryOperationsIntegrationTests.swift */; };
 		938E5EF58A1ACE61DCC97776 /* BatchWriting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF876F4BCCF157A3367AC517 /* BatchWriting.swift */; };
-		9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */; };
 		949EEE5A10862788DAA2342C /* SpacePickerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */; };
 		95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF4222455FCC3471031DA93 /* SpacesTabView.swift */; };
 		NT0001010000000000000001 /* NotesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = NT0002010000000000000001 /* NotesTabView.swift */; };
@@ -265,7 +264,6 @@
 		F1EF25204FEBCEF208204A62 /* SearchCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9861555F95FB044633943568 /* SearchCalculations.swift */; };
 		F30423AB5031451051CBFDD9 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A249549F993D74A6F0A4A94 /* InventoryView.swift */; };
 		F45A8A2A63FE827BF26CFD61 /* ItemDetailCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7698CDEC62AC82AB04FE5656 /* ItemDetailCalculations.swift */; };
-		F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */; };
 		F5C239C3637432227B79705B /* ProjectServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */; };
 		F607182A3B4C5D6E7F8091A2 /* FilterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* FilterMenu.swift */; };
 		F8CC9F1287A1E194B2B7DC7F /* TransactionPickerModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8E96E602EEF4C8B516C46F /* TransactionPickerModal.swift */; };
@@ -323,7 +321,6 @@
 		WP03B00100000000000C0004 /* MultiStepFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0004 /* MultiStepFormSheet.swift */; };
 		WP03B00100000000000C0005 /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP03F00100000000000C0005 /* StatusBanner.swift */; };
 		WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */; };
-		WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP04F00100000000003X0001 /* ReceiptListParserTests.swift */; };
 		WP06B00100000000000C0001 /* AdaptiveContentWidth.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP06F00100000000000C0001 /* AdaptiveContentWidth.swift */; };
 		WP07B00100000000000C0001 /* TransactionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000C0001 /* TransactionCard.swift */; };
 		WP07B00100000000000L0001 /* TransactionCardCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = WP07F00100000000000L0001 /* TransactionCardCalculations.swift */; };
@@ -359,7 +356,6 @@
 
 /* Begin PBXFileReference section */
 		0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionsTabPlaceholder.swift; sourceTree = "<group>"; };
-		00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CreateItemsFromListModal.swift; sourceTree = "<group>"; };
 		011B2B991C66CB99379D3F13 /* ScopeFilters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScopeFilters.swift; sourceTree = "<group>"; };
 		01B811FD8239474CAE880515 /* FinancesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FinancesTabView.swift; sourceTree = "<group>"; };
 		021EC733A0B41828CF1AFDCE /* ProjectServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectServiceProtocol.swift; sourceTree = "<group>"; };
@@ -367,7 +363,6 @@
 		033D7CD21A568DA7AC4CDBFA /* MakeCopiesModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MakeCopiesModal.swift; sourceTree = "<group>"; };
 		049A65317E23565736557A3D /* InvoiceImportCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceImportCalculations.swift; sourceTree = "<group>"; };
 		049F6C9A5256A2B0805DBF29 /* AddExistingItemsCalculations.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddExistingItemsCalculations.swift; sourceTree = "<group>"; };
-		05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReceiptListParser.swift; sourceTree = "<group>"; };
 		06EC92FFA9C18C4F52AD23C1 /* ImageThumbnailGeneratorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ImageThumbnailGeneratorTests.swift; path = LedgeriOSTests/ImageThumbnailGeneratorTests.swift; sourceTree = SOURCE_ROOT; };
 		0715DEDB6E5B432081A76B9F /* ReportPDFSharing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReportPDFSharing.swift; sourceTree = "<group>"; };
 		0756B26E39032364A86F74DD /* PdfImageExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PdfImageExtractor.swift; sourceTree = "<group>"; };
@@ -678,7 +673,6 @@
 		WP04F00100000000000L0001 /* MediaGalleryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculations.swift; sourceTree = "<group>"; };
 		WP04F00100000000000X0001 /* MediaGalleryCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGalleryCalculationTests.swift; sourceTree = "<group>"; };
 		WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionNextStepsCalculationTests.swift; sourceTree = "<group>"; };
-		WP04F00100000000003X0001 /* ReceiptListParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptListParserTests.swift; sourceTree = "<group>"; };
 		WP05F00100000000000C0001 /* ActionMenuSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuSheet.swift; sourceTree = "<group>"; };
 		WP05F00100000000000L0001 /* ActionMenuCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculations.swift; sourceTree = "<group>"; };
 		WP05F00100000000000X0001 /* ActionMenuCalculationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ActionMenuCalculationTests.swift; sourceTree = "<group>"; };
@@ -805,7 +799,6 @@
 				IAS00100000000000L0001 /* ItemActionSheetsModifier.swift */,
 				TMB00100000000000L0001 /* TransactionMenuBuilder.swift */,
 				C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */,
-				05A3C28F2A8B2A6E03A87A13 /* ReceiptListParser.swift */,
 				5F1A364580DEA092553FDE82 /* ItemFormValidation.swift */,
 				C89F38C225B3ABEBCDDF68A0 /* BulkSaleResolutionCalculations.swift */,
 				F0DB6D4C81937205D1F35C0F /* SpaceListCalculations.swift */,
@@ -971,7 +964,6 @@
 				WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */,
 				4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */,
 				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
-				WP04F00100000000003X0001 /* ReceiptListParserTests.swift */,
 				C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */,
 				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
 				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
@@ -1268,7 +1260,6 @@
 				FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */,
 				FF98508B449ED9F5ED931CA0 /* EditNotesModal.swift */,
 				49C0101010E7C4EA3FD774F7 /* CategoryPickerList.swift */,
-				00E199FE2C40830B13F339DA /* CreateItemsFromListModal.swift */,
 				A77227D1EB4BA5A554E940BB /* SpacePickerList.swift */,
 				46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */,
 				7E665AF5D09BF06D144848C6 /* RenameItemModal.swift */,
@@ -1600,9 +1591,7 @@
 				8C022C22D824861D91971EF3 /* EditProjectModal.swift in Sources */,
 				E81C9960E9EDAD6E5C83C411 /* EditNotesModal.swift in Sources */,
 				E95BEA371D8AB6BB4EC53141 /* CategoryPickerList.swift in Sources */,
-				9425F0DE21047D07CCA34197 /* CreateItemsFromListModal.swift in Sources */,
 				180F69A4AF52A9C1019ACB63 /* TransactionNextStepsCalculations.swift in Sources */,
-				F547BAFEF293A79378487221 /* ReceiptListParser.swift in Sources */,
 				10982DD24FB1473C6654C345 /* ProgressRing.swift in Sources */,
 				WP06B00100000000000C0001 /* AdaptiveContentWidth.swift in Sources */,
 				WP08B00100000000000A0001 /* AccountToolbarMenu.swift in Sources */,
@@ -1733,7 +1722,6 @@
 				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
 				3F582B99A07E893EB77D4930 /* TransactionExportCalculationTests.swift in Sources */,
 				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
-				WP04B00100000000003X0001 /* ReceiptListParserTests.swift in Sources */,
 				770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */,
 				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
 				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,

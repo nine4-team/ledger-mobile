@@ -21,7 +21,6 @@ struct TransactionDetailView: View {
     @State private var showActionMenu = false
     @State private var showEditDetails = false
     @State private var showEditNotes = false
-    @State private var showCreateItemsFromList = false
     @State private var showCreateItemsFromImages = false
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
@@ -243,14 +242,6 @@ struct TransactionDetailView: View {
                 onComplete: { dismiss() }
             )
         }
-        .adaptivePresentation(isPresented: $showCreateItemsFromList, style: .form) {
-            CreateItemsFromListModal(
-                transaction: currentTransaction,
-                onCreated: { parsedItems in
-                    createItemsFromParsed(parsedItems)
-                }
-            )
-        }
         .adaptivePresentation(isPresented: $showCreateItemsFromImages, style: .fullSheet) {
             CreateItemsFromImagesModal(
                 transaction: currentTransaction,
@@ -272,9 +263,6 @@ struct TransactionDetailView: View {
                         }),
                         ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
                             showAddExistingItems = true
-                        }),
-                        ActionMenuItem(id: "create-from-list", label: "Create from List", icon: "doc.text", onPress: {
-                            showCreateItemsFromList = true
                         }),
                     ]
                     let hasImages = !(currentTransaction.receiptImages ?? []).isEmpty
@@ -1099,43 +1087,6 @@ struct TransactionDetailView: View {
             mergeCreatedItems(createdItems)
         } catch {
             print("🔴 createItemsFromImageGroups failed: \(error)")
-        }
-    }
-
-    private func createItemsFromParsed(_ parsedItems: [ReceiptListParser.ParsedItem]) {
-        guard let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId,
-              let transactionId = currentTransaction.id else { return }
-
-        let items = parsedItems.map { parsed -> Item in
-            var item = Item()
-            item.accountId = accountId
-            item.projectId = projectId
-            item.name = parsed.name
-            item.sku = parsed.sku
-            item.purchasePriceCents = parsed.priceCents
-            item.projectPriceCents = parsed.priceCents
-            item.transactionId = transactionId
-            item.budgetCategoryId = currentTransaction.budgetCategoryId
-            return item
-        }
-
-        expandedSections.insert("items")
-        do {
-            let createdItems = try ItemsService().createItemsForTransaction(
-                accountId: accountId,
-                transactionId: transactionId,
-                items: items,
-                onCommitError: { itemIds, error in
-                    Task { @MainActor in
-                        removePendingCreatedItemIds(itemIds)
-                        print("🔴 createItemsFromParsed failed: \(error)")
-                    }
-                }
-            )
-            mergeCreatedItems(createdItems)
-        } catch {
-            print("🔴 createItemsFromParsed failed: \(error)")
         }
     }
 
