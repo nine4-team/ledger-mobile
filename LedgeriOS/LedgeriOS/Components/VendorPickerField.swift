@@ -13,6 +13,7 @@ struct VendorPickerField: View {
     @Binding var value: String
     var label: String = "Source"
     @Binding var showPicker: Bool
+    var fixedOptions: [String] = []
 
     @Environment(AccountContext.self) private var accountContext
 
@@ -24,7 +25,7 @@ struct VendorPickerField: View {
     /// Filtered vendor list (no empty strings, deduplicated).
     private var displayVendors: [String] {
         var seen = Set<String>()
-        return vendors.filter { v in
+        return (fixedOptions + vendors).filter { v in
             let trimmed = v.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
             seen.insert(trimmed)
@@ -94,6 +95,7 @@ struct VendorPickerField: View {
 /// Loads its own vendor data from Firestore.
 struct VendorPickerModal: View {
     let selectedValue: String
+    var fixedOptions: [String] = []
     let onSelect: (String) -> Void
 
     @Environment(AccountContext.self) private var accountContext
@@ -107,8 +109,9 @@ struct VendorPickerModal: View {
 
     private let service = VendorDefaultsService()
 
-    init(selectedValue: String, onSelect: @escaping (String) -> Void) {
+    init(selectedValue: String, fixedOptions: [String] = [], onSelect: @escaping (String) -> Void) {
         self.selectedValue = selectedValue
+        self.fixedOptions = fixedOptions
         self.onSelect = onSelect
         // Other mode will be resolved once vendors load
         _otherMode = State(initialValue: false)
@@ -118,7 +121,7 @@ struct VendorPickerModal: View {
     /// Filtered vendor list (no empty strings, deduplicated).
     private var displayVendors: [String] {
         var seen = Set<String>()
-        return vendors.filter { v in
+        return (fixedOptions + vendors).filter { v in
             let trimmed = v.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
             seen.insert(trimmed)
@@ -246,6 +249,7 @@ struct InlineVendorPicker: View {
     @Binding var otherMode: Bool
     @Binding var otherText: String
     var otherFocused: FocusState<Bool>.Binding
+    var fixedOptions: [String] = []
 
     @Environment(AccountContext.self) private var accountContext
 
@@ -256,7 +260,7 @@ struct InlineVendorPicker: View {
 
     private var displayVendors: [String] {
         var seen = Set<String>()
-        return vendors.filter { v in
+        return (fixedOptions + vendors).filter { v in
             let trimmed = v.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
             seen.insert(trimmed)

@@ -9,6 +9,7 @@ import { tagNotesAsAi } from "../util/notes.js";
 import { asToolResponse } from "../util/projections.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { getUid } from "../context.js";
+import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MCP-side implementation of the per-batch sale spec at
@@ -33,7 +34,7 @@ import { getUid } from "../context.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_BATCH_ITEMS = 100;
-const INVENTORY_LABEL = "Business Inventory";
+const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
 
 /** Resolve a frozen amount snapshot for a batch of items. */
 function computeBatchTotals(items: (Item & { id: string })[]): {
@@ -199,6 +200,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     withTelemetry(
       "sell_items",
       async ({ itemIds, destinationProjectId, budgetCategoryId, notes, dryRun }) => {
+        const inventoryLabel = await resolveInventoryLabel(db);
 
         // Fetch all items.
         const items: (Item & { id: string })[] = [];
@@ -240,7 +242,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               plan: {
                 saleTransaction: {
                   type: "Sale" as const,
-                  source: INVENTORY_LABEL,
+                  source: inventoryLabel,
                   projectId: destinationProjectId,
                   budgetCategoryId: budgetCategoryId!,
                   amountCents,
@@ -253,7 +255,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                     projectId: destinationProjectId,
                     budgetCategoryId: budgetCategoryId!,
                     status: "purchased",
-                    currentSource: INVENTORY_LABEL,
+                    currentSource: inventoryLabel,
                   },
                 })),
                 lineageEdges: items.length,
@@ -269,6 +271,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             amountCents,
             missingTax,
             notes,
+            inventoryLabel,
           });
         }
 
@@ -298,7 +301,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             plan: {
               saleTransaction: {
                 type: "Sale" as const,
-                source: INVENTORY_LABEL,
+                source: inventoryLabel,
                 projectId: destinationProjectId,
                 // budgetCategoryId absent → encodes project→inventory direction
                 amountCents,
@@ -311,7 +314,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                   projectId: null,
                   budgetCategoryId: null,
                   status: "purchased",
-                  currentSource: INVENTORY_LABEL,
+                  currentSource: inventoryLabel,
                 },
               })),
               lineageEdges: items.length,
@@ -327,6 +330,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           amountCents,
           missingTax,
           notes,
+          inventoryLabel,
         });
       }
     )
@@ -382,6 +386,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     withTelemetry(
       "return_items",
       async ({ itemIds, returnTo, returnTransactionId, notes, dryRun }) => {
+        const inventoryLabel = await resolveInventoryLabel(db);
 
         if (returnTo === "vendor" && !returnTransactionId) {
           return validation(
@@ -445,7 +450,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                         status: "returned",
                         projectId: null,
                         budgetCategoryId: null,
-                        currentSource: INVENTORY_LABEL,
+                        currentSource: inventoryLabel,
                       }
                     : { status: "returned" },
                 from: { transactionId: i.transactionId ?? null },
@@ -456,7 +461,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         }
 
         if (returnTo === "inventory") {
-          return await commitReturnToInventory(db, items, existingReturnTx, notes);
+          return await commitReturnToInventory(db, items, existingReturnTx, notes, inventoryLabel);
         }
         return await commitReturnToVendor(db, items, existingReturnTx!, notes);
       }
@@ -515,6 +520,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         notes,
         dryRun,
       }) => {
+        const inventoryLabel = await resolveInventoryLabel(db);
 
         const items: (Item & { id: string })[] = [];
         const missing: string[] = [];
@@ -566,7 +572,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             split.returnItems.length > 0
               ? {
                   type: "Return" as const,
-                  source: INVENTORY_LABEL,
+                  source: inventoryLabel,
                   projectId: sourceProjectId,
                   amountCents: split.returnItems.reduce(
                     (sum, i) => sum + (i.purchasePriceCents ?? 0),
@@ -581,7 +587,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                   const t = computeBatchTotals(split.saleItems);
                   return {
                     type: "Sale" as const,
-                    source: INVENTORY_LABEL,
+                    source: inventoryLabel,
                     projectId: sourceProjectId,
                     // budgetCategoryId absent → project→inventory
                     amountCents: t.amountCents,
@@ -600,7 +606,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               secondHop: {
                 saleToProject: {
                   type: "Sale" as const,
-                  source: INVENTORY_LABEL,
+                  source: inventoryLabel,
                   projectId: destinationProjectId,
                   budgetCategoryId: destinationBudgetCategoryId,
                   amountCents,
@@ -614,7 +620,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 to: {
                   projectId: destinationProjectId,
                   budgetCategoryId: destinationBudgetCategoryId,
-                  currentSource: INVENTORY_LABEL,
+                  currentSource: inventoryLabel,
                 },
               })),
               lineageEdges: items.length * 2, // first-hop + second-hop per item
@@ -633,7 +639,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           sourceProjectId,
           destinationProjectId,
           destinationBudgetCategoryId,
-          { subtotalCents, amountCents, missingTax, notes }
+          { subtotalCents, amountCents, missingTax, notes, inventoryLabel }
         );
       }
     )
@@ -649,7 +655,7 @@ async function commitSellToProject(
   items: (Item & { id: string })[],
   destinationProjectId: string,
   budgetCategoryId: string,
-  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string }
+  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
 ) {
   const frozen = await frozenSourceTxIds(db, items);
 
@@ -664,7 +670,7 @@ async function commitSellToProject(
   const saleRef = txCol.doc();
   batch.set(saleRef, {
     type: "Sale",
-    source: INVENTORY_LABEL,
+    source: totals.inventoryLabel,
     projectId: destinationProjectId,
     budgetCategoryId,
     amountCents: totals.amountCents,
@@ -686,7 +692,7 @@ async function commitSellToProject(
       status: "purchased",
       transactionId: saleRef.id,
       spaceId: null,
-      currentSource: INVENTORY_LABEL,
+      currentSource: totals.inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
     });
@@ -734,7 +740,7 @@ async function commitSellToInventory(
   db: Firestore,
   items: (Item & { id: string })[],
   sourceProjectId: string,
-  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string }
+  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
 ) {
   const frozen = await frozenSourceTxIds(db, items);
 
@@ -749,7 +755,7 @@ async function commitSellToInventory(
   const saleRef = txCol.doc();
   batch.set(saleRef, {
     type: "Sale",
-    source: INVENTORY_LABEL,
+    source: totals.inventoryLabel,
     projectId: sourceProjectId,
     amountCents: totals.amountCents,
     subtotalCents: totals.subtotalCents,
@@ -770,7 +776,7 @@ async function commitSellToInventory(
       spaceId: null,
       status: "purchased",
       transactionId: saleRef.id,
-      currentSource: INVENTORY_LABEL,
+      currentSource: totals.inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
     });
@@ -818,7 +824,8 @@ async function commitReturnToInventory(
   db: Firestore,
   items: (Item & { id: string })[],
   existingReturnTx: (Transaction & { id: string }) | null,
-  notes: string | undefined
+  notes: string | undefined,
+  inventoryLabel: string
 ) {
   const frozen = await frozenSourceTxIds(db, items);
 
@@ -857,7 +864,7 @@ async function commitReturnToInventory(
     isNewReturnTx = true;
     batch.set(returnTxRef, {
       type: "Return",
-      source: INVENTORY_LABEL,
+      source: inventoryLabel,
       projectId: sourceProjectId,
       amountCents: returnAmount,
       itemIds: items.map((i) => i.id),
@@ -876,7 +883,7 @@ async function commitReturnToInventory(
       spaceId: null,
       status: "returned",
       transactionId: returnTxRef.id,
-      currentSource: INVENTORY_LABEL,
+      currentSource: inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
     });
@@ -1004,7 +1011,7 @@ async function commitMoveBetweenProjects(
   sourceProjectId: string,
   destinationProjectId: string,
   destinationBudgetCategoryId: string,
-  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string }
+  totals: { subtotalCents: number; amountCents: number; missingTax: string[]; notes?: string; inventoryLabel: string }
 ) {
   const frozen = await frozenSourceTxIds(db, items);
 
@@ -1026,7 +1033,7 @@ async function commitMoveBetweenProjects(
     );
     batch.set(returnRef, {
       type: "Return",
-      source: INVENTORY_LABEL,
+      source: totals.inventoryLabel,
       projectId: sourceProjectId,
       amountCents: returnAmount,
       itemIds: split.returnItems.map((i) => i.id),
@@ -1046,7 +1053,7 @@ async function commitMoveBetweenProjects(
     const saleTotals = computeBatchTotals(split.saleItems);
     batch.set(saleRef, {
       type: "Sale",
-      source: INVENTORY_LABEL,
+      source: totals.inventoryLabel,
       projectId: sourceProjectId,
       // budgetCategoryId absent → project→inventory direction
       amountCents: saleTotals.amountCents,
@@ -1065,7 +1072,7 @@ async function commitMoveBetweenProjects(
   const destSaleRef = txCol.doc();
   batch.set(destSaleRef, {
     type: "Sale",
-    source: INVENTORY_LABEL,
+    source: totals.inventoryLabel,
     projectId: destinationProjectId,
     budgetCategoryId: destinationBudgetCategoryId,
     amountCents: totals.amountCents,
@@ -1087,7 +1094,7 @@ async function commitMoveBetweenProjects(
       status: "purchased",
       transactionId: destSaleRef.id,
       spaceId: null,
-      currentSource: INVENTORY_LABEL,
+      currentSource: totals.inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
     });

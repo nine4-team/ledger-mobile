@@ -18,6 +18,7 @@ import {
 import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
+import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 
 function txTypeName(tx: Transaction): string {
   return tx.type ?? "";
@@ -322,6 +323,14 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         return validation(
           "Cannot create Sale transactions directly — use sell_items instead.",
           "Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform."
+        );
+      }
+
+      const inventoryLabel = await resolveInventoryLabel(db);
+      if (txType === "Purchase" && projectId && isInventorySource(source, inventoryLabel)) {
+        return validation(
+          "Project purchases with inventory as the source must route through inventory and create a Sale into the project.",
+          "Use create_transaction_with_items when creating new items, or sell_items for existing inventory items. create_transaction alone cannot create the required item updates and lineage edge."
         );
       }
 

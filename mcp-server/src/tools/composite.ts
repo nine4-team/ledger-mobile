@@ -13,6 +13,7 @@ import {
 import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
+import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 
 /**
  * Task-shaped tools that sit on top of the primitives. Each one
@@ -134,11 +135,11 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     {
       transaction: z
         .object({
-          projectId: z.string().optional().describe("Project ID (omit for business inventory)"),
+          projectId: z.string().optional().describe("Project ID (omit for business inventory). If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Sale into this project."),
           budgetCategoryId: z.string().describe("Budget category ID"),
           amountCents: z.coerce.number().describe("Total amount in cents"),
           type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
-          source: z.string().optional(),
+          source: z.string().optional().describe("Vendor/source name. The account inventory label is a built-in source, not a vendor preset; using it on a project Purchase routes through inventory and sells into the project."),
           transactionDate: z.string().optional(),
           subtotalCents: z.coerce.number().optional(),
           taxRatePct: z.coerce.number().optional(),
@@ -177,9 +178,16 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       const txCol = accountCollection(db, "transactions");
       const itemsCol = accountCollection(db, "items");
+      const edgesCol = accountCollection(db, "lineageEdges");
       const txRef = txCol.doc();
       const itemRefs = items.map(() => itemsCol.doc());
       const itemIds = itemRefs.map((r: FirebaseFirestore.DocumentReference) => r.id);
+      const inventoryLabel = await resolveInventoryLabel(db);
+      const routeInventorySource =
+        transaction.type === "Purchase" &&
+        !!transaction.projectId &&
+        isInventorySource(transaction.source, inventoryLabel);
+      const saleRef = routeInventorySource ? txCol.doc() : null;
 
       // Resolve per-item tax rate from the transaction if not set.
       const resolvedTaxRate = transaction.taxRatePct;
@@ -188,17 +196,17 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       const taggedNotes = notes ? tagNotesAsAi(notes) : undefined;
       const txData: Record<string, unknown> = {
-        budgetCategoryId: transaction.budgetCategoryId,
         amountCents: transaction.amountCents,
         type: transaction.type,
         status: "completed",
         isComplete: false,
-        itemIds,
+        itemIds: routeInventorySource ? [] : itemIds,
         ...(taggedNotes ? { notes: taggedNotes } : {}),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      if (transaction.projectId) txData.projectId = transaction.projectId;
+      if (!routeInventorySource) txData.budgetCategoryId = transaction.budgetCategoryId;
+      if (transaction.projectId && !routeInventorySource) txData.projectId = transaction.projectId;
       if (transaction.source) txData.source = transaction.source;
       if (transaction.transactionDate) txData.transactionDate = transaction.transactionDate;
       if (transaction.subtotalCents !== undefined) txData.subtotalCents = transaction.subtotalCents;
@@ -208,28 +216,65 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       batch.set(txRef, txData);
 
+      if (routeInventorySource && saleRef) {
+        batch.set(saleRef, {
+          type: "Sale",
+          source: inventoryLabel,
+          projectId: transaction.projectId,
+          budgetCategoryId: transaction.budgetCategoryId,
+          amountCents: transaction.amountCents,
+          subtotalCents: transaction.subtotalCents ?? transaction.amountCents,
+          itemIds,
+          status: "completed",
+          isComplete: true,
+          ...(taggedNotes ? { notes: taggedNotes } : {}),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const itemData: Record<string, unknown> = {
           name: item.name,
           status: item.status,
-          transactionId: txRef.id,
+          transactionId: saleRef?.id ?? txRef.id,
           ...(taggedNotes ? { notes: taggedNotes } : {}),
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        if (transaction.projectId) itemData.projectId = transaction.projectId;
+        if (transaction.projectId && !routeInventorySource) itemData.projectId = transaction.projectId;
+        if (transaction.projectId && routeInventorySource) itemData.projectId = transaction.projectId;
         if (item.purchasePriceCents !== undefined) itemData.purchasePriceCents = item.purchasePriceCents;
         if (item.projectPriceCents !== undefined) itemData.projectPriceCents = item.projectPriceCents;
-        if (item.source) itemData.source = item.source;
+        const itemSource = item.source;
+        if (itemSource) {
+          itemData.source = itemSource;
+        }
+        if (routeInventorySource) itemData.currentSource = inventoryLabel;
+        else if (itemSource) itemData.currentSource = itemSource;
         if (item.sku) itemData.sku = item.sku;
         if (item.spaceId) itemData.spaceId = item.spaceId;
-        if (item.budgetCategoryId) itemData.budgetCategoryId = item.budgetCategoryId;
+        if (routeInventorySource) itemData.budgetCategoryId = transaction.budgetCategoryId;
+        else if (item.budgetCategoryId) itemData.budgetCategoryId = item.budgetCategoryId;
         else itemData.budgetCategoryId = transaction.budgetCategoryId;
         if (item.taxRatePct !== undefined) itemData.taxRatePct = item.taxRatePct;
         else if (resolvedTaxRate !== undefined) itemData.taxRatePct = resolvedTaxRate;
 
         batch.set(itemRefs[i], itemData);
+
+        if (routeInventorySource && saleRef) {
+          batch.set(edgesCol.doc(), {
+            itemId: itemRefs[i].id,
+            fromTransactionId: txRef.id,
+            toTransactionId: saleRef.id,
+            fromProjectId: null,
+            toProjectId: transaction.projectId,
+            movementKind: "sold",
+            source: "mcp",
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
       }
 
       await batch.commit();
@@ -237,6 +282,8 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       return asToolResponse({
         ok: true,
         transactionId: txRef.id,
+        saleTransactionId: saleRef?.id,
+        routedThroughInventory: routeInventorySource,
         itemIds,
         itemCount: items.length,
       });

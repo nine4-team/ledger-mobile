@@ -116,6 +116,30 @@ struct NewTransactionView: View {
         transactionType == .purchase && purchasedBy == "design-business"
     }
 
+    /// The built-in inventory source is always available in the source picker.
+    /// Choosing it from a project purchase creates the items in inventory first,
+    /// then hands them to the sell-to-project flow for the selected project.
+    private var inventorySourceLabel: String {
+        InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+    }
+
+    private var fixedSourceOptions: [String] {
+        [inventorySourceLabel]
+    }
+
+    private var inventorySourceSelected: Bool {
+        let selected = (vendor.isEmpty ? source : vendor).trimmingCharacters(in: .whitespacesAndNewlines)
+        return selected == inventorySourceLabel
+    }
+
+    private var routeThroughInventorySource: Bool {
+        transactionType == .purchase && destinationProjectId != nil && inventorySourceSelected
+    }
+
+    private var routeThroughInventory: Bool {
+        autoInventoryRouting || routeThroughInventorySource
+    }
+
     /// Fee: counterparty is the business; who-paid is always the business.
     /// Return: items physically go back to a vendor; who-paid doesn't apply.
     private var skipWhoPaid: Bool {
@@ -254,6 +278,7 @@ struct NewTransactionView: View {
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
             VendorPickerModal(
                 selectedValue: vendor.isEmpty ? source : vendor,
+                fixedOptions: fixedSourceOptions,
                 onSelect: { newValue in
                     if currentStep == .vendor || !vendor.isEmpty {
                         vendor = newValue
@@ -420,7 +445,8 @@ struct NewTransactionView: View {
                     selectedValue: $vendor,
                     otherMode: $otherVendorMode,
                     otherText: $otherVendorText,
-                    otherFocused: $otherVendorFocused
+                    otherFocused: $otherVendorFocused,
+                    fixedOptions: fixedSourceOptions
                 )
             }
         }
@@ -443,15 +469,18 @@ struct NewTransactionView: View {
     /// looks like a non-sequitur.
     @ViewBuilder
     private var autoInventoryRoutingNote: some View {
-        if autoInventoryRouting {
+        if routeThroughInventory {
             let projectName = originProject?.name
             let suffix = projectName.map { " You'll be offered to sell items to \($0) after." }
                 ?? " You'll be offered to sell items to a project after."
+            let prefix = routeThroughInventorySource
+                ? "Inventory was selected as the source, so items will be created in inventory first."
+                : "This will be recorded as a business-inventory purchase."
             HStack(alignment: .top, spacing: Spacing.sm) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(BrandColors.primary)
                     .padding(.top, 2)
-                Text("This will be recorded as a business-inventory purchase.\(suffix)")
+                Text("\(prefix)\(suffix)")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
             }
@@ -491,9 +520,19 @@ struct NewTransactionView: View {
                 autoInventoryRoutingNote
                 if transactionType != .fee {
                     if !vendor.isEmpty {
-                        VendorPickerField(value: $vendor, label: "Source / Vendor", showPicker: $showVendorPicker)
+                        VendorPickerField(
+                            value: $vendor,
+                            label: "Source / Vendor",
+                            showPicker: $showVendorPicker,
+                            fixedOptions: fixedSourceOptions
+                        )
                     } else {
-                        VendorPickerField(value: $source, label: "Source / Vendor", showPicker: $showVendorPicker)
+                        VendorPickerField(
+                            value: $source,
+                            label: "Source / Vendor",
+                            showPicker: $showVendorPicker,
+                            fixedOptions: fixedSourceOptions
+                        )
                     }
                 }
 
@@ -771,9 +810,7 @@ struct NewTransactionView: View {
             transaction.receiptImages = receiptImages
         }
 
-        let routeThroughInventory = autoInventoryRouting
-
-        transaction.budgetCategoryId = selectedCategoryId
+        transaction.budgetCategoryId = routeThroughInventory ? nil : selectedCategoryId
         if isItemized {
             let amountCents = transaction.amountCents ?? 0
             switch taxMode {
