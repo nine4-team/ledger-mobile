@@ -22,6 +22,40 @@ enum TransactionSortOption: String, CaseIterable {
     case sourceDesc = "source-desc"
 }
 
+// MARK: - Inventory Movement Grouping
+
+enum TransactionListScope {
+    case project
+    case inventory
+}
+
+struct InventoryTransactionGroup: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let badgeText: String
+    let dateString: String?
+    let amountCents: Int
+    let itemCount: Int
+    let transactions: [Transaction]
+
+    var transactionIds: [String] {
+        transactions.compactMap(\.id)
+    }
+}
+
+enum TransactionListRow: Identifiable {
+    case transaction(Transaction)
+    case inventoryGroup(InventoryTransactionGroup)
+
+    var id: String {
+        switch self {
+        case .transaction(let tx): return tx.id.map { "tx-\($0)" } ?? "tx-\(UUID().uuidString)"
+        case .inventoryGroup(let group): return "inventory-group-\(group.id)"
+        }
+    }
+}
+
 // MARK: - Transaction Grouped Filter State
 
 struct TransactionFilterState {
@@ -262,6 +296,153 @@ enum TransactionFilterSortCalculations {
         }
     }
 
+    static func groupedRows(
+        for transactions: [Transaction],
+        scope: TransactionListScope
+    ) -> [TransactionListRow] {
+        var keyed: [InventoryMovementGroupKey: [Transaction]] = [:]
+        var firstIndex: [InventoryMovementGroupKey: Int] = [:]
+        var ungrouped: [(index: Int, transaction: Transaction)] = []
+
+        for (index, transaction) in transactions.enumerated() {
+            guard let key = inventoryMovementGroupKey(for: transaction, scope: scope) else {
+                ungrouped.append((index, transaction))
+                continue
+            }
+            keyed[key, default: []].append(transaction)
+            if firstIndex[key] == nil {
+                firstIndex[key] = index
+            }
+        }
+
+        let grouped: [(index: Int, row: TransactionListRow)] = keyed.compactMap { key, transactions in
+            guard let index = firstIndex[key] else { return nil }
+            return (index, .inventoryGroup(makeInventoryGroup(key: key, transactions: transactions)))
+        }
+
+        return (ungrouped.map { ($0.index, TransactionListRow.transaction($0.transaction)) } + grouped)
+            .sorted { lhs, rhs in
+                if lhs.0 != rhs.0 { return lhs.0 < rhs.0 }
+                return lhs.row.id < rhs.row.id
+            }
+            .map(\.row)
+    }
+
+    private enum InventoryMovementDirection: String, Hashable {
+        case addedToInventory
+        case fromInventory
+        case soldToInventory
+        case returnedToInventory
+    }
+
+    private struct InventoryMovementGroupKey: Hashable {
+        let direction: InventoryMovementDirection
+        let dateBucket: String
+        let source: String
+        let projectId: String
+        let budgetCategoryId: String
+        let type: String
+    }
+
+    private static func inventoryMovementGroupKey(
+        for transaction: Transaction,
+        scope: TransactionListScope
+    ) -> InventoryMovementGroupKey? {
+        guard transaction.status != .canceled else { return nil }
+
+        let source = normalizedGroupValue(transaction.source)
+        let projectId = normalizedGroupValue(transaction.projectId)
+        let categoryId = normalizedGroupValue(transaction.budgetCategoryId)
+        let date = transaction.effectiveSortDate
+        let type = transaction.transactionType?.rawValue ?? "unknown"
+
+        if scope == .inventory,
+           transaction.transactionType == .purchase,
+           transaction.projectId == nil {
+            return InventoryMovementGroupKey(
+                direction: .addedToInventory,
+                dateBucket: date,
+                source: source,
+                projectId: "inventory",
+                budgetCategoryId: "none",
+                type: type
+            )
+        }
+
+        guard transaction.isInventoryMovement else { return nil }
+
+        switch transaction.transactionType {
+        case .sale:
+            let direction: InventoryMovementDirection = transaction.budgetCategoryId == nil
+                ? .soldToInventory
+                : .fromInventory
+            return InventoryMovementGroupKey(
+                direction: direction,
+                dateBucket: date,
+                source: source,
+                projectId: projectId,
+                budgetCategoryId: categoryId,
+                type: type
+            )
+        case .return:
+            return InventoryMovementGroupKey(
+                direction: .returnedToInventory,
+                dateBucket: date,
+                source: source,
+                projectId: projectId,
+                budgetCategoryId: "none",
+                type: type
+            )
+        case .purchase, .fee, .expense, nil:
+            return nil
+        }
+    }
+
+    private static func makeInventoryGroup(
+        key: InventoryMovementGroupKey,
+        transactions: [Transaction]
+    ) -> InventoryTransactionGroup {
+        let totalCents = transactions.reduce(0) { $0 + ($1.amountCents ?? 0) }
+        let itemCount = transactions.reduce(0) { $0 + ($1.itemIds?.count ?? 0) }
+        let source = key.source == "none" ? "Business Inventory" : key.source
+        let title: String
+        let subtitlePrefix: String
+
+        switch key.direction {
+        case .addedToInventory:
+            title = "Added to Business Inventory"
+            subtitlePrefix = source == "none" ? "Inventory purchase" : source
+        case .fromInventory:
+            title = "From \(source)"
+            subtitlePrefix = "Project purchase"
+        case .soldToInventory:
+            title = "Sold to \(source)"
+            subtitlePrefix = "Business acquisition"
+        case .returnedToInventory:
+            title = "Returned to \(source)"
+            subtitlePrefix = "Inventory return"
+        }
+
+        let dateLabel = TransactionCardCalculations.formattedDate(key.dateBucket)
+        let subtitle = dateLabel == "—" ? subtitlePrefix : "\(subtitlePrefix) · \(dateLabel)"
+
+        return InventoryTransactionGroup(
+            id: "\(key.direction.rawValue)|\(key.dateBucket)|\(key.source)|\(key.projectId)|\(key.budgetCategoryId)|\(key.type)",
+            title: title,
+            subtitle: subtitle,
+            badgeText: "Inventory",
+            dateString: key.dateBucket,
+            amountCents: totalCents,
+            itemCount: itemCount,
+            transactions: transactions
+        )
+    }
+
+    private static func normalizedGroupValue(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "none" : trimmed
+    }
+
     static func filterLabel(for option: TransactionFilterOption) -> String {
         switch option {
         case .all: return "All"
@@ -480,6 +661,116 @@ struct SharedTransactionsList: View {
         }
     }
 
+}
+
+// MARK: - Inventory Transaction Group Card
+
+struct InventoryTransactionGroupCard<ExpandedContent: View>: View {
+    let group: InventoryTransactionGroup
+    var isExpanded: Binding<Bool>
+    var isSelected: Binding<Bool>?
+    var onSelectAll: ((Bool) -> Void)?
+    @ViewBuilder var expandedContent: () -> ExpandedContent
+
+    private var selected: Bool {
+        isSelected?.wrappedValue ?? false
+    }
+
+    var body: some View {
+        Card(padding: 0, isSelected: selected) {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    withAnimation { isExpanded.wrappedValue.toggle() }
+                } label: {
+                    VStack(alignment: .leading, spacing: 0) {
+                        headerRow
+                        if !isExpanded.wrappedValue {
+                            collapsedContent
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                if isExpanded.wrappedValue {
+                    VStack(spacing: Spacing.cardListGap) {
+                        expandedContent()
+                    }
+                    .padding(Spacing.sm)
+                }
+            }
+        }
+        .animation(.default, value: isExpanded.wrappedValue)
+    }
+
+    private var headerRow: some View {
+        HStack(spacing: Spacing.sm) {
+            if isSelected != nil {
+                CardSelectorButton(
+                    isSelected: selected,
+                    label: group.title,
+                    action: {
+                        let newValue = !selected
+                        isSelected?.wrappedValue = newValue
+                        onSelectAll?(newValue)
+                    }
+                )
+            }
+
+            Spacer(minLength: 0)
+
+            Badge(text: group.badgeText, color: BrandColors.primary)
+
+            Text("\(group.transactions.count) \(group.transactions.count == 1 ? "transaction" : "transactions")")
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            Image(systemName: isExpanded.wrappedValue ? "chevron.down" : "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(BrandColors.textTertiary)
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.sm)
+        .overlay(alignment: .bottom) {
+            CardDivider()
+        }
+    }
+
+    private var collapsedContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                FindableText(group.title)
+                    .font(Typography.body.weight(.semibold))
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(2)
+
+                Spacer(minLength: Spacing.md)
+
+                Text(CurrencyFormatting.formatCentsWithDecimals(group.amountCents))
+                    .font(Typography.body.weight(.bold))
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
+
+            HStack(spacing: 0) {
+                FindableText(group.subtitle)
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
+
+                if group.itemCount > 0 {
+                    Text(" \u{00B7} ")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    Text("\(group.itemCount) \(group.itemCount == 1 ? "item" : "items")")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+        }
+        .padding(Spacing.cardPadding)
+    }
 }
 
 // MARK: - Previews

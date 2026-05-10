@@ -108,6 +108,20 @@ What changes:
 - **Items in inventory have no category badge.** UI components that previously displayed a category for inventory items should hide the badge when `projectId == null`.
 - **Inventory item filters by category** are removed. There's no category to filter by.
 - **The project-context "Move to Inventory" action** replaces the earlier "Return to Inventory" action. The modal shows which items will go as a Return and which as a Sale-to-Inventory based on origin.
+- **Transaction lists group inventory movement records visually.** Inventory acquisitions, inventory-to-project Sales, Sale-to-Inventory records, and return-to-inventory records can render as expandable grouped rows. The grouped row is not a transaction and is never written to Firestore; it exists only to keep one-off inventory movements readable in the UI. Expanding the row reveals the underlying child transactions.
+
+### Transaction List Grouping Rules
+
+Grouping is intentionally broader than `type: "Sale"` because inventory purchase transactions are also part of the business-inventory story.
+
+Group these records:
+
+- Inventory-scope purchases (`type: "Purchase"`, `projectId: null`) as `Added to Business Inventory`.
+- Inventory → project Sales (`type: "Sale"`, `budgetCategoryId` set) as `From [inventory label]`.
+- Project → inventory Sales (`type: "Sale"`, `budgetCategoryId` absent) as `Sold to [inventory label]`.
+- Return-to-inventory transactions (`type: "Return"`, source is the inventory label) as `Returned to [inventory label]`.
+
+Do not group normal project purchases, fees, expenses, vendor returns, or ambiguous records. Grouping keys include date bucket, movement direction, source/inventory label, project ID, category ID where present, and transaction type so opposite financial effects are never merged.
 
 ## Edge Cases
 

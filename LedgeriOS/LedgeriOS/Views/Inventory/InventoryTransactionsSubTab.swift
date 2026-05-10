@@ -13,6 +13,7 @@ struct InventoryTransactionsSubTab: View {
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
     @State private var createdTransaction: Transaction?
+    @State private var expandedInventoryGroups: Set<String> = []
 
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
@@ -29,6 +30,13 @@ struct InventoryTransactionsSubTab: View {
             filters: activeFilters,
             sort: activeSort,
             search: searchText
+        )
+    }
+
+    private var transactionRows: [TransactionListRow] {
+        TransactionFilterSortCalculations.groupedRows(
+            for: processedTransactions,
+            scope: .inventory
         )
     }
 
@@ -183,22 +191,58 @@ struct InventoryTransactionsSubTab: View {
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {
-                    ForEach(processedTransactions) { transaction in
-                        if let txId = transaction.id {
-                            if selectedIds.isEmpty {
-                                NavigationLink(value: transaction) {
-                                    transactionCardContent(for: transaction, txId: txId)
-                                }
-                                .buttonStyle(.plain)
-                            } else {
-                                transactionCardContent(for: transaction, txId: txId)
-                                    .onTapGesture { toggleSelection(txId) }
-                            }
-                        }
+                    ForEach(transactionRows) { row in
+                        transactionRow(row)
                     }
                 }
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.bottom, Spacing.sm)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func transactionRow(_ row: TransactionListRow) -> some View {
+        switch row {
+        case .transaction(let transaction):
+            transactionNavigationCard(for: transaction)
+        case .inventoryGroup(let group):
+            InventoryTransactionGroupCard(
+                group: group,
+                isExpanded: Binding(
+                    get: { expandedInventoryGroups.contains(group.id) },
+                    set: { isExpanded in
+                        if isExpanded {
+                            expandedInventoryGroups.insert(group.id)
+                        } else {
+                            expandedInventoryGroups.remove(group.id)
+                        }
+                    }
+                ),
+                isSelected: Binding(
+                    get: { !group.transactionIds.isEmpty && Set(group.transactionIds).isSubset(of: selectedIds) },
+                    set: { isSelected in setGroupSelection(group, isSelected: isSelected) }
+                ),
+                onSelectAll: { isSelected in setGroupSelection(group, isSelected: isSelected) }
+            ) {
+                ForEach(group.transactions) { transaction in
+                    transactionNavigationCard(for: transaction)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func transactionNavigationCard(for transaction: Transaction) -> some View {
+        if let txId = transaction.id {
+            if selectedIds.isEmpty {
+                NavigationLink(value: transaction) {
+                    transactionCardContent(for: transaction, txId: txId)
+                }
+                .buttonStyle(.plain)
+            } else {
+                transactionCardContent(for: transaction, txId: txId)
+                    .onTapGesture { toggleSelection(txId) }
             }
         }
     }
@@ -246,6 +290,14 @@ struct InventoryTransactionsSubTab: View {
             selectedIds.remove(txId)
         } else {
             selectedIds.insert(txId)
+        }
+    }
+
+    private func setGroupSelection(_ group: InventoryTransactionGroup, isSelected: Bool) {
+        if isSelected {
+            selectedIds.formUnion(group.transactionIds)
+        } else {
+            selectedIds.subtract(group.transactionIds)
         }
     }
 

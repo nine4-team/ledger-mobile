@@ -651,6 +651,105 @@ struct CentralizedSearchTests {
     }
 }
 
+@Suite("Inventory Transaction Grouping")
+struct InventoryTransactionGroupingTests {
+
+    @Test("Inventory purchases group only in inventory scope")
+    func inventoryPurchasesGroupOnlyInInventoryScope() {
+        var purchase = makeTransaction(
+            id: "purchase-1",
+            source: "Wayfair",
+            transactionType: .purchase,
+            amountCents: 12000
+        )
+        purchase.transactionDate = "2026-05-09"
+        purchase.projectId = nil
+        purchase.itemIds = ["item-1"]
+
+        let inventoryRows = TransactionFilterSortCalculations.groupedRows(
+            for: [purchase],
+            scope: .inventory
+        )
+        let projectRows = TransactionFilterSortCalculations.groupedRows(
+            for: [purchase],
+            scope: .project
+        )
+
+        guard case .inventoryGroup(let group) = inventoryRows.first else {
+            Issue.record("Expected inventory purchase to render as an inventory group")
+            return
+        }
+        #expect(group.title == "Added to Business Inventory")
+        #expect(group.amountCents == 12000)
+        #expect(group.itemCount == 1)
+
+        guard case .transaction = projectRows.first else {
+            Issue.record("Project scope should not group a normal purchase")
+            return
+        }
+    }
+
+    @Test("Inventory sale groups by category and does not merge returns")
+    func saleGroupsDoNotMergeWithReturns() {
+        var sale = makeTransaction(
+            id: "sale-1",
+            source: "1584 Design Inventory",
+            transactionType: .sale,
+            budgetCategoryId: "furnishings",
+            amountCents: 8000
+        )
+        sale.transactionDate = "2026-05-09"
+        sale.projectId = "project-1"
+        sale.itemIds = ["item-1"]
+
+        var returnTx = makeTransaction(
+            id: "return-1",
+            source: "1584 Design Inventory",
+            transactionType: .return,
+            amountCents: 8000
+        )
+        returnTx.transactionDate = "2026-05-09"
+        returnTx.projectId = "project-1"
+        returnTx.itemIds = ["item-1"]
+
+        let rows = TransactionFilterSortCalculations.groupedRows(
+            for: [sale, returnTx],
+            scope: .project
+        )
+
+        #expect(rows.count == 2)
+        let titles = rows.compactMap { row -> String? in
+            if case .inventoryGroup(let group) = row { return group.title }
+            return nil
+        }
+        #expect(titles.contains("From 1584 Design Inventory"))
+        #expect(titles.contains("Returned to 1584 Design Inventory"))
+    }
+
+    @Test("Vendor returns remain ungrouped")
+    func vendorReturnsRemainUngrouped() {
+        var vendorReturn = makeTransaction(
+            id: "return-1",
+            source: "Wayfair",
+            transactionType: .return,
+            amountCents: 3000
+        )
+        vendorReturn.transactionDate = "2026-05-09"
+        vendorReturn.projectId = "project-1"
+
+        let rows = TransactionFilterSortCalculations.groupedRows(
+            for: [vendorReturn],
+            scope: .project
+        )
+
+        guard case .transaction(let tx) = rows.first else {
+            Issue.record("Vendor return should stay as a normal transaction row")
+            return
+        }
+        #expect(tx.id == "return-1")
+    }
+}
+
 @Suite("Transaction Needs Review Filter")
 struct TransactionNeedsReviewFilterTests {
 

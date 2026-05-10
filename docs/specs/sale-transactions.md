@@ -192,6 +192,26 @@ Resolution is implemented in `TransactionDisplayCalculations.displayName(for:)` 
 
 Sale transactions are NOT user-editable. The shape fields are immutable. Users can edit `notes` and add/cancel via `status`.
 
+### Transaction List Grouping
+
+Transaction lists may visually group inventory-movement records so one-off item moves do not flood the list. This grouping is **presentation-only**:
+
+- The underlying Sale, Return, and Purchase documents remain separate immutable/auditable records.
+- Transaction detail always opens the real child transaction.
+- Bulk selection, export, and totals operate on the child transaction IDs.
+- No grouped row is written back to Firestore and no grouped row becomes a canonical aggregate.
+
+Groupable records:
+
+| Record | Group row | Notes |
+|---|---|---|
+| Inventory purchase/acquisition (`type: "Purchase"`, `projectId: null`) | `Added to Business Inventory` | Groups inventory-scope acquisition purchases by date/vendor/type. |
+| Inventory → project Sale (`type: "Sale"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by date, inventory label, project, category, and transaction type. |
+| Project → inventory Sale (`type: "Sale"`, no `budgetCategoryId`) | `Sold to [inventory label]` | Groups by date, inventory label, project, no-category shape, and transaction type. |
+| Return to inventory (`type: "Return"`, inventory-label source) | `Returned to [inventory label]` | Vendor returns are excluded; only inventory-label returns are grouped. |
+
+The grouping key intentionally includes movement direction, date bucket, source/inventory label, project ID, budget category ID, and transaction type. Charges and credits must not be collapsed into a misleading net row.
+
 ## Legacy Canonical Sales
 
 Existing sale transactions written under the canonical-sale model remain in the data as read-only historical records. They are identified by the field `isCanonicalInventorySale: true` and have an `inventorySaleDirection` field of either `"business_to_project"` or `"project_to_business"`.

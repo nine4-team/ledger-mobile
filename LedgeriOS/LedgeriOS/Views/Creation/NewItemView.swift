@@ -8,6 +8,11 @@ enum ItemCreationContext: Equatable {
     case inventory
 }
 
+private enum ProjectItemTransactionMode {
+    case existing
+    case createViaInventory
+}
+
 /// Two-step bottom-sheet form for creating a new item.
 struct NewItemView: View {
     @State private var resolvedContext: ItemCreationContext?
@@ -37,6 +42,8 @@ struct NewItemView: View {
 
     // Step 2 fields
     @State private var selectedTransactionId: String?
+    @State private var projectTransactionMode: ProjectItemTransactionMode = .existing
+    @State private var selectedInventorySaleCategoryId: String?
     @State private var selectedSpaceId: String?
     @State private var purchasePrice = ""
     @State private var projectPrice = ""
@@ -54,6 +61,8 @@ struct NewItemView: View {
     @State private var showSpacePicker = false
     @State private var showStatusPicker = false
     @State private var showVendorPicker = false
+    @State private var showInventorySaleCategoryPicker = false
+    @State private var isCreating = false
 
     // Image source
     @State private var showImageSourceMenu = false
@@ -68,8 +77,15 @@ struct NewItemView: View {
         guard resolvedContext != nil,
               ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
         else { return false }
-        // Project items must be attached to a transaction.
-        if projectId != nil && selectedTransactionId == nil { return false }
+        guard !isCreating else { return false }
+        if projectId != nil {
+            switch projectTransactionMode {
+            case .existing:
+                if selectedTransactionId == nil { return false }
+            case .createViaInventory:
+                if selectedInventorySaleCategoryId == nil { return false }
+            }
+        }
         return true
     }
 
@@ -86,6 +102,27 @@ struct NewItemView: View {
 
     private var selectedTransaction: Transaction? {
         scopedTransactions.first { $0.id == selectedTransactionId }
+    }
+
+    private var enabledPurchaseCategories: [BudgetCategory] {
+        let enabledIds = Set(projectContext?.projectBudgetCategories.compactMap(\.id) ?? [])
+        return accountContext.allBudgetCategories
+            .filter { category in
+                guard let id = category.id else { return false }
+                return enabledIds.contains(id)
+                    && category.isArchived != true
+                    && category.resolvedSupportedTypes.contains(.purchase)
+            }
+            .sorted { ($0.order ?? 999) < ($1.order ?? 999) }
+    }
+
+    private var selectedInventorySaleCategory: BudgetCategory? {
+        enabledPurchaseCategories.first { $0.id == selectedInventorySaleCategoryId }
+    }
+
+    private var inventorySaleCategoryLabel: String {
+        if selectedInventorySaleCategoryId == "uncategorized" { return "Uncategorized" }
+        return selectedInventorySaleCategory?.name ?? "Choose Category"
     }
 
     private var quantityBinding: Binding<Int> {
@@ -139,7 +176,19 @@ struct NewItemView: View {
             TransactionPickerModal(
                 transactions: scopedTransactions,
                 selectedId: selectedTransactionId,
-                onSelect: { tx in selectedTransactionId = tx.id }
+                onSelect: { tx in
+                    projectTransactionMode = .existing
+                    selectedTransactionId = tx.id
+                }
+            )
+        }
+        .adaptivePresentation(isPresented: $showInventorySaleCategoryPicker, style: .picker) {
+            CategoryPickerList(
+                categories: enabledPurchaseCategories,
+                selectedId: selectedInventorySaleCategoryId == "uncategorized" ? nil : selectedInventorySaleCategoryId,
+                onSelect: { category in
+                    selectedInventorySaleCategoryId = category?.id ?? "uncategorized"
+                }
             )
         }
         .adaptivePresentation(isPresented: $showVendorPicker, style: .picker) {
@@ -245,15 +294,42 @@ struct NewItemView: View {
                             .font(Typography.label)
                             .foregroundStyle(BrandColors.textSecondary)
 
+                        if projectId != nil {
+                            Text("Choose how this item gets attached to the project: link it to an existing transaction, or create it through inventory so Ledger creates an inventory sale transaction automatically.")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
                         Button { showTransactionPicker = true } label: {
-                            pickerButton(label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction")
+                            pickerButton(
+                                label: selectedTransaction.map { transactionLabel($0) } ?? "Link Transaction",
+                                isSelected: projectTransactionMode == .existing && selectedTransactionId != nil
+                            )
                         }
                         .buttonStyle(.plain)
 
-                        if projectId != nil && selectedTransactionId == nil {
-                            Text("Select a transaction to add this item to the project.")
-                                .font(Typography.caption)
-                                .foregroundStyle(BrandColors.textSecondary)
+                        if projectId != nil {
+                            Button {
+                                projectTransactionMode = .createViaInventory
+                                selectedTransactionId = nil
+                                if selectedInventorySaleCategoryId == nil {
+                                    selectedInventorySaleCategoryId = enabledPurchaseCategories.first?.id ?? "uncategorized"
+                                }
+                            } label: {
+                                pickerButton(
+                                    label: "Create via Inventory",
+                                    isSelected: projectTransactionMode == .createViaInventory
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            if projectTransactionMode == .createViaInventory {
+                                Button { showInventorySaleCategoryPicker = true } label: {
+                                    pickerButton(label: "Category: \(inventorySaleCategoryLabel)")
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                 }
@@ -465,22 +541,30 @@ struct NewItemView: View {
 
     // MARK: - Shared Picker Button
 
-    private func pickerButton(label: String) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(BrandColors.textPrimary)
+    private func pickerButton(label: String, detail: String? = nil, isSelected: Bool = false) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .foregroundStyle(BrandColors.textPrimary)
+                if let detail {
+                    Text(detail)
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
             Spacer()
-            Image(systemName: "chevron.right")
-                .foregroundStyle(BrandColors.textSecondary)
+            Image(systemName: isSelected ? "checkmark" : "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
         }
         .font(Typography.input)
         .padding(.horizontal, Spacing.md)
-        .frame(height: 44)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                .stroke(isSelected ? BrandColors.primary : BrandColors.border, lineWidth: Dimensions.borderWidth)
         )
     }
 
@@ -535,9 +619,23 @@ struct NewItemView: View {
         item.projectPriceCents = parseCents(projectPrice)
         item.marketValueCents = parseCents(marketValue)
         item.transactionId = selectedTransactionId
+        if projectId != nil, projectTransactionMode == .existing {
+            item.budgetCategoryId = selectedTransaction?.budgetCategoryId
+        }
         item.accountId = accountId
 
+        if case .project(let destinationProjectId, _) = resolvedContext,
+           projectTransactionMode == .createViaInventory {
+            createProjectItemViaInventory(
+                accountId: accountId,
+                destinationProjectId: destinationProjectId,
+                item: item
+            )
+            return
+        }
+
         do {
+            isCreating = true
             var itemIds: [String] = []
             for _ in 0..<quantity {
                 var copy = item
@@ -558,29 +656,114 @@ struct NewItemView: View {
 
             dismiss()
 
-            // Enqueue images for persistent upload — survives app restart
-            for itemId in itemIds {
-                for (index, data) in imageDatas.enumerated() {
-                    let filename = "image_\(index).jpg"
-                    let path = mediaService.uploadPath(
-                        accountId: accountId, entityType: "items",
-                        entityId: itemId, filename: filename
-                    )
-                    let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
-                    var metadata = UploadMetadata(
-                        accountId: accountId, entityType: "items", entityId: itemId,
-                        storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
-                        fileName: filename
-                    )
-                    metadata.thumbnailStoragePathSm = thumbPaths.sm
-                    metadata.thumbnailStoragePathMd = thumbPaths.md
-                    mediaUploadQueue.enqueue(imageData: data, metadata: metadata)
-                }
-            }
-            mediaUploadQueue.processQueue()
+            enqueueImages(for: itemIds, accountId: accountId)
         } catch {
             // Offline-first: should not fail
+            isCreating = false
         }
+    }
+
+    private func createProjectItemViaInventory(accountId: String, destinationProjectId: String, item: Item) {
+        guard let categoryId = selectedInventorySaleCategoryId else { return }
+        isCreating = true
+
+        Task {
+            do {
+                let db = Firestore.firestore()
+                let batch = db.batch()
+                let txRef = db.collection("accounts/\(accountId)/transactions").document()
+                let saleId = txRef.documentID
+                let itemRefs = (0..<quantity).map { _ in
+                    db.collection("accounts/\(accountId)/items").document()
+                }
+                let itemIds = itemRefs.map(\.documentID)
+                let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+                let amountCents = itemIds.reduce(0) { total, _ in
+                    total + (item.projectPriceCents ?? item.purchasePriceCents ?? 0)
+                }
+                let today = todayDateString()
+
+                batch.setData([
+                    "type": "Sale",
+                    "source": inventoryLabel,
+                    "projectId": destinationProjectId,
+                    "budgetCategoryId": categoryId,
+                    "amountCents": amountCents,
+                    "subtotalCents": amountCents,
+                    "itemIds": itemIds,
+                    "isComplete": true,
+                    "transactionDate": today,
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ], forDocument: txRef)
+
+                for itemRef in itemRefs {
+                    var copy = item
+                    copy.id = itemRef.documentID
+                    copy.projectId = destinationProjectId
+                    copy.budgetCategoryId = categoryId
+                    copy.transactionId = saleId
+                    copy.currentSource = inventoryLabel
+                    copy.accountId = accountId
+                    if copy.projectPriceCents == nil {
+                        copy.projectPriceCents = copy.purchasePriceCents
+                    }
+
+                    var itemFields = try Firestore.Encoder().encode(copy)
+                    itemFields["accountId"] = accountId
+                    itemFields["projectId"] = destinationProjectId
+                    itemFields["budgetCategoryId"] = categoryId
+                    itemFields["transactionId"] = saleId
+                    itemFields["currentSource"] = inventoryLabel
+                    itemFields["updatedAt"] = FieldValue.serverTimestamp()
+                    batch.setData(itemFields, forDocument: itemRef)
+
+                    let edgeRef = db.collection("accounts/\(accountId)/lineageEdges").document()
+                    batch.setData([
+                        "accountId": accountId,
+                        "itemId": itemRef.documentID,
+                        "toProjectId": destinationProjectId,
+                        "toTransactionId": saleId,
+                        "movementKind": "sold",
+                        "source": "app",
+                        "createdAt": FieldValue.serverTimestamp(),
+                    ], forDocument: edgeRef)
+                }
+
+                if categoryId != "uncategorized" {
+                    let categoryRef = db.document("accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories/\(categoryId)")
+                    batch.setData(["updatedAt": FieldValue.serverTimestamp()], forDocument: categoryRef, merge: true)
+                }
+
+                try await batch.commit()
+                dismiss()
+                enqueueImages(for: itemIds, accountId: accountId)
+            } catch {
+                isCreating = false
+            }
+        }
+    }
+
+    private func enqueueImages(for itemIds: [String], accountId: String) {
+        for itemId in itemIds {
+            for (index, data) in imageDatas.enumerated() {
+                let filename = "image_\(index).jpg"
+                let path = mediaService.uploadPath(
+                    accountId: accountId, entityType: "items",
+                    entityId: itemId, filename: filename
+                )
+                let thumbPaths = ImageThumbnailGenerator.thumbnailPaths(for: path)
+                var metadata = UploadMetadata(
+                    accountId: accountId, entityType: "items", entityId: itemId,
+                    storagePath: path, updateType: .appendToArray(field: "images", kind: "image", isPrimary: index == 0),
+                    fileName: filename
+                )
+                metadata.thumbnailStoragePathSm = thumbPaths.sm
+                metadata.thumbnailStoragePathMd = thumbPaths.md
+                mediaUploadQueue.enqueue(imageData: data, metadata: metadata)
+            }
+        }
+        mediaUploadQueue.processQueue()
     }
 
     private func parseCents(_ text: String) -> Int? {
@@ -601,5 +784,12 @@ struct NewItemView: View {
             return "\(type) - \(CurrencyFormatting.formatCentsWithDecimals(cents))"
         }
         return type
+    }
+
+    private func todayDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: Date())
     }
 }
