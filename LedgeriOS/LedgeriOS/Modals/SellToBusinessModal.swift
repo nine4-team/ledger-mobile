@@ -29,7 +29,10 @@ struct MoveToInventoryModal: View {
         switch (returns.isEmpty, sales.isEmpty) {
         case (false, true):  return "Return to Inventory"
         case (true, false):  return "Sale to Inventory"
-        default:             return "Move to Inventory"
+        // Mixed batch: still labeled "Return to Inventory" because that's the
+        // user-facing operation name per docs/specs/reassign-vs-sell.md. The
+        // description below discloses the per-item routing (Return vs Sale).
+        default:             return "Return to Inventory"
         }
     }
 

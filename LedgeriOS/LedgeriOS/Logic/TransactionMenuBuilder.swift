@@ -4,7 +4,9 @@ import Foundation
 
 /// Callbacks for single-transaction menu actions. All optional so callers only wire what they need.
 struct SingleTransactionMenuCallbacks {
-    // Reassign (detail context only)
+    // Correct / Move — within-scope correction (no transactions, no budget impact).
+    // Note: these reassign the whole transaction's scope, which is distinct from
+    // item-level Correct / Move. See docs/specs/reassign-vs-sell.md.
     var onReassignToInventory: (() -> Void)?
     var onReassignToProject: (() -> Void)?
     // Copy ID
@@ -27,7 +29,7 @@ enum TransactionMenuBuilder {
 
     /// Menu for a transaction card in a list view.
     /// Legacy canonical inventory sales: no actions.
-    /// New per-batch Sales: delete only (shape fields are immutable).
+    /// New per-batch inventory movements: delete only (shape fields are immutable).
     static func buildCardMenu(
         transaction: Transaction,
         callbacks: SingleTransactionMenuCallbacks
@@ -59,39 +61,39 @@ enum TransactionMenuBuilder {
 
     /// Menu for the transaction detail toolbar.
     /// Legacy canonical sales: suppress Reassign, allow Delete.
-    /// New per-batch Sales: suppress Reassign (shape is immutable), allow Delete.
+    /// New per-batch inventory movements: suppress Reassign (shape is immutable), allow Delete.
     static func buildDetailMenu(
         transaction: Transaction,
         callbacks: SingleTransactionMenuCallbacks
     ) -> [ActionMenuItem] {
         let isCanonical = transaction.isCanonicalInventorySale == true
-        let isPerBatchSale = transaction.transactionType == .sale && !isCanonical
+        let isFrozenInventoryMovement = transaction.isInventoryMovement && !isCanonical
         var items: [ActionMenuItem] = []
 
-        if !isCanonical && !isPerBatchSale {
-            var reassignSubactions: [ActionMenuSubitem] = []
+        if !isCanonical && !isFrozenInventoryMovement {
+            var correctSubactions: [ActionMenuSubitem] = []
             if let onReassignToInventory = callbacks.onReassignToInventory {
-                reassignSubactions.append(ActionMenuSubitem(
+                correctSubactions.append(ActionMenuSubitem(
                     id: "reassign-to-inventory",
-                    label: "Reassign to Inventory",
+                    label: "Move to Inventory",
                     icon: "shippingbox",
                     onPress: onReassignToInventory
                 ))
             }
             if let onReassignToProject = callbacks.onReassignToProject {
-                reassignSubactions.append(ActionMenuSubitem(
+                correctSubactions.append(ActionMenuSubitem(
                     id: "reassign-to-project",
-                    label: "Reassign to Project",
+                    label: "Move to Project",
                     icon: "arrow.triangle.2.circlepath",
                     onPress: onReassignToProject
                 ))
             }
-            if !reassignSubactions.isEmpty {
+            if !correctSubactions.isEmpty {
                 items.append(ActionMenuItem(
-                    id: "reassign",
-                    label: "Reassign",
+                    id: "correct-move",
+                    label: "Correct / Move",
                     icon: "arrow.triangle.2.circlepath",
-                    subactions: reassignSubactions,
+                    subactions: correctSubactions,
                     isActionOnly: true
                 ))
             }

@@ -32,11 +32,10 @@ struct SingleItemMenuCallbacks {
     // Space
     var onSetSpace: (() -> Void)?
     var onClearSpace: (() -> Void)?
-    // Sell / Move
+    // Sell / Return — real business events (transactions created, budgets shift)
     var onReturnToInventory: (() -> Void)?
     var onSellToProject: (() -> Void)?
-    var onMoveToProject: (() -> Void)?
-    // Reassign
+    // Correct / Move — within-scope correction (no transactions, no budget impact)
     var onReassignToProject: (() -> Void)?
     // Copies
     var onMakeCopies: (() -> Void)?
@@ -56,7 +55,6 @@ struct BulkItemMenuCallbacks {
     var onClearSpace: (() -> Void)?
     var onReturnToInventory: (() -> Void)?
     var onSellToProject: (() -> Void)?
-    var onMoveToProject: (() -> Void)?
     var onReassignToProject: (() -> Void)?
     var onCopyIDs: (() -> Void)?
     var onDelete: (() -> Void)?
@@ -179,39 +177,40 @@ enum ItemMenuBuilder {
             ))
         }
 
-        // --- Sell / Move submenu (scope-dependent) ---
-        var sellSubactions: [ActionMenuSubitem] = []
+        // --- Sell / Return — top-level, no parent grouping ---
+        // These are real business events. They are intentionally NOT grouped
+        // under a "Move / Sell" parent because doing so conflates them with
+        // Correct / Move (a within-scope correction with no financial impact).
+        // See docs/specs/reassign-vs-sell.md §Design Decision.
         if scope == .project || scope == .search {
             if let onReturnToInventory = callbacks.onReturnToInventory {
-                sellSubactions.append(ActionMenuSubitem(id: "move-to-inventory", label: "Move to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
+                items.append(ActionMenuItem(
+                    id: "return-to-inventory",
+                    label: "Return to Inventory",
+                    icon: "shippingbox",
+                    onPress: onReturnToInventory
+                ))
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
-            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: onSellToProject))
-        }
-        if scope == .project || scope == .search {
-            if let onMoveToProject = callbacks.onMoveToProject {
-                sellSubactions.append(ActionMenuSubitem(id: "move-to-project", label: "Move to Project", icon: "arrow.triangle.2.circlepath", onPress: onMoveToProject))
-            }
-        }
-        if !sellSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "sell", label: "Move / Sell", icon: "dollarsign.circle",
-                subactions: sellSubactions,
-                isActionOnly: true
+                id: "sell-to-project",
+                label: "Sell to Project",
+                icon: "arrow.right.square",
+                onPress: onSellToProject
             ))
         }
 
-        // --- Reassign submenu ---
-        var reassignSubactions: [ActionMenuSubitem] = []
+        // --- Correct / Move — within-scope correction, no money moves ---
+        // The label combines intent ("Correct") with mechanic ("Move") so users
+        // don't confuse this with Sell. Reassigns an item between transactions
+        // within the same scope. See docs/specs/reassign-vs-sell.md.
         if let onReassignToProject = callbacks.onReassignToProject {
-            reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-project", label: "Reassign to Project", icon: "arrow.triangle.2.circlepath", onPress: onReassignToProject))
-        }
-        if !reassignSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath",
-                subactions: reassignSubactions,
-                isActionOnly: true
+                id: "correct-move",
+                label: "Correct / Move",
+                icon: "arrow.triangle.2.circlepath",
+                onPress: onReassignToProject
             ))
         }
 
@@ -279,39 +278,34 @@ enum ItemMenuBuilder {
             ))
         }
 
-        // Sell / Move submenu (scope-dependent)
-        var sellSubactions: [ActionMenuSubitem] = []
+        // Sell / Return — top-level, scope-dependent. See single-item builder
+        // for rationale (no "Move / Sell" parent grouping).
         if scope == .project || scope == .search {
             if let onReturnToInventory = callbacks.onReturnToInventory {
-                sellSubactions.append(ActionMenuSubitem(id: "move-to-inventory", label: "Move to Inventory", icon: "shippingbox", onPress: onReturnToInventory))
+                items.append(ActionMenuItem(
+                    id: "return-to-inventory",
+                    label: "Return to Inventory",
+                    icon: "shippingbox",
+                    onPress: onReturnToInventory
+                ))
             }
         }
         if let onSellToProject = callbacks.onSellToProject {
-            sellSubactions.append(ActionMenuSubitem(id: "sell-to-project", label: "Sell to Project", icon: "arrow.right.square", onPress: onSellToProject))
-        }
-        if scope == .project || scope == .search {
-            if let onMoveToProject = callbacks.onMoveToProject {
-                sellSubactions.append(ActionMenuSubitem(id: "move-to-project", label: "Move to Project", icon: "arrow.triangle.2.circlepath", onPress: onMoveToProject))
-            }
-        }
-        if !sellSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "sell", label: "Move / Sell", icon: "dollarsign.circle",
-                subactions: sellSubactions,
-                isActionOnly: true
+                id: "sell-to-project",
+                label: "Sell to Project",
+                icon: "arrow.right.square",
+                onPress: onSellToProject
             ))
         }
 
-        // Reassign submenu
-        var reassignSubactions: [ActionMenuSubitem] = []
+        // Correct / Move — within-scope correction.
         if let onReassignToProject = callbacks.onReassignToProject {
-            reassignSubactions.append(ActionMenuSubitem(id: "reassign-to-project", label: "Reassign to Project", icon: "arrow.triangle.2.circlepath", onPress: onReassignToProject))
-        }
-        if !reassignSubactions.isEmpty {
             items.append(ActionMenuItem(
-                id: "reassign", label: "Reassign", icon: "arrow.triangle.2.circlepath",
-                subactions: reassignSubactions,
-                isActionOnly: true
+                id: "correct-move",
+                label: "Correct / Move",
+                icon: "arrow.triangle.2.circlepath",
+                onPress: onReassignToProject
             ))
         }
 

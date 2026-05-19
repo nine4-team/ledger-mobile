@@ -15,7 +15,7 @@ struct ReassignTransactionToProjectModal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Reassign to Project")
+                Text("Move to Project")
                     .font(Typography.h2)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
