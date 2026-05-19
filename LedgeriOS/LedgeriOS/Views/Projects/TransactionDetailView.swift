@@ -730,16 +730,12 @@ struct TransactionDetailView: View {
             showAddItemMenu = true
         } label: {
             Image(systemName: "plus")
-                .fontWeight(.medium)
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(BrandColors.textSecondary)
+                .frame(width: 36, height: 36)
+                .contentShape(Rectangle())
         }
-        .buttonStyle(CircleBarButtonStyle())
-        .tint(BrandColors.textSecondary)
-        .font(.system(size: 16))
-        .imageScale(.medium)
-        .background(BrandColors.surface, in: Circle())
-        .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .buttonStyle(.plain)
         .accessibilityLabel("Add item")
     }
 
