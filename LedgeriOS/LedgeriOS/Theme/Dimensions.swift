@@ -31,6 +31,8 @@ enum Dimensions {
 
     /// Thumbnail corner radius — 21pt
     static let thumbnailRadius: CGFloat = 21
+    /// Standard item/card thumbnail size — matches `ItemCard` previews.
+    static let itemThumbnailSize: CGFloat = 108
 
     // MARK: - Adaptive Layout
 

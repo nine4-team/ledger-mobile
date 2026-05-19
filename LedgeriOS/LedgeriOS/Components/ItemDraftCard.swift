@@ -3,8 +3,6 @@ import SwiftUI
 struct ItemDraftCard: View {
     let protoItem: ProtoItem
 
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-
     private var photos: [AttachmentRef] {
         protoItem.photos ?? []
     }
@@ -32,10 +30,6 @@ struct ItemDraftCard: View {
             (first.isPrimary == true ? 0 : 1) < (second.isPrimary == true ? 0 : 1)
         }
         return Array(ordered.prefix(3))
-    }
-
-    private var thumbnailSize: CGFloat {
-        horizontalSizeClass == .compact ? 76 : 92
     }
 
     var body: some View {
@@ -86,22 +80,32 @@ struct ItemDraftCard: View {
     @ViewBuilder
     private var photoStrip: some View {
         if previewPhotos.isEmpty {
-            placeholderThumb(size: thumbnailSize)
+            placeholderThumb
         } else {
-            HStack(spacing: Spacing.sm) {
-                ForEach(Array(previewPhotos.enumerated()), id: \.offset) { _, photo in
-                    photoThumb(photo, size: thumbnailSize)
+            GeometryReader { proxy in
+                let visibleCount = visibleThumbnailCount(for: proxy.size.width)
+                HStack(spacing: Spacing.sm) {
+                    ForEach(Array(previewPhotos.prefix(visibleCount).enumerated()), id: \.offset) { _, photo in
+                        photoThumb(photo)
+                    }
                 }
             }
+            .frame(height: Dimensions.itemThumbnailSize)
         }
     }
 
-    private func photoThumb(_ photo: AttachmentRef, size: CGFloat) -> some View {
+    private func visibleThumbnailCount(for availableWidth: CGFloat) -> Int {
+        let itemWidth = Dimensions.itemThumbnailSize + Spacing.sm
+        let fitCount = Int((availableWidth + Spacing.sm) / itemWidth)
+        return min(previewPhotos.count, max(1, fitCount))
+    }
+
+    private func photoThumb(_ photo: AttachmentRef) -> some View {
         FirebaseImage(url: photo.url, thumbnailUrl: photo.thumbnailUrlSm, contentMode: .fill) {
             ProgressView()
-                .frame(width: size, height: size)
+                .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
         }
-        .frame(width: size, height: size)
+        .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
         .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
         .overlay(
@@ -110,7 +114,7 @@ struct ItemDraftCard: View {
         )
     }
 
-    private func placeholderThumb(size: CGFloat) -> some View {
+    private var placeholderThumb: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .fill(BrandColors.surfaceTertiary)
@@ -118,7 +122,7 @@ struct ItemDraftCard: View {
                 .font(.system(size: 22))
                 .foregroundStyle(BrandColors.textTertiary)
         }
-        .frame(width: size, height: size)
+        .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)

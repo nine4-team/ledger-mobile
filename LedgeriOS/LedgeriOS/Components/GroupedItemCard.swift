@@ -226,9 +226,9 @@ struct GroupedItemCard<ExpandedContent: View>: View {
         if let thumbnailUrl, !thumbnailUrl.isEmpty {
             FirebaseImage(url: thumbnailUrl, thumbnailUrl: thumbnailSmUrl, contentMode: .fill) {
                 ProgressView()
-                    .frame(width: 108, height: 108)
+                    .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
             }
-            .frame(width: 108, height: 108)
+            .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
             .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
             .overlay(
@@ -248,7 +248,7 @@ struct GroupedItemCard<ExpandedContent: View>: View {
                 .font(.system(size: 24))
                 .foregroundStyle(BrandColors.textTertiary)
         }
-        .frame(width: 108, height: 108)
+        .frame(width: Dimensions.itemThumbnailSize, height: Dimensions.itemThumbnailSize)
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
