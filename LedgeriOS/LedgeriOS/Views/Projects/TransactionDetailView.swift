@@ -152,6 +152,8 @@ struct TransactionDetailView: View {
                 ScrollView {
                     AdaptiveContentWidth {
                         LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                            compactTransactionContext
+
                             ScrollableTabBar(
                                 selectedId: $selectedTransactionTab,
                                 items: [
@@ -533,7 +535,6 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemsTabContent: some View {
-        compactTransactionContext
         itemSubtabHeader
 
         if selectedItemsSubtab == "item-drafts" {
