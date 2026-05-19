@@ -19,8 +19,6 @@ struct ItemsTabView: View {
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
-    @State private var showAddItemMenu = false
-    @State private var addItemPendingAction: (() -> Void)?
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
 
@@ -43,12 +41,6 @@ struct ItemsTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            itemsWorkspaceHeader
-                .frame(maxWidth: Dimensions.contentMaxWidth)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-
             ScrollableTabBar(
                 selectedId: $selectedItemsSubtab,
                 items: [
@@ -115,31 +107,6 @@ struct ItemsTabView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .adaptivePresentation(isPresented: $showAddItemMenu, style: .quickMenu, onDismiss: {
-            addItemPendingAction?()
-            addItemPendingAction = nil
-        }) {
-            ActionMenuSheet(
-                title: "Add Item",
-                items: [
-                    ActionMenuItem(
-                        id: "item-draft",
-                        label: "Item Draft",
-                        icon: "camera.badge.ellipsis",
-                        onPress: { showNewItemDraft = true }
-                    ),
-                    ActionMenuItem(
-                        id: "new-item",
-                        label: "New Item",
-                        icon: "shippingbox",
-                        onPress: { showNewItem = true }
-                    ),
-                ],
-                onSelectAction: { action in
-                    addItemPendingAction = action
-                }
-            )
-        }
         .adaptivePresentation(isPresented: $showNewItem, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 NewItemView(context: .project(projectId, spaceId: nil))
@@ -165,23 +132,52 @@ struct ItemsTabView: View {
         }
     }
 
-    // MARK: - Item Workspace
+    private var realItemsList: some View {
+        SharedItemsList(
+            mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
+            getMenuItems: { singleItemMenuItems(for: $0) },
+            emptyMessage: "No items in this project",
+            onAdd: { showNewItem = true },
+            getBulkMenuItems: { bulkActionMenuItems },
+            selectedIds: $selectedItemIds,
+            useNavigationLinks: true,
+            emptyIcon: "cube.box"
+        )
+    }
 
-    private var itemsWorkspaceHeader: some View {
-        HStack(spacing: Spacing.sm) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Items")
-                    .font(Typography.h3)
-                    .foregroundStyle(BrandColors.textPrimary)
-                Text("\(activeProjectProtoItems.count) drafts | \(projectContext.items.count) items")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
+    private var itemDraftsList: some View {
+        ScrollView {
+            AdaptiveContentWidth {
+                VStack(alignment: .leading, spacing: 0) {
+                    draftAddButton
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.bottom, Spacing.sm)
+
+                    if activeProjectProtoItems.isEmpty {
+                        ContentUnavailableView {
+                            Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xl)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                            ForEach(activeProjectProtoItems) { protoItem in
+                                ItemDraftCard(protoItem: protoItem)
+                            }
+                        }
+                        .padding(.horizontal, Spacing.screenPadding)
+                        .padding(.vertical, Spacing.sm)
+                    }
+                }
             }
+        }
+    }
 
+    private var draftAddButton: some View {
+        HStack {
             Spacer()
-
             Button {
-                showAddItemMenu = true
+                showNewItemDraft = true
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.medium)
@@ -194,43 +190,9 @@ struct ItemsTabView: View {
             .background(BrandColors.surface, in: Circle())
             .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item")
+            .accessibilityLabel("Add item draft")
         }
-        .frame(minHeight: 44)
-    }
-
-    private var realItemsList: some View {
-        SharedItemsList(
-            mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
-            getMenuItems: { singleItemMenuItems(for: $0) },
-            emptyMessage: "No items in this project",
-            onAdd: nil,
-            getBulkMenuItems: { bulkActionMenuItems },
-            selectedIds: $selectedItemIds,
-            useNavigationLinks: true,
-            emptyIcon: "cube.box"
-        )
-    }
-
-    private var itemDraftsList: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                if activeProjectProtoItems.isEmpty {
-                    ContentUnavailableView {
-                        Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
-                    }
-                    .padding(.vertical, Spacing.xl)
-                } else {
-                    LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
-                        ForEach(activeProjectProtoItems) { protoItem in
-                            ItemDraftCard(protoItem: protoItem)
-                        }
-                    }
-                    .padding(.horizontal, Spacing.screenPadding)
-                    .padding(.vertical, Spacing.sm)
-                }
-            }
-        }
+        .padding(.top, Spacing.sm)
     }
 
     // MARK: - Single-Item Menu

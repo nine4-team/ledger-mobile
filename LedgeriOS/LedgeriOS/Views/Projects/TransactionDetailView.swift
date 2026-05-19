@@ -273,9 +273,6 @@ struct TransactionDetailView: View {
                 title: "Add Items",
                 items: {
                     var items = [
-                        ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
-                            showCreateItemDraft = true
-                        }),
                         ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
                             showCreateNewItem = true
                         }),
@@ -501,7 +498,7 @@ struct TransactionDetailView: View {
         switch step.id {
         case "items":
             selectedTransactionTab = "items"
-            selectedItemsSubtab = activeTransactionProtoItems.isEmpty ? "items" : "item-drafts"
+            selectedItemsSubtab = "items"
             showAddItemMenu = true
         case "receipt":
             selectedTransactionTab = "details"
@@ -533,7 +530,6 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemsTabContent: some View {
-        itemsWorkspaceHeader
         ScrollableTabBar(
             selectedId: $selectedItemsSubtab,
             items: [
@@ -549,39 +545,6 @@ struct TransactionDetailView: View {
             returnedItemsSection
             soldItemsSection
         }
-    }
-
-    private var itemsWorkspaceHeader: some View {
-        HStack(spacing: Spacing.sm) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Items")
-                    .font(Typography.h3)
-                    .foregroundStyle(BrandColors.textPrimary)
-                Text("\(activeTransactionProtoItems.count) drafts | \(activeItems.count) items")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-
-            Spacer()
-
-            Button {
-                showAddItemMenu = true
-            } label: {
-                Image(systemName: "plus")
-                    .fontWeight(.medium)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-            .buttonStyle(CircleBarButtonStyle())
-            .tint(BrandColors.textSecondary)
-            .font(.system(size: 16))
-            .imageScale(.medium)
-            .background(BrandColors.surface, in: Circle())
-            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item")
-        }
-        .frame(minHeight: 44)
-        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Sections
@@ -699,7 +662,7 @@ struct TransactionDetailView: View {
         SharedItemsList(
             mode: .embedded(items: activeItems, onItemPress: { _ in }),
             emptyMessage: "No items yet",
-            onAdd: nil,
+            onAdd: { showAddItemMenu = true },
             useNavigationLinks: true,
             filterScope: .project,
             inline: true
@@ -708,19 +671,47 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemDraftsList: some View {
-        if activeTransactionProtoItems.isEmpty {
-            ContentUnavailableView {
-                Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
-            }
-            .padding(.vertical, Spacing.xl)
-        } else {
-            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
-                ForEach(activeTransactionProtoItems) { protoItem in
-                    ItemDraftCard(protoItem: protoItem)
+        VStack(alignment: .leading, spacing: 0) {
+            draftAddButton
+                .padding(.bottom, Spacing.sm)
+
+            if activeTransactionProtoItems.isEmpty {
+                ContentUnavailableView {
+                    Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.xl)
+            } else {
+                VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                    ForEach(activeTransactionProtoItems) { protoItem in
+                        ItemDraftCard(protoItem: protoItem)
+                    }
+                }
+                .padding(.top, Spacing.sm)
             }
-            .padding(.top, Spacing.sm)
         }
+    }
+
+    private var draftAddButton: some View {
+        HStack {
+            Spacer()
+            Button {
+                showCreateItemDraft = true
+            } label: {
+                Image(systemName: "plus")
+                    .fontWeight(.medium)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .tint(BrandColors.textSecondary)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+            .accessibilityLabel("Add item draft")
+        }
+        .padding(.top, Spacing.sm)
     }
 
     // 6. Returned Items (collapsed, conditional)
