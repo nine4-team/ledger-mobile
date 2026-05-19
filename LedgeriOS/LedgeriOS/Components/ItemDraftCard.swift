@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ItemDraftCard: View {
     let protoItem: ProtoItem
-    var onPinImage: ((AttachmentRef, [AttachmentRef]) -> Void)?
 
     private var photos: [AttachmentRef] {
         protoItem.photos ?? []
@@ -103,9 +102,8 @@ struct ItemDraftCard: View {
         }
     }
 
-    @ViewBuilder
     private func photoThumb(_ photo: AttachmentRef, size: CGFloat) -> some View {
-        let image = FirebaseImage(url: photo.url, thumbnailUrl: photo.thumbnailUrlSm, contentMode: .fill) {
+        FirebaseImage(url: photo.url, thumbnailUrl: photo.thumbnailUrlSm, contentMode: .fill) {
             ProgressView()
                 .frame(width: size, height: size)
         }
@@ -116,16 +114,5 @@ struct ItemDraftCard: View {
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
         )
-
-        if let onPinImage {
-            Button {
-                onPinImage(photo, photos)
-            } label: {
-                image
-            }
-            .buttonStyle(.plain)
-        } else {
-            image
-        }
     }
 }

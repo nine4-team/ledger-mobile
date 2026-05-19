@@ -716,9 +716,7 @@ struct TransactionDetailView: View {
         } else {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 ForEach(activeTransactionProtoItems) { protoItem in
-                    ItemDraftCard(protoItem: protoItem) { attachment, source in
-                        pinImage(attachment, from: source)
-                    }
+                    ItemDraftCard(protoItem: protoItem)
                 }
             }
             .padding(.top, Spacing.sm)
