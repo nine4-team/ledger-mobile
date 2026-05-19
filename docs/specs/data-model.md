@@ -176,7 +176,7 @@ Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-manage
 
 A persistent capture group for a physical object that is not ready to become a real `Item` yet. Proto items are photo-first intake records used for field capture and later review. They do not affect budgets, inventory value, item counts, transactions, invoices, reports, or lineage until resolved.
 
-User-facing UI should call these **Item Drafts**. Unresolved drafts are shown in their owning context first: project drafts above project Items, inventory drafts above inventory Items, and transaction-linked drafts near transaction line/items. Needs Review is an additional global cleanup queue, not the only place drafts are visible.
+User-facing UI should call these **Item Drafts**. Unresolved drafts are shown in their owning context first: project drafts in project context, inventory drafts in inventory context, and transaction-linked drafts in Transaction Detail's `Items > Item Drafts` sub-tab. Needs Review is an additional global cleanup queue, not the only place drafts are visible.
 
 | Field | Type | Constraints |
 |-------|------|-------------|

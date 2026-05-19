@@ -110,9 +110,26 @@ The section should:
 
 ### Transaction Detail
 
-Transaction-linked item drafts appear near the transaction's item/line-item area, separate from real items.
+Transaction Detail should use a minimal top-level split:
 
-The section should make it clear that the draft is a possible match, not yet a resolved transaction item.
+- **Details**: default tab; keeps the existing non-item transaction sections such as summary, next steps, receipts, other images, notes, details, and transaction audit.
+- **Items**: dedicated item workspace for item drafts, real items, returned items, and sold items.
+
+Inside the **Items** tab, use sub-tabs:
+
+- **Item Drafts**: unresolved `ProtoItem` records linked to this transaction.
+- **Items**: real `Item` records linked to this transaction.
+
+The sub-tabs keep each object type's controls clear. Item Drafts should not be forced into `SharedItemsList`, and real item search/sort/filter/select controls should remain scoped to real Items.
+
+The Items tab should have one item-related add affordance at the tab level, not separate competing add buttons inside each sub-tab. The add menu can route to:
+
+- Item Draft
+- New Item
+- Add Existing Items
+- Create from Images, when transaction images are available
+
+This keeps creation centered on the user task: "add something item-related to this transaction," while still keeping draft management and real item management separate.
 
 ## Data Rules
 
@@ -228,7 +245,7 @@ This protects existing invariants:
 
 ## Relationship To Transactions
 
-Proto items may point at candidate transactions, but transactions do not own proto items. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
+Proto items may point at candidate transactions, but transactions do not own proto items as embedded children. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
 
 If a proto item resolves into a transaction-created item, the resulting `Item` follows normal transaction membership rules.
 

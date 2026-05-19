@@ -74,9 +74,15 @@ Surface proto items in their natural contexts and in the review workflow.
 
 Work items:
 
-- Add an Item Drafts section above Items in the Project Items tab.
+- Refactor Transaction Detail into top-level `Details` and `Items` tabs.
+- Keep existing non-item transaction sections in the default `Details` tab.
+- Move item-related transaction sections into the `Items` tab.
+- Add `Item Drafts` and `Items` sub-tabs inside the transaction `Items` tab.
+- Add one item-related add affordance at the transaction `Items` tab level with routes for Item Draft, New Item, Add Existing Items, and Create from Images when available.
+- Keep `SharedItemsList` scoped to the real `Items` sub-tab so sticky search/sort/filter/select controls apply only to real items.
+- Add an Item Drafts section above Items in the Project Items tab, or replace this with the project-level Review tab if that redesign lands first.
 - Add an Item Drafts section above normal Inventory items.
-- Add transaction-linked Item Drafts near transaction items/line items.
+- Add transaction-linked Item Drafts in the transaction `Items > Item Drafts` sub-tab.
 - Add proto item sections to Needs Review as an account-wide cleanup queue.
 - Group by project, intended project, inventory/unassigned, and transaction-linked captures.
 - Show image group, context hints, capture date, and source hint.
@@ -84,6 +90,10 @@ Work items:
 
 Acceptance:
 
+- Transaction Detail has a default `Details` tab and a dedicated `Items` tab.
+- The transaction `Items` tab separates Item Drafts and real Items into sub-tabs.
+- There is a single item-related add affordance for the transaction `Items` tab, not competing add buttons in each sub-tab.
+- Real item list controls remain scoped to real Items and do not imply they affect Item Drafts.
 - A user opening a project can see unresolved item drafts for that project above its normal items.
 - A user opening inventory can see unresolved inventory item drafts above normal inventory items.
 - A reviewer can find all unresolved proto items from one place.
