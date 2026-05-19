@@ -688,39 +688,20 @@ struct TransactionDetailView: View {
 
     private var compactTransactionContext: some View {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
-            VStack(alignment: .leading, spacing: 2) {
-                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
-                    .font(Typography.body.weight(.semibold))
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .lineLimit(1)
-
-                HStack(spacing: Spacing.xs) {
-                    FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
-                    Text("·")
-                    FindableText(TransactionDisplayCalculations.projectLabel(
-                        for: currentTransaction,
-                        projects: accountContext.allProjects
-                    ))
-                }
-                .font(Typography.caption)
+            FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
+                .font(Typography.caption.weight(.semibold))
                 .foregroundStyle(BrandColors.textSecondary)
                 .lineLimit(1)
-            }
 
             Spacer(minLength: Spacing.sm)
 
             FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
-                .font(Typography.body.weight(.semibold))
-                .foregroundStyle(BrandColors.textPrimary)
+                .font(Typography.caption.weight(.semibold))
+                .foregroundStyle(BrandColors.textSecondary)
                 .lineLimit(1)
         }
-        .padding(.horizontal, Spacing.md)
-        .padding(.vertical, Spacing.sm)
-        .background(BrandColors.surface, in: RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
-                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
-        )
+        .padding(.horizontal, Spacing.xs)
+        .padding(.top, Spacing.xs)
     }
 
     private var itemSubtabHeader: some View {
