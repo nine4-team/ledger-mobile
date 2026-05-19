@@ -19,14 +19,14 @@ enum TransactionDisplayCalculations {
 
     /// Resolves the display name for a transaction, from the project's point of view.
     ///
-    /// Sale direction is derived implicitly from the transaction shape — no
-    /// dedicated field. A Sale's `budgetCategoryId` presence distinguishes
-    /// inventory → project (has a destination category) from project →
-    /// inventory (inventory items have no category). Legacy canonical sales
-    /// that carry `inventorySaleDirection` are honored as a fallback.
+    /// Inventory movement direction is derived implicitly from the transaction
+    /// shape. Inventory → project is a Purchase from an inventory source.
+    /// Project → inventory acquisition is a Sale with no category. Legacy
+    /// canonical sales that carry `inventorySaleDirection` are honored as a
+    /// fallback.
     ///
     /// Naming convention:
-    /// - Sale, inventory → project → `"Purchase from [source]"`
+    /// - Purchase, inventory → project → `"Purchase from [source]"`
     /// - Sale, project → inventory → `"Sale to [source]"`
     /// - Return → `"Return to [source]"`
     /// - Fee → "Fee" (source is the business itself — no counterparty)
@@ -57,7 +57,12 @@ enum TransactionDisplayCalculations {
                 return "Return to \(source)"
             case .fee:
                 return "Fee"
-            case .purchase, .expense, nil:
+            case .purchase:
+                if transaction.isInventoryMovement {
+                    return "Purchase from \(source)"
+                }
+                return source
+            case .expense, nil:
                 return source
             }
         }

@@ -39,6 +39,7 @@ struct TransactionCard: View {
             status: transaction.status,
             isCanonicalInventorySale: transaction.isCanonicalInventorySale,
             inventorySaleDirection: transaction.inventorySaleDirection,
+            budgetCategoryId: transaction.budgetCategoryId,
             invoiceStatus: invoice
         )
     }

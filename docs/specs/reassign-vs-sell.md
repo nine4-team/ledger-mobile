@@ -7,7 +7,7 @@ When items need to move between transactions, projects, or business inventory, t
 UI labels (final):
 
 - **Correct / Move** — corrections only, no financial impact. Within-scope reassignment.
-- **Sell to Project** — one menu item that handles both inventory→project and project→project sales (the two-hop is an implementation detail invisible to the user).
+- **Sell to Project** — one menu item that handles moving inventory or another project's items into the destination project (the two-hop is an implementation detail invisible to the user).
 - **Return to Inventory** — items returning home to business inventory (origin-aware under the hood).
 - **Return to Vendor** — items being physically sent back to the vendor.
 
@@ -51,8 +51,8 @@ Sell moves items **into a project**. From the user's perspective this is a singl
 
 Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the user picks one budget category that applies to every item in the batch. Two underlying flows, transparent to the user:
 
-- **Inventory → Project** (single Sale). One new immutable Sale transaction.
-- **Project A → Project B** (two-hop, atomic). Hop 1 is origin-aware against Project A (Return-to-Inventory if the item came from inventory, Sale-to-Inventory if it originated in Project A). Hop 2 is a new Sale into Project B with the chosen category. All writes land in the same Firestore batch.
+- **Inventory → Project** (single Purchase). One new immutable Purchase transaction.
+- **Project A → Project B** (two-hop, atomic). Hop 1 is origin-aware against Project A (Return-to-Inventory if the item came from inventory, Sale-to-Inventory if it originated in Project A). Hop 2 is a new Purchase from inventory into Project B with the chosen category. All writes land in the same Firestore batch.
 
 > **Note:** The reverse direction (project → business inventory) is **not** a Sell from the user's perspective — it's the **Return to Inventory** action below. See [return-and-sale-tracking.md](return-and-sale-tracking.md) for the return flow details.
 
@@ -60,9 +60,9 @@ Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the us
 
 - `item.projectId` set to destination project ID
 - `item.budgetCategoryId` set to the chosen batch category
-- `item.transactionId` set to the new Sale transaction ID
+- `item.transactionId` set to the new Purchase transaction ID
 - `item.status` set to `"purchased"`
-- A new Sale transaction is created (auto-ID, frozen `amountCents` and `itemIds`)
+- A new Purchase transaction is created (auto-ID, frozen `amountCents` and `itemIds`)
 - Items removed from any prior transaction's `itemIds`
 - One `"sold"` lineage edge per item
 - Budget spend in the destination project increases
@@ -75,7 +75,7 @@ Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the us
 
 - Adds to destination project's budget for the chosen category
 
-See [sale-transactions.md](sale-transactions.md) for the full per-batch sale flow.
+See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
 
 ## Return to Inventory (Project → Inventory) — Origin-Aware
 
@@ -113,10 +113,10 @@ The UI confirms the split before writing, then writes both transactions in a sin
 |--------|-------------|--------------------|----------------------|------------------|
 | Project A, Transaction X | Project A, Transaction Y | **Correct / Move** | `transactionId` swap | None |
 | Business Inventory, Txn X | Business Inventory, Txn Y | **Correct / Move** | `transactionId` swap | None |
-| Business Inventory | Project A | **Sell to Project** | Single Sale (inventory → project) | Adds to Project A budget |
+| Business Inventory | Project A | **Purchase from Inventory** | Single Purchase from inventory | Adds to Project A budget |
 | Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Return transaction | Subtracts from Project A budget |
 | Project A | Business Inventory (item originated in A) | **Return to Inventory** | Sale-to-Inventory transaction | Subtracts from Project A budget |
-| Project A | Project B | **Sell to Project** | Two-hop atomic: origin-aware hop 1 + destination Sale | Subtracts from A, adds to B |
+| Project A | Project B | **Move/Sell to Project** | Two-hop atomic: origin-aware hop 1 + destination Purchase from inventory | Subtracts from A, adds to B |
 | Project A or Inventory | Vendor | **Return to Vendor** | Vendor Return transaction (new or appended) | Subtracts from source budget (if from project) |
 
 ### Sell to Project — Project-to-Project Mechanics
@@ -124,7 +124,7 @@ The UI confirms the split before writing, then writes both transactions in a sin
 When the source is another project, **Sell to Project** decomposes into a **two-hop** atomic batch. The user does not see this — to them it's a single Sell action. The first hop is origin-aware:
 
 1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory (no `budgetCategoryId`) against Project A. Mixed batches write both.
-2. **Hop 2.** One Sale into Project B (`budgetCategoryId` set), covering all items.
+2. **Hop 2.** One Purchase from inventory into Project B (`budgetCategoryId` set), covering all items.
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
@@ -163,7 +163,7 @@ Under the per-batch model, **inventory items have no `budgetCategoryId`** (the i
 
 1. The picker shows categories enabled in the destination project.
 2. If the user picks a category that's not enabled, the system auto-enables it (creates a `ProjectBudgetCategory` doc with `setData(merge: true)`).
-3. The chosen category is set on the new Sale transaction AND on every item in the batch.
+3. The chosen category is set on the new Purchase transaction AND on every item in the batch.
 
 There is no per-item category override and no mixed-category batches. Users wanting mixed categories must sell in separate batches. See [sale-transactions.md](sale-transactions.md) D4a.
 
@@ -172,6 +172,6 @@ There is no per-item category override and no mixed-category batches. Users want
 Correct/Move and Sell could theoretically be one "move" operation that detects scope changes automatically. They are kept separate because:
 
 1. **User intent matters.** Correcting a mistake vs selling (financial transaction) have different mental models. Conflating them leads to accidental financial entries. The label "Correct / Move" exists specifically to make the corrective intent visible — without "Correct," users might choose Sell when they meant to fix a data error.
-2. **Reversibility.** Correct/Move is trivially reversible (just reassign back). Sell creates Sale transactions and lineage edges that persist.
+2. **Reversibility.** Correct/Move is trivially reversible (just reassign back). Sell to Project creates inventory movement transactions and lineage edges that persist.
 3. **Validation differs.** Sell requires budget category selection and may need user input. Correct/Move is always immediate.
 4. **Audit trail clarity.** The lineage edge types (`"association"` vs `"sold"` vs `"returned"`) clearly distinguish organizational moves from financial ones.

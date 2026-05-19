@@ -372,16 +372,22 @@ enum TransactionFilterSortCalculations {
         guard transaction.isInventoryMovement else { return nil }
 
         switch transaction.transactionType {
-        case .sale:
-            let direction: InventoryMovementDirection = transaction.budgetCategoryId == nil
-                ? .soldToInventory
-                : .fromInventory
+        case .purchase:
             return InventoryMovementGroupKey(
-                direction: direction,
+                direction: .fromInventory,
                 dateBucket: date,
                 source: source,
                 projectId: projectId,
                 budgetCategoryId: categoryId,
+                type: type
+            )
+        case .sale:
+            return InventoryMovementGroupKey(
+                direction: .soldToInventory,
+                dateBucket: date,
+                source: source,
+                projectId: projectId,
+                budgetCategoryId: "none",
                 type: type
             )
         case .return:
@@ -393,7 +399,7 @@ enum TransactionFilterSortCalculations {
                 budgetCategoryId: "none",
                 type: type
             )
-        case .purchase, .fee, .expense, nil:
+        case .fee, .expense, nil:
             return nil
         }
     }

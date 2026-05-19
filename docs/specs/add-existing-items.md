@@ -4,7 +4,7 @@
 
 When users are inside a transaction or space, they can pull items from anywhere in the account — other transactions in the same project, other projects, or business inventory. The system determines the correct operation (reassign or sell) based on whether the source and destination are in the same scope, then applies the appropriate field updates and audit trail entries.
 
-This spec covers the picker scoping rules, conflict detection, scope change routing, and field update semantics. For reassign vs sell business rules, see [reassign-vs-sell.md](reassign-vs-sell.md). For the per-batch sale transaction model, see [sale-transactions.md](sale-transactions.md). For return-to-inventory, see [return-and-sale-tracking.md](return-and-sale-tracking.md).
+This spec covers the picker scoping rules, conflict detection, scope change routing, and field update semantics. For reassign vs sell business rules, see [reassign-vs-sell.md](reassign-vs-sell.md). For the per-batch inventory movement transaction model, see [sale-transactions.md](sale-transactions.md). For return-to-inventory, see [return-and-sale-tracking.md](return-and-sale-tracking.md).
 
 ## Entry Points
 
@@ -122,7 +122,7 @@ The system determines the operation automatically based on source and destinatio
 |-------------|-------------------|-----------|-----------|
 | Same project | Same project | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
 | Business inventory | Business inventory | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
-| Business inventory | Project | **Sell to Project** (per-batch) | [sale-transactions.md](sale-transactions.md) |
+| Business inventory | Project | **Purchase from Inventory** (per-batch) | [sale-transactions.md](sale-transactions.md) |
 | Project | Business inventory | **Return to Inventory** | [return-and-sale-tracking.md](return-and-sale-tracking.md) §Returning to Inventory |
 | Project A | Project B | **Sell to Project** (two-hop: return + sell, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
 
@@ -158,17 +158,17 @@ This is a reassign. All writes are client-side (Tier 1: fire-and-forget).
 
 This is a sell or return-to-inventory, depending on direction. Each is one Firestore batch (the destination transaction is a brand-new immutable document, not an aggregator). See [sale-transactions.md](sale-transactions.md) and [return-and-sale-tracking.md](return-and-sale-tracking.md) for the full write sequences.
 
-**Inventory → project (per-batch Sale):**
+**Inventory → project (per-batch Purchase):**
 
 | Field | Update |
 |-------|--------|
 | `item.projectId` | Set to destination project ID |
-| `item.transactionId` | Set to the new Sale transaction ID |
+| `item.transactionId` | Set to the new Purchase transaction ID |
 | `item.spaceId` | Cleared (null) — spaces are project-scoped |
 | `item.budgetCategoryId` | Set to the chosen batch category |
 | `item.status` | Set to `"purchased"` |
 | Source `transaction.itemIds` | Remove item ID (if any prior transaction) |
-| New Sale transaction | Created with `itemIds` and `amountCents` frozen at this batch |
+| New Purchase transaction | Created with `itemIds` and `amountCents` frozen at this batch |
 
 **Lineage:** A `sold` edge is created client-side per item.
 
@@ -206,7 +206,7 @@ Inventory items have **no `budgetCategoryId`** (the inventory invariant). The us
 
 1. The picker shows categories enabled in the destination project.
 2. If the chosen category is not yet enabled, the system auto-enables it (`setData(merge: true)` on the `ProjectBudgetCategory` doc, preserving any existing budget amount).
-3. The chosen category is set on the new Sale transaction AND on every item in the batch.
+3. The chosen category is set on the new Purchase transaction AND on every item in the batch.
 
 There is no per-item override and no mixed-category batches. See [sale-transactions.md](sale-transactions.md) D4a.
 

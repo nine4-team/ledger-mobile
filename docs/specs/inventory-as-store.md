@@ -1,10 +1,10 @@
 # Inventory as a Store
 
-> **Status:** Active. Documents the conceptual model shift introduced by the per-batch sale redesign.
+> **Status:** Active. Documents the conceptual model shift introduced by the per-batch inventory movement redesign.
 
 ## The Idea
 
-**Business inventory is a store the business stocks via two paths.** Projects can buy from inventory (a Sale, inventory → project) and projects can return to inventory (a Return, project → inventory) when an item is going home. But projects can also **sell** items into inventory — when an item originated in the project and the business is acquiring it for future use. That acquisition is also a Sale (project → inventory), not a Return. A Return is reserved for items that came from inventory to begin with.
+**Business inventory is a store the business stocks via two paths.** Projects can buy from inventory (a Purchase, inventory → project) and projects can return to inventory (a Return, project → inventory) when an item is going home. But projects can also **sell** items into inventory — when an item originated in the project and the business is acquiring it for future use. That acquisition is a Sale (project → inventory), not a Return. A Return is reserved for items that came from inventory to begin with.
 
 Inventory items have no budget category; categories belong to projects. Items moving into inventory lose their category; items moving out acquire one.
 
@@ -12,7 +12,7 @@ Inventory items have no budget category; categories belong to projects. Items mo
 
 | Concept | Legacy model | New model |
 |---|---|---|
-| Inventory → project | Sale transaction (`business_to_project` direction) | Sale transaction, `budgetCategoryId` set |
+| Inventory → project | Sale transaction (`business_to_project` direction) | **Purchase transaction**, `budgetCategoryId` set |
 | Project → inventory (item came from inventory) | Sale transaction (`project_to_business` direction) | **Return transaction** |
 | Project → inventory (item originated in project) | Sale transaction (`project_to_business` direction) | **Sale transaction, `budgetCategoryId` absent** |
 | Items in inventory | Carry their `budgetCategoryId` across scope moves | Have `budgetCategoryId == null` |
@@ -83,7 +83,7 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 
 - **Triggered by:** the user selling items from inventory into a project.
 - **Requires a budget category.** The user picks one category for the whole batch. The category must be enabled in the destination project. If not enabled, prompt to enable or choose another.
-- **Creates a per-batch Sale transaction.** See [sale-transactions.md](sale-transactions.md).
+- **Creates a per-batch Purchase transaction.** See [sale-transactions.md](sale-transactions.md).
 - **Sets `budgetCategoryId`** on each item to the chosen category. The category is now part of the item's identity in the destination project.
 - **Sign convention:** budget impact is `+1 * amountCents` on the destination project.
 
@@ -95,7 +95,7 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
    - From-inventory items → Return transaction against the source project.
    - Originated-in-project items → Sale-to-Inventory transaction against the source project.
    - Mixed batches produce both transactions in the same Firestore batch.
-2. **Second hop** — all items land in the destination project via one Sale transaction (`budgetCategoryId` set).
+2. **Second hop** — all items land in the destination project via one Purchase transaction (`budgetCategoryId` set).
 
 All hops commit atomically when the user invokes **Sell to Project** from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
 
@@ -117,7 +117,7 @@ Grouping is intentionally broader than `type: "Sale"` because inventory purchase
 Group these records:
 
 - Inventory-scope purchases (`type: "Purchase"`, `projectId: null`) as `Added to Business Inventory`.
-- Inventory → project Sales (`type: "Sale"`, `budgetCategoryId` set) as `From [inventory label]`.
+- Inventory → project Purchases (`type: "Purchase"`, `budgetCategoryId` set) as `From [inventory label]`.
 - Project → inventory Sales (`type: "Sale"`, `budgetCategoryId` absent) as `Sold to [inventory label]`.
 - Return-to-inventory transactions (`type: "Return"`, source is the inventory label) as `Returned to [inventory label]`.
 

@@ -88,16 +88,16 @@ Cross-entity lookups use the **owner's ID array**, not a back-reference on the c
 
 When resolving a transaction's items, filter from the items collection using the transaction's `itemIds` array — **not** by matching `item.transactionId`. The `transactionId` field on Item exists but is a cache back-reference, not the source of truth.
 
-### Sales and Inventory
+### Inventory Movements
 
-The system uses a **per-batch sale transaction** model. See [docs/specs/sale-transactions.md](docs/specs/sale-transactions.md) for the active spec, [docs/specs/inventory-as-store.md](docs/specs/inventory-as-store.md) for the conceptual model, and [docs/specs/canonical-sales.md](docs/specs/canonical-sales.md) for the legacy model preserved for historical reads.
+The system uses a **per-batch inventory movement transaction** model. See [docs/specs/sale-transactions.md](docs/specs/sale-transactions.md) for the active spec, [docs/specs/inventory-as-store.md](docs/specs/inventory-as-store.md) for the conceptual model, and [docs/specs/canonical-sales.md](docs/specs/canonical-sales.md) for the legacy model preserved for historical reads.
 
 Key invariants:
-- **Each sale is a new immutable transaction.** No long-lived aggregators. Sale transaction shape fields (`amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId`) are locked after creation by Firestore security rules. Mutable fields: `notes`, `status`, `updatedAt`.
-- **Project → inventory is a Return, not a Sale.** There is no longer a "sell to inventory" flow. Items return to inventory via a Return transaction with `source: "Business Inventory"`.
+- **Each inventory movement is a new immutable transaction.** No long-lived aggregators. Inventory → project writes a `Purchase` from inventory. Project → inventory writes either a `Return` when the item came from inventory, or a `Sale` only when the business is acquiring a project-originated item into inventory. Shape fields (`amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId`) are locked after creation by Firestore security rules. Mutable fields: `notes`, `status`, `updatedAt`.
+- **Project → inventory is origin-aware.** Items that came from inventory go home via a Return transaction with `source: "Business Inventory"`. Items that originated in the project use the Sale-to-Inventory path.
 - **Items in business inventory have no budget category.** Invariant: `(item.projectId == null) ↔ (item.budgetCategoryId == null)`. Categories are wiped on return-to-inventory and re-resolved at sell-from-inventory time.
 - **Project items must have a transaction.** Invariant: `(item.projectId != null) → (item.transactionId != null)`. Enforced at the iOS and MCP write layers, not in Firestore rules. Legacy orphans (pre-invariant) are repaired manually via the Bulk Reassign UI.
-- **One category per sale batch.** When selling from inventory to a project, the user picks one category that applies to every item in the batch.
+- **One category per inventory-to-project batch.** When moving inventory into a project, the user picks one category that applies to every item in the batch.
 
 ### Navigation
 
@@ -160,8 +160,8 @@ Key specs and what they cover:
 
 - `reassign-vs-sell.md` — Correct/Move vs Sell vs Return semantics, menu visibility rules
 - `return-and-sale-tracking.md` — Return flow (vendor and inventory), disposition lifecycle, incomplete-return detection
-- `sale-transactions.md` — per-batch Sale model, immutability rules
-- `inventory-as-store.md` — why returning to inventory is a Return, not a Sale
+- `sale-transactions.md` — per-batch inventory movement model, immutability rules
+- `inventory-as-store.md` — why inventory → project is a Purchase, and why project → inventory is origin-aware
 - `canonical-sales.md` — legacy model, historical reads only
 - `data-model.md` — entity relationships, canonical lookup directions
 - `lineage-tracking.md` — intent edges vs audit edges
