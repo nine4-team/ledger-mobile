@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseFirestore
 
 struct ItemsTabView: View {
     @Environment(ProjectContext.self) private var projectContext
@@ -6,6 +7,9 @@ struct ItemsTabView: View {
 
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
+    @State private var selectedItemsSubtab = "items"
+    @State private var protoItemsListener: ListenerRegistration?
+    @State private var projectProtoItems: [ProtoItem] = []
 
     // Bulk action modals
     @State private var showBulkStatusPicker = false
@@ -29,19 +33,40 @@ struct ItemsTabView: View {
         }
     }
 
+    private var activeProjectProtoItems: [ProtoItem] {
+        projectProtoItems
+            .filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
+            .sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
+
     // MARK: - Body
 
     var body: some View {
-        SharedItemsList(
-            mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
-            getMenuItems: { singleItemMenuItems(for: $0) },
-            emptyMessage: "No items in this project",
-            onAdd: { showAddItemMenu = true },
-            getBulkMenuItems: { bulkActionMenuItems },
-            selectedIds: $selectedItemIds,
-            useNavigationLinks: true,
-            emptyIcon: "cube.box"
-        )
+        VStack(spacing: 0) {
+            itemsWorkspaceHeader
+                .frame(maxWidth: Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.sm)
+
+            ScrollableTabBar(
+                selectedId: $selectedItemsSubtab,
+                items: [
+                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                    TabBarItem(id: "items", label: "Items"),
+                ]
+            )
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
+
+            if selectedItemsSubtab == "item-drafts" {
+                itemDraftsList
+            } else {
+                realItemsList
+            }
+        }
         .itemActionSheets(
             itemActions,
             spaces: projectContext.spaces,
@@ -130,6 +155,81 @@ struct ItemsTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
             showNewItem = true
+        }
+        .onAppear {
+            subscribeToProjectProtoItems()
+        }
+        .onDisappear {
+            protoItemsListener?.remove()
+            protoItemsListener = nil
+        }
+    }
+
+    // MARK: - Item Workspace
+
+    private var itemsWorkspaceHeader: some View {
+        HStack(spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Items")
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Text("\(activeProjectProtoItems.count) drafts | \(projectContext.items.count) items")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+
+            Spacer()
+
+            Button {
+                showAddItemMenu = true
+            } label: {
+                Image(systemName: "plus")
+                    .fontWeight(.medium)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .tint(BrandColors.textSecondary)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+            .accessibilityLabel("Add item")
+        }
+        .frame(minHeight: 44)
+    }
+
+    private var realItemsList: some View {
+        SharedItemsList(
+            mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
+            getMenuItems: { singleItemMenuItems(for: $0) },
+            emptyMessage: "No items in this project",
+            onAdd: nil,
+            getBulkMenuItems: { bulkActionMenuItems },
+            selectedIds: $selectedItemIds,
+            useNavigationLinks: true,
+            emptyIcon: "cube.box"
+        )
+    }
+
+    private var itemDraftsList: some View {
+        ScrollView {
+            AdaptiveContentWidth {
+                if activeProjectProtoItems.isEmpty {
+                    ContentUnavailableView {
+                        Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
+                    }
+                    .padding(.vertical, Spacing.xl)
+                } else {
+                    LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                        ForEach(activeProjectProtoItems) { protoItem in
+                            ItemDraftCard(protoItem: protoItem)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.screenPadding)
+                    .padding(.vertical, Spacing.sm)
+                }
+            }
         }
     }
 
@@ -224,5 +324,15 @@ struct ItemsTabView: View {
         let items = Array(selectedItems)
         Task { try? await service.deleteItems(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
+    }
+
+    private func subscribeToProjectProtoItems() {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = projectContext.currentProjectId else { return }
+        protoItemsListener?.remove()
+        protoItemsListener = ProtoItemsService()
+            .subscribeToProtoItems(accountId: accountId, scope: .project(projectId)) { protoItems in
+                projectProtoItems = protoItems
+            }
     }
 }

@@ -10,7 +10,7 @@ Primary spec: [../specs/proto-item-capture.md](../specs/proto-item-capture.md)
 
 UI naming: show these records as **Item Drafts**. Keep `ProtoItem` for code and Firestore.
 
-Visibility principle: item drafts live in their capture context first. Project and inventory screens should show unresolved **Item Drafts** above normal Items; Needs Review is the global cleanup queue, not the only home for drafts.
+Visibility principle: item drafts live in their capture context first. The **Items** surface is the canonical home for both **Item Drafts** and real **Items** in project, transaction, and inventory contexts. Needs Review is the cross-workflow cleanup queue, not the only home for drafts.
 
 ## Phase 1 — Data Model And Services
 
@@ -80,8 +80,10 @@ Work items:
 - Add `Item Drafts` and `Items` sub-tabs inside the transaction `Items` tab.
 - Add one item-related add affordance at the transaction `Items` tab level with routes for Item Draft, New Item, Add Existing Items, and Create from Images when available.
 - Keep `SharedItemsList` scoped to the real `Items` sub-tab so sticky search/sort/filter/select controls apply only to real items.
-- Add an Item Drafts section above Items in the Project Items tab, or replace this with the project-level Review tab if that redesign lands first.
-- Add an Item Drafts section above normal Inventory items.
+- Add `Item Drafts` and `Items` sub-tabs inside the Project Items tab, matching the transaction Items pattern.
+- Keep the Project Items real-item sub-tab on `SharedItemsList` so project-level search/sort/filter/select/bulk controls apply only to real items.
+- Add one project Items add affordance that routes to Item Draft or New Item.
+- Add `Item Drafts` and `Items` sub-areas for Inventory when the inventory UI is implemented.
 - Add transaction-linked Item Drafts in the transaction `Items > Item Drafts` sub-tab.
 - Add proto item sections to Needs Review as an account-wide cleanup queue.
 - Group by project, intended project, inventory/unassigned, and transaction-linked captures.
@@ -94,8 +96,9 @@ Acceptance:
 - The transaction `Items` tab separates Item Drafts and real Items into sub-tabs.
 - There is a single item-related add affordance for the transaction `Items` tab, not competing add buttons in each sub-tab.
 - Real item list controls remain scoped to real Items and do not imply they affect Item Drafts.
-- A user opening a project can see unresolved item drafts for that project above its normal items.
-- A user opening inventory can see unresolved inventory item drafts above normal inventory items.
+- A user opening a project can see unresolved item drafts for that project under Project Items > Item Drafts.
+- Project Items and Transaction Items teach the same structure: Item Drafts for captures, Items for real item records.
+- A user opening inventory can see unresolved inventory item drafts in the inventory Items surface.
 - A reviewer can find all unresolved proto items from one place.
 - Proto item cards make the next action obvious.
 - Dismissed/resolved proto items leave the active queue.

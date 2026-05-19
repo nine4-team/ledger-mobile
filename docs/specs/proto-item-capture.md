@@ -50,7 +50,14 @@ This means capture should not require price, vendor, tax, budget category, SKU, 
 
 ## Entry Points
 
-Item drafts should be visible where they were captured, not only in a review queue. The Needs Review area is a global cleanup workbench, but the project, inventory, or transaction context is the draft's natural home.
+Item drafts should be visible where they were captured, not only in a review queue. The Needs Review area is a cross-workflow cleanup workbench, but the project, inventory, or transaction context is the draft's natural home.
+
+Across contexts, the **Items** surface is the canonical place for item-like work. If a context has both unfinished captures and real items, the Items surface should expose the same two sub-areas:
+
+- **Item Drafts**: unresolved `ProtoItem` records.
+- **Items**: real `Item` records.
+
+This keeps the navigation vocabulary consistent. Users should learn that "Items" contains both drafts and finished items, while "Needs Review" means "work that needs attention."
 
 ### Project Capture
 
@@ -88,9 +95,9 @@ Unresolved item drafts should appear in their owning context before the normal i
 
 ### Project Items
 
-Project-scoped item drafts appear in the Project Items tab in an **Item Drafts** section above normal Items.
+Project-scoped item drafts appear in the Project Items tab under an **Item Drafts** sub-tab. Real project items appear under an **Items** sub-tab.
 
-The section should:
+The Item Drafts sub-tab should:
 
 - show only unresolved drafts for the current project
 - use photo-first draft cards or rows, not normal item rows
@@ -98,9 +105,11 @@ The section should:
 - keep item drafts visually distinct from real items
 - offer draft actions such as finish item, merge, sell from inventory, and dismiss
 
+The real Items sub-tab should reuse the existing shared item list machinery so search, sort, filter, select, and bulk actions remain scoped to real `Item` records.
+
 ### Inventory Items
 
-Inventory-scoped item drafts appear in Inventory in an **Item Drafts** section above normal inventory items.
+Inventory-scoped item drafts should follow the same pattern when inventory gets the full implementation: Inventory Items exposes **Item Drafts** and **Items** sub-areas rather than hiding drafts only in review.
 
 The section should:
 
