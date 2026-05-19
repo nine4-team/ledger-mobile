@@ -152,8 +152,6 @@ struct TransactionDetailView: View {
                 ScrollView {
                     AdaptiveContentWidth {
                         LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                            transactionContextCard
-
                             ScrollableTabBar(
                                 selectedId: $selectedTransactionTab,
                                 items: [
@@ -355,9 +353,9 @@ struct TransactionDetailView: View {
         }
     }
 
-    // MARK: - Transaction Context
+    // MARK: - Hero Card
 
-    private var transactionContextCard: some View {
+    private var heroCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
@@ -520,6 +518,7 @@ struct TransactionDetailView: View {
     private var detailsTabContent: some View {
         VStack(spacing: Spacing.lg) {
             badgesRow
+            heroCard
             nextStepsCard
         }
         .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
@@ -534,15 +533,8 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemsTabContent: some View {
-        itemsWorkspaceHeader
-
-        ScrollableTabBar(
-            selectedId: $selectedItemsSubtab,
-            items: [
-                TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                TabBarItem(id: "items", label: "Items"),
-            ]
-        )
+        compactTransactionContext
+        itemSubtabHeader
 
         if selectedItemsSubtab == "item-drafts" {
             itemDraftsList
@@ -694,26 +686,74 @@ struct TransactionDetailView: View {
         }
     }
 
-    private var itemsWorkspaceHeader: some View {
-        HStack {
-            Spacer()
-            Button {
-                showAddItemMenu = true
-            } label: {
-                Image(systemName: "plus")
-                    .fontWeight(.medium)
-                    .foregroundStyle(BrandColors.textSecondary)
+    private var compactTransactionContext: some View {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
+            VStack(alignment: .leading, spacing: 2) {
+                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
+                    .font(Typography.body.weight(.semibold))
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(1)
+
+                HStack(spacing: Spacing.xs) {
+                    FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
+                    Text("·")
+                    FindableText(TransactionDisplayCalculations.projectLabel(
+                        for: currentTransaction,
+                        projects: accountContext.allProjects
+                    ))
+                }
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+                .lineLimit(1)
             }
-            .buttonStyle(CircleBarButtonStyle())
-            .tint(BrandColors.textSecondary)
-            .font(.system(size: 16))
-            .imageScale(.medium)
-            .background(BrandColors.surface, in: Circle())
-            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item")
+
+            Spacer(minLength: Spacing.sm)
+
+            FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
+                .font(Typography.body.weight(.semibold))
+                .foregroundStyle(BrandColors.textPrimary)
+                .lineLimit(1)
         }
-        .padding(.top, Spacing.sm)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(BrandColors.surface, in: RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
+                .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+        )
+    }
+
+    private var itemSubtabHeader: some View {
+        ZStack(alignment: .trailing) {
+            ScrollableTabBar(
+                selectedId: $selectedItemsSubtab,
+                items: [
+                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                    TabBarItem(id: "items", label: "Items"),
+                ]
+            )
+
+            addItemButton
+        }
+    }
+
+    private var addItemButton: some View {
+        Button {
+            showAddItemMenu = true
+        } label: {
+            Image(systemName: "plus")
+                .fontWeight(.medium)
+                .foregroundStyle(BrandColors.textSecondary)
+        }
+        .buttonStyle(CircleBarButtonStyle())
+        .tint(BrandColors.textSecondary)
+        .font(.system(size: 16))
+        .imageScale(.medium)
+        .background(BrandColors.surface, in: Circle())
+        .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .accessibilityLabel("Add item")
+        .padding(.bottom, Spacing.xs)
     }
 
     // 6. Returned Items (collapsed, conditional)

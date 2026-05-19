@@ -43,20 +43,7 @@ struct ItemsTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            itemsWorkspaceHeader
-                .frame(maxWidth: Dimensions.contentMaxWidth)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-                .padding(.bottom, Spacing.xs)
-
-            ScrollableTabBar(
-                selectedId: $selectedItemsSubtab,
-                items: [
-                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                    TabBarItem(id: "items", label: "Items"),
-                ]
-            )
+            itemSubtabHeader
             .frame(maxWidth: Dimensions.contentMaxWidth)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, Spacing.screenPadding)
@@ -196,25 +183,37 @@ struct ItemsTabView: View {
         }
     }
 
-    private var itemsWorkspaceHeader: some View {
-        HStack {
-            Spacer()
-            Button {
-                showAddItemMenu = true
-            } label: {
-                Image(systemName: "plus")
-                    .fontWeight(.medium)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-            .buttonStyle(CircleBarButtonStyle())
-            .tint(BrandColors.textSecondary)
-            .font(.system(size: 16))
-            .imageScale(.medium)
-            .background(BrandColors.surface, in: Circle())
-            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item")
+    private var itemSubtabHeader: some View {
+        ZStack(alignment: .trailing) {
+            ScrollableTabBar(
+                selectedId: $selectedItemsSubtab,
+                items: [
+                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                    TabBarItem(id: "items", label: "Items"),
+                ]
+            )
+
+            addItemButton
         }
+    }
+
+    private var addItemButton: some View {
+        Button {
+            showAddItemMenu = true
+        } label: {
+            Image(systemName: "plus")
+                .fontWeight(.medium)
+                .foregroundStyle(BrandColors.textSecondary)
+        }
+        .buttonStyle(CircleBarButtonStyle())
+        .tint(BrandColors.textSecondary)
+        .font(.system(size: 16))
+        .imageScale(.medium)
+        .background(BrandColors.surface, in: Circle())
+        .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+        .accessibilityLabel("Add item")
+        .padding(.bottom, Spacing.xs)
     }
 
     // MARK: - Single-Item Menu
