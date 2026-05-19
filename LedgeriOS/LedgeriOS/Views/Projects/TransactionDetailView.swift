@@ -13,7 +13,9 @@ struct TransactionDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     // Section expanded states — all expanded by default
-    @State private var expandedSections: Set<String> = ["receipts", "other-images", "notes", "details", "items", "returned-items", "sold-items", "transaction-audit"]
+    @State private var expandedSections: Set<String> = ["receipts", "other-images", "notes", "details", "returned-items", "sold-items", "transaction-audit"]
+    @State private var selectedTransactionTab = "details"
+    @State private var selectedItemsSubtab = "items"
 
     // Items picker
     @State private var showAddExistingItems = false
@@ -25,6 +27,7 @@ struct TransactionDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var showAddItemMenu = false
     @State private var showCreateNewItem = false
+    @State private var showCreateItemDraft = false
     @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
 
@@ -47,6 +50,8 @@ struct TransactionDetailView: View {
     // fire after updateData on an already-matching document).
     @State private var liveTransaction: Transaction?
     @State private var transactionListener: ListenerRegistration?
+    @State private var protoItemsListener: ListenerRegistration?
+    @State private var transactionProtoItems: [ProtoItem] = []
     @State private var pendingCreatedItems: [Item] = []
 
     // MARK: - Computed
@@ -99,6 +104,12 @@ struct TransactionDetailView: View {
     private var returnedItems: [Item] { lineageReturnedItems }
     private var soldItems: [Item] { lineageSoldItems }
 
+    private var activeTransactionProtoItems: [ProtoItem] {
+        transactionProtoItems
+            .filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
+            .sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+    }
+
     private var categoryLookup: [String: BudgetCategory] {
         Dictionary(
             uniqueKeysWithValues: projectContext.budgetCategories.compactMap { cat in
@@ -141,21 +152,19 @@ struct TransactionDetailView: View {
                 ScrollView {
                     AdaptiveContentWidth {
                         LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                            VStack(spacing: Spacing.lg) {
-                                badgesRow
-                                heroCard
-                                nextStepsCard
+                            ScrollableTabBar(
+                                selectedId: $selectedTransactionTab,
+                                items: [
+                                    TabBarItem(id: "details", label: "Details"),
+                                    TabBarItem(id: "items", label: "Items"),
+                                ]
+                            )
+
+                            if selectedTransactionTab == "details" {
+                                detailsTabContent
+                            } else {
+                                itemsTabContent
                             }
-                            .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
-                            .padding(.bottom, Spacing.xs)
-                            receiptsSection
-                            otherImagesSection
-                            notesSection
-                            detailsSection
-                            itemsSection
-                            returnedItemsSection
-                            soldItemsSection
-                            transactionAuditSection
                         }
                         .padding(.horizontal, Spacing.screenPadding)
                         .padding(.vertical, Spacing.lg)
@@ -183,10 +192,17 @@ struct TransactionDetailView: View {
                 .subscribeToTransaction(accountId: accountId, transactionId: transactionId) { tx in
                     liveTransaction = tx
                 }
+            protoItemsListener?.remove()
+            protoItemsListener = ProtoItemsService()
+                .subscribeToProtoItemsForTransaction(accountId: accountId, transactionId: transactionId) { protoItems in
+                    transactionProtoItems = protoItems
+                }
         }
         .onDisappear {
             transactionListener?.remove()
             transactionListener = nil
+            protoItemsListener?.remove()
+            protoItemsListener = nil
         }
         #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)
@@ -257,6 +273,9 @@ struct TransactionDetailView: View {
                 title: "Add Items",
                 items: {
                     var items = [
+                        ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
+                            showCreateItemDraft = true
+                        }),
                         ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
                             showCreateNewItem = true
                         }),
@@ -284,6 +303,16 @@ struct TransactionDetailView: View {
                 NewItemView(
                     context: .project(projectId, spaceId: nil),
                     initialTransactionId: currentTransaction.id
+                )
+            }
+        }
+        .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
+            if let projectId = projectContext.currentProjectId {
+                ItemDraftCaptureSheet(
+                    projectId: projectId,
+                    projectName: projectContext.project?.name,
+                    transactionId: currentTransaction.id,
+                    transactionName: TransactionDisplayCalculations.displayName(for: currentTransaction)
                 )
             }
         }
@@ -471,13 +500,88 @@ struct TransactionDetailView: View {
     private func handleNextStepTap(_ step: TransactionNextStepsCalculations.NextStep) {
         switch step.id {
         case "items":
+            selectedTransactionTab = "items"
+            selectedItemsSubtab = activeTransactionProtoItems.isEmpty ? "items" : "item-drafts"
             showAddItemMenu = true
         case "receipt":
+            selectedTransactionTab = "details"
             expandedSections.insert("receipts")
         default:
             // budget-category, amount, purchased-by, tax-rate all edit via details modal
             showEditDetails = true
         }
+    }
+
+    // MARK: - Tabs
+
+    @ViewBuilder
+    private var detailsTabContent: some View {
+        VStack(spacing: Spacing.lg) {
+            badgesRow
+            heroCard
+            nextStepsCard
+        }
+        .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
+        .padding(.bottom, Spacing.xs)
+
+        receiptsSection
+        otherImagesSection
+        notesSection
+        detailsSection
+        transactionAuditSection
+    }
+
+    @ViewBuilder
+    private var itemsTabContent: some View {
+        itemsWorkspaceHeader
+        ScrollableTabBar(
+            selectedId: $selectedItemsSubtab,
+            items: [
+                TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                TabBarItem(id: "items", label: "Items"),
+            ]
+        )
+
+        if selectedItemsSubtab == "item-drafts" {
+            itemDraftsList
+        } else {
+            realItemsList
+            returnedItemsSection
+            soldItemsSection
+        }
+    }
+
+    private var itemsWorkspaceHeader: some View {
+        HStack(spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Items")
+                    .font(Typography.h3)
+                    .foregroundStyle(BrandColors.textPrimary)
+                Text("\(activeTransactionProtoItems.count) drafts | \(activeItems.count) items")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+
+            Spacer()
+
+            Button {
+                showAddItemMenu = true
+            } label: {
+                Image(systemName: "plus")
+                    .fontWeight(.medium)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+            .buttonStyle(CircleBarButtonStyle())
+            .tint(BrandColors.textSecondary)
+            .font(.system(size: 16))
+            .imageScale(.medium)
+            .background(BrandColors.surface, in: Circle())
+            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
+            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+            .accessibilityLabel("Add item")
+        }
+        .frame(minHeight: 44)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Sections
@@ -590,49 +694,35 @@ struct TransactionDetailView: View {
         }
     }
 
-    // 5. Items — composite pinned header (items label + control bar)
     @ViewBuilder
-    private var itemsSection: some View {
-        if expandedSections.contains("items") {
-            SharedItemsList(
-                mode: .embedded(items: activeItems, onItemPress: { _ in }),
-                emptyMessage: "No items yet",
-                onAdd: { showAddItemMenu = true },
-                useNavigationLinks: true,
-                filterScope: .project,
-                inline: true,
-                inlineSectionHeader: AnyView(itemsSectionHeader)
-            )
-        } else {
-            itemsSectionHeader
-        }
+    private var realItemsList: some View {
+        SharedItemsList(
+            mode: .embedded(items: activeItems, onItemPress: { _ in }),
+            emptyMessage: "No items yet",
+            onAdd: nil,
+            useNavigationLinks: true,
+            filterScope: .project,
+            inline: true
+        )
     }
 
-    private var itemsSectionHeader: some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                sectionBinding("items").wrappedValue.toggle()
+    @ViewBuilder
+    private var itemDraftsList: some View {
+        if activeTransactionProtoItems.isEmpty {
+            ContentUnavailableView {
+                Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
             }
-        } label: {
-            HStack(spacing: Spacing.xs) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12))
-                    .foregroundStyle(BrandColors.textTertiary)
-                    .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
-                    .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
-                Text("Items")
-                    .sectionLabelStyle()
-                Text("\(activeItems.count)")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.primary)
-                Spacer()
+            .padding(.vertical, Spacing.xl)
+        } else {
+            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                ForEach(activeTransactionProtoItems) { protoItem in
+                    ItemDraftCard(protoItem: protoItem) { attachment, source in
+                        pinImage(attachment, from: source)
+                    }
+                }
             }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+            .padding(.top, Spacing.sm)
         }
-        .buttonStyle(.plain)
-        .background(BrandColors.background
-            .padding(.horizontal, -Spacing.screenPadding))
     }
 
     // 6. Returned Items (collapsed, conditional)
@@ -1082,7 +1172,8 @@ struct TransactionDetailView: View {
             return item
         }
 
-        expandedSections.insert("items")
+        selectedTransactionTab = "items"
+        selectedItemsSubtab = "items"
         do {
             let createdItems = try ItemsService().createItemsForTransaction(
                 accountId: accountId,
@@ -1125,4 +1216,127 @@ struct TransactionDetailView: View {
         }
     }
 
+}
+
+private struct ItemDraftCard: View {
+    let protoItem: ProtoItem
+    var onPinImage: ((AttachmentRef, [AttachmentRef]) -> Void)?
+
+    private var photos: [AttachmentRef] {
+        protoItem.photos ?? []
+    }
+
+    private var primaryPhoto: AttachmentRef? {
+        photos.first(where: { $0.isPrimary == true }) ?? photos.first
+    }
+
+    private var sourceLabel: String {
+        switch protoItem.sourceHint {
+        case .purchasedByClient: return "Client Purchase"
+        case .purchasedByBusiness: return "Business Purchase"
+        case .fromInventory: return "From Inventory"
+        case .unknown, nil: return "Source Not Sure"
+        }
+    }
+
+    private var statusLabel: String {
+        (protoItem.status ?? .open).displayLabel
+    }
+
+    private var createdLabel: String? {
+        guard let createdAt = protoItem.createdAt else { return nil }
+        return TransactionCardCalculations.formattedCreatedDate(createdAt)
+    }
+
+    var body: some View {
+        Card(padding: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                CardHeader(
+                    badges: [CardBadge(text: statusLabel, color: StatusColors.badgeNeedsReview)],
+                    menuTitle: "Item Draft"
+                )
+
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    HStack(alignment: .top, spacing: Spacing.md) {
+                        thumbnailView
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Item Draft")
+                                .font(Typography.h3)
+                                .foregroundStyle(BrandColors.textPrimary)
+
+                            Text(sourceLabel)
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+
+                            if let createdLabel {
+                                Text(createdLabel)
+                                    .font(Typography.small)
+                                    .foregroundStyle(BrandColors.textSecondary)
+                            }
+
+                            if let notes = protoItem.notes, !notes.isEmpty {
+                                Text(notes)
+                                    .font(Typography.small)
+                                    .foregroundStyle(BrandColors.textSecondary)
+                                    .lineLimit(3)
+                            }
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+
+                    if photos.count > 1 {
+                        HStack(spacing: Spacing.xs) {
+                            ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { _, photo in
+                                photoThumb(photo, size: 52)
+                            }
+                        }
+                    }
+                }
+                .padding(Spacing.lg)
+            }
+        }
+        .findEntity(id: protoItem.id)
+        .findMatchHighlight()
+    }
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        if let primaryPhoto {
+            photoThumb(primaryPhoto, size: 108)
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                    .fill(BrandColors.surfaceTertiary)
+                Image(systemName: "camera")
+                    .font(.system(size: 24))
+                    .foregroundStyle(BrandColors.textTertiary)
+            }
+            .frame(width: 108, height: 108)
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
+        }
+    }
+
+    private func photoThumb(_ photo: AttachmentRef, size: CGFloat) -> some View {
+        Button {
+            onPinImage?(photo, photos)
+        } label: {
+            FirebaseImage(url: photo.url, thumbnailUrl: photo.thumbnailUrlSm, contentMode: .fill) {
+                ProgressView()
+                    .frame(width: size, height: size)
+            }
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+            .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
+        }
+        .buttonStyle(.plain)
+    }
 }

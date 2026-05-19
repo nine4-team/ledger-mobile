@@ -4,6 +4,8 @@ import PhotosUI
 struct ItemDraftCaptureSheet: View {
     let projectId: String
     var projectName: String?
+    var transactionId: String?
+    var transactionName: String?
 
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
@@ -25,6 +27,20 @@ struct ItemDraftCaptureSheet: View {
 
     private var canSave: Bool {
         !imageDatas.isEmpty && !isSaving
+    }
+
+    private var contextTitle: String {
+        transactionId == nil ? "Project" : "Transaction"
+    }
+
+    private var contextLabel: String {
+        if transactionId != nil, let transactionName, !transactionName.isEmpty {
+            return transactionName
+        }
+        if let projectName, !projectName.isEmpty {
+            return projectName
+        }
+        return transactionId == nil ? "Current Project" : "Current Transaction"
     }
 
     var body: some View {
@@ -52,12 +68,12 @@ struct ItemDraftCaptureSheet: View {
 
     private var contextSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Project")
+            Text(contextTitle)
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.textSecondary)
 
             HStack {
-                Text(projectName?.isEmpty == false ? projectName! : "Current Project")
+                Text(contextLabel)
                     .font(Typography.input)
                     .foregroundStyle(BrandColors.textPrimary)
                 Spacer()
@@ -230,7 +246,8 @@ struct ItemDraftCaptureSheet: View {
             var protoItem = ProtoItem()
             protoItem.accountId = accountId
             protoItem.projectId = projectId
-            protoItem.captureContext = .project
+            protoItem.transactionId = transactionId
+            protoItem.captureContext = transactionId == nil ? .project : .transaction
             protoItem.status = .open
             protoItem.sourceHint = sourceHint == .unknown ? nil : sourceHint
             let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
