@@ -10,6 +10,8 @@ Primary spec: [../specs/proto-item-capture.md](../specs/proto-item-capture.md)
 
 UI naming: show these records as **Item Drafts**. Keep `ProtoItem` for code and Firestore.
 
+Visibility principle: item drafts live in their capture context first. Project and inventory screens should show unresolved **Item Drafts** above normal Items; Needs Review is the global cleanup queue, not the only home for drafts.
+
 ## Phase 1 — Data Model And Services
 
 Add a separate `ProtoItem` model and service layer.
@@ -68,17 +70,22 @@ Acceptance:
 
 ## Phase 3 — Needs Review Integration
 
-Surface proto items in the review workflow.
+Surface proto items in their natural contexts and in the review workflow.
 
 Work items:
 
-- Add proto item sections to Needs Review.
+- Add an Item Drafts section above Items in the Project Items tab.
+- Add an Item Drafts section above normal Inventory items.
+- Add transaction-linked Item Drafts near transaction items/line items.
+- Add proto item sections to Needs Review as an account-wide cleanup queue.
 - Group by project, intended project, inventory/unassigned, and transaction-linked captures.
 - Show image group, context hints, capture date, and source hint.
 - Add actions: create item, merge into item, sell from inventory, dismiss.
 
 Acceptance:
 
+- A user opening a project can see unresolved item drafts for that project above its normal items.
+- A user opening inventory can see unresolved inventory item drafts above normal inventory items.
 - A reviewer can find all unresolved proto items from one place.
 - Proto item cards make the next action obvious.
 - Dismissed/resolved proto items leave the active queue.

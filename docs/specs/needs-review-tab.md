@@ -5,7 +5,7 @@ Last updated: 2026-05-18
 ## Summary
 The Needs Review tab surfaces items, proto items, and transactions that need attention, but currently displays them as a flat, context-free list. When the user taps into an item, they can't tell which client it's for, what project it lives in, or what they're supposed to do with it. This is the same problem the previous search bar had — results stripped of their surrounding context. The fix is to group the list by project and add breadcrumb navigation to item details.
 
-Proto item capture makes this tab a core work queue: captured photo groups appear here until a reviewer creates an item, merges the capture into an item, sells from inventory, or dismisses the capture. See [proto-item-capture.md](proto-item-capture.md).
+Proto item capture makes this tab a global cleanup work queue: captured photo groups appear here until a reviewer creates an item, merges the capture into an item, sells from inventory, or dismisses the capture. Item Drafts must also appear in their owning project, inventory, or transaction context; Needs Review is not their only home. See [proto-item-capture.md](proto-item-capture.md).
 
 ## Current Behavior (What Exists Today)
 
@@ -28,7 +28,7 @@ Proto item capture makes this tab a core work queue: captured photo groups appea
 ### Adding
 - **Project-grouped list layout** on the Needs Review tab with visual dividers between project sections
 - **Inventory / Unassigned section** — items that are in inventory (not yet sold to a project) or that have no project association get their own section, visually distinct from the project groups. This makes it immediately obvious which items are floating and may need to be assigned.
-- **Proto item sections** — unresolved proto items are shown alongside incomplete items/transactions, grouped by project, intended project, inventory/unassigned, or candidate transaction.
+- **Proto item sections** — unresolved Item Drafts are shown alongside incomplete items/transactions, grouped by project, intended project, inventory/unassigned, or candidate transaction.
 - **Proto item resolution actions** — create item, merge into existing item, sell from inventory, or dismiss.
 - **Breadcrumb navigation** on the item detail view showing Client > Project > Category, with each level tappable
 - **Assign-to-project action (TBD)** — for items in the unassigned/inventory section, a way to assign them to a project directly from the Needs Review tab without navigating away. [Details need further discussion — see Open Questions]
@@ -51,7 +51,9 @@ Items that are in inventory but not associated with a project, or items that nee
 The grouping gives the user an instant visual map of their review workload organized by project, instead of a jumbled list where items from five different projects are mixed together.
 
 **Proto item rows**
-Proto items render as capture groups rather than normal item rows. The row should emphasize the photos, capture context, source hint, and next action. A proto item row does not open the normal item detail view because it is not an item yet; it opens a resolve workflow.
+Item Drafts render as capture groups rather than normal item rows. The row should emphasize the photos, capture context, source hint, and next action. An item draft row does not open the normal item detail view because it is not an item yet; it opens a resolve workflow.
+
+Needs Review uses the same unresolved Item Drafts that appear in Projects, Inventory, and Transactions. Resolving or dismissing a draft from Needs Review removes it from both the global queue and its contextual Item Drafts section.
 
 ### Item Detail View (With Breadcrumb)
 

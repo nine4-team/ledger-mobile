@@ -50,6 +50,8 @@ This means capture should not require price, vendor, tax, budget category, SKU, 
 
 ## Entry Points
 
+Item drafts should be visible where they were captured, not only in a review queue. The Needs Review area is a global cleanup workbench, but the project, inventory, or transaction context is the draft's natural home.
+
 ### Project Capture
 
 When the designer is in a project and adds a proto item:
@@ -79,6 +81,38 @@ Transaction-scoped capture is allowed but should not be the primary flow. If a p
 - The proto item still remains separate from real items until resolved.
 
 This replaces the narrow ephemeral "create items from images" workflow with persistent capture groups.
+
+## Contextual Visibility
+
+Unresolved item drafts should appear in their owning context before the normal item list. This keeps captured objects discoverable in the place the designer expects to find them.
+
+### Project Items
+
+Project-scoped item drafts appear in the Project Items tab in an **Item Drafts** section above normal Items.
+
+The section should:
+
+- show only unresolved drafts for the current project
+- use photo-first draft cards or rows, not normal item rows
+- show source hint and notes when present
+- keep item drafts visually distinct from real items
+- offer draft actions such as finish item, merge, sell from inventory, and dismiss
+
+### Inventory Items
+
+Inventory-scoped item drafts appear in Inventory in an **Item Drafts** section above normal inventory items.
+
+The section should:
+
+- show unresolved drafts with `projectId == null`
+- surface `intendedProjectId` when present
+- support finishing into inventory, assigning/selling to a project, merging, or dismissing
+
+### Transaction Detail
+
+Transaction-linked item drafts appear near the transaction's item/line-item area, separate from real items.
+
+The section should make it clear that the draft is a possible match, not yet a resolved transaction item.
 
 ## Data Rules
 
@@ -150,7 +184,9 @@ If the capture is accidental, duplicate, or not needed, it can be dismissed. Dis
 
 ## Review Queue
 
-Proto items should appear in the Needs Review area as a first-class review type. The queue should group by:
+Proto items should also appear in the Needs Review area as a first-class review type. Needs Review is the global workbench for finding and resolving unresolved drafts across the account; it is not the only place item drafts live.
+
+The queue should group by:
 
 1. project captures
 2. inventory captures with intended destination project
