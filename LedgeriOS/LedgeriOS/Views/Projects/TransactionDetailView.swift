@@ -706,16 +706,22 @@ struct TransactionDetailView: View {
     }
 
     private var itemSubtabHeader: some View {
-        ZStack(alignment: .trailing) {
+        HStack(alignment: .center, spacing: Spacing.sm) {
             ScrollableTabBar(
                 selectedId: $selectedItemsSubtab,
                 items: [
                     TabBarItem(id: "item-drafts", label: "Item Drafts"),
                     TabBarItem(id: "items", label: "Items"),
-                ]
+                ],
+                showsBottomBorder: false
             )
 
             addItemButton
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(BrandColors.borderSecondary)
+                .frame(height: Dimensions.borderWidth)
         }
     }
 
@@ -735,7 +741,6 @@ struct TransactionDetailView: View {
         .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
         .accessibilityLabel("Add item")
-        .padding(.bottom, Spacing.xs)
     }
 
     // 6. Returned Items (collapsed, conditional)

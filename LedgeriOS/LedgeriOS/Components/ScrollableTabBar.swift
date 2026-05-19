@@ -8,6 +8,7 @@ struct TabBarItem: Identifiable {
 struct ScrollableTabBar: View {
     @Binding var selectedId: String
     let items: [TabBarItem]
+    var showsBottomBorder = true
 
     var body: some View {
         ScrollViewReader { scrollProxy in
@@ -50,9 +51,11 @@ struct ScrollableTabBar: View {
         }
         .frame(height: 36)
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: Dimensions.borderWidth)
+            if showsBottomBorder {
+                Rectangle()
+                    .fill(BrandColors.borderSecondary)
+                    .frame(height: Dimensions.borderWidth)
+            }
         }
     }
 }
