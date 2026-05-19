@@ -21,6 +21,8 @@ struct ItemsTabView: View {
     @State private var showBulkDeleteConfirmation = false
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
+    @State private var showAddItemMenu = false
+    @State private var menuPendingAction: (() -> Void)?
 
     // MARK: - Computed
 
@@ -41,6 +43,13 @@ struct ItemsTabView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            itemsWorkspaceHeader
+                .frame(maxWidth: Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.sm)
+                .padding(.bottom, Spacing.xs)
+
             ScrollableTabBar(
                 selectedId: $selectedItemsSubtab,
                 items: [
@@ -120,6 +129,25 @@ struct ItemsTabView: View {
                 )
             }
         }
+        .adaptivePresentation(isPresented: $showAddItemMenu, style: .quickMenu, onDismiss: {
+            menuPendingAction?()
+            menuPendingAction = nil
+        }) {
+            ActionMenuSheet(
+                title: "Add Item",
+                items: [
+                    ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
+                        showNewItemDraft = true
+                    }),
+                    ActionMenuItem(id: "item", label: "Item", icon: "plus.square.fill", onPress: {
+                        showNewItem = true
+                    }),
+                ],
+                onSelectAction: { action in
+                    menuPendingAction = action
+                }
+            )
+        }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
             showNewItem = true
         }
@@ -137,7 +165,6 @@ struct ItemsTabView: View {
             mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
             getMenuItems: { singleItemMenuItems(for: $0) },
             emptyMessage: "No items in this project",
-            onAdd: { showNewItem = true },
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
@@ -149,10 +176,6 @@ struct ItemsTabView: View {
         ScrollView {
             AdaptiveContentWidth {
                 VStack(alignment: .leading, spacing: 0) {
-                    draftAddButton
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.bottom, Spacing.sm)
-
                     if activeProjectProtoItems.isEmpty {
                         ContentUnavailableView {
                             Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
@@ -173,11 +196,11 @@ struct ItemsTabView: View {
         }
     }
 
-    private var draftAddButton: some View {
+    private var itemsWorkspaceHeader: some View {
         HStack {
             Spacer()
             Button {
-                showNewItemDraft = true
+                showAddItemMenu = true
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.medium)
@@ -190,9 +213,8 @@ struct ItemsTabView: View {
             .background(BrandColors.surface, in: Circle())
             .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item draft")
+            .accessibilityLabel("Add item")
         }
-        .padding(.top, Spacing.sm)
     }
 
     // MARK: - Single-Item Menu

@@ -152,6 +152,8 @@ struct TransactionDetailView: View {
                 ScrollView {
                     AdaptiveContentWidth {
                         LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                            transactionContextCard
+
                             ScrollableTabBar(
                                 selectedId: $selectedTransactionTab,
                                 items: [
@@ -270,9 +272,12 @@ struct TransactionDetailView: View {
             menuPendingAction = nil
         }) {
             ActionMenuSheet(
-                title: "Add Items",
+                title: "Add Item",
                 items: {
                     var items = [
+                        ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
+                            showCreateItemDraft = true
+                        }),
                         ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
                             showCreateNewItem = true
                         }),
@@ -350,9 +355,9 @@ struct TransactionDetailView: View {
         }
     }
 
-    // MARK: - Hero Card
+    // MARK: - Transaction Context
 
-    private var heroCard: some View {
+    private var transactionContextCard: some View {
         Card {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
@@ -515,7 +520,6 @@ struct TransactionDetailView: View {
     private var detailsTabContent: some View {
         VStack(spacing: Spacing.lg) {
             badgesRow
-            heroCard
             nextStepsCard
         }
         .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
@@ -530,6 +534,8 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemsTabContent: some View {
+        itemsWorkspaceHeader
+
         ScrollableTabBar(
             selectedId: $selectedItemsSubtab,
             items: [
@@ -662,7 +668,6 @@ struct TransactionDetailView: View {
         SharedItemsList(
             mode: .embedded(items: activeItems, onItemPress: { _ in }),
             emptyMessage: "No items yet",
-            onAdd: { showAddItemMenu = true },
             useNavigationLinks: true,
             filterScope: .project,
             inline: true
@@ -672,9 +677,6 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var itemDraftsList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            draftAddButton
-                .padding(.bottom, Spacing.sm)
-
             if activeTransactionProtoItems.isEmpty {
                 ContentUnavailableView {
                     Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
@@ -692,11 +694,11 @@ struct TransactionDetailView: View {
         }
     }
 
-    private var draftAddButton: some View {
+    private var itemsWorkspaceHeader: some View {
         HStack {
             Spacer()
             Button {
-                showCreateItemDraft = true
+                showAddItemMenu = true
             } label: {
                 Image(systemName: "plus")
                     .fontWeight(.medium)
@@ -709,7 +711,7 @@ struct TransactionDetailView: View {
             .background(BrandColors.surface, in: Circle())
             .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel("Add item draft")
+            .accessibilityLabel("Add item")
         }
         .padding(.top, Spacing.sm)
     }
