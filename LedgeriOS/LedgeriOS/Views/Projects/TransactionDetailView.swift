@@ -336,11 +336,11 @@ struct TransactionDetailView: View {
             isComplete: currentTransaction.isComplete,
             status: currentTransaction.status,
             isCanonicalInventorySale: currentTransaction.isCanonicalInventorySale,
-            inventorySaleDirection: currentTransaction.inventorySaleDirection
+            inventorySaleDirection: currentTransaction.inventorySaleDirection,
+            budgetCategoryId: currentTransaction.budgetCategoryId
         )
         if !badges.isEmpty {
             HStack(spacing: Spacing.sm) {
-                Spacer(minLength: 0)
                 ForEach(badges, id: \.text) { badge in
                     Badge(
                         text: badge.text,
@@ -517,7 +517,6 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var detailsTabContent: some View {
         VStack(spacing: Spacing.lg) {
-            badgesRow
             heroCard
             nextStepsCard
         }
@@ -668,20 +667,7 @@ struct TransactionDetailView: View {
 
     @ViewBuilder
     private var itemDraftsList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            NativeListControlBar(
-                searchText: .constant(""),
-                onAdd: { showCreateItemDraft = true },
-                style: .plain,
-                showSearch: false
-            ) {
-                EmptyView()
-            } sortMenu: {
-                EmptyView()
-            } filterMenu: {
-                EmptyView()
-            }
-
+        Section {
             if activeTransactionProtoItems.isEmpty {
                 ContentUnavailableView {
                     Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
@@ -696,25 +682,68 @@ struct TransactionDetailView: View {
                 }
                 .padding(.top, Spacing.sm)
             }
+        } header: {
+            NativeListControlBar(
+                searchText: .constant(""),
+                onAdd: { showCreateItemDraft = true },
+                style: .plain,
+                showSearch: false
+            ) {
+                EmptyView()
+            } sortMenu: {
+                EmptyView()
+            } filterMenu: {
+                EmptyView()
+            }
+            .textCase(nil)
+            .background(BrandColors.background.padding(.horizontal, -Spacing.screenPadding))
         }
     }
 
     private var compactTransactionContext: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Spacing.md) {
-            FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
-                .font(Typography.caption.weight(.semibold))
-                .foregroundStyle(BrandColors.textSecondary)
-                .lineLimit(1)
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(alignment: .center, spacing: Spacing.sm) {
+                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
+                    .font(Typography.caption.weight(.semibold))
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
 
-            Spacer(minLength: Spacing.sm)
+                badgesRow
 
-            FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
-                .font(Typography.caption.weight(.semibold))
-                .foregroundStyle(BrandColors.textSecondary)
-                .lineLimit(1)
+                Spacer(minLength: Spacing.sm)
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: Spacing.xs) {
+                FindableText(TransactionDisplayCalculations.projectLabel(
+                    for: currentTransaction,
+                    projects: accountContext.allProjects
+                ))
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
+
+                Text("/")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+
+                FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
+
+                Text("/")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+
+                FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
+            }
         }
         .padding(.horizontal, Spacing.xs)
         .padding(.top, Spacing.xs)
+        .padding(.bottom, Spacing.xs)
     }
 
     private var itemSubtabHeader: some View {
