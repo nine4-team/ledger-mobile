@@ -669,8 +669,17 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var itemDraftsList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            AddOnlyControlBar(label: "Add item draft") {
-                showCreateItemDraft = true
+            NativeListControlBar(
+                searchText: .constant(""),
+                onAdd: { showCreateItemDraft = true },
+                style: .plain,
+                showSearch: false
+            ) {
+                EmptyView()
+            } sortMenu: {
+                EmptyView()
+            } filterMenu: {
+                EmptyView()
             }
 
             if activeTransactionProtoItems.isEmpty {

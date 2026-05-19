@@ -16,6 +16,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
     var searchPlaceholder: String = "Search..."
     var onAdd: (() -> Void)?
     var style: ControlBarStyle
+    var showSearch: Bool = true
     @ViewBuilder var selectAll: () -> SelectAllContent
     @ViewBuilder var sortMenu: () -> SortContent
     @ViewBuilder var filterMenu: () -> FilterContent
@@ -28,6 +29,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         searchPlaceholder: String = "Search...",
         onAdd: (() -> Void)? = nil,
         style: ControlBarStyle = .capsule,
+        showSearch: Bool = true,
         @ViewBuilder selectAll: @escaping () -> SelectAllContent = { EmptyView() },
         @ViewBuilder sortMenu: @escaping () -> SortContent = { EmptyView() },
         @ViewBuilder filterMenu: @escaping () -> FilterContent = { EmptyView() }
@@ -36,6 +38,7 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
         self.searchPlaceholder = searchPlaceholder
         self.onAdd = onAdd
         self.style = style
+        self.showSearch = showSearch
         self.selectAll = selectAll
         self.sortMenu = sortMenu
         self.filterMenu = filterMenu
@@ -52,20 +55,22 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                     selectAll()
                 }
 
-                barItem(label: "Search") {
-                    Button {
-                        withAnimation(.spring(duration: 0.3)) {
-                            isSearchExpanded.toggle()
-                            if !isSearchExpanded {
-                                isSearchFocused = false
+                if showSearch {
+                    barItem(label: "Search") {
+                        Button {
+                            withAnimation(.spring(duration: 0.3)) {
+                                isSearchExpanded.toggle()
+                                if !isSearchExpanded {
+                                    isSearchFocused = false
+                                }
                             }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
                         }
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
+                        .tint(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
+                        .accessibilityLabel("Search")
                     }
-                    .tint(isSearchExpanded ? BrandColors.primary : BrandColors.textSecondary)
-                    .accessibilityLabel("Search")
                 }
 
                 barItem(label: "Sort") {
@@ -77,9 +82,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
                 }
 
                 if let onAdd {
-                    if usesCircleButtons {
-                        Spacer(minLength: 0)
-                    }
                     barItem(label: "Add") {
                         Button(action: onAdd) {
                             Image(systemName: "plus")
@@ -169,38 +171,6 @@ struct NativeListControlBar<SelectAllContent: View, SortContent: View, FilterCon
             .background(BrandColors.surface, in: Circle())
             .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
             .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-    }
-}
-
-/// Slim control bar with only a right-aligned add affordance.
-/// Visually matches the `.plain` style of `NativeListControlBar` so it can sit
-/// in the same position above a list that doesn't need search/sort/filter.
-struct AddOnlyControlBar: View {
-    let label: String
-    let action: () -> Void
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Spacer(minLength: 0)
-            Button(action: action) {
-                Image(systemName: "plus")
-                    .fontWeight(.medium)
-                    .foregroundStyle(BrandColors.textSecondary)
-            }
-            .buttonStyle(CircleBarButtonStyle())
-            .font(.system(size: 16))
-            .imageScale(.medium)
-            .background(BrandColors.surface, in: Circle())
-            .overlay(Circle().stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth))
-            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-            .accessibilityLabel(label)
-        }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.sm)
-        .frame(maxWidth: Dimensions.contentMaxWidth)
-        .frame(maxWidth: .infinity)
-        .padding(.top, Spacing.sm)
-        .padding(.bottom, Spacing.sm)
     }
 }
 

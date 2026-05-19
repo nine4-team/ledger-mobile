@@ -191,8 +191,17 @@ struct ItemsTabView: View {
     }
 
     private var draftsControlBar: some View {
-        AddOnlyControlBar(label: "Add item draft") {
-            showNewItemDraft = true
+        NativeListControlBar(
+            searchText: .constant(""),
+            onAdd: { showNewItemDraft = true },
+            style: .plain,
+            showSearch: false
+        ) {
+            EmptyView()
+        } sortMenu: {
+            EmptyView()
+        } filterMenu: {
+            EmptyView()
         }
     }
 
