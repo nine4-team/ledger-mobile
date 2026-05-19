@@ -3,12 +3,10 @@ import SwiftUI
 struct ItemDraftCard: View {
     let protoItem: ProtoItem
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     private var photos: [AttachmentRef] {
         protoItem.photos ?? []
-    }
-
-    private var primaryPhoto: AttachmentRef? {
-        photos.first(where: { $0.isPrimary == true }) ?? photos.first
     }
 
     private var sourceLabel: String {
@@ -29,6 +27,17 @@ struct ItemDraftCard: View {
         return TransactionCardCalculations.formattedCreatedDate(createdAt)
     }
 
+    private var previewPhotos: [AttachmentRef] {
+        let ordered = photos.sorted { first, second in
+            (first.isPrimary == true ? 0 : 1) < (second.isPrimary == true ? 0 : 1)
+        }
+        return Array(ordered.prefix(3))
+    }
+
+    private var thumbnailSize: CGFloat {
+        horizontalSizeClass == .compact ? 76 : 92
+    }
+
     var body: some View {
         Card(padding: 0) {
             VStack(alignment: .leading, spacing: 0) {
@@ -38,9 +47,9 @@ struct ItemDraftCard: View {
                 )
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
-                    HStack(alignment: .top, spacing: Spacing.md) {
-                        thumbnailView
+                    photoStrip
 
+                    HStack(alignment: .top, spacing: Spacing.md) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Item Draft")
                                 .font(Typography.h3)
@@ -66,14 +75,6 @@ struct ItemDraftCard: View {
 
                         Spacer(minLength: 0)
                     }
-
-                    if photos.count > 1 {
-                        HStack(spacing: Spacing.xs) {
-                            ForEach(Array(photos.prefix(4).enumerated()), id: \.offset) { _, photo in
-                                photoThumb(photo, size: 52)
-                            }
-                        }
-                    }
                 }
                 .padding(Spacing.lg)
             }
@@ -83,22 +84,15 @@ struct ItemDraftCard: View {
     }
 
     @ViewBuilder
-    private var thumbnailView: some View {
-        if let primaryPhoto {
-            photoThumb(primaryPhoto, size: 108)
+    private var photoStrip: some View {
+        if previewPhotos.isEmpty {
+            placeholderThumb(size: thumbnailSize)
         } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                    .fill(BrandColors.surfaceTertiary)
-                Image(systemName: "camera")
-                    .font(.system(size: 24))
-                    .foregroundStyle(BrandColors.textTertiary)
+            HStack(spacing: Spacing.sm) {
+                ForEach(Array(previewPhotos.enumerated()), id: \.offset) { _, photo in
+                    photoThumb(photo, size: thumbnailSize)
+                }
             }
-            .frame(width: 108, height: 108)
-            .overlay(
-                RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
-                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
-            )
         }
     }
 
@@ -110,6 +104,21 @@ struct ItemDraftCard: View {
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
         .background(BrandColors.surfaceTertiary, in: RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                .stroke(photo.isPrimary == true ? BrandColors.primary : BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+        )
+    }
+
+    private func placeholderThumb(size: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
+                .fill(BrandColors.surfaceTertiary)
+            Image(systemName: "camera")
+                .font(.system(size: 22))
+                .foregroundStyle(BrandColors.textTertiary)
+        }
+        .frame(width: size, height: size)
         .overlay(
             RoundedRectangle(cornerRadius: Dimensions.thumbnailRadius)
                 .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
