@@ -141,6 +141,10 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
+    match /accounts/{accountId}/protoItems/{protoItemId} {
+      allow read, create, update, delete: if isAccountMember(accountId);
+    }
+
     match /accounts/{accountId}/projects/{projectId} {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
@@ -194,4 +198,3 @@ service cloud.firestore {
     }
   }
 }
-

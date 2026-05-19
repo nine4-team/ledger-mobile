@@ -60,6 +60,45 @@ struct ModelCodableTests {
         #expect(dict["images"] == nil)
     }
 
+    // MARK: - ProtoItem
+
+    @Test("ProtoItem encodes capture fields correctly")
+    func protoItemEncoding() throws {
+        var protoItem = ProtoItem()
+        protoItem.projectId = "project1"
+        protoItem.captureContext = .project
+        protoItem.status = .open
+        protoItem.sourceHint = .purchasedByBusiness
+        protoItem.notes = "Blue fish with tag"
+        protoItem.photos = [
+            AttachmentRef(url: "offline://upload-1", isUploading: true),
+            AttachmentRef(url: "https://example.com/tag.jpg")
+        ]
+        protoItem.extracted = ProtoItemExtraction(
+            rawText: "SKU 12345",
+            skuCandidates: ["12345"],
+            confidence: 0.92,
+            extractedAt: Date(timeIntervalSince1970: 100)
+        )
+
+        let dict = try encodeToDict(protoItem)
+
+        #expect(dict["projectId"] as? String == "project1")
+        #expect(dict["captureContext"] as? String == "project")
+        #expect(dict["status"] as? String == "open")
+        #expect(dict["sourceHint"] as? String == "purchased_by_business")
+        #expect(dict["notes"] as? String == "Blue fish with tag")
+
+        let photos = dict["photos"] as? [[String: Any]]
+        #expect(photos?.count == 2)
+        #expect(photos?.first?["url"] as? String == "offline://upload-1")
+        #expect(photos?.first?["isUploading"] as? Bool == true)
+
+        let extracted = dict["extracted"] as? [String: Any]
+        #expect(extracted?["rawText"] as? String == "SKU 12345")
+        #expect(extracted?["skuCandidates"] as? [String] == ["12345"])
+    }
+
     // MARK: - Transaction
 
     @Test("Transaction encodes all fields correctly")

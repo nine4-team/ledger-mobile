@@ -2,6 +2,8 @@
 Status: new
 Last updated: 2026-05-18
 
+User-facing name: **Item Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Draft" or "Item Drafts".
+
 ## Summary
 
 Proto item capture lets a designer record a physical object quickly before all item details are known. A proto item is a persistent photo group plus lightweight context. It is not a real `Item` yet and does not affect project budgets, inventory value, transactions, invoices, or reports until it is resolved.
@@ -16,7 +18,7 @@ The current item flow asks for too much too early. It treats item creation as a 
 
 ## Core Concept
 
-A **ProtoItem** is a draft capture record for one physical object or one intended line item.
+A **ProtoItem** is the data model for an item draft: a draft capture record for one physical object or one intended line item.
 
 It can contain:
 

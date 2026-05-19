@@ -53,6 +53,24 @@ struct MediaServiceTests {
                 == "accounts/a/transactions/t1/x.jpg")
         #expect(service.uploadPath(accountId: "a", entityType: "spaces", entityId: "s1", filename: "y.jpg")
                 == "accounts/a/spaces/s1/y.jpg")
+        #expect(service.uploadPath(accountId: "a", entityType: "protoItems", entityId: "p1", filename: "z.jpg")
+                == "accounts/a/protoItems/p1/z.jpg")
+    }
+
+    @Test("ProtoItemsService photoUploadMetadata targets proto item photos")
+    func protoItemPhotoUploadMetadata() {
+        let metadata = ProtoItemsService.photoUploadMetadata(
+            accountId: "acc1",
+            protoItemId: "proto1",
+            filename: "photo.jpg",
+            isPrimary: true
+        )
+
+        #expect(metadata.entityType == "protoItems")
+        #expect(metadata.entityId == "proto1")
+        #expect(metadata.storagePath == "accounts/acc1/protoItems/proto1/photo.jpg")
+        #expect(metadata.thumbnailStoragePathSm == "accounts/acc1/protoItems/proto1/thumbs/photo_sm.jpg")
+        #expect(metadata.thumbnailStoragePathMd == "accounts/acc1/protoItems/proto1/thumbs/photo_md.jpg")
     }
 
     @Test("uploadPath uses provided filename verbatim")

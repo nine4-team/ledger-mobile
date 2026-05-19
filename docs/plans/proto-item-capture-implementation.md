@@ -1,5 +1,5 @@
 # Proto Item Capture Implementation Plan
-Status: draft
+Status: in progress
 Last updated: 2026-05-18
 
 ## Goal
@@ -8,17 +8,26 @@ Implement persistent proto item capture so designers can capture physical items 
 
 Primary spec: [../specs/proto-item-capture.md](../specs/proto-item-capture.md)
 
+UI naming: show these records as **Item Drafts**. Keep `ProtoItem` for code and Firestore.
+
 ## Phase 1 — Data Model And Services
 
 Add a separate `ProtoItem` model and service layer.
 
+Progress:
+
+- Created the `ProtoItem` model, status/context/source-hint enums, and extraction payload.
+- Added `ProtoItemsService` and `ProtoItemsServiceProtocol` for create, update, review, resolve, dismiss, scoped subscriptions, and photo upload metadata.
+- Added Firestore rules for `accounts/{accountId}/protoItems/{protoItemId}`.
+- Added initial codable and media path tests.
+
 Work items:
 
-- Create `ProtoItem` model with fields from the data model spec.
-- Add `ProtoItemsService` for create, update, dismiss, and resolve-state writes.
-- Add upload support for proto item images.
-- Add account-scoped query for open/in-review proto items.
-- Add scoped queries for project, inventory, and transaction contexts.
+- [x] Create `ProtoItem` model with fields from the data model spec.
+- [x] Add `ProtoItemsService` for create, update, dismiss, and resolve-state writes.
+- [x] Add upload support for proto item images.
+- [x] Add account-scoped query for open/in-review proto items.
+- [x] Add scoped queries for project, inventory, and transaction contexts.
 - Keep proto items out of normal item queries and budget/report calculations.
 
 Acceptance:
@@ -31,9 +40,15 @@ Acceptance:
 
 Build the capture experience around repeated, low-friction entry.
 
+Progress:
+
+- Added a project-scoped `ItemDraftCaptureSheet` entry from the Project Items tab.
+- The sheet captures grouped photos, optional source hint, and notes.
+- Saving creates a `ProtoItem`, queues photo uploads, and resets for the next item draft.
+
 Entry points:
 
-- Project detail: capture item for current project.
+- [x] Project detail: capture item for current project.
 - Inventory: capture item for inventory, optional intended project.
 - Transaction detail: capture item with `candidateTransactionId`.
 
@@ -43,7 +58,7 @@ Capture UI:
 - Add tag/SKU/price photo.
 - Add more photos if needed.
 - Optional quick source hint: client purchase, business purchase, from inventory.
-- Save and immediately reset for the next proto item.
+- [x] Save and immediately reset for the next item draft.
 
 Acceptance:
 

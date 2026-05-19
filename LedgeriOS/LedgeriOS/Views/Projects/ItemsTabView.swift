@@ -15,7 +15,10 @@ struct ItemsTabView: View {
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
+    @State private var showAddItemMenu = false
+    @State private var addItemPendingAction: (() -> Void)?
     @State private var showNewItem = false
+    @State private var showNewItemDraft = false
 
     // MARK: - Computed
 
@@ -33,7 +36,7 @@ struct ItemsTabView: View {
             mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
             getMenuItems: { singleItemMenuItems(for: $0) },
             emptyMessage: "No items in this project",
-            onAdd: { showNewItem = true },
+            onAdd: { showAddItemMenu = true },
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
@@ -87,9 +90,42 @@ struct ItemsTabView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .adaptivePresentation(isPresented: $showAddItemMenu, style: .quickMenu, onDismiss: {
+            addItemPendingAction?()
+            addItemPendingAction = nil
+        }) {
+            ActionMenuSheet(
+                title: "Add Item",
+                items: [
+                    ActionMenuItem(
+                        id: "item-draft",
+                        label: "Item Draft",
+                        icon: "camera.badge.ellipsis",
+                        onPress: { showNewItemDraft = true }
+                    ),
+                    ActionMenuItem(
+                        id: "new-item",
+                        label: "New Item",
+                        icon: "shippingbox",
+                        onPress: { showNewItem = true }
+                    ),
+                ],
+                onSelectAction: { action in
+                    addItemPendingAction = action
+                }
+            )
+        }
         .adaptivePresentation(isPresented: $showNewItem, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 NewItemView(context: .project(projectId, spaceId: nil))
+            }
+        }
+        .adaptivePresentation(isPresented: $showNewItemDraft, style: .form) {
+            if let projectId = projectContext.currentProjectId {
+                ItemDraftCaptureSheet(
+                    projectId: projectId,
+                    projectName: projectContext.project?.name
+                )
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
