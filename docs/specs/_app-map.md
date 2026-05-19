@@ -1,5 +1,5 @@
 # App Map: Ledger
-Last updated: 2026-04-03
+Last updated: 2026-05-18
 
 ## Overview
 Ledger is an inventory and transaction management app for design teams. It exists as both a web app and a macOS desktop app. The app tracks items (inventory) and transactions across projects and spaces, with budgeting and reporting features.
@@ -28,6 +28,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ### Item Entry (Current — Being Redesigned)
 - **Path A (being removed for itemized categories):** Items added directly to a project, marked as "business purchased, client owes"
 - **Path B (becoming the standard for itemized categories):** Items enter inventory via purchase transaction, then sold/moved to a project
+- **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then resolved later into real items, existing receipt-created items, or inventory sales. See `proto-item-capture.md`.
 - Non-itemized expenses currently [needs discovery — unclear how these are handled today]
 
 ### Invoicing (Current)
@@ -71,7 +72,7 @@ These are designer-facing workflow statuses tracking the physical lifecycle of a
 **Known issue:** When items are moved from inventory to a project, the status does not auto-update to "Purchased." This requires manual cleanup.
 
 ## Data Model Summary
-Based on available MCP tools, key entities include: Items, Transactions, Projects, Spaces, Accounts, Budget Categories. Relationships between these are [needs discovery].
+Key entities include: Items, ProtoItems, Transactions, Projects, Spaces, Accounts, Budget Categories. ProtoItems are separate from Items and do not affect budgets, inventory, transactions, invoices, reports, or item counts until resolved.
 
 ## Navigation Flow
 [Needs discovery — the app has desktop and web versions with potentially different navigation patterns]

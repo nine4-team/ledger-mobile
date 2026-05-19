@@ -1,0 +1,128 @@
+# Proto Item Capture Implementation Plan
+Status: draft
+Last updated: 2026-05-18
+
+## Goal
+
+Implement persistent proto item capture so designers can capture physical items quickly, then resolve those captures later into real items, existing receipt-created items, or inventory-to-project sales.
+
+Primary spec: [../specs/proto-item-capture.md](../specs/proto-item-capture.md)
+
+## Phase 1 — Data Model And Services
+
+Add a separate `ProtoItem` model and service layer.
+
+Work items:
+
+- Create `ProtoItem` model with fields from the data model spec.
+- Add `ProtoItemsService` for create, update, dismiss, and resolve-state writes.
+- Add upload support for proto item images.
+- Add account-scoped query for open/in-review proto items.
+- Add scoped queries for project, inventory, and transaction contexts.
+- Keep proto items out of normal item queries and budget/report calculations.
+
+Acceptance:
+
+- A proto item can be created with photos and context.
+- Open proto items survive app restart.
+- Existing item lists and transaction totals do not change when proto items are created.
+
+## Phase 2 — Fast Capture UI
+
+Build the capture experience around repeated, low-friction entry.
+
+Entry points:
+
+- Project detail: capture item for current project.
+- Inventory: capture item for inventory, optional intended project.
+- Transaction detail: capture item with `candidateTransactionId`.
+
+Capture UI:
+
+- Add object photo.
+- Add tag/SKU/price photo.
+- Add more photos if needed.
+- Optional quick source hint: client purchase, business purchase, from inventory.
+- Save and immediately reset for the next proto item.
+
+Acceptance:
+
+- A designer can capture multiple proto items in sequence without reselecting project context.
+- Capture requires no price, vendor, SKU, category, or transaction.
+- Project/inventory context is visible before save.
+
+## Phase 3 — Needs Review Integration
+
+Surface proto items in the review workflow.
+
+Work items:
+
+- Add proto item sections to Needs Review.
+- Group by project, intended project, inventory/unassigned, and transaction-linked captures.
+- Show image group, context hints, capture date, and source hint.
+- Add actions: create item, merge into item, sell from inventory, dismiss.
+
+Acceptance:
+
+- A reviewer can find all unresolved proto items from one place.
+- Proto item cards make the next action obvious.
+- Dismissed/resolved proto items leave the active queue.
+
+## Phase 4 — Resolution Flows
+
+Implement manual resolution first.
+
+### Create Item
+
+- Convert proto item into a new inventory item or project item.
+- Reuse existing item creation and transaction membership rules.
+- Mark proto item `resolved` with `resolvedItemId`.
+
+### Merge Into Existing Item
+
+- Let reviewer search/filter existing items, especially skeletal receipt-created items.
+- Attach proto item images to the chosen item.
+- Optionally copy notes/extracted text.
+- Mark proto item `resolved` with `resolvedItemId`.
+
+### Sell From Inventory
+
+- If `sourceHint == from_inventory`, route through existing sell-to-project operations.
+- Require destination project and budget category before committing sale.
+- Mark proto item resolved once the resulting item/project sale is created.
+
+Acceptance:
+
+- Every resolution path is reversible through existing item/transaction editing where practical.
+- Merge does not create duplicate items.
+- Sale resolution uses existing inventory sale mechanics rather than a parallel write path.
+
+## Phase 5 — Automation Assist
+
+Layer in suggestions after the manual workflow is useful.
+
+Candidates:
+
+- On-device OCR for SKU/price/tag text.
+- Suggested receipt transaction from date/vendor/project context.
+- Suggested existing item match by SKU or name.
+- Suggested item name from image or receipt description.
+
+Acceptance:
+
+- Suggestions are optional and human-confirmed.
+- Low-confidence matches remain open.
+- No automated suggestion creates budget impact without confirmation.
+
+## Test Strategy
+
+- Unit tests for `ProtoItem` encode/decode and status transitions.
+- Service tests for create/update/dismiss/resolve writes.
+- UI tests for repeated capture flow.
+- Review queue tests for grouping and filtering.
+- Integration tests for merge and sell-from-inventory resolution.
+- Regression tests confirming unresolved proto items do not affect item counts, transaction completeness, budgets, invoices, or reports.
+
+## Rollout Notes
+
+This should ship behind a feature flag or hidden entry point until the full capture → review → resolve loop works. A capture-only release would create a new backlog bucket without giving the reviewer a way to clear it.

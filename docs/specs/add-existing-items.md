@@ -120,11 +120,11 @@ The system determines the operation automatically based on source and destinatio
 
 | Source Scope | Destination Scope | Operation | Reference |
 |-------------|-------------------|-----------|-----------|
-| Same project | Same project | Direct reassign | [reassign-vs-sell.md](reassign-vs-sell.md) §Reassign |
-| Business inventory | Business inventory | Direct reassign | [reassign-vs-sell.md](reassign-vs-sell.md) §Reassign |
-| Business inventory | Project | **Sell** (per-batch) | [sale-transactions.md](sale-transactions.md) |
+| Same project | Same project | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
+| Business inventory | Business inventory | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
+| Business inventory | Project | **Sell to Project** (per-batch) | [sale-transactions.md](sale-transactions.md) |
 | Project | Business inventory | **Return to Inventory** | [return-and-sale-tracking.md](return-and-sale-tracking.md) §Returning to Inventory |
-| Project A | Project B | **Move Between Projects** (return + sell, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
+| Project A | Project B | **Sell to Project** (two-hop: return + sell, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
 
 ### Bulk Selection Across Scopes
 

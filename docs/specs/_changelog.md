@@ -1,5 +1,11 @@
 # Ledger Specs — Changelog
 
+## 2026-05-18
+- **Created Proto Item Capture spec.** Added a separate `protoItems` entity for persistent photo-first item intake. Proto items are not real items and do not affect budgets, transactions, invoices, reports, or item counts until resolved.
+- **Documented capture-first, resolve-later workflow.** Project and inventory entry points now support lightweight physical capture, with later review actions to create items, merge into receipt-created skeletal items, sell from inventory, or dismiss.
+- **Added implementation plan.** Created `docs/plans/proto-item-capture-implementation.md` covering data model/services, fast capture UI, Needs Review integration, manual resolution, automation assist, and rollout/testing.
+- **Updated related specs.** Cross-linked `items.md`, `data-model.md`, `item-entry-flow.md`, `transaction-creation.md`, and `needs-review-tab.md` so new work treats proto item capture as the active item-intake redesign.
+
 ## 2026-04-14
 - **Restored Sell-to-Inventory as a bidirectional Sale path.** The 2026-04-11 per-batch-sale redesign had removed sell-to-inventory on the "inventory is a store; you don't sell back to it" metaphor. That was a semantic regression: items that originated in a project are never "returning" when the business acquires them — they're being sold. Restored `sellToInventory` in `InventoryOperationsService`; `moveToInventory` now routes per-item based on origin (`item.currentSource != item.source` → Return; otherwise → Sale-to-Inventory). Mixed batches write both transactions atomically. `moveBetweenProjects` takes the origin-aware first hop too.
 - **Direction is shape-derived, not a field.** A Sale with `budgetCategoryId` set is inventory → project; a Sale with `budgetCategoryId` absent is project → inventory. No new field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.

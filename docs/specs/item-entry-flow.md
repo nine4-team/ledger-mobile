@@ -1,10 +1,12 @@
 # Item & Expense Entry Flow
-Status: shipped
-Last updated: 2026-04-07
+Status: modify
+Last updated: 2026-05-18
 Implemented: 2026-04-07
 
 ## Summary
 How items and expenses get into a project. Currently there are two overlapping paths for physical items (direct-to-project vs. inventory-first), which creates confusion. This spec replaces them with a single, category-based routing system: the category you select at transaction creation determines whether the flow goes through inventory or goes directly to the project.
+
+**2026-05-18 redesign note:** The inventory-first routing model remains the financial/accounting model for real items, but item intake is moving toward a capture-first flow using persistent proto items. See [proto-item-capture.md](proto-item-capture.md). New implementation should avoid requiring full item details during field capture.
 
 ## Current Behavior (What Exists Today)
 
@@ -30,6 +32,7 @@ Both paths can be used for the same type of item (e.g., furnishings), which lead
 ### Adding
 - **Immediate sell-to-project option at inventory entry.** When entering items into inventory under an itemized category, the user is prompted: "Do you want to sell this entire transaction to a project?" or "Do you want to select specific items to sell to a project?" This makes inventory → sell feel like one step, not two, while still routing through the consistent pipeline.
 - **Direct-to-project flow for non-itemized expense categories.** Categories like install, fuel, delivery, and other service/expense categories skip inventory entirely. These aren't physical goods — they go straight to a project. The flow asks: which project? Who purchased it?
+- **Proto item capture as the lightweight intake path.** For physical items where details are unknown, the designer can create proto items from project or inventory context, then resolve them into real items later.
 
 ### Removing
 - **The ability to add itemized items directly to a project as "business purchased, client owes."** This path goes away. If it's an itemized category, it goes through inventory (even if it's immediately sold onward).

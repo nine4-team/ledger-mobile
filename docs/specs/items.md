@@ -6,6 +6,12 @@ Items are the individual physical products tracked in Ledger. Each item represen
 
 Items are a shared domain module — the same `Item` entity and UI components are used across both project and business inventory scopes.
 
+## Proto Items Are Separate
+
+Photo-first captures that are not ready to become real items are stored as `ProtoItem` records, not incomplete `Item` records. See [proto-item-capture.md](proto-item-capture.md).
+
+This keeps the `Item` entity reserved for physical products that are ready to participate in item lists, inventory operations, transaction membership, reporting, billing, and project budget behavior. A proto item can later create a new item or merge photos into an existing item, but unresolved proto items do not appear in normal item lists and do not affect item counts.
+
 ## Item Entity
 
 **Firestore path:** `accounts/{accountId}/items/{itemId}`
@@ -79,6 +85,8 @@ Price fields must be zero or greater (negative values are invalid).
 ## Creation Flow
 
 Item creation uses a 2-step sheet form.
+
+This flow remains the full-detail item creation path. For field capture where the designer only has photos and lightweight context, use proto item capture first and resolve later.
 
 ### Step 1: Essentials
 

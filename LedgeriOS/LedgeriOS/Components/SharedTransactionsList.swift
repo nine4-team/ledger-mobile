@@ -484,6 +484,7 @@ struct SharedTransactionsList: View {
     @State private var selectedIds: Set<String> = []
     @State private var showBulkActionMenu = false
     @Environment(FindStateManager.self) private var findState
+    @Environment(AccountContext.self) private var accountContext
 
     // MARK: - Computed
 
@@ -638,6 +639,10 @@ struct SharedTransactionsList: View {
             TransactionCard(
                 transaction: transaction,
                 budgetCategoryName: transaction.budgetCategoryId,
+                projectName: TransactionDisplayCalculations.projectLabel(
+                    for: transaction,
+                    projects: accountContext.allProjects
+                ),
                 isSelected: isSelected ? .constant(true) : selectedIds.isEmpty ? nil : .constant(false),
                 menuItems: menuItems,
                 onPress: {

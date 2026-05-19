@@ -141,4 +141,28 @@ enum TransactionDisplayCalculations {
     static func canonicalTypeLabel(for type: TransactionType?) -> String? {
         type?.displayLabel
     }
+
+    // MARK: - Project Label
+
+    /// Resolves the project label for a transaction.
+    ///
+    /// - If `projectId` is set, returns the project's name (or `"Unknown Project"`
+    ///   if no matching project is found — indicates data drift).
+    /// - If `projectId` is nil, returns `"Business Inventory"`. In the data model,
+    ///   a null `projectId` on an itemized transaction (Purchase, Sale, Return)
+    ///   means inventory scope — not "unassigned." Surfacing this as a real label
+    ///   makes the inventory scope visible to users instead of rendering as
+    ///   absence.
+    ///
+    /// Note: this returns `"Business Inventory"` for any transaction with a null
+    /// `projectId`, including non-itemized types (Fee, Expense). If those have
+    /// no project they're business-overhead, but for now we treat null as
+    /// inventory uniformly. Refine if/when a separate "Business Overhead" scope
+    /// is introduced.
+    static func projectLabel(for transaction: Transaction, projects: [Project]) -> String {
+        if let projectId = transaction.projectId {
+            return projects.first(where: { $0.id == projectId })?.name ?? "Unknown Project"
+        }
+        return "Business Inventory"
+    }
 }

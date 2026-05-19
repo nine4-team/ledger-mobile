@@ -1,14 +1,21 @@
-# Reassign vs Sell
+# Correct/Move vs Sell vs Return
 
 ## Overview
 
-When items need to move between projects or between a project and business inventory, there are two distinct operations with different semantics. Users must understand which they're performing because the financial implications differ.
+When items need to move between transactions, projects, or business inventory, there are three distinct operations with different semantics: **Correct/Move**, **Sell**, and **Return**. Users must understand which they're performing because the financial implications differ.
 
-## Reassign
+UI labels (final):
+
+- **Correct / Move** — corrections only, no financial impact. Within-scope reassignment.
+- **Sell to Project** — one menu item that handles both inventory→project and project→project sales (the two-hop is an implementation detail invisible to the user).
+- **Return to Inventory** — items returning home to business inventory (origin-aware under the hood).
+- **Return to Vendor** — items being physically sent back to the vendor.
+
+## Correct / Move (Reassign)
 
 ### Definition
 
-Reassign moves an item from one transaction to another **within the same scope** (same project, or within business inventory). No financial impact — no new transactions are created, no budget amounts change.
+Correct/Move reassigns an item from one transaction to another **within the same scope** (same project, or within business inventory). No financial impact — no new transactions are created, no budget amounts change. The "Correct" half of the label signals intent (this is a data fix, not a business event); the "Move" half describes the mechanic (the item is being relocated between transactions).
 
 ### What Changes
 
@@ -34,15 +41,20 @@ Reassign moves an item from one transaction to another **within the same scope**
 ### Validation
 
 - Source and destination must be in the same scope (same projectId, or both null for business inventory)
-- If scopes differ, the operation is a "sell," not a "reassign"
+- If scopes differ, the operation is a Sell, not a Correct/Move
 
-## Sell (Inventory → Project)
+## Sell to Project
 
 ### Definition
 
-Sell moves items **from business inventory into a project**. Under the per-batch model ([sale-transactions.md](sale-transactions.md)), this creates **one new immutable Sale transaction** for the batch. The user picks one budget category that applies to every item in the batch.
+Sell moves items **into a project**. From the user's perspective this is a single operation regardless of where the item starts — the menu item is **Sell to Project** whether the item is in business inventory or in another project.
 
-> **Note:** The reverse direction (project → business inventory) is no longer a sell. It's a Return-to-Inventory. See "Return to Inventory" below and [return-and-sale-tracking.md](return-and-sale-tracking.md).
+Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the user picks one budget category that applies to every item in the batch. Two underlying flows, transparent to the user:
+
+- **Inventory → Project** (single Sale). One new immutable Sale transaction.
+- **Project A → Project B** (two-hop, atomic). Hop 1 is origin-aware against Project A (Return-to-Inventory if the item came from inventory, Sale-to-Inventory if it originated in Project A). Hop 2 is a new Sale into Project B with the chosen category. All writes land in the same Firestore batch.
+
+> **Note:** The reverse direction (project → business inventory) is **not** a Sell from the user's perspective — it's the **Return to Inventory** action below. See [return-and-sale-tracking.md](return-and-sale-tracking.md) for the return flow details.
 
 ### What Changes
 
@@ -65,9 +77,9 @@ Sell moves items **from business inventory into a project**. Under the per-batch
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch sale flow.
 
-## Move to Inventory (Project → Inventory) — Origin-Aware
+## Return to Inventory (Project → Inventory) — Origin-Aware
 
-A single user action — "Move to Inventory" — routes each item to one of two transaction types based on its origin:
+A single user action — **Return to Inventory** — routes each item to one of two transaction types based on its origin:
 
 ### Return to Inventory (item came from inventory)
 
@@ -97,18 +109,19 @@ The UI confirms the split before writing, then writes both transactions in a sin
 
 ## Decision Matrix
 
-| Source | Destination | Operation | Financial Impact |
-|--------|-------------|-----------|------------------|
-| Project A, Transaction X | Project A, Transaction Y | Reassign | None |
-| Business Inventory, Txn X | Business Inventory, Txn Y | Reassign | None |
-| Business Inventory | Project A | **Sell to Project** (inventory → project Sale) | Adds to Project A budget |
-| Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Subtracts from Project A budget |
-| Project A | Business Inventory (item originated in A) | **Sale to Inventory** (project → inventory Sale) | Subtracts from Project A budget |
-| Project A | Project B | **Move Between Projects** (origin-aware hop 1 + destination Sale, atomic) | Subtracts from A, adds to B |
+| Source | Destination | User-facing action | Underlying mechanics | Financial Impact |
+|--------|-------------|--------------------|----------------------|------------------|
+| Project A, Transaction X | Project A, Transaction Y | **Correct / Move** | `transactionId` swap | None |
+| Business Inventory, Txn X | Business Inventory, Txn Y | **Correct / Move** | `transactionId` swap | None |
+| Business Inventory | Project A | **Sell to Project** | Single Sale (inventory → project) | Adds to Project A budget |
+| Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Return transaction | Subtracts from Project A budget |
+| Project A | Business Inventory (item originated in A) | **Return to Inventory** | Sale-to-Inventory transaction | Subtracts from Project A budget |
+| Project A | Project B | **Sell to Project** | Two-hop atomic: origin-aware hop 1 + destination Sale | Subtracts from A, adds to B |
+| Project A or Inventory | Vendor | **Return to Vendor** | Vendor Return transaction (new or appended) | Subtracts from source budget (if from project) |
 
-### Project-to-Project Moves
+### Sell to Project — Project-to-Project Mechanics
 
-Moving items between projects is a single user action that decomposes into a **two-hop** atomic batch. The first hop is origin-aware:
+When the source is another project, **Sell to Project** decomposes into a **two-hop** atomic batch. The user does not see this — to them it's a single Sell action. The first hop is origin-aware:
 
 1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory (no `budgetCategoryId`) against Project A. Mixed batches write both.
 2. **Hop 2.** One Sale into Project B (`budgetCategoryId` set), covering all items.
@@ -119,27 +132,30 @@ All writes land in the same Firestore batch. Lineage edges link the path. See [s
 
 The actions available to users depend on context.
 
-### "Reassign" is available when:
+### "Correct / Move" is available when:
 
 - Item is linked to a transaction
-- Other transactions exist in the same scope
+- Other transactions exist in the same scope (same projectId, or both null for business inventory)
+- Framed in the UI as a correction — no money moves, no Sale or Return created
 
 ### "Sell to Project" is available when:
 
-- Item is in business inventory (projectId is null)
-- At least one project exists
+- Item is in business inventory (projectId is null) AND at least one project exists, OR
+- Item is in a project (projectId is not null) AND at least one other project exists
+- Single menu item regardless of source; underlying single-hop vs two-hop is invisible to the user
 
 ### "Return to Inventory" is available when:
 
 - Item is in a project (projectId is not null)
+- Origin-aware under the hood (Return transaction vs Sale-to-Inventory transaction)
 
-(Previously "Send to Inventory." Renamed to make it clear this is a Return transaction, not a Sale.)
+(Previously "Send to Inventory." Renamed to make it clear this is a Return, not a Sale.)
 
-### "Move to Different Project" is available when:
+### "Return to Vendor" is available when:
 
-- Item is in a project
-- Other projects exist
-- Implemented as Return-to-Inventory + new Sale, atomically in one batch
+- Item is in a Purchase transaction (vendor-sourced)
+- Items being physically sent back to the vendor
+- Routes through a vendor Return transaction (new or appended); see [return-and-sale-tracking.md](return-and-sale-tracking.md) for the coalescing rules
 
 ## Budget Category Resolution During Sell
 
@@ -153,9 +169,9 @@ There is no per-item category override and no mixed-category batches. Users want
 
 ## Design Decision: Why Separate Operations?
 
-Reassign and sell could theoretically be one "move" operation that detects scope changes automatically. They are kept separate because:
+Correct/Move and Sell could theoretically be one "move" operation that detects scope changes automatically. They are kept separate because:
 
-1. **User intent matters.** Reassigning (fixing a mistake) vs selling (financial transaction) have different mental models. Conflating them leads to accidental financial entries.
-2. **Reversibility.** Reassign is trivially reversible (just reassign back). Sell creates Sale transactions and lineage edges that persist.
-3. **Validation differs.** Sell requires budget category selection and may need user input. Reassign is always immediate.
+1. **User intent matters.** Correcting a mistake vs selling (financial transaction) have different mental models. Conflating them leads to accidental financial entries. The label "Correct / Move" exists specifically to make the corrective intent visible — without "Correct," users might choose Sell when they meant to fix a data error.
+2. **Reversibility.** Correct/Move is trivially reversible (just reassign back). Sell creates Sale transactions and lineage edges that persist.
+3. **Validation differs.** Sell requires budget category selection and may need user input. Correct/Move is always immediate.
 4. **Audit trail clarity.** The lineage edge types (`"association"` vs `"sold"` vs `"returned"`) clearly distinguish organizational moves from financial ones.

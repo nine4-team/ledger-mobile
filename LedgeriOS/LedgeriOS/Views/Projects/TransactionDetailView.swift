@@ -351,6 +351,18 @@ struct TransactionDetailView: View {
                         .foregroundStyle(BrandColors.textPrimary)
                 }
 
+                HStack(spacing: Spacing.xs) {
+                    Text("Project:")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FindableText(TransactionDisplayCalculations.projectLabel(
+                        for: currentTransaction,
+                        projects: accountContext.allProjects
+                    ))
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textPrimary)
+                }
+
                 let displayCategoryName = selectedCategory?.name
                     ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : nil)
                 if let displayCategoryName, !displayCategoryName.isEmpty {

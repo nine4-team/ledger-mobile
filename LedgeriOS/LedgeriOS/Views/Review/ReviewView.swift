@@ -150,6 +150,10 @@ struct ReviewView: View {
                                     assignmentLabel: ReviewCalculations.assignmentLabel(
                                         for: transaction,
                                         projects: accountContext.allProjects
+                                    ),
+                                    projectName: TransactionDisplayCalculations.projectLabel(
+                                        for: transaction,
+                                        projects: accountContext.allProjects
                                     )
                                 )
                             }

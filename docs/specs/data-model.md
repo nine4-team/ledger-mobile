@@ -170,7 +170,45 @@ Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-manage
 
 ---
 
-### 3. Space
+### 3. ProtoItem
+
+**Path:** `accounts/{accountId}/protoItems/{protoItemId}`
+
+A persistent capture group for a physical object that is not ready to become a real `Item` yet. Proto items are photo-first intake records used for field capture and later review. They do not affect budgets, inventory value, item counts, transactions, invoices, reports, or lineage until resolved.
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | string | Document ID |
+| accountId | string | FK to Account |
+| projectId | string, nullable | FK to Project. Project context for the capture. Null means inventory/unassigned. |
+| intendedProjectId | string, nullable | FK to Project. Destination hint for inventory captures intended for a project. |
+| candidateTransactionId | string, nullable | FK to Transaction. Possible matching transaction; not authoritative. |
+| candidateItemId | string, nullable | FK to Item. Possible matching item; not authoritative until resolved. |
+| resolvedItemId | string, nullable | FK to Item. Set when status becomes `resolved`. |
+| status | string | One of: `"open"`, `"in_review"`, `"resolved"`, `"dismissed"`. Defaults to `"open"`. |
+| sourceHint | string, nullable | One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. |
+| images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image or note is required. |
+| notes | string, nullable | Free-text capture/reviewer notes |
+| extractedText | string, nullable | OCR text from images. Optional; may be added by later automation. |
+| extractedMeta | map, nullable | Optional structured extraction, such as candidate SKU, price, vendor, or confidence values. |
+| createdBy | string, nullable | Firebase Auth UID |
+| updatedBy | string, nullable | Firebase Auth UID |
+| resolvedBy | string, nullable | Firebase Auth UID |
+| dismissedBy | string, nullable | Firebase Auth UID |
+| createdAt | timestamp | |
+| updatedAt | timestamp | |
+| resolvedAt | timestamp, nullable | |
+| dismissedAt | timestamp, nullable | |
+
+**Validation:** A proto item requires at least one image or a non-empty note. In normal capture UX, at least one image is expected.
+
+**Resolution:** A proto item is resolved by creating a new item, merging into an existing item, or routing through the sell-from-inventory flow. Resolution sets `status: "resolved"` and `resolvedItemId` when an item exists. Dismissal sets `status: "dismissed"` and does not create item, transaction, or lineage effects.
+
+**Invariant:** unresolved proto items are never queried as items and never included in item, budget, invoice, transaction completeness, or report calculations.
+
+---
+
+### 4. Space
 
 **Path:** `accounts/{accountId}/spaces/{spaceId}`
 
@@ -191,7 +229,7 @@ A physical location or logical grouping within a project or business inventory (
 
 ---
 
-### 4. Project
+### 5. Project
 
 **Path:** `accounts/{accountId}/projects/{projectId}`
 
@@ -213,7 +251,7 @@ A design project, job, or client engagement.
 
 ---
 
-### 5. BudgetCategory (Account-Scoped Preset)
+### 6. BudgetCategory (Account-Scoped Preset)
 
 **Path:** `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
 
@@ -236,7 +274,7 @@ A reusable budget category template defined at the account level. These are the 
 
 ---
 
-### 6. ProjectBudgetCategory (Per-Project Allocation)
+### 7. ProjectBudgetCategory (Per-Project Allocation)
 
 **Path:** `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
 
@@ -261,7 +299,7 @@ Represents a budget category that has been "enabled" for a specific project, wit
 
 ---
 
-### 7. ProjectPreferences (User-Specific Display Settings)
+### 8. ProjectPreferences (User-Specific Display Settings)
 
 **Path:** `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}`
 
@@ -279,7 +317,7 @@ Per-user, per-project display preferences. These do not affect data or calculati
 
 ---
 
-### 8. LineageEdge
+### 9. LineageEdge
 
 **Path:** `accounts/{accountId}/lineageEdges/{edgeId}`
 
@@ -311,7 +349,7 @@ Tracks the movement history of an item across transactions and projects. Each ed
 
 ---
 
-### 9. VendorDefaults (Account Preset)
+### 10. VendorDefaults (Account Preset)
 
 **Path:** `accounts/{accountId}/presets/default/vendors/default`
 
@@ -324,7 +362,7 @@ A single document holding the account's list of vendor/source presets for transa
 
 ---
 
-### 10. SpaceTemplate (Account Preset)
+### 11. SpaceTemplate (Account Preset)
 
 **Path:** `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
 
@@ -332,7 +370,7 @@ Predefined space templates for quick space creation.
 
 ---
 
-### 11. RequestDoc (Write-Ahead Log for Atomic Operations)
+### 12. RequestDoc (Write-Ahead Log for Atomic Operations)
 
 **Path:** `accounts/{accountId}/requests/{requestDocId}` (account-scoped)
 **Path:** `accounts/{accountId}/projects/{projectId}/requests/{requestDocId}` (project-scoped)
@@ -362,7 +400,7 @@ These are not Firestore collections. They are nested objects/arrays within paren
 
 ### AttachmentRef
 
-Embedded within Transaction, Item, and Space documents.
+Embedded within Transaction, Item, ProtoItem, and Space documents.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
@@ -464,6 +502,11 @@ Embedded within Checklist.
 | Item | belongs to | Project | N:1 | `item.projectId` | Null means business inventory. See Scope Semantics |
 | Item | belongs to | Space | N:1 | `item.spaceId` | Null means item is not in any space |
 | Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.** Set when an item moves into a project (sell-to-project flow); wiped when an item moves into inventory (return-to-inventory flow). Auto-set from destination transaction on association or reassignment within a project. |
+| ProtoItem | may resolve to | Item | 0:1 | `protoItem.resolvedItemId` | Set only after the capture is resolved into or merged with a real item |
+| ProtoItem | may reference | Project | 0:1 | `protoItem.projectId` | Capture context. Null means inventory/unassigned |
+| ProtoItem | may hint destination | Project | 0:1 | `protoItem.intendedProjectId` | Optional destination hint for inventory captures |
+| ProtoItem | may reference | Transaction | 0:1 | `protoItem.candidateTransactionId` | Candidate match only; not authoritative until resolution creates or updates real item/transaction links |
+| ProtoItem | may reference | Item | 0:1 | `protoItem.candidateItemId` | Candidate merge target only; not authoritative until resolution |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |
 | Space | belongs to | Project | N:1 | `space.projectId` | Null means business inventory scope |
@@ -602,6 +645,7 @@ An entity with a non-null `projectId` belongs to that project. It appears in tha
 An entity with `projectId: null` belongs to **business inventory** -- the account-wide pool not tied to any specific project. This applies to:
 
 - **Items** with `projectId: null`: These are in business inventory (e.g. purchased but not yet allocated to a project, or returned from a project to inventory)
+- **ProtoItems** with `projectId: null`: These are inventory/unassigned captures. They are not inventory items until resolved into real items.
 - **Spaces** with `projectId: null`: These are business-inventory spaces (e.g. warehouse, storage unit)
 - **Transactions** with `projectId: null`: These are business-level transactions not tied to a project
 

@@ -7,6 +7,7 @@ Platform-agnostic design specs documenting business rules, entity relationships,
 | Spec | Description |
 |------|-------------|
 | [data-model.md](data-model.md) | All entities, relationships, canonical lookups, and validation rules |
+| [proto-item-capture.md](proto-item-capture.md) | Persistent photo-first item intake queue and resolution model |
 | [write-tiers.md](write-tiers.md) | The four write patterns (fire-and-forget, request-doc, callable, trigger) and when to use each |
 | [offline-first.md](offline-first.md) | Offline architecture, sync status, and attachment lifecycle |
 | [budget-management.md](budget-management.md) | Categories, allocations, progress calculations, sign conventions, and pinning |
@@ -15,7 +16,7 @@ Platform-agnostic design specs documenting business rules, entity relationships,
 | [return-and-sale-tracking.md](return-and-sale-tracking.md) | Return flow, disposition lifecycle, and incomplete return detection |
 | [transaction-audit.md](transaction-audit.md) | Completeness calculation, variance analysis, and missing price tracking |
 | [spaces.md](spaces.md) | Organization, scoping, templates, and checklists |
-| [reassign-vs-sell.md](reassign-vs-sell.md) | When to reassign (no financial impact) vs sell (scope change with budget impact) |
+| [reassign-vs-sell.md](reassign-vs-sell.md) | Correct/Move (no financial impact) vs Sell (scope change with budget impact) vs Return (vendor or inventory). UI menu labels and visibility rules. |
 | [reports.md](reports.md) | Invoice, client summary, and property management report generation |
 | [invoice-import.md](invoice-import.md) | PDF/image extraction, vendor parsing, and draft transaction creation |
 

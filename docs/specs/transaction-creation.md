@@ -8,6 +8,8 @@ Guide users through creating a new transaction, showing only fields relevant to 
 
 Reimbursement is treated as a narrow concept — asked about only in the Expense flow and only via a single toggle (see §Payable Semantics).
 
+For photo-first physical item capture, use [proto-item-capture.md](proto-item-capture.md). Transaction creation remains the financial evidence flow; proto items are physical evidence that can be linked or merged later.
+
 ## Entry Points
 
 - **Project context** — opened from a project's transactions/finances tab. Transaction is pre-scoped to that project (`projectId` set as the default).
@@ -139,5 +141,6 @@ The "route through inventory" decision is computed as `isItemizedCategory && pur
 ## Related Specs
 
 - [item-entry-flow.md](item-entry-flow.md) — post-creation item entry and sell-to-project flow
+- [proto-item-capture.md](proto-item-capture.md) — persistent photo-first item intake and later resolution
 - [transaction-completeness.md](transaction-completeness.md) — required fields / completeness rules
 - [transaction-audit.md](transaction-audit.md) — audit trail

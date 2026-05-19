@@ -319,6 +319,10 @@ struct UniversalSearchView: View {
                     let card = TransactionCard(
                         transaction: displayTransaction,
                         budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
+                        projectName: TransactionDisplayCalculations.projectLabel(
+                            for: transaction,
+                            projects: accountContext.allProjects
+                        ),
                         isSelected: isSelected,
                         menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : []
                     )

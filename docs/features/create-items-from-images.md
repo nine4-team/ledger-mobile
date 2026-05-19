@@ -1,5 +1,7 @@
 # Create Items from Images
 
+> Superseded direction: persistent proto item capture is now the preferred item-intake model. See [../specs/proto-item-capture.md](../specs/proto-item-capture.md). This feature remains useful as historical context for image grouping and transaction-photo conversion, but its ephemeral state should not be the foundation for the redesign.
+
 ## Purpose
 Lets designers bulk-create items by grouping transaction photos into items — capture images at the store, group them later, fill in details after.
 

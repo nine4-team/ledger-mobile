@@ -68,7 +68,7 @@ A return transaction is a return transaction, whether the items go back to a ven
 
 ### Moving into inventory — routed by item origin
 
-The user performs a single "Move to Inventory" action. The service routes each item based on origin:
+The user performs a single **Return to Inventory** action. The service routes each item based on origin:
 
 - **Item came from inventory (`item.currentSource != item.source`)** → creates a **Return** transaction (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
 - **Item originated in the project (`item.currentSource == item.source`, or `currentSource == nil`)** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
@@ -97,7 +97,7 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
    - Mixed batches produce both transactions in the same Firestore batch.
 2. **Second hop** — all items land in the destination project via one Sale transaction (`budgetCategoryId` set).
 
-All hops commit atomically when the user invokes "move to project." Lineage edges link the path.
+All hops commit atomically when the user invokes **Sell to Project** from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
 
 ## Display
 
@@ -107,7 +107,7 @@ What changes:
 
 - **Items in inventory have no category badge.** UI components that previously displayed a category for inventory items should hide the badge when `projectId == null`.
 - **Inventory item filters by category** are removed. There's no category to filter by.
-- **The project-context "Move to Inventory" action** replaces the earlier "Return to Inventory" action. The modal shows which items will go as a Return and which as a Sale-to-Inventory based on origin.
+- **The project-context "Return to Inventory" action** is origin-aware. The modal shows which items will go as a Return and which as a Sale-to-Inventory based on origin. (This label supersedes a brief "Move to Inventory" interim name; the action has always been a Return semantically.)
 - **Transaction lists group inventory movement records visually.** Inventory acquisitions, inventory-to-project Sales, Sale-to-Inventory records, and return-to-inventory records can render as expandable grouped rows. The grouped row is not a transaction and is never written to Firestore; it exists only to keep one-off inventory movements readable in the UI. Expanding the row reveals the underlying child transactions.
 
 ### Transaction List Grouping Rules

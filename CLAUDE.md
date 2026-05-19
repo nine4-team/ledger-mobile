@@ -152,6 +152,22 @@ Think before acting. Consider multiple approaches and propose the most appropria
 
 Do the right thing, not the easy thing. Never rationalize a shortcut as a pragmatic decision. If the correct approach requires more work, that's the work. Before proposing any fix, ask yourself: "is this the best practice, or a workaround?" If you'd change your answer when challenged, change it now.
 
+## Check the Specs First
+
+Before answering questions about how a feature works, or proposing changes to one, read the relevant spec in `docs/specs/`. The specs are the source of truth — not the current UI, not the current code, not your model from prior conversation. Code may have drifted; UI may be wrong; conversation memory is unreliable.
+
+Key specs and what they cover:
+
+- `reassign-vs-sell.md` — Correct/Move vs Sell vs Return semantics, menu visibility rules
+- `return-and-sale-tracking.md` — Return flow (vendor and inventory), disposition lifecycle, incomplete-return detection
+- `sale-transactions.md` — per-batch Sale model, immutability rules
+- `inventory-as-store.md` — why returning to inventory is a Return, not a Sale
+- `canonical-sales.md` — legacy model, historical reads only
+- `data-model.md` — entity relationships, canonical lookup directions
+- `lineage-tracking.md` — intent edges vs audit edges
+
+If a question or task touches sales, returns, inventory, item movement, transaction shape, or budget impact, read the relevant spec before responding. "I think it works like…" is not acceptable — look it up.
+
 ## Communication
 
 Never use the AskUserQuestion tool. Ask questions as plain text in your response and wait for the user to reply.

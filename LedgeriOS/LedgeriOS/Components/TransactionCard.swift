@@ -7,6 +7,10 @@ struct TransactionCard: View {
     // Cross-collection lookup — not on Transaction model
     var budgetCategoryName: String?
     var assignmentLabel: String?
+    /// Project name, or "Business Inventory" for null-projectId transactions.
+    /// Resolved by the caller via `TransactionDisplayCalculations.projectLabel(for:projects:)`.
+    /// Pass nil to suppress (e.g. in already-project-scoped views where it would be redundant).
+    var projectName: String?
 
     // Selection — parent-owned, nil means no selector
     var isSelected: Binding<Bool>?
@@ -102,7 +106,7 @@ struct TransactionCard: View {
             // Detail rows
             VStack(alignment: .leading, spacing: Spacing.xs) {
 
-            // Date + item count + category (collapsed on macOS)
+            // Date + item count + project + category (collapsed on macOS)
             #if os(macOS)
             HStack(spacing: 0) {
                 Text("Date: ")
@@ -117,6 +121,15 @@ struct TransactionCard: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                     Text("\(count) \(count == 1 ? "item" : "items")")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+
+                if let project = projectName, !project.isEmpty {
+                    Text(" \u{00B7} ")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FindableText(project)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
@@ -144,6 +157,17 @@ struct TransactionCard: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                     Text("\(count) \(count == 1 ? "item" : "items")")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+            }
+
+            if let project = projectName, !project.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    Text("Project:")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                    FindableText(project)
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
