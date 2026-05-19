@@ -44,10 +44,10 @@ struct ItemsTabView: View {
     var body: some View {
         VStack(spacing: 0) {
             itemSubtabHeader
-            .frame(maxWidth: Dimensions.contentMaxWidth)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, Spacing.screenPadding)
-            .padding(.vertical, Spacing.sm)
+                .frame(maxWidth: Dimensions.contentMaxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, Spacing.screenPadding)
+                .padding(.top, Spacing.sm)
 
             if selectedItemsSubtab == "item-drafts" {
                 itemDraftsList
@@ -152,6 +152,7 @@ struct ItemsTabView: View {
             mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
             getMenuItems: { singleItemMenuItems(for: $0) },
             emptyMessage: "No items in this project",
+            onAdd: { showAddItemMenu = true },
             getBulkMenuItems: { bulkActionMenuItems },
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
@@ -160,61 +161,49 @@ struct ItemsTabView: View {
     }
 
     private var itemDraftsList: some View {
-        ScrollView {
-            AdaptiveContentWidth {
-                VStack(alignment: .leading, spacing: 0) {
-                    if activeProjectProtoItems.isEmpty {
-                        ContentUnavailableView {
-                            Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.xl)
-                    } else {
-                        LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
-                            ForEach(activeProjectProtoItems) { protoItem in
-                                ItemDraftCard(protoItem: protoItem)
+        VStack(spacing: 0) {
+            draftsControlBar
+                .padding(.horizontal, Spacing.screenPadding)
+                .background(BrandColors.background)
+
+            ScrollView {
+                AdaptiveContentWidth {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if activeProjectProtoItems.isEmpty {
+                            ContentUnavailableView {
+                                Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Spacing.xl)
+                        } else {
+                            LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                                ForEach(activeProjectProtoItems) { protoItem in
+                                    ItemDraftCard(protoItem: protoItem)
+                                }
+                            }
+                            .padding(.horizontal, Spacing.screenPadding)
+                            .padding(.vertical, Spacing.sm)
                         }
-                        .padding(.horizontal, Spacing.screenPadding)
-                        .padding(.vertical, Spacing.sm)
                     }
                 }
             }
         }
     }
 
-    private var itemSubtabHeader: some View {
-        HStack(alignment: .center, spacing: Spacing.sm) {
-            ScrollableTabBar(
-                selectedId: $selectedItemsSubtab,
-                items: [
-                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                    TabBarItem(id: "items", label: "Items"),
-                ],
-                showsBottomBorder: false
-            )
-
-            addItemButton
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: Dimensions.borderWidth)
+    private var draftsControlBar: some View {
+        AddOnlyControlBar(label: "Add item draft") {
+            showNewItemDraft = true
         }
     }
 
-    private var addItemButton: some View {
-        Button {
-            showAddItemMenu = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(BrandColors.textSecondary)
-                .frame(width: 36, height: 36)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Add item")
+    private var itemSubtabHeader: some View {
+        ScrollableTabBar(
+            selectedId: $selectedItemsSubtab,
+            items: [
+                TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                TabBarItem(id: "items", label: "Items"),
+            ]
+        )
     }
 
     // MARK: - Single-Item Menu

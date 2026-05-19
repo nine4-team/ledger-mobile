@@ -89,13 +89,11 @@ struct TransactionDetailView: View {
         if currentTransaction.isReturnTransaction {
             return transactionItems
         }
-        // Sale transactions show all items regardless of status. Items in a sale's
-        // itemIds may have status "returned" (returned to vendor while in inventory)
-        // or "sold" (sold to another project) — but they still belong to this
-        // transaction until moved via lineage. The status-based filter only applies
-        // to purchase transactions where returned/sold items have been moved out
-        // and are tracked via lineage in separate sections.
-        if currentTransaction.transactionType == .sale {
+        // Inventory movement transactions show all items regardless of status.
+        // Their itemIds are frozen movement snapshots; status-based filtering
+        // only applies to normal purchase transactions whose moved-out items
+        // are tracked via lineage in separate sections.
+        if currentTransaction.isInventoryMovement {
             return transactionItems
         }
         return transactionItems.filter { $0.status != .returned && $0.status != .sold }
@@ -661,6 +659,7 @@ struct TransactionDetailView: View {
         SharedItemsList(
             mode: .embedded(items: activeItems, onItemPress: { _ in }),
             emptyMessage: "No items yet",
+            onAdd: { showAddItemMenu = true },
             useNavigationLinks: true,
             filterScope: .project,
             inline: true
@@ -670,6 +669,10 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var itemDraftsList: some View {
         VStack(alignment: .leading, spacing: 0) {
+            AddOnlyControlBar(label: "Add item draft") {
+                showCreateItemDraft = true
+            }
+
             if activeTransactionProtoItems.isEmpty {
                 ContentUnavailableView {
                     Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
@@ -706,37 +709,13 @@ struct TransactionDetailView: View {
     }
 
     private var itemSubtabHeader: some View {
-        HStack(alignment: .center, spacing: Spacing.sm) {
-            ScrollableTabBar(
-                selectedId: $selectedItemsSubtab,
-                items: [
-                    TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                    TabBarItem(id: "items", label: "Items"),
-                ],
-                showsBottomBorder: false
-            )
-
-            addItemButton
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: Dimensions.borderWidth)
-        }
-    }
-
-    private var addItemButton: some View {
-        Button {
-            showAddItemMenu = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(BrandColors.textSecondary)
-                .frame(width: 36, height: 36)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Add item")
+        ScrollableTabBar(
+            selectedId: $selectedItemsSubtab,
+            items: [
+                TabBarItem(id: "item-drafts", label: "Item Drafts"),
+                TabBarItem(id: "items", label: "Items"),
+            ]
+        )
     }
 
     // 6. Returned Items (collapsed, conditional)
