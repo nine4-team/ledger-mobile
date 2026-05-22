@@ -44,8 +44,8 @@ export type MovementKind = (typeof movementKinds)[number];
 
 /**
  * @deprecated Legacy canonical-sale direction. Only present on historical
- * `isCanonicalInventorySale: true` transactions. New per-batch sales always
- * go business → project and never set this field. Kept for legacy reads.
+ * `isCanonicalInventorySale: true` transactions. New per-batch inventory movements
+ * derive direction from transaction shape and never set this field. Kept for legacy reads.
  * See docs/specs/canonical-sales.md.
  */
 export const inventorySaleDirections = [
@@ -71,8 +71,8 @@ export const ENUMS: EnumSpec[] = [
     values: transactionTypes,
     description:
       "Transaction type. 'Purchase' is itemized purchases; 'Expense' is non-itemized third-party " +
-      "costs; 'Fee' is money the business charges the client. Sale transactions are created via " +
-      "sell_items, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
+      "costs; 'Fee' is money the business charges the client. Inventory movement transactions are created via " +
+      "sell_items, return_items, or move_items_between_projects, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
       "with source: 'Business Inventory'.",
   },
   {
@@ -105,7 +105,7 @@ export const ENUMS: EnumSpec[] = [
     values: inventorySaleDirections,
     description:
       "DEPRECATED — legacy canonical-sale direction. Only present on historical " +
-      "transactions with isCanonicalInventorySale: true. New per-batch sales never set this field.",
+      "transactions with isCanonicalInventorySale: true. New per-batch inventory movements never set this field.",
   },
   {
     name: "categoryType",

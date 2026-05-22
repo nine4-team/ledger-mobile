@@ -4,10 +4,12 @@ import FirebaseFirestore
 struct ItemsTabView: View {
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
+    @Environment(MediaService.self) private var mediaService
 
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
-    @State private var selectedItemsSubtab = "items"
+    @State private var expandedSections: Set<String> = ["item-drafts", "items"]
     @State private var protoItemsListener: ListenerRegistration?
     @State private var projectProtoItems: [ProtoItem] = []
 
@@ -22,6 +24,12 @@ struct ItemsTabView: View {
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
+    @State private var selectedProtoItem: ProtoItem?
+    @State private var protoItemPendingDelete: ProtoItem?
+    @State private var protoItemPendingConvert: ProtoItem?
+    @State private var protoItemPendingMerge: ProtoItem?
+    @State private var protoItemToast: (id: String, message: String)?
+    @State private var protoItemToastTask: Task<Void, Never>?
     @State private var menuPendingAction: (() -> Void)?
 
     // MARK: - Computed
@@ -42,17 +50,14 @@ struct ItemsTabView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            itemSubtabHeader
-                .frame(maxWidth: Dimensions.contentMaxWidth)
-                .frame(maxWidth: .infinity)
+        ScrollView {
+            AdaptiveContentWidth {
+                LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
+                    itemDraftsSection
+                    itemsSection
+                }
                 .padding(.horizontal, Spacing.screenPadding)
-                .padding(.top, Spacing.sm)
-
-            if selectedItemsSubtab == "item-drafts" {
-                itemDraftsList
-            } else {
-                realItemsList
+                .padding(.vertical, Spacing.lg)
             }
         }
         .itemActionSheets(
@@ -108,7 +113,7 @@ struct ItemsTabView: View {
                 NewItemView(context: .project(projectId, spaceId: nil))
             }
         }
-        .adaptivePresentation(isPresented: $showNewItemDraft, style: .form) {
+        .adaptivePresentation(isPresented: $showNewItemDraft, style: .quickMenu) {
             if let projectId = projectContext.currentProjectId {
                 ItemDraftCaptureSheet(
                     projectId: projectId,
@@ -123,7 +128,7 @@ struct ItemsTabView: View {
             ActionMenuSheet(
                 title: "Add Item",
                 items: [
-                    ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
+                    ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
                         showNewItemDraft = true
                     }),
                     ActionMenuItem(id: "item", label: "Item", icon: "plus.square.fill", onPress: {
@@ -135,6 +140,47 @@ struct ItemsTabView: View {
                 }
             )
         }
+        .adaptivePresentation(item: $protoItemPendingConvert, style: .form) { protoItem in
+            NewItemView(
+                context: protoItem.projectId.map { .project($0, spaceId: nil) } ?? .inventory,
+                initialTransactionId: protoItem.transactionId,
+                initialName: protoItem.name,
+                initialImageRefs: protoItem.photos ?? [],
+                onCreated: { itemIds in
+                    if let itemId = itemIds.first {
+                        Task { await convertProtoItem(protoItem, itemId: itemId) }
+                    }
+                }
+            )
+        }
+        .adaptivePresentation(item: $protoItemPendingMerge, style: .fullSheet) { protoItem in
+            ItemQuickDraftMergePicker(
+                protoItem: protoItem,
+                items: dedupeItems(projectContext.items + accountContext.allItems),
+                onMerge: { item in
+                    Task { await mergeProtoItem(protoItem, into: item) }
+                }
+            )
+        }
+        .navigationDestination(item: $selectedProtoItem) { protoItem in
+            ItemQuickDraftDetailView(protoItem: protoItem)
+        }
+        .confirmationDialog(
+            "Delete Item Quick Draft?",
+            isPresented: Binding(
+                get: { protoItemPendingDelete != nil },
+                set: { if !$0 { protoItemPendingDelete = nil } }
+            )
+        ) {
+            Button("Delete Draft", role: .destructive) {
+                if let protoItem = protoItemPendingDelete {
+                    Task { await deleteProtoItem(protoItem) }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the draft and its media. This cannot be undone.")
+        }
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
             showNewItem = true
         }
@@ -144,75 +190,89 @@ struct ItemsTabView: View {
         .onDisappear {
             protoItemsListener?.remove()
             protoItemsListener = nil
+            protoItemToastTask?.cancel()
+            protoItemToastTask = nil
         }
     }
 
-    private var realItemsList: some View {
-        SharedItemsList(
-            mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
-            getMenuItems: { singleItemMenuItems(for: $0) },
-            emptyMessage: "No items in this project",
-            onAdd: { showAddItemMenu = true },
-            getBulkMenuItems: { bulkActionMenuItems },
-            selectedIds: $selectedItemIds,
-            useNavigationLinks: true,
-            emptyIcon: "cube.box"
-        )
-    }
-
-    private var itemDraftsList: some View {
-        VStack(spacing: 0) {
-            draftsControlBar
-                .padding(.horizontal, Spacing.screenPadding)
-                .background(BrandColors.background)
-
-            ScrollView {
-                AdaptiveContentWidth {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if activeProjectProtoItems.isEmpty {
-                            ContentUnavailableView {
-                                Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, Spacing.xl)
-                        } else {
-                            LazyVStack(alignment: .leading, spacing: Spacing.cardListGap) {
-                                ForEach(activeProjectProtoItems) { protoItem in
-                                    ItemDraftCard(protoItem: protoItem)
-                                }
-                            }
-                            .padding(.horizontal, Spacing.screenPadding)
-                            .padding(.vertical, Spacing.sm)
-                        }
+    private var itemDraftsSection: some View {
+        CollapsibleSection(
+            title: "Item Quick Drafts",
+            isExpanded: sectionBinding("item-drafts"),
+            badge: "\(activeProjectProtoItems.count)",
+            onAdd: { showNewItemDraft = true }
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                if activeProjectProtoItems.isEmpty {
+                    ContentUnavailableView {
+                        Label("No item quick drafts yet", systemImage: "camera.badge.ellipsis")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xl)
+                } else {
+                    ForEach(activeProjectProtoItems) { protoItem in
+                        ItemDraftCard(
+                            protoItem: protoItem,
+                            onOpen: { selectedProtoItem = protoItem },
+                            onConvert: { protoItemPendingConvert = protoItem },
+                            onMerge: { protoItemPendingMerge = protoItem },
+                            toastMessage: protoItem.id == protoItemToast?.id ? protoItemToast?.message : nil,
+                            onToggleFromInventory: { toggleFromInventory(protoItem) },
+                            onDelete: { protoItemPendingDelete = protoItem }
+                        )
                     }
                 }
             }
+            .padding(.top, Spacing.xs)
         }
     }
 
-    private var draftsControlBar: some View {
-        NativeListControlBar(
-            searchText: .constant(""),
-            onAdd: { showNewItemDraft = true },
-            style: .plain,
-            showSearch: false
-        ) {
-            EmptyView()
-        } sortMenu: {
-            EmptyView()
-        } filterMenu: {
-            EmptyView()
+    @ViewBuilder
+    private var itemsSection: some View {
+        if expandedSections.contains("items") {
+            SharedItemsList(
+                mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
+                getMenuItems: { singleItemMenuItems(for: $0) },
+                emptyMessage: "No items in this project",
+                onAdd: { showAddItemMenu = true },
+                getBulkMenuItems: { bulkActionMenuItems },
+                selectedIds: $selectedItemIds,
+                useNavigationLinks: true,
+                emptyIcon: "cube.box",
+                filterScope: .project,
+                inline: true,
+                inlineSectionHeader: AnyView(itemsSectionHeader)
+            )
+        } else {
+            itemsSectionHeader
         }
     }
 
-    private var itemSubtabHeader: some View {
-        ScrollableTabBar(
-            selectedId: $selectedItemsSubtab,
-            items: [
-                TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                TabBarItem(id: "items", label: "Items"),
-            ]
-        )
+    private var itemsSectionHeader: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                sectionBinding("items").wrappedValue.toggle()
+            }
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
+                    .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
+                Text("Items")
+                    .sectionLabelStyle()
+                Text("\(projectContext.items.count)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+                Spacer()
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(BrandColors.background
+            .padding(.horizontal, -Spacing.screenPadding))
     }
 
     // MARK: - Single-Item Menu
@@ -224,6 +284,19 @@ struct ItemsTabView: View {
             scope: .project,
             accountId: accountContext.currentAccountId,
             onSelect: { selectedItemIds.insert(itemId) }
+        )
+    }
+
+    private func sectionBinding(_ key: String) -> Binding<Bool> {
+        Binding(
+            get: { expandedSections.contains(key) },
+            set: { isExpanded in
+                if isExpanded {
+                    expandedSections.insert(key)
+                } else {
+                    expandedSections.remove(key)
+                }
+            }
         )
     }
 
@@ -317,4 +390,90 @@ struct ItemsTabView: View {
                 projectProtoItems = protoItems
             }
     }
+
+    private func toggleFromInventory(_ protoItem: ProtoItem) {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        let isRemoving = protoItem.sourceHint == .fromInventory
+        showProtoItemToast(
+            protoItemId: protoItemId,
+            message: isRemoving ? "Removed \"From Inventory\" Marker." : "Marked \"From Inventory\""
+        )
+        let nextValue = isRemoving
+            ? ProtoItemSourceHint.unknown.rawValue
+            : ProtoItemSourceHint.fromInventory.rawValue
+        Task {
+            do {
+                try await ProtoItemsService().updateProtoItem(
+                    accountId: accountId,
+                    protoItemId: protoItemId,
+                    fields: ["sourceHint": nextValue]
+                )
+            } catch {
+                // Keep the capture flow light; failed writes leave the current state unchanged.
+            }
+        }
+    }
+
+    private func showProtoItemToast(protoItemId: String, message: String) {
+        protoItemToastTask?.cancel()
+        protoItemToast = (protoItemId, message)
+        protoItemToastTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            if !Task.isCancelled {
+                protoItemToast = nil
+            }
+        }
+    }
+
+    private func mergeProtoItem(_ protoItem: ProtoItem, into item: Item) async {
+        guard let accountId = accountContext.currentAccountId,
+              protoItem.id != nil,
+              let itemId = item.id else { return }
+        let mergedImages = mergeAttachments(existing: item.images ?? [], incoming: protoItem.photos ?? [])
+        try? await ItemsService().updateItem(
+            accountId: accountId,
+            itemId: itemId,
+            fields: ["images": mergedImages.map(attachmentDict)]
+        )
+        await convertProtoItem(protoItem, itemId: itemId)
+        protoItemPendingMerge = nil
+    }
+
+    private func convertProtoItem(_ protoItem: ProtoItem, itemId: String) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        try? await ProtoItemsService().convertProtoItem(
+            accountId: accountId,
+            protoItemId: protoItemId,
+            convertedItemId: itemId,
+            userId: authManager.currentUser?.uid
+        )
+        protoItemPendingConvert = nil
+    }
+
+    private func deleteProtoItem(_ protoItem: ProtoItem) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        try? await ProtoItemsService().deleteProtoItem(accountId: accountId, protoItemId: protoItemId)
+        for photo in protoItem.photos ?? [] where !photo.url.isEmpty {
+            try? await mediaService.deleteImage(url: photo.url)
+        }
+        protoItemPendingDelete = nil
+    }
+
+    private func attachmentDict(_ ref: AttachmentRef) -> [String: Any] {
+        var dict: [String: Any] = [
+            "url": ref.url,
+            "kind": ref.kind.rawValue,
+        ]
+        if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
+        if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
+        if let fileName = ref.fileName { dict["fileName"] = fileName }
+        if let contentType = ref.contentType { dict["contentType"] = contentType }
+        if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
+        if let isUploading = ref.isUploading { dict["isUploading"] = isUploading }
+        return dict
+    }
+
 }

@@ -9,7 +9,7 @@ Give the user a one-or-two-tap way to copy the opaque Firestore document ID of a
 ## Scope
 
 - **Items** (both project items and business-inventory items).
-- **Transactions** (per-batch sales and regular transactions; suppressed on legacy canonical inventory sales that have no card menu at all).
+- **Transactions** (per-batch inventory movements and regular transactions; suppressed on legacy canonical inventory sales that have no card menu at all).
 - **Out of scope for this spec:** projects, spaces, budget categories. They can follow the same pattern later if a need emerges.
 
 ## Affordance

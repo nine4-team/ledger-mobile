@@ -8,14 +8,13 @@ struct TransactionDetailView: View {
 
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
+    @Environment(AuthManager.self) private var authManager
     @Environment(MediaService.self) private var mediaService
     @Environment(FindStateManager.self) private var findState
     @Environment(\.dismiss) private var dismiss
 
     // Section expanded states — all expanded by default
-    @State private var expandedSections: Set<String> = ["receipts", "other-images", "notes", "details", "returned-items", "sold-items", "transaction-audit"]
-    @State private var selectedTransactionTab = "details"
-    @State private var selectedItemsSubtab = "items"
+    @State private var expandedSections: Set<String> = ["receipts", "item-drafts", "notes", "details", "items", "returned-items", "sold-items", "transaction-audit"]
 
     // Items picker
     @State private var showAddExistingItems = false
@@ -28,6 +27,12 @@ struct TransactionDetailView: View {
     @State private var showAddItemMenu = false
     @State private var showCreateNewItem = false
     @State private var showCreateItemDraft = false
+    @State private var selectedProtoItem: ProtoItem?
+    @State private var protoItemPendingDelete: ProtoItem?
+    @State private var protoItemPendingConvert: ProtoItem?
+    @State private var protoItemPendingMerge: ProtoItem?
+    @State private var protoItemToast: (id: String, message: String)?
+    @State private var protoItemToastTask: Task<Void, Never>?
     @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
 
@@ -150,21 +155,22 @@ struct TransactionDetailView: View {
                 ScrollView {
                     AdaptiveContentWidth {
                         LazyVStack(spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-                            compactTransactionContext
-
-                            ScrollableTabBar(
-                                selectedId: $selectedTransactionTab,
-                                items: [
-                                    TabBarItem(id: "details", label: "Details"),
-                                    TabBarItem(id: "items", label: "Items"),
-                                ]
-                            )
-
-                            if selectedTransactionTab == "details" {
-                                detailsTabContent
-                            } else {
-                                itemsTabContent
+                            VStack(spacing: Spacing.lg) {
+                                badgesRow
+                                heroCard
                             }
+                            .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
+                            .padding(.bottom, Spacing.xs)
+
+                            receiptsSection
+                            notesSection
+                            detailsSection
+                            itemDraftsSection
+                            itemsSection
+                            returnedItemsSection
+                            soldItemsSection
+                            transactionAuditSection
+                            nextStepsCard
                         }
                         .padding(.horizontal, Spacing.screenPadding)
                         .padding(.vertical, Spacing.lg)
@@ -179,6 +185,9 @@ struct TransactionDetailView: View {
         .background(BrandColors.background)
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
+        }
+        .navigationDestination(item: $selectedProtoItem) { protoItem in
+            ItemQuickDraftDetailView(protoItem: protoItem)
         }
         .task(id: transaction.id) {
             await loadLineageItems()
@@ -203,6 +212,8 @@ struct TransactionDetailView: View {
             transactionListener = nil
             protoItemsListener?.remove()
             protoItemsListener = nil
+            protoItemToastTask?.cancel()
+            protoItemToastTask = nil
         }
         #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)
@@ -273,7 +284,7 @@ struct TransactionDetailView: View {
                 title: "Add Item",
                 items: {
                     var items = [
-                        ActionMenuItem(id: "item-draft", label: "Item Draft", icon: "camera.badge.ellipsis", onPress: {
+                        ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
                             showCreateItemDraft = true
                         }),
                         ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
@@ -306,7 +317,7 @@ struct TransactionDetailView: View {
                 )
             }
         }
-        .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
+        .adaptivePresentation(isPresented: $showCreateItemDraft, style: .quickMenu) {
             if let projectId = projectContext.currentProjectId {
                 ItemDraftCaptureSheet(
                     projectId: projectId,
@@ -315,6 +326,44 @@ struct TransactionDetailView: View {
                     transactionName: TransactionDisplayCalculations.displayName(for: currentTransaction)
                 )
             }
+        }
+        .adaptivePresentation(item: $protoItemPendingConvert, style: .form) { protoItem in
+            NewItemView(
+                context: protoItem.projectId.map { .project($0, spaceId: nil) } ?? .inventory,
+                initialTransactionId: protoItem.transactionId,
+                initialName: protoItem.name,
+                initialImageRefs: protoItem.photos ?? [],
+                onCreated: { itemIds in
+                    if let itemId = itemIds.first {
+                        Task { await convertProtoItem(protoItem, itemId: itemId) }
+                    }
+                }
+            )
+        }
+        .adaptivePresentation(item: $protoItemPendingMerge, style: .fullSheet) { protoItem in
+            ItemQuickDraftMergePicker(
+                protoItem: protoItem,
+                items: dedupeItems(projectContext.items + accountContext.allItems),
+                onMerge: { item in
+                    Task { await mergeProtoItem(protoItem, into: item) }
+                }
+            )
+        }
+        .confirmationDialog(
+            "Delete Item Quick Draft?",
+            isPresented: Binding(
+                get: { protoItemPendingDelete != nil },
+                set: { if !$0 { protoItemPendingDelete = nil } }
+            )
+        ) {
+            Button("Delete Draft", role: .destructive) {
+                if let protoItem = protoItemPendingDelete {
+                    Task { await deleteProtoItem(protoItem) }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the draft and its media. This cannot be undone.")
         }
         .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
@@ -341,6 +390,7 @@ struct TransactionDetailView: View {
         )
         if !badges.isEmpty {
             HStack(spacing: Spacing.sm) {
+                Spacer(minLength: 0)
                 ForEach(badges, id: \.text) { badge in
                     Badge(
                         text: badge.text,
@@ -500,11 +550,9 @@ struct TransactionDetailView: View {
     private func handleNextStepTap(_ step: TransactionNextStepsCalculations.NextStep) {
         switch step.id {
         case "items":
-            selectedTransactionTab = "items"
-            selectedItemsSubtab = "items"
+            expandedSections.insert("items")
             showAddItemMenu = true
         case "receipt":
-            selectedTransactionTab = "details"
             expandedSections.insert("receipts")
         default:
             // budget-category, amount, purchased-by, tax-rate all edit via details modal
@@ -512,35 +560,75 @@ struct TransactionDetailView: View {
         }
     }
 
-    // MARK: - Tabs
-
-    @ViewBuilder
-    private var detailsTabContent: some View {
-        VStack(spacing: Spacing.lg) {
-            heroCard
-            nextStepsCard
+    private func toggleFromInventory(_ protoItem: ProtoItem) {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        let isRemoving = protoItem.sourceHint == .fromInventory
+        showProtoItemToast(
+            protoItemId: protoItemId,
+            message: isRemoving ? "Removed \"From Inventory\" Marker." : "Marked \"From Inventory\""
+        )
+        let nextValue = isRemoving
+            ? ProtoItemSourceHint.unknown.rawValue
+            : ProtoItemSourceHint.fromInventory.rawValue
+        Task {
+            do {
+                try await ProtoItemsService().updateProtoItem(
+                    accountId: accountId,
+                    protoItemId: protoItemId,
+                    fields: ["sourceHint": nextValue]
+                )
+            } catch {
+                // Keep the capture flow light; failed writes leave the current state unchanged.
+            }
         }
-        .animation(.easeInOut(duration: 0.3), value: allStepsComplete)
-        .padding(.bottom, Spacing.xs)
-
-        receiptsSection
-        otherImagesSection
-        notesSection
-        detailsSection
-        transactionAuditSection
     }
 
-    @ViewBuilder
-    private var itemsTabContent: some View {
-        itemSubtabHeader
-
-        if selectedItemsSubtab == "item-drafts" {
-            itemDraftsList
-        } else {
-            realItemsList
-            returnedItemsSection
-            soldItemsSection
+    private func showProtoItemToast(protoItemId: String, message: String) {
+        protoItemToastTask?.cancel()
+        protoItemToast = (protoItemId, message)
+        protoItemToastTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            if !Task.isCancelled {
+                protoItemToast = nil
+            }
         }
+    }
+
+    private func mergeProtoItem(_ protoItem: ProtoItem, into item: Item) async {
+        guard let accountId = accountContext.currentAccountId,
+              protoItem.id != nil,
+              let itemId = item.id else { return }
+        let mergedImages = mergeAttachments(existing: item.images ?? [], incoming: protoItem.photos ?? [])
+        try? await ItemsService().updateItem(
+            accountId: accountId,
+            itemId: itemId,
+            fields: ["images": mergedImages.map(attachmentDict)]
+        )
+        await convertProtoItem(protoItem, itemId: itemId)
+        protoItemPendingMerge = nil
+    }
+
+    private func convertProtoItem(_ protoItem: ProtoItem, itemId: String) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        try? await ProtoItemsService().convertProtoItem(
+            accountId: accountId,
+            protoItemId: protoItemId,
+            convertedItemId: itemId,
+            userId: authManager.currentUser?.uid
+        )
+        protoItemPendingConvert = nil
+    }
+
+    private func deleteProtoItem(_ protoItem: ProtoItem) async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = protoItem.id else { return }
+        try? await ProtoItemsService().deleteProtoItem(accountId: accountId, protoItemId: protoItemId)
+        for photo in protoItem.photos ?? [] where !photo.url.isEmpty {
+            try? await mediaService.deleteImage(url: photo.url)
+        }
+        protoItemPendingDelete = nil
     }
 
     // MARK: - Sections
@@ -631,7 +719,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Created", value: TransactionCardCalculations.formattedCreatedDate(currentTransaction.createdAt))
                 DetailRow(label: "Status", value: displayStatus(currentTransaction.status))
                 DetailRow(label: "Purchased By", value: displayPurchasedBy(currentTransaction.purchasedBy))
-                DetailRow(label: "Transaction Type", value: displayTransactionType(currentTransaction.transactionType))
+                DetailRow(label: "Transaction Type", value: displayTransactionType(for: currentTransaction))
                 DetailRow(label: "Payable", value: displayPayable(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
                 if currentTransaction.needsItemizedAudit {
@@ -653,107 +741,81 @@ struct TransactionDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private var realItemsList: some View {
-        SharedItemsList(
-            mode: .embedded(items: activeItems, onItemPress: { _ in }),
-            emptyMessage: "No items yet",
-            onAdd: { showAddItemMenu = true },
-            useNavigationLinks: true,
-            filterScope: .project,
-            inline: true
-        )
-    }
-
-    @ViewBuilder
-    private var itemDraftsList: some View {
-        Section {
-            if activeTransactionProtoItems.isEmpty {
-                ContentUnavailableView {
-                    Label("No item drafts yet", systemImage: "camera.badge.ellipsis")
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.xl)
-            } else {
-                VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+    private var itemDraftsSection: some View {
+        CollapsibleSection(
+            title: "Item Quick Drafts",
+            isExpanded: sectionBinding("item-drafts"),
+            badge: "\(activeTransactionProtoItems.count)",
+            onAdd: { showCreateItemDraft = true }
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                if activeTransactionProtoItems.isEmpty {
+                    ContentUnavailableView {
+                        Label("No item quick drafts yet", systemImage: "camera.badge.ellipsis")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xl)
+                } else {
                     ForEach(activeTransactionProtoItems) { protoItem in
-                        ItemDraftCard(protoItem: protoItem)
+                        ItemDraftCard(
+                            protoItem: protoItem,
+                            onOpen: { selectedProtoItem = protoItem },
+                            onConvert: { protoItemPendingConvert = protoItem },
+                            onMerge: { protoItemPendingMerge = protoItem },
+                            toastMessage: protoItem.id == protoItemToast?.id ? protoItemToast?.message : nil,
+                            onToggleFromInventory: { toggleFromInventory(protoItem) },
+                            onDelete: { protoItemPendingDelete = protoItem }
+                        )
                     }
                 }
-                .padding(.top, Spacing.sm)
             }
-        } header: {
-            NativeListControlBar(
-                searchText: .constant(""),
-                onAdd: { showCreateItemDraft = true },
-                style: .plain,
-                showSearch: false
-            ) {
-                EmptyView()
-            } sortMenu: {
-                EmptyView()
-            } filterMenu: {
-                EmptyView()
-            }
-            .textCase(nil)
-            .background(BrandColors.background.padding(.horizontal, -Spacing.screenPadding))
+            .padding(.top, Spacing.xs)
         }
     }
 
-    private var compactTransactionContext: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            HStack(alignment: .center, spacing: Spacing.sm) {
-                FindableText(TransactionDisplayCalculations.displayName(for: currentTransaction))
-                    .font(Typography.caption.weight(.semibold))
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .lineLimit(1)
-
-                badgesRow
-
-                Spacer(minLength: Spacing.sm)
-            }
-
-            HStack(alignment: .firstTextBaseline, spacing: Spacing.xs) {
-                FindableText(TransactionDisplayCalculations.projectLabel(
-                    for: currentTransaction,
-                    projects: accountContext.allProjects
-                ))
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .lineLimit(1)
-
-                Text("/")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                FindableText(TransactionCardCalculations.formattedDate(currentTransaction.transactionDate))
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .lineLimit(1)
-
-                Text("/")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-
-                FindableText(TransactionDisplayCalculations.formattedAmount(for: currentTransaction))
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .lineLimit(1)
-            }
+    // 5. Items — composite pinned header (items label + control bar)
+    @ViewBuilder
+    private var itemsSection: some View {
+        if expandedSections.contains("items") {
+            SharedItemsList(
+                mode: .embedded(items: activeItems, onItemPress: { _ in }),
+                emptyMessage: "No items yet",
+                onAdd: { showAddItemMenu = true },
+                useNavigationLinks: true,
+                filterScope: .project,
+                inline: true,
+                inlineSectionHeader: AnyView(itemsSectionHeader)
+            )
+        } else {
+            itemsSectionHeader
         }
-        .padding(.horizontal, Spacing.xs)
-        .padding(.top, Spacing.xs)
-        .padding(.bottom, Spacing.xs)
     }
 
-    private var itemSubtabHeader: some View {
-        ScrollableTabBar(
-            selectedId: $selectedItemsSubtab,
-            items: [
-                TabBarItem(id: "item-drafts", label: "Item Drafts"),
-                TabBarItem(id: "items", label: "Items"),
-            ]
-        )
+    private var itemsSectionHeader: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                sectionBinding("items").wrappedValue.toggle()
+            }
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundStyle(BrandColors.textTertiary)
+                    .rotationEffect(.degrees(expandedSections.contains("items") ? 90 : 0))
+                    .animation(.easeInOut(duration: 0.25), value: expandedSections.contains("items"))
+                Text("Items")
+                    .sectionLabelStyle()
+                Text("\(activeItems.count)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.primary)
+                Spacer()
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(BrandColors.background
+            .padding(.horizontal, -Spacing.screenPadding))
     }
 
     // 6. Returned Items (collapsed, conditional)
@@ -1005,8 +1067,12 @@ struct TransactionDetailView: View {
         }
     }
 
-    private func displayTransactionType(_ value: TransactionType?) -> String {
-        value?.displayLabel ?? "—"
+    private func displayTransactionType(for transaction: Transaction) -> String {
+        if transaction.transactionType == .sale,
+           (transaction.inventorySaleDirection == .businessToProject || (transaction.inventorySaleDirection == nil && transaction.budgetCategoryId != nil)) {
+            return TransactionType.purchase.displayLabel
+        }
+        return transaction.transactionType?.displayLabel ?? "—"
     }
 
     private func displayPayable(_ value: String?) -> String {
@@ -1203,8 +1269,7 @@ struct TransactionDetailView: View {
             return item
         }
 
-        selectedTransactionTab = "items"
-        selectedItemsSubtab = "items"
+        expandedSections.insert("items")
         do {
             let createdItems = try ItemsService().createItemsForTransaction(
                 accountId: accountId,

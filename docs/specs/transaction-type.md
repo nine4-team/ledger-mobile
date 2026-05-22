@@ -16,8 +16,8 @@ This spec defines the single enum, the new Category field, the user-facing label
 |---|---|---|---|
 | `fee` | `"fee"` | Money the business charges the client for services. Counterparty is implicitly the business. | New. |
 | `expense` | `"expense"` | Non-itemized project cost paid to a third party (delivery, storage, fuel). | New. |
-| `purchase` | `"purchase"` | Purchase of physical items that flow through the inventory/item model. | Retained. **Meaning narrows** — was previously any payment-out transaction; now itemized only. |
-| `sale` | `"sale"` | Items sold (per-batch sale model, see [sale-transactions.md](sale-transactions.md)). Not user-pickable from the wizard. | Retained. |
+| `purchase` | `"purchase"` | Purchase of physical items that flow through the inventory/item model, including inventory → project purchases. | Retained. **Meaning narrows** — was previously any payment-out transaction; now itemized only. |
+| `sale` | `"sale"` | Items sold out of a project into inventory when the business acquires project-originated items. Not user-pickable from the wizard. | Retained. |
 | `return` | `"return"` | Items returned to a vendor (wizard) or to inventory (item action). | Retained. |
 
 Keeping `purchase`, `sale`, `return` as raw values means Firestore field values don't rename; only legacy `purchase` transactions whose category is semantically a fee or expense get rewritten.
@@ -52,7 +52,7 @@ Valid shapes:
 
 The UI's category-creation picker surfaces these four as named options. Arbitrary subsets of `{purchase, return, expense}` are schema-valid but the UI doesn't emit them; they exist only as a safety-net for legacy derivation edge cases.
 
-Sales (`.sale`) are not included in any `supportedTypes` list — sale transactions are written by `InventoryOperationsService.sellToProject()` with items attached and link to whatever category those items came from.
+Sales (`.sale`) are not included in any `supportedTypes` list — sale-to-inventory transactions have no category because items leave the project's category system. Inventory → project movements are Purchases and link to the destination category.
 
 ### Invariants
 
@@ -74,7 +74,7 @@ Purchase (items)      → writes .purchase
 Return (items)        → writes .return
 ```
 
-The fifth enum value, `.sale`, is not user-pickable from the wizard. Sales are written exclusively by `sellToProject()` with items attached.
+The fifth enum value, `.sale`, is not user-pickable from the wizard. Sales are written exclusively by inventory operations when project-originated items are sold into inventory.
 
 The downstream flow follows the picked kind. The separate "Fee / Expense / Itemized" filter step (introduced in v2) is retired — it was the symptom of the two-enum split.
 

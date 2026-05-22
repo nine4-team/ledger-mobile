@@ -1,16 +1,16 @@
 # Ledger Specs — Changelog
 
 ## 2026-05-18
-- **Created Proto Item Capture spec.** Added a separate `protoItems` entity for persistent photo-first item intake. Proto items are not real items and do not affect budgets, transactions, invoices, reports, or item counts until resolved.
-- **Documented capture-first, resolve-later workflow.** Project and inventory entry points now support lightweight physical capture, with later review actions to create items, merge into receipt-created skeletal items, sell from inventory, or dismiss.
-- **Added implementation plan.** Created `docs/plans/proto-item-capture-implementation.md` covering data model/services, fast capture UI, Needs Review integration, manual resolution, automation assist, and rollout/testing.
+- **Created Proto Item Capture spec.** Added a separate `protoItems` entity for persistent photo-first item intake. Proto items are not real items and do not affect budgets, transactions, invoices, reports, or item counts until converted.
+- **Documented capture-first, convert-later workflow.** Project and inventory entry points now support lightweight physical capture, with later review actions to create items, merge with existing items, convert from inventory, or delete.
+- **Added implementation plan.** Created `docs/plans/proto-item-capture-implementation.md` covering data model/services, fast capture UI, Needs Review integration, manual conversion, automation assist, and rollout/testing.
 - **Updated related specs.** Cross-linked `items.md`, `data-model.md`, `item-entry-flow.md`, `transaction-creation.md`, and `needs-review-tab.md` so new work treats proto item capture as the active item-intake redesign.
 
 ## 2026-04-14
 - **Restored Sell-to-Inventory as a bidirectional Sale path.** The 2026-04-11 per-batch-sale redesign had removed sell-to-inventory on the "inventory is a store; you don't sell back to it" metaphor. That was a semantic regression: items that originated in a project are never "returning" when the business acquires them — they're being sold. Restored `sellToInventory` in `InventoryOperationsService`; `moveToInventory` now routes per-item based on origin (`item.currentSource != item.source` → Return; otherwise → Sale-to-Inventory). Mixed batches write both transactions atomically. `moveBetweenProjects` takes the origin-aware first hop too.
-- **Direction is shape-derived, not a field.** A Sale with `budgetCategoryId` set is inventory → project; a Sale with `budgetCategoryId` absent is project → inventory. No new field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.
+- **Direction is shape-derived, not a field.** A Purchase with an inventory source and `budgetCategoryId` set is inventory → project; a Sale with `budgetCategoryId` absent is project → inventory. No new field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.
 - **Naming convention.** Display name resolution renders direction explicitly: `"Purchase from [source]"` (inventory → project), `"Sale to [source]"` (project → inventory), `"Return to [source]"` (any Return). Updated in `TransactionDisplayCalculations`; `SearchCalculations.transactionDisplayName` now delegates to it.
-- Updated `sale-transactions.md`, `inventory-as-store.md` to reflect two Sale directions and the shape-derived rule.
+- Updated `sale-transactions.md`, `inventory-as-store.md` to reflect Purchase-from-inventory, Sale-to-Inventory, and the shape-derived rule.
 
 ## 2026-04-02
 - Initial spec setup: created folder structure, index, app map, feedback log
@@ -35,7 +35,7 @@
 - Updated `_feedback-log.md` with session feedback and clarifications
 
 ## 2026-04-03 (session 4)
-- Created `inventory-source-naming.md`: sale transactions from inventory currently have a blank source field — spec defines that they should be labeled "[Business Name] Inventory" or "Business Inventory" (dev team's call). Original acquisition vendor (Homegoods, Ross, Wayfair, etc.) must be preserved and accessible internally but hidden from all client-facing outputs (invoices, closeout reports). Items in a project should carry an indicator that they came from inventory. Verified current state via Ledger API: sale transactions confirmed to have empty source fields.
+- Created `inventory-source-naming.md`: legacy sale transactions from inventory had a blank source field — spec defines that inventory movement transactions should be labeled "[Business Name] Inventory" or "Business Inventory" (dev team's call). Original acquisition vendor (Homegoods, Ross, Wayfair, etc.) must be preserved and accessible internally but hidden from all client-facing outputs (invoices, closeout reports). Items in a project should carry an indicator that they came from inventory. Verified current state via Ledger API: legacy sale transactions confirmed to have empty source fields.
 - Updated `_index.md` with Inventory Source & Naming entry
 - Updated `_app-map.md` with sale transaction source field details
 

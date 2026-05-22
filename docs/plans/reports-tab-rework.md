@@ -38,7 +38,7 @@ These are **net positions**, not raw sums of reimbursement-flagged transactions.
 
 - Fees charged to the client (not reimbursements — fees are direct charges).
 - Chargeable project expenses the business paid for on the client's behalf.
-- Items sold to the client (per per-batch sale transactions; see [sale-transactions.md](../specs/sale-transactions.md)).
+- Items purchased by the client from inventory (per per-batch inventory movement transactions; see [sale-transactions.md](../specs/sale-transactions.md)).
 - Minus: invoice payments already received from the client.
 
 **Owed to client** should include:

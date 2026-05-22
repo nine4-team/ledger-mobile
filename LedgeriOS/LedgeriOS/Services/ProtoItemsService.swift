@@ -56,6 +56,10 @@ struct ProtoItemsService: ProtoItemsServiceProtocol {
         try await repo(accountId: accountId).update(id: protoItemId, fields: updateFields)
     }
 
+    func deleteProtoItem(accountId: String, protoItemId: String) async throws {
+        try await repo(accountId: accountId).delete(id: protoItemId)
+    }
+
     func markProtoItemInReview(accountId: String, protoItemId: String, userId: String?) async throws {
         var fields: [String: Any] = [
             "status": ProtoItemStatus.inReview.rawValue,
@@ -65,28 +69,15 @@ struct ProtoItemsService: ProtoItemsServiceProtocol {
         try await repo(accountId: accountId).update(id: protoItemId, fields: fields)
     }
 
-    func resolveProtoItem(accountId: String, protoItemId: String, resolvedItemId: String, userId: String?) async throws {
+    func convertProtoItem(accountId: String, protoItemId: String, convertedItemId: String, userId: String?) async throws {
         var fields: [String: Any] = [
-            "status": ProtoItemStatus.resolved.rawValue,
-            "resolvedItemId": resolvedItemId,
-            "resolvedAt": FieldValue.serverTimestamp(),
+            "status": ProtoItemStatus.converted.rawValue,
+            "convertedItemId": convertedItemId,
+            "convertedAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
         ]
         if let userId {
-            fields["resolvedBy"] = userId
-            fields["updatedBy"] = userId
-        }
-        try await repo(accountId: accountId).update(id: protoItemId, fields: fields)
-    }
-
-    func dismissProtoItem(accountId: String, protoItemId: String, userId: String?) async throws {
-        var fields: [String: Any] = [
-            "status": ProtoItemStatus.dismissed.rawValue,
-            "dismissedAt": FieldValue.serverTimestamp(),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ]
-        if let userId {
-            fields["dismissedBy"] = userId
+            fields["convertedBy"] = userId
             fields["updatedBy"] = userId
         }
         try await repo(accountId: accountId).update(id: protoItemId, fields: fields)

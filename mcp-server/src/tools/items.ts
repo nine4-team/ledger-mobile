@@ -19,7 +19,7 @@ import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inventory invariant helpers (per-batch sale redesign).
+// Inventory invariant helpers (per-batch inventory movement redesign).
 //
 // Rule 1: (item.projectId == null) ↔ (item.budgetCategoryId == null)
 // Items in business inventory have no budget category. Categories are
@@ -565,7 +565,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           "If this is a legacy orphan (item already in a project with no transactionId) and you're trying to " +
             "edit fields like source/notes/price: STOP and use the corrections path instead — " +
             "bulk_update_items with projectId: null moves it to inventory, then sell_items inventory→project " +
-            "creates the real Sale transaction. Do not invent a fake transactionId to satisfy this rule."
+            "creates the real Purchase-from-inventory transaction. Do not invent a fake transactionId to satisfy this rule."
         );
       }
 
@@ -688,7 +688,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           `Bulk update would leave ${linkageViolations.length} item(s) in a project with no transactionId: ${linkageViolations.slice(0, 5).join(", ")}${linkageViolations.length > 5 ? "…" : ""}`,
           "If these are legacy orphans you're trying to clean up, use the corrections path: bulk_update_items " +
             "with projectId: null relocates them to inventory (no transaction needed), then sell_items " +
-            "inventory→project records the real Sale. Do not fabricate transactionIds to silence this rule."
+            "inventory→project records the real Purchase-from-inventory transaction. Do not fabricate transactionIds to silence this rule."
         );
       }
 

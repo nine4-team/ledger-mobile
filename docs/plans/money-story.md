@@ -12,9 +12,9 @@ There are two different operations. They look similar but mean different things.
 
 A **reassignment** is a fix. The user put an item somewhere by mistake and is correcting it. No money changes hands, no Sale or Return transaction is written, no project budget shifts. The item just gets re-pointed to the right transaction. This is a data-correction tool.
 
-A **sale** is the real financial event. When an item enters a project from business inventory, a Sale transaction is written and the project's spend in the chosen category goes up. When an item goes the other way, leaving a project back to inventory, a Return transaction is written (or, in the narrow case where the item was born in the project, a Sale-to-inventory). Either way, money has moved and the project's budget reflects it. Sales and Returns are the only operations that change what the client might owe.
+A **movement** is the real financial event. When an item enters a project from business inventory, a Purchase-from-inventory transaction is written and the project's spend in the chosen category goes up. When an item goes the other way, leaving a project back to inventory, a Return transaction is written (or, in the narrow case where the item was born in the project, a Sale-to-inventory). Either way, money has moved and the project's budget reflects it. Inventory movement transactions and Returns are the operations that change what the client might owe.
 
-That's all a sale transaction is. It's an inventory-movement record with a money impact on one project's budget. It does not know anything about the client being billed.
+That's all an inventory movement transaction is. It's a record with a money impact on one project's budget. It does not know anything about the client being billed.
 
 ## Direct project expenses
 
@@ -24,7 +24,7 @@ Some things aren't items: install crew, fuel, a permit fee. These become transac
 
 An invoice is a separate document the user builds by hand. The user opens the Create Invoice flow, picks some items and some non-itemized transactions, and saves. Each thing picked gets its billing status flipped from unbilled to invoiced. When the invoice is later marked paid, every picked thing flips from invoiced to paid. The invoice itself has its own lifecycle: draft, sent, paid, voided. The total on an invoice is a pure sum — every line adds up, no signs, no credits.
 
-Invoices are never created automatically. Sale transactions don't produce invoices. Nothing in the system connects the two layers.
+Invoices are never created automatically. Inventory movement transactions don't produce invoices. Nothing in the system connects the two layers.
 
 ## What the system doesn't track
 
@@ -40,4 +40,4 @@ Settlements aren't recorded. When the business pays the client back for money th
 
 ## The summary in one line
 
-Sales move items and change project budgets. Invoices are one-way bills the user assembles manually. Nothing in between tracks running balances, credits, refunds, partial payments, or settlements. Every design conversation about the Reports cards keeps hitting the same wall because that in-between layer doesn't exist yet.
+Inventory movements move items and change project budgets. Invoices are one-way bills the user assembles manually. Nothing in between tracks running balances, credits, refunds, partial payments, or settlements. Every design conversation about the Reports cards keeps hitting the same wall because that in-between layer doesn't exist yet.

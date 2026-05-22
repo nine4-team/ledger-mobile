@@ -1,51 +1,49 @@
-# Sale Transactions
+# Inventory Movement Transactions
 
 > **Status:** Active. Replaces the legacy "canonical sale" model documented in [canonical-sales.md](canonical-sales.md).
 
 ## Overview
 
-When items move between business inventory and a project, the system creates a **sale transaction** to represent the financial impact on the project's budget. This document is the source of truth for how sales work in the new per-batch model.
+When items move between business inventory and a project, the system creates an immutable **inventory movement transaction** to represent the financial impact on the project's budget. Inventory → project is a **Purchase** from inventory. Project → inventory acquisition is a **Sale** to inventory. This document is the source of truth for how these per-batch inventory movements work.
 
 ## The Per-Batch Model
 
-Every user action that sells items from inventory into a project creates **one new sale transaction**. The transaction is written once, with a frozen list of items and a frozen amount snapshot, and is **never mutated after creation**. If the user sells more items later, that's a separate transaction.
+Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written once, with a frozen list of items and a frozen amount snapshot, and is **never mutated after creation**. If the user purchases more inventory items into the project later, that's a separate transaction.
 
-This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every sale of that combination over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
+This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every inventory movement over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
 
 ### Why per-batch
 
-- **Drift impossible.** Each sale is an immutable document. There's no shared mutable state across implementations to drift.
-- **Accounting-correct.** Historical sale amounts never shift retroactively. A sale records what was true at the moment it happened.
-- **Matches user mental model.** "I sold these five things to Hawaii under Furnishings" = one transaction. Not "this category in this project has accumulated $X of inventory transfers."
+- **Drift impossible.** Each movement is an immutable document. There's no shared mutable state across implementations to drift.
+- **Accounting-correct.** Historical movement amounts never shift retroactively. A movement records what was true at the moment it happened.
+- **Matches user mental model.** "I bought these five things from inventory for Hawaii under Furnishings" = one transaction. Not "this category in this project has accumulated $X of inventory transfers."
 - **Atomic failure.** A failed batch fails as a unit. There's no partial state where some items moved and others didn't.
 
-## Sale Direction
+## Movement Direction
 
-Sales go in **both directions** between business inventory and a project:
+Inventory movements go in **both directions** between business inventory and a project:
 
-1. **Business inventory → project** (a Purchase from Inventory, from the project's POV). Items leave inventory and land in the project with a `budgetCategoryId`. The project's budget for that category increases.
-2. **Project → business inventory** (a Sale to Inventory, from the project's POV). Items that **originated in the project** are acquired into inventory. The project's budget decreases. This is distinct from a Return — Returns are reserved for items that came from inventory and are going home.
+1. **Business inventory → project** is a `Purchase` from inventory. Items leave inventory and land in the project with a `budgetCategoryId`. The project's budget for that category increases.
+2. **Project → business inventory** is a `Sale` to inventory only when items **originated in the project** and the business is acquiring them into inventory. The project's budget decreases. This is distinct from a Return — Returns are reserved for items that came from inventory and are going home.
 
 Direction is not stored as a dedicated field. It is **implicit in the transaction shape**:
 
 | Direction | `type` | `source` | `budgetCategoryId` | Project's budget |
 |---|---|---|---|---|
-| Inventory → Project | `Sale` | inventory label | set (destination category) | **increases** |
+| Inventory → Project | `Purchase` | inventory label | set (destination category) | **increases** |
 | Project → Inventory | `Sale` | inventory label | absent | **decreases** |
 
 This leverages the core invariant `item.projectId == null ↔ item.budgetCategoryId == null`: inventory items have no category, so a Sale involving inventory as destination cannot carry one.
 
 **Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
-## Sale Transaction Shape
+## Inventory Purchase Transaction Shape
 
 ```typescript
-interface SaleTransaction {
-  type: "Sale";
-  projectId: string;                    // project side of the transaction (required)
-  //                                    // inventory → project: the destination
-  //                                    // project → inventory: the source
-  budgetCategoryId?: string;            // present = inventory → project; absent = project → inventory
+interface InventoryPurchaseTransaction {
+  type: "Purchase";
+  projectId: string;                    // destination project
+  budgetCategoryId: string;             // destination category
   amountCents: number;                  // frozen at creation; sum of item projectPriceCents
   itemIds: string[];                    // frozen at creation, length 1..100
   source: "[Account] Inventory";        // inventory label, the non-project side
@@ -58,22 +56,22 @@ interface SaleTransaction {
 
 **Auto-generated ID.** No deterministic ID formula. The transaction document ID is a Firestore auto-ID.
 
-**Removed fields.** New per-batch sales do NOT have `isCanonicalInventorySale` or `inventorySaleDirection`. Those fields exist only on legacy canonical sales.
+**Removed fields.** New per-batch inventory purchases and sale-to-inventory transactions do NOT have `isCanonicalInventorySale` or `inventorySaleDirection`. Those fields exist only on legacy canonical sales.
 
 ## Invariants
 
 The following invariants are enforced by Firestore security rules and by tests in both iOS and the MCP server:
 
-1. **Immutability after creation.** `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on a Sale transaction after it's created. Mutable fields: `notes`, `status`, `updatedAt`.
-2. **Batch size cap.** `itemIds.length >= 1 && itemIds.length <= 100`. Both clients enforce locally; the cap exists because Firestore batch writes have a 500-doc limit and a sale of 100 items touches ~305 docs.
+1. **Immutability after creation.** `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it's created. Mutable fields: `notes`, `status`, `updatedAt`.
+2. **Batch size cap.** `itemIds.length >= 1 && itemIds.length <= 100`. Both clients enforce locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
-4. **Direction is shape-derived.** `budgetCategoryId` presence distinguishes inventory → project (set) from project → inventory (absent). The direction is derivable from `(type, source, budgetCategoryId)` alone — no dedicated field.
-5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the sale. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
-6. **One category per batch.** An inventory → project sale has exactly one `budgetCategoryId`. There's no per-item category override. Users wanting mixed categories must sell in separate batches. Project → inventory sales have no category (items leave the project's category system entirely).
+4. **Direction is shape-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source and no category is project → inventory acquisition. The direction is derivable from `(type, source, budgetCategoryId)` alone — no dedicated field.
+5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the purchase. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
+6. **One category per batch.** An inventory → project purchase has exactly one `budgetCategoryId`. There's no per-item category override. Users wanting mixed categories must move items in separate batches. Project → inventory sales have no category (items leave the project's category system entirely).
 
 ## The Sell Flow
 
-When a user sells items from business inventory into a project:
+When a user purchases items from business inventory into a project:
 
 ### 1. Collect inputs from the user
 
@@ -99,11 +97,11 @@ amountCents = sum(item.projectPriceCents ?? item.purchasePriceCents ?? 0) for it
 
 One batch, all-or-nothing:
 
-1. **Create the Sale transaction** at `accounts/{accountId}/transactions/{auto-id}` with the shape above.
+1. **Create the Purchase transaction** at `accounts/{accountId}/transactions/{auto-id}` with the shape above.
 2. **For each item:** update at `accounts/{accountId}/items/{itemId}`:
    - `projectId` = destination project ID
    - `budgetCategoryId` = the chosen category
-   - `transactionId` = the new sale transaction ID
+   - `transactionId` = the new purchase transaction ID
    - `status` = `"purchased"`
    - `spaceId` = null
    - `updatedAt` = serverTimestamp()
@@ -113,7 +111,7 @@ One batch, all-or-nothing:
    - `fromProjectId`: null (item was in business inventory)
    - `toProjectId`: destination project
    - `fromTransactionId`: the item's prior `transactionId` if any
-   - `toTransactionId`: the new sale transaction
+   - `toTransactionId`: the new purchase transaction
    - `movementKind`: `"sold"`
    - `createdBy`, `createdAt`
 
@@ -122,7 +120,7 @@ One batch, all-or-nothing:
 ### 5. Side effects (server-side, automatic)
 
 - The `onItemTransactionIdChanged` Cloud Function fires for each item, creating an `association` lineage edge as the audit trail. (Already exists, no change needed.)
-- The `onTransactionWritten` Cloud Function fires for the new Sale transaction and recalculates the destination project's budget summary.
+- The `onTransactionWritten` Cloud Function fires for the new Purchase transaction and recalculates the destination project's budget summary.
 
 ## Project → Project Moves
 
@@ -132,7 +130,7 @@ Moving items from one project to another is a **two-hop** operation in a single 
    - From-inventory items (`currentSource != source`) → a **Return** transaction against the source project.
    - Items that originated in the source project (`currentSource == source`) → a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`) against the source project.
    - Mixed batches produce **both** first-hop transactions in the same Firestore batch.
-2. **Second hop:** one **Sale-to-Project** transaction (`type: "Sale"`, with `budgetCategoryId`) against the destination project. Covers every item in the batch.
+2. **Second hop:** one **Purchase-from-Inventory** transaction (`type: "Purchase"`, with `budgetCategoryId`) against the destination project. Covers every item in the batch.
 
 The iOS UI presents this as a single "move to project" action. The service layer issues all hops in one atomic Firestore batch. Lineage edges link each hop.
 
@@ -140,31 +138,31 @@ The destination category is collected from the user — items don't carry a cate
 
 ## Lineage Edges
 
-Every sale creates one `sold` lineage edge per item. See [lineage-tracking.md](lineage-tracking.md) for the edge schema.
+Every inventory → project purchase creates one `sold` lineage edge per item. See [lineage-tracking.md](lineage-tracking.md) for the edge schema.
 
 For project→project moves, **two** edges are created per item:
 - A `returned` edge from the source project to the return transaction.
-- A `sold` edge from inventory to the destination sale transaction.
+- A `sold` edge from inventory to the destination purchase transaction.
 
 Together they record the full path: source project → inventory → destination project.
 
 ## Amount Calculation
 
-The Sale transaction's `amountCents` is computed **once**, at creation time:
+The inventory movement transaction's `amountCents` is computed **once**, at creation time:
 
 ```
 amountCents = sum(item.projectPriceCents ?? item.purchasePriceCents ?? 0) for item in items
 ```
 
-After creation, `amountCents` does not change, even if an item's `projectPriceCents` is later updated. This is intentional — historical sales should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips Sale transactions.
+After creation, `amountCents` does not change, even if an item's `projectPriceCents` is later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
 
-If an item has neither `projectPriceCents` nor `purchasePriceCents` at sell time, it contributes $0 to the sale total but is still included in `itemIds`.
+If an item has neither `projectPriceCents` nor `purchasePriceCents` at movement time, it contributes $0 to the total but is still included in `itemIds`.
 
 ## Sign Convention
 
 | Transaction | Multiplier on project budget | Effect |
 |---|---|---|
-| Sale, inventory → project (`type: "Sale"`, `budgetCategoryId` set) | +1 | Adds to project spend (destination category) |
+| Purchase, inventory → project (`type: "Purchase"`, `budgetCategoryId` set, inventory source) | +1 | Adds to project spend (destination category) |
 | Sale, project → inventory (`type: "Sale"`, `budgetCategoryId` absent) | –1 | Items leave the project; item-level category is wiped on the item |
 | Return (`type: "Return"`) | –1 | Subtracts from project spend; items leave |
 | Legacy canonical sale (`isCanonicalInventorySale: true`) | direction-based | See "Legacy Canonical Sales" below |
@@ -173,11 +171,11 @@ The sign convention is centralized in [mcp-server/src/util/budget.ts](../../mcp-
 
 ## Display — Naming Convention
 
-Sale direction is rendered in the transaction's **display name**, from the project's point of view. There is no direction badge — direction lives in the name.
+Inventory movement direction is rendered in the transaction's **display name**, from the project's point of view. There is no direction badge — direction lives in the name.
 
 | Direction | Display name | Example |
 |---|---|---|
-| Inventory → Project (Sale with `budgetCategoryId`) | `Purchase from [source]` | `Purchase from 1584 Design Inventory` |
+| Inventory → Project (Purchase with `budgetCategoryId`) | `Purchase from [source]` | `Purchase from 1584 Design Inventory` |
 | Project → Inventory (Sale without `budgetCategoryId`) | `Sale to [source]` | `Sale to 1584 Design Inventory` |
 | Return to inventory (`type: "Return"`) | `Return to [source]` | `Return to 1584 Design Inventory` |
 | Return to vendor (`type: "Return"`) | `Return to [source]` | `Return to Wayfair` |
@@ -185,12 +183,12 @@ Sale direction is rendered in the transaction's **display name**, from the proje
 Resolution is implemented in `TransactionDisplayCalculations.displayName(for:)` and mirrored in `SearchCalculations.transactionDisplayName(for:)` for search cards.
 
 **Other display:**
-- **Type badge:** "Sale" or "Return" (type only — never direction).
+- **Type badge:** "Purchase", "Sale", or "Return" (type only — never direction).
 - **Source field:** the inventory label for inventory-involved transactions, the vendor name for vendor transactions.
 - **Amount:** the frozen `amountCents`.
 - **Items:** rendered from `itemIds`.
 
-Sale transactions are NOT user-editable. The shape fields are immutable. Users can edit `notes` and add/cancel via `status`.
+Inventory movement transactions are NOT user-editable. The shape fields are immutable. Users can edit `notes` and add/cancel via `status`.
 
 ### Transaction List Grouping
 
@@ -206,7 +204,7 @@ Groupable records:
 | Record | Group row | Notes |
 |---|---|---|
 | Inventory purchase/acquisition (`type: "Purchase"`, `projectId: null`) | `Added to Business Inventory` | Groups inventory-scope acquisition purchases by date/vendor/type. |
-| Inventory → project Sale (`type: "Sale"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by date, inventory label, project, category, and transaction type. |
+| Inventory → project Purchase (`type: "Purchase"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by date, inventory label, project, category, and transaction type. |
 | Project → inventory Sale (`type: "Sale"`, no `budgetCategoryId`) | `Sold to [inventory label]` | Groups by date, inventory label, project, no-category shape, and transaction type. |
 | Return to inventory (`type: "Return"`, inventory-label source) | `Returned to [inventory label]` | Vendor returns are excluded; only inventory-label returns are grouped. |
 
@@ -224,13 +222,13 @@ Existing sale transactions written under the canonical-sale model remain in the 
 
 **No migration.** Legacy canonical sales are not converted to per-batch shape. The dual-read path in `util/budget.ts` is the maintenance cost of preserving them. If the volume becomes problematic, a one-time migration script can be considered as a follow-up.
 
-**Why preserve them:** rewriting historical financial records is risky. Freezing them is the safe move. The new shape applies only to sales created after the per-batch model ships.
+**Why preserve them:** rewriting historical financial records is risky. Freezing them is the safe move. The new shape applies only to inventory movement records created after this taxonomy correction ships.
 
 ## Edge Cases
 
 1. **Item with no price.** Contributes $0 to `amountCents`. Still included in `itemIds`. Lineage edge still created.
-2. **Sale with 0 total amount.** Allowed. Some items may legitimately have no recorded price.
+2. **Movement with 0 total amount.** Allowed. Some items may legitimately have no recorded price.
 3. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.
-4. **Item already in destination project.** Pre-flight validation rejects — the sell flow only accepts inventory items.
-5. **Concurrent sells of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
-6. **Cancellation.** Setting `status: "canceled"` on a Sale transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.
+4. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
+5. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
+6. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.

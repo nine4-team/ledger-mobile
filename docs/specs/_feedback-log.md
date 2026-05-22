@@ -9,7 +9,7 @@
 - Restored `sellToInventory` in `InventoryOperationsService`. Added `moveToInventory` for origin-aware routing — items with `currentSource != source` take the Return path; items with `currentSource == source` (never touched inventory) take the Sale-to-Inventory path. Mixed batches write both atomically.
 - Refactored `moveBetweenProjects` so hop 1 branches by origin (Return for from-inventory items, Sale-to-Inventory for originated-here items).
 - Naming convention in `TransactionDisplayCalculations.displayName(for:)`:
-  - Sale with `budgetCategoryId` set → `"Purchase from [source]"`
+  - Purchase with an inventory source and `budgetCategoryId` set → `"Purchase from [source]"`
   - Sale without `budgetCategoryId` → `"Sale to [source]"`
   - Return → `"Return to [source]"`
 - Direction is **implicit in the transaction shape**. No new field.

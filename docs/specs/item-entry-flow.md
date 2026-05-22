@@ -14,7 +14,7 @@ There are two ways to get costs into a project:
 
 **Path A — Direct to project:** User creates a transaction inside a project, adds items, marks them as "business purchased, client owes." The items land in the project immediately. They never touch inventory.
 
-**Path B — Inventory first:** User creates a transaction in inventory (business purchases items). Items sit in inventory. Later, the user sells/moves selected items to a project. This creates a sale transaction in the project.
+**Path B — Inventory first:** User creates a transaction in inventory (business purchases items). Items sit in inventory. Later, the user sells/moves selected items to a project. This creates a Purchase-from-inventory transaction in the project.
 
 Both paths can be used for the same type of item (e.g., furnishings), which leads to inconsistency in how items are tracked and makes it unclear which flow to use.
 

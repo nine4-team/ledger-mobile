@@ -161,21 +161,25 @@ service cloud.firestore {
       allow read, create, update, delete: if isAccountMember(accountId);
     }
 
-    // Sale transaction immutability (per-batch sale redesign).
-    // New per-batch Sale transactions are frozen after creation — `amountCents`,
-    // `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId` must never
-    // change. Mutable fields: `notes`, `status`, `updatedAt`, `isComplete`,
-    // `audit`, any other non-shape fields.
-    // Sale direction is implicit in the transaction shape — `budgetCategoryId`
-    // presence distinguishes inventory→project (set) from project→inventory (absent).
-    // Legacy canonical sales (`isCanonicalInventorySale == true`) are exempt so
-    // existing flows (cancel_transaction, etc.) continue to work.
-    // Non-Sale transactions are unrestricted (current behavior).
+    // Inventory movement transaction immutability.
+    // New per-batch inventory movement transactions are frozen after creation —
+    // `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`,
+    // `projectId` must never change. Mutable fields: `notes`, `status`,
+    // `updatedAt`, `isComplete`, `audit`, any other non-shape fields.
+    // Inventory→project is an inventory-labeled Purchase. Project→inventory
+    // acquisition is a Sale with no category. Legacy canonical sales are
+    // exempt so existing flows (cancel_transaction, etc.) continue to work.
+    // Other transactions remain unrestricted.
     match /accounts/{accountId}/transactions/{transactionId} {
       allow read, create, delete: if isAccountMember(accountId);
 
       allow update: if isAccountMember(accountId)
-        && (resource.data.get('type', '') != 'Sale'
+        && (!((resource.data.get('type', '') == 'Sale'
+                || (resource.data.get('type', '') == 'Return'
+                    && resource.data.get('source', '').matches('.* Inventory$'))
+                || (resource.data.get('type', '') == 'Purchase'
+                    && resource.data.get('source', '').matches('.* Inventory$')))
+              && resource.data.get('isCanonicalInventorySale', false) != true)
             || resource.data.get('isCanonicalInventorySale', false) == true
             || (request.resource.data.amountCents == resource.data.amountCents
                 && request.resource.data.itemIds == resource.data.itemIds

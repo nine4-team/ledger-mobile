@@ -24,21 +24,21 @@ const ENTITIES: Record<string, EntitySchema> = {
   transaction: {
     name: "transaction",
     description:
-      "A purchase, return, or sale. Owned by an account; may belong to a project. " +
+      "A purchase, return, sale-to-inventory, fee, or expense. Owned by an account; may belong to a project. " +
       "Completeness (`isComplete`) is computed server-side — do not set manually. " +
-      "Sale transactions are per-batch and immutable after creation (amountCents, " +
+      "Inventory movement transactions are per-batch and immutable after creation (amountCents, " +
       "itemIds, budgetCategoryId, type, source, projectId are frozen).",
     requiredOnCreate: ["budgetCategoryId", "amountCents", "type", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
       { name: "projectId", type: "string?", description: "Null = business inventory." },
-      { name: "type", type: "enum(transactionType)", description: "Sale: created via sell_items only, immutable after creation. Return to inventory: source == 'Business Inventory'." },
-      { name: "source", type: "string", description: "Vendor for Purchases; 'Business Inventory' for inventory-origin sales and returns." },
-      { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on Sale transactions." },
+      { name: "type", type: "enum(transactionType)", description: "Inventory → project uses Purchase; project-originated item → inventory uses Sale; item going home to inventory uses Return." },
+      { name: "source", type: "string", description: "Vendor for normal purchases; inventory label for inventory movement transactions." },
+      { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on inventory movement transactions." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
-      { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId. FROZEN at creation on Sale transactions." },
-      { name: "budgetCategoryId", type: "string?", description: "Budget category. FROZEN at creation on Sale transactions." },
+      { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId. FROZEN at creation on inventory movement transactions." },
+      { name: "budgetCategoryId", type: "string?", description: "Budget category. FROZEN at creation on inventory movement transactions." },
       { name: "isComplete", type: "boolean", description: "Computed server-side; false means items don't match subtotal within ±1% or missing data." },
       { name: "notes", type: "string", description: "REQUIRED on writes — dated audit note." },
     ],
@@ -46,7 +46,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Every mutation must include a dated audit note in `notes`.",
       "Canceled transactions contribute $0 to budget calculations.",
-      "Sale transaction shape fields (amountCents, itemIds, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. Only notes, status, and updatedAt are mutable.",
+      "Inventory movement transaction shape fields (amountCents, itemIds, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. Only notes, status, and updatedAt are mutable.",
       "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
     ],
   },

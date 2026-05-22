@@ -2,10 +2,10 @@
 
 ## Overview
 
-This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the **return-to-inventory** flow, which under the per-batch sale redesign replaces the legacy "sell from project to business inventory" path.
+This spec describes how items are returned from transactions, how disposition (what happens to a returned item) is tracked, and how incomplete returns are detected. It also covers the **return-to-inventory** flow, which under the per-batch inventory movement redesign replaces the legacy "sell from project to business inventory" path.
 
 > **Related specs:**
-> - [sale-transactions.md](sale-transactions.md) — the active sale transaction model (per-batch, immutable)
+> - [sale-transactions.md](sale-transactions.md) — the active inventory movement transaction model (per-batch, immutable)
 > - [inventory-as-store.md](inventory-as-store.md) — why returning to inventory is a return, not a sale
 > - [canonical-sales.md](canonical-sales.md) — the legacy canonical-sale model (historical reads only)
 
@@ -136,7 +136,7 @@ All in one Firestore batch. Atomic.
 
 A return-to-inventory transaction can grow during a single user session — if the user returns 3 items, then 2 more in the same flow, both batches can write to the same Return transaction's `itemIds` (using `arrayUnion`) and recalculate `amountCents`. Once the user leaves the flow (or 24h passes), the transaction is treated as closed and clients should create a new one for subsequent returns.
 
-This is the only place mutation of a return-to-inventory transaction is allowed; otherwise these documents are immutable like Sale transactions.
+This is the only place mutation of a return-to-inventory transaction is allowed; otherwise these documents are immutable like other inventory movement transactions.
 
 ### Budget Impact
 
@@ -164,9 +164,9 @@ The per-batch model collapses this to one return transaction with one budget imp
 A move from one project to another decomposes into two operations in one atomic batch:
 
 1. Return-to-inventory from the source project (this section).
-2. New per-batch sale from inventory to the destination project ([sale-transactions.md](sale-transactions.md)).
+2. New per-batch Purchase-from-inventory into the destination project ([sale-transactions.md](sale-transactions.md)).
 
-Each item gets two lineage edges: one `returned` (source → inventory) and one `sold` (inventory → destination). The destination sale's category is collected from the user — the category is wiped during the return hop.
+Each item gets two lineage edges: one `returned` (source → inventory) and one `purchasedFromInventory` (inventory → destination). The destination purchase's category is collected from the user — the category is wiped during the return hop.
 
 ## Return Transaction Properties
 

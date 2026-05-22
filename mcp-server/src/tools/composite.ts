@@ -135,7 +135,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     {
       transaction: z
         .object({
-          projectId: z.string().optional().describe("Project ID (omit for business inventory). If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Sale into this project."),
+          projectId: z.string().optional().describe("Project ID (omit for business inventory). If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Purchase-from-inventory movement into this project."),
           budgetCategoryId: z.string().describe("Budget category ID"),
           amountCents: z.coerce.number().describe("Total amount in cents"),
           type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
@@ -171,8 +171,8 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     withTelemetry("create_transaction_with_items", async ({ transaction, items, notes }) => {
       if (transaction.type === "Sale") {
         return validation(
-          "Cannot create Sale transactions here — use sell_items instead.",
-          "Sale transactions require canonical IDs and lineage edges that only sell_items can produce."
+          "Cannot create Sale-to-Inventory transactions here — use sell_items instead.",
+          "Sale-to-Inventory transactions require lineage edges and item scope changes that only sell_items can produce."
         );
       }
 
@@ -218,7 +218,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       if (routeInventorySource && saleRef) {
         batch.set(saleRef, {
-          type: "Sale",
+          type: "Purchase",
           source: inventoryLabel,
           projectId: transaction.projectId,
           budgetCategoryId: transaction.budgetCategoryId,
@@ -270,7 +270,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
             toTransactionId: saleRef.id,
             fromProjectId: null,
             toProjectId: transaction.projectId,
-            movementKind: "sold",
+          movementKind: "sold",
             source: "mcp",
             createdAt: FieldValue.serverTimestamp(),
           });

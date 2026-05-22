@@ -79,9 +79,19 @@ struct TransactionDisplayCalculationTests {
         #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Inventory")
     }
 
-    // New per-batch Sale with source + businessToProject direction renders "Purchase from [source]"
-    @Test("Display name for Sale businessToProject prefixes 'Purchase from'")
-    func displayNamePerBatchSalePurchase() {
+    @Test("Display name for inventory Purchase prefixes 'Purchase from'")
+    func displayNameInventoryPurchase() {
+        let txn = makeTransaction(
+            source: "1584 Design Inventory",
+            transactionType: .purchase,
+            budgetCategoryId: "cat1"
+        )
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Purchase from 1584 Design Inventory")
+    }
+
+    // Legacy canonical Sale with source + businessToProject direction renders "Purchase from [source]"
+    @Test("Display name for legacy Sale businessToProject prefixes 'Purchase from'")
+    func displayNameLegacySalePurchase() {
         let txn = makeTransaction(
             source: "1584 Design Inventory",
             inventorySaleDirection: .businessToProject,

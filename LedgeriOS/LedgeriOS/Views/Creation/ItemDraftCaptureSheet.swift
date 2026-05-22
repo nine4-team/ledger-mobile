@@ -12,10 +12,9 @@ struct ItemDraftCaptureSheet: View {
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(\.dismiss) private var dismiss
 
+    @State private var name = ""
     @State private var imageItems: [PhotosPickerItem] = []
     @State private var imageDatas: [Data] = []
-    @State private var notes = ""
-    @State private var sourceHint: ProtoItemSourceHint = .unknown
     @State private var showImageSourceMenu = false
     @State private var imageSourcePendingAction: (() -> Void)?
     @State private var showCamera = false
@@ -29,23 +28,9 @@ struct ItemDraftCaptureSheet: View {
         !imageDatas.isEmpty && !isSaving
     }
 
-    private var contextTitle: String {
-        transactionId == nil ? "Project" : "Transaction"
-    }
-
-    private var contextLabel: String {
-        if transactionId != nil, let transactionName, !transactionName.isEmpty {
-            return transactionName
-        }
-        if let projectName, !projectName.isEmpty {
-            return projectName
-        }
-        return transactionId == nil ? "Current Project" : "Current Transaction"
-    }
-
     var body: some View {
         FormSheet(
-            title: "New Item Draft",
+            title: "New Item Quick Draft",
             primaryAction: FormSheetAction(
                 title: "Save & Next",
                 isLoading: isSaving,
@@ -58,35 +43,9 @@ struct ItemDraftCaptureSheet: View {
             error: errorMessage
         ) {
             VStack(spacing: Spacing.md) {
-                contextSection
+                FormField(label: "Name", text: $name, placeholder: "Optional")
                 photosSection
-                sourceHintSection
-                FormField(label: "Notes", text: $notes, placeholder: "Notes", axis: .vertical)
             }
-        }
-    }
-
-    private var contextSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(contextTitle)
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
-
-            HStack {
-                Text(contextLabel)
-                    .font(Typography.input)
-                    .foregroundStyle(BrandColors.textPrimary)
-                Spacer()
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(BrandColors.primary)
-            }
-            .padding(.horizontal, Spacing.md)
-            .frame(height: 44)
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-            )
         }
     }
 
@@ -96,47 +55,46 @@ struct ItemDraftCaptureSheet: View {
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.textSecondary)
 
-            if !imageDatas.isEmpty {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
-                    ForEach(Array(imageDatas.enumerated()), id: \.offset) { index, data in
-                        ZStack(alignment: .topTrailing) {
-                            platformImage(from: data)
-                                .scaledToFill()
-                                .frame(width: 70, height: 70)
-                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: Spacing.sm)], spacing: Spacing.sm) {
+                ForEach(Array(imageDatas.enumerated()), id: \.offset) { index, data in
+                    ZStack(alignment: .topTrailing) {
+                        platformImage(from: data)
+                            .scaledToFill()
+                            .frame(height: 88)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
 
-                            Button {
-                                imageDatas.remove(at: index)
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(.white)
-                                    .shadow(radius: 2)
-                            }
-                            .offset(x: 4, y: -4)
+                        Button {
+                            imageDatas.remove(at: index)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundStyle(.white)
+                                .shadow(radius: 2)
                         }
+                        .offset(x: 4, y: -4)
                     }
                 }
-            }
 
-            Button {
-                showImageSourceMenu = true
-            } label: {
-                HStack {
-                    Image(systemName: "plus.circle")
-                    Text(imageDatas.isEmpty ? "Add Photos" : "Add More Photos")
-                }
-                .font(Typography.input)
-                .foregroundStyle(BrandColors.textSecondary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                .overlay(
+                Button {
+                    showImageSourceMenu = true
+                } label: {
                     RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                )
+                        .strokeBorder(style: StrokeStyle(lineWidth: Dimensions.borderWidth, dash: [6]))
+                        .foregroundStyle(BrandColors.borderSecondary)
+                        .frame(height: 88)
+                        .overlay {
+                            VStack(spacing: Spacing.xs) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 24, weight: .regular))
+                                Text(imageDatas.isEmpty ? "Add Photos" : "Add More")
+                                    .font(Typography.caption)
+                            }
+                            .foregroundStyle(BrandColors.textSecondary)
+                        }
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .adaptivePresentation(isPresented: $showImageSourceMenu, style: .quickMenu, onDismiss: {
             imageSourcePendingAction?()
@@ -156,6 +114,7 @@ struct ItemDraftCaptureSheet: View {
         .photosPicker(
             isPresented: $showPhotoPicker,
             selection: $imageItems,
+            maxSelectionCount: 0,
             matching: .images,
             photoLibrary: .shared()
         )
@@ -173,7 +132,7 @@ struct ItemDraftCaptureSheet: View {
 
     private var imageSourceMenu: some View {
         ActionMenuSheet(
-            title: "Add Photo",
+            title: "Add Photos",
             items: [
                 ActionMenuItem(
                     id: "camera",
@@ -194,45 +153,6 @@ struct ItemDraftCaptureSheet: View {
         )
     }
 
-    private var sourceHintSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Source")
-                .font(Typography.label)
-                .foregroundStyle(BrandColors.textSecondary)
-
-            VStack(spacing: Spacing.sm) {
-                sourceHintButton(.unknown, label: "Not Sure", icon: "questionmark.circle")
-                sourceHintButton(.purchasedByClient, label: "Client Purchase", icon: "person.crop.circle")
-                sourceHintButton(.purchasedByBusiness, label: "Business Purchase", icon: "building.2")
-                sourceHintButton(.fromInventory, label: "From Inventory", icon: "shippingbox")
-            }
-        }
-    }
-
-    private func sourceHintButton(_ hint: ProtoItemSourceHint, label: String, icon: String) -> some View {
-        Button {
-            sourceHint = hint
-        } label: {
-            HStack {
-                Image(systemName: sourceHint == hint ? "checkmark.circle.fill" : icon)
-                    .foregroundStyle(sourceHint == hint ? BrandColors.primary : BrandColors.textSecondary)
-                Text(label)
-                    .foregroundStyle(BrandColors.textPrimary)
-                Spacer()
-            }
-            .font(Typography.input)
-            .padding(.horizontal, Spacing.md)
-            .frame(height: 44)
-            .contentShape(Rectangle())
-            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                    .stroke(sourceHint == hint ? BrandColors.primary : BrandColors.border, lineWidth: Dimensions.borderWidth)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     private func saveAndReset() {
         guard let accountId = accountContext.currentAccountId else { return }
         let capturedImageDatas = imageDatas
@@ -249,18 +169,17 @@ struct ItemDraftCaptureSheet: View {
             protoItem.transactionId = transactionId
             protoItem.captureContext = transactionId == nil ? .project : .transaction
             protoItem.status = .open
-            protoItem.sourceHint = sourceHint == .unknown ? nil : sourceHint
-            let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-            protoItem.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+            let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             protoItem.createdBy = authManager.currentUser?.uid
             protoItem.updatedBy = authManager.currentUser?.uid
 
             try protoItemsService.createProtoItem(accountId: accountId, id: protoItemId, protoItem: protoItem)
             enqueuePhotos(capturedImageDatas, accountId: accountId, protoItemId: protoItemId)
 
+            name = ""
             imageDatas = []
-            notes = ""
-            sourceHint = .unknown
+            showImageSourceMenu = true
             mediaUploadQueue.processQueue()
             isSaving = false
         } catch {

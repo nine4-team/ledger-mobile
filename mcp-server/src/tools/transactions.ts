@@ -18,22 +18,22 @@ import {
 import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
-import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
+import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 
 function txTypeName(tx: Transaction): string {
   return tx.type ?? "";
 }
 
 /**
- * Server-side defense matching Firestore rules: Sale transactions created
- * under the per-batch redesign have frozen shape fields (amountCents, itemIds,
+ * Server-side defense matching Firestore rules: per-batch inventory movement
+ * transactions have frozen shape fields (amountCents, itemIds,
  * budgetCategoryId, type, source, projectId). Legacy canonical sales
  * (isCanonicalInventorySale == true) are exempt so cancel_transaction, etc.
  * still work on historical docs.
  *
  * Returns null if the update is allowed, or an error tool-response otherwise.
  */
-const FROZEN_SALE_FIELDS = [
+const FROZEN_MOVEMENT_FIELDS = [
   "amountCents",
   "itemIds",
   "budgetCategoryId",
@@ -42,21 +42,27 @@ const FROZEN_SALE_FIELDS = [
   "projectId",
 ] as const;
 
-function checkSaleImmutability(
+function checkInventoryMovementImmutability(
   existing: Transaction & { id: string },
   updates: Record<string, unknown>
 ) {
-  if (existing.type !== "Sale") return null;
   if (existing.isCanonicalInventorySale === true) return null; // legacy exempt
+  const isFrozenMovement =
+    existing.type === "Sale" ||
+    existing.type === "Return" ||
+    (existing.type === "Purchase" &&
+      (isInventorySource(existing.source, DEFAULT_INVENTORY_LABEL) ||
+        (typeof existing.source === "string" && existing.source.trim().endsWith(" Inventory"))));
+  if (!isFrozenMovement) return null;
 
-  const violated = FROZEN_SALE_FIELDS.filter((f) => f in updates);
+  const violated = FROZEN_MOVEMENT_FIELDS.filter((f) => f in updates);
   if (violated.length === 0) return null;
 
   return validation(
-    `Sale transaction ${existing.id} has frozen shape fields; cannot update: ${violated.join(", ")}.`,
-    "Per-batch Sale transactions are immutable after creation. If the sale needs to be " +
-      "corrected, cancel it via cancel_transaction and issue a new one via sell_items. " +
-      "Mutable fields on a Sale: notes, status, updatedAt."
+    `Inventory movement transaction ${existing.id} has frozen shape fields; cannot update: ${violated.join(", ")}.`,
+    "Per-batch inventory movement transactions are immutable after creation. If the movement needs to be " +
+      "corrected, cancel it via cancel_transaction and issue a new one via inventory movement tools. " +
+      "Mutable fields: notes, status, updatedAt."
   );
 }
 
@@ -294,7 +300,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
+      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale-to-Inventory transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
@@ -321,15 +327,15 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
       if (txType === "Sale") {
         return validation(
-          "Cannot create Sale transactions directly — use sell_items instead.",
-          "Sale transactions require canonical IDs, lineage edges, and item scope changes that create_transaction cannot perform."
+          "Cannot create Sale-to-Inventory transactions directly — use sell_items instead.",
+          "Sale-to-Inventory transactions require lineage edges and item scope changes that create_transaction cannot perform."
         );
       }
 
       const inventoryLabel = await resolveInventoryLabel(db);
       if (txType === "Purchase" && projectId && isInventorySource(source, inventoryLabel)) {
         return validation(
-          "Project purchases with inventory as the source must route through inventory and create a Sale into the project.",
+          "Project purchases with inventory as the source must route through inventory and create a Purchase-from-inventory movement.",
           "Use create_transaction_with_items when creating new items, or sell_items for existing inventory items. create_transaction alone cannot create the required item updates and lineage edge."
         );
       }
@@ -385,7 +391,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
-      type: z.string().optional().describe("Transaction type: Purchase, Return, Fee, or Expense. Cannot update to/from 'Sale' — it's a frozen field on per-batch sales. 'To Inventory' is legacy."),
+      type: z.string().optional().describe("Transaction type: Purchase, Return, Fee, or Expense. Cannot update to/from 'Sale' — it's a frozen field on per-batch Sale-to-Inventory movements. 'To Inventory' is legacy."),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
       notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead if you just want to add a one-line audit entry."),
@@ -421,9 +427,10 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      // Server-side guard matching Firestore rules — reject writes to Sale
-      // shape fields on new per-batch sales. Legacy canonical sales are exempt.
-      const immutabilityError = checkSaleImmutability(existing, updates);
+      // Server-side guard matching Firestore rules — reject writes to frozen
+      // shape fields on new per-batch inventory movements. Legacy canonical
+      // sales are exempt.
+      const immutabilityError = checkInventoryMovementImmutability(existing, updates);
       if (immutabilityError) return immutabilityError;
 
       await accountCollection(db, "transactions").doc(transactionId).update(updates);
@@ -477,19 +484,19 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         if (value !== undefined) updates[key] = value;
       }
 
-      // Sale immutability preflight: reject the whole call if any matched
-      // doc is a per-batch Sale and the update touches a frozen field.
+      // Inventory movement immutability preflight: reject the whole call if any
+      // matched doc is frozen and the update touches a shape field.
       const violations: string[] = [];
       for (const doc of snapshot.docs) {
         const data = doc.data() as Transaction;
         const existing = { ...data, id: doc.id };
-        const err = checkSaleImmutability(existing, updates);
+        const err = checkInventoryMovementImmutability(existing, updates);
         if (err) violations.push(doc.id);
       }
       if (violations.length > 0) {
         return validation(
-          `Bulk update would touch frozen shape fields on ${violations.length} Sale transaction(s): ${violations.slice(0, 3).join(", ")}${violations.length > 3 ? "…" : ""}`,
-          "Per-batch Sale transactions are immutable after creation. Narrow the filter to exclude Sale type, or drop the frozen field from the update."
+          `Bulk update would touch frozen shape fields on ${violations.length} inventory movement transaction(s): ${violations.slice(0, 3).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          "Per-batch inventory movement transactions are immutable after creation. Narrow the filter or drop the frozen field from the update."
         );
       }
 
@@ -521,7 +528,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
   server.tool(
     "cancel_transaction",
     "Mark a transaction as canceled. Canceled transactions contribute $0 to budget calculations. " +
-      "Per-batch Sale transactions cancel cleanly with just a status flip — no item shuffling, no " +
+      "Per-batch inventory movement transactions cancel cleanly with just a status flip — no item shuffling, no " +
       "amount recomputation. Legacy canonical sales also cancel via status.",
     { transactionId: z.string().describe("Transaction document ID") },
     async ({ transactionId }) => {

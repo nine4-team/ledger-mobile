@@ -24,20 +24,21 @@ enum InventoryOperationError: Error {
 // MARK: - Service
 
 /// Multi-step atomic Firestore operations for inventory movements:
-/// sell to project, sell to inventory, return to inventory, move to inventory
+/// purchase into project, sell to inventory, return to inventory, move to inventory
 /// (origin-aware split), move between projects, reassign (within-scope),
 /// return to transaction.
 ///
-/// ## Per-Batch Sale Transactions (Bidirectional)
-/// Each sell action creates ONE new immutable Sale transaction with an auto-ID.
+/// ## Per-Batch Inventory Movement Transactions
+/// Inventory → project creates ONE new immutable Purchase transaction with an auto-ID.
+/// Project → inventory acquisition creates ONE new immutable Sale transaction.
 /// Shape fields (amountCents, itemIds, budgetCategoryId, type, source,
 /// projectId) are frozen at creation and never mutated.
 ///
-/// Sale direction is implicit in the transaction shape — no dedicated field:
-///   - Inventory → project: `source` is the inventory label AND
-///     `budgetCategoryId` is set (destination category).
-///   - Project → inventory: `source` is the inventory label AND
-///     `budgetCategoryId` is absent (inventory items have no category).
+/// Inventory movement direction is implicit in the transaction shape:
+///   - Inventory → project: `type == .purchase`, `source` is the inventory
+///     label, and `budgetCategoryId` is set (destination category).
+///   - Project → inventory acquisition: `type == .sale`, `source` is the
+///     inventory label, and `budgetCategoryId` is absent.
 ///
 /// This leverages the invariant `item.projectId == null ↔ item.budgetCategoryId == null`.
 ///
@@ -101,10 +102,10 @@ struct InventoryOperationsService {
 
     // MARK: - Sell to Project
 
-    /// Sells items from business inventory (or another project) into a destination project.
-    /// Creates ONE new immutable Sale transaction per call. No long-lived aggregators.
+    /// Purchases items from business inventory (or another project) into a destination project.
+    /// Creates ONE new immutable Purchase transaction per call. No long-lived aggregators.
     ///
-    /// The Sale transaction's shape (amountCents, itemIds, budgetCategoryId, projectId,
+    /// The Purchase transaction's shape (amountCents, itemIds, budgetCategoryId, projectId,
     /// type, source) is frozen at creation — Firestore security rules enforce this.
     func sellToProject(
         items: [Item],
@@ -126,7 +127,7 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        // Pre-fetch source tx types — frozen types (Sale, Return) must not have
+        // Pre-fetch source tx types — frozen movement docs must not have
         // their itemIds array mutated (Firestore rules reject; spec says immutable).
         let frozenSources = try await Self.frozenSourceTxIds(
             items: items, batch: batch, txPath: txPath
@@ -135,12 +136,12 @@ struct InventoryOperationsService {
         // Frozen amount snapshot
         let totals = Self.computeBatchTotals(items)
 
-        // 1. Create new Sale transaction (auto-ID via UUID, frozen shape)
-        let saleId = UUID().uuidString
-        let saleDocPath = "\(txPath)/\(saleId)"
+        // 1. Create new Purchase transaction (auto-ID via UUID, frozen shape)
+        let purchaseId = UUID().uuidString
+        let purchaseDocPath = "\(txPath)/\(purchaseId)"
         let today = Self.todayDateString()
-        var saleFields: [String: Any] = [
-            "type": "Sale",
+        var purchaseFields: [String: Any] = [
+            "type": "Purchase",
             "source": inventoryLabel,
             "projectId": destinationProjectId,
             "budgetCategoryId": budgetCategoryId,
@@ -152,9 +153,9 @@ struct InventoryOperationsService {
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
         ]
-        if let notes { saleFields["notes"] = notes }
-        if let userId { saleFields["createdBy"] = userId }
-        batch.setData(saleFields, forDocumentAt: saleDocPath, merge: false)
+        if let notes { purchaseFields["notes"] = notes }
+        if let userId { purchaseFields["createdBy"] = userId }
+        batch.setData(purchaseFields, forDocumentAt: purchaseDocPath, merge: false)
 
         // 2. Update each item
         for item in items {
@@ -164,7 +165,7 @@ struct InventoryOperationsService {
                 "projectId": destinationProjectId,
                 "budgetCategoryId": budgetCategoryId,
                 "status": "purchased",
-                "transactionId": saleId,
+                "transactionId": purchaseId,
                 "spaceId": NSNull(),
                 // Immediate source denormalized for search. Original `source`
                 // (vendor) is intentionally left untouched — preserved for returns.
@@ -178,7 +179,7 @@ struct InventoryOperationsService {
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
             // 3. Remove item from its source transaction's itemIds — skipped
-            // when source is a frozen Sale/Return (itemIds is immutable there).
+            // when source is a frozen movement document (itemIds is immutable there).
             if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
@@ -191,7 +192,7 @@ struct InventoryOperationsService {
                 "accountId": accountId,
                 "itemId": itemId,
                 "toProjectId": destinationProjectId,
-                "toTransactionId": saleId,
+                "toTransactionId": purchaseId,
                 "movementKind": "sold",
                 "source": "app",
                 "createdAt": FieldValue.serverTimestamp(),
@@ -631,7 +632,7 @@ struct InventoryOperationsService {
     /// that originated in the source project leave as a `Sale` (direction
     /// `.projectToBusiness`). Mixed batches write both first-hop transactions.
     ///
-    /// **Second hop:** one `Sale` transaction (direction `.businessToProject`)
+    /// **Second hop:** one `Purchase` transaction from inventory
     /// covering all items, landing them in the destination project.
     ///
     /// All items must be in the same source project.
@@ -721,12 +722,12 @@ struct InventoryOperationsService {
             batch.setData(saleFields, forDocumentAt: "\(txPath)/\(id)", merge: false)
         }
 
-        // 2. Second hop — Sale transaction (to destination project) covers all items
-        let destSaleId = UUID().uuidString
+        // 2. Second hop — Purchase transaction (from inventory) covers all items
+        let destPurchaseId = UUID().uuidString
         let totals = Self.computeBatchTotals(items)
         let itemIdList = items.compactMap(\.id)
-        var destSaleFields: [String: Any] = [
-            "type": "Sale",
+        var destPurchaseFields: [String: Any] = [
+            "type": "Purchase",
             "source": inventoryLabel,
             "projectId": destinationProjectId,
             "budgetCategoryId": destinationCategoryId,
@@ -738,9 +739,9 @@ struct InventoryOperationsService {
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
         ]
-        if let notes { destSaleFields["notes"] = notes }
-        if let userId { destSaleFields["createdBy"] = userId }
-        batch.setData(destSaleFields, forDocumentAt: "\(txPath)/\(destSaleId)", merge: false)
+        if let notes { destPurchaseFields["notes"] = notes }
+        if let userId { destPurchaseFields["createdBy"] = userId }
+        batch.setData(destPurchaseFields, forDocumentAt: "\(txPath)/\(destPurchaseId)", merge: false)
 
         // 3. Update each item (lands in destination project) + lineage edges
         for item in items {
@@ -750,7 +751,7 @@ struct InventoryOperationsService {
                 "projectId": destinationProjectId,
                 "budgetCategoryId": destinationCategoryId,
                 "status": "purchased",
-                "transactionId": destSaleId,
+                "transactionId": destPurchaseId,
                 "spaceId": NSNull(),
                 // moveBetweenProjects is modeled as two hops through inventory,
                 // so the immediate source lands on the inventory label.
@@ -789,13 +790,13 @@ struct InventoryOperationsService {
                 batch.setDataAutoId(firstEdge, inCollection: edgesPath)
             }
 
-            // Second-hop lineage edge — "sold" into destination
+            // Second-hop lineage edge — purchased from inventory into destination
             var soldEdge: [String: Any] = [
                 "accountId": accountId,
                 "itemId": itemId,
                 "fromProjectId": sourceProjectId,
                 "toProjectId": destinationProjectId,
-                "toTransactionId": destSaleId,
+                "toTransactionId": destPurchaseId,
                 "movementKind": "sold",
                 "source": "app",
                 "createdAt": FieldValue.serverTimestamp(),
@@ -984,9 +985,9 @@ struct InventoryOperationsService {
         return (subtotalCents, amountCents)
     }
 
-    /// Returns the set of source transaction IDs whose `type` is "Sale" or
-    /// "Return" — these have frozen shape fields per Firestore rules, so
-    /// the service must not attempt `arrayRemove` on their `itemIds`.
+    /// Returns the set of source transaction IDs whose shape is frozen by
+    /// Firestore rules, so the service must not attempt `arrayRemove` on
+    /// their `itemIds`.
     ///
     /// Deduplicates across items so the same source is fetched once.
     static func frozenSourceTxIds(
@@ -999,8 +1000,11 @@ struct InventoryOperationsService {
 
         var frozen: Set<String> = []
         for txId in uniqueSourceIds {
-            let type = try await batch.stringField("type", atPath: "\(txPath)/\(txId)")
-            if type == "Sale" || type == "Return" {
+            let path = "\(txPath)/\(txId)"
+            let type = try await batch.stringField("type", atPath: path)
+            let source = try await batch.stringField("source", atPath: path) ?? ""
+            let isInventoryPurchase = type == "Purchase" && source.hasSuffix(" Inventory")
+            if type == "Sale" || type == "Return" || isInventoryPurchase {
                 frozen.insert(txId)
             }
         }

@@ -14,6 +14,7 @@ enum TransactionCardCalculations {
         status: TransactionStatus?,
         isCanonicalInventorySale: Bool? = nil,
         inventorySaleDirection: InventorySaleDirection? = nil,
+        budgetCategoryId: String? = nil,
         invoiceStatus: InvoiceStatus? = nil
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
@@ -32,12 +33,15 @@ enum TransactionCardCalculations {
         if let type = transactionType {
             let label: String
             let color: Color
-            if isCanonicalInventorySale == true, inventorySaleDirection == .businessToProject {
-                // Legacy canonical: business_to_project shows "Purchase" badge
+            if type == .sale,
+               (inventorySaleDirection == .businessToProject || (inventorySaleDirection == nil && budgetCategoryId != nil)) {
+                // Inventory -> project uses the Purchase label, including
+                // legacy Sale-shaped records that predate the type correction.
                 label = TransactionType.purchase.displayLabel
                 color = BrandColors.primary
             } else {
-                // New per-batch Sales show "Sale", everything else uses its own label
+                // New per-batch inventory purchases show "Purchase"; sale-to-inventory
+                // shows "Sale"; everything else uses its own label.
                 label = type.displayLabel
                 switch type {
                 case .sale:      color = StatusColors.atRiskBar

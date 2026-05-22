@@ -165,10 +165,10 @@ exports.onLineageEdgeCreated = (0, firestore_2.onDocumentCreated)('accounts/{acc
 });
 /**
  * Recompute isComplete for any parent transactions that reference this item
- * when the item's price changes. Sale transactions are intentionally NOT touched:
- * per the per-batch sale redesign, `amountCents` on Sale transactions is a frozen
- * snapshot at creation time and must never be rewritten here. Legacy canonical
- * sales are also frozen historical records. Both are skipped below.
+ * when the item's price changes. Inventory movement transactions are
+ * intentionally NOT touched: their `amountCents` is a frozen snapshot at
+ * creation time and must never be rewritten here. Legacy canonical sales are
+ * also frozen historical records. Both are skipped below.
  */
 exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accountId}/items/{itemId}', async (event) => {
     const before = event.data?.before.data() ?? null;
@@ -184,8 +184,14 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
     const accountId = event.params.accountId;
     const itemId = event.params.itemId;
     const db = (0, firestore_1.getFirestore)();
+    const isFrozenInventoryMovement = (txData) => {
+        const rawType = (txData.type ?? txData.transactionType ?? null);
+        const type = typeof rawType === 'string' ? rawType.trim().toLowerCase() : '';
+        const source = typeof txData.source === 'string' ? txData.source.trim() : '';
+        return type === 'sale' || type === 'return' || (type === 'purchase' && source.endsWith(' Inventory'));
+    };
     // Recompute isComplete for parent transactions — only if purchasePriceCents
-    // changed (that's what audit uses). Never touches Sale transactions.
+    // changed (that's what audit uses). Never touches frozen movement docs.
     if (beforePurchase !== afterPurchase) {
         try {
             const parentTxSnapshot = await db
@@ -194,13 +200,9 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
                 .get();
             for (const txDoc of parentTxSnapshot.docs) {
                 const txData = txDoc.data() ?? {};
-                // Skip Sale transactions: per-batch sales freeze amountCents at creation;
-                // legacy canonical sales (isCanonicalInventorySale == true) are historical
-                // records. Either way, this trigger must not rewrite them.
-                const rawType = (txData.type ?? txData.transactionType ?? null);
-                const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
-                if (isSale) {
-                    console.log(`[onItemPriceChanged] skipping Sale transaction ${txDoc.id} (frozen shape)`);
+                // Skip frozen inventory movement transactions.
+                if (isFrozenInventoryMovement(txData)) {
+                    console.log(`[onItemPriceChanged] skipping frozen inventory movement transaction ${txDoc.id}`);
                     continue;
                 }
                 const result = await computeIsComplete(db, accountId, txDoc.id, txData);
@@ -246,10 +248,8 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
                 const txItemIds = Array.isArray(txData.itemIds) ? txData.itemIds : [];
                 if (txItemIds.includes(itemId))
                     continue;
-                // Skip Sale transactions: frozen historical records (see parent-branch comment).
-                const rawType = (txData.type ?? txData.transactionType ?? null);
-                const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
-                if (isSale)
+                // Skip frozen inventory movement transactions.
+                if (isFrozenInventoryMovement(txData))
                     continue;
                 const result = await computeIsComplete(db, accountId, srcTxId, txData);
                 const currentIsComplete = txData.isComplete ?? null;
@@ -680,6 +680,26 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
     await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
     return result;
 });
+// ---------------------------------------------------------------------------
+// Budget Summary Denormalization
+// ---------------------------------------------------------------------------
+// Maintains a precomputed `budgetSummary` on each project document so the
+// projects list can display budget progress without extra queries.
+/**
+ * Derive supportedTypes for a legacy category from `metadata.categoryType`.
+ * Mirrors Swift `BudgetCategory.resolvedSupportedTypes` and the MCP util.
+ * See docs/specs/transaction-type.md.
+ */
+function deriveSupportedTypesFromLegacyCategoryType(legacy) {
+    switch (legacy) {
+        case 'fee': return ['fee'];
+        case 'expense': return ['expense'];
+        case 'general': return ['expense'];
+        case 'itemized': return ['purchase', 'return'];
+        // Missing/unknown: widest safe default so the category matches any wizard filter.
+        default: return ['purchase', 'return', 'expense'];
+    }
+}
 /**
  * Full, idempotent recalculation of a project's budget summary.
  * Queries all source data and writes the computed summary to the project doc.
@@ -696,9 +716,16 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
         const metadata = data.metadata && typeof data.metadata === 'object'
             ? data.metadata
             : {};
+        const explicitSupported = Array.isArray(data.supportedTypes)
+            ? data.supportedTypes.filter((v) => typeof v === 'string')
+            : [];
+        const supportedTypes = explicitSupported.length > 0
+            ? explicitSupported
+            : deriveSupportedTypesFromLegacyCategoryType(typeof metadata.categoryType === 'string' ? metadata.categoryType : null);
         budgetCategories[doc.id] = {
             name: typeof data.name === 'string' ? data.name : '',
             categoryType: typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+            supportedTypes,
             excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
             isArchived: data.isArchived === true,
         };
@@ -766,6 +793,7 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
             spentCents,
             name: catMeta?.name ?? '',
             categoryType: catMeta?.categoryType ?? null,
+            supportedTypes: catMeta?.supportedTypes ?? ['purchase', 'return', 'expense'],
             excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
             isArchived: catMeta?.isArchived ?? false,
         };
@@ -821,33 +849,15 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
             },
         };
     }
-    // 2. Check budget category type
-    const budgetCategoryId = typeof txData.budgetCategoryId === 'string' ? txData.budgetCategoryId.trim() : null;
-    if (budgetCategoryId) {
-        // Find the account ID to look up the category
-        const catDoc = await db
-            .doc(`accounts/${accountId}/presets/default/budgetCategories/${budgetCategoryId}`)
-            .get();
-        if (catDoc.exists) {
-            const catData = catDoc.data() ?? {};
-            const metadata = catData.metadata && typeof catData.metadata === 'object'
-                ? catData.metadata
-                : {};
-            const categoryType = typeof metadata.categoryType === 'string' ? metadata.categoryType : null;
-            if (categoryType !== 'itemized') {
-                return { isComplete: true, audit: null };
-            }
-        }
-        else {
-            // Category not found — treat as non-itemized
-            return { isComplete: true, audit: null };
-        }
-    }
-    else {
-        // No budget category — treat as non-itemized
+    // 2. Audit gate is now tx-type-based (not category-based). A category can
+    //    be Mixed (items + expenses); whether a specific transaction needs
+    //    tax/subtotal is a property of the transaction's own type.
+    //    See docs/specs/transaction-type.md §"Transaction audit gate".
+    const txType = typeof txData.type === 'string' ? txData.type.trim().toLowerCase() : null;
+    if (txType !== 'purchase' && txType !== 'return') {
         return { isComplete: true, audit: null };
     }
-    // From here: category is itemized
+    // From here: tx is purchase or return — needs tax/subtotal audit
     // 3. Check tax data presence (strict null check — taxRatePct: 0 is valid)
     const hasSubtotal = txData.subtotalCents !== null && txData.subtotalCents !== undefined;
     const hasTaxRate = txData.taxRatePct !== null && txData.taxRatePct !== undefined;
@@ -1065,54 +1075,25 @@ exports.onAccountBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('acc
         const afterMeta = after.metadata && typeof after.metadata === 'object'
             ? after.metadata
             : {};
+        // Relevant fields for budget-summary denormalization. `supportedTypes` is
+        // included so the denormalized summary stays in sync with category shape.
+        // `categoryType` stays listed until Phase 4 clears the field; after that
+        // this line becomes dead.
+        const beforeSupported = JSON.stringify(before.supportedTypes ?? null);
+        const afterSupported = JSON.stringify(after.supportedTypes ?? null);
         const relevantFieldsChanged = before.name !== after.name ||
             before.isArchived !== after.isArchived ||
             beforeMeta.categoryType !== afterMeta.categoryType ||
-            beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget;
+            beforeMeta.excludeFromOverallBudget !== afterMeta.excludeFromOverallBudget ||
+            beforeSupported !== afterSupported;
         if (!relevantFieldsChanged)
             return;
     }
     const db = (0, firestore_1.getFirestore)();
-    const categoryId = event.params.categoryId;
-    // --- New: Handle categoryType changes for isComplete ---
-    if (before && after) {
-        const beforeMeta = before.metadata && typeof before.metadata === 'object'
-            ? before.metadata
-            : {};
-        const afterMeta = after.metadata && typeof after.metadata === 'object'
-            ? after.metadata
-            : {};
-        const beforeCategoryType = typeof beforeMeta.categoryType === 'string' ? beforeMeta.categoryType : null;
-        const afterCategoryType = typeof afterMeta.categoryType === 'string' ? afterMeta.categoryType : null;
-        if (beforeCategoryType !== afterCategoryType) {
-            try {
-                const txSnapshot = await db
-                    .collection(`accounts/${accountId}/transactions`)
-                    .where('budgetCategoryId', '==', categoryId)
-                    .get();
-                if (!txSnapshot.empty) {
-                    const isNowItemized = afterCategoryType === 'itemized';
-                    const TX_BATCH_SIZE = 500;
-                    for (let i = 0; i < txSnapshot.docs.length; i += TX_BATCH_SIZE) {
-                        const txBatch = db.batch();
-                        const slice = txSnapshot.docs.slice(i, i + TX_BATCH_SIZE);
-                        for (const txDoc of slice) {
-                            txBatch.set(txDoc.ref, {
-                                isComplete: !isNowItemized, // non-itemized = true, itemized = false (needs review)
-                                audit: null,
-                                updatedAt: firestore_1.FieldValue.serverTimestamp(),
-                            }, { merge: true });
-                        }
-                        await txBatch.commit();
-                    }
-                    console.log(`[onAccountBudgetCategoryWritten] Updated isComplete on ${txSnapshot.size} transactions for category ${categoryId} (now ${afterCategoryType})`);
-                }
-            }
-            catch (err) {
-                console.error(`[onAccountBudgetCategoryWritten] isComplete fan-out failed for category ${categoryId}:`, err);
-            }
-        }
-    }
+    // Note: the audit gate is now tx-type-based (see computeIsComplete and
+    // docs/specs/transaction-type.md §"Transaction audit gate"). We no longer
+    // fan out isComplete recomputes when a category's shape changes, because
+    // isComplete depends on the transaction's own type, not the category's.
     // --- Existing: recalculate budget summaries for all projects ---
     const projectsSnapshot = await db
         .collection(`accounts/${accountId}/projects`)

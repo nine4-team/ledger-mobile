@@ -122,7 +122,7 @@ multiplier rules (in order — first match wins):
   if transactionType is "return": -1
   if isCanonicalInventorySale AND inventorySaleDirection is "project_to_business": -1   # legacy carve-out
   if isCanonicalInventorySale AND inventorySaleDirection is "business_to_project": +1   # legacy carve-out
-  if transactionType is "sale": +1                                                      # new per-batch sales
+  if transactionType is "sale": -1                                                      # new project → inventory acquisition
   otherwise: +1                                                                          # purchases
 ```
 
@@ -157,12 +157,13 @@ overallPercentage = (overallSpentCents / overallBudgetCents) * 100
 
 ## Sign Conventions
 
-The system handles two generations of sale transactions: new per-batch sales and legacy canonical sales. The dual-read path lives in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
+The system handles current per-batch inventory movement transactions plus legacy canonical sales. The dual-read path lives in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`. Any new reader must consult this function rather than reimplement the convention.
 
-### Sign convention for Sale transactions
+### Sign convention for inventory movement transactions
 
 - **Legacy canonical sales** (`isCanonicalInventorySale == true`): sign depends on `inventorySaleDirection`. `business_to_project` → +1. `project_to_business` → -1. These are historical documents only; no new code writes them.
-- **New per-batch sales** (no `isCanonicalInventorySale` flag): always +1. There is no `project_to_business` sale in the new model — that case is a Return transaction with `source: "Business Inventory"`. See [sale-transactions.md](sale-transactions.md) and [inventory-as-store.md](inventory-as-store.md).
+- **Inventory → project purchases** (`type == "Purchase"`, inventory source, `budgetCategoryId` set): always +1.
+- **Project → inventory sales** (`type == "Sale"`, no `isCanonicalInventorySale` flag, no category): subtract from the source project conceptually; these records do not attach to a destination category because items leave the category system.
 - **Returns** (`type == "Return"`): always -1. Includes both vendor returns and return-to-inventory transactions.
 
 ### Full table
@@ -171,7 +172,8 @@ The system handles two generations of sale transactions: new per-batch sales and
 |-----------------|------------|------------------|
 | Purchase | +1 | Adds to spent |
 | Return (vendor or inventory) | -1 | Subtracts from spent |
-| Per-batch Sale (`type: "Sale"`, no `isCanonicalInventorySale`) | +1 | Adds to spent |
+| Inventory → project Purchase (`type: "Purchase"`, inventory source) | +1 | Adds to spent |
+| Project → inventory Sale (`type: "Sale"`, no category) | -1 | Subtracts from project spend |
 | **Legacy** canonical sale, `business_to_project` | +1 | Adds to spent |
 | **Legacy** canonical sale, `project_to_business` | -1 | Subtracts from spent |
 | Canceled transactions (`status == "canceled"`, any type) | excluded | No effect |
@@ -260,7 +262,7 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 ## Transaction Budget Attribution
 
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
-- **Per-batch Sale transactions** (new model): Category collected from the user at sell time and applied to every item in the batch. One category per Sale transaction; no per-item category. See [sale-transactions.md](sale-transactions.md).
+- **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. See [sale-transactions.md](sale-transactions.md).
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution
@@ -275,7 +277,7 @@ Items in business inventory have no category. Items in a project have a category
 
 1. **When creating an item with `projectId == null`** (in business inventory): `budgetCategoryId` is forced to null. Any value passed by the caller is ignored or rejected.
 2. **When creating an item linked to a project transaction**: `item.budgetCategoryId = transaction.budgetCategoryId`.
-3. **When selling from inventory to a project**: the user picks a category for the whole batch, which is set on every item AND on the new Sale transaction.
+3. **When purchasing from inventory into a project**: the user picks a category for the whole batch, which is set on every item AND on the new Purchase transaction.
 4. **When returning from a project to inventory**: `item.budgetCategoryId` is wiped to null.
 5. **When reassigning within the same project**: `item.budgetCategoryId` may be updated to match the new transaction's category, but the projectId does not change.
 

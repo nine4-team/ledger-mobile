@@ -110,13 +110,13 @@ Migration plan is out of scope for this spec. Implementation doc will cover it.
 - **Returns after a paid invoice.** When an item on a paid invoice is returned to inventory, the system generates a credit transaction on the project automatically. That credit lands in the project's To Invoice tab and is picked up on the next invoice the user creates. No automatic invoice generation — only the credit-in-pool step is automatic.
 - **Partial payments.** Not doing it. An invoice is fully paid or not.
 - **Multiple open drafts per project.** Allowed. A transaction can only be on one invoice at a time (see Core Model) — the picker enforces this.
-- **One project per invoice.** An invoice covers lines from one project. Cross-project sales (project A → inventory → project B) produce two sale transactions, one per project, each billed on its own project's invoice.
+- **One project per invoice.** An invoice covers lines from one project. Cross-project moves (project A → inventory → project B) produce the source project's exit transaction (Return or Sale-to-Inventory) plus the destination project's Purchase-from-inventory transaction; each project only invoices its own eligible lines.
 
 ## Related
 
 - [../plans/money-story.md](../plans/money-story.md) — plain-English description of how money flows today.
 - [../plans/invoicing-reconciliation-decisions.md](../plans/invoicing-reconciliation-decisions.md) — the five coupled decisions this spec resolves.
 - [../plans/reports-tab-rework.md](../plans/reports-tab-rework.md) — the Reports-tab work that depends on this spec.
-- [sale-transactions.md](sale-transactions.md) — the per-batch Sale model, upstream.
+- [sale-transactions.md](sale-transactions.md) — the per-batch inventory movement model, upstream.
 - [reassign-vs-sell.md](reassign-vs-sell.md) — why reassignments are not billable.
 - [billing-invoicing.md](billing-invoicing.md) — the shipped v1 spec this supersedes.

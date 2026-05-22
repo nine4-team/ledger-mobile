@@ -5,11 +5,11 @@
 > 1. **Historical data still uses this shape.** Existing sale transactions written under the canonical model remain in Firestore as immutable historical records. Readers must understand this shape to render them correctly.
 > 2. **The dual-read path in [util/budget.ts](../../mcp-server/src/util/budget.ts) depends on the sign convention documented here.**
 >
-> **For all new sale-related work, see [sale-transactions.md](sale-transactions.md) and [inventory-as-store.md](inventory-as-store.md).**
+> **For all new inventory movement work, see [sale-transactions.md](sale-transactions.md) and [inventory-as-store.md](inventory-as-store.md).**
 
 ## Quick Links
 
-- [sale-transactions.md](sale-transactions.md) — the active sale transaction spec
+- [sale-transactions.md](sale-transactions.md) — the active inventory movement transaction spec
 - [inventory-as-store.md](inventory-as-store.md) — the conceptual shift that replaced this model
 - [return-and-sale-tracking.md](return-and-sale-tracking.md) — how returns work, including return-to-inventory
 
@@ -17,12 +17,12 @@
 
 | Legacy concept | Replacement |
 |---|---|
-| Long-lived canonical sale transaction per `(project, direction, category)` | New per-batch Sale transaction per user action ([sale-transactions.md](sale-transactions.md)) |
-| `inventorySaleDirection: "business_to_project"` | The only direction. No flag needed. |
-| `inventorySaleDirection: "project_to_business"` | Replaced by Return transactions with `source: "Business Inventory"` |
+| Long-lived canonical sale transaction per `(project, direction, category)` | New per-batch inventory movement transaction per user action ([sale-transactions.md](sale-transactions.md)) |
+| `inventorySaleDirection: "business_to_project"` | Purchase-from-inventory transaction (`type: "Purchase"`, inventory source, `budgetCategoryId` set). No flag needed. |
+| `inventorySaleDirection: "project_to_business"` | Return transaction when the item came from inventory; Sale-to-Inventory only when the item originated in the project. |
 | Items carrying `budgetCategoryId` across scope moves | Items in inventory have `budgetCategoryId == null`; category resolved at sell time |
-| Two-hop project → project moves | Return-to-inventory + new sale to destination, atomic |
-| `arrayUnion` / `arrayRemove` mutations on long-lived sale documents | Each sale is an immutable per-batch document |
+| Two-hop project → project moves | Origin-aware first hop + new Purchase-from-inventory to destination, atomic |
+| `arrayUnion` / `arrayRemove` mutations on long-lived sale documents | Each inventory movement is an immutable per-batch document |
 
 ## Legacy Shape (For Historical Reads)
 
@@ -48,7 +48,7 @@ if tx.isCanonicalInventorySale and tx.inventorySaleDirection:
         return -abs(tx.amountCents)    // money returned from project
 ```
 
-New per-batch sales (no `isCanonicalInventorySale` flag) are always `+abs(amountCents)`. See [budget-management.md](budget-management.md) Sign Conventions section for the full table.
+New per-batch inventory movements derive sign from their shape: Purchase-from-inventory adds to the destination project, Sale-to-Inventory and Returns subtract from the source project. See [budget-management.md](budget-management.md) Sign Conventions section for the full table.
 
 ## Why Not Migrate
 

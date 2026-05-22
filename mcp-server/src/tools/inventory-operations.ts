@@ -12,18 +12,17 @@ import { getUid } from "../context.js";
 import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventory.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MCP-side implementation of the per-batch sale spec at
+// MCP-side implementation of the per-batch inventory movement spec at
 // docs/specs/sale-transactions.md. Mirrors
 // LedgeriOS/Services/InventoryOperationsService.swift.
 //
 // Key invariants (also enforced by Firestore rules):
-//   • Each inventory movement creates at least one new immutable Sale or
-//     Return transaction with an auto-ID. Shape fields (amountCents, itemIds,
-//     budgetCategoryId, type, source, projectId) are frozen at creation.
-//   • Sales are BIDIRECTIONAL:
-//        - inventory → project: Sale with `budgetCategoryId` set.
-//        - project → inventory: Sale with `budgetCategoryId` absent.
-//     Direction is derivable from the transaction shape alone.
+//   • Each inventory movement creates at least one new immutable Purchase,
+//     Sale, or Return transaction with an auto-ID. Shape fields (amountCents,
+//     itemIds, budgetCategoryId, type, source, projectId) are frozen at creation.
+//   • Inventory movement direction is derived from transaction shape:
+//        - inventory → project: Purchase with `budgetCategoryId` set.
+//        - project → inventory acquisition: Sale with `budgetCategoryId` absent.
 //   • Return is RESERVED for items going HOME to inventory — i.e., items
 //     that previously passed through inventory (currentSource != source).
 //     Items that originated in a project and are moving to inventory are a
@@ -96,8 +95,8 @@ function splitByOrigin(items: (Item & { id: string })[]): {
 }
 
 /**
- * Pre-fetch each distinct source transaction's type. Sale and Return are
- * frozen by Firestore rules; their itemIds cannot be mutated via arrayRemove.
+ * Pre-fetch each distinct source transaction's type. Inventory movement
+ * transactions are frozen; their itemIds cannot be mutated via arrayRemove.
  * The commit helpers skip arrayRemove for these sources.
  */
 async function frozenSourceTxIds(
@@ -108,7 +107,9 @@ async function frozenSourceTxIds(
   const frozen = new Set<string>();
   for (const txId of unique) {
     const tx = await getDoc<Transaction>(db, "transactions", txId);
-    if (tx && (tx.type === "Sale" || tx.type === "Return")) frozen.add(txId);
+    const isInventoryPurchase =
+      tx?.type === "Purchase" && typeof tx.source === "string" && tx.source.endsWith(" Inventory");
+    if (tx && (tx.type === "Sale" || tx.type === "Return" || isInventoryPurchase)) frozen.add(txId);
   }
   return frozen;
 }
@@ -148,9 +149,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "budgets move). Do NOT use it to satisfy a schema rule when an item was logged incorrectly. " +
       "If you encounter project items with no transaction (legacy orphans, mis-entered items), " +
       "the fix is `bulk_update_items` with `projectId: null` to relocate them to inventory as a CORRECTION " +
-      "— then sell from inventory normally. Inventing fake Sales to retroactively justify bad data pollutes the books.\n\n" +
-      "[destructive] Create a Sale transaction moving items between inventory and a project. " +
-      "Sales are BIDIRECTIONAL — direction is derived from the arguments:\n\n" +
+      "— then sell from inventory normally. Inventing fake inventory movement transactions to retroactively justify bad data pollutes the books.\n\n" +
+      "[destructive] Create an inventory movement transaction between inventory and a project. " +
+      "Direction is derived from the arguments:\n\n" +
       "• INVENTORY → PROJECT (pass budgetCategoryId): items must currently be in business inventory " +
       "(projectId == null). Items land in destinationProjectId under the chosen category. The " +
       "project's budget for that category increases. Ask the user to pick the category from " +
@@ -160,10 +161,10 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "them for inventory for the first time). Items land in inventory with projectId and " +
       "budgetCategoryId cleared. The source project's budget decreases. For items that came from " +
       "inventory originally, use return_items (returnTo: 'inventory') instead — that's a Return, not a Sale.\n\n" +
-      "Each call creates ONE new immutable Sale transaction with an auto-ID. Shape fields (amountCents, " +
+      "Each call creates ONE new immutable Purchase or Sale transaction with an auto-ID. Shape fields (amountCents, " +
       "itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Cap: 100 items per call.\n\n" +
       "Related: for project→project reallocation, use move_items_between_projects — it runs the correct " +
-      "origin-aware two-hop (Return or Sale-to-Inventory on the first hop, Sale-to-Project on the second).",
+      "origin-aware two-hop (Return or Sale-to-Inventory on the first hop, Purchase-from-Inventory on the second).",
     {
       itemIds: z
         .array(z.string())
@@ -173,7 +174,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       destinationProjectId: z
         .string()
         .describe(
-          "The project side of the sale. For inventory→project, this is where items are going. " +
+          "The project side of the movement. For inventory→project, this is where items are going. " +
             "For project→inventory, this is where items are coming from (must match every item's current projectId)."
         ),
       budgetCategoryId: z
@@ -240,8 +241,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               dryRun: true,
               direction,
               plan: {
-                saleTransaction: {
-                  type: "Sale" as const,
+                purchaseTransaction: {
+                  type: "Purchase" as const,
                   source: inventoryLabel,
                   projectId: destinationProjectId,
                   budgetCategoryId: budgetCategoryId!,
@@ -483,7 +484,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "   • Items that originated in the source project (currentSource == source) → a Sale-to-Inventory " +
       "transaction (type: 'Sale', no budgetCategoryId) against the source project.\n" +
       "   • Mixed batches produce BOTH first-hop transactions in the same Firestore batch.\n\n" +
-      "  SECOND HOP: one Sale-to-Project transaction (type: 'Sale', with budgetCategoryId) against " +
+      "  SECOND HOP: one Purchase-from-Inventory transaction (type: 'Purchase', with budgetCategoryId) against " +
       "the destination project, covering every item in the batch.\n\n" +
       "All items must be in the same source project. Cap: 100 items per call. One destination category " +
       "applies to the whole batch — ask the user to pick from get_project_budget_categories before calling. " +
@@ -604,8 +605,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 saleToInventoryLeg,
               },
               secondHop: {
-                saleToProject: {
-                  type: "Sale" as const,
+                purchaseFromInventory: {
+                  type: "Purchase" as const,
                   source: inventoryLabel,
                   projectId: destinationProjectId,
                   budgetCategoryId: destinationBudgetCategoryId,
@@ -666,10 +667,10 @@ async function commitSellToProject(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // 1. New Sale transaction (frozen shape).
-  const saleRef = txCol.doc();
-  batch.set(saleRef, {
-    type: "Sale",
+  // 1. New Purchase transaction (frozen shape).
+  const purchaseRef = txCol.doc();
+  batch.set(purchaseRef, {
+    type: "Purchase",
     source: totals.inventoryLabel,
     projectId: destinationProjectId,
     budgetCategoryId,
@@ -690,7 +691,7 @@ async function commitSellToProject(
       projectId: destinationProjectId,
       budgetCategoryId,
       status: "purchased",
-      transactionId: saleRef.id,
+      transactionId: purchaseRef.id,
       spaceId: null,
       currentSource: totals.inventoryLabel,
       updatedAt: now,
@@ -706,7 +707,7 @@ async function commitSellToProject(
     batch.set(edgesCol.doc(), {
       itemId: item.id,
       fromTransactionId: item.transactionId ?? null,
-      toTransactionId: saleRef.id,
+      toTransactionId: purchaseRef.id,
       fromProjectId: item.projectId ?? null,
       toProjectId: destinationProjectId,
       movementKind: "sold",
@@ -722,8 +723,8 @@ async function commitSellToProject(
       {
         type: "text" as const,
         text:
-          `Sold ${items.length} item(s) from inventory into project ${destinationProjectId}.\n` +
-          `New Sale transaction: ${saleRef.id}\n` +
+          `Purchased ${items.length} item(s) from inventory into project ${destinationProjectId}.\n` +
+          `New Purchase transaction: ${purchaseRef.id}\n` +
           `amountCents: ${totals.amountCents} (${formatCents(totals.amountCents)})\n` +
           `budgetCategoryId: ${budgetCategoryId}` +
           missingTaxWarning(totals.missingTax, items.length),
@@ -1068,10 +1069,10 @@ async function commitMoveBetweenProjects(
     });
   }
 
-  // 2. Second hop — Sale-to-Project (destination) covers every item.
-  const destSaleRef = txCol.doc();
-  batch.set(destSaleRef, {
-    type: "Sale",
+  // 2. Second hop — Purchase-from-Inventory (destination) covers every item.
+  const destPurchaseRef = txCol.doc();
+  batch.set(destPurchaseRef, {
+    type: "Purchase",
     source: totals.inventoryLabel,
     projectId: destinationProjectId,
     budgetCategoryId: destinationBudgetCategoryId,
@@ -1092,7 +1093,7 @@ async function commitMoveBetweenProjects(
       projectId: destinationProjectId,
       budgetCategoryId: destinationBudgetCategoryId,
       status: "purchased",
-      transactionId: destSaleRef.id,
+      transactionId: destPurchaseRef.id,
       spaceId: null,
       currentSource: totals.inventoryLabel,
       updatedAt: now,
@@ -1123,7 +1124,7 @@ async function commitMoveBetweenProjects(
     batch.set(edgesCol.doc(), {
       itemId: item.id,
       fromTransactionId: firstHopTxId ?? item.transactionId ?? null,
-      toTransactionId: destSaleRef.id,
+      toTransactionId: destPurchaseRef.id,
       fromProjectId: null,
       toProjectId: destinationProjectId,
       movementKind: "sold",
@@ -1137,7 +1138,7 @@ async function commitMoveBetweenProjects(
   const legs: string[] = [];
   if (returnTxId) legs.push(`Return (from-inventory leg): ${returnTxId}`);
   if (firstSaleTxId) legs.push(`Sale-to-Inventory (originated-in-project leg): ${firstSaleTxId}`);
-  legs.push(`Sale-to-Project (destination): ${destSaleRef.id}`);
+  legs.push(`Purchase-from-Inventory (destination): ${destPurchaseRef.id}`);
 
   return {
     content: [

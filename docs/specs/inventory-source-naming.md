@@ -3,7 +3,7 @@ Status: shipped (all pending items resolved as of 2026-04-11)
 Last updated: 2026-04-11
 
 > **Shipped**:
-> - **Phase 1 — static source label** (2026-04-07). Sale/Return transactions created by `InventoryOperationsService` carry a populated `source` field instead of leaving it blank. Hop 1 (`project_to_business`, legacy) was intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
+> - **Phase 1 — static source label** (2026-04-07). Inventory movement transactions created by `InventoryOperationsService` carry a populated `source` field instead of leaving it blank. Hop 1 (`project_to_business`, legacy) was intentionally untouched — that record lives on the inventory side and isn't displayed in project transaction lists.
 > - **Option A — dynamic `[Account Name] Inventory` label** (2026-04-11). `InventoryOperationsService` now takes an `inventoryLabel: String` parameter on `sellToProject`, `returnToInventory`, and `moveBetweenProjects`, defaulting to `"Business Inventory"`. A static helper `InventoryOperationsService.inventoryLabel(for: accountName:)` builds `"[Name] Inventory"` from the account's display name, trimming whitespace and falling back to `"Business Inventory"` when the name is empty. All six production call sites (SellToProjectModal, SellToBusinessModal, ReassignToProjectModal, AddExistingItemsPicker, ItemEntryFlowView, TransactionDetailView) now pass the helper-derived label through `accountContext.account?.name`. Existing tests that pin the default `"Business Inventory"` still pass because of the parameter default; new tests cover both the helper and passthrough for each method.
 > - **Two-field source split** (2026-04-11). `item.source` is the original vendor (set at creation, never overwritten by scope moves — preserved for returns). `item.currentSource` is the immediate/mutable source denormalized from the item's current transaction for fast display. `InventoryOperationsService` writes `currentSource = inventoryLabel` on sell-to-project, return-to-inventory, and move-between-projects. At creation time, callers set `currentSource = source`. Legacy items pre-dating this field fall back to `source` in all display callers. See `data-model.md` for the full field contract.
 > - **Client-facing source masking** (2026-04-11). Reports (ClientSummaryReportView, ReportHTMLBuilder, PropertyManagementReportView) read `item.currentSource ?? item.source`, so inventory-sourced items display the inventory label instead of the original vendor. No separate masking layer needed — `currentSource` is the mask.
@@ -12,15 +12,15 @@ Last updated: 2026-04-11
 > - **Backfill** (2026-04-11). `backfill-item-current-source.mjs` populated `currentSource` for 2,456 existing items in production, deriving the value from each item's linked transaction source.
 
 ## Summary
-When items are sold from business inventory into a project, the resulting sale transaction currently has a blank source field — no label at all. This spec defines how those transactions should be labeled, how the original acquisition source (the store the business bought the item from) should be preserved and surfaced internally, and how source information should be masked in any client-facing context.
+When items are sold from business inventory into a project, the resulting Purchase-from-inventory transaction needs an inventory source label. This spec defines how those transactions should be labeled, how the original acquisition source (the store the business bought the item from) should be preserved and surfaced internally, and how source information should be masked in any client-facing context.
 
 ## Current Behavior (What Exists Today)
 
-### Sale Transactions (Inventory → Project)
-When items move from inventory to a project, a sale transaction is created in the project. Currently:
+### Purchase-From-Inventory Transactions (Inventory → Project)
+When items move from inventory to a project, a Purchase-from-inventory transaction is created in the project. Historical legacy data used Sale transactions for this direction; new writes use `type: "Purchase"`. Previously:
 - **Source field**: blank (empty string)
 - **Purchased by**: blank
-- **Transaction ID**: structured string like `SALE_[projectId]_business_to_project_[categoryId]` — technically descriptive, but not human-readable and not surfaced as a display name
+- **Transaction ID**: structured string like `SALE_[projectId]_business_to_project_[categoryId]` in legacy data — technically descriptive, but not human-readable and not surfaced as a display name
 - **Result**: In a project's transaction list, these show up as unnamed entries alongside clearly labeled transactions (e.g., "Wayfair — $6,349", "Pottery Barn — $5,387", then just "— $3,213" with no source)
 
 ### Inventory Purchase Transactions
@@ -37,7 +37,7 @@ Individual items in inventory may be associated with a transaction that has a so
 - Transaction-per-category structure within projects stays as-is
 
 ### Changing
-- **Sale transactions get a proper source label.** When items are sold from inventory to a project, the sale transaction's source field is populated with a clear, identifiable label (see naming options below) instead of being left blank.
+- **Purchase-from-inventory transactions get a proper source label.** When items are sold from inventory to a project, the movement transaction's source field is populated with a clear, identifiable label (see naming options below) instead of being left blank.
 
 ### Adding
 - ~~**Inventory origin indicator on items.**~~ **Shipped.** Items display `currentSource` on cards and search results. For inventory-sourced items in a project, this shows the inventory label (e.g., "1584 Design Inventory"). No badge — the source field itself is the indicator.
@@ -50,7 +50,7 @@ Individual items in inventory may be associated with a transaction that has a so
 
 ### Transaction Source Label
 
-When a sale transaction is created (items moving from inventory to a project), the source field should be populated with one of these options (dev team decides based on implementation simplicity):
+When a Purchase-from-inventory transaction is created (items moving from inventory to a project), the source field should be populated with one of these options (dev team decides based on implementation simplicity):
 
 **Option A (preferred):** `[Business Name] Inventory` — dynamically pulls from the account's business name setting. For 1584 Design, this would display as "1584 Design Inventory."
 
@@ -59,7 +59,7 @@ When a sale transaction is created (items moving from inventory to a project), t
 **Whichever option is chosen, the label must:**
 - Appear in the project's transaction list so these transactions are identifiable at a glance
 - Be filterable in transaction filters (the user should be able to filter transactions by this source to see only inventory-sourced items)
-- Be consistent across all sale transactions from inventory (same label every time, not varying)
+- Be consistent across all Purchase-from-inventory transactions (same label every time, not varying)
 
 ### Original Source Preservation
 
@@ -88,13 +88,13 @@ When an item moves from inventory to a project, it should carry a visible indica
 **Implementation options (dev team decides):**
 - A tag or badge on the item (e.g., "From Inventory")
 - A metadata field on the item recording its origin type (direct purchase vs. inventory transfer)
-- The sale transaction's source label itself may be sufficient if items inherit or display their transaction's source
+- The Purchase-from-inventory transaction's source label itself may be sufficient if items inherit or display their transaction's source
 
 The key requirement is that looking at an item in a project, the team can tell at a glance whether it was inventory-sourced without clicking into transaction details.
 
 ## Interaction with Other Specs
 
-- **Item Entry Flow (item-entry-flow.md):** The category-based routing spec defines how items enter inventory and get sold to projects. This naming spec defines what those sale transactions look like once they land in the project.
+- **Item Entry Flow (item-entry-flow.md):** The category-based routing spec defines how items enter inventory and get sold to projects. This naming spec defines what those Purchase-from-inventory transactions look like once they land in the project.
 - **Billing & Invoicing (billing-invoicing.md):** Invoices must use the masked source (business inventory label), never the original acquisition vendor.
 - **Project Closeout Report (project-closeout-report.md):** The furnishings breakdown shows items with their project price. Source should display as business inventory, not original vendor. The "savings" narrative already avoids exposing cost basis — this reinforces that.
 - **Search Results (search-results.md):** When an inventory-sourced item appears in search results, its project context should show the business inventory source, not the original vendor.
@@ -106,7 +106,7 @@ The key requirement is that looking at an item in a project, the team can tell a
 
 ---
 ## Implementation Notes
-- The sale transaction source field is currently stored as an empty string. Populating it is likely a straightforward change at the point where sale transactions are created (the sell_items flow).
+- The inventory movement transaction source field was historically stored as an empty string. Populating it is likely a straightforward change at the point where Purchase-from-inventory transactions are created (the sell_items flow).
 - If using Option A (dynamic business name), this requires reading from the account/business profile at transaction creation time. If the business name changes later, previously created transactions would retain the old name — this is probably fine (it's a historical record), but worth noting.
 - Original source data already exists on the inventory purchase transactions. The question is whether items themselves carry a reference to their originating transaction/source, or if that's looked up through the transaction chain. This affects how easily the original source can be displayed in item detail views.
 - Client-facing masking could be handled at the view/export layer (filter what's shown) rather than changing underlying data. This is cleaner than duplicating or overwriting source fields.

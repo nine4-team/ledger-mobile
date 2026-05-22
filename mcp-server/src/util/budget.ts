@@ -42,9 +42,10 @@ export function categoryPillLabel(c: BudgetCategory): string {
  *      (isCanonicalInventorySale == true)           project_to_business, +1 for
  *                                                   business_to_project). See
  *                                                   docs/specs/canonical-sales.md.
- *   3. New per-batch Sale (type == "Sale",      → always +1 (+|amount|)
- *      no isCanonicalInventorySale flag)            Sales always go
- *                                                   business → project.
+ *   3. Inventory → project Purchase             → +amount (normal purchase)
+ *      (type == "Purchase", inventory source)
+ *      Project → inventory Sale has no category and is not attributed to a
+ *      destination budget category.
  *   4. Everything else (Purchase, etc.)         → +amount (unchanged)
  *
  * Canceled transactions contribute $0.
@@ -75,9 +76,8 @@ export function normalizeSpendAmount(tx: Transaction): number {
       : Math.abs(amount);
   }
 
-  // Case 3: New per-batch Sale — always positive.
-  // Per the per-batch redesign, sales only ever go business → project, and
-  // the amount is a frozen snapshot captured at creation time.
+  // Case 3: Non-legacy Sale — project → inventory acquisition. These normally
+  // have no category, but remain positive here for historical/defensive reads.
   if (rawType === "sale") {
     return Math.abs(amount);
   }

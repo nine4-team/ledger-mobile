@@ -47,7 +47,7 @@ struct SellToProjectExecutionTests {
     private let catId = "cat_furnishings"
 
     // I1: sellToProject with 5 items
-    @Test("5 items — 1 Sale tx, correct amountCents, item fields, 5 lineage edges")
+    @Test("5 items — 1 Purchase tx, correct amountCents, item fields, 5 lineage edges")
     func fiveItemsHappyPath() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -67,34 +67,34 @@ struct SellToProjectExecutionTests {
 
         #expect(batch.commitCalled)
 
-        // Exactly 1 Sale transaction (via setData, not setDataAutoId)
-        let saleSets = batch.sets.filter {
-            ($0.fields["type"] as? String) == "Sale"
+        // Exactly 1 Purchase transaction (via setData, not setDataAutoId)
+        let purchaseSets = batch.sets.filter {
+            ($0.fields["type"] as? String) == "Purchase"
         }
-        #expect(saleSets.count == 1)
-        let sale = saleSets[0].fields
+        #expect(purchaseSets.count == 1)
+        let purchase = purchaseSets[0].fields
 
         // Shape fields
-        #expect(sale["type"] as? String == "Sale")
-        #expect(sale["source"] as? String == "Business Inventory")
-        #expect(sale["projectId"] as? String == dstProj)
-        #expect(sale["budgetCategoryId"] as? String == catId)
-        #expect(sale["status"] as? String == "completed")
-        #expect(sale["isComplete"] as? Bool == true)
+        #expect(purchase["type"] as? String == "Purchase")
+        #expect(purchase["source"] as? String == "Business Inventory")
+        #expect(purchase["projectId"] as? String == dstProj)
+        #expect(purchase["budgetCategoryId"] as? String == catId)
+        #expect(purchase["status"] as? String == nil)
+        #expect(purchase["isComplete"] as? Bool == true)
 
         // amountCents = sum of projectPriceCents (no tax)
         // 1200 + 2400 + 3600 + 4800 + 6000 = 18000
-        #expect(sale["amountCents"] as? Int == 18000)
-        #expect(sale["subtotalCents"] as? Int == 18000)
+        #expect(purchase["amountCents"] as? Int == 18000)
+        #expect(purchase["subtotalCents"] as? Int == 18000)
 
         // itemIds
-        let itemIds = sale["itemIds"] as? [String] ?? []
+        let itemIds = purchase["itemIds"] as? [String] ?? []
         #expect(itemIds.count == 5)
         #expect(Set(itemIds) == Set(["i1", "i2", "i3", "i4", "i5"]))
 
-        // Sale doc path contains the auto-generated UUID (not a SALE_ prefix)
-        let salePath = saleSets[0].path
-        #expect(!salePath.contains("SALE_"))
+        // Purchase doc path contains the auto-generated UUID (not a SALE_ prefix)
+        let purchasePath = purchaseSets[0].path
+        #expect(!purchasePath.contains("SALE_"))
 
         // 5 item updates
         for i in 1...5 {
@@ -105,7 +105,7 @@ struct SellToProjectExecutionTests {
             #expect(f["budgetCategoryId"] as? String == catId)
             #expect(f["status"] as? String == "purchased")
             #expect(f["spaceId"] is NSNull)
-            // transactionId is the UUID from the sale doc
+            // transactionId is the UUID from the purchase doc
             let txId = f["transactionId"] as? String
             #expect(txId != nil && !txId!.contains("SALE_"))
         }
@@ -147,18 +147,18 @@ struct SellToProjectExecutionTests {
             budgetCategoryId: catId, accountId: acct
         )
 
-        // Each batch has exactly 1 sale transaction
-        let sale1 = batch1.sets.filter { ($0.fields["type"] as? String) == "Sale" }
-        let sale2 = batch2.sets.filter { ($0.fields["type"] as? String) == "Sale" }
-        #expect(sale1.count == 1)
-        #expect(sale2.count == 1)
+        // Each batch has exactly 1 purchase transaction
+        let purchase1 = batch1.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
+        let purchase2 = batch2.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
+        #expect(purchase1.count == 1)
+        #expect(purchase2.count == 1)
 
         // Different doc paths (different UUIDs)
-        #expect(sale1[0].path != sale2[0].path)
+        #expect(purchase1[0].path != purchase2[0].path)
 
-        // First sale unchanged by second
-        #expect(sale1[0].fields["amountCents"] as? Int == 1200)
-        #expect(sale2[0].fields["amountCents"] as? Int == 2400)
+        // First purchase unchanged by second
+        #expect(purchase1[0].fields["amountCents"] as? Int == 1200)
+        #expect(purchase2[0].fields["amountCents"] as? Int == 2400)
     }
 
     // I5: sellToProject with 101 items — batch size error
@@ -195,13 +195,13 @@ struct SellToProjectExecutionTests {
             budgetCategoryId: catId, accountId: acct
         )
 
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }!.fields
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }!.fields
         // i1 contributes 0, i2 contributes 6000
-        #expect(sale["amountCents"] as? Int == 6000)
-        #expect(sale["subtotalCents"] as? Int == 6000)
+        #expect(purchase["amountCents"] as? Int == 6000)
+        #expect(purchase["subtotalCents"] as? Int == 6000)
 
         // Both items still in itemIds
-        let itemIds = sale["itemIds"] as? [String] ?? []
+        let itemIds = purchase["itemIds"] as? [String] ?? []
         #expect(itemIds.count == 2)
         #expect(Set(itemIds) == Set(["i1", "i2"]))
     }
@@ -231,9 +231,9 @@ struct SellToProjectExecutionTests {
             budgetCategoryId: catId, accountId: acct
         )
 
-        // Sale still created (nil-id item contributes to itemIds via compactMap)
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }!.fields
-        let itemIds = sale["itemIds"] as? [String] ?? []
+        // Purchase still created (nil-id item contributes to itemIds via compactMap)
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }!.fields
+        let itemIds = purchase["itemIds"] as? [String] ?? []
         #expect(itemIds == ["i2"]) // nil-id item excluded
 
         // Only i2 gets item update
@@ -315,9 +315,9 @@ struct SellToProjectExecutionTests {
             budgetCategoryId: catId, accountId: acct
         )
 
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }!.fields
-        #expect(sale["isCanonicalInventorySale"] == nil)
-        #expect(sale["inventorySaleDirection"] == nil)
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }!.fields
+        #expect(purchase["isCanonicalInventorySale"] == nil)
+        #expect(purchase["inventorySaleDirection"] == nil)
     }
 }
 
@@ -455,7 +455,7 @@ struct ReturnToInventoryExecutionTests {
 struct MoveBetweenProjectsExecutionTests {
 
     // I4: moveBetweenProjects with from-inventory items — Return-leg first hop
-    @Test("From-inventory items: 1 Return + 1 destination Sale, lineage edges cross-linked")
+    @Test("From-inventory items: 1 Return + 1 destination Purchase, lineage edges cross-linked")
     func happyPathFromInventory() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -480,13 +480,13 @@ struct MoveBetweenProjectsExecutionTests {
         #expect(ret["projectId"] as? String == "srcProj")
         #expect(ret["amountCents"] as? Int == 5000)
 
-        let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
-        #expect(saleSets.count == 1)
-        let sale = saleSets[0].fields
-        #expect(sale["projectId"] as? String == "dstProj")
-        #expect(sale["budgetCategoryId"] as? String == "cat1")
-        #expect(sale["amountCents"] as? Int == 6000)
-        #expect(sale["subtotalCents"] as? Int == 6000)
+        let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
+        #expect(purchaseSets.count == 1)
+        let purchase = purchaseSets[0].fields
+        #expect(purchase["projectId"] as? String == "dstProj")
+        #expect(purchase["budgetCategoryId"] as? String == "cat1")
+        #expect(purchase["amountCents"] as? Int == 6000)
+        #expect(purchase["subtotalCents"] as? Int == 6000)
 
         for itemId in ["i1", "i2"] {
             let updates = batch.updatesForPath("accounts/\(acct)/items/\(itemId)")
@@ -516,7 +516,7 @@ struct MoveBetweenProjectsExecutionTests {
     }
 
     // Project-originated items take the Sale-to-Inventory path on hop 1
-    @Test("Originated-here items: Sale-to-Inventory + destination Sale, soldToInventory edges")
+    @Test("Originated-here items: Sale-to-Inventory + destination Purchase, soldToInventory edges")
     func happyPathOriginatedHere() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -537,13 +537,14 @@ struct MoveBetweenProjectsExecutionTests {
         let returnSets = batch.sets.filter { ($0.fields["type"] as? String) == "Return" }
         #expect(returnSets.isEmpty)
 
-        // Two Sale transactions: one for project→inventory (no budgetCategoryId)
-        // and one for inventory→destination (with budgetCategoryId = cat1)
+        // One Sale-to-Inventory plus one Purchase-from-Inventory destination transaction.
         let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
-        #expect(saleSets.count == 2)
+        let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
+        #expect(saleSets.count == 1)
+        #expect(purchaseSets.count == 1)
 
         let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }
-        let toDest = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }
+        let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }
         #expect(toInventory != nil)
         #expect(toDest != nil)
         #expect(toInventory?.fields["projectId"] as? String == "srcProj")
@@ -552,13 +553,13 @@ struct MoveBetweenProjectsExecutionTests {
         // Lineage: 2 soldToInventory (hop 1) + 2 sold (hop 2)
         let edges = batch.lineageEdges(accountId: acct)
         let soldToInventory = edges.filter { ($0.fields["movementKind"] as? String) == "soldToInventory" }
-        let sold = edges.filter { ($0.fields["movementKind"] as? String) == "sold" }
+        let purchased = edges.filter { ($0.fields["movementKind"] as? String) == "sold" }
         #expect(soldToInventory.count == 2)
-        #expect(sold.count == 2)
+        #expect(purchased.count == 2)
     }
 
-    // Mixed origin: one Return + one Sale-to-Inventory + one destination Sale
-    @Test("Mixed origin items: Return + Sale-to-Inventory + destination Sale")
+    // Mixed origin: one Return + one Sale-to-Inventory + one destination Purchase
+    @Test("Mixed origin items: Return + Sale-to-Inventory + destination Purchase")
     func mixedOriginHop1() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -576,8 +577,10 @@ struct MoveBetweenProjectsExecutionTests {
 
         let returnSets = batch.sets.filter { ($0.fields["type"] as? String) == "Return" }
         let saleSets = batch.sets.filter { ($0.fields["type"] as? String) == "Sale" }
+        let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
         #expect(returnSets.count == 1)
-        #expect(saleSets.count == 2)
+        #expect(saleSets.count == 1)
+        #expect(purchaseSets.count == 1)
 
         // Return covers only i1 (the from-inventory item)
         let returnItemIds = returnSets[0].fields["itemIds"] as? [String] ?? []
@@ -588,8 +591,8 @@ struct MoveBetweenProjectsExecutionTests {
         let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
         #expect(toInventoryItemIds == ["i2"])
 
-        // Destination Sale covers both items
-        let toDest = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!
+        // Destination Purchase covers both items
+        let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!
         let toDestItemIds = toDest.fields["itemIds"] as? [String] ?? []
         #expect(Set(toDestItemIds) == Set(["i1", "i2"]))
     }
@@ -890,7 +893,7 @@ struct InventoryLabelTests {
 @Suite("sellToProject / returnToInventory / moveBetweenProjects — custom inventoryLabel")
 struct InventoryLabelPassthroughTests {
 
-    @Test("sellToProject writes custom source label on the Sale transaction")
+    @Test("sellToProject writes custom source label on the Purchase transaction")
     func sellToProjectCustomLabel() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
@@ -904,8 +907,8 @@ struct InventoryLabelPassthroughTests {
             inventoryLabel: "1584 Design Inventory"
         )
 
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
-        #expect(sale?["source"] as? String == "1584 Design Inventory")
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }?.fields
+        #expect(purchase?["source"] as? String == "1584 Design Inventory")
     }
 
     @Test("sellToProject defaults to 'Business Inventory' when label not provided")
@@ -921,8 +924,8 @@ struct InventoryLabelPassthroughTests {
             accountId: acct
         )
 
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
-        #expect(sale?["source"] as? String == "Business Inventory")
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }?.fields
+        #expect(purchase?["source"] as? String == "Business Inventory")
     }
 
     @Test("returnToInventory writes custom source label on the Return transaction")
@@ -961,9 +964,9 @@ struct InventoryLabelPassthroughTests {
         )
 
         let ret = batch.sets.first { ($0.fields["type"] as? String) == "Return" }?.fields
-        let sale = batch.sets.first { ($0.fields["type"] as? String) == "Sale" }?.fields
+        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }?.fields
         #expect(ret?["source"] as? String == "1584 Design Inventory")
-        #expect(sale?["source"] as? String == "1584 Design Inventory")
+        #expect(purchase?["source"] as? String == "1584 Design Inventory")
     }
 }
 

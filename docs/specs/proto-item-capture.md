@@ -1,14 +1,14 @@
 # Proto Item Capture
 Status: new
-Last updated: 2026-05-18
+Last updated: 2026-05-21
 
-User-facing name: **Item Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Draft" or "Item Drafts".
+User-facing name: **Item Quick Draft**. The code/data model uses `ProtoItem`; UI copy should use "Item Quick Draft" or "Item Quick Drafts".
 
 ## Summary
 
-Proto item capture lets a designer record a physical object quickly before all item details are known. A proto item is a persistent photo group plus lightweight context. It is not a real `Item` yet and does not affect project budgets, inventory value, transactions, invoices, or reports until it is resolved.
+Proto item capture lets a designer record a physical object quickly before all item details are known. A proto item is a persistent photo group plus lightweight context. It is not a real `Item` yet and does not affect project budgets, inventory value, transactions, invoices, or reports until it is converted.
 
-The goal is to make the field workflow simple: capture the object now, resolve the business data later.
+The goal is to make the field workflow simple: capture the object now, convert the business data later.
 
 ## Problem
 
@@ -18,18 +18,16 @@ The current item flow asks for too much too early. It treats item creation as a 
 
 ## Core Concept
 
-A **ProtoItem** is the data model for an item draft: a draft capture record for one physical object or one intended line item.
+A **ProtoItem** is the data model for an item quick draft: a draft capture record for one physical object or one intended line item.
 
 It can contain:
 
 - one or more photos of the object
 - one or more photos of the tag, price label, SKU, or packaging
+- an optional quick name/label for the capture
 - optional project context
-- optional inventory/source hint
-- optional destination hint
-- optional notes
 - optional extracted text/OCR metadata in a later phase
-- resolution state
+- conversion state
 
 It cannot contain:
 
@@ -38,7 +36,7 @@ It cannot contain:
 - sale/return transaction impact
 - canonical item lineage
 
-Those belong to real `Item` and `Transaction` records after resolution.
+Those belong to real `Item` and `Transaction` records after conversion.
 
 ## Capture Principle
 
@@ -46,7 +44,9 @@ At capture time, ask only what the designer already knows.
 
 At review time, ask what the business needs.
 
-This means capture should not require price, vendor, tax, budget category, SKU, transaction, project price, or final item name. It should prioritize repeated capture speed: photo, tag photo, save, next.
+This means capture should not require price, vendor, tax, budget category, SKU, transaction, project price, or final item details. It should prioritize repeated capture speed: optional quick name, photo, tag photo, save, next.
+
+The add flow is photo-first with only one optional text field: a quick name/label. When the user taps add for an Item Quick Draft, the app shows the lightweight draft form and lets the user add photos from camera or photo library. The user must be able to select multiple photos from the library and take multiple camera photos before returning to the form. Source, notes, SKU, vendor, category, price, and other item metadata are collected later during conversion, when the draft is converted into or merged with a real `Item`.
 
 ## Entry Points
 
@@ -54,7 +54,7 @@ Item drafts should be visible where they were captured, not only in a review que
 
 Across contexts, the **Items** surface is the canonical place for item-like work. If a context has both unfinished captures and real items, the Items surface should expose the same two sub-areas:
 
-- **Item Drafts**: unresolved `ProtoItem` records.
+- **Item Quick Drafts**: unconverted `ProtoItem` records.
 - **Items**: real `Item` records.
 
 This keeps the navigation vocabulary consistent. Users should learn that "Items" contains both drafts and finished items, while "Needs Review" means "work that needs attention."
@@ -65,7 +65,6 @@ When the designer is in a project and adds a proto item:
 
 - `projectId` is set to the current project.
 - The capture is treated as intended for that project.
-- The designer can optionally mark "from inventory" if the item should be sold from business inventory into this project.
 
 This handles the common workflow: "I am unloading or installing items for this project."
 
@@ -75,7 +74,6 @@ When the designer is in business inventory and adds a proto item:
 
 - `projectId` is null.
 - The capture belongs to business inventory.
-- The designer can optionally set an intended destination project.
 
 This handles: "We bought this, but it will probably go to Sandra later."
 
@@ -85,60 +83,79 @@ Transaction-scoped capture is allowed but should not be the primary flow. If a p
 
 - `candidateTransactionId` is set.
 - `projectId` may be inherited from the transaction if present.
-- The proto item still remains separate from real items until resolved.
+- The proto item still remains separate from real items until converted.
 
 This replaces the narrow ephemeral "create items from images" workflow with persistent capture groups.
 
 ## Contextual Visibility
 
-Unresolved item drafts should appear in their owning context before the normal item list. This keeps captured objects discoverable in the place the designer expects to find them.
+Unconverted item quick drafts should appear in their owning context before the normal item list. This keeps captured objects discoverable in the place the designer expects to find them.
 
 ### Project Items
 
-Project-scoped item drafts appear in the Project Items tab under an **Item Drafts** sub-tab. Real project items appear under an **Items** sub-tab.
+Project-scoped item quick drafts appear in the Project Items tab as an **Item Quick Drafts** collapsible section. Real project items remain in a separate **Items** collapsible section on the same scrolling page.
 
-The Item Drafts sub-tab should:
+The Item Quick Drafts section should:
 
-- show only unresolved drafts for the current project
-- use photo-first draft cards or rows, not normal item rows
-- show source hint and notes when present
-- keep item drafts visually distinct from real items
-- offer draft actions such as finish item, merge, sell from inventory, and dismiss
+- show only unconverted drafts for the current project
+- show a photo-first draft row/card with up to 3 thumbnails and a small action menu
+- omit status badges, source/date/note fields, and normal item metadata from the contextual row/card
+- keep item quick drafts visually distinct from real items
+- expose a lightweight **From Inventory** control for marking drafts that came from business inventory
+- offer draft actions from the card menu: convert to item, merge with existing item, and delete draft
 
-The real Items sub-tab should reuse the existing shared item list machinery so search, sort, filter, select, and bulk actions remain scoped to real `Item` records.
+The **From Inventory** control is a conversion hint, not a completed sale. It records that the draft should later be converted through the inventory-to-project flow. Setting this hint must not require price, budget category, transaction, SKU, or full item metadata, and it must not create budget, transaction, sale, or lineage effects by itself.
+
+Tapping **From Inventory** toggles the hint immediately. Do not show a confirmation dialog, because no financial or destructive action has happened. Instead, show a readable toast near the control the user just tapped. The toast should stay visible for about 4 seconds:
+
+- When turned on: "Marked \"From Inventory\""
+- When turned off: "Removed \"From Inventory\" Marker."
+
+The real Items section should reuse the existing shared item list machinery so search, sort, filter, select, and bulk actions remain scoped to real `Item` records. Its section header and control bar should preserve the sticky behavior used by transaction item sections.
+
+Tapping a draft opens an Item Quick Draft detail screen. The detail screen is the edit surface for the draft:
+
+- inline editable quick name
+- editable media gallery: add photos, remove photos, set primary
+- convert to item
+- merge with existing item
+- From Inventory hint, when project-scoped
+- delete draft
+
+There is no separate "Edit Draft" menu item because opening the detail screen is the edit action.
 
 ### Inventory Items
 
-Inventory-scoped item drafts should follow the same pattern when inventory gets the full implementation: Inventory Items exposes **Item Drafts** and **Items** sub-areas rather than hiding drafts only in review.
+Inventory-scoped item quick drafts should follow the same pattern when inventory gets the full implementation: Inventory Items exposes **Item Quick Drafts** and **Items** collapsible sections rather than hiding drafts only in review.
 
 The section should:
 
-- show unresolved drafts with `projectId == null`
+- show unconverted drafts with `projectId == null`
 - surface `intendedProjectId` when present
-- support finishing into inventory, assigning/selling to a project, merging, or dismissing
+- support converting into inventory, assigning/selling to a project, merging with an existing item, or deleting
 
 ### Transaction Detail
 
-Transaction Detail should use a minimal top-level split:
+Transaction Detail remains a single scrolling page. It should not split the transaction into top-level Details and Items tabs.
 
-- **Details**: default tab; keeps the existing non-item transaction sections such as summary, next steps, receipts, other images, notes, details, and transaction audit.
-- **Items**: dedicated item workspace for item drafts, real items, returned items, and sold items.
+Item-related content appears as peer collapsible sections in the main transaction scroll:
 
-Inside the **Items** tab, use sub-tabs:
-
-- **Item Drafts**: unresolved `ProtoItem` records linked to this transaction.
+- **Item Quick Drafts**: unconverted `ProtoItem` records linked to this transaction.
 - **Items**: real `Item` records linked to this transaction.
+- **Returned Items** and **Sold Items**: lineage-derived historical item sections, shown when present.
 
-The sub-tabs keep each object type's controls clear. Item Drafts should not be forced into `SharedItemsList`, and real item search/sort/filter/select controls should remain scoped to real Items.
+The sections keep each object type's controls clear. Item Quick Drafts should not be forced into `SharedItemsList`, and real item search/sort/filter/select controls should remain scoped to real Items.
 
-The Items tab should have one item-related add affordance at the tab level, not separate competing add buttons inside each sub-tab. The add menu can route to:
+Contextual Item Quick Draft rows/cards are photo-first: up to 3 thumbnails plus an action menu, with no badges or metadata fields. Even if a draft has an optional quick name, conversion details belong in the draft workflow, not in the contextual section row. Project-scoped draft cards may show the lightweight **From Inventory** control because that hint is part of capture, not full item metadata.
 
-- Item Draft
+The real Items section should preserve the existing collapsible/sticky section behavior: the Items section header and the SharedItemsList control bar pin together while the user scrolls. The add menu can route to:
+
+- Item Quick Draft
 - New Item
 - Add Existing Items
 - Create from Images, when transaction images are available
 
-This keeps creation centered on the user task: "add something item-related to this transaction," while still keeping draft management and real item management separate.
+This keeps creation centered on the user task: "add something item-related to this transaction," while keeping draft management and real item management separate inside the same transaction document.
 
 ## Data Rules
 
@@ -158,59 +175,62 @@ A proto item requires at least one image or a non-empty note. In normal use, at 
 
 | Status | Meaning |
 |---|---|
-| `open` | Captured but not resolved |
-| `in_review` | A human or assistant is actively resolving it |
-| `resolved` | Converted or merged into an item |
-| `dismissed` | Not an item, duplicate, accidental capture, or intentionally ignored |
+| `open` | Captured but not converted |
+| `in_review` | A human or assistant is actively converting it |
+| `converted` | Converted or merged into an item |
 
 Only `open` and `in_review` proto items appear in active review queues.
 
-### Source and Destination Hints
+### Conversion Metadata
 
-Hints should be simple and reversible:
+Source, destination, SKU, vendor, category, price, notes, and candidate matches are conversion metadata. They are collected when an Item Quick Draft is turned into a real item, merged with an item, or routed through the inventory-to-project flow. They should not be requested in the initial photo capture flow.
+
+Conversion hints should be simple and reversible:
 
 | Field | Meaning |
 |---|---|
 | `projectId` | Project the capture is currently associated with. Null means inventory/unassigned. |
 | `intendedProjectId` | Destination project hint for an inventory capture. |
-| `sourceHint` | One of `unknown`, `client_purchase`, `business_purchase`, `from_inventory`. |
+| `sourceHint` | One of `unknown`, `client_purchase`, `business_purchase`, `from_inventory`. `from_inventory` may be set by the card-level **From Inventory** control. |
 | `candidateTransactionId` | Possible matching transaction. Not authoritative. |
-| `candidateItemId` | Possible matching item. Not authoritative until resolved. |
+| `candidateItemId` | Possible matching item. Not authoritative until converted. |
 
 Hints never create budget or transaction effects by themselves.
 
-## Resolution
+## Conversion
 
-A proto item is resolved by one of these actions:
+An Item Quick Draft is converted by one of these actions:
 
 ### Create New Item
 
 The proto item's photos and context are used to create a new `Item`.
 
-If the proto item is project-scoped, resolution must choose or create a valid project transaction/category before the item becomes budget-impacting. If the proto item is inventory-scoped, the new item is created in inventory with `projectId == null` and `budgetCategoryId == null`.
+If the proto item is project-scoped, conversion must choose or create a valid project transaction/category before the item becomes budget-impacting. If the proto item is inventory-scoped, the new item is created in inventory with `projectId == null` and `budgetCategoryId == null`.
 
-### Merge Into Existing Item
+The convert flow reuses the normal item creation flow seeded with the draft's quick name and photos. After the item is created, the proto item is marked `converted` with `convertedItemId`.
+
+### Merge with Existing Item
 
 The proto item's photos, notes, and any extracted metadata are attached to an existing `Item`.
 
 This is the preferred flow when receipt/email parsing has already created skeletal items with SKU and price. A reviewer can search or filter by SKU, pick the matching item, and merge the captured photos into it.
 
-### Sell From Inventory To Project
+### Convert From Inventory To Project
 
-If a project-scoped proto item is marked `sourceHint == from_inventory`, resolution should route through the existing sell-to-project mechanism:
+If a project-scoped proto item is marked **From Inventory**, conversion should route through the existing inventory-to-project mechanism:
 
 1. reviewer selects the matching inventory item or creates one
 2. reviewer selects the destination project/category if not already known
-3. app creates the normal per-batch Sale transaction
-4. proto item is marked resolved and linked to the resulting item
+3. app creates the normal per-batch Purchase-from-inventory transaction
+4. proto item is marked converted and linked to the resulting item
 
-### Dismiss
+### Delete Draft
 
-If the capture is accidental, duplicate, or not needed, it can be dismissed. Dismissal does not delete image data immediately unless the user explicitly deletes it; this leaves an audit-friendly recovery path.
+If the capture is accidental, duplicate, or not needed, it can be deleted. Deleting a draft removes the proto item and its media.
 
 ## Review Queue
 
-Proto items should also appear in the Needs Review area as a first-class review type. Needs Review is the global workbench for finding and resolving unresolved drafts across the account; it is not the only place item drafts live.
+Proto items should also appear in the Needs Review area as a first-class review type. Needs Review is the global workbench for finding and converting unconverted drafts across the account; it is not the only place item quick drafts live.
 
 The queue should group by:
 
@@ -222,10 +242,10 @@ The queue should group by:
 Each row/card should show the image group, capture context, and the next likely action:
 
 - Create item
-- Merge with item
+- Merge with Existing Item
 - Match receipt/transaction
-- Sell from inventory
-- Dismiss
+- Convert From Inventory
+- Delete draft
 
 ## AI And Automation
 
@@ -239,7 +259,7 @@ The app should be useful with a human reviewer doing the matching manually. Late
 - suggested merge targets
 - confidence labels
 
-Automated suggestions should never silently resolve proto items in v1. A human confirms the merge/create/sell action.
+Automated suggestions should never silently convert proto items in v1. A human confirms the create/merge/from-inventory action.
 
 ## Relationship To Existing Items
 
@@ -250,18 +270,18 @@ This protects existing invariants:
 - inventory items still have `projectId == null` and `budgetCategoryId == null`
 - project items still need a real transaction/category relationship
 - item counts continue to mean real items
-- reports and invoices ignore unresolved captures
+- reports and invoices ignore unconverted captures
 
 ## Relationship To Transactions
 
 Proto items may point at candidate transactions, but transactions do not own proto items as embedded children. The transaction is financial evidence; the proto item is physical evidence. Review connects them.
 
-If a proto item resolves into a transaction-created item, the resulting `Item` follows normal transaction membership rules.
+If a proto item converts into a transaction-created item, the resulting `Item` follows normal transaction membership rules.
 
 ## Open Questions
 
 - Should proto item images be stored using the same attachment uploader and storage path as item images, or under a separate `protoItems` path?
 - Should a proto item support multiple quantities, or should repeated physical objects be captured as separate proto items?
-- Should `sourceHint` be a required quick toggle, or optional metadata hidden behind a secondary control?
+- Should **From Inventory** be a persistent visible control on every project-scoped quick draft card, or only appear behind the card action menu?
 - What is the exact UX for selecting an existing skeletal item during merge?
 - Should OCR run immediately after capture on-device, or only when the reviewer opens the queue?

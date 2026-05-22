@@ -13,7 +13,7 @@ Last updated: 2026-05-18
 ## Feature Areas
 
 ### Sale Transactions & Inventory (Per-Batch Redesign)
-- [new] [Sale Transactions](sale-transactions.md) — **Active.** Per-batch sale transactions: every user sell action creates one new immutable Sale transaction. Replaces the canonical-sale aggregator model.
+- [new] [Inventory Movement Transactions](sale-transactions.md) — **Active.** Per-batch inventory movement transactions: inventory → project writes an immutable Purchase; project → inventory acquisition writes an immutable Sale. Replaces the canonical-sale aggregator model.
 - [new] [Inventory as a Store](inventory-as-store.md) — **Active.** Conceptual model: business inventory is treated like any vendor/store. Items in inventory have `budgetCategoryId == null`. Project → inventory is a Return, not a Sale.
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 

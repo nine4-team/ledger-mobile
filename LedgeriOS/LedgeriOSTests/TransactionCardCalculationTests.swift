@@ -69,6 +69,40 @@ struct TransactionCardCalculationTests {
         #expect(badges[0].color == BrandColors.primary)
     }
 
+    @Test("Legacy canonical sale with category shows Purchase badge")
+    func badgeItemsLegacyCanonicalCategoryPurchase() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .sale,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: true,
+            status: nil,
+            isCanonicalInventorySale: true,
+            inventorySaleDirection: nil,
+            budgetCategoryId: "storage-receiving"
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
+        #expect(badges[0].color == BrandColors.primary)
+    }
+
+    @Test("Legacy sale-shaped purchase does not require canonical flag")
+    func badgeItemsLegacySaleCategoryPurchaseWithoutCanonicalFlag() {
+        let badges = TransactionCardCalculations.badgeItems(
+            transactionType: .sale,
+            reimbursementType: nil,
+            hasEmailReceipt: false,
+            isComplete: true,
+            status: nil,
+            isCanonicalInventorySale: nil,
+            inventorySaleDirection: nil,
+            budgetCategoryId: "storage-receiving"
+        )
+        #expect(badges.count == 1)
+        #expect(badges[0].text == "Purchase")
+        #expect(badges[0].color == BrandColors.primary)
+    }
+
     @Test("Canonical project-to-business sale keeps Sale badge")
     func badgeItemsCanonicalProjectToBusiness() {
         let badges = TransactionCardCalculations.badgeItems(

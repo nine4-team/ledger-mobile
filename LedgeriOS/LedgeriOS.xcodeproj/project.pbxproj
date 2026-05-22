@@ -118,6 +118,7 @@
 		812FF2207D742F67E3870934 /* ProjectPreferencesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE461E5CE01EC26784E658E /* ProjectPreferencesService.swift */; };
 		828FD8B1F71867C487CF442D /* AmazonInvoiceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A77552797A86EF385887EC1 /* AmazonInvoiceParser.swift */; };
 		82E2369EAFDA2C4773AF0CC0 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */; };
+		IQD000010000000000000002 /* ItemQuickDraftDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = IQD000010000000000000001 /* ItemQuickDraftDetailView.swift */; };
 		830E8B9FF4788FC87716BD3A /* SelectableImageGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75995C85549BD0E5672D1941 /* SelectableImageGrid.swift */; };
 		83144D18B8B910BBDA753FAE /* TransactionCRUDIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC22444E1A1B5E94733132F /* TransactionCRUDIntegrationTests.swift */; };
 		833C5EE78B4597D084EB4D6C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC603170450B281DD69B33BC /* SettingsView.swift */; };
@@ -509,6 +510,7 @@
 		AAE5748E2943183F32FE6124 /* UsersView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UsersView.swift; sourceTree = "<group>"; };
 		AF876F4BCCF157A3367AC517 /* BatchWriting.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BatchWriting.swift; sourceTree = "<group>"; };
 		AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
+		IQD000010000000000000001 /* ItemQuickDraftDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemQuickDraftDetailView.swift; sourceTree = "<group>"; };
 		B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCategoriesService.swift; sourceTree = "<group>"; };
 		B03AED92E32EB085437B6F76 /* Item.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		2F31C8097A284B69A32DF100 /* ProtoItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProtoItem.swift; sourceTree = "<group>"; };
@@ -774,6 +776,7 @@
 				F6C8D790E231E5FEA05A2BA5 /* TransactionDetailView.swift */,
 				9742FB86A5C2560412082DDB /* TransactionAuditPanel.swift */,
 				AFEA6071A8A08862D6ABC54E /* ItemDetailView.swift */,
+				IQD000010000000000000001 /* ItemQuickDraftDetailView.swift */,
 				7BF4222455FCC3471031DA93 /* SpacesTabView.swift */,
 				NT0002010000000000000001 /* NotesTabView.swift */,
 				4745C15BA2924A183A82E249 /* ItemsTabView.swift */,
@@ -1657,6 +1660,7 @@
 				C65BA390C7A34284075003F2 /* BudgetCategoryManagementView.swift in Sources */,
 				5E5F53EA937468D990B8E42F /* SpaceTemplateManagementView.swift in Sources */,
 				82E2369EAFDA2C4773AF0CC0 /* ItemDetailView.swift in Sources */,
+				IQD000010000000000000002 /* ItemQuickDraftDetailView.swift in Sources */,
 				95F800429BA14C57864C0584 /* SpacesTabView.swift in Sources */,
 				NT0001010000000000000001 /* NotesTabView.swift in Sources */,
 				F1A8091E7D2EAF253BF66A93 /* ItemsTabView.swift in Sources */,

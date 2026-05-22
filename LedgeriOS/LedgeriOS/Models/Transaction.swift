@@ -83,14 +83,19 @@ struct Transaction: Codable, Identifiable, Hashable {
     }
 
     /// True for transactions that move items between business inventory and
-    /// a project: any Sale (per-batch or legacy canonical, both directions,
-    /// including 2-hop second hops) and Returns whose source is the inventory
-    /// label. Vendor returns are excluded — they carry a real RMA receipt.
+    /// a project: inventory-labeled Purchases (inventory → project), any Sale
+    /// (project → inventory acquisition or legacy canonical), and Returns
+    /// whose source is the inventory label. Vendor returns are excluded — they
+    /// carry a real RMA receipt.
     ///
     /// The inventory-source signal is the `" Inventory"` suffix, which
     /// `InventoryOperationsService.inventoryLabel(for:)` always appends.
     var isInventoryMovement: Bool {
         if transactionType == .sale { return true }
+        if transactionType == .purchase,
+           let src = source, src.hasSuffix(" Inventory") {
+            return true
+        }
         if transactionType == .return,
            let src = source, src.hasSuffix(" Inventory") {
             return true

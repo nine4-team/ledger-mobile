@@ -34,13 +34,13 @@ struct CollapsibleSection<Content: View>: View {
                                 .font(Typography.caption)
                                 .foregroundStyle(badgeColor)
                         }
-
-                        Spacer()
                     }
                     .frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
 
                 if let statusBadge {
                     Badge(text: statusBadge, color: statusBadgeColor)

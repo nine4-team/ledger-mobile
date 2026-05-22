@@ -174,10 +174,10 @@ or { error: { code, message, hint } }</div>
 </details>
 
 <h3>4. Dry-run for destructive ops</h3>
-<p><code>sell_items</code>, <code>return_items</code>, and <code>move_items_between_projects</code> accept <code>dryRun: true</code>. You get the full plan — the new Sale/Return transaction shape, item updates, source-transaction removals, lineage edges — with zero side effects.</p>
+<p><code>sell_items</code>, <code>return_items</code>, and <code>move_items_between_projects</code> accept <code>dryRun: true</code>. You get the full plan — the new Purchase/Return/Sale-to-Inventory transaction shape, item updates, source-transaction removals, lineage edges — with zero side effects.</p>
 <details>
   <summary>How it actually works</summary>
-  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, each tool computes its plan (including the frozen <code>amountCents</code> snapshot and itemIds) and either returns it (<code>dryRun: true</code>) or commits a Firestore batch. Since the per-batch sale redesign, each sell/return produces one new immutable transaction — there are no long-lived aggregators to mutate.</p>
+  <p>In <a href="../../mcp-server/src/tools/inventory-operations.ts">tools/inventory-operations.ts</a>, each tool computes its plan (including the frozen <code>amountCents</code> snapshot and itemIds) and either returns it (<code>dryRun: true</code>) or commits a Firestore batch. Since the per-batch inventory movement redesign, each move produces immutable transaction records — there are no long-lived aggregators to mutate.</p>
 </details>
 <details>
   <summary>Why</summary>
@@ -202,7 +202,7 @@ or { error: { code, message, hint } }</div>
   <tr><td>reconcile_transaction</td><td>Fetch tx + items, compute audit variance, return concrete suggested fixes with tool names.</td></tr>
   <tr><td>create_transaction_with_items</td><td>Atomic batched write — creates a transaction and its items in one call, rolls back on failure.</td></tr>
   <tr><td>triage_inbox</td><td>Ranked incomplete transactions with per-row reasons (needs review > missing category > largest amount).</td></tr>
-  <tr><td>sell_items / return_items / move_items_between_projects</td><td>Per-batch immutable Sale transactions + lineage edges + dryRun preview. Each sell creates one new Sale doc (auto-ID); returns to inventory create a Return doc with source: "Business Inventory"; project-to-project moves emit both in one batch.</td></tr>
+  <tr><td>sell_items / return_items / move_items_between_projects</td><td>Per-batch immutable inventory movement transactions + lineage edges + dryRun preview. Inventory to project creates a Purchase doc (auto-ID); project-originated items acquired into inventory create a Sale doc; returns to inventory create a Return doc with source: "Business Inventory"; project-to-project moves emit the required hops in one batch.</td></tr>
 </table>
 
 <details>

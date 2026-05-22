@@ -68,7 +68,7 @@ struct ModelCodableTests {
         protoItem.projectId = "project1"
         protoItem.captureContext = .project
         protoItem.status = .open
-        protoItem.sourceHint = .purchasedByBusiness
+        protoItem.sourceHint = .businessPurchase
         protoItem.notes = "Blue fish with tag"
         protoItem.photos = [
             AttachmentRef(url: "offline://upload-1", isUploading: true),
@@ -86,7 +86,7 @@ struct ModelCodableTests {
         #expect(dict["projectId"] as? String == "project1")
         #expect(dict["captureContext"] as? String == "project")
         #expect(dict["status"] as? String == "open")
-        #expect(dict["sourceHint"] as? String == "purchased_by_business")
+        #expect(dict["sourceHint"] as? String == "business_purchase")
         #expect(dict["notes"] as? String == "Blue fish with tag")
 
         let photos = dict["photos"] as? [[String: Any]]

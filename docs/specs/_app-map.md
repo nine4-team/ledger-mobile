@@ -22,13 +22,13 @@ Ledger is an inventory and transaction management app for design teams. It exist
 
 ### Transaction Structure
 - Projects have one transaction per budget category (e.g., one Furnishings transaction per project that accumulates items over time)
-- Transactions can be purchase transactions (business buys items into inventory) or sale transactions (items sold from inventory to a project)
+- Transactions can be purchase transactions (business buys items into inventory, or a project buys items from inventory), return transactions, or Sale-to-Inventory transactions (business acquires project-originated items into inventory)
 - Categories come in two types: **itemized** (individual items tracked with detail — furnishings, accessories, additional requests, mattresses) and **non-itemized/expense** (costs logged at transaction level — install, fuel, delivery). [Full category list needs discovery]
 
 ### Item Entry (Current — Being Redesigned)
 - **Path A (being removed for itemized categories):** Items added directly to a project, marked as "business purchased, client owes"
 - **Path B (becoming the standard for itemized categories):** Items enter inventory via purchase transaction, then sold/moved to a project
-- **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then resolved later into real items, existing receipt-created items, or inventory sales. See `proto-item-capture.md`.
+- **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then converted later into real items, existing receipt-created items, or inventory-to-project flows. See `proto-item-capture.md`.
 - Non-itemized expenses currently [needs discovery — unclear how these are handled today]
 
 ### Invoicing (Current)
@@ -37,11 +37,11 @@ Ledger is an inventory and transaction management app for design teams. It exist
 - Invoices are downloaded and attached to external payment software for collection
 - No item-level billing status exists today
 
-### Sale Transaction Source (Inventory → Project)
-- When items are sold from inventory to a project, a sale transaction is created in the project
-- **Current state:** The source field on these sale transactions is **blank** (empty string)
-- **Transaction IDs** follow the pattern `SALE_[projectId]_business_to_project_[categoryId]` or `SALE_[projectId]_project_to_business_[categoryId]` — structured but not human-readable
-- **purchasedBy** field is also blank on sale transactions
+### Inventory Movement Source (Inventory → Project)
+- When items are sold from inventory to a project, a Purchase-from-inventory transaction is created in the project
+- **Historical state:** The source field on legacy sale transactions was **blank** (empty string)
+- **Legacy transaction IDs** follow the pattern `SALE_[projectId]_business_to_project_[categoryId]` or `SALE_[projectId]_project_to_business_[categoryId]` — structured but not human-readable
+- **purchasedBy** field may also be blank on historical inventory movement transactions
 - **Being changed:** Source should be populated with "[Business Name] Inventory" or "Business Inventory" — see inventory-source-naming.md
 
 ### Who Purchased

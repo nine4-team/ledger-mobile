@@ -69,13 +69,13 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
 | transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"` |
 | status | string, nullable | One of: `"pending"`, `"completed"`, `"canceled"` |
-| source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Sale transactions and return-to-inventory transactions use the literal `"Business Inventory"`.** |
+| source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Inventory movement transactions use the inventory label (for example `"Business Inventory"`).** |
 | transactionDate | string, nullable | Date of the transaction (stored as a string, not a timestamp) |
 | itemIds | array of string, nullable | **CANONICAL link to items.** List of Item document IDs associated with this transaction |
 | notes | string, nullable | |
 | ~~isCanceled~~ | ~~boolean~~ | **Removed.** Use `status == "canceled"` instead. Canceled transactions contribute $0 to all budget calculations |
-| isCanonicalInventorySale | boolean, nullable | **LEGACY.** True only on legacy canonical sale transactions written before the per-batch redesign. New per-batch sales never set this flag. See [canonical-sales.md](canonical-sales.md). |
-| inventorySaleDirection | string, nullable | **LEGACY.** Only set when `isCanonicalInventorySale` is true. New per-batch sales have no direction (sales only go business → project). |
+| isCanonicalInventorySale | boolean, nullable | **LEGACY.** True only on legacy canonical sale transactions written before the per-batch redesign. New per-batch inventory movements never set this flag. See [canonical-sales.md](canonical-sales.md). |
+| inventorySaleDirection | string, nullable | **LEGACY.** Only set when `isCanonicalInventorySale` is true. New per-batch inventory movements derive direction from transaction shape. |
 | isCanonicalInventory | boolean, nullable | Legacy flag for older inventory operations |
 | canonicalKind | string, nullable | Legacy kind classifier |
 | ~~needsReview~~ | ~~boolean~~ | **Removed.** Replaced by `isComplete`. |
@@ -97,7 +97,7 @@ A financial event: a purchase, return, sale, or inventory transfer.
 
 #### Sale and Return-to-Inventory Immutability
 
-**Per-batch Sale transactions** (the new model — `type: "Sale"` with no `isCanonicalInventorySale` flag) and **Return-to-Inventory transactions** (`type: "Return"` with `source: "Business Inventory"`) are **immutable after creation** for their shape fields:
+**Per-batch inventory movement transactions** (inventory → project `type: "Purchase"` with an inventory source; project → inventory acquisition `type: "Sale"` with no `budgetCategoryId`; return-to-inventory `type: "Return"` with an inventory source) are **immutable after creation** for their shape fields:
 
 - `type`
 - `source`
@@ -174,9 +174,9 @@ Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-manage
 
 **Path:** `accounts/{accountId}/protoItems/{protoItemId}`
 
-A persistent capture group for a physical object that is not ready to become a real `Item` yet. Proto items are photo-first intake records used for field capture and later review. They do not affect budgets, inventory value, item counts, transactions, invoices, reports, or lineage until resolved.
+A persistent capture group for a physical object that is not ready to become a real `Item` yet. Proto items are photo-first intake records used for field capture and later conversion. They do not affect budgets, inventory value, item counts, transactions, invoices, reports, or lineage until converted.
 
-User-facing UI should call these **Item Drafts**. Unresolved drafts are shown in their owning context first: project drafts in project context, inventory drafts in inventory context, and transaction-linked drafts in Transaction Detail's `Items > Item Drafts` sub-tab. Needs Review is an additional global cleanup queue, not the only place drafts are visible.
+User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are shown in their owning context first: project drafts in the Project Items tab's Item Quick Drafts section, inventory drafts in inventory context, and transaction-linked drafts in Transaction Detail's Item Quick Drafts section. Needs Review is an additional global cleanup queue, not the only place drafts are visible.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
@@ -185,28 +185,27 @@ User-facing UI should call these **Item Drafts**. Unresolved drafts are shown in
 | projectId | string, nullable | FK to Project. Project context for the capture. Null means inventory/unassigned. |
 | intendedProjectId | string, nullable | FK to Project. Destination hint for inventory captures intended for a project. |
 | candidateTransactionId | string, nullable | FK to Transaction. Possible matching transaction; not authoritative. |
-| candidateItemId | string, nullable | FK to Item. Possible matching item; not authoritative until resolved. |
-| resolvedItemId | string, nullable | FK to Item. Set when status becomes `resolved`. |
-| status | string | One of: `"open"`, `"in_review"`, `"resolved"`, `"dismissed"`. Defaults to `"open"`. |
-| sourceHint | string, nullable | One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. |
-| images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image or note is required. |
-| notes | string, nullable | Free-text capture/reviewer notes |
+| candidateItemId | string, nullable | FK to Item. Possible matching item; not authoritative until converted. |
+| convertedItemId | string, nullable | FK to Item. Set when status becomes `"converted"`. |
+| name | string, nullable | Optional quick capture label. Not a finalized item name until conversion. |
+| status | string | One of: `"open"`, `"in_review"`, `"converted"`. Defaults to `"open"`. |
+| sourceHint | string, nullable | Conversion hint. One of: `"unknown"`, `"client_purchase"`, `"business_purchase"`, `"from_inventory"`. `from_inventory` may be set by the card-level **From Inventory** control on project-scoped drafts. |
+| images | array of AttachmentRef | Object, tag, SKU, price, packaging, or supporting photos. At least one image is required for normal capture. |
+| notes | string, nullable | Reviewer/conversion notes. Not collected in the initial photo capture flow. |
 | extractedText | string, nullable | OCR text from images. Optional; may be added by later automation. |
 | extractedMeta | map, nullable | Optional structured extraction, such as candidate SKU, price, vendor, or confidence values. |
 | createdBy | string, nullable | Firebase Auth UID |
 | updatedBy | string, nullable | Firebase Auth UID |
-| resolvedBy | string, nullable | Firebase Auth UID |
-| dismissedBy | string, nullable | Firebase Auth UID |
+| convertedBy | string, nullable | Firebase Auth UID |
 | createdAt | timestamp | |
 | updatedAt | timestamp | |
-| resolvedAt | timestamp, nullable | |
-| dismissedAt | timestamp, nullable | |
+| convertedAt | timestamp, nullable | |
 
-**Validation:** A proto item requires at least one image or a non-empty note. In normal capture UX, at least one image is expected.
+**Validation:** A proto item requires at least one image in the normal capture UX. The capture flow may collect an optional quick name/label. Metadata such as source, notes, SKU, vendor, category, and price is collected during conversion, when the draft becomes or merges into a real item. The **From Inventory** hint is allowed at the card/detail level because it records capture intent only; it does not create item, budget, transaction, sale, or lineage effects.
 
-**Resolution:** A proto item is resolved by creating a new item, merging into an existing item, or routing through the sell-from-inventory flow. Resolution sets `status: "resolved"` and `resolvedItemId` when an item exists. Dismissal sets `status: "dismissed"` and does not create item, transaction, or lineage effects.
+**Conversion:** A proto item is converted by creating a new item, merging with an existing item, or routing through the inventory-to-project flow when marked **From Inventory**. Conversion sets `status: "converted"` and `convertedItemId` when an item exists. Unwanted drafts are deleted.
 
-**Invariant:** unresolved proto items are never queried as items and never included in item, budget, invoice, transaction completeness, or report calculations.
+**Invariant:** unconverted proto items are never queried as items and never included in item, budget, invoice, transaction completeness, or report calculations.
 
 ---
 
@@ -493,7 +492,7 @@ Embedded within Checklist.
 >
 > Card and list views use `transaction.itemIds` for counts. Detail views must use the same source. This has caused bugs when the wrong lookup direction was used.
 >
-> **Per-batch sale immutability:** under the per-batch sale model (see [sale-transactions.md](sale-transactions.md)), `transaction.itemIds` is set once at sale creation and never mutated. The same applies to Return-to-Inventory transactions (with the documented coalescing exception). This makes `itemIds` reliably authoritative for these transaction types.
+> **Per-batch inventory movement immutability:** under the per-batch inventory movement model (see [sale-transactions.md](sale-transactions.md)), `transaction.itemIds` is set once at movement creation and never mutated. The same applies to Return-to-Inventory transactions (with the documented coalescing exception). This makes `itemIds` reliably authoritative for these transaction types.
 
 ### Relationships Table
 
@@ -504,11 +503,11 @@ Embedded within Checklist.
 | Item | belongs to | Project | N:1 | `item.projectId` | Null means business inventory. See Scope Semantics |
 | Item | belongs to | Space | N:1 | `item.spaceId` | Null means item is not in any space |
 | Item | belongs to | BudgetCategory | N:1 | `item.budgetCategoryId` | **Invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.** Set when an item moves into a project (sell-to-project flow); wiped when an item moves into inventory (return-to-inventory flow). Auto-set from destination transaction on association or reassignment within a project. |
-| ProtoItem | may resolve to | Item | 0:1 | `protoItem.resolvedItemId` | Set only after the capture is resolved into or merged with a real item |
+| ProtoItem | may convert to | Item | 0:1 | `protoItem.convertedItemId` | Set only after the capture is converted into or merged with a real item |
 | ProtoItem | may reference | Project | 0:1 | `protoItem.projectId` | Capture context. Null means inventory/unassigned |
 | ProtoItem | may hint destination | Project | 0:1 | `protoItem.intendedProjectId` | Optional destination hint for inventory captures |
-| ProtoItem | may reference | Transaction | 0:1 | `protoItem.candidateTransactionId` | Candidate match only; not authoritative until resolution creates or updates real item/transaction links |
-| ProtoItem | may reference | Item | 0:1 | `protoItem.candidateItemId` | Candidate merge target only; not authoritative until resolution |
+| ProtoItem | may reference | Transaction | 0:1 | `protoItem.candidateTransactionId` | Candidate match only; not authoritative until conversion creates or updates real item/transaction links |
+| ProtoItem | may reference | Item | 0:1 | `protoItem.candidateItemId` | Candidate merge target only; not authoritative until conversion |
 | Transaction | belongs to | Project | N:1 | `transaction.projectId` | Null is valid for business-inventory-scoped transactions |
 | Transaction | belongs to | BudgetCategory | N:1 | `transaction.budgetCategoryId` | Links transaction spend to a budget category for rollup calculations |
 | Space | belongs to | Project | N:1 | `space.projectId` | Null means business inventory scope |
@@ -607,9 +606,9 @@ function normalizeTransactionAmount(transaction):
             return abs(amount)      // money spent on project
         return amount               // fallback if direction unknown
 
-    # NEW per-batch sales: always +1
+    # NEW per-batch Sale: project-originated item acquired into inventory
     if transaction.transactionType == "sale":
-        return abs(amount)          // money spent on project (one direction only)
+        return -abs(amount)
 
     # Returns (vendor or inventory) subtract
     if transaction.transactionType == "return" OR amount < 0:
@@ -618,7 +617,7 @@ function normalizeTransactionAmount(transaction):
     return amount                   // purchases add to spend
 ```
 
-The dual-read path (legacy canonical sales vs. new per-batch sales) is the intentional cost of preserving historical financial records. Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`.
+The dual-read path (legacy canonical sales vs. new per-batch inventory movements) is the intentional cost of preserving historical financial records. Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.ts) `normalizeSpendAmount`.
 
 **Overall budget computation:**
 
@@ -647,7 +646,7 @@ An entity with a non-null `projectId` belongs to that project. It appears in tha
 An entity with `projectId: null` belongs to **business inventory** -- the account-wide pool not tied to any specific project. This applies to:
 
 - **Items** with `projectId: null`: These are in business inventory (e.g. purchased but not yet allocated to a project, or returned from a project to inventory)
-- **ProtoItems** with `projectId: null`: These are inventory/unassigned captures. They are not inventory items until resolved into real items.
+- **ProtoItems** with `projectId: null`: These are inventory/unassigned captures. They are not inventory items until converted into real items.
 - **Spaces** with `projectId: null`: These are business-inventory spaces (e.g. warehouse, storage unit)
 - **Transactions** with `projectId: null`: These are business-level transactions not tied to a project
 
@@ -655,7 +654,7 @@ An entity with `projectId: null` belongs to **business inventory** -- the accoun
 
 When an item moves between scopes, its `projectId` and `budgetCategoryId` are updated together to preserve the invariant `(projectId == null) ↔ (budgetCategoryId == null)`:
 
-- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Sale transaction. See [sale-transactions.md](sale-transactions.md).
+- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
 - **Move between projects** (`moveBetweenProjects`): atomic combination of return-to-inventory + sell-to-destination. Two transactions, one batch. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
@@ -672,7 +671,8 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 
 - **Purchases:** Stored as positive. Adds to project spend.
 - **Returns** (vendor or to inventory): Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
-- **Per-batch Sale transactions** (`type == "sale"`, no `isCanonicalInventorySale` flag): Stored as positive. **Adds** to project spend. There is only one direction (business → project); the reverse case is a Return.
+- **Per-batch inventory → project Purchase transactions** (`type == "Purchase"` with an inventory source and `budgetCategoryId` set): Stored as positive. **Adds** to project spend.
+- **Per-batch project → inventory Sale transactions** (`type == "Sale"` with an inventory source and no `budgetCategoryId`): Stored as positive. **Multiplied by -1** in budget calculations. This path is only for project-originated items acquired into inventory.
 - **LEGACY canonical sales, `business_to_project`:** Stored as positive. **Adds** to project spend. Historical only.
 - **LEGACY canonical sales, `project_to_business`:** Stored as positive. **Multiplied by -1** in budget calculations. Historical only.
 - **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `status == "canceled"`.

@@ -36,15 +36,15 @@ The discrepancy traces entirely to the **Furnishings** category, which is the on
 The cached budget summary also includes spend from categories that don't appear on the Finances page:
 
 - **Games and Entertainment**: $125.00 spent in cache (no budget allocated, not shown in Finances). The user confirmed they moved all Games and Entertainment items into Furnishings — there are now zero transactions in this category. But the cache still counts the $125 because it was never recomputed after the recategorization.
-- **Uncategorized**: $2,494.97 spent (not shown in Finances as a visible category). These are 9 items across 2 system-generated "Sale" transactions representing inventory-to-project moves. The items were recategorized to Furnishings at the item level on April 6, 2026, but the synthetic Sale transactions retain `budgetCategoryId: "uncategorized"` because inventory-movement transactions inherit the item's category at the time of the move and don't update when the item is later recategorized. See "Inventory movement category bug" below.
+- **Uncategorized**: $2,494.97 spent (not shown in Finances as a visible category). These are 9 items across 2 legacy system-generated "Sale" transactions representing inventory-to-project moves. The items were recategorized to Furnishings at the item level on April 6, 2026, but the legacy synthetic Sale transactions retain `budgetCategoryId: "uncategorized"` because inventory-movement transactions inherit the item's category at the time of the move and don't update when the item is later recategorized. See "Inventory movement category bug" below.
 - **Additional Requests**: $0 spent on Hyers, but $12,289.65 on Witzenman (has $0 budget, shown in live but contributes to cache)
 
 These hidden amounts inflate the cached total further beyond just the Furnishings gap.
 
 ### Inventory movement category bug
-When items are moved between business inventory and a project (via the "Sale" transaction type), the system generates synthetic transactions with IDs like `SALE_{projectId}_business_to_project_{categoryId}`. The budget category on these transactions is set at the time of the move based on the item's category at that moment. If the item had no category (uncategorized), the synthetic transaction is permanently uncategorized — recategorizing the item later does not update the transaction.
+In legacy canonical-sale data, when items were moved between business inventory and a project, the system generated synthetic transactions with IDs like `SALE_{projectId}_business_to_project_{categoryId}`. The budget category on these transactions was set at the time of the move based on the item's category at that moment. If the item had no category (uncategorized), the synthetic transaction is permanently uncategorized — recategorizing the item later does not update the transaction.
 
-**Confirmed on Hyers**: 9 items totaling $2,494.97 net ($2,509.96 in, $14.99 out) were moved from inventory without a category. Items were recategorized to Furnishings on April 6, 2026, but the Sale transactions still show as uncategorized in the live budget, and the spend does not roll into the Furnishings total.
+**Confirmed on Hyers**: 9 items totaling $2,494.97 net ($2,509.96 in, $14.99 out) were moved from inventory without a category. Items were recategorized to Furnishings on April 6, 2026, but the legacy Sale transactions still show as uncategorized in the live budget, and the spend does not roll into the Furnishings total.
 
 **Items affected** (all now tagged Furnishings at item level, but still uncategorized at transaction level):
 - Black rectangular coffee table ($309.10)
@@ -63,7 +63,7 @@ When items are moved between business inventory and a project (via the "Sale" tr
 - **Itemized category spend calculation differs between cache and live** → Both paths must use the same formula. Need to determine which is correct: the item-cost-based number or the transaction-based number. The transaction-based number is more likely correct since it reflects actual money movement.
 
 ### Inventory movement bug to fix
-- **Synthetic Sale transactions don't update when items are recategorized** → When an item's budget category changes after it was moved from inventory to a project, the system-generated Sale transaction should update to reflect the item's current category. Currently, recategorizing the item has no effect on the transaction, leaving spend permanently orphaned in "uncategorized."
+- **Legacy synthetic Sale transactions don't update when items are recategorized** → When an item's budget category changes after it was moved from inventory to a project under the legacy canonical-sale model, the system-generated Sale transaction does not update to reflect the item's current category. Recategorizing the item has no effect on the transaction, leaving spend permanently orphaned in "uncategorized."
 
 ### Display issue to address
 - **Hidden categories not visible in Finances** → If uncategorized spend and spend in categories with no budget allocation (like Games and Entertainment) count toward the Overall Budget total, they should be visible somewhere in the Finances breakdown. Currently they're phantom spend — included in the total but not shown in any line item, so the category numbers don't add up to the overall.
@@ -72,7 +72,7 @@ When items are moved between business inventory and a project (via the "Sale" tr
 - **Add "Uncategorized" as an option in the budget category filter** (on the Items tab, Transactions tab, and anywhere else categories can be filtered). This lets users quickly find items and transactions that haven't been assigned a budget category, so they can clean them up. Currently there's no way in the UI to surface uncategorized transactions — users have no way to know they exist or to audit them.
 
 ### New feature: "Sale" option in transaction type filter
-- **Add "Sale" as a filter option in the transaction type filter** on the Transactions tab. Sale transactions are system-generated when items move between business inventory and a project. Currently the transaction type filter does not include Sale as an option, so users can't isolate these inventory-movement transactions to review them. The available type options should be: Purchase, Return, Sale, To Inventory.
+- **Expose inventory movement transaction filters** on the Transactions tab. Legacy Sale transactions and new Purchase-from-inventory / Sale-to-Inventory / Return-to-inventory records should be auditable without implying that inventory-to-project moves are `type: "Sale"`. The available type options should include current transaction types plus a clear inventory-movement filter.
 
 ## Impact on Real Projects (Hyers Specifically)
 

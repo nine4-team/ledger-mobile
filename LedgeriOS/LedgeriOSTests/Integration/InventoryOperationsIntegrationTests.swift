@@ -93,7 +93,7 @@ struct InventoryOperationsIntegrationTests {
 
     // MARK: - sellToProject
 
-    @Test("sellToProject — item moves to destination, per-batch Sale created")
+    @Test("sellToProject — item moves to destination, per-batch Purchase created")
     func sellToProjectPerBatch() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
@@ -128,21 +128,21 @@ struct InventoryOperationsIntegrationTests {
         #expect(resultItem.spaceId == nil)
         #expect(resultItem.status == .purchased)
 
-        // Verify: item linked to per-batch Sale (auto-ID, not SALE_ prefix)
-        let saleTxId = try #require(resultItem.transactionId)
-        #expect(!saleTxId.hasPrefix("SALE_"))
+        // Verify: item linked to per-batch Purchase (auto-ID, not SALE_ prefix)
+        let purchaseTxId = try #require(resultItem.transactionId)
+        #expect(!purchaseTxId.hasPrefix("SALE_"))
 
-        // Verify: Sale transaction exists with correct shape
-        let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
-        #expect(rawSale["type"] as? String == "Sale")
-        #expect(rawSale["source"] as? String == "Business Inventory")
-        #expect(rawSale["projectId"] as? String == destProjectId)
-        #expect(rawSale["budgetCategoryId"] as? String == categoryId)
-        #expect(rawSale["status"] as? String == "completed")
-        #expect(rawSale["isComplete"] as? Bool == true)
+        // Verify: Purchase transaction exists with correct shape
+        let rawPurchase = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
+        #expect(rawPurchase["type"] as? String == "Purchase")
+        #expect(rawPurchase["source"] as? String == "Business Inventory")
+        #expect(rawPurchase["projectId"] as? String == destProjectId)
+        #expect(rawPurchase["budgetCategoryId"] as? String == categoryId)
+        #expect(rawPurchase["status"] as? String == nil)
+        #expect(rawPurchase["isComplete"] as? Bool == true)
         // No canonical sale fields
-        #expect(rawSale["isCanonicalInventorySale"] == nil)
-        #expect(rawSale["inventorySaleDirection"] == nil)
+        #expect(rawPurchase["isCanonicalInventorySale"] == nil)
+        #expect(rawPurchase["inventorySaleDirection"] == nil)
 
         // Verify: source transaction updated
         let resultSourceTx: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: sourceTxId))
@@ -225,13 +225,13 @@ struct InventoryOperationsIntegrationTests {
     // MARK: - E4: Price change after sale
 
     /// E4: Updating an item's purchasePriceCents after a sale must NOT change
-    /// the Sale transaction's amountCents. Verifies `onItemPriceChanged`'s guard.
+    /// the inventory Purchase transaction's amountCents. Verifies `onItemPriceChanged`'s guard.
     ///
     /// Requires the **Functions emulator** in addition to Firestore. Boot with:
     /// ```
     /// firebase emulators:start --config firebase.test.json
     /// ```
-    @Test("E4: price change on sold item does not mutate Sale tx amountCents")
+    @Test("E4: price change on moved item does not mutate Purchase tx amountCents")
     func priceChangeDoesNotMutateSaleAmount() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
@@ -246,7 +246,7 @@ struct InventoryOperationsIntegrationTests {
         )
         try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
 
-        // E1 precondition: sell the item to create a Sale transaction
+        // E1 precondition: move the item to create a Purchase transaction
         try await service.sellToProject(
             items: [item],
             destinationProjectId: destProjectId,
@@ -254,10 +254,10 @@ struct InventoryOperationsIntegrationTests {
             accountId: accountId
         )
 
-        let itemAfterSale: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
-        let saleTxId = try #require(itemAfterSale.transactionId)
-        let originalSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
-        let originalAmountCents = try #require(originalSale["amountCents"] as? Int)
+        let itemAfterPurchase: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+        let purchaseTxId = try #require(itemAfterPurchase.transactionId)
+        let originalPurchase = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
+        let originalAmountCents = try #require(originalPurchase["amountCents"] as? Int)
         #expect(originalAmountCents == 12000)
 
         // E4 action: change the item's purchasePriceCents (triggers onItemPriceChanged)
@@ -265,14 +265,14 @@ struct InventoryOperationsIntegrationTests {
             .document("\(itemsPath)/\(itemId)")
             .updateData(["purchasePriceCents": 99999])
 
-        // Wait for the Cloud Function trigger to fire (and short-circuit on Sale tx)
+        // Wait for the Cloud Function trigger to fire (and short-circuit on the frozen Purchase tx)
         try await Task.sleep(nanoseconds: 3_000_000_000) // 3s
 
-        // Verify: Sale tx amountCents is unchanged
-        let saleAfter = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
-        let amountAfter = try #require(saleAfter["amountCents"] as? Int)
+        // Verify: Purchase tx amountCents is unchanged
+        let purchaseAfter = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
+        let amountAfter = try #require(purchaseAfter["amountCents"] as? Int)
         #expect(amountAfter == originalAmountCents,
-                "Sale.amountCents changed from \(originalAmountCents) to \(amountAfter) — onItemPriceChanged guard failed")
+                "Purchase.amountCents changed from \(originalAmountCents) to \(amountAfter) — onItemPriceChanged guard failed")
     }
 
     // MARK: - E6: Offline sell, reconnect
@@ -330,20 +330,20 @@ struct InventoryOperationsIntegrationTests {
         let cachedItem = try cachedSnap.data(as: Item.self)
         #expect(cachedItem.projectId == destProjectId)
         #expect(cachedItem.budgetCategoryId == categoryId)
-        let saleTxId = try #require(cachedItem.transactionId)
+        let purchaseTxId = try #require(cachedItem.transactionId)
 
         // Reconnect — queued writes sync to the server, sellTask's await resolves.
         try await Firestore.firestore().enableNetwork()
         try await sellTask.value
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5s for final sync
 
-        // Server read: confirm the sale actually landed on the emulator (not just cache).
+        // Server read: confirm the purchase actually landed on the emulator (not just cache).
         let serverSnap = try await Firestore.firestore()
-            .document("\(txPath)/\(saleTxId)")
+            .document("\(txPath)/\(purchaseTxId)")
             .getDocument(source: .server)
         #expect(serverSnap.exists)
         let serverFields = try #require(serverSnap.data())
-        #expect(serverFields["type"] as? String == "Sale")
+        #expect(serverFields["type"] as? String == "Purchase")
         #expect(serverFields["projectId"] as? String == destProjectId)
         #expect(serverFields["amountCents"] as? Int == 6000)
     }
@@ -384,20 +384,20 @@ struct InventoryOperationsIntegrationTests {
             #expect(result.status == .purchased)
         }
 
-        // Verify: 1 Sale tx exists for Project A
+        // Verify: 1 Purchase tx exists for Project A
         let item1After: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: item1.id!))
-        let saleTxId = try #require(item1After.transactionId)
-        let rawSale = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
-        #expect(rawSale["type"] as? String == "Sale")
-        #expect(rawSale["source"] as? String == "Business Inventory")
-        #expect(rawSale["projectId"] as? String == projectA)
-        #expect(rawSale["budgetCategoryId"] as? String == catFurnishings)
+        let purchaseTxId = try #require(item1After.transactionId)
+        let rawPurchase = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
+        #expect(rawPurchase["type"] as? String == "Purchase")
+        #expect(rawPurchase["source"] as? String == "Business Inventory")
+        #expect(rawPurchase["projectId"] as? String == projectA)
+        #expect(rawPurchase["budgetCategoryId"] as? String == catFurnishings)
         // amountCents = 12000 + 18000 + 24000 = 54000 (no tax)
-        #expect(rawSale["amountCents"] as? Int == 54000)
-        let saleItemIds = rawSale["itemIds"] as? [String] ?? []
-        #expect(Set(saleItemIds) == Set([item1.id!, item2.id!, item3.id!]))
+        #expect(rawPurchase["amountCents"] as? Int == 54000)
+        let purchaseItemIds = rawPurchase["itemIds"] as? [String] ?? []
+        #expect(Set(purchaseItemIds) == Set([item1.id!, item2.id!, item3.id!]))
         // No canonical sale fields
-        #expect(rawSale["isCanonicalInventorySale"] == nil)
+        #expect(rawPurchase["isCanonicalInventorySale"] == nil)
 
         // ── E2: Return 2 items from Project A to inventory ──
 
@@ -447,20 +447,20 @@ struct InventoryOperationsIntegrationTests {
         #expect(item1Final.projectId == projectB)
         #expect(item1Final.budgetCategoryId == catInstall)
 
-        // Verify: second Sale tx (independent from first)
-        let secondSaleTxId = try #require(item1Final.transactionId)
-        #expect(secondSaleTxId != saleTxId) // different transaction
-        let rawSale2 = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(secondSaleTxId)"))
-        #expect(rawSale2["type"] as? String == "Sale")
-        #expect(rawSale2["projectId"] as? String == projectB)
-        #expect(rawSale2["budgetCategoryId"] as? String == catInstall)
-        #expect(rawSale2["amountCents"] as? Int == 12000)
+        // Verify: second Purchase tx (independent from first)
+        let secondPurchaseTxId = try #require(item1Final.transactionId)
+        #expect(secondPurchaseTxId != purchaseTxId) // different transaction
+        let rawPurchase2 = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(secondPurchaseTxId)"))
+        #expect(rawPurchase2["type"] as? String == "Purchase")
+        #expect(rawPurchase2["projectId"] as? String == projectB)
+        #expect(rawPurchase2["budgetCategoryId"] as? String == catInstall)
+        #expect(rawPurchase2["amountCents"] as? Int == 12000)
 
-        // Verify: original Sale tx unchanged (E1 sale still has its original amountCents)
-        let rawSaleRecheck = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(saleTxId)"))
-        #expect(rawSaleRecheck["amountCents"] as? Int == 54000)
+        // Verify: original Purchase tx unchanged (E1 purchase still has its original amountCents)
+        let rawPurchaseRecheck = try #require(await FirestoreTestHelper.readRaw(documentPath: "\(txPath)/\(purchaseTxId)"))
+        #expect(rawPurchaseRecheck["amountCents"] as? Int == 54000)
 
-        // Verify: lineage edges — at least 6 total (3 sold + 2 returned + 1 sold)
+        // Verify: lineage edges — at least 6 total (3 purchased + 2 returned + 1 purchased)
         let allEdges = try await Firestore.firestore()
             .collection(edgesPath)
             .whereField("itemId", in: [item1.id!, item2.id!, item3.id!])

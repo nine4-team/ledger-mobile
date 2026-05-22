@@ -34,7 +34,7 @@ function createServer(): McpServer {
         "for a teammate. Always prefix with today's date. Example: '4/2 — Moved 3 lighting fixtures from inventory into Witzenman project, client approved selections.' " +
         "If the entity already has notes, append your note on a new line so existing context is preserved. " +
         "This applies to every write operation, not just sales or moves.\n\n" +
-        "SALES AND INVENTORY: Every sell action creates ONE new immutable Sale transaction — no long-lived aggregators. Sale shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Sales always go business → project; returning items to inventory is a Return transaction via return_items. Project→project moves use move_items_between_projects.",
+        "INVENTORY MOVEMENTS: Inventory → project creates ONE new immutable Purchase transaction; project → inventory acquisition creates ONE immutable Sale transaction; returns to inventory create Return transactions. Shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Project→project moves use move_items_between_projects.",
     },
   );
 

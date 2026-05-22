@@ -249,10 +249,10 @@ export const onLineageEdgeCreated = onDocumentCreated(
 
 /**
  * Recompute isComplete for any parent transactions that reference this item
- * when the item's price changes. Sale transactions are intentionally NOT touched:
- * per the per-batch sale redesign, `amountCents` on Sale transactions is a frozen
- * snapshot at creation time and must never be rewritten here. Legacy canonical
- * sales are also frozen historical records. Both are skipped below.
+ * when the item's price changes. Inventory movement transactions are
+ * intentionally NOT touched: their `amountCents` is a frozen snapshot at
+ * creation time and must never be rewritten here. Legacy canonical sales are
+ * also frozen historical records. Both are skipped below.
  */
 export const onItemPriceChanged = onDocumentUpdated(
   'accounts/{accountId}/items/{itemId}',
@@ -271,8 +271,15 @@ export const onItemPriceChanged = onDocumentUpdated(
     const itemId = event.params.itemId as string;
     const db = getFirestore();
 
+    const isFrozenInventoryMovement = (txData: FirebaseFirestore.DocumentData): boolean => {
+      const rawType = (txData.type ?? txData.transactionType ?? null) as string | null;
+      const type = typeof rawType === 'string' ? rawType.trim().toLowerCase() : '';
+      const source = typeof txData.source === 'string' ? txData.source.trim() : '';
+      return type === 'sale' || type === 'return' || (type === 'purchase' && source.endsWith(' Inventory'));
+    };
+
     // Recompute isComplete for parent transactions — only if purchasePriceCents
-    // changed (that's what audit uses). Never touches Sale transactions.
+    // changed (that's what audit uses). Never touches frozen movement docs.
     if (beforePurchase !== afterPurchase) {
       try {
         const parentTxSnapshot = await db
@@ -282,14 +289,10 @@ export const onItemPriceChanged = onDocumentUpdated(
 
         for (const txDoc of parentTxSnapshot.docs) {
           const txData = txDoc.data() ?? {};
-          // Skip Sale transactions: per-batch sales freeze amountCents at creation;
-          // legacy canonical sales (isCanonicalInventorySale == true) are historical
-          // records. Either way, this trigger must not rewrite them.
-          const rawType = (txData.type ?? txData.transactionType ?? null) as string | null;
-          const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
-          if (isSale) {
+          // Skip frozen inventory movement transactions.
+          if (isFrozenInventoryMovement(txData)) {
             console.log(
-              `[onItemPriceChanged] skipping Sale transaction ${txDoc.id} (frozen shape)`
+              `[onItemPriceChanged] skipping frozen inventory movement transaction ${txDoc.id}`
             );
             continue;
           }
@@ -346,10 +349,8 @@ export const onItemPriceChanged = onDocumentUpdated(
           const txItemIds = Array.isArray(txData.itemIds) ? txData.itemIds as string[] : [];
           if (txItemIds.includes(itemId)) continue;
 
-          // Skip Sale transactions: frozen historical records (see parent-branch comment).
-          const rawType = (txData.type ?? txData.transactionType ?? null) as string | null;
-          const isSale = typeof rawType === 'string' && rawType.trim().toLowerCase() === 'sale';
-          if (isSale) continue;
+          // Skip frozen inventory movement transactions.
+          if (isFrozenInventoryMovement(txData)) continue;
 
           const result = await computeIsComplete(db, accountId, srcTxId, txData);
 

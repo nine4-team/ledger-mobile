@@ -43,12 +43,12 @@ Lineage tracking maintains a complete audit trail of item movements across trans
 
 ### 2. Sold (`movementKind: "sold"`)
 
-**Trigger:** Item moves from business inventory into a project via the per-batch sale flow. (Under the per-batch sale model, "sold" only goes one direction; project → inventory is a `returned` edge, not `sold`.)
+**Trigger:** Item moves from business inventory into a project via the per-batch inventory movement flow.
 
 **Semantics:**
 
 - `fromTransactionId`: the transaction the item was previously in (if any — null is valid)
-- `toTransactionId`: the new per-batch Sale transaction
+- `toTransactionId`: the new per-batch Purchase-from-inventory transaction
 - `fromProjectId`: null (item was in business inventory)
 - `toProjectId`: destination project
 

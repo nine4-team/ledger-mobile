@@ -17,10 +17,21 @@ private enum ProjectItemTransactionMode {
 struct NewItemView: View {
     @State private var resolvedContext: ItemCreationContext?
     @State private var selectedProject: Project?
+    private let initialImageRefs: [AttachmentRef]
+    private let onCreated: (([String]) -> Void)?
 
-    init(context: ItemCreationContext? = nil, initialTransactionId: String? = nil) {
+    init(
+        context: ItemCreationContext? = nil,
+        initialTransactionId: String? = nil,
+        initialName: String? = nil,
+        initialImageRefs: [AttachmentRef] = [],
+        onCreated: (([String]) -> Void)? = nil
+    ) {
         self._resolvedContext = State(initialValue: context)
         self._selectedTransactionId = State(initialValue: initialTransactionId)
+        self._name = State(initialValue: initialName ?? "")
+        self.initialImageRefs = initialImageRefs
+        self.onCreated = onCreated
     }
 
     @Environment(ProjectContext.self) private var projectContext: ProjectContext?
@@ -75,7 +86,7 @@ struct NewItemView: View {
 
     private var isValid: Bool {
         guard resolvedContext != nil,
-              ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count)
+              ItemFormValidation.isValidItem(name: name, imageCount: imageDatas.count + initialImageRefs.count)
         else { return false }
         guard !isCreating else { return false }
         if projectId != nil {
@@ -433,6 +444,13 @@ struct NewItemView: View {
 
             if !imageDatas.isEmpty {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
+                    ForEach(Array(initialImageRefs.enumerated()), id: \.offset) { _, attachment in
+                        FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
+                            ProgressView()
+                        }
+                        .frame(width: 70, height: 70)
+                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    }
                     ForEach(Array(imageDatas.enumerated()), id: \.offset) { index, data in
                         ZStack(alignment: .topTrailing) {
                             platformImage(from: data)
@@ -452,6 +470,16 @@ struct NewItemView: View {
                         }
                     }
                 }
+            } else if !initialImageRefs.isEmpty {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: Spacing.sm)], spacing: Spacing.sm) {
+                    ForEach(Array(initialImageRefs.enumerated()), id: \.offset) { _, attachment in
+                        FirebaseImage(url: attachment.url, thumbnailUrl: attachment.thumbnailUrlSm, contentMode: .fill) {
+                            ProgressView()
+                        }
+                        .frame(width: 70, height: 70)
+                        .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                    }
+                }
             }
 
             Button {
@@ -459,7 +487,7 @@ struct NewItemView: View {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle")
-                    Text(imageDatas.isEmpty ? "Add Images" : "Add More Images")
+                    Text(imageDatas.isEmpty && initialImageRefs.isEmpty ? "Add Images" : "Add More Images")
                 }
                 .font(Typography.input)
                 .foregroundStyle(BrandColors.textSecondary)
@@ -473,8 +501,9 @@ struct NewItemView: View {
             }
             .buttonStyle(.plain)
 
-            if !imageDatas.isEmpty {
-                Text("\(imageDatas.count) \(imageDatas.count == 1 ? "image" : "images")")
+            if !imageDatas.isEmpty || !initialImageRefs.isEmpty {
+                let imageCount = imageDatas.count + initialImageRefs.count
+                Text("\(imageCount) \(imageCount == 1 ? "image" : "images")")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
             }
@@ -619,6 +648,7 @@ struct NewItemView: View {
         item.projectPriceCents = parseCents(projectPrice)
         item.marketValueCents = parseCents(marketValue)
         item.transactionId = selectedTransactionId
+        item.images = initialImageRefs.isEmpty ? nil : initialImageRefs
         if projectId != nil, projectTransactionMode == .existing {
             item.budgetCategoryId = selectedTransaction?.budgetCategoryId
         }
@@ -654,6 +684,7 @@ struct NewItemView: View {
                 }
             }
 
+            onCreated?(itemIds)
             dismiss()
 
             enqueueImages(for: itemIds, accountId: accountId)
@@ -672,7 +703,7 @@ struct NewItemView: View {
                 let db = Firestore.firestore()
                 let batch = db.batch()
                 let txRef = db.collection("accounts/\(accountId)/transactions").document()
-                let saleId = txRef.documentID
+                let purchaseId = txRef.documentID
                 let itemRefs = (0..<quantity).map { _ in
                     db.collection("accounts/\(accountId)/items").document()
                 }
@@ -684,7 +715,7 @@ struct NewItemView: View {
                 let today = todayDateString()
 
                 batch.setData([
-                    "type": "Sale",
+                    "type": "Purchase",
                     "source": inventoryLabel,
                     "projectId": destinationProjectId,
                     "budgetCategoryId": categoryId,
@@ -702,7 +733,7 @@ struct NewItemView: View {
                     copy.id = itemRef.documentID
                     copy.projectId = destinationProjectId
                     copy.budgetCategoryId = categoryId
-                    copy.transactionId = saleId
+                    copy.transactionId = purchaseId
                     copy.currentSource = inventoryLabel
                     copy.accountId = accountId
                     if copy.projectPriceCents == nil {
@@ -713,7 +744,7 @@ struct NewItemView: View {
                     itemFields["accountId"] = accountId
                     itemFields["projectId"] = destinationProjectId
                     itemFields["budgetCategoryId"] = categoryId
-                    itemFields["transactionId"] = saleId
+                    itemFields["transactionId"] = purchaseId
                     itemFields["currentSource"] = inventoryLabel
                     itemFields["updatedAt"] = FieldValue.serverTimestamp()
                     batch.setData(itemFields, forDocument: itemRef)
@@ -723,7 +754,7 @@ struct NewItemView: View {
                         "accountId": accountId,
                         "itemId": itemRef.documentID,
                         "toProjectId": destinationProjectId,
-                        "toTransactionId": saleId,
+                        "toTransactionId": purchaseId,
                         "movementKind": "sold",
                         "source": "app",
                         "createdAt": FieldValue.serverTimestamp(),
@@ -736,6 +767,7 @@ struct NewItemView: View {
                 }
 
                 try await batch.commit()
+                onCreated?(itemIds)
                 dismiss()
                 enqueueImages(for: itemIds, accountId: accountId)
             } catch {

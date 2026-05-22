@@ -21,7 +21,6 @@ struct ItemMenuBuilderTests {
             onClearSpace: {},
             onReturnToInventory: {},
             onSellToProject: {},
-            onMoveToProject: {},
             onReassignToProject: {},
             onMakeCopies: {},
             onDelete: {}
@@ -38,7 +37,6 @@ struct ItemMenuBuilderTests {
             onClearSpace: {},
             onReturnToInventory: {},
             onSellToProject: {},
-            onMoveToProject: {},
             onReassignToProject: {},
             onDelete: {}
         )
@@ -265,7 +263,7 @@ struct ItemMenuBuilderTests {
         var cb = allCallbacks()
         cb.onReturnToInventory = nil
         cb.onSellToProject = nil
-        cb.onMoveToProject = nil
+        cb.onReassignToProject = nil
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: cb
         )

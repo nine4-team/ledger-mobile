@@ -79,6 +79,6 @@ Decisions are on the table. User has leaned toward the coherent path above but h
 - [reports-tab-rework.md](reports-tab-rework.md) — the downstream work waiting on these decisions.
 - [transaction-flow-v2-unified.md](transaction-flow-v2-unified.md) — the `reimbursementType` narrowing, upstream of all this.
 - [../specs/billing-invoicing.md](../specs/billing-invoicing.md) — current shipped invoice spec.
-- [../specs/sale-transactions.md](../specs/sale-transactions.md) — per-batch Sale/Return model.
+- [../specs/sale-transactions.md](../specs/sale-transactions.md) — per-batch inventory movement model.
 - [../specs/reassign-vs-sell.md](../specs/reassign-vs-sell.md) — reassignment (data fix) vs sale (financial event) distinction.
 - [../specs/_feedback-log.md](../specs/_feedback-log.md) (dated 2026-04-03) — original user feedback driving progressive invoicing.
