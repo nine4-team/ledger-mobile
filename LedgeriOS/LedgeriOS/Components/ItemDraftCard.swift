@@ -121,22 +121,31 @@ struct ItemDraftCard: View {
 
     @ViewBuilder
     private var photoStrip: some View {
-        if previewPhotos.isEmpty {
-            HStack(spacing: Spacing.sm) {
-                placeholderThumb
-                Spacer(minLength: 0)
-            }
-        } else {
-            GeometryReader { proxy in
-                let visibleCount = visibleThumbnailCount(for: proxy.size.width)
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            if previewPhotos.isEmpty {
                 HStack(spacing: Spacing.sm) {
-                    ForEach(Array(previewPhotos.prefix(visibleCount).enumerated()), id: \.offset) { _, photo in
-                        photoThumb(photo)
-                    }
+                    placeholderThumb
                     Spacer(minLength: 0)
                 }
+            } else {
+                GeometryReader { proxy in
+                    let visibleCount = visibleThumbnailCount(for: proxy.size.width)
+                    HStack(spacing: Spacing.sm) {
+                        ForEach(Array(previewPhotos.prefix(visibleCount).enumerated()), id: \.offset) { _, photo in
+                            photoThumb(photo)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+                .frame(height: thumbnailSize)
             }
-            .frame(height: thumbnailSize)
+
+            if let sku = protoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines), !sku.isEmpty {
+                FindableText("SKU: \(sku)")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+                    .lineLimit(1)
+            }
         }
     }
 

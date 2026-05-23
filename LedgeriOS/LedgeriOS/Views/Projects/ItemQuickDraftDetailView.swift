@@ -19,6 +19,7 @@ struct ItemQuickDraftDetailView: View {
     @State private var errorMessage: String?
     @State private var toastMessage: String?
     @State private var toastTask: Task<Void, Never>?
+    @State private var skuDraft: String
 
     private let protoItemsService = ProtoItemsService()
 
@@ -26,6 +27,7 @@ struct ItemQuickDraftDetailView: View {
         self.protoItem = protoItem
         self._liveProtoItem = State(initialValue: protoItem)
         self._nameDraft = State(initialValue: protoItem.name ?? "")
+        self._skuDraft = State(initialValue: protoItem.sku ?? "")
     }
 
     private var photos: [AttachmentRef] {
@@ -34,6 +36,10 @@ struct ItemQuickDraftDetailView: View {
 
     private var nameHasChanges: Bool {
         nameDraft.trimmingCharacters(in: .whitespacesAndNewlines) != (liveProtoItem.name ?? "")
+    }
+
+    private var skuHasChanges: Bool {
+        skuDraft.trimmingCharacters(in: .whitespacesAndNewlines) != (liveProtoItem.sku ?? "")
     }
 
     var body: some View {
@@ -76,6 +82,7 @@ struct ItemQuickDraftDetailView: View {
                 context: conversionContext,
                 initialTransactionId: liveProtoItem.transactionId,
                 initialName: liveProtoItem.name,
+                initialSku: liveProtoItem.sku,
                 initialImageRefs: photos,
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {
@@ -112,6 +119,49 @@ struct ItemQuickDraftDetailView: View {
                 .font(Typography.label)
                 .foregroundStyle(BrandColors.primary)
             }
+            FormField(label: "SKU", text: $skuDraft, placeholder: "Barcode or SKU number")
+            if !skuCandidates.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.xs) {
+                        ForEach(skuCandidates, id: \.self) { candidate in
+                            Button {
+                                skuDraft = candidate
+                                Task { await saveSku() }
+                            } label: {
+                                Text(candidate)
+                                    .font(Typography.caption)
+                                    .foregroundStyle(candidate == liveProtoItem.sku ? BrandColors.primary : BrandColors.textSecondary)
+                                    .padding(.horizontal, Spacing.sm)
+                                    .padding(.vertical, Spacing.xs)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
+                                            .fill(candidate == liveProtoItem.sku ? BrandColors.primary.opacity(0.12) : BrandColors.surfaceTertiary)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
+                                            .stroke(candidate == liveProtoItem.sku ? BrandColors.primary.opacity(0.35) : BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            if skuHasChanges {
+                Button("Save SKU") {
+                    Task { await saveSku() }
+                }
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.primary)
+            }
+        }
+    }
+
+    private var skuCandidates: [String] {
+        var seen = Set<String>()
+        return (liveProtoItem.extracted?.skuCandidates ?? []).filter { candidate in
+            let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+            return !trimmed.isEmpty && seen.insert(trimmed).inserted
         }
     }
 
@@ -181,6 +231,9 @@ struct ItemQuickDraftDetailView: View {
             if !nameHasChanges {
                 nameDraft = item.name ?? ""
             }
+            if !skuHasChanges {
+                skuDraft = item.sku ?? ""
+            }
         }
     }
 
@@ -196,6 +249,21 @@ struct ItemQuickDraftDetailView: View {
             )
         } catch {
             errorMessage = "Failed to update name."
+        }
+    }
+
+    private func saveSku() async {
+        guard let accountId = accountContext.currentAccountId,
+              let protoItemId = liveProtoItem.id else { return }
+        let trimmed = skuDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            try await protoItemsService.updateProtoItem(
+                accountId: accountId,
+                protoItemId: protoItemId,
+                fields: ["sku": trimmed.isEmpty ? FieldValue.delete() : trimmed]
+            )
+        } catch {
+            errorMessage = "Failed to update SKU."
         }
     }
 
@@ -300,10 +368,16 @@ struct ItemQuickDraftDetailView: View {
               let itemId = item.id else { return }
         do {
             let mergedImages = mergeAttachments(existing: item.images ?? [], incoming: photos)
+            var fields: [String: Any] = ["images": mergedImages.map(attachmentDict)]
+            if (item.sku ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let draftSku = liveProtoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !draftSku.isEmpty {
+                fields["sku"] = draftSku
+            }
             try await ItemsService().updateItem(
                 accountId: accountId,
                 itemId: itemId,
-                fields: ["images": mergedImages.map(attachmentDict)]
+                fields: fields
             )
             try await protoItemsService.convertProtoItem(
                 accountId: accountId,

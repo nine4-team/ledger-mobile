@@ -35,7 +35,7 @@ struct ItemDraftCaptureSheet: View {
                 title: "Save & Next",
                 isLoading: isSaving,
                 isDisabled: !canSave,
-                action: saveAndReset
+                action: { Task { await saveAndReset() } }
             ),
             secondaryAction: FormSheetAction(title: "Done") {
                 dismiss()
@@ -153,7 +153,7 @@ struct ItemDraftCaptureSheet: View {
         )
     }
 
-    private func saveAndReset() {
+    private func saveAndReset() async {
         guard let accountId = accountContext.currentAccountId else { return }
         let capturedImageDatas = imageDatas
         guard !capturedImageDatas.isEmpty else { return }
@@ -162,6 +162,7 @@ struct ItemDraftCaptureSheet: View {
         errorMessage = nil
 
         do {
+            let extraction = await ItemTagExtractionService.extract(from: capturedImageDatas)
             let protoItemId = protoItemsService.newProtoItemId(accountId: accountId)
             var protoItem = ProtoItem()
             protoItem.accountId = accountId
@@ -171,6 +172,8 @@ struct ItemDraftCaptureSheet: View {
             protoItem.status = .open
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
+            protoItem.sku = extraction.selectedSku
+            protoItem.extracted = extraction.protoExtraction
             protoItem.createdBy = authManager.currentUser?.uid
             protoItem.updatedBy = authManager.currentUser?.uid
 

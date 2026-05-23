@@ -29,6 +29,7 @@ enum ProtoItemSourceHint: String, Codable, CaseIterable, CaseInsensitiveStringEn
 
 struct ProtoItemExtraction: Codable, Hashable, Sendable {
     var rawText: String?
+    var barcodePayloads: [String]?
     var skuCandidates: [String]?
     var confidence: Double?
     var extractedAt: Date?
@@ -49,6 +50,7 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var status: ProtoItemStatus?
     var sourceHint: ProtoItemSourceHint?
     var photos: [AttachmentRef]?
+    var sku: String?
     var notes: String?
     var extracted: ProtoItemExtraction?
     var candidateTransactionId: String?
@@ -63,7 +65,7 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, intendedProjectId, transactionId,
-             name, captureContext, status, sourceHint, photos, notes, extracted,
+             name, captureContext, status, sourceHint, photos, sku, notes, extracted,
              candidateTransactionId, candidateItemId, convertedItemId,
              convertedAt, createdBy, updatedBy, convertedBy,
              createdAt, updatedAt

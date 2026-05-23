@@ -24,12 +24,14 @@ struct NewItemView: View {
         context: ItemCreationContext? = nil,
         initialTransactionId: String? = nil,
         initialName: String? = nil,
+        initialSku: String? = nil,
         initialImageRefs: [AttachmentRef] = [],
         onCreated: (([String]) -> Void)? = nil
     ) {
         self._resolvedContext = State(initialValue: context)
         self._selectedTransactionId = State(initialValue: initialTransactionId)
         self._name = State(initialValue: initialName ?? "")
+        self._sku = State(initialValue: initialSku ?? "")
         self.initialImageRefs = initialImageRefs
         self.onCreated = onCreated
     }

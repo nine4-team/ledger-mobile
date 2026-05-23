@@ -46,6 +46,9 @@
 		2F31C8097A284B69A32DF101 /* ProtoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F31C8097A284B69A32DF100 /* ProtoItem.swift */; };
 		2F31C8097A284B69A32DF103 /* ProtoItemsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F31C8097A284B69A32DF102 /* ProtoItemsService.swift */; };
 		2F31C8097A284B69A32DF105 /* ProtoItemsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F31C8097A284B69A32DF104 /* ProtoItemsServiceProtocol.swift */; };
+		ITX000010000000000000001 /* ItemTagExtraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = ITX000020000000000000001 /* ItemTagExtraction.swift */; };
+		ITX000010000000000000002 /* ItemTagExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ITX000020000000000000002 /* ItemTagExtractionService.swift */; };
+		ITX000010000000000000003 /* ItemTagExtractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ITX000020000000000000003 /* ItemTagExtractionTests.swift */; };
 		BL00000000000000000B0001 /* Invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0001 /* Invoice.swift */; };
 		BL00000000000000000B0002 /* InvoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0002 /* InvoiceService.swift */; };
 		BL00000000000000000B0003 /* InvoiceServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */; };
@@ -516,6 +519,9 @@
 		2F31C8097A284B69A32DF100 /* ProtoItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProtoItem.swift; sourceTree = "<group>"; };
 		2F31C8097A284B69A32DF102 /* ProtoItemsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProtoItemsService.swift; sourceTree = "<group>"; };
 		2F31C8097A284B69A32DF104 /* ProtoItemsServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProtoItemsServiceProtocol.swift; sourceTree = "<group>"; };
+		ITX000020000000000000001 /* ItemTagExtraction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemTagExtraction.swift; sourceTree = "<group>"; };
+		ITX000020000000000000002 /* ItemTagExtractionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemTagExtractionService.swift; sourceTree = "<group>"; };
+		ITX000020000000000000003 /* ItemTagExtractionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemTagExtractionTests.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0001 /* Invoice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Invoice.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0002 /* InvoiceService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceService.swift; sourceTree = "<group>"; };
 		BL00000000000000000F0003 /* InvoiceServiceProtocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InvoiceServiceProtocol.swift; sourceTree = "<group>"; };
@@ -815,6 +821,7 @@
 				TMB00100000000000L0001 /* TransactionMenuBuilder.swift */,
 				C3CB85C43594DAB5E6485BAD /* TransactionNextStepsCalculations.swift */,
 				5F1A364580DEA092553FDE82 /* ItemFormValidation.swift */,
+				ITX000020000000000000001 /* ItemTagExtraction.swift */,
 				C89F38C225B3ABEBCDDF68A0 /* BulkSaleResolutionCalculations.swift */,
 				F0DB6D4C81937205D1F35C0F /* SpaceListCalculations.swift */,
 				34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */,
@@ -899,6 +906,7 @@
 				C5FF345E9378E3C5FA9416FB /* TransactionsService.swift */,
 				88A5591BE06362A9528212DD /* ItemsService.swift */,
 				2F31C8097A284B69A32DF102 /* ProtoItemsService.swift */,
+				ITX000020000000000000002 /* ItemTagExtractionService.swift */,
 				50623E68F8E8A1789A9C2132 /* SpacesService.swift */,
 				B008B56DCF582319A871D50E /* BudgetCategoriesService.swift */,
 				D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */,
@@ -984,6 +992,7 @@
 				C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */,
 				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
 				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
+				ITX000020000000000000003 /* ItemTagExtractionTests.swift */,
 				862F852843A06A4E1AD326AF /* IncompleteReturnDetectionTests.swift */,
 				60D3AB5696530B5D8E14D18D /* Helpers */,
 				C3E7DF21CF6EF11ED1B7C1B7 /* Integration */,
@@ -1486,6 +1495,8 @@
 				6802FB1D167B91F91372B029 /* TransactionsService.swift in Sources */,
 				51A5F6D3829C766680F9178A /* ItemsService.swift in Sources */,
 				2F31C8097A284B69A32DF103 /* ProtoItemsService.swift in Sources */,
+				ITX000010000000000000001 /* ItemTagExtraction.swift in Sources */,
+				ITX000010000000000000002 /* ItemTagExtractionService.swift in Sources */,
 				96212F452F89463B9E156E3D /* MediaService.swift in Sources */,
 				0C26D013CD6F6E91B9C48801 /* MediaUploadQueue.swift in Sources */,
 				E0C8E2D81869D3725ED4AD47 /* SpacesService.swift in Sources */,
@@ -1753,6 +1764,7 @@
 				770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */,
 				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
 				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,
+				ITX000010000000000000003 /* ItemTagExtractionTests.swift in Sources */,
 				41228B2CE8BCF5256643BCDA /* IncompleteReturnDetectionTests.swift in Sources */,
 				A5EF3AB43B882AF00C1BB869 /* RecordingBatch.swift in Sources */,
 				1981EB24ABFC7304052614DF /* TestFactories.swift in Sources */,
@@ -1925,7 +1937,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1959,7 +1971,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
