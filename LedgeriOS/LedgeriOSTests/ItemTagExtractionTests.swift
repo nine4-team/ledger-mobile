@@ -42,6 +42,31 @@ struct ItemTagExtractionTests {
         #expect(result.skuCandidates.first == "400296767289")
     }
 
+    @Test("Barcode substrings must be long enough to auto-fill")
+    func shortBarcodeSubstringsDoNotAutoSelect() {
+        let result = ItemTagExtraction.extract(
+            barcodePayloads: ["0789112613222"],
+            textObservations: [
+                ItemTagTextObservation(text: "124350733\n89112\n61322 2", confidence: 0.84),
+            ]
+        )
+
+        #expect(result.selectedSku == nil)
+        #expect(result.skuCandidates.contains("124350733"))
+        #expect(result.skuCandidates.contains("61322"))
+    }
+
+    @Test("Dashed SKU candidates are still supported")
+    func dashedSkuCandidatesAreStillSupported() {
+        let result = ItemTagExtraction.extract(
+            textObservations: [
+                ItemTagTextObservation(text: "Item # 313-433-0203", confidence: 0.9),
+            ]
+        )
+
+        #expect(result.selectedSku == "313-433-0203")
+    }
+
     @Test("Loose barcode-shaped OCR stays a chip without auto-fill")
     func looseBarcodeShapedOcrDoesNotAutoSelect() {
         let result = ItemTagExtraction.extract(
@@ -52,6 +77,19 @@ struct ItemTagExtractionTests {
 
         #expect(result.selectedSku == nil)
         #expect(result.skuCandidates.contains("26446592"))
+    }
+
+    @Test("Standalone numeric item numbers stay chips without auto-fill")
+    func standaloneNumericItemNumbersStayChips() {
+        let result = ItemTagExtraction.extract(
+            textObservations: [
+                ItemTagTextObservation(text: "Honeybloom\n124350733\n12-23", confidence: 0.86),
+            ]
+        )
+
+        #expect(result.selectedSku == nil)
+        #expect(result.skuCandidates.contains("124350733"))
+        #expect(!result.skuCandidates.contains("12-23"))
     }
 
     @Test("Extracts labeled SKU on same line")

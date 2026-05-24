@@ -66,7 +66,7 @@ enum ItemTagExtraction {
                labeled.isEmpty,
                lines.indices.contains(index + 1),
                let nextCandidate = cleanCandidate(lines[index + 1].text),
-               isPlausibleSku(nextCandidate, allowNumericOnly: true) {
+               isPlausibleSku(nextCandidate, allowNumericOnly: true, allowPhoneNumberShape: true) {
                 scored.append(ScoredCandidate(
                     value: nextCandidate,
                     score: scoreWithBarcodeSupport(baseScore: 88, candidate: nextCandidate, barcodes: cleanedBarcodes),
@@ -100,14 +100,14 @@ enum ItemTagExtraction {
         let pattern = #"(?i)\b(?:sku|style|model|item|item\s*#|item\s*no\.?|product|part|upc|ean|barcode)\b\s*(?:no\.?|number|#|:|-)?\s*([A-Z0-9][A-Z0-9._/-]{2,31})"#
         return regexMatches(pattern: pattern, in: line)
             .compactMap(cleanCandidate)
-            .filter { isPlausibleSku($0, allowNumericOnly: true) }
+            .filter { isPlausibleSku($0, allowNumericOnly: true, allowPhoneNumberShape: true) }
     }
 
     private static func looseCandidates(in line: String) -> [String] {
         let pattern = #"\b[A-Z0-9][A-Z0-9._/-]{3,31}\b"#
         return regexMatches(pattern: pattern, in: line.uppercased())
             .compactMap(cleanCandidate)
-            .filter { isPlausibleSku($0, allowNumericOnly: false) || isStandardBarcodeLength($0) }
+            .filter { isPlausibleSku($0, allowNumericOnly: false) || isStandaloneNumericSku($0) }
     }
 
     private static func containsSkuLabel(_ line: String) -> Bool {
@@ -130,14 +130,21 @@ enum ItemTagExtraction {
         return cleaned.isEmpty ? nil : cleaned
     }
 
-    private static func isPlausibleSku(_ candidate: String, allowNumericOnly: Bool) -> Bool {
+    private static func isPlausibleSku(
+        _ candidate: String,
+        allowNumericOnly: Bool,
+        allowPhoneNumberShape: Bool = false
+    ) -> Bool {
         guard (4...32).contains(candidate.count) else { return false }
         guard candidate.range(of: #"^[A-Z0-9][A-Z0-9.-]*[A-Z0-9]$"#, options: .regularExpression) != nil else { return false }
         guard candidate.contains(where: { $0.isNumber }) else { return false }
         if candidate.allSatisfy(\.isNumber) {
-            return allowNumericOnly || isStandardBarcodeLength(candidate)
+            return allowNumericOnly || isStandaloneNumericSku(candidate)
         }
-        if looksLikeDate(candidate) || looksLikePrice(candidate) || looksLikePhoneNumber(candidate) {
+        if looksLikeDate(candidate) || looksLikePrice(candidate) {
+            return false
+        }
+        if !allowPhoneNumberShape && looksLikePhoneNumber(candidate) {
             return false
         }
         return true
@@ -147,8 +154,13 @@ enum ItemTagExtraction {
         candidate.allSatisfy(\.isNumber) && [8, 12, 13, 14].contains(candidate.count)
     }
 
+    private static func isStandaloneNumericSku(_ candidate: String) -> Bool {
+        candidate.allSatisfy(\.isNumber) && (5...14).contains(candidate.count)
+    }
+
     private static func looksLikeDate(_ candidate: String) -> Bool {
-        candidate.range(of: #"^\d{1,2}[-.]\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil
+        candidate.range(of: #"^\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil ||
+            candidate.range(of: #"^\d{1,2}[-.]\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil
     }
 
     private static func looksLikePrice(_ candidate: String) -> Bool {
@@ -161,16 +173,20 @@ enum ItemTagExtraction {
     }
 
     private static func looseScore(for candidate: String) -> Double {
-        if isStandardBarcodeLength(candidate) { return 62 }
+        if isStandaloneNumericSku(candidate) { return 62 }
         if candidate.contains("-") || candidate.contains(".") { return 58 }
         return 48
     }
 
     private static func scoreWithBarcodeSupport(baseScore: Double, candidate: String, barcodes: [String]) -> Double {
-        guard barcodes.contains(where: { barcode in
-            barcode == candidate || barcode.contains(candidate) || candidate.contains(barcode)
-        }) else { return baseScore }
+        guard barcodes.contains(where: { barcodeSupports(candidate: candidate, barcode: $0) }) else { return baseScore }
         return max(baseScore + 15, 90)
+    }
+
+    private static func barcodeSupports(candidate: String, barcode: String) -> Bool {
+        if barcode == candidate { return true }
+        guard candidate.count >= 12 else { return false }
+        return barcode.contains(candidate) || candidate.contains(barcode)
     }
 
     private static func rankedCandidates(_ candidates: [ScoredCandidate]) -> [ScoredCandidate] {

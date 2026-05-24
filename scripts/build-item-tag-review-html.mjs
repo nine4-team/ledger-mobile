@@ -72,6 +72,9 @@ function splitValues(value) {
 function rowCard(row, index) {
   const chips = splitValues(row.detectedCandidates).map((value) => pill(value)).join('');
   const barcodes = splitValues(row.detectedBarcodes).map((value) => pill(value, 'barcode')).join('');
+  const ocrLines = splitValues(row.detectedTextLines)
+    .map((value) => `<li>${escapeHTML(value)}</li>`)
+    .join('');
   const selectedTone = row.selectedMatchesExpected === 'true' ? 'good' : row.selectedSku ? 'bad' : 'muted';
   return `
     <article class="card">
@@ -93,6 +96,10 @@ function rowCard(row, index) {
           <strong>Barcode payloads</strong>
           <div class="pillrow">${barcodes || '<span class="empty">none</span>'}</div>
         </div>
+        <details>
+          <summary>OCR text lines</summary>
+          <ol>${ocrLines || '<li class="empty">none</li>'}</ol>
+        </details>
         <p class="question">${escapeHTML(row.reviewQuestion)}</p>
       </section>
     </article>
@@ -136,6 +143,9 @@ writeFileSync(OUT_PATH, `<!doctype html>
     .pill { padding: 4px 7px; border-radius: 999px; background: #eef0f4; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
     .pill.barcode { background: #fff2d8; }
     .empty { color: #888; font-style: italic; }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; color: #3f4650; font-size: 13px; font-weight: 650; }
+    ol { margin: 8px 0 0; padding-left: 22px; color: #30343a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.45; }
     .question { margin: 12px 0 0; color: #555; font-size: 14px; }
     @media (max-width: 760px) { body { padding: 12px; } .card { grid-template-columns: 1fr; } .facts { grid-template-columns: 1fr; } }
   </style>

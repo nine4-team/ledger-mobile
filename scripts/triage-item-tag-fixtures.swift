@@ -28,6 +28,7 @@ struct TriageRow: Encodable {
     let tagEvidence: String
     let detectedBarcodes: [String]
     let detectedCandidates: [String]
+    let detectedTextLines: [String]
     let textLineCount: Int
     let localPath: String
     let itemId: String
@@ -95,6 +96,7 @@ for (index, image) in manifest.images.enumerated() {
             tagEvidence: "none",
             detectedBarcodes: [],
             detectedCandidates: [],
+            detectedTextLines: [],
             textLineCount: 0,
             localPath: image.localPath,
             itemId: image.itemId,
@@ -148,6 +150,7 @@ for (index, image) in manifest.images.enumerated() {
         tagEvidence: tagEvidence(barcodes: result.barcodes, candidates: result.candidates),
         detectedBarcodes: result.barcodes,
         detectedCandidates: result.candidates,
+        detectedTextLines: result.textLines,
         textLineCount: result.textLines.count,
         localPath: image.localPath,
         itemId: image.itemId,
@@ -321,7 +324,7 @@ func rankedCandidates(from lines: [String], barcodes: [String]) -> [ScoredCandid
                 score: scoreWithBarcodeSupport(baseScore: 95, candidate: $0, barcodes: barcodes)
             )
         })
-        if containsSkuLabel(line), lines.indices.contains(index + 1), let next = cleanCandidate(lines[index + 1]), isPlausibleSku(next, allowNumericOnly: true) {
+        if containsSkuLabel(line), lines.indices.contains(index + 1), let next = cleanCandidate(lines[index + 1]), isPlausibleSku(next, allowNumericOnly: true, allowPhoneNumberShape: true) {
             candidates.append(ScoredCandidate(
                 value: next,
                 score: scoreWithBarcodeSupport(baseScore: 88, candidate: next, barcodes: barcodes)
@@ -350,14 +353,14 @@ func labeledCandidates(in line: String) -> [String] {
     let pattern = #"(?i)\b(?:sku|style|model|item|item\s*#|item\s*no\.?|product|part|upc|ean|barcode)\b\s*(?:no\.?|number|#|:|-)?\s*([A-Z0-9][A-Z0-9._/-]{2,31})"#
     return regexMatches(pattern: pattern, in: line)
         .compactMap(cleanCandidate)
-        .filter { isPlausibleSku($0, allowNumericOnly: true) }
+        .filter { isPlausibleSku($0, allowNumericOnly: true, allowPhoneNumberShape: true) }
 }
 
 func looseCandidates(in line: String) -> [String] {
     let pattern = #"\b[A-Z0-9][A-Z0-9._/-]{3,31}\b"#
     return regexMatches(pattern: pattern, in: line.uppercased())
         .compactMap(cleanCandidate)
-        .filter { isPlausibleSku($0, allowNumericOnly: false) || isStandardBarcodeLength($0) }
+        .filter { isPlausibleSku($0, allowNumericOnly: false) || isStandaloneNumericSku($0) }
 }
 
 func containsSkuLabel(_ line: String) -> Bool {
@@ -380,18 +383,32 @@ func cleanCandidate(_ raw: String) -> String? {
     return cleaned.isEmpty ? nil : cleaned
 }
 
-func isPlausibleSku(_ candidate: String, allowNumericOnly: Bool) -> Bool {
+func isPlausibleSku(
+    _ candidate: String,
+    allowNumericOnly: Bool,
+    allowPhoneNumberShape: Bool = false
+) -> Bool {
     guard (4...32).contains(candidate.count) else { return false }
     guard candidate.range(of: #"^[A-Z0-9][A-Z0-9.-]*[A-Z0-9]$"#, options: .regularExpression) != nil else { return false }
     guard candidate.contains(where: { $0.isNumber }) else { return false }
     if candidate.allSatisfy(\.isNumber) {
-        return allowNumericOnly || isStandardBarcodeLength(candidate)
+        return allowNumericOnly || isStandaloneNumericSku(candidate)
     }
-    return !looksLikeDate(candidate) && !looksLikePrice(candidate) && !looksLikePhoneNumber(candidate)
+    if looksLikeDate(candidate) || looksLikePrice(candidate) {
+        return false
+    }
+    if !allowPhoneNumberShape && looksLikePhoneNumber(candidate) {
+        return false
+    }
+    return true
 }
 
 func isStandardBarcodeLength(_ candidate: String) -> Bool {
     candidate.allSatisfy(\.isNumber) && [8, 12, 13, 14].contains(candidate.count)
+}
+
+func isStandaloneNumericSku(_ candidate: String) -> Bool {
+    candidate.allSatisfy(\.isNumber) && (5...14).contains(candidate.count)
 }
 
 func isStrongCandidate(_ candidate: String, textLines: [String]) -> Bool {
@@ -402,16 +419,20 @@ func isStrongCandidate(_ candidate: String, textLines: [String]) -> Bool {
 }
 
 func looseScore(for candidate: String) -> Int {
-    if isStandardBarcodeLength(candidate) { return 62 }
+    if isStandaloneNumericSku(candidate) { return 62 }
     if candidate.contains("-") || candidate.contains(".") { return 58 }
     return 48
 }
 
 func scoreWithBarcodeSupport(baseScore: Int, candidate: String, barcodes: [String]) -> Int {
-    guard barcodes.contains(where: { barcode in
-        barcode == candidate || barcode.contains(candidate) || candidate.contains(barcode)
-    }) else { return baseScore }
+    guard barcodes.contains(where: { barcodeSupports(candidate: candidate, barcode: $0) }) else { return baseScore }
     return max(baseScore + 15, 90)
+}
+
+func barcodeSupports(candidate: String, barcode: String) -> Bool {
+    if barcode == candidate { return true }
+    guard candidate.count >= 12 else { return false }
+    return barcode.contains(candidate) || candidate.contains(barcode)
 }
 
 func tagEvidence(barcodes: [String], candidates: [String]) -> String {
@@ -429,7 +450,8 @@ struct ScoredCandidate {
 }
 
 func looksLikeDate(_ candidate: String) -> Bool {
-    candidate.range(of: #"^\d{1,2}[-.]\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil
+    candidate.range(of: #"^\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil ||
+        candidate.range(of: #"^\d{1,2}[-.]\d{1,2}[-.]\d{2,4}$"#, options: .regularExpression) != nil
 }
 
 func looksLikePrice(_ candidate: String) -> Bool {
@@ -472,7 +494,7 @@ func triageCSV(_ rows: [TriageRow]) -> String {
     let headers = [
         "bucket", "vendor", "expectedSku", "selectedSku", "selectedMatchesExpected",
         "candidateContainsExpected", "barcodeContainsExpected", "tagEvidence",
-        "detectedBarcodes", "detectedCandidates",
+        "detectedBarcodes", "detectedCandidates", "detectedTextLines",
         "textLineCount", "localPath", "itemId", "itemName", "projectName",
     ]
     let body = rows.map { row in
@@ -487,6 +509,7 @@ func triageCSV(_ rows: [TriageRow]) -> String {
             row.tagEvidence,
             row.detectedBarcodes.joined(separator: " | "),
             row.detectedCandidates.joined(separator: " | "),
+            row.detectedTextLines.joined(separator: " | "),
             String(row.textLineCount),
             row.localPath,
             row.itemId,
