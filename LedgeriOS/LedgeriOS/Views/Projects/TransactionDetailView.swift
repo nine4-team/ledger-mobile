@@ -287,17 +287,18 @@ struct TransactionDetailView: View {
             ActionMenuSheet(
                 title: "Add Item",
                 items: {
-                    var items: [ActionMenuItem] = []
+                    var items = [
+                        ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
+                            showCreateItemDraft = true
+                        }),
+                    ]
 
                     if transactionProjectId != nil {
-                        items.append(contentsOf: [
-                            ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
-                                showCreateItemDraft = true
-                            }),
+                        items.append(
                             ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
                                 showCreateNewItem = true
-                            }),
-                        ])
+                            })
+                        )
                     }
 
                     items.append(contentsOf: [
@@ -330,14 +331,12 @@ struct TransactionDetailView: View {
             }
         }
         .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
-            if let projectId = transactionProjectId {
-                ItemDraftCaptureSheet(
-                    projectId: projectId,
-                    projectName: projectContext.project?.name,
-                    transactionId: currentTransaction.id,
-                    transactionName: TransactionDisplayCalculations.displayName(for: currentTransaction)
-                )
-            }
+            ItemDraftCaptureSheet(
+                projectId: transactionProjectId,
+                projectName: projectContext.project?.name,
+                transactionId: currentTransaction.id,
+                transactionName: TransactionDisplayCalculations.displayName(for: currentTransaction)
+            )
         }
         .adaptivePresentation(item: $protoItemPendingConvert, style: .form) { protoItem in
             NewItemView(
@@ -758,7 +757,7 @@ struct TransactionDetailView: View {
             title: "Item Quick Drafts",
             isExpanded: sectionBinding("item-drafts"),
             badge: "\(activeTransactionProtoItems.count)",
-            onAdd: transactionProjectId == nil ? nil : { showCreateItemDraft = true }
+            onAdd: { showCreateItemDraft = true }
         ) {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 if activeTransactionProtoItems.isEmpty {

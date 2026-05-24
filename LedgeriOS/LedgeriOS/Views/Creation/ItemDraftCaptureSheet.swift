@@ -2,7 +2,7 @@ import SwiftUI
 import PhotosUI
 
 struct ItemDraftCaptureSheet: View {
-    let projectId: String
+    let projectId: String?
     var projectName: String?
     var transactionId: String?
     var transactionName: String?
@@ -168,7 +168,9 @@ struct ItemDraftCaptureSheet: View {
             protoItem.accountId = accountId
             protoItem.projectId = projectId
             protoItem.transactionId = transactionId
-            protoItem.captureContext = transactionId == nil ? .project : .transaction
+            protoItem.captureContext = transactionId == nil
+                ? (projectId == nil ? .inventory : .project)
+                : .transaction
             protoItem.status = .open
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
