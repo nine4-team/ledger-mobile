@@ -26,7 +26,21 @@ struct ItemTagExtractionTests {
         )
 
         #expect(result.selectedSku == nil)
-        #expect(result.skuCandidates == ["400293670643000799"])
+        #expect(result.skuCandidates.contains("400293670643000799"))
+        #expect(result.skuCandidates.contains("400293670643"))
+    }
+
+    @Test("Barcode item prefix is a chip but not an auto-fill")
+    func barcodeItemPrefixIsChipOnly() {
+        let result = ItemTagExtraction.extract(
+            barcodePayloads: ["400297925640000999"],
+            textObservations: [
+                ItemTagTextObservation(text: "ROSS HOME DECOR $9.99", confidence: 0.86),
+            ]
+        )
+
+        #expect(result.selectedSku == nil)
+        #expect(result.skuCandidates.contains("400297925640"))
     }
 
     @Test("Barcode supports matching OCR SKU")

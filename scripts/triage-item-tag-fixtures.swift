@@ -316,7 +316,9 @@ func upscale(_ image: CGImage, minimumLongSide: CGFloat) -> CGImage? {
 }
 
 func rankedCandidates(from lines: [String], barcodes: [String]) -> [ScoredCandidate] {
-    var candidates: [ScoredCandidate] = []
+    var candidates = barcodeChipCandidates(from: barcodes).map {
+        ScoredCandidate(value: $0, score: 60)
+    }
     for (index, line) in lines.enumerated() {
         candidates.append(contentsOf: labeledCandidates(in: line).map {
             ScoredCandidate(
@@ -347,6 +349,23 @@ func rankedCandidates(from lines: [String], barcodes: [String]) -> [ScoredCandid
         if $0.score == $1.score { return $0.value < $1.value }
         return $0.score > $1.score
     }
+}
+
+func barcodeChipCandidates(from barcodes: [String]) -> [String] {
+    var candidates: [String] = []
+    for barcode in barcodes {
+        candidates.append(barcode)
+        if let itemPrefix = itemNumberPrefix(from: barcode) {
+            candidates.append(itemPrefix)
+        }
+    }
+    return Array(Set(candidates))
+}
+
+func itemNumberPrefix(from barcode: String) -> String? {
+    guard barcode.allSatisfy(\.isNumber), barcode.count > 14 else { return nil }
+    let prefix = String(barcode.prefix(12))
+    return isStandaloneNumericSku(prefix) ? prefix : nil
 }
 
 func labeledCandidates(in line: String) -> [String] {

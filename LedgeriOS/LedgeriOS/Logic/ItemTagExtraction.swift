@@ -36,7 +36,7 @@ enum ItemTagExtraction {
 
         let cleanedBarcodes = barcodePayloads.compactMap(cleanCandidate)
         var scored: [ScoredCandidate] = []
-        for barcode in cleanedBarcodes {
+        for barcode in barcodeChipCandidates(from: cleanedBarcodes) {
             if isPlausibleSku(barcode, allowNumericOnly: true) {
                 scored.append(ScoredCandidate(value: barcode, score: 60, confidence: 1.0, source: .barcode))
             }
@@ -101,6 +101,23 @@ enum ItemTagExtraction {
         return regexMatches(pattern: pattern, in: line)
             .compactMap(cleanCandidate)
             .filter { isPlausibleSku($0, allowNumericOnly: true, allowPhoneNumberShape: true) }
+    }
+
+    private static func barcodeChipCandidates(from barcodes: [String]) -> [String] {
+        var candidates: [String] = []
+        for barcode in barcodes {
+            candidates.append(barcode)
+            if let itemPrefix = itemNumberPrefix(from: barcode) {
+                candidates.append(itemPrefix)
+            }
+        }
+        return Array(Set(candidates))
+    }
+
+    private static func itemNumberPrefix(from barcode: String) -> String? {
+        guard barcode.allSatisfy(\.isNumber), barcode.count > 14 else { return nil }
+        let prefix = String(barcode.prefix(12))
+        return isStandaloneNumericSku(prefix) ? prefix : nil
     }
 
     private static func looseCandidates(in line: String) -> [String] {
