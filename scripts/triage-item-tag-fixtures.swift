@@ -1,5 +1,6 @@
 #!/usr/bin/env swift
 import Foundation
+import ImageIO
 import Vision
 
 struct Manifest: Decodable {
@@ -194,6 +195,12 @@ func analyzeImage(at url: URL) -> ImageAnalysis {
     for region in barcodeTextRegions(from: barcodeRequest.results ?? []) {
         textLines.append(contentsOf: recognizeText(in: region, url: url))
     }
+    if let image = normalizedImage(at: url) {
+        for region in barcodeTextRegions(from: barcodeRequest.results ?? []) {
+            guard let crop = croppedUpscaledImage(from: image, region: region) else { continue }
+            textLines.append(contentsOf: recognizeText(in: crop))
+        }
+    }
 
     let ranked = rankedCandidates(from: textLines, barcodes: barcodes)
     return ImageAnalysis(
@@ -211,6 +218,21 @@ func recognizeText(in region: CGRect, url: URL) -> [String] {
     request.regionOfInterest = region
 
     let handler = VNImageRequestHandler(url: url, options: [:])
+    do {
+        try handler.perform([request])
+    } catch {
+        return []
+    }
+
+    return recognizedTextLines(from: request.results ?? [])
+}
+
+func recognizeText(in image: CGImage) -> [String] {
+    let request = VNRecognizeTextRequest()
+    request.recognitionLevel = .accurate
+    request.usesLanguageCorrection = false
+
+    let handler = VNImageRequestHandler(cgImage: image, options: [:])
     do {
         try handler.perform([request])
     } catch {
@@ -238,6 +260,56 @@ func expandedRegion(around box: CGRect) -> CGRect {
     let maxX = min(1, box.maxX + box.width * 1.4)
     let maxY = min(1, box.maxY + box.height * 6.0)
     return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+}
+
+func normalizedImage(at url: URL) -> CGImage? {
+    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+    let options: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: 4096,
+    ]
+    return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+}
+
+func croppedUpscaledImage(from image: CGImage, region: CGRect) -> CGImage? {
+    let cropRect = pixelRect(for: region, image: image)
+    guard let cropped = image.cropping(to: cropRect) else { return nil }
+    return upscale(cropped, minimumLongSide: 1800)
+}
+
+func pixelRect(for region: CGRect, image: CGImage) -> CGRect {
+    let width = CGFloat(image.width)
+    let height = CGFloat(image.height)
+    let rect = CGRect(
+        x: region.minX * width,
+        y: (1 - region.maxY) * height,
+        width: region.width * width,
+        height: region.height * height
+    )
+    return rect.integral.intersection(CGRect(x: 0, y: 0, width: width, height: height))
+}
+
+func upscale(_ image: CGImage, minimumLongSide: CGFloat) -> CGImage? {
+    let width = CGFloat(image.width)
+    let height = CGFloat(image.height)
+    guard width > 0, height > 0 else { return nil }
+    let scale = max(1, minimumLongSide / max(width, height))
+    let outputWidth = Int((width * scale).rounded(.up))
+    let outputHeight = Int((height * scale).rounded(.up))
+    guard let context = CGContext(
+        data: nil,
+        width: outputWidth,
+        height: outputHeight,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else { return nil }
+
+    context.interpolationQuality = .high
+    context.draw(image, in: CGRect(x: 0, y: 0, width: CGFloat(outputWidth), height: CGFloat(outputHeight)))
+    return context.makeImage()
 }
 
 func rankedCandidates(from lines: [String], barcodes: [String]) -> [ScoredCandidate] {
