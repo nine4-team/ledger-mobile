@@ -113,7 +113,7 @@ struct ItemsTabView: View {
                 NewItemView(context: .project(projectId, spaceId: nil))
             }
         }
-        .adaptivePresentation(isPresented: $showNewItemDraft, style: .quickMenu) {
+        .adaptivePresentation(isPresented: $showNewItemDraft, style: .form) {
             if let projectId = projectContext.currentProjectId {
                 ItemDraftCaptureSheet(
                     projectId: projectId,

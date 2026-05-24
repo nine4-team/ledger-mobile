@@ -73,6 +73,10 @@ struct TransactionDetailView: View {
         return tx
     }
 
+    private var transactionProjectId: String? {
+        currentTransaction.projectId ?? projectContext.currentProjectId
+    }
+
     private var transactionItems: [Item] {
         guard let ids = currentTransaction.itemIds, !ids.isEmpty else { return [] }
         let idSet = Set(ids)
@@ -283,21 +287,29 @@ struct TransactionDetailView: View {
             ActionMenuSheet(
                 title: "Add Item",
                 items: {
-                    var items = [
-                        ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
-                            showCreateItemDraft = true
-                        }),
-                        ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
-                            showCreateNewItem = true
-                        }),
+                    var items: [ActionMenuItem] = []
+
+                    if transactionProjectId != nil {
+                        items.append(contentsOf: [
+                            ActionMenuItem(id: "item-draft", label: "Item Quick Draft", icon: "camera.badge.ellipsis", onPress: {
+                                showCreateItemDraft = true
+                            }),
+                            ActionMenuItem(id: "create-new", label: "Create New Item", icon: "plus.square.fill", onPress: {
+                                showCreateNewItem = true
+                            }),
+                        ])
+                    }
+
+                    items.append(contentsOf: [
                         ActionMenuItem(id: "add-existing", label: "Add Existing Items", icon: "plus.square.on.square", onPress: {
                             showAddExistingItems = true
                         }),
-                    ]
+                    ])
+
                     let hasImages = !(currentTransaction.receiptImages ?? []).isEmpty
                         || !(currentTransaction.otherImages ?? []).isEmpty
                         || !(currentTransaction.transactionImages ?? []).isEmpty
-                    if hasImages {
+                    if hasImages, transactionProjectId != nil {
                         items.append(ActionMenuItem(id: "create-from-images", label: "Create from Images", icon: "photo.on.rectangle.angled", onPress: {
                             showCreateItemsFromImages = true
                         }))
@@ -310,15 +322,15 @@ struct TransactionDetailView: View {
             )
         }
         .adaptivePresentation(isPresented: $showCreateNewItem, style: .form) {
-            if let projectId = projectContext.currentProjectId {
+            if let projectId = transactionProjectId {
                 NewItemView(
                     context: .project(projectId, spaceId: nil),
                     initialTransactionId: currentTransaction.id
                 )
             }
         }
-        .adaptivePresentation(isPresented: $showCreateItemDraft, style: .quickMenu) {
-            if let projectId = projectContext.currentProjectId {
+        .adaptivePresentation(isPresented: $showCreateItemDraft, style: .form) {
+            if let projectId = transactionProjectId {
                 ItemDraftCaptureSheet(
                     projectId: projectId,
                     projectName: projectContext.project?.name,
@@ -746,7 +758,7 @@ struct TransactionDetailView: View {
             title: "Item Quick Drafts",
             isExpanded: sectionBinding("item-drafts"),
             badge: "\(activeTransactionProtoItems.count)",
-            onAdd: { showCreateItemDraft = true }
+            onAdd: transactionProjectId == nil ? nil : { showCreateItemDraft = true }
         ) {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
                 if activeTransactionProtoItems.isEmpty {
@@ -1252,7 +1264,7 @@ struct TransactionDetailView: View {
 
     private func createItemsFromImageGroups(_ groups: [ImageGroup]) {
         guard let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId,
+              let projectId = transactionProjectId,
               let transactionId = transaction.id else { return }
 
         let items = groups.map { group -> Item in
