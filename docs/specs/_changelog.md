@@ -1,5 +1,13 @@
 # Ledger Specs — Changelog
 
+## 2026-05-26
+- **Rewrote Billing & Invoicing as the canonical active spec.** Removed the active v1/v2 split in favor of one model: transactions record money movement, invoices demand money, and invoice lines describe demand components.
+- **Added manual New Charge invoice lines.** Manual lines cover design fees, retainers, project management fees, storage fees, and other invoice demands that are not backed by prior money movement.
+- **Clarified settlement.** Collection is represented by real transactions linked back to invoices or invoice lines; settlement transactions are excluded from the billable pool.
+- **Marked historical docs.** `billing-invoicing-v2.md` is now a historical implementation spec, and `project-charges.md` is superseded by manual New Charge invoice lines.
+- **Updated dependent docs.** `_index.md`, `project-closeout-report.md`, and `docs/backlog/mcp-invoicing-tools.md` now point at the canonical billing model.
+- **Started implementation.** Completed Phase 0 decisions and Phase 1 additive data model work: invoice line IDs, `manual` line source type, optional line source IDs, transaction settlement linkage, and MCP mirror types.
+
 ## 2026-05-18
 - **Created Proto Item Capture spec.** Added a separate `protoItems` entity for persistent photo-first item intake. Proto items are not real items and do not affect budgets, transactions, invoices, reports, or item counts until converted.
 - **Documented capture-first, convert-later workflow.** Project and inventory entry points now support lightweight physical capture, with later review actions to create items, merge with existing items, convert from inventory, or delete.

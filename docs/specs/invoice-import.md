@@ -46,15 +46,15 @@ User reviews the parsed results. They can:
 
 On confirmation, the system creates:
 
-1. A **draft transaction** with:
+1. An active transaction with:
    - `source` = vendor name
    - `transactionDate` = parsed date
    - `amountCents` = parsed total
    - `subtotalCents` = parsed subtotal (if available)
    - `taxRatePct` = calculated from subtotal and total (if both available)
    - `budgetCategoryId` = user-selected category
-   - `status` = "pending" (draft)
    - `transactionType` = "Purchase"
+   - `isComplete` = `false` until the linked items/audit reconcile cleanly
 2. **Items** for each line item:
    - `name` = parsed item description
    - `purchasePriceCents` = parsed unit price

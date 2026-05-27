@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-05-18
+Last updated: 2026-05-26
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -23,8 +23,8 @@ Last updated: 2026-05-18
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.
 
 ### Billing & Invoicing
-- [Billing & Invoicing v2](billing-invoicing-v2.md) — **Shipped 2026-04-21.** Collapses paid-state onto the invoice, makes invoices bidirectional (charges + credits, netted), and derives billable-membership instead of storing `billingStatus`. Adds a To Invoice / Invoiced / Paid pipeline on the project Billing subtab. Supersedes v1.
-- [superseded] [Billing & Invoicing (v1)](billing-invoicing.md) — **Legacy.** Item-level billing status (unbilled → invoiced → paid), selective mid-project invoicing, invoice-level payment cascade. Shipped 2026-04-07; superseded by v2 on 2026-04-20.
+- [modify] [Billing & Invoicing](billing-invoicing.md) — **Active canonical spec.** Transactions record money movement; invoices demand money; invoice lines can source from items, existing transactions, or manual New Charge lines. Collection is tracked by linking real money-movement transactions back to invoices.
+- [superseded] [Billing & Invoicing v2](billing-invoicing-v2.md) — **Historical implementation spec.** Shipped 2026-04-21; superseded as the active product spec by `billing-invoicing.md` on 2026-05-26.
 
 ### Lists & Layout
 - [shipped] [List Layout](list-layout.md) — macOS item and transaction lists default to single-column stacked rows via `Dimensions.listColumns` platform branch. Shipped 2026-04-03 (commit 2358be7b). List/grid toggle nice-to-have deferred.
@@ -35,7 +35,7 @@ Last updated: 2026-05-18
 - [new] [Field Tooltips](ui/tooltips.md) — Info tooltips on non-obvious fields across the app. `(i)` icon next to labels, bottom sheet with plain-language explanation. Centralized content registry.
 
 ### Project Charges & Fees
-- [new] [Project Charges](project-charges.md) — Service fees, design fees, and planned costs created within a project (distinct from inventory items and pass-through expenses)
+- [superseded] [Project Charges](project-charges.md) — Historical proposal for a standalone charge entity. Active behavior is now covered by manual New Charge invoice lines in `billing-invoicing.md`.
 
 ### Reporting
 - [new] [Project Closeout Report](project-closeout-report.md) — Client-facing end-of-project report showing furnishings breakdown with savings, total project cost, and outstanding payments

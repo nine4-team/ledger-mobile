@@ -1,6 +1,6 @@
 # Project Closeout Report
 Status: new
-Last updated: 2026-04-03
+Last updated: 2026-05-26
 
 ## Summary
 A polished, client-facing report generated at the end of a project that tells the full financial story: what was spent across all categories, how much the client saved on furnishings vs. market value, the total project cost including everything, and any outstanding payments still owed. The report's goal is to make the client feel they received incredible value, stayed within budget, and that the design team went above and beyond.
@@ -39,7 +39,7 @@ If there are multiple itemized categories (e.g., Furnishings, Accessories, Mattr
 A single, clear summary that rolls everything together:
 
 - **Furnishings & items total** — the project price total from Section 1
-- **Services & other costs** — a single rolled-up number for everything that is NOT itemized: design fees, install, delivery, fuel, storage, any other expenses and service charges. This is deliberately not broken down line by line — the client sees one number, not a detailed list of every expense category.
+- **Services & other costs** — a single rolled-up number for everything that is NOT itemized: design fees, install, delivery, fuel, storage, any other expenses, and manual New Charge invoice lines. This is deliberately not broken down line by line — the client sees one number, not a detailed list of every expense category.
 - **Overall project total** — furnishings + services & other costs combined. This is the number the client compares to their original budget.
 
 The reason for not breaking down non-itemized costs: the itemized furnishings are where the value story lives (savings, market value comparison). The rest — design fees, install, logistics — are supporting costs that the client already agreed to. Breaking them out invites line-item scrutiny that doesn't serve the narrative. One clean total keeps the focus on the value delivered.
@@ -49,7 +49,7 @@ The reason for not breaking down non-itemized costs: the itemized furnishings ar
 A list of any amounts not yet collected from the client:
 
 - Each outstanding item shows: **description** and **amount owed**
-- These can be unpaid service charges, invoiced-but-not-yet-paid items, or any other balance
+- These can be unpaid manual charges, invoiced-but-not-yet-paid items, or any other balance
 - A **total outstanding** amount at the bottom
 
 A clear note (or visual treatment) communicating: "These amounts are already included in the project total above." The client should understand that the project came in at $X, and of that $X, here's what still needs to be settled. They're not additional charges on top.
@@ -75,8 +75,8 @@ This reinforces the "stayed within budget" message. Only include this if a budge
 The user generates the report from within a project, likely from a "Reports" or "Closeout" action. The report pulls data automatically from:
 
 - All items sold to the project across all itemized categories (for the furnishings breakdown)
-- All expenses and service charges in the project (for the services & other costs total)
-- All billing statuses across items, expenses, and charges (to identify outstanding amounts)
+- All non-itemized expenses and manual New Charge invoice lines in the project (for the services & other costs total)
+- Invoice demand and settlement state (to identify outstanding amounts)
 - The project's budget allocation if one was set (for the budget comparison)
 
 The report is generated as a downloadable document (PDF likely — the team already downloads invoices for external use). It should be designed/formatted to feel professional and on-brand, consistent with 1584 Design's visual identity (Playfair Display headers, Avenir body text, brand colors — see `visual-style.md`).
@@ -93,9 +93,9 @@ The report is generated as a downloadable document (PDF likely — the team alre
 
 ---
 ## Implementation Notes
-- Report generation needs to aggregate data across multiple sources: items (with project price and market value), expenses, service charges (see `project-charges.md`), billing statuses, and budget allocations
+- Report generation needs to aggregate data across multiple sources: items (with project price and market value), expenses, manual New Charge invoice lines (see `billing-invoicing.md`), invoice settlement state, and budget allocations
 - PDF generation will require a template/layout engine — the report needs to look polished, not just be a data dump. Consider whether the existing invoice generation infrastructure can be extended or if this needs a separate report template.
 - Market value on items: confirm this field exists on items today. The app map notes project price and market value as concepts, but the exact field names and availability need discovery.
-- The "services & other costs" total is calculated by summing: all non-itemized category expenses + all service charges. This crosses multiple data sources.
-- Outstanding amounts are identified by: any item, expense, or charge with a billing status of "unpaid" or "invoiced" (not yet "paid")
+- The "services & other costs" total is calculated by summing: all non-itemized category expenses + manual New Charge invoice lines. This crosses multiple data sources.
+- Outstanding amounts are identified from sent invoice demand minus linked settlement transactions.
 - The report should be regeneratable — if an outstanding payment comes in after the report was first generated, the user should be able to generate an updated version

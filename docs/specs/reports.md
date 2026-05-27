@@ -8,31 +8,31 @@ The reporting system generates formatted documents from project data. Reports ar
 
 ### 1. Invoice Report
 
-**Purpose:** Generate an itemized invoice for a client showing all purchased items, grouped by budget category, with totals.
+**Purpose:** Render a project invoice demand for a client. The report uses the invoice's stored lines once sent/collected so historical invoices do not drift when source items or transactions change.
 
 **Data Sources:**
 - Project details (name, client name, address)
-- Transactions (filtered to project, non-canceled)
-- Items linked to those transactions
+- Invoice lines (`sourceType: item | transaction | manual`)
+- Items and transactions referenced by source-backed lines when rendering draft/live previews
 - Budget categories for grouping
 
 **Structure:**
 - Header: Business name/logo, project name, client name, date
-- Body: Items grouped by budget category
-  - Each group shows: category name, list of items with name/description and price
+- Body: Invoice lines grouped by budget category where available
+  - Each group shows: category name, list of line labels and signed amounts
   - Group subtotal
 - Footer: Overall total, optional notes
 
 **Calculations:**
 ```
-for each budget category with items:
-  categoryItems = items where budgetCategoryId matches
-  categoryTotal = sum of item display prices
+for each invoice line:
+  signedAmount = amountCents * sign
 
-overallTotal = sum of all category totals
+overallTotal = sum of signedAmount
 ```
 
 **Display price:** `projectPriceCents` (always set at item creation — defaults to `purchasePriceCents` when not explicitly provided).
+For manual New Charge lines, use the line's stored `snapshotName` and `amountCents`.
 
 ### 2. Client Summary Report
 
@@ -80,5 +80,5 @@ Reports are generated entirely client-side. No server-side rendering is needed. 
 1. **No items/transactions:** Show empty report with message "No data for this report"
 2. **Items without prices:** Include in report with "No Price" or $0.00
 3. **Offline generation:** Works fully offline from cached data
-4. **Fee categories in invoice:** Transactions in fee categories (`categoryType == "fee"`) are excluded from the invoice. Fee categories represent income received from the client (e.g., design fees), not pass-through charges. Including them would double-count money already collected.
+4. **Collected fee transactions:** Settlement transactions linked by `settlementInvoiceId` are excluded from the active invoiceable pool. They record money received; they are not a new demand for money.
 5. **Canceled transactions:** Excluded from all reports

@@ -1,5 +1,5 @@
 # App Map: Ledger
-Last updated: 2026-05-18
+Last updated: 2026-05-26
 
 ## Overview
 Ledger is an inventory and transaction management app for design teams. It exists as both a web app and a macOS desktop app. The app tracks items (inventory) and transactions across projects and spaces, with budgeting and reporting features.
@@ -31,11 +31,12 @@ Ledger is an inventory and transaction management app for design teams. It exist
 - **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then converted later into real items, existing receipt-created items, or inventory-to-project flows. See `proto-item-capture.md`.
 - Non-itemized expenses currently [needs discovery — unclear how these are handled today]
 
-### Invoicing (Current)
-- Ledger can generate downloadable invoice documents
-- No payment tracking or collection in-app
-- Invoices are downloaded and attached to external payment software for collection
-- No item-level billing status exists today
+### Invoicing
+- Ledger stores project-scoped invoices as demands for money.
+- Invoice lines can reference existing items, existing transactions, or manual **New Charge** lines such as design-fee milestones.
+- Transactions remain records of actual money movement. Marking an invoice collected creates one normal Fee transaction linked by `settlementInvoiceId`.
+- Ad-hoc invoices can include pre-existing transactions and manual charges in the same invoice.
+- Item/transaction billing state is derived from invoice membership and settlement links; there is no item-level billing status field.
 
 ### Inventory Movement Source (Inventory → Project)
 - When items are sold from inventory to a project, a Purchase-from-inventory transaction is created in the project
@@ -67,16 +68,16 @@ Items have four statuses (confirmed via Ledger API):
 - **To Return** — item needs to be returned
 - **Returned** — item has been returned
 
-These are designer-facing workflow statuses tracking the physical lifecycle of an item. A separate billing status track (unbilled → invoiced → paid) is being specced as a new addition — see billing-invoicing.md.
+These are designer-facing workflow statuses tracking the physical lifecycle of an item. Billing state is derived from invoices and settlement transactions — see billing-invoicing.md.
 
 **Known issue:** When items are moved from inventory to a project, the status does not auto-update to "Purchased." This requires manual cleanup.
 
 ## Data Model Summary
-Key entities include: Items, ProtoItems, Transactions, Projects, Spaces, Accounts, Budget Categories. ProtoItems are separate from Items and do not affect budgets, inventory, transactions, invoices, reports, or item counts until resolved.
+Key entities include: Items, ProtoItems, Transactions, Invoices, InvoiceLines, Projects, Spaces, Accounts, and Budget Categories. ProtoItems are separate from Items and do not affect budgets, inventory, transactions, invoices, reports, or item counts until resolved.
 
 ## Navigation Flow
 [Needs discovery — the app has desktop and web versions with potentially different navigation patterns]
 
 ## Notes
 - No codebase access yet. App map is based on user descriptions. Will reconcile when codebase is available.
-- The Ledger MCP connector is available, which suggests the app's data model includes: items, transactions, projects, spaces, accounts, and budget categories.
+- The Ledger MCP connector includes items, transactions, invoices, projects, spaces, accounts, and budget categories.

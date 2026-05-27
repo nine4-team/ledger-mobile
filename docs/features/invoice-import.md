@@ -31,7 +31,7 @@ All state is local to `ImportInvoiceModal` via `@State`. No `@Observable` store 
 ## Data
 **Creates:**
 - `accounts/{accountId}/items/{itemId}` — One item per included draft line item. Fields: `name`, `purchasePriceCents`, `quantity`, `source`, `sku` (Wayfair), `status: "active"`, `budgetCategoryId`, `notes` (Wayfair attribute lines).
-- `accounts/{accountId}/transactions/{txId}` — One transaction linking all created items. Fields: `projectId`, `transactionType: "purchase"`, `source` (e.g. "Amazon #ORDER123"), `transactionDate`, `amountCents`, `status: "pending"`, `itemIds`, `budgetCategoryId`.
+- `accounts/{accountId}/transactions/{txId}` — One active transaction linking all created items. Fields: `projectId`, `transactionType: "purchase"`, `source` (e.g. "Amazon #ORDER123"), `transactionDate`, `amountCents`, `itemIds`, `budgetCategoryId`. Active transactions omit `status`; `isComplete` drives the Needs Review workflow.
 
 **Uploads (background, fire-and-forget):**
 - Receipt PDF to `accounts/{accountId}/transactions/{txId}/{uuid}.pdf` -> updates `receiptImages`

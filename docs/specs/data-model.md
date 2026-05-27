@@ -57,7 +57,8 @@ All data lives under a single **Account** document. Every entity path begins wit
 
 **Path:** `accounts/{accountId}/transactions/{transactionId}`
 
-A financial event: a purchase, return, sale, or inventory transfer.
+A financial event: money moved. Invoices are separate demand records; settlement
+transactions link back to invoices with `settlementInvoiceId`.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
@@ -67,8 +68,8 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | amountCents | number, nullable | Total amount in cents (always stored as positive; see Sign Conventions) |
 | subtotalCents | number, nullable | Pre-tax subtotal in cents. When set, should be <= amountCents |
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
-| transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"` |
-| status | string, nullable | One of: `"pending"`, `"completed"`, `"canceled"` |
+| transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"`, `"fee"`, `"expense"` |
+| status | string, nullable | Omitted for active transactions. `"canceled"` is the only canonical stored status. Legacy `"pending"` / `"completed"` should be treated as active/nil. |
 | source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Inventory movement transactions use the inventory label (for example `"Business Inventory"`).** |
 | transactionDate | string, nullable | Date of the transaction (stored as a string, not a timestamp) |
 | itemIds | array of string, nullable | **CANONICAL link to items.** List of Item document IDs associated with this transaction |
@@ -88,6 +89,8 @@ A financial event: a purchase, return, sale, or inventory transfer.
 | otherImages | array of AttachmentRef, nullable | Other supporting images |
 | transactionImages | array of AttachmentRef, nullable | General transaction images |
 | ingestionSource | string, nullable | Origin of the transaction: `"email"` (auto-ingested from email), `"manual"` (created by human), or null (legacy/unknown) |
+| settlementInvoiceId | string, nullable | Invoice this money-movement transaction settles. Settlement-linked transactions are excluded from invoiceable demand pools. |
+| settlementInvoiceLineIds | array of string, nullable | Optional invoice line IDs settled by this transaction. |
 | ingestionStatus | string, nullable | Ingestion lifecycle: `"needs_review"` (unmatched or low confidence), `"auto_matched"` (matched to project but unconfirmed), `"confirmed"` (user-verified), or null |
 | ingestionMeta | IngestionMeta, nullable | Metadata from the email ingestion pipeline. Null for manually created transactions |
 | createdAt | timestamp | |
@@ -116,7 +119,45 @@ See [sale-transactions.md](sale-transactions.md) for the full sale shape and the
 
 ---
 
-### 2. Item
+### 2. Invoice
+
+**Path:** `accounts/{accountId}/invoices/{invoiceId}`
+
+A project-scoped demand for money. An invoice is not proof that money moved.
+Collection is recorded by ordinary transactions linked with
+`settlementInvoiceId`.
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | string | Document ID |
+| projectId | string | FK to Project |
+| status | string | `"draft"`, `"sent"`, `"paid"`, or `"voided"` |
+| itemIds | array of string | Membership index derived from `lines` where `sourceType == "item"` |
+| transactionIds | array of string | Membership index derived from `lines` where `sourceType == "transaction"` |
+| lines | array of InvoiceLine | Authoritative demand lines. Drafts may include manual New Charge lines. |
+| totalCents | number, nullable | Frozen net total once sent/collected; sum of signed line amounts |
+| invoiceNumber | string, nullable | Human-readable label |
+| notes | string, nullable | |
+| dateIssued | timestamp, nullable | |
+| dateSent | timestamp, nullable | |
+| datePaid | timestamp, nullable | Compatibility lifecycle marker; settlement transactions are the auditable collection record |
+| dateVoided | timestamp, nullable | |
+
+`InvoiceLine` fields:
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| id | string | Stable line identifier. Backfilled historical lines use deterministic IDs. |
+| sourceType | string | `"item"`, `"transaction"`, or `"manual"` |
+| sourceId | string, nullable | Item/transaction ID for sourced lines; omitted for manual New Charge lines |
+| amountCents | number | Positive magnitude |
+| sign | number | `1` charge, `-1` credit |
+| snapshotName | string, nullable | Frozen display label |
+| settlementTransactionIds | array of string, nullable | Optional convenience reverse lookup; transaction settlement fields are source of truth |
+
+---
+
+### 3. Item
 
 **Path:** `accounts/{accountId}/items/{itemId}`
 
@@ -170,7 +211,7 @@ Rationale: see [inventory-as-store.md](inventory-as-store.md) and [budget-manage
 
 ---
 
-### 3. ProtoItem
+### 4. ProtoItem
 
 **Path:** `accounts/{accountId}/protoItems/{protoItemId}`
 
@@ -209,7 +250,7 @@ User-facing UI should call these **Item Quick Drafts**. Unconverted drafts are s
 
 ---
 
-### 4. Space
+### 5. Space
 
 **Path:** `accounts/{accountId}/spaces/{spaceId}`
 
@@ -230,7 +271,7 @@ A physical location or logical grouping within a project or business inventory (
 
 ---
 
-### 5. Project
+### 6. Project
 
 **Path:** `accounts/{accountId}/projects/{projectId}`
 
@@ -252,7 +293,7 @@ A design project, job, or client engagement.
 
 ---
 
-### 6. BudgetCategory (Account-Scoped Preset)
+### 7. BudgetCategory (Account-Scoped Preset)
 
 **Path:** `accounts/{accountId}/presets/default/budgetCategories/{budgetCategoryId}`
 
@@ -275,7 +316,7 @@ A reusable budget category template defined at the account level. These are the 
 
 ---
 
-### 7. ProjectBudgetCategory (Per-Project Allocation)
+### 8. ProjectBudgetCategory (Per-Project Allocation)
 
 **Path:** `accounts/{accountId}/projects/{projectId}/budgetCategories/{budgetCategoryId}`
 
@@ -300,7 +341,7 @@ Represents a budget category that has been "enabled" for a specific project, wit
 
 ---
 
-### 8. ProjectPreferences (User-Specific Display Settings)
+### 9. ProjectPreferences (User-Specific Display Settings)
 
 **Path:** `accounts/{accountId}/users/{userId}/projectPreferences/{projectId}`
 
@@ -318,7 +359,7 @@ Per-user, per-project display preferences. These do not affect data or calculati
 
 ---
 
-### 9. LineageEdge
+### 10. LineageEdge
 
 **Path:** `accounts/{accountId}/lineageEdges/{edgeId}`
 
@@ -350,7 +391,7 @@ Tracks the movement history of an item across transactions and projects. Each ed
 
 ---
 
-### 10. VendorDefaults (Account Preset)
+### 11. VendorDefaults (Account Preset)
 
 **Path:** `accounts/{accountId}/presets/default/vendors/default`
 
@@ -363,7 +404,7 @@ A single document holding the account's list of vendor/source presets for transa
 
 ---
 
-### 11. SpaceTemplate (Account Preset)
+### 12. SpaceTemplate (Account Preset)
 
 **Path:** `accounts/{accountId}/presets/default/spaceTemplates/{templateId}`
 
@@ -371,7 +412,7 @@ Predefined space templates for quick space creation.
 
 ---
 
-### 12. RequestDoc (Write-Ahead Log for Atomic Operations)
+### 13. RequestDoc (Write-Ahead Log for Atomic Operations)
 
 **Path:** `accounts/{accountId}/requests/{requestDocId}` (account-scoped)
 **Path:** `accounts/{accountId}/projects/{projectId}/requests/{requestDocId}` (project-scoped)
@@ -725,7 +766,7 @@ All enum-like fields use **lowercase with spaces** for multi-word values. Swift 
 | Field | Valid values |
 |-------|-------------|
 | `item.status` | `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"` |
-| `transaction.type` | `"purchase"`, `"sale"`, `"return"` |
-| `transaction.status` | `"pending"`, `"completed"`, `"canceled"` |
+| `transaction.type` | `"purchase"`, `"sale"`, `"return"`, `"fee"`, `"expense"` |
+| `transaction.status` | `"canceled"` only; omit when active |
 
 - `source` (vendor) values are case-sensitive display strings; do not normalize.

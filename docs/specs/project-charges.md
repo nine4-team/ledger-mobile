@@ -1,8 +1,13 @@
 # Project Charges (Service Fees & Planned Costs)
-Status: new
-Last updated: 2026-04-03
+Status: superseded by [Billing & Invoicing](billing-invoicing.md)
+Last updated: 2026-05-26
 
-## Summary
+> **Historical proposal.** This document proposed a standalone `ProjectCharge`
+> entity for design fees and planned costs. The active model now uses manual
+> invoice lines created through the **New Charge** action on draft invoices.
+> See [billing-invoicing.md](billing-invoicing.md).
+
+## Historical Summary
 A way to create and track service fees, design fees, and other planned charges within a project. These are the business's own fees for services rendered — not reimbursable expenses the business fronted, and not inventory items sold to the client. Each charge has a set amount, a name, and a payment status. Charges can be created at project setup or added anytime during the project.
 
 ## The Three Buckets of Project Cost

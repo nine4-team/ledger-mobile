@@ -1,10 +1,16 @@
 # Billing & Invoicing v2
 
-Status: shipped
-Last updated: 2026-04-21
+Status: historical; superseded by [billing-invoicing.md](billing-invoicing.md) as the active product spec
+Last updated: 2026-05-26
 Implemented: 2026-04-21
 Supersedes: [billing-invoicing.md](billing-invoicing.md) (shipped 2026-04-07)
 Grounding: [../plans/money-story.md](../plans/money-story.md), [../plans/invoicing-reconciliation-decisions.md](../plans/invoicing-reconciliation-decisions.md)
+
+> **Historical implementation spec.** This document describes the shipped
+> 2026-04-21 billing redesign. New product work should use
+> [billing-invoicing.md](billing-invoicing.md), which keeps signed invoice lines
+> but clarifies that transactions record money movement, invoices demand money,
+> and manual New Charge lines cover fees before collection.
 
 ## Summary
 

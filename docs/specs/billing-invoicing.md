@@ -1,122 +1,308 @@
 # Billing & Invoicing
-Status: superseded by [billing-invoicing-v2.md](billing-invoicing-v2.md) (2026-04-20)
-Last updated: 2026-04-20
-Implemented: 2026-04-07
-
-> **Superseded.** This is the v1 spec, preserved for historical context. The shipped implementation still matches this doc, but new work should reference [billing-invoicing-v2.md](billing-invoicing-v2.md), which collapses paid-state onto the invoice and makes invoices bidirectional.
+Status: active redesign
+Last updated: 2026-05-26
+Implementation plan: [../plans/billing-invoicing-canonical-implementation.md](../plans/billing-invoicing-canonical-implementation.md)
 
 ## Summary
-Progressive billing for projects — the ability to bill clients mid-project for approved items rather than waiting until the end. Items within a project transaction have individual billing statuses, invoices can be generated from selected items, and marking an invoice as paid automatically updates all items on it. Stretch goal: auto-detect payment via email integration.
 
-## Current Behavior (What Exists Today)
+Billing is the boundary between money the business requests and money that has
+actually moved.
 
-- Ledger can generate invoices (downloadable documents), but does not handle money collection or payment tracking in-app
-- The user downloads the invoice and attaches it to external payment software (e.g., Stripe, Square, QuickBooks — exact tool TBD) to collect payment
-- There is no item-level billing status — once items are in a project, there's no way to distinguish "billed" from "unbilled" items within a transaction
-- There is no way to bill for a subset of items mid-project; billing happens outside the app at the end of a project
-- All items within a project's category transaction are treated the same regardless of whether the client has approved, been invoiced for, or paid for them
+- **Transaction** — a record that money moved.
+- **Invoice** — a demand for money.
+- **Invoice line** — one component of an invoice's demand.
 
-## What's Changing
+Ledger supports two invoice workflows:
 
-### Staying the Same
-- One transaction per budget category per project (e.g., one Furnishings transaction that accumulates items over time)
-- Ledger generates invoices as downloadable documents
-- Actual money collection happens in external payment software (Ledger does not process payments)
+1. **Ad-hoc invoices** built from existing project records: items, reimbursable
+   expenses, credits, and other transactions where money already moved.
+2. **Manual charge invoices** built from new invoice lines that are not backed by
+   prior transactions, such as design fees, retainers, storage fees, or project
+   management fees.
 
-### Changing
-- **Items get individual billing statuses.** Each item within a project transaction now has a status: unbilled, invoiced, or paid. This replaces the current flat/untracked state.
-- **Invoice generation becomes item-aware.** Instead of generating a generic invoice, the user selects specific items from a transaction to include on an invoice. Only selected items move to "invoiced" status.
+The app must not create a transaction for money that has not moved. If the team
+needs to request money before collection, use an invoice line. When collection
+happens, create or link a transaction and connect it to the invoice as settlement
+evidence.
 
-### Adding
-- **Item-level billing status** (unbilled → invoiced → paid) — visible on each item within a project transaction
-- **Selective invoicing from transactions** — user can check/select approved items from a transaction and generate an invoice for just those items
-- **Invoice-level payment confirmation** — when the user marks an invoice as "paid," all items on that invoice automatically update from "invoiced" → "paid" (no manual per-item updates)
-- **Project billing summary** — a view showing total project cost, total invoiced, total collected (paid), and total still outstanding
-- **Stretch goal: auto-payment detection** — Ledger monitors incoming email for payment confirmation notifications from the external payment software and automatically marks the corresponding invoice (and its items) as paid via MCP integration
+## Core Model
 
-### Removing
-- Nothing explicitly removed — this builds on what exists
+### Transactions
 
-## How It Works
+A transaction records a real-world money movement. Examples:
 
-### Item Billing Status
-Every item within a project transaction has one of three billing statuses:
+- The business buys an item.
+- The business pays an installer.
+- The client pays the business.
+- The business refunds or credits the client.
 
-- **Unbilled** — item is in the project, client has not been invoiced for it yet. This is the default status when an item enters a project (whether sold from inventory or logged as a direct expense).
-- **Invoiced** — item has been included on an invoice that was sent to the client. Payment has not been received yet.
-- **Paid** — client has paid for this item (confirmed either manually or via auto-detection).
+Transactions are never pending demands. A planned fee, future installment, or
+expected client payment is not a transaction until money moves.
 
-Status transitions are one-directional under normal flow: unbilled → invoiced → paid.
+Some transactions settle invoice demands. Settlement is represented by optional
+invoice linkage on the transaction, not by a separate payment entity.
 
-For non-itemized expenses (install, fuel, etc.), the billing status applies to the expense entry itself rather than individual items, since these aren't itemized.
+Settlement fields:
 
-### Generating an Invoice (Mid-Project or End-of-Project)
-1. User opens the project's Finances → Billing tab
-2. User taps "Create Invoice"
-3. The Create Invoice picker presents every billable item and non-itemized expense in the project (see "Billable Membership" below). A search field at the top filters both lists in real time by name, source, or SKU using the same matchers as the rest of the app.
-4. User selects/checks the items and expenses they want to bill for — typically those the client has already approved. Selections persist across search queries (selecting an item, changing the search, then returning to a different filter still keeps it counted in the running total).
-5. User reviews step 2: optional **Invoice Name** (free-form, e.g. "Phase 1 — Furnishings"), optional notes, total. Tapping Create makes the invoice in `draft` status and cascades every selected item + transaction to `billingStatus = invoiced` in one atomic batch.
-6. User downloads (or otherwise exports) the invoice and sends it through their external payment software, then can mark it Sent in Ledger.
+```swift
+struct Transaction {
+    var settlementInvoiceId: String?
+    var settlementInvoiceLineIds: [String]?
+}
+```
 
-### Billable Membership
+- `settlementInvoiceId` points to the invoice this transaction settled.
+- `settlementInvoiceLineIds` optionally points to specific invoice lines when a
+  payment settles only part of an invoice.
 
-The Create Invoice picker includes:
+A transaction with `settlementInvoiceId` is not billable activity. It is
+collection or settlement evidence and must not re-enter the To Invoice pool.
 
-- **Items** that satisfy: persisted, `billingStatus ∈ {nil, unbilled}`, AND `status != returned` (returned items are terminal and never billable).
-- **Transactions** that satisfy: persisted, **non-itemized** (no `itemIds` — itemized transactions are excluded so their value isn't double-counted alongside their child items), `billingStatus ∈ {nil, unbilled}`, AND `status != canceled`.
+### Invoices
 
-Transactions where `isComplete != true` ("needs review") **are** included in the picker but each row is flagged with a "Needs Review" badge so the user can decide whether to bill them as-is.
+An invoice is a project-scoped demand for money. It may include lines based on
+existing records and lines typed directly into the invoice.
 
-The user can generate multiple invoices over the life of a project — one for the big items confirmed early on, another for accessories confirmed later, a final one for remaining items at project end. Each invoice is a separate billing event.
+Lifecycle:
 
-### Invoice Across Categories
-A single invoice should be able to pull items from multiple transactions/categories within the same project. For example, one invoice to the client might include:
-- 3 items from the Furnishings transaction
-- The install crew expense from the Install transaction
-- 2 items from the Additional Requests transaction
+- `draft` — editable planned demand. The invoice can be used to stage design-fee
+  breakdowns before sending.
+- `sent` — issued demand. Lines and totals are frozen as the demand the client
+  received.
+- `paid` — settled demand. This status should be supported by linked settlement
+  transactions, either created through the Mark Collected flow or linked after
+  the fact.
+- `voided` — withdrawn demand. Its existing item/transaction sources return to
+  the billable pool unless they are claimed by another non-voided invoice.
 
-This means the invoice is its own entity — it references items across transactions, not tied to a single transaction.
+Invoices do not mutate the source records they reference. Paid/collected state is
+derived from invoice status and settlement linkage, not stored on items or source
+transactions.
 
-### Marking an Invoice as Paid
-1. User receives confirmation that the client has paid (via their payment software, email, etc.)
-2. User opens the invoice in Ledger and marks it as "Paid"
-3. **All items on that invoice automatically update** from "invoiced" → "paid" — no per-item manual changes required
-4. The project billing summary updates to reflect the new totals
+### Invoice Lines
 
-### Project Billing Summary
-The project view includes a billing summary showing:
-- **Total project cost** — the sum of all items and expenses in the project across all categories
-- **Total invoiced** — the sum of all items/expenses that have been included on invoices (status: invoiced + paid)
-- **Total collected** — the sum of all items/expenses where payment has been received (status: paid)
-- **Total outstanding** — the sum of all items/expenses not yet paid (status: unbilled + invoiced)
+Invoice lines represent the components of a demand. They carry a sign so one
+invoice can include charges and credits.
 
-This summary gives an at-a-glance picture of where the project stands financially — how much has been spent, how much has been billed, how much has been collected, and how much is still owed.
+```swift
+enum InvoiceLineSourceType {
+    case item
+    case transaction
+    case manual
+}
 
-### Stretch Goal: Auto-Payment Detection via Email/MCP
-Rather than manually marking invoices as paid, Ledger could monitor the team's email for payment confirmation notifications from their payment software. When a matching email arrives (e.g., "Invoice #1234 has been paid"), an MCP integration could:
-1. Parse the email to identify the invoice
-2. Match it to the corresponding invoice in Ledger
-3. Automatically mark the invoice as paid
-4. Cascade the status update to all items on that invoice
+struct InvoiceLine {
+    var id: String
+    var sourceType: InvoiceLineSourceType
+    var sourceId: String?
+    var amountCents: Int
+    var sign: InvoiceLineSign
+    var snapshotName: String?
+    var settlementTransactionIds: [String]?
+}
+```
 
-This would eliminate the manual confirmation step entirely. Requires: email MCP access, reliable invoice ID matching between Ledger and the payment software, and a way to handle edge cases (partial payments, failed payments, refunds).
+`id` is needed so settlement transactions can optionally target specific lines.
+`sourceId` is nil for manual lines.
 
-## Open Questions
-- What does the invoice document look like today? What fields/layout does the current invoice generator produce? [needs discovery]
-- Should invoices be browsable as a list within the project (e.g., "Invoice History" section), or just downloadable one-time documents?
-- Can a single invoice span multiple projects, or is it always one invoice per project? (Likely one per project, but worth confirming.)
-- What payment software does the team use? This matters for the auto-detection stretch goal — different platforms send different email formats.
-- Should there be a "void" or "cancel" action for invoices? (e.g., client disputes items after invoicing, items need to go back to "unbilled")
-- For partial payments — if a client pays half an invoice, how should that be handled? Mark individual items as paid? Or is it all-or-nothing per invoice?
-- How should the billing status be visually represented on items? Color coding? Badge/tag? Status column?
+Line ID policy:
 
----
+- New invoice lines use UUID strings created when the draft line is added.
+- Backfilled historical lines use deterministic IDs derived from invoice id,
+  source type, source id, and line index so migration is idempotent.
+- Line IDs survive draft edits and are frozen into sent invoices.
+
+Source meanings:
+
+- `item` — demand is based on a project item.
+- `transaction` — demand or credit is based on money that already moved, such as
+  a reimbursable expense or client-paid credit.
+- `manual` — demand is entered directly on the invoice, not backed by an item or
+  prior transaction.
+
+The UI should label the action for adding a manual line as **New Charge**.
+Examples: "Design Fee 1 of 3", "Retainer", "Project Management Fee", "Storage
+Fee", "Adjustment".
+
+## Billable Pool
+
+The To Invoice pool includes existing billable sources that are not already
+claimed by a non-voided invoice:
+
+- Project items that are not returned.
+- Eligible non-itemized project transactions where money already moved and the
+  transaction is not canceled.
+
+Existing transactions are billable only when their shape represents money that
+should be demanded or credited on an invoice. Settlement transactions are never
+billable.
+
+Fee transactions are treated as money movement. A fee transaction created when
+the client pays the business is settlement evidence, not a planned receivable.
+
+Manual New Charge lines are not discovered from the pool because they do not
+exist until the user adds them to a draft invoice. They are invoice demand lines,
+not project-level source records.
+
+## Invoice Workflows
+
+### Ad-Hoc Invoice
+
+Used when the project already has records that justify the demand.
+
+Example:
+
+```text
+Existing records:
+- Item: Sofa
+- Transaction: business paid installer $300
+
+Invoice:
+- Sofa                         sourceType: item
+- Installer reimbursement      sourceType: transaction
+```
+
+When the client pays, Ledger creates or links a transaction for the actual money
+received and sets `settlementInvoiceId` to the invoice.
+
+### Manual Charge Invoice
+
+Used when no money has moved yet and the team needs to demand a design fee,
+retainer, service fee, or other planned amount.
+
+Example:
+
+```text
+Draft invoice:
+- New Charge: Design Fee 1 of 3       $2,500
+- New Charge: Design Fee 2 of 3       $2,500
+- New Charge: Design Fee 3 of 3       $2,500
+```
+
+Those lines may live on a draft invoice before it is sent. They are invoice
+lines, not transactions.
+
+When the client pays, Ledger creates or links a fee transaction for the payment
+event and links that transaction to the invoice or specific invoice lines.
+
+### Mixed Invoice
+
+One invoice can combine existing records and manual charges.
+
+Example:
+
+```text
+Invoice:
+- Existing expense transaction: delivery reimbursement       $300
+- New Charge: Design Fee 1 of 3                            $2,500
+
+Client pays $2,800:
+- Create one transaction for the $2,800 payment event.
+- Link it to the invoice.
+```
+
+The existing expense transaction records money out. The settlement transaction
+records money in. Both are transactions because money moved in both cases, but
+only the expense transaction is an invoice-line source.
+
+## Collection Behavior
+
+Ledger should support collecting at invoice or line granularity:
+
+- **Whole invoice collected** — create or link one transaction for the amount
+  collected and set `settlementInvoiceId`.
+- **Selected lines collected** — create or link one transaction for the payment
+  event and set `settlementInvoiceLineIds` to the settled lines.
+
+Collection should follow real payment events. If one check/ACH/card payment
+settles multiple lines, create one transaction, not one transaction per line.
+
+Marking an invoice paid may create a settlement transaction as part of the
+workflow. If a transaction already exists, the user should be able to link it
+instead.
+
+The UI should use **Mark Collected** for actions that create or link settlement
+transactions. The raw invoice status value `paid` may remain for lifecycle
+compatibility.
+
+## Derived States and Reporting
+
+Invoices track demand lifecycle:
+
+- Draft: planned but not issued.
+- Sent: demanded and outstanding unless fully settled.
+- Paid: settled.
+- Voided: withdrawn.
+
+Transactions track money movement.
+
+Reports and billing summaries should distinguish:
+
+- **Demanded / invoiced** — invoice lines on sent or paid invoices.
+- **Outstanding** — sent invoice demand minus linked settlement transactions.
+- **Collected** — transactions linked to invoices as settlement.
+- **Unbilled** — eligible items and transactions not on a non-voided invoice,
+  plus manual charges not yet sent if represented in draft invoices.
+
+Until settlement linkage is implemented, paid invoice status may remain a
+compatibility signal for collected state. The target model is auditable
+collection through linked transactions.
+
+Historical paid invoices should not get synthetic settlement transactions by
+default. Readers should treat `Invoice.status == paid` as a compatibility-only
+collected signal until a reviewed settlement backfill is intentionally run.
+
+## Returns and Credits
+
+Credits remain invoice lines with negative sign.
+
+If an item on a paid invoice is returned, Ledger may create a credit source
+transaction or a manual credit line depending on the operation. The resulting
+credit appears on a later invoice as a credit line. The credit source must be
+clearly separated from settlement transactions so it does not get excluded from
+the billable pool by mistake.
+
+## MCP and Contract Ingestion
+
+MCP tools should operate on invoices and settlement linkage, not fake
+transactions for future money.
+
+Needed capabilities:
+
+- Create draft invoices.
+- Add existing item and transaction lines.
+- Add manual New Charge lines.
+- Build draft invoice lines from a contract.
+- Mark an invoice or selected lines collected.
+- Create or link settlement transactions.
+- List invoice settlement state and outstanding balances.
+
+Contract ingestion should create or update project fields and draft invoice
+manual lines for fee schedules. It should not create fee transactions until
+payment is actually collected.
+
 ## Implementation Notes
-- Items have a `billingStatus` field (enum: unbilled, invoiced, paid). nil is treated as unbilled. Default for new items: unbilled.
-- Transactions also have a `billingStatus` field — used for non-itemized expenses (install, fuel) that have no child items.
-- The `Invoice` entity (`accounts/{accountId}/invoices/{id}`, with `projectId` field) references a list of `itemIds` AND `transactionIds`, has its own status (draft / sent / paid / voided), `totalCents` snapshot, and date stamps for issued / sent / paid / voided.
-- The `invoiceNumber` Firestore field stores the user's free-form **Invoice Name** (the UI label is "Invoice Name", but the underlying field name is preserved for backward compatibility).
-- All cascading operations (create → invoiced, markPaid → paid, void → unbilled) commit through one Firestore batch so they're atomic.
-- Voiding an invoice reverts referenced items + transactions to `unbilled`, but **skips** any that have already moved to `paid` — paid is terminal.
-- Auto-payment detection would use an email MCP to monitor inbox, parse payment notifications, and call Ledger's MCP to update invoice status — this is a significant integration effort and should be treated as a separate phase
-- Consider whether billing status should also be reflected on the transaction level (e.g., "partially billed," "fully billed," "fully paid") for quick scanning
+
+- Existing `InvoiceLineSourceType` should expand from `item | transaction` to
+  `item | transaction | manual`.
+- Invoice lines need stable IDs for line-level settlement.
+- Draft invoices can continue to render live previews for item and transaction
+  lines. Manual lines store their amount and label on the draft line itself.
+- Sent invoices freeze line names, signs, and amounts.
+- Transactions with settlement linkage must be excluded from billable membership,
+  budget demand calculations, and invoice pickers.
+- The previous `billingStatus` model on items/transactions remains retired.
+- Legacy `pending` and `completed` transaction statuses are not part of the
+  conceptual model. Nil means active; `canceled` means canceled.
+
+## Historical Context
+
+This spec replaces the earlier v1/v2 split:
+
+- v1 stored billing state on items and transactions and cascaded invoice status
+  changes onto those records.
+- The shipped v2 redesign moved paid-state onto invoices and introduced signed
+  lines.
+- The current target model keeps signed invoice lines but clarifies that
+  transactions are money movement records and invoices are demands. Manual New
+  Charge lines cover design fees and other demands that exist before money moves.

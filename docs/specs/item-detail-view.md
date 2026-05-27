@@ -1,6 +1,6 @@
 # Item Detail View
 Status: shipped (one open question remains on auto-status edge cases)
-Last updated: 2026-04-10
+Last updated: 2026-05-26
 
 > **Shipped**:
 > - **Auto-status on inventory-to-project move** (2026-04-07) — `InventoryOperationsService.sellToProject` now sets `status: "purchased"` on each item in the destination-project update batch, matching the existing `sellToBusiness` behavior. Decision on the open question "should already-'to return' items still flip to 'purchased'?": yes for now — selling a to-return item is unusual, and assigning it to a project is a clear signal that it's purchased. Revisit if this causes confusion in practice.
@@ -8,7 +8,7 @@ Last updated: 2026-04-10
 > - **Notes section pencil-per-section edit** — CollapsibleSection `onEdit` wired on the NOTES section.
 > - **Details section pencil-per-section edit** (2026-04-10) — CollapsibleSection `onEdit` wired on the DETAILS section, opens `EditItemDetailsModal`.
 > - **Three-dot menu reduction** (2026-04-10) — Edit Details and Edit Notes removed from the kebab (now covered by pencil icons); Status submenu suppressed for `context == .detail` in `ItemMenuBuilder.buildSingleItemMenu` (covered by the toolbar capsule). Kebab now only contains Make Copies, Transaction, Space, Move/Sell, Reassign, and Delete.
-> - **Two-track status — UI display** (2026-04-10) — Details section now renders `Billing` as a `DetailRow` alongside `Status`, reading `liveItem.billingStatus?.displayLabel`. Item.swift has the `billingStatus: BillingStatus?` field (unbilled / invoiced / paid, Enums.swift `BillingStatus`), shipped alongside billing-invoicing.md.
+> - **Billing display moved out of item state** (2026-05-26) — Item billing state is now derived from invoice membership. `Item.billingStatus` / `BillingStatus` are historical concepts; use [billing-invoicing.md](billing-invoicing.md) for the canonical invoice/settlement model.
 >
 > **Deferred**:
 > - **Clear Status from detail** — removing the Status submenu from the detail kebab also removed the "Clear Status" path. StatusPickerModal does not currently offer a "No Status" option. Accept for now; if clearing becomes common, add a "No Status" entry to StatusPickerModal.
@@ -33,7 +33,7 @@ Items have four possible statuses, confirmed via the Ledger API:
 - **To Return** — item needs to be returned
 - **Returned** — item has been returned
 
-These statuses track the **designer's physical workflow** — the lifecycle of acquiring and managing the item. They are distinct from the billing/invoicing status (unbilled → invoiced → paid) specced in [billing-invoicing.md](billing-invoicing.md), which tracks the **financial lifecycle** of collecting payment from the client.
+These statuses track the **designer's physical workflow** — the lifecycle of acquiring and managing the item. Billing state is not stored on the item; it is derived from invoices and settlement transactions as described in [billing-invoicing.md](billing-invoicing.md).
 
 ## What's Changing
 
@@ -56,7 +56,7 @@ Items effectively have two parallel status dimensions:
 
 1. **Designer workflow status** (this spec): to purchase → purchased → to return → returned. Tracks the physical lifecycle — has the item been ordered, has it arrived, does it need to go back?
 
-2. **Billing status** (see [billing-invoicing.md](billing-invoicing.md)): unbilled → invoiced → paid. Tracks the financial lifecycle — has the client been billed for this item, have they paid?
+2. **Billing state** (see [billing-invoicing.md](billing-invoicing.md)): To Invoice → Invoiced → Collected, derived from whether the item appears on a draft/sent/paid invoice and whether that invoice has settlement transactions.
 
 These serve different audiences and answer different questions. A designer checking their shopping list cares about workflow status. The person handling invoicing cares about billing status. An item that is "Purchased" (designer bought it) might still be "Unbilled" (client hasn't been invoiced yet) — those are independent facts.
 
@@ -65,7 +65,7 @@ These serve different audiences and answer different questions. A designer check
 **Naming:** Both tracks cannot be called "Status" — that creates ambiguity ("what's the status?" could mean either). Working direction is to keep the designer workflow as "Status" (since that's what the team already knows) and give the billing track a distinct label like "Billing" or "Payment." Example of how this might read on an item:
 
 **Status:** Purchased
-**Billing:** Unbilled
+**Billing:** To Invoice
 
 Names are NOT finalized — still needs workshopping. The important decision is that they're two separate, clearly labeled tracks, not the names themselves.
 
@@ -83,4 +83,4 @@ Names are NOT finalized — still needs workshopping. The important decision is 
 ## Implementation Notes
 - The Ledger API currently supports four item statuses: "to purchase", "purchased", "to return", "returned" (confirmed via the `list_items` endpoint filter).
 - Auto-status on inventory-to-project move would need to hook into the sell/move flow — when `sell_items` is called or an item's project assignment changes, the status should update automatically.
-- The billing status track (unbilled → invoiced → paid) is a new field being specced separately in billing-invoicing.md — it does not exist in the current data model.
+- Billing state is derived from invoice membership and settlement records; do not add item-level billing status fields.

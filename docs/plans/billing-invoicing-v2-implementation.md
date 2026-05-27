@@ -1,7 +1,14 @@
 # Billing & Invoicing v2 — Implementation Plan
 
-Status: Shipped 2026-04-21 (all phases)
-Last updated: 2026-04-21
+Status: historical; superseded by [billing-invoicing-canonical-implementation.md](billing-invoicing-canonical-implementation.md)
+Last updated: 2026-05-26
+
+> **Historical implementation plan.** This plan describes the April 2026
+> signed-line redesign. New billing work should use
+> [billing-invoicing-canonical-implementation.md](billing-invoicing-canonical-implementation.md),
+> which clarifies the core separation: invoices demand money, transactions
+> record money movement, and manual **New Charge** lines cover design fees before
+> collection.
 
 **Amendment (2026-04-21):** drafts are now live previews — `lines` and `totalCents` are no longer written while `status == .draft`. They are materialized at `markSent` and frozen from that point on. This supersedes the "write signed lines on create / update" behavior described in Tasks 1.4 and 1.5 below. See §3 Scope and §5 Phase 1 notes.
 Spec: [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) (supersedes the shipped [billing-invoicing.md](../specs/billing-invoicing.md))

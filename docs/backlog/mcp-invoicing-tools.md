@@ -1,28 +1,45 @@
 # MCP Tools for Invoicing
 
-**Status:** Roadmap
+**Status:** Implemented in local MCP server; needs connector smoke test against a sandbox account
 **Created:** 2026-04-20
+**Updated:** 2026-05-26
 
 ## Summary
 
-Add invoice-related tools to the Ledger MCP server. Today the MCP surface covers transactions, items, inventory movement, projects, spaces, accounts, and notes — but has **zero** invoice tools. Invoicing is iOS-only.
+Add invoice-related tools to the Ledger MCP server so agents can work with invoice demands without creating fake transaction records.
 
 ## Motivation
 
-Once the billing-invoicing v2 redesign ships (see [../specs/billing-invoicing-v2.md](../specs/billing-invoicing-v2.md) and [../plans/billing-invoicing-v2-implementation.md](../plans/billing-invoicing-v2-implementation.md)), invoices become the single source of truth for "what has been billed" and "what has been paid." That makes them a natural MCP target for reporting, bulk operations, and cross-project queries.
+The active billing model (see [../specs/billing-invoicing.md](../specs/billing-invoicing.md)) separates demand from money movement:
 
-## Likely Tools
+- Invoices demand money.
+- Invoice lines describe the components of that demand.
+- Transactions record money that actually moved.
+- Some transactions are linked back to invoices as settlement evidence.
+
+That makes invoices a natural MCP target for reporting, contract import, bulk operations, and cross-project settlement queries.
+
+## Implemented Tools
 
 - `list_invoices` — filter by project, status, date range.
 - `get_invoice` — full document including signed lines.
-- `create_invoice` — build a draft from a picked set of transaction/item ids.
-- `mark_invoice_sent` / `mark_invoice_paid` / `void_invoice`.
+- `create_invoice` — build a draft from picked item ids, transaction ids, and manual New Charge lines.
+- `add_invoice_line` / `update_invoice_line` — add or edit item, transaction, or manual lines on a draft invoice.
+- `mark_invoice_sent` / `void_invoice`.
 - `billable_pool` — the To Invoice query for a project.
+- `mark_invoice_collected` — create one settlement transaction for the invoice.
+- `mark_invoice_lines_collected` — create one settlement transaction for selected lines.
+- `apply_contract_setup` — accepts contract-derived structured fields, updates/creates a project, and creates draft manual New Charge lines.
+
+## Follow-Ups
+
+- Add sandbox MCP tests around the implemented tools.
+- Add a dedicated existing-transaction settlement-linking workflow if real users need to match bank-feed payments after the fact.
 
 ## Dependencies
 
-Blocked on billing-invoicing v2 shipping. Tool shape depends on the finalized signed-line model.
+Depends on the canonical billing-invoicing model, especially stable invoice-line IDs and settlement linkage fields on transactions.
 
 ## Out of Scope for v2
 
-Flagged in the v2 implementation plan as deferred. Not blocking v2 delivery.
+Payment processing remains out of scope. MCP tools create/link Ledger records; they do not move money through Stripe, Square, QuickBooks, or a bank.
