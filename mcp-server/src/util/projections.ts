@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import type { Transaction, Item, Project } from "../types.js";
+import type { Transaction, Item, Project, Invoice } from "../types.js";
 import { formatCents } from "./format.js";
 
 /**
@@ -75,6 +75,19 @@ export function projectSummary(p: Project & { id: string }) {
     isArchived: p.isArchived,
     budget: formatCents(p.budgetSummary?.totalBudgetCents),
     spent: formatCents(p.budgetSummary?.spentCents),
+  };
+}
+
+export function invoiceSummary(inv: Invoice & { id: string }) {
+  return {
+    id: inv.id,
+    projectId: inv.projectId ?? null,
+    status: inv.status ?? "",
+    invoiceNumber: inv.invoiceNumber ?? "",
+    total: formatCents(inv.totalCents),
+    itemCount: inv.itemIds?.length ?? 0,
+    transactionCount: inv.transactionIds?.length ?? 0,
+    lineCount: inv.lines?.length ?? 0,
   };
 }
 

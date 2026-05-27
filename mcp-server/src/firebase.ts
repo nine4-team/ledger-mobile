@@ -1,5 +1,6 @@
 import admin from "firebase-admin";
 import type { Firestore } from "firebase-admin/firestore";
+import { readFileSync } from "node:fs";
 
 export function initFirebase(credentialsPath?: string): Firestore {
   const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
@@ -23,8 +24,7 @@ export function initFirebase(credentialsPath?: string): Firestore {
       const credPath = credentialsPath || process.env.GOOGLE_APPLICATION_CREDENTIALS;
       if (credPath) {
         // Explicit cert() bypasses ADC chain — immune to RAPT re-auth
-        const fs = require("fs");
-        const serviceAccount = JSON.parse(fs.readFileSync(credPath, "utf8"));
+        const serviceAccount = JSON.parse(readFileSync(credPath, "utf8"));
         console.error(`[ledger-mcp] Using service account: ${serviceAccount.client_email}`);
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),

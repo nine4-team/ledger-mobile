@@ -86,6 +86,28 @@ const ENTITIES: Record<string, EntitySchema> = {
     ],
     enums: [],
   },
+  invoice: {
+    name: "invoice",
+    description:
+      "A project-scoped demand for money. It is separate from transactions, which record money movement. " +
+      "Invoice lines can reference existing items, existing transactions, or manual New Charge demands.",
+    requiredOnCreate: ["projectId", "lines"],
+    keyFields: [
+      { name: "id", type: "string", description: "Opaque document ID." },
+      { name: "projectId", type: "string", description: "Project being billed." },
+      { name: "status", type: "enum(invoiceStatus)", description: "draft, sent, paid, or voided." },
+      { name: "lines", type: "InvoiceLine[]", description: "Authoritative demand lines. sourceType is item, transaction, or manual (New Charge)." },
+      { name: "itemIds", type: "string[]", description: "Membership index derived from item lines." },
+      { name: "transactionIds", type: "string[]", description: "Membership index derived from transaction lines." },
+      { name: "totalCents", type: "number?", description: "Frozen net total once sent. Drafts may recompute from lines." },
+    ],
+    enums: ["invoiceStatus"],
+    notes: [
+      "Manual invoice lines are UI-labeled New Charge and do not create transactions by themselves.",
+      "Marking an invoice collected creates one normal Fee transaction with settlementInvoiceId; it does not create one transaction per line.",
+      "Existing transaction-backed invoice lines remain supported for ad-hoc invoices.",
+    ],
+  },
   space: {
     name: "space",
     description: "A sub-area inside a project (e.g. 'Living Room').",
@@ -118,7 +140,7 @@ export function registerSchemaTools(server: McpServer, db: Firestore) {
     "[read-only] Return enum values, key fields, and business rules for ledger entities. Call this ONCE per session instead of guessing. Omit `entity` for the full manifest.",
     {
       entity: z
-        .enum(["transaction", "item", "project", "space", "budget"])
+        .enum(["transaction", "item", "project", "invoice", "space", "budget"])
         .optional()
         .describe("Which entity to describe. Omit for all."),
     },

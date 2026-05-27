@@ -19,6 +19,8 @@ export const SERVER_FEATURES = {
   requiredAuditNotes: true,
   dryRun: true,
   compositeTools: true,
+  invoiceTools: true,
+  invoiceSettlementTransactions: true,
   schemaIntrospection: true,
   telemetry: true,
   cursorPagination: false,

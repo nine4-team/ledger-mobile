@@ -27,7 +27,7 @@ export const transactionTypes = [
 ] as const;
 export type TransactionType = (typeof transactionTypes)[number];
 
-export const transactionStatuses = ["completed", "pending", "canceled", "returned"] as const;
+export const transactionStatuses = ["canceled"] as const;
 export type TransactionStatus = (typeof transactionStatuses)[number];
 
 export const reimbursementTypes = ["none", "owed-to-client", "owed-to-company"] as const;
@@ -38,6 +38,9 @@ export type IngestionStatus = (typeof ingestionStatuses)[number];
 
 export const itemStatuses = ["to purchase", "purchased", "to return", "returned"] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
+
+export const invoiceStatuses = ["draft", "sent", "paid", "voided"] as const;
+export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
 export const movementKinds = ["sold", "returned", "transferred"] as const;
 export type MovementKind = (typeof movementKinds)[number];
@@ -78,7 +81,7 @@ export const ENUMS: EnumSpec[] = [
   {
     name: "transactionStatus",
     values: transactionStatuses,
-    description: "Transaction lifecycle status. Canceled transactions contribute $0 to budget.",
+    description: "Transaction lifecycle status. Only 'canceled' is canonical; active transactions omit status. Needs Review is driven by isComplete.",
   },
   {
     name: "reimbursementType",
@@ -94,6 +97,11 @@ export const ENUMS: EnumSpec[] = [
     name: "itemStatus",
     values: itemStatuses,
     description: "Item lifecycle status.",
+  },
+  {
+    name: "invoiceStatus",
+    values: invoiceStatuses,
+    description: "Invoice demand lifecycle. Paid means collected/settled; transactions record the actual money movement.",
   },
   {
     name: "movementKind",

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * backfill-invoice-lines.mjs — Billing v2 Phase 5.1
+ * backfill-invoice-lines.mjs — Canonical billing migration
  *
  * Synthesizes the new signed `lines` array onto v1 invoices that pre-date the
- * billing-v2 rework. Legacy v1 invoices had no credits by construction, so
+ * signed-line rework. Legacy v1 invoices had no credits by construction, so
  * every synthesized line gets `sign: 1` (charge).
  *
  * For each invoice under `accounts/{id}/invoices/`:
@@ -60,7 +60,7 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`
-Backfill signed \`lines\` onto v1 invoices (billing-v2 Phase 5.1).
+Backfill signed \`lines\` and stable line IDs onto legacy invoices.
 
 Options:
   --account <id>    Run against one account. Required unless --all.
@@ -111,17 +111,23 @@ function txAmountCents(txData) {
   return typeof a === 'number' ? a : 0;
 }
 
-function buildLines({ itemIds, transactionIds, itemById, txById }) {
+function lineId(invoiceId, sourceType, sourceId, index) {
+  const safeSource = String(sourceId ?? 'missing').replace(/[^A-Za-z0-9_-]/g, '_');
+  return `${invoiceId}_${sourceType}_${index}_${safeSource}`;
+}
+
+function buildLines({ invoiceId, itemIds, transactionIds, itemById, txById }) {
   const lines = [];
   const missing = { items: [], transactions: [] };
 
-  for (const id of itemIds ?? []) {
+  for (const [idx, id] of (itemIds ?? []).entries()) {
     const data = itemById.get(id);
     if (!data) {
       missing.items.push(id);
       // Still emit a zero-amount line so membership is preserved — the invoice
       // still claims this id. Better than silently dropping it.
       lines.push({
+        id: lineId(invoiceId, 'item', id, idx),
         sourceType: 'item',
         sourceId: id,
         amountCents: 0,
@@ -131,6 +137,7 @@ function buildLines({ itemIds, transactionIds, itemById, txById }) {
       continue;
     }
     lines.push({
+      id: lineId(invoiceId, 'item', id, idx),
       sourceType: 'item',
       sourceId: id,
       amountCents: itemAmountCents(data),
@@ -139,11 +146,12 @@ function buildLines({ itemIds, transactionIds, itemById, txById }) {
     });
   }
 
-  for (const id of transactionIds ?? []) {
+  for (const [idx, id] of (transactionIds ?? []).entries()) {
     const data = txById.get(id);
     if (!data) {
       missing.transactions.push(id);
       lines.push({
+        id: lineId(invoiceId, 'transaction', id, idx),
         sourceType: 'transaction',
         sourceId: id,
         amountCents: 0,
@@ -153,6 +161,7 @@ function buildLines({ itemIds, transactionIds, itemById, txById }) {
       continue;
     }
     lines.push({
+      id: lineId(invoiceId, 'transaction', id, idx),
       sourceType: 'transaction',
       sourceId: id,
       amountCents: txAmountCents(data),
@@ -176,11 +185,13 @@ async function processAccount(db, accountId, commit) {
   // Collect every item/tx id referenced by any invoice lacking `lines`, then
   // batch-fetch. Cheaper than loading the whole account.
   const candidateDocs = [];
+  const existingLineDocs = [];
   const neededItemIds = new Set();
   const neededTxIds = new Set();
 
   const distribution = {
     'already-backfilled': 0,
+    'missing-line-ids': 0,
     'candidate': 0,
     'empty-membership': 0,
     'skipped-draft': 0,
@@ -189,7 +200,13 @@ async function processAccount(db, accountId, commit) {
   for (const doc of invoicesSnap.docs) {
     const inv = doc.data();
     if (Array.isArray(inv.lines)) {
-      distribution['already-backfilled']++;
+      const missingIds = inv.lines.some((line) => !line?.id);
+      if (missingIds) {
+        distribution['missing-line-ids']++;
+        existingLineDocs.push({ ref: doc.ref, inv, lines: inv.lines });
+      } else {
+        distribution['already-backfilled']++;
+      }
       continue;
     }
     // Drafts are in-progress; freezing them into a stored `lines` array is
@@ -204,7 +221,7 @@ async function processAccount(db, accountId, commit) {
     const itemIds = Array.isArray(inv.itemIds) ? inv.itemIds : [];
     const txIds = Array.isArray(inv.transactionIds) ? inv.transactionIds : [];
     if (itemIds.length === 0 && txIds.length === 0) {
-      // Empty invoice — write an empty lines array so the v2 reader path
+      // Empty invoice — write an empty lines array so the line-backed reader path
       // doesn't have to keep handling nil.
       distribution['empty-membership']++;
       candidateDocs.push({ ref: doc.ref, inv, itemIds, txIds });
@@ -242,8 +259,28 @@ async function processAccount(db, accountId, commit) {
   let totalMissingTx = 0;
   let totalMismatches = 0;
 
+  for (const c of existingLineDocs) {
+    const lines = c.lines.map((line, idx) => ({
+      ...line,
+      id: line.id ?? lineId(c.ref.id, line.sourceType ?? 'line', line.sourceId ?? 'manual', idx),
+    }));
+    const storedTotal = typeof c.inv.totalCents === 'number' ? c.inv.totalCents : null;
+    const syntheticTotal = lines.reduce((s, l) => s + (l.amountCents ?? 0) * (l.sign ?? 1), 0);
+    const mismatch = storedTotal !== null && storedTotal !== syntheticTotal;
+    if (mismatch) totalMismatches++;
+    writes.push({
+      ref: c.ref,
+      lines,
+      storedTotal,
+      syntheticTotal,
+      missing: { items: [], transactions: [] },
+      mismatch,
+    });
+  }
+
   for (const c of candidateDocs) {
     const { lines, missing } = buildLines({
+      invoiceId: c.ref.id,
       itemIds: c.itemIds,
       transactionIds: c.txIds,
       itemById,

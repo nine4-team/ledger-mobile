@@ -17,6 +17,7 @@ import { registerSchemaTools } from "./tools/schema.js";
 import { registerServerInfoTools } from "./tools/server-info.js";
 import { registerCompositeTools } from "./tools/composite.js";
 import { registerProjectNoteTools } from "./tools/project-notes.js";
+import { registerInvoiceTools } from "./tools/invoices.js";
 
 const credIdx = process.argv.indexOf("--credentials");
 const credentialsPath = credIdx !== -1 ? process.argv[credIdx + 1] : undefined;
@@ -32,6 +33,7 @@ const server = new McpServer(
       "PROJECT NOTES: Use `add_project_note` to write notes to a project. `create_project` and `update_project` also accept a `notes` param that writes to the project's notes subcollection (not the legacy string field). All notes require a dated prefix, e.g. '4/6 — Moved 3 fixtures to Witzenman'. Use `list_project_notes` and `search_project_notes` to read them.\n\n" +
       "INVENTORY MOVEMENTS: Inventory → project creates ONE new immutable Purchase transaction; project → inventory acquisition creates ONE immutable Sale transaction; returns to inventory create Return transactions. Shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Project→project moves use move_items_between_projects.\n\n" +
       "TOKEN BUDGET: list_/search_/get_ tools default to `mode: 'summary'` — pass `mode: 'full'` or explicit `fields` only when you need more. Use `get_transactions` / `get_items` / `get_projects` for bulk ID lookups in one round-trip.\n\n" +
+      "INVOICING: Invoices are demands for money; transactions are records of money movement. Use invoice lines with sourceType item, transaction, or manual (shown to users as New Charge). Marking an invoice collected creates one normal Fee transaction linked by settlementInvoiceId.\n\n" +
       "REPORTS / BULK PULLS: For reports and bulk operations, pass `fields: [...]` to slim each row to exactly what you need (e.g. `fields: ['id', 'name', 'purchasePriceCents']` for a property-management export). A slim projection over hundreds of rows fits comfortably under the default 75KB response cap; full documents do not. If a legitimate report still hits `truncated: true`, raise `responseLimit` (max 200KB) on the same call rather than paginating blindly.\n\n" +
       "PREFER TASK TOOLS: `reconcile_transaction`, `create_transaction_with_items`, `triage_inbox` collapse long primitive chains. `sell_items`, `return_items`, and `move_items_between_projects` support `dryRun: true` — use it before committing.\n\n" +
       "ERRORS: Failures return structured JSON with `{ code, message, hint, retryable }`. Branch on `code`; the `hint` field tells you how to recover.",
@@ -52,6 +54,7 @@ registerSchemaTools(server, db);
 registerServerInfoTools(server, db);
 registerCompositeTools(server, db);
 registerProjectNoteTools(server, db);
+registerInvoiceTools(server, db);
 registerResources(server, db);
 
 async function main() {

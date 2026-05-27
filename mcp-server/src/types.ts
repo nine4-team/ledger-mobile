@@ -91,6 +91,42 @@ export interface Transaction {
     orderNumber?: string;
     linkedIngestionIds?: string[];
   };
+  settlementInvoiceId?: string;
+  settlementInvoiceLineIds?: string[];
+  createdAt?: FirebaseFirestore.Timestamp;
+  updatedAt?: FirebaseFirestore.Timestamp;
+}
+
+export type InvoiceLineSourceType = "item" | "transaction" | "manual";
+export type InvoiceLineSign = 1 | -1;
+
+export interface InvoiceLine {
+  id?: string;
+  sourceType: InvoiceLineSourceType;
+  sourceId?: string;
+  amountCents: number;
+  sign: InvoiceLineSign;
+  snapshotName?: string;
+  settlementTransactionIds?: string[];
+}
+
+export interface Invoice {
+  id: string;
+  accountId?: string;
+  projectId?: string;
+  status?: "draft" | "sent" | "paid" | "voided";
+  itemIds?: string[];
+  transactionIds?: string[];
+  lines?: InvoiceLine[];
+  totalCents?: number;
+  notes?: string;
+  invoiceNumber?: string;
+  dateIssued?: FirebaseFirestore.Timestamp;
+  dateSent?: FirebaseFirestore.Timestamp;
+  datePaid?: FirebaseFirestore.Timestamp;
+  dateVoided?: FirebaseFirestore.Timestamp;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
 }

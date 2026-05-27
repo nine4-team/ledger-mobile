@@ -311,7 +311,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       purchasedBy: z.string().optional().describe("Who made the purchase"),
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
       receiptEmailed: z.boolean().optional().describe("Whether a receipt was emailed"),
-      status: z.string().default("completed").describe("Transaction status (e.g. 'completed', 'pending')"),
+      status: z.enum(["canceled"]).optional().describe("Transaction status. Omit for active transactions; only 'canceled' is canonical."),
       ingestionSource: z.string().optional().describe("Origin of transaction: 'email' (auto-ingested) or 'manual'. Omit for manually created transactions."),
       ingestionStatus: z.string().optional().describe("Ingestion lifecycle: 'needs_review' (unmatched), 'auto_matched' (matched but unconfirmed), 'confirmed'. Only set for ingested transactions."),
       ingestionMeta: z.object({
@@ -344,11 +344,11 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         budgetCategoryId,
         amountCents,
         type: txType,
-        status,
         isComplete: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+      if (status) data.status = status;
       if (projectId) data.projectId = projectId;
       if (source) data.source = source;
       if (transactionDate) data.transactionDate = transactionDate;
