@@ -99,7 +99,7 @@ private struct BillingSubTab: View {
 // MARK: - Billing Pipeline Section
 
 /// Three-segment view of the project's billable pipeline:
-/// - To Invoice: items and non-itemized transactions not on any non-voided invoice.
+/// - Available: items and non-itemized transactions not on any non-voided invoice.
 /// - Invoiced: everything on sent-but-unpaid invoices.
 /// - Paid: everything on paid invoices.
 /// Membership is derived via `InvoiceLineCalculations.billableMembership`.
@@ -107,6 +107,8 @@ private struct BillingPipelineSection: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(ProjectContext.self) private var projectContext
     @State private var selectedSegment = "to-invoice"
+    @State private var selectedRecordType = "all"
+    @State private var showingPipelineInfo = false
 
     private var projectId: String? { projectContext.currentProjectId }
 
@@ -149,10 +151,23 @@ private struct BillingPipelineSection: View {
     }
 
     private var isEmpty: Bool {
-        visibleItems.isEmpty && visibleTransactions.isEmpty
+        switch selectedRecordType {
+        case "items":
+            return visibleItems.isEmpty
+        case "transactions":
+            return visibleTransactions.isEmpty
+        default:
+            return visibleItems.isEmpty && visibleTransactions.isEmpty
+        }
     }
 
     private var emptyMessage: String {
+        if selectedRecordType == "items" {
+            return "No \(selectedSegmentName.lowercased()) items."
+        }
+        if selectedRecordType == "transactions" {
+            return "No \(selectedSegmentName.lowercased()) transactions."
+        }
         switch selectedSegment {
         case "invoiced":
             return "Nothing is on a sent invoice yet."
@@ -163,15 +178,50 @@ private struct BillingPipelineSection: View {
         }
     }
 
+    private var selectedSegmentName: String {
+        switch selectedSegment {
+        case "invoiced": return "Invoiced"
+        case "paid": return "Paid"
+        default: return "Available"
+        }
+    }
+
+    private var recordCountsLabel: String {
+        "\(visibleItems.count) item\(visibleItems.count == 1 ? "" : "s") · \(visibleTransactions.count) transaction\(visibleTransactions.count == 1 ? "" : "s")"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Pipeline").sectionLabelStyle()
+            HStack(spacing: Spacing.xs) {
+                Text("Pipeline").sectionLabelStyle()
+                Button {
+                    showingPipelineInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Pipeline info")
+                .accessibilityHint(pipelineInfoMessage)
+            }
 
             SegmentedControl(selection: $selectedSegment, options: [
-                SegmentOption(id: "to-invoice", label: "To Invoice"),
+                SegmentOption(id: "to-invoice", label: "Available"),
                 SegmentOption(id: "invoiced", label: "Invoiced"),
                 SegmentOption(id: "paid", label: "Paid"),
             ])
+
+            SegmentedControl(selection: $selectedRecordType, options: [
+                SegmentOption(id: "all", label: "All"),
+                SegmentOption(id: "items", label: "Items"),
+                SegmentOption(id: "transactions", label: "Transactions"),
+            ])
+
+            Text(recordCountsLabel)
+                .font(Typography.caption)
+                .foregroundStyle(BrandColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if isEmpty {
                 Card {
@@ -181,8 +231,10 @@ private struct BillingPipelineSection: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {
-                if !visibleItems.isEmpty {
-                    Text("Items").sectionLabelStyle()
+                if selectedRecordType != "transactions", !visibleItems.isEmpty {
+                    if selectedRecordType == "all" {
+                        Text("Items").sectionLabelStyle()
+                    }
                     ForEach(visibleItems, id: \.id) { item in
                         NavigationLink(value: item) {
                             ItemCard(item: item)
@@ -190,8 +242,10 @@ private struct BillingPipelineSection: View {
                         .buttonStyle(.plain)
                     }
                 }
-                if !visibleTransactions.isEmpty {
-                    Text("Transactions").sectionLabelStyle()
+                if selectedRecordType != "items", !visibleTransactions.isEmpty {
+                    if selectedRecordType == "all" {
+                        Text("Transactions").sectionLabelStyle()
+                    }
                     ForEach(visibleTransactions, id: \.id) { tx in
                         NavigationLink(value: tx) {
                             TransactionCard(transaction: tx)
@@ -201,6 +255,23 @@ private struct BillingPipelineSection: View {
                 }
             }
         }
+        .alert("Billing Pipeline", isPresented: $showingPipelineInfo) {
+            Button("OK", role: .cancel) { showingPipelineInfo = false }
+        } message: {
+            Text(pipelineInfoMessage)
+        }
+    }
+
+    private var pipelineInfoMessage: String {
+        """
+        The pipeline shows where existing project items and billable transactions are in the invoicing process.
+
+        Available: eligible records that can be added to an invoice.
+
+        Invoiced: records on invoices sent to the client but not collected yet.
+
+        Paid: records on invoices marked collected.
+        """
     }
 }
 
