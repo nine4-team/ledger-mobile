@@ -222,7 +222,7 @@ struct InventoryOperationsService {
     ///
     /// `paidInvoiceItemIds` — item IDs currently on any paid invoice. Any item
     /// in `items` whose id is in this set triggers an auto-generated credit
-    /// transaction on the source project (billing-invoicing-v2, §"Returns
+    /// transaction on the source project (billing-invoicing.md, §"Returns
     /// after a paid invoice"). Pass an empty set to disable.
     func returnToInventory(
         items: [Item],
@@ -1023,7 +1023,7 @@ struct InventoryOperationsService {
     /// Append one owed-to-client credit transaction per returning item that
     /// is currently on a paid invoice. Lands on the item's source project so
     /// the derived billable-membership query picks it up in the To Invoice tab.
-    /// See `docs/specs/billing-invoicing-v2.md` §"Returns after a paid invoice".
+    /// See `docs/specs/billing-invoicing.md` §"Returns after a paid invoice".
     static func appendPaidReturnCredits(
         items: [Item],
         paidInvoiceItemIds: Set<String>,

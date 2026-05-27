@@ -36,6 +36,10 @@ struct InvoiceDetailView: View {
         )
     }
 
+    private var collectedAmountCents: Int {
+        max(reportData.netDueCents, 0)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             chromeRow
@@ -80,14 +84,14 @@ struct InvoiceDetailView: View {
             )
         }
         .confirmationDialog(
-            "Mark this invoice as paid?",
+            "Mark this invoice as collected?",
             isPresented: $showingMarkPaidConfirm,
             titleVisibility: .visible
         ) {
-            Button("Mark Paid") { performMarkPaid() }
+            Button("Mark Collected") { performMarkCollected() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Marks this invoice paid and stamps the payment date. Items and expenses are unchanged.")
+            Text("Creates a fee transaction for the collected payment and links it to this invoice.")
         }
         .confirmationDialog(
             "Void this invoice?",
@@ -159,7 +163,7 @@ struct InvoiceDetailView: View {
             items.append(ActionMenuItem(id: "sent", label: "Mark Sent", icon: "paperplane", onPress: { performMarkSent() }))
         }
         if status == .draft || status == .sent {
-            items.append(ActionMenuItem(id: "paid", label: "Mark Paid", icon: "checkmark.circle", onPress: { showingMarkPaidConfirm = true }))
+            items.append(ActionMenuItem(id: "collected", label: "Mark Collected", icon: "checkmark.circle", onPress: { showingMarkPaidConfirm = true }))
         }
         if status != .voided && status != .paid {
             items.append(ActionMenuItem(id: "void", label: "Void Invoice", icon: "trash", isDestructive: true, onPress: { showingVoidConfirm = true }))
@@ -207,6 +211,9 @@ struct InvoiceDetailView: View {
                 lines.append(line)
             }
         }
+        for line in liveInvoice.lines ?? [] where line.sourceType == .manual {
+            lines.append(line)
+        }
         let total = InvoiceLineCalculations.netTotalCents(lines: lines)
 
         runService {
@@ -225,6 +232,31 @@ struct InvoiceDetailView: View {
         let inv = liveInvoice
         let userId = authManager.currentUser?.uid
         runService { try await InvoiceService().markPaid(invoice: inv, accountId: acctId, userId: userId) }
+    }
+
+    private func performMarkCollected() {
+        let acctId = accountContext.currentAccountId ?? ""
+        let inv = liveInvoice
+        let userId = authManager.currentUser?.uid
+        let projectId = inv.projectId ?? projectContext.currentProjectId ?? ""
+        let amount = collectedAmountCents
+        let source = inv.invoiceNumber?.isEmpty == false
+            ? "Collected \(inv.invoiceNumber!)"
+            : "Collected invoice"
+        let feeCategoryId = projectContext.budgetCategories.first { $0.isFeeCategory }?.id
+        let lineIds = inv.lines?.map(\.id)
+        runService {
+            _ = try await InvoiceService().markCollected(
+                invoice: inv,
+                accountId: acctId,
+                projectId: projectId,
+                amountCents: amount,
+                source: source,
+                budgetCategoryId: feeCategoryId,
+                settlementInvoiceLineIds: lineIds,
+                userId: userId
+            )
+        }
     }
 
     private func performVoid() {

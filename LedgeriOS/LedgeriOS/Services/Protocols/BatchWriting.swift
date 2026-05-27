@@ -51,7 +51,15 @@ struct FirestoreBatchWriter: BatchWriting, @unchecked Sendable {
     }
 
     func commit() async throws {
-        try await batch.commit()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+            batch.commit { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
     }
 
     func commit(onError: @escaping @Sendable (Error) -> Void) {

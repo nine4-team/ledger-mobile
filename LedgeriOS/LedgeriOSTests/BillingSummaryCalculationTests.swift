@@ -10,7 +10,8 @@ struct BillingSummaryCalculationTests {
         projectId: String,
         status: InvoiceStatus,
         itemIds: [String] = [],
-        transactionIds: [String] = []
+        transactionIds: [String] = [],
+        lines: [InvoiceLine]? = nil
     ) -> Invoice {
         var inv = Invoice()
         inv.id = id
@@ -18,6 +19,7 @@ struct BillingSummaryCalculationTests {
         inv.status = status
         inv.itemIds = itemIds
         inv.transactionIds = transactionIds
+        inv.lines = lines
         return inv
     }
 
@@ -55,12 +57,12 @@ struct BillingSummaryCalculationTests {
 
         // Items: 1000+2000+3000+4000 = 10000, Tx non-itemized: 500+700+900 = 2100
         #expect(summary.totalSpentCents == 12100)
-        // Invoiced (any non-voided: draft+sent+paid): items 2000+3000+4000 + tx 700+900 = 10600
-        #expect(summary.invoicedCents == 10600)
-        // Collected (paid only): items 4000 + tx 900 = 4900
+        // Invoiced demand (sent+paid only): items 3000+4000 + tx 700+900 = 8600
+        #expect(summary.invoicedCents == 8600)
+        // Collected falls back to paid invoice demand when no settlement transaction exists.
         #expect(summary.collectedCents == 4900)
-        // Outstanding = total - collected
-        #expect(summary.outstandingCents == 7200)
+        // Outstanding = sent invoice demand.
+        #expect(summary.outstandingCents == 3700)
     }
 
     @Test("Empty inputs produce zero summary")
@@ -84,6 +86,57 @@ struct BillingSummaryCalculationTests {
         #expect(summary.collectedCents == 0)
     }
 
+    @Test("Manual invoice lines count as demand and settlement transactions count as collected")
+    func manualLineDemandAndSettlementCollection() {
+        let projectId = "p1"
+        let manualLine = InvoiceLine(
+            id: "line-manual",
+            sourceType: .manual,
+            amountCents: 123,
+            sign: .charge,
+            snapshotName: "Design Fee"
+        )
+        let sentInvoice = makeInvoice(
+            id: "inv-sent",
+            projectId: projectId,
+            status: .sent,
+            lines: [manualLine]
+        )
+
+        let sentSummary = BillingSummaryCalculations.summarize(
+            projectId: projectId,
+            items: [],
+            transactions: [],
+            invoices: [sentInvoice]
+        )
+        #expect(sentSummary.totalSpentCents == 0)
+        #expect(sentSummary.invoicedCents == 123)
+        #expect(sentSummary.collectedCents == 0)
+        #expect(sentSummary.outstandingCents == 123)
+
+        var paidInvoice = sentInvoice
+        paidInvoice.status = .paid
+        let settlement = makeTransaction(
+            id: "settlement",
+            projectId: projectId,
+            amountCents: 123,
+            itemIds: nil
+        )
+        var linkedSettlement = settlement
+        linkedSettlement.settlementInvoiceId = "inv-sent"
+
+        let paidSummary = BillingSummaryCalculations.summarize(
+            projectId: projectId,
+            items: [],
+            transactions: [linkedSettlement],
+            invoices: [paidInvoice]
+        )
+        #expect(paidSummary.totalSpentCents == 0)
+        #expect(paidSummary.invoicedCents == 123)
+        #expect(paidSummary.collectedCents == 123)
+        #expect(paidSummary.outstandingCents == 0)
+    }
+
     @Test("Voided invoice membership doesn't count")
     func voidedDoesNotCount() {
         let item = makeItem(id: "i", projectId: "p1", purchasePriceCents: 5000)
@@ -94,6 +147,6 @@ struct BillingSummaryCalculationTests {
         #expect(summary.totalSpentCents == 5000)
         #expect(summary.invoicedCents == 0)
         #expect(summary.collectedCents == 0)
-        #expect(summary.outstandingCents == 5000)
+        #expect(summary.outstandingCents == 0)
     }
 }

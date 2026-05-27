@@ -122,6 +122,7 @@ enum ReportAggregationCalculations {
 
         let active = transactions.filter { tx in
             guard tx.status != .canceled else { return false }
+            guard tx.settlementInvoiceId == nil else { return false }
             let category = tx.budgetCategoryId.flatMap { categoryMap[$0] }
             let resolvedType = TransactionTaxonomy.resolve(
                 storedType: tx.transactionType ?? .purchase,
@@ -217,8 +218,9 @@ enum ReportAggregationCalculations {
         if let lines = invoice.lines, !lines.isEmpty {
             var chargeLines: [InvoiceLineEntry] = []
             var creditLines: [InvoiceLineEntry] = []
+            let useFrozenLines = (invoice.status ?? .draft) != .draft
             for line in lines {
-                let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap)
+                let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap, useFrozenLine: useFrozenLines)
                 switch line.sign {
                 case .charge: chargeLines.append(entry)
                 case .credit: creditLines.append(entry)
@@ -275,11 +277,19 @@ enum ReportAggregationCalculations {
     private static func invoiceLineEntry(
         from line: InvoiceLine,
         itemMap: [String: Item],
-        txMap: [String: Transaction]
+        txMap: [String: Transaction],
+        useFrozenLine: Bool
     ) -> InvoiceLineEntry {
         switch line.sourceType {
         case .item:
-            if let item = itemMap[line.sourceId] {
+            if useFrozenLine {
+                return InvoiceLineEntry(
+                    name: line.snapshotName ?? "Unnamed Item",
+                    priceCents: line.amountCents,
+                    isMissingPrice: false
+                )
+            }
+            if let sourceId = line.sourceId, let item = itemMap[sourceId] {
                 let projectPrice = item.projectPriceCents ?? 0
                 let priceCents = projectPrice > 0 ? projectPrice : (item.purchasePriceCents ?? 0)
                 let isMissing = projectPrice == 0
@@ -294,7 +304,14 @@ enum ReportAggregationCalculations {
                 isMissingPrice: false
             )
         case .transaction:
-            if let tx = txMap[line.sourceId] {
+            if useFrozenLine {
+                return InvoiceLineEntry(
+                    name: line.snapshotName ?? "Adjustment",
+                    priceCents: line.amountCents,
+                    isMissingPrice: false
+                )
+            }
+            if let sourceId = line.sourceId, let tx = txMap[sourceId] {
                 return InvoiceLineEntry(
                     name: tx.source ?? tx.notes ?? line.snapshotName ?? "Adjustment",
                     priceCents: tx.amountCents ?? line.amountCents,
@@ -303,6 +320,12 @@ enum ReportAggregationCalculations {
             }
             return InvoiceLineEntry(
                 name: line.snapshotName ?? "Adjustment",
+                priceCents: line.amountCents,
+                isMissingPrice: false
+            )
+        case .manual:
+            return InvoiceLineEntry(
+                name: line.snapshotName ?? "New Charge",
                 priceCents: line.amountCents,
                 isMissingPrice: false
             )

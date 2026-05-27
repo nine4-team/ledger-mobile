@@ -2,18 +2,15 @@ import Foundation
 
 /// Pure calculations for the project billing summary card.
 ///
-/// v2 derivation — paid-state lives only on the invoice. Membership in a
-/// non-voided invoice drives Invoiced; membership in a paid invoice drives
-/// Collected.
+/// Current derivation — invoices are demand, transactions are money movement.
 ///
 /// Definitions:
 /// - **Total Spent** — sum of all item `purchasePriceCents` + all non-itemized
 ///   transaction `amountCents` for the project.
-/// - **Invoiced** — same sum restricted to items/transactions referenced by
-///   any non-voided invoice for the project.
-/// - **Collected** — same sum restricted to items/transactions on a **paid**
-///   invoice for the project.
-/// - **Outstanding** — Total Spent − Collected.
+/// - **Invoiced** — sent or paid invoice demand, including manual New Charge
+///   lines.
+/// - **Collected** — settlement transactions linked back to invoices.
+/// - **Outstanding** — sent invoice demand minus linked settlements.
 ///
 /// A transaction counts as "non-itemized" (and therefore directly billable)
 /// when it has no child items. Itemized transactions are excluded so their
@@ -33,51 +30,71 @@ enum BillingSummaryCalculations {
         transactions: [Transaction],
         invoices: [Invoice]
     ) -> Summary {
-        // Collect the sets of ids on any non-voided invoice and on paid
-        // invoices, scoped to the project when known.
-        var onAnyInvoiceItems: Set<String> = []
-        var onAnyInvoiceTxs: Set<String> = []
-        var paidItems: Set<String> = []
-        var paidTxs: Set<String> = []
+        let scopedItems = items.filter { item in
+            guard let pid = projectId else { return true }
+            return item.projectId == pid
+        }
+        let scopedTransactions = transactions.filter { tx in
+            guard let pid = projectId else { return true }
+            return tx.projectId == pid
+        }
+
+        let itemAmounts = Dictionary(uniqueKeysWithValues: scopedItems.compactMap { item -> (String, Int)? in
+            guard let id = item.id else { return nil }
+            return (id, item.purchasePriceCents ?? 0)
+        })
+        let nonItemizedTxAmounts = Dictionary(uniqueKeysWithValues: scopedTransactions.compactMap { tx -> (String, Int)? in
+            guard let id = tx.id, isNonItemized(tx) else { return nil }
+            return (id, tx.amountCents ?? 0)
+        })
+
+        let settlementByInvoiceId = Dictionary(grouping: scopedTransactions.compactMap { tx -> (String, Int)? in
+            guard let invoiceId = tx.settlementInvoiceId else { return nil }
+            return (invoiceId, tx.amountCents ?? 0)
+        }, by: { $0.0 })
+            .mapValues { entries in entries.reduce(0) { $0 + $1.1 } }
+
+        var totalSpent = scopedItems.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+        var invoiced = 0
+        var collected = settlementByInvoiceId.values.reduce(0, +)
+        var outstanding = 0
+
+        for tx in scopedTransactions where isNonItemized(tx) {
+            totalSpent += tx.amountCents ?? 0
+        }
 
         for invoice in invoices {
             if let pid = projectId, invoice.projectId != pid { continue }
             guard invoice.status != .voided else { continue }
-            let itemIds = invoice.itemIds ?? []
-            let txIds = invoice.transactionIds ?? []
-            onAnyInvoiceItems.formUnion(itemIds)
-            onAnyInvoiceTxs.formUnion(txIds)
-            if invoice.status == .paid {
-                paidItems.formUnion(itemIds)
-                paidTxs.formUnion(txIds)
+
+            let demand = demandCents(
+                for: invoice,
+                itemAmounts: itemAmounts,
+                transactionAmounts: nonItemizedTxAmounts
+            )
+
+            switch invoice.status ?? .draft {
+            case .draft, .voided:
+                break
+            case .sent:
+                invoiced += demand
+                let settled = invoice.id.flatMap { settlementByInvoiceId[$0] } ?? 0
+                outstanding += max(demand - settled, 0)
+            case .paid:
+                invoiced += demand
+                // Historical paid invoices may predate settlement transactions.
+                if let invoiceId = invoice.id, settlementByInvoiceId[invoiceId] != nil {
+                    break
+                }
+                collected += demand
             }
-        }
-
-        var totalSpent = 0
-        var invoiced = 0
-        var collected = 0
-
-        for item in items {
-            let cents = item.purchasePriceCents ?? 0
-            totalSpent += cents
-            guard let id = item.id else { continue }
-            if onAnyInvoiceItems.contains(id) { invoiced += cents }
-            if paidItems.contains(id) { collected += cents }
-        }
-
-        for tx in transactions where isNonItemized(tx) {
-            let cents = tx.amountCents ?? 0
-            totalSpent += cents
-            guard let id = tx.id else { continue }
-            if onAnyInvoiceTxs.contains(id) { invoiced += cents }
-            if paidTxs.contains(id) { collected += cents }
         }
 
         return Summary(
             totalSpentCents: totalSpent,
             invoicedCents: invoiced,
             collectedCents: collected,
-            outstandingCents: totalSpent - collected
+            outstandingCents: outstanding
         )
     }
 
@@ -85,6 +102,23 @@ enum BillingSummaryCalculations {
     /// child items. Itemized transactions derive their billing state from
     /// their items.
     static func isNonItemized(_ tx: Transaction) -> Bool {
-        (tx.itemIds ?? []).isEmpty
+        tx.settlementInvoiceId == nil && (tx.itemIds ?? []).isEmpty
+    }
+
+    private static func demandCents(
+        for invoice: Invoice,
+        itemAmounts: [String: Int],
+        transactionAmounts: [String: Int]
+    ) -> Int {
+        if let lines = invoice.lines {
+            return InvoiceLineCalculations.netTotalCents(lines: lines)
+        }
+        if let total = invoice.totalCents {
+            return total
+        }
+
+        let itemTotal = (invoice.itemIds ?? []).reduce(0) { $0 + (itemAmounts[$1] ?? 0) }
+        let txTotal = (invoice.transactionIds ?? []).reduce(0) { $0 + (transactionAmounts[$1] ?? 0) }
+        return itemTotal + txTotal
     }
 }

@@ -4,7 +4,7 @@ import Foundation
 /// (item or transaction), and the three-way billable-membership split that
 /// drives the To Invoice / Invoiced / Paid pipeline in the Billing subtab.
 ///
-/// See `docs/specs/billing-invoicing-v2.md` for the rules.
+/// See `docs/specs/billing-invoicing.md` for the rules.
 enum InvoiceLineCalculations {
 
     // MARK: - Sign derivation
@@ -25,6 +25,7 @@ enum InvoiceLineCalculations {
     /// can't be inferred.
     static func sign(for tx: Transaction) -> InvoiceLineSign? {
         guard tx.status != .canceled else { return nil }
+        guard tx.settlementInvoiceId == nil else { return nil }
         guard let direction = ReportAggregationCalculations.reimbursementDirection(for: tx) else {
             return nil
         }
@@ -241,7 +242,11 @@ enum InvoiceLineCalculations {
             }
         }
 
-        return PayableBalance(toBusinessCents: toBusiness, toClientCents: toClient)
+        for tx in transactions where tx.projectId == projectId && tx.settlementInvoiceId != nil {
+            toBusiness -= tx.amountCents ?? 0
+        }
+
+        return PayableBalance(toBusinessCents: max(toBusiness, 0), toClientCents: toClient)
     }
 }
 

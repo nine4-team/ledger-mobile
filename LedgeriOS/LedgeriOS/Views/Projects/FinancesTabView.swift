@@ -227,6 +227,9 @@ private struct InvoiceRow: View {
             for tx in transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
                 if let line = InvoiceLineCalculations.makeLine(transaction: tx) { lines.append(line) }
             }
+            for line in invoice.lines ?? [] where line.sourceType == .manual {
+                lines.append(line)
+            }
             return InvoiceLineCalculations.netTotalCents(lines: lines)
         }
         return invoice.totalCents ?? 0

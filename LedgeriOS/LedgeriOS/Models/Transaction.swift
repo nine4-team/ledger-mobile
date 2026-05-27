@@ -55,6 +55,8 @@ struct Transaction: Codable, Identifiable, Hashable {
     var ingestionStatus: String?
     var ingestionMeta: IngestionMeta?
     var triggerEvent: String?
+    var settlementInvoiceId: String?
+    var settlementInvoiceLineIds: [String]?
     var createdAt: Date?
     var updatedAt: Date?
 
@@ -65,6 +67,7 @@ struct Transaction: Codable, Identifiable, Hashable {
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
              isComplete, audit, taxRatePct, subtotalCents,
              ingestionSource, ingestionStatus, ingestionMeta, triggerEvent,
+             settlementInvoiceId, settlementInvoiceLineIds,
              createdAt, updatedAt
         case transactionType = "type"
         case hasEmailReceipt = "receiptEmailed"

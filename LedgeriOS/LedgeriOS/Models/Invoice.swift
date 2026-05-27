@@ -7,23 +7,63 @@ enum InvoiceLineSign: Int, Codable {
     case credit = -1
 }
 
-/// Source of an invoice line — either an item or a non-itemized transaction.
+/// Source of an invoice line.
 enum InvoiceLineSourceType: String, Codable, CaseInsensitiveStringEnum {
-    case item, transaction
+    case item, transaction, manual
 }
 
-/// A single signed line on an invoice. Part of the v2 bidirectional-invoice model
-/// (see `docs/specs/billing-invoicing-v2.md`).
+/// A single signed line on an invoice.
 struct InvoiceLine: Codable, Hashable {
+    /// Stable line identifier used for line-level settlement. Legacy lines that
+    /// predate this field decode with a generated id until the backfill writes a
+    /// deterministic one.
+    var id: String
     var sourceType: InvoiceLineSourceType
-    var sourceId: String
+    /// Item or transaction id for sourced lines. Nil for manual New Charge lines.
+    var sourceId: String?
     var amountCents: Int
     var sign: InvoiceLineSign
     /// Optional display-name snapshot taken when the line was added, so historical
     /// invoices still render sensibly after the source item/transaction is renamed.
     var snapshotName: String?
+    /// Convenience reverse lookup for line-level settlement transactions. The
+    /// source of truth lives on Transaction.settlementInvoiceLineIds.
+    var settlementTransactionIds: [String]?
 
     var signedAmountCents: Int { amountCents * sign.rawValue }
+
+    init(
+        id: String = UUID().uuidString,
+        sourceType: InvoiceLineSourceType,
+        sourceId: String? = nil,
+        amountCents: Int,
+        sign: InvoiceLineSign,
+        snapshotName: String? = nil,
+        settlementTransactionIds: [String]? = nil
+    ) {
+        self.id = id
+        self.sourceType = sourceType
+        self.sourceId = sourceId
+        self.amountCents = amountCents
+        self.sign = sign
+        self.snapshotName = snapshotName
+        self.settlementTransactionIds = settlementTransactionIds
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, sourceType, sourceId, amountCents, sign, snapshotName, settlementTransactionIds
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+        sourceType = try container.decode(InvoiceLineSourceType.self, forKey: .sourceType)
+        sourceId = try container.decodeIfPresent(String.self, forKey: .sourceId)
+        amountCents = try container.decode(Int.self, forKey: .amountCents)
+        sign = try container.decode(InvoiceLineSign.self, forKey: .sign)
+        snapshotName = try container.decodeIfPresent(String.self, forKey: .snapshotName)
+        settlementTransactionIds = try container.decodeIfPresent([String].self, forKey: .settlementTransactionIds)
+    }
 }
 
 /// A project-scoped invoice that references items + non-itemized expense transactions.

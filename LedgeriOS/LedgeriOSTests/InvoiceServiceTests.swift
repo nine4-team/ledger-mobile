@@ -86,11 +86,12 @@ struct InvoiceServiceTests {
         let service = makeService(batch: batch)
 
         let lines: [InvoiceLine] = [
-            InvoiceLine(sourceType: .item, sourceId: "i1", amountCents: 5_000, sign: .charge, snapshotName: "Sofa"),
-            InvoiceLine(sourceType: .transaction, sourceId: "t1", amountCents: 1_000, sign: .credit, snapshotName: "Refund"),
-            InvoiceLine(sourceType: .item, sourceId: "i2", amountCents: 3_000, sign: .charge, snapshotName: nil),
+            InvoiceLine(id: "line-i1", sourceType: .item, sourceId: "i1", amountCents: 5_000, sign: .charge, snapshotName: "Sofa"),
+            InvoiceLine(id: "line-t1", sourceType: .transaction, sourceId: "t1", amountCents: 1_000, sign: .credit, snapshotName: "Refund"),
+            InvoiceLine(id: "line-i2", sourceType: .item, sourceId: "i2", amountCents: 3_000, sign: .charge, snapshotName: nil),
+            InvoiceLine(id: "line-manual", sourceType: .manual, amountCents: 2_500, sign: .charge, snapshotName: "Design Fee"),
         ]
-        let total = InvoiceLineCalculations.netTotalCents(lines: lines) // 5000 - 1000 + 3000 = 7000
+        let total = InvoiceLineCalculations.netTotalCents(lines: lines) // 5000 - 1000 + 3000 + 2500 = 9500
 
         try await service.markSent(
             invoiceId: invoiceId,
@@ -107,7 +108,7 @@ struct InvoiceServiceTests {
 
         let fields = update.fields
         #expect(fields["status"] as? String == "sent")
-        #expect(fields["totalCents"] as? Int == 7_000)
+        #expect(fields["totalCents"] as? Int == 9_500)
         #expect(fields["itemIds"] as? [String] == ["i1", "i2"])
         #expect(fields["transactionIds"] as? [String] == ["t1"])
         #expect(fields["updatedBy"] as? String == "user1")
@@ -118,13 +119,18 @@ struct InvoiceServiceTests {
 
         // Lines encoded as untyped dicts
         let encoded = try #require(fields["lines"] as? [[String: Any]])
-        #expect(encoded.count == 3)
+        #expect(encoded.count == 4)
+        #expect(encoded[0]["id"] as? String == "line-i1")
         #expect(encoded[0]["sourceId"] as? String == "i1")
         #expect(encoded[0]["sign"] as? Int == 1)
         #expect(encoded[1]["sign"] as? Int == -1)
         #expect(encoded[1]["snapshotName"] as? String == "Refund")
         // Third line has no snapshotName — key should be absent rather than NSNull
         #expect(encoded[2]["snapshotName"] == nil)
+        // Manual line has no sourceId but does preserve its label and amount.
+        #expect(encoded[3]["sourceType"] as? String == "manual")
+        #expect(encoded[3]["sourceId"] == nil)
+        #expect(encoded[3]["snapshotName"] as? String == "Design Fee")
     }
 
     @Test("markSent — deduplicates membership when the same source appears twice")
@@ -146,5 +152,49 @@ struct InvoiceServiceTests {
 
         let fields = batch.updates[0].fields
         #expect(fields["itemIds"] as? [String] == ["i1"])
+    }
+
+    // MARK: - markCollected
+
+    @Test("markCollected — creates settlement transaction and marks invoice paid")
+    func markCollectedCreatesSettlementTransaction() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var invoice = Invoice()
+        invoice.id = invoiceId
+
+        let txId = try await service.markCollected(
+            invoice: invoice,
+            accountId: acct,
+            projectId: "proj1",
+            amountCents: 2_800_00,
+            source: "Collected INV-1",
+            budgetCategoryId: "fee-cat",
+            settlementInvoiceLineIds: ["line1", "line2"],
+            userId: "user1"
+        )
+
+        #expect(!txId.isEmpty)
+        #expect(batch.commitCalled)
+        #expect(batch.sets.count == 1)
+        #expect(batch.updates.count == 1)
+
+        let set = batch.sets[0]
+        #expect(set.path == "accounts/\(acct)/transactions/\(txId)")
+        #expect(set.fields["projectId"] as? String == "proj1")
+        #expect(set.fields["amountCents"] as? Int == 2_800_00)
+        #expect(set.fields["type"] as? String == "fee")
+        #expect(set.fields["source"] as? String == "Collected INV-1")
+        #expect(set.fields["budgetCategoryId"] as? String == "fee-cat")
+        #expect(set.fields["settlementInvoiceId"] as? String == invoiceId)
+        #expect(set.fields["settlementInvoiceLineIds"] as? [String] == ["line1", "line2"])
+        #expect(set.fields["isComplete"] as? Bool == true)
+        #expect(set.fields["transactionDate"] != nil)
+
+        let update = batch.updates[0]
+        #expect(update.path == invoicePath)
+        #expect(update.fields["status"] as? String == "paid")
+        #expect(update.fields["updatedBy"] as? String == "user1")
+        #expect(update.fields["datePaid"] != nil)
     }
 }

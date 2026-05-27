@@ -18,8 +18,11 @@ struct CreateInvoiceModal: View {
     @State private var step = 1
     @State private var selectedItemIds: Set<String>
     @State private var selectedTxIds: Set<String>
+    @State private var manualLines: [InvoiceLine]
     @State private var invoiceName: String
     @State private var notes: String
+    @State private var newChargeName = ""
+    @State private var newChargeAmount = ""
     @State private var searchText = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -30,6 +33,7 @@ struct CreateInvoiceModal: View {
         self.editingInvoice = editingInvoice
         _selectedItemIds = State(initialValue: Set(editingInvoice?.itemIds ?? []))
         _selectedTxIds = State(initialValue: Set(editingInvoice?.transactionIds ?? []))
+        _manualLines = State(initialValue: editingInvoice?.lines?.filter { $0.sourceType == .manual } ?? [])
         _invoiceName = State(initialValue: editingInvoice?.invoiceNumber ?? "")
         _notes = State(initialValue: editingInvoice?.notes ?? "")
     }
@@ -110,11 +114,12 @@ struct CreateInvoiceModal: View {
                 lines.append(line)
             }
         }
+        lines.append(contentsOf: manualLines)
         return InvoiceLineCalculations.netTotalCents(lines: lines)
     }
 
     private var hasSelection: Bool {
-        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty
+        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !manualLines.isEmpty
     }
 
     // MARK: - Body
@@ -171,7 +176,7 @@ struct CreateInvoiceModal: View {
     @ViewBuilder
     private var step1Content: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            SearchField(text: $searchText, placeholder: "Search items and expenses...")
+            SearchField(text: $searchText, placeholder: "Search items, expenses, and charges...")
 
             HStack {
                 Text("Selected total")
@@ -184,7 +189,9 @@ struct CreateInvoiceModal: View {
                     .monospacedDigit()
             }
 
-            if billableItems.isEmpty && billableTransactions.isEmpty {
+            newChargeEditor
+
+            if billableItems.isEmpty && billableTransactions.isEmpty && manualLines.isEmpty {
                 Text("Nothing to bill — every item and expense in this project has already been invoiced or paid.")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
@@ -240,7 +247,63 @@ struct CreateInvoiceModal: View {
                     )
                 }
             }
+
+            if !manualLines.isEmpty {
+                Text("New Charges")
+                    .sectionLabelStyle()
+                ForEach(manualLines, id: \.id) { line in
+                    manualLineRow(line)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private var newChargeEditor: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("New Charge")
+                .sectionLabelStyle()
+            FormField(label: "Name", text: $newChargeName, placeholder: "Design Fee 1 of 3")
+            FormField(label: "Amount", text: $newChargeAmount, placeholder: "$2,500")
+            Button {
+                addManualLine()
+            } label: {
+                Label("Add New Charge", systemImage: "plus.circle.fill")
+                    .font(Typography.body.weight(.semibold))
+                    .foregroundStyle(BrandColors.primary)
+            }
+            .buttonStyle(.plain)
+            .disabled(!canAddManualLine)
+        }
+    }
+
+    private func manualLineRow(_ line: InvoiceLine) -> some View {
+        HStack(alignment: .center, spacing: Spacing.md) {
+            SelectorCircle(isSelected: true, indicator: .check)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(line.snapshotName ?? "New Charge")
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(2)
+                Text("Manual charge")
+                    .font(Typography.caption)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+            Spacer()
+            Text(CurrencyFormatting.formatCents(line.signedAmountCents))
+                .font(Typography.body)
+                .foregroundStyle(BrandColors.textPrimary)
+                .monospacedDigit()
+            Button {
+                removeManualLine(id: line.id)
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(BrandColors.destructive)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Remove charge")
+        }
+        .padding(.vertical, Spacing.sm)
     }
 
     private func selectionRow(
@@ -307,7 +370,7 @@ struct CreateInvoiceModal: View {
             FormField(label: "Invoice Name (optional)", text: $invoiceName, placeholder: "Phase 1 — Furnishings")
             FormField(label: "Notes (optional)", text: $notes, placeholder: "")
 
-            Text("\(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) expense\(selectedTxIds.count == 1 ? "" : "s")")
+            Text("\(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) expense\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
         }
@@ -336,14 +399,66 @@ struct CreateInvoiceModal: View {
         return projectContext.budgetCategories.first { $0.id == id }?.name
     }
 
+    private var canAddManualLine: Bool {
+        !newChargeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && parseCents(newChargeAmount) != nil
+    }
+
+    private func addManualLine() {
+        let name = newChargeName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, let cents = parseCents(newChargeAmount) else { return }
+        manualLines.append(InvoiceLine(
+            sourceType: .manual,
+            amountCents: cents,
+            sign: .charge,
+            snapshotName: name
+        ))
+        newChargeName = ""
+        newChargeAmount = ""
+    }
+
+    private func removeManualLine(id: String) {
+        manualLines.removeAll { $0.id == id }
+    }
+
+    private func existingLineId(sourceType: InvoiceLineSourceType, sourceId: String) -> String? {
+        editingInvoice?.lines?.first {
+            $0.sourceType == sourceType && $0.sourceId == sourceId
+        }?.id
+    }
+
+    private func draftLines(itemIds: [String], txIds: [String]) -> [InvoiceLine] {
+        var lines: [InvoiceLine] = []
+        let itemIdSet = Set(itemIds)
+        let txIdSet = Set(txIds)
+        for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
+            guard var line = InvoiceLineCalculations.makeLine(item: item),
+                  let sourceId = item.id else { continue }
+            if let existing = existingLineId(sourceType: .item, sourceId: sourceId) {
+                line.id = existing
+            }
+            lines.append(line)
+        }
+        for tx in projectContext.transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
+            guard var line = InvoiceLineCalculations.makeLine(transaction: tx),
+                  let sourceId = tx.id else { continue }
+            if let existing = existingLineId(sourceType: .transaction, sourceId: sourceId) {
+                line.id = existing
+            }
+            lines.append(line)
+        }
+        lines.append(contentsOf: manualLines)
+        return lines
+    }
+
     private func performSave() {
         guard hasSelection else { return }
         isSaving = true
         errorMessage = nil
         let service = InvoiceService()
 
-        // Drafts are live previews — store only membership; lines/total are
-        // materialized at markSent from the then-current item/tx state.
+        // Drafts store line identity and manual New Charge lines. Item/tx
+        // amounts remain live previews and are materialized at markSent.
         let itemIds = projectContext.items.compactMap { item -> String? in
             guard let id = item.id, selectedItemIds.contains(id) else { return nil }
             return id
@@ -359,6 +474,7 @@ struct CreateInvoiceModal: View {
         let acctId = accountId
         let projId = projectId
         let editingId = editingInvoice?.id
+        let lines = draftLines(itemIds: itemIds, txIds: txIds)
 
         Task {
             do {
@@ -370,6 +486,7 @@ struct CreateInvoiceModal: View {
                         accountId: acctId,
                         newItemIds: itemIds,
                         newTransactionIds: txIds,
+                        lines: lines,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                         userId: userId
@@ -380,6 +497,7 @@ struct CreateInvoiceModal: View {
                         projectId: projId,
                         itemIds: itemIds,
                         transactionIds: txIds,
+                        lines: lines,
                         invoiceNumber: number.isEmpty ? nil : number,
                         notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                         userId: userId
@@ -395,5 +513,13 @@ struct CreateInvoiceModal: View {
                 }
             }
         }
+    }
+
+    private func parseCents(_ text: String) -> Int? {
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+        guard !cleaned.isEmpty, let value = Double(cleaned), value >= 0 else { return nil }
+        return Int(round(value * 100))
     }
 }

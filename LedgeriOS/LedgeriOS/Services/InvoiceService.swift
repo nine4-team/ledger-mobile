@@ -57,6 +57,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         projectId: String,
         itemIds: [String],
         transactionIds: [String],
+        lines: [InvoiceLine]? = nil,
         invoiceNumber: String?,
         notes: String?,
         userId: String?
@@ -79,6 +80,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         ]
         if let invoiceNumber { invoiceFields["invoiceNumber"] = invoiceNumber }
         if let notes { invoiceFields["notes"] = notes }
+        if let lines { invoiceFields["lines"] = lines.map(Self.encodeLine) }
         if let userId {
             invoiceFields["createdBy"] = userId
             invoiceFields["updatedBy"] = userId
@@ -96,6 +98,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         accountId: String,
         newItemIds: [String],
         newTransactionIds: [String],
+        lines: [InvoiceLine]? = nil,
         invoiceNumber: String?,
         notes: String?,
         userId: String?
@@ -108,11 +111,16 @@ struct InvoiceService: InvoiceServiceProtocol {
         var invoiceFields: [String: Any] = [
             "itemIds": newItemIds,
             "transactionIds": newTransactionIds,
-            // Clear any stale snapshot fields — drafts render live from membership.
-            "lines": FieldValue.delete(),
+            // Clear any stale total snapshot — drafts render totals live from
+            // membership plus stored manual lines.
             "totalCents": FieldValue.delete(),
             "updatedAt": now,
         ]
+        if let lines {
+            invoiceFields["lines"] = lines.map(Self.encodeLine)
+        } else {
+            invoiceFields["lines"] = FieldValue.delete()
+        }
         invoiceFields["invoiceNumber"] = (invoiceNumber?.isEmpty == false) ? invoiceNumber! : FieldValue.delete()
         invoiceFields["notes"] = (notes?.isEmpty == false) ? notes! : FieldValue.delete()
         if let userId { invoiceFields["updatedBy"] = userId }
@@ -168,6 +176,54 @@ struct InvoiceService: InvoiceServiceProtocol {
         try await batch.commit()
     }
 
+    // MARK: - Mark Collected (create settlement transaction + paid status)
+
+    func markCollected(
+        invoice: Invoice,
+        accountId: String,
+        projectId: String,
+        amountCents: Int,
+        source: String,
+        budgetCategoryId: String?,
+        settlementInvoiceLineIds: [String]?,
+        userId: String?
+    ) async throws -> String {
+        guard let invoiceId = invoice.id else { return "" }
+
+        let batch = makeBatch()
+        let now = FieldValue.serverTimestamp()
+        let transactionId = UUID().uuidString
+        let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
+
+        var txFields: [String: Any] = [
+            "projectId": projectId,
+            "amountCents": amountCents,
+            "type": TransactionType.fee.rawValue,
+            "source": source,
+            "transactionDate": Self.todayString(),
+            "isComplete": true,
+            "settlementInvoiceId": invoiceId,
+            "createdAt": now,
+            "updatedAt": now,
+        ]
+        if let budgetCategoryId { txFields["budgetCategoryId"] = budgetCategoryId }
+        if let lineIds = settlementInvoiceLineIds, !lineIds.isEmpty {
+            txFields["settlementInvoiceLineIds"] = lineIds
+        }
+
+        var invoiceFields: [String: Any] = [
+            "status": InvoiceStatus.paid.rawValue,
+            "datePaid": now,
+            "updatedAt": now,
+        ]
+        if let userId { invoiceFields["updatedBy"] = userId }
+
+        batch.setData(txFields, forDocumentAt: txPath, merge: false)
+        batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
+        try await batch.commit()
+        return transactionId
+    }
+
     // MARK: - Void (status only — members return to pool via derived query)
 
     func voidInvoice(invoice: Invoice, accountId: String, userId: String?) async throws {
@@ -199,9 +255,13 @@ struct InvoiceService: InvoiceServiceProtocol {
         for line in lines {
             switch line.sourceType {
             case .item:
-                if seenItems.insert(line.sourceId).inserted { itemIds.append(line.sourceId) }
+                guard let sourceId = line.sourceId else { continue }
+                if seenItems.insert(sourceId).inserted { itemIds.append(sourceId) }
             case .transaction:
-                if seenTx.insert(line.sourceId).inserted { txIds.append(line.sourceId) }
+                guard let sourceId = line.sourceId else { continue }
+                if seenTx.insert(sourceId).inserted { txIds.append(sourceId) }
+            case .manual:
+                continue
             }
         }
         return (itemIds, txIds)
@@ -210,12 +270,22 @@ struct InvoiceService: InvoiceServiceProtocol {
     /// Encode an InvoiceLine as a plain `[String: Any]` for Firestore's untyped batch writer.
     private static func encodeLine(_ line: InvoiceLine) -> [String: Any] {
         var dict: [String: Any] = [
+            "id": line.id,
             "sourceType": line.sourceType.rawValue,
-            "sourceId": line.sourceId,
             "amountCents": line.amountCents,
             "sign": line.sign.rawValue,
         ]
+        if let sourceId = line.sourceId { dict["sourceId"] = sourceId }
         if let name = line.snapshotName { dict["snapshotName"] = name }
+        if let settlementIds = line.settlementTransactionIds { dict["settlementTransactionIds"] = settlementIds }
         return dict
+    }
+
+    private static func todayString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter.string(from: Date())
     }
 }

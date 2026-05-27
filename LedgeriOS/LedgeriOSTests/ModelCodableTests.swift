@@ -114,6 +114,8 @@ struct ModelCodableTests {
         tx.subtotalCents = 4620
         tx.isCanonicalInventory = false
         tx.inventorySaleDirection = .businessToProject
+        tx.settlementInvoiceId = "inv1"
+        tx.settlementInvoiceLineIds = ["line1", "line2"]
 
         let dict = try encodeToDict(tx)
 
@@ -126,6 +128,8 @@ struct ModelCodableTests {
         #expect(dict["taxRatePct"] as? Double == 8.25)
         #expect(dict["subtotalCents"] as? Int == 4620)
         #expect(dict["inventorySaleDirection"] as? String == "business_to_project")
+        #expect(dict["settlementInvoiceId"] as? String == "inv1")
+        #expect(dict["settlementInvoiceLineIds"] as? [String] == ["line1", "line2"])
     }
 
     @Test("Transaction with empty optionals")
@@ -144,6 +148,52 @@ struct ModelCodableTests {
 
         let dict = try encodeToDict(tx)
         #expect(dict["isComplete"] as? Bool == true)
+    }
+
+    // MARK: - Invoice
+
+    @Test("InvoiceLine encodes manual line fields")
+    func invoiceLineManualEncoding() throws {
+        let line = InvoiceLine(
+            id: "line1",
+            sourceType: .manual,
+            amountCents: 2_500_00,
+            sign: .charge,
+            snapshotName: "Design Fee 1 of 3",
+            settlementTransactionIds: ["tx1"]
+        )
+
+        let dict = try encodeToDict(line)
+
+        #expect(dict["id"] as? String == "line1")
+        #expect(dict["sourceType"] as? String == "manual")
+        #expect(dict["sourceId"] == nil)
+        #expect(dict["amountCents"] as? Int == 2_500_00)
+        #expect(dict["sign"] as? Int == 1)
+        #expect(dict["snapshotName"] as? String == "Design Fee 1 of 3")
+        #expect(dict["settlementTransactionIds"] as? [String] == ["tx1"])
+    }
+
+    @Test("InvoiceLine decodes legacy line without id")
+    func invoiceLineLegacyDecode() throws {
+        let json = """
+        {
+          "sourceType": "item",
+          "sourceId": "item1",
+          "amountCents": 1000,
+          "sign": 1,
+          "snapshotName": "Lamp"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(InvoiceLine.self, from: json)
+
+        #expect(!decoded.id.isEmpty)
+        #expect(decoded.sourceType == .item)
+        #expect(decoded.sourceId == "item1")
+        #expect(decoded.amountCents == 1000)
+        #expect(decoded.sign == .charge)
+        #expect(decoded.snapshotName == "Lamp")
     }
 
     // MARK: - Project
