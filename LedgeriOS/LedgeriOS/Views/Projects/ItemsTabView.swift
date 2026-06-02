@@ -21,6 +21,7 @@ struct ItemsTabView: View {
     @State private var showBulkReassign = false
     @State private var showBulkTransactionPicker = false
     @State private var showBulkDeleteConfirmation = false
+    @State private var showBulkActionMenu = false
     @State private var showNewItem = false
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
@@ -41,6 +42,15 @@ struct ItemsTabView: View {
         }
     }
 
+    private var selectedTotalCents: Int? {
+        let pairs = projectContext.items.compactMap { item -> (id: String, cents: Int)? in
+            guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
+            return (id: id, cents: cents)
+        }
+        let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)
+        return total > 0 ? total : nil
+    }
+
     private var activeProjectProtoItems: [ProtoItem] {
         projectProtoItems
             .filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
@@ -59,6 +69,26 @@ struct ItemsTabView: View {
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.vertical, Spacing.lg)
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if !selectedItemIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedItemIds.count,
+                    totalCents: selectedTotalCents,
+                    onBulkActions: { showBulkActionMenu = true },
+                    onClear: { selectedItemIds.removeAll() }
+                )
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
+            ActionMenuSheet(
+                title: "\(selectedItemIds.count) selected",
+                items: bulkActionMenuItems + [
+                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
+                        selectedItemIds.removeAll()
+                    })
+                ]
+            )
         }
         .itemActionSheets(
             itemActions,
