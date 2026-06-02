@@ -45,7 +45,7 @@ struct FirebaseImage<Placeholder: View>: View {
             }
         }
         .task(id: effectiveUrl) {
-            await resolveAndLoad()
+            await resolveAndLoadWithTimeout(for: effectiveUrl)
         }
     }
 
@@ -60,12 +60,30 @@ struct FirebaseImage<Placeholder: View>: View {
         return urlString
     }
 
-    private func resolveAndLoad() async {
+    private func resolveAndLoadWithTimeout(for requestedUrl: String?) async {
+        let loader = Task {
+            await resolveAndLoad(requestedUrl: requestedUrl)
+        }
+
+        let watchdog = Task {
+            try? await Task.sleep(for: .seconds(15))
+            guard !Task.isCancelled else { return }
+            if effectiveUrl == requestedUrl, loadedImage == nil, !loadFailed {
+                loader.cancel()
+                loadFailed = true
+            }
+        }
+
+        await loader.value
+        watchdog.cancel()
+    }
+
+    private func resolveAndLoad(requestedUrl: String?) async {
         // Reset state for new URL
         loadedImage = nil
         loadFailed = false
 
-        guard let effectiveUrl, !effectiveUrl.isEmpty else {
+        guard let effectiveUrl = requestedUrl, !effectiveUrl.isEmpty else {
             loadFailed = true
             return
         }
@@ -84,6 +102,8 @@ struct FirebaseImage<Placeholder: View>: View {
             url = await StorageURLResolver.resolve(effectiveUrl)
         }
 
+        guard !Task.isCancelled, self.effectiveUrl == requestedUrl else { return }
+
         guard let url else {
             loadFailed = true
             return
@@ -91,8 +111,11 @@ struct FirebaseImage<Placeholder: View>: View {
 
         // Download image bytes
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 15
+            let (data, response) = try await URLSession.shared.data(for: request)
             guard !Task.isCancelled else { return }
+            guard self.effectiveUrl == requestedUrl else { return }
 
             if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
                 loadFailed = true
