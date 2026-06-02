@@ -62,10 +62,10 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates
 
 echo "==> Creating DMG..."
-# Use sparse image + rsync to avoid com.apple.provenance xattr blocking hdiutil -srcfolder
+# Use sparse image + ditto to preserve the signed app bundle metadata.
 hdiutil create -size 200m -fs HFS+ -volname "LedgerInstaller" -type SPARSE "$SPARSE_PATH"
 hdiutil attach "$SPARSE_PATH" -mountpoint "$MOUNT_POINT"
-rsync -a "$EXPORT_PATH/LedgeriOS.app/" "$MOUNT_POINT/Ledger.app/"
+ditto "$EXPORT_PATH/LedgeriOS.app" "$MOUNT_POINT/Ledger.app"
 hdiutil detach "$MOUNT_POINT"
 hdiutil convert "$SPARSE_PATH" -format UDZO -o "$DMG_PATH"
 rm -f "$SPARSE_PATH"

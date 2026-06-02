@@ -146,7 +146,7 @@ struct SharedItemsList: View {
         }
         #if os(macOS)
         .overlay {
-            if let group = macOSExpandedGroup {
+            if !inline, let group = macOSExpandedGroup {
                 groupExpandedOverlay(for: group)
             }
         }
@@ -624,8 +624,6 @@ struct SharedItemsList: View {
             }
         }
 
-        #if os(macOS)
-        // macOS: tap opens centered overlay instead of inline expansion
         GroupedItemCard(
             name: group.name,
             thumbnailUrl: summaryImage?.url,
@@ -636,35 +634,37 @@ struct SharedItemsList: View {
             sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
             spaceName: spaceName,
             priceLabel: displayedPriceLabel,
+            isExpanded: inlineGroupExpansionBinding(for: group),
             isSelected: selectionBinding,
             onSelectedChange: onSelectedChange,
-            onPress: { withAnimation { macOSExpandedGroup = group } },
-            itemCount: validItems.count
-        ) {
-            EmptyView()
-        }
-        #else
-        GroupedItemCard(
-            name: group.name,
-            thumbnailUrl: summaryImage?.url,
-            thumbnailSmUrl: summaryImage?.thumbnailUrlSm,
-            countLabel: "×\(group.count)",
-            totalLabel: totalLabel,
-            sku: summaryItem?.sku,
-            sourceLabel: summaryItem?.currentSource ?? summaryItem?.source,
-            spaceName: spaceName,
-            priceLabel: displayedPriceLabel,
-            isExpanded: Binding(
-                get: { expandedGroups.contains(group.id) },
-                set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
-            ),
-            isSelected: selectionBinding,
-            onSelectedChange: onSelectedChange,
+            onPress: groupedCardPressAction(for: group),
             itemCount: validItems.count
         ) {
             groupedCardExpandedContent(for: group)
         }
+    }
+
+    private func inlineGroupExpansionBinding(for group: ItemGroup) -> Binding<Bool>? {
+        #if os(macOS)
+        if !inline {
+            return nil
+        }
         #endif
+
+        return Binding(
+            get: { expandedGroups.contains(group.id) },
+            set: { if $0 { expandedGroups.insert(group.id) } else { expandedGroups.remove(group.id) } }
+        )
+    }
+
+    private func groupedCardPressAction(for group: ItemGroup) -> (() -> Void)? {
+        #if os(macOS)
+        if !inline {
+            return { withAnimation { macOSExpandedGroup = group } }
+        }
+        #endif
+
+        return nil
     }
 
     private func groupedSpaceName(for group: ItemGroup) -> String? {
