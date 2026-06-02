@@ -26,6 +26,7 @@ struct ItemsTabView: View {
     @State private var showNewItemDraft = false
     @State private var showAddItemMenu = false
     @State private var selectedProtoItem: ProtoItem?
+    @State private var selectedItemForNavigation: Item?
     @State private var protoItemPendingDelete: ProtoItem?
     @State private var protoItemPendingConvert: ProtoItem?
     @State private var protoItemPendingMerge: ProtoItem?
@@ -195,6 +196,9 @@ struct ItemsTabView: View {
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
         }
+        .navigationDestination(item: $selectedItemForNavigation) { item in
+            ItemDetailView(item: item)
+        }
         .confirmationDialog(
             "Delete Item Quick Draft?",
             isPresented: Binding(
@@ -261,7 +265,10 @@ struct ItemsTabView: View {
     private var itemsSection: some View {
         if expandedSections.contains("items") {
             SharedItemsList(
-                mode: .embedded(items: projectContext.items, onItemPress: { _ in }),
+                mode: .embedded(items: projectContext.items, onItemPress: { itemId in
+                    guard selectedItemIds.isEmpty else { return }
+                    selectedItemForNavigation = projectContext.items.first { $0.id == itemId }
+                }),
                 getMenuItems: { singleItemMenuItems(for: $0) },
                 emptyMessage: "No items in this project",
                 onAdd: { showAddItemMenu = true },

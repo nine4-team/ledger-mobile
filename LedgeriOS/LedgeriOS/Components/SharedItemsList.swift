@@ -694,6 +694,7 @@ struct SharedItemsList: View {
                     get: { resolvedSelectedIds.wrappedValue.contains(itemId) },
                     set: { if $0 { resolvedSelectedIds.wrappedValue.insert(itemId) } else { resolvedSelectedIds.wrappedValue.remove(itemId) } }
                 )
+                let shouldUseInlinePressNavigation = inline && useNavigationLinks && ids.isEmpty
                 let card = ItemCard(
                     item: item,
                     priceLabel: displayPrice(for: item),
@@ -701,12 +702,14 @@ struct SharedItemsList: View {
                     indexLabel: "\(index + 1)/\(group.items.count)",
                     statusOverride: item.status?.displayLabel,
                     isSelected: selectionBinding,
-                    onPress: useNavigationLinks && ids.isEmpty ? nil : { handleItemPress(item) },
+                    onPress: shouldUseInlinePressNavigation || !ids.isEmpty || !useNavigationLinks
+                        ? { handleItemPress(item) }
+                        : nil,
                     menuItems: getMenuItems?(item) ?? [],
                     warningMessage: getWarning?(item)
                 )
 
-                if useNavigationLinks && ids.isEmpty {
+                if useNavigationLinks && ids.isEmpty && !shouldUseInlinePressNavigation {
                     NavigationLink(value: item) {
                         card
                     }
