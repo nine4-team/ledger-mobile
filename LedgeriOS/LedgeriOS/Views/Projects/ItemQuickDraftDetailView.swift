@@ -61,7 +61,7 @@ struct ItemQuickDraftDetailView: View {
         }
         .background(BrandColors.background.ignoresSafeArea())
         .navigationTitle("Item Quick Draft")
-        .navigationBarTitleDisplayMode(.inline)
+        .navBarTitleDisplayMode(.inline)
         .onAppear(perform: subscribe)
         .onDisappear {
             listener?.remove()
