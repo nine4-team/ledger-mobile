@@ -27,6 +27,7 @@ struct UniversalSearchView: View {
     @State private var selectedTransactionIds: Set<String> = []
     @State private var showTransactionBulkActions = false
     @State private var showTransactionDeleteConfirmation = false
+    @State private var navigationTransaction: Transaction?
 
     // Single-transaction actions
     @State private var actionTargetTransactionId: String?
@@ -73,6 +74,9 @@ struct UniversalSearchView: View {
         }
         .navigationTitle("Search")
         .navBarTitleDisplayMode(.inline)
+        .navigationDestination(item: $navigationTransaction) { transaction in
+            TransactionDetailView(transaction: transaction)
+        }
         .safeAreaInset(edge: .bottom) {
             if !selectedItemIds.isEmpty {
                 BulkSelectionBar(
@@ -324,12 +328,14 @@ struct UniversalSearchView: View {
                             projects: accountContext.allProjects
                         ),
                         isSelected: isSelected,
-                        menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : []
+                        menuItems: selectedTransactionIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
+                        onPress: selectedTransactionIds.isEmpty ? {
+                            navigationTransaction = transaction
+                        } : nil
                     )
 
                     if selectedTransactionIds.isEmpty {
-                        NavigationLink(value: transaction) { card }
-                            .buttonStyle(.plain)
+                        card
                     } else {
                         card
                             .onTapGesture { isSelected.wrappedValue.toggle() }

@@ -39,19 +39,10 @@ struct ProjectDetailView: View {
                 switch selectedTab {
                 case "items":
                     ItemsTabView()
-                        .navigationDestination(for: Item.self) { item in
-                            ItemDetailView(item: item)
-                        }
                 case "transactions":
                     TransactionsTabView(showExportSheet: $showExportSheet)
-                        .navigationDestination(for: Transaction.self) { transaction in
-                            TransactionDetailView(transaction: transaction)
-                        }
                 case "spaces":
                     SpacesTabView()
-                        .navigationDestination(for: Space.self) { space in
-                            SpaceDetailView(space: space)
-                        }
                 case "notes":
                     NotesTabView()
                 case "finances":
@@ -63,6 +54,15 @@ struct ProjectDetailView: View {
                     ItemsTabView()
                 }
             }
+        }
+        .navigationDestination(for: Item.self) { item in
+            ItemDetailView(item: item)
+        }
+        .navigationDestination(for: Transaction.self) { transaction in
+            TransactionDetailView(transaction: transaction)
+        }
+        .navigationDestination(for: Space.self) { space in
+            SpaceDetailView(space: space)
         }
         .navBarTitleDisplayMode(.inline)
         #if os(macOS)

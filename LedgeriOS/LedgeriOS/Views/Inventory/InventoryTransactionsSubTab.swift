@@ -12,7 +12,7 @@ struct InventoryTransactionsSubTab: View {
     @State private var showNewTransaction = false
     @State private var showSortMenu = false
     @State private var showFilterMenu = false
-    @State private var createdTransaction: Transaction?
+    @State private var navigationTransaction: Transaction?
     @State private var expandedInventoryGroups: Set<String> = []
 
     // Single-transaction actions
@@ -112,10 +112,10 @@ struct InventoryTransactionsSubTab: View {
             let _ = print("🟢 [TxSubTab] NewTransactionView sheet body evaluated")
             NewTransactionView(
                 context: .inventory,
-                onCreated: { createdTransaction = $0 }
+                onCreated: { navigationTransaction = $0 }
             )
         }
-        .navigationDestination(item: $createdTransaction) { tx in
+        .navigationDestination(item: $navigationTransaction) { tx in
             TransactionDetailView(transaction: tx)
         }
         .background(SortMenu(
@@ -236,10 +236,7 @@ struct InventoryTransactionsSubTab: View {
     private func transactionNavigationCard(for transaction: Transaction) -> some View {
         if let txId = transaction.id {
             if selectedIds.isEmpty {
-                NavigationLink(value: transaction) {
-                    transactionCardContent(for: transaction, txId: txId)
-                }
-                .buttonStyle(.plain)
+                transactionCardContent(for: transaction, txId: txId)
             } else {
                 transactionCardContent(for: transaction, txId: txId)
                     .onTapGesture { toggleSelection(txId) }
@@ -255,7 +252,10 @@ struct InventoryTransactionsSubTab: View {
                 get: { selectedIds.contains(txId) },
                 set: { if $0 { selectedIds.insert(txId) } else { selectedIds.remove(txId) } }
             ),
-            menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : []
+            menuItems: selectedIds.isEmpty ? singleTransactionMenuItems(for: transaction, txId: txId) : [],
+            onPress: selectedIds.isEmpty ? {
+                navigationTransaction = transaction
+            } : nil
         )
     }
 

@@ -5,6 +5,7 @@ struct ReviewView: View {
     @State private var selectedBucketId: String = "unassigned"
     @State private var searchText = ""
     @State private var activeSort: TransactionSortOption = .dateDesc
+    @State private var selectedTransaction: Transaction?
     @Environment(FindStateManager.self) private var findState
 
     private static let unassignedId = "unassigned"
@@ -85,8 +86,11 @@ struct ReviewView: View {
         }
         .navigationTitle("Review")
         .navBarTitleDisplayMode(.inline)
-        .navigationDestination(for: Transaction.self) { transaction in
+        .navigationDestination(item: $selectedTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
+        }
+        .navigationDestination(for: Item.self) { item in
+            ItemDetailView(item: item)
         }
         .universalAddButton()
         .background(BrandColors.background)
@@ -142,22 +146,22 @@ struct ReviewView: View {
                         spacing: Spacing.cardListGap
                     ) {
                         ForEach(displayTransactions) { transaction in
-                            NavigationLink(value: transaction) {
-                                TransactionCard(
-                                    transaction: transaction,
-                                    budgetCategoryName: accountContext.allBudgetCategories
-                                        .first(where: { $0.id == transaction.budgetCategoryId })?.name,
-                                    assignmentLabel: ReviewCalculations.assignmentLabel(
-                                        for: transaction,
-                                        projects: accountContext.allProjects
-                                    ),
-                                    projectName: TransactionDisplayCalculations.projectLabel(
-                                        for: transaction,
-                                        projects: accountContext.allProjects
-                                    )
-                                )
-                            }
-                            .buttonStyle(.plain)
+                            TransactionCard(
+                                transaction: transaction,
+                                budgetCategoryName: accountContext.allBudgetCategories
+                                    .first(where: { $0.id == transaction.budgetCategoryId })?.name,
+                                assignmentLabel: ReviewCalculations.assignmentLabel(
+                                    for: transaction,
+                                    projects: accountContext.allProjects
+                                ),
+                                projectName: TransactionDisplayCalculations.projectLabel(
+                                    for: transaction,
+                                    projects: accountContext.allProjects
+                                ),
+                                onPress: {
+                                    selectedTransaction = transaction
+                                }
+                            )
                             .id(transaction.id ?? "")
                         }
                     }

@@ -136,9 +136,6 @@ struct SpaceDetailView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .navigationDestination(for: Item.self) { item in
-            ItemDetailView(item: item)
-        }
         .task { startSpaceListener() }
         .onDisappear { spaceListener?.remove() }
         .background(BrandColors.background)

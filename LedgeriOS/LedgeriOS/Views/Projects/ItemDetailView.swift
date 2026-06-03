@@ -21,6 +21,8 @@ struct ItemDetailView: View {
     @State private var liveTransactionData: Transaction?
     @State private var transactionListener: ListenerRegistration?
     @State private var transactionLookupCompleted = false
+    @State private var navigationTransaction: Transaction?
+    @State private var navigationSpace: Space?
 
     // Modal presentation
     @State private var showActionMenu = false
@@ -195,10 +197,10 @@ struct ItemDetailView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .navigationDestination(for: Transaction.self) { transaction in
+        .navigationDestination(item: $navigationTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
         }
-        .navigationDestination(for: Space.self) { space in
+        .navigationDestination(item: $navigationSpace) { space in
             SpaceDetailView(space: space)
         }
         .onAppear {
@@ -241,11 +243,14 @@ struct ItemDetailView: View {
                 switch transactionLinkDisplayState {
                 case .linked:
                     if let tx = linkedTransaction {
-                        NavigationLink(value: tx) {
+                        Button {
+                            navigationTransaction = tx
+                        } label: {
                             FindableText(linkedTransactionLabel)
                                 .font(Typography.small)
                                 .foregroundStyle(BrandColors.primary)
                         }
+                        .buttonStyle(.plain)
                     }
                 case .none:
                     Text("None")
@@ -266,11 +271,14 @@ struct ItemDetailView: View {
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                 if let space = linkedSpace {
-                    NavigationLink(value: space) {
+                    Button {
+                        navigationSpace = space
+                    } label: {
                         FindableText(space.name)
                             .font(Typography.small)
                             .foregroundStyle(BrandColors.primary)
                     }
+                    .buttonStyle(.plain)
                 } else {
                     Text("None")
                         .font(Typography.small)

@@ -28,6 +28,7 @@ struct TransactionDetailView: View {
     @State private var showCreateNewItem = false
     @State private var showCreateItemDraft = false
     @State private var selectedProtoItem: ProtoItem?
+    @State private var navigationItem: Item?
     @State private var protoItemPendingDelete: ProtoItem?
     @State private var protoItemPendingConvert: ProtoItem?
     @State private var protoItemPendingMerge: ProtoItem?
@@ -187,11 +188,11 @@ struct TransactionDetailView: View {
         }
         .findEntity(id: transaction.id)
         .background(BrandColors.background)
-        .navigationDestination(for: Item.self) { item in
-            ItemDetailView(item: item)
-        }
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
+        }
+        .navigationDestination(item: $navigationItem) { item in
+            ItemDetailView(item: item)
         }
         .task(id: transaction.id) {
             await loadLineageItems()
@@ -789,10 +790,12 @@ struct TransactionDetailView: View {
     private var itemsSection: some View {
         if expandedSections.contains("items") {
             SharedItemsList(
-                mode: .embedded(items: activeItems, onItemPress: { _ in }),
+                mode: .embedded(items: activeItems, onItemPress: { itemId in
+                    navigationItem = activeItems.first { $0.id == itemId }
+                }),
                 emptyMessage: "No items yet",
                 onAdd: { showAddItemMenu = true },
-                useNavigationLinks: true,
+                useNavigationLinks: false,
                 filterScope: .project,
                 inline: true,
                 inlineSectionHeader: AnyView(itemsSectionHeader)
@@ -905,7 +908,8 @@ struct TransactionDetailView: View {
                                 item: item,
                                 priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
                                 indexLabel: "\(index + 1)/\(group.count)",
-                                statusOverride: statusOverride
+                                statusOverride: statusOverride,
+                                onPress: { navigationItem = item }
                             )
                         }
                     }
@@ -913,7 +917,8 @@ struct TransactionDetailView: View {
                     ItemCard(
                         item: item,
                         priceLabel: item.purchasePriceCents.map { CurrencyFormatting.formatCentsWithDecimals($0) },
-                        statusOverride: statusOverride
+                        statusOverride: statusOverride,
+                        onPress: { navigationItem = item }
                     )
                 }
             }

@@ -28,23 +28,23 @@ struct InventoryView: View {
                 switch selectedTab {
                 case "items":
                     InventoryItemsSubTab()
-                        .navigationDestination(for: Item.self) { item in
-                            ItemDetailView(item: item)
-                        }
                 case "transactions":
                     InventoryTransactionsSubTab()
-                        .navigationDestination(for: Transaction.self) { transaction in
-                            TransactionDetailView(transaction: transaction)
-                        }
                 case "spaces":
                     InventorySpacesSubTab()
-                        .navigationDestination(for: Space.self) { space in
-                            SpaceDetailView(space: space)
-                        }
                 default:
                     InventoryItemsSubTab()
                 }
             }
+        }
+        .navigationDestination(for: Item.self) { item in
+            ItemDetailView(item: item)
+        }
+        .navigationDestination(for: Transaction.self) { transaction in
+            TransactionDetailView(transaction: transaction)
+        }
+        .navigationDestination(for: Space.self) { space in
+            SpaceDetailView(space: space)
         }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.inline)
