@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Project, Transaction, BudgetCategory, ProjectBudgetCategory } from "../types.js";
+import type { Project, Transaction, BudgetCategory, ProjectBudgetCategory, Item } from "../types.js";
 import { accountCollection, subcollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { normalizeSpendAmount, resolveSupportedTypes } from "../util/budget.js";
@@ -41,14 +41,23 @@ export function registerProjectTools(server: McpServer, db: Firestore) {
   // ── get_project ────────────────────────────────────────────────────────────
   server.tool(
     "get_project",
-    "Get a single project with full details including budget summary. The notes field may contain client-specific context useful for matching receipts to projects — payment method details (e.g. card last 4 digits), billing address variations, or other identifiers.",
+    "Get a single project with full details including budget summary and an `itemCounts` scope check (total / withImages / withoutImages). The notes field may contain client-specific context useful for matching receipts to projects — payment method details (e.g. card last 4 digits), billing address variations, or other identifiers.",
     { projectId: z.string().describe("Project document ID") },
     async ({ projectId }) => {
       const project = await getDoc<Project>(db, "projects", projectId);
       if (!project) {
         return { content: [{ type: "text", text: `Project ${projectId} not found.` }], isError: true };
       }
-      return { content: [{ type: "text", text: JSON.stringify(project, null, 2) }] };
+      const items = await queryDocs<Item>(
+        accountCollection(db, "items").where("projectId", "==", projectId)
+      );
+      const withImages = items.filter((i) => (i.images?.length ?? 0) > 0).length;
+      const itemCounts = {
+        total: items.length,
+        withImages,
+        withoutImages: items.length - withImages,
+      };
+      return { content: [{ type: "text", text: JSON.stringify({ ...project, itemCounts }, null, 2) }] };
     }
   );
 

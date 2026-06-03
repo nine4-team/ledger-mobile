@@ -109,21 +109,35 @@ export function pickFields<T extends Record<string, unknown>>(
 
 /**
  * Build a size-capped list response. Serializes items one at a time
- * until the budget would be exceeded, then stops. If truncated, adds
- * `truncated: true` and a hint so the AI knows to narrow the filter.
+ * until the byte budget would be exceeded, then stops.
+ *
+ * When truncated, the response leads with a `_truncationNotice` (first key,
+ * so an agent scanning a large payload can't miss it) and a `nextOffset` to
+ * resume pagination. If the caller requested `fetchAll`, the notice says so
+ * explicitly — the "give me everything" promise was broken, and the agent
+ * should either page from `nextOffset` or narrow the filter.
  */
-export function capResponse<T>(
-  items: T[],
-  options: { totalCount?: number; limitBytes?: number } = {}
-): {
+export interface CappedResponse<T> {
+  _truncationNotice?: string;
+  nextOffset?: number;
   items: T[];
   returnedCount: number;
   totalCount: number;
   truncated: boolean;
-  hint?: string;
-} {
+}
+
+export function capResponse<T>(
+  items: T[],
+  options: {
+    totalCount?: number;
+    limitBytes?: number;
+    offset?: number;
+    fetchAll?: boolean;
+  } = {}
+): CappedResponse<T> {
   const limit = options.limitBytes ?? RESPONSE_SIZE_LIMIT_BYTES;
   const total = options.totalCount ?? items.length;
+  const baseOffset = options.offset ?? 0;
   const kept: T[] = [];
   let bytes = 0;
 
@@ -135,23 +149,34 @@ export function capResponse<T>(
   }
 
   const truncated = kept.length < items.length || total > items.length;
-  const response: {
-    items: T[];
-    returnedCount: number;
-    totalCount: number;
-    truncated: boolean;
-    hint?: string;
-  } = {
+
+  if (!truncated) {
+    return {
+      items: kept,
+      returnedCount: kept.length,
+      totalCount: total,
+      truncated: false,
+    };
+  }
+
+  const nextOffset = baseOffset + kept.length;
+  const narrowHint =
+    `Narrow the filter (by project, status, hasImages, etc.), pass \`fields: [...]\` to slim each row, or raise \`responseLimit\` (max ${RESPONSE_SIZE_HARD_CEILING_BYTES.toLocaleString()}).`;
+  const notice = options.fetchAll
+    ? `fetchAll requested, but the response hit the ${limit.toLocaleString()}-byte budget before all items fit. Returned ${kept.length} of ${total} matching items. Continue with offset=${nextOffset}, or ${narrowHint.charAt(0).toLowerCase() + narrowHint.slice(1)}`
+    : `Response truncated at the ${limit.toLocaleString()}-byte budget. Returned ${kept.length} items starting at offset ${baseOffset}. Continue with offset=${nextOffset}. ${narrowHint}`;
+
+  // `_truncationNotice` and `nextOffset` are emitted first on purpose:
+  // JSON.stringify preserves key insertion order, so they land at the top
+  // of the payload where an agent is far less likely to scan past them.
+  return {
+    _truncationNotice: notice,
+    nextOffset,
     items: kept,
     returnedCount: kept.length,
     totalCount: total,
-    truncated,
+    truncated: true,
   };
-  if (truncated) {
-    response.hint =
-      `Response was capped at ${limit.toLocaleString()} bytes. Narrow the filter (by project, date, status), pass \`fields: [...]\` to slim each row, or raise \`responseLimit\` (max ${RESPONSE_SIZE_HARD_CEILING_BYTES.toLocaleString()}).`;
-  }
-  return response;
 }
 
 /** Serialize a capped list response to MCP tool text content. */

@@ -171,7 +171,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
   // ── list_items ─────────────────────────────────────────────────────────────
   server.tool(
     "list_items",
-    "List items by EXACT-match structured filters (projectId, status, budgetCategoryId, source, etc.). Use projectId='inventory' for business inventory (no project). Supports pagination via offset + limit.\n\nPicking between this and search_items:\n- Exact vendor string → list_items (here).\n- Partial vendor name, or any keyword that might appear in source or notes → search_items.\nDon't enumerate name variants by calling this tool in a loop.",
+    "List items by EXACT-match structured filters (projectId, status, budgetCategoryId, etc.). Use projectId='inventory' for business inventory (no project). Supports pagination via offset + limit.\n\nPicking between this and search_items:\n- Exact vendor string → list_items (here).\n- Partial vendor name, or any keyword that might appear in source or notes → search_items.\nDon't enumerate name variants by calling this tool in a loop.",
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for items with no project."),
       spaceId: z.string().optional().describe("Filter by space ID"),
@@ -179,14 +179,15 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       status: z.string().optional().describe("Filter by status (to purchase, purchased, to return, returned)"),
       bookmarked: z.boolean().optional().describe("Filter by bookmark status"),
       hasTransaction: z.boolean().optional().describe("Filter by transaction linkage: true = only items with a transactionId, false = only items with NO transactionId"),
+      hasImages: z.boolean().optional().describe("Filter by image presence: true = only items with at least one image, false = only items with NO images. Use false to find items still needing photos."),
       limit: z.coerce.number().default(50).describe("Max results (ignored when fetchAll is true)"),
       offset: z.coerce.number().default(0).describe("Number of results to skip (for pagination). Use with limit to page through results."),
-      fetchAll: z.boolean().default(false).describe("Return all matching items, ignoring limit/offset. Use when you need the full collection without pagination."),
+      fetchAll: z.boolean().default(false).describe("Return all matching items, ignoring limit/offset — subject to the per-response byte budget. If the result exceeds the budget, the response leads with a `_truncationNotice` and a `nextOffset` to resume; it does NOT silently drop items. For large projects, prefer narrowing the filter (e.g. hasImages: false) over fetchAll."),
       mode: ProjectionMode.describe("'summary' (default) or 'full'."),
       fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
       responseLimit: ResponseLimitArg,
     },
-    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, limit, offset, fetchAll, mode, fields, responseLimit }) => {
+    async ({ projectId, spaceId, budgetCategoryId, status, bookmarked, hasTransaction, hasImages, limit, offset, fetchAll, mode, fields, responseLimit }) => {
       let query: FirebaseFirestore.Query = accountCollection(db, "items");
 
       if (projectId === "inventory") {
@@ -200,26 +201,26 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       if (status) query = query.where("status", "==", status);
       if (bookmarked !== undefined) query = query.where("bookmark", "==", bookmarked);
 
-      // Firestore can't query "field does not exist", so we filter client-side
-      let clientFilter: ((item: Item & { id: string }) => boolean) | null = null;
-      if (hasTransaction === true) {
-        clientFilter = (item) => !!item.transactionId;
-      } else if (hasTransaction === false) {
-        clientFilter = (item) => !item.transactionId;
-      }
+      // Firestore can't query "field absent" or array length, so we filter client-side
+      const clientFilters: ((item: Item & { id: string }) => boolean)[] = [];
+      if (hasTransaction === true) clientFilters.push((item) => !!item.transactionId);
+      else if (hasTransaction === false) clientFilters.push((item) => !item.transactionId);
+      if (hasImages === true) clientFilters.push((item) => (item.images?.length ?? 0) > 0);
+      else if (hasImages === false) clientFilters.push((item) => (item.images?.length ?? 0) === 0);
+      const hasClientFilter = clientFilters.length > 0;
 
-      if (!fetchAll && !clientFilter) {
+      if (!fetchAll && !hasClientFilter) {
         query = query.offset(offset).limit(limit);
       }
       let items = await queryDocs<Item>(query);
-      if (clientFilter) items = items.filter(clientFilter);
+      if (hasClientFilter) items = items.filter((item) => clientFilters.every((f) => f(item)));
       if (!fetchAll) items = items.slice(offset, offset + limit);
 
       const projected = items.map((i) => {
         if (fields && fields.length) return pickFields(i as unknown as Record<string, unknown>, fields);
         return mode === "full" ? (i as unknown as Record<string, unknown>) : (itemSummary(i) as unknown as Record<string, unknown>);
       });
-      return asToolResponse(capResponse(projected, { limitBytes: responseLimit }));
+      return asToolResponse(capResponse(projected, { limitBytes: responseLimit, offset, fetchAll }));
     }
   );
 
