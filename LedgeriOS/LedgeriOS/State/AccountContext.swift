@@ -23,6 +23,9 @@ final class AccountContext {
     var allProjects: [Project] = []
     var allInvoices: [Invoice] = []
 
+    private var rawAllTransactions: [Transaction] = []
+    private var rawAllBudgetCategories: [BudgetCategory] = []
+    private var rawAllInvoices: [Invoice] = []
     private var listeners: [ListenerRegistration] = []
     private let accountsService: AccountsServiceProtocol
     private let membersService: AccountMembersServiceProtocol
@@ -119,6 +122,9 @@ final class AccountContext {
         allBudgetCategories = []
         allProjects = []
         allInvoices = []
+        rawAllTransactions = []
+        rawAllBudgetCategories = []
+        rawAllInvoices = []
 
         currentAccountId = accountId
 
@@ -132,6 +138,7 @@ final class AccountContext {
         let memberListener = membersService.subscribeToMember(accountId: accountId, userId: userId) { [weak self] member in
             Task { @MainActor in
                 self?.member = member
+                self?.applyFinancialAccess()
             }
         }
         listeners.append(memberListener)
@@ -146,7 +153,10 @@ final class AccountContext {
 
         if let transactionsService {
             let txListener = transactionsService.subscribeToTransactions(accountId: accountId, scope: .all) { [weak self] transactions in
-                Task { @MainActor in self?.allTransactions = transactions }
+                Task { @MainActor in
+                    self?.rawAllTransactions = transactions
+                    self?.applyFinancialAccess()
+                }
             }
             listeners.append(txListener)
         }
@@ -160,7 +170,10 @@ final class AccountContext {
 
         if let budgetCategoriesService {
             let categoriesListener = budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
-                Task { @MainActor in self?.allBudgetCategories = categories }
+                Task { @MainActor in
+                    self?.rawAllBudgetCategories = categories
+                    self?.applyFinancialAccess()
+                }
             }
             listeners.append(categoriesListener)
         }
@@ -174,7 +187,10 @@ final class AccountContext {
 
         if let invoicesService {
             let invoicesListener = invoicesService.subscribeToInvoices(accountId: accountId) { [weak self] invoices in
-                Task { @MainActor in self?.allInvoices = invoices }
+                Task { @MainActor in
+                    self?.rawAllInvoices = invoices
+                    self?.applyFinancialAccess()
+                }
             }
             listeners.append(invoicesListener)
         }
@@ -194,5 +210,19 @@ final class AccountContext {
         allBudgetCategories = []
         allProjects = []
         allInvoices = []
+        rawAllTransactions = []
+        rawAllBudgetCategories = []
+        rawAllInvoices = []
+    }
+
+    private func applyFinancialAccess() {
+        let policy = FinancialAccessPolicy(member: member)
+        allBudgetCategories = policy.visibleCategories(rawAllBudgetCategories)
+        allTransactions = policy.visibleTransactions(rawAllTransactions, categories: rawAllBudgetCategories)
+        allInvoices = policy.visibleInvoices(
+            rawAllInvoices,
+            transactions: rawAllTransactions,
+            categories: rawAllBudgetCategories
+        )
     }
 }

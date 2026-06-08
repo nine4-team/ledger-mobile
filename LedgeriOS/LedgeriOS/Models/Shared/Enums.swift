@@ -36,6 +36,26 @@ enum BudgetCategoryType: String, Codable, CaseInsensitiveStringEnum {
 
 enum MemberRole: String, Codable {
     case owner, admin, user
+
+    var displayLabel: String {
+        switch self {
+        case .owner: return "Owner"
+        case .admin: return "Admin"
+        case .user: return "Employee"
+        }
+    }
+}
+
+enum CompanyFinancialAccess: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
+    case full, limited, none
+
+    var displayLabel: String {
+        switch self {
+        case .full: return "Full access"
+        case .limited: return "Limited access"
+        case .none: return "No access"
+        }
+    }
 }
 
 enum InventorySaleDirection: String, Codable {

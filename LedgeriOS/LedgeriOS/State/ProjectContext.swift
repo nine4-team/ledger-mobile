@@ -15,6 +15,9 @@ final class ProjectContext {
     var projectPreferences: ProjectPreferences?
     var notes: [ProjectNote] = []
 
+    private var financialAccessMember: AccountMember?
+    private var rawTransactions: [Transaction] = []
+    private var rawBudgetCategories: [BudgetCategory] = []
     private var listeners: [ListenerRegistration] = []
     private let projectService: ProjectServiceProtocol
     private let transactionsService: TransactionsServiceProtocol
@@ -50,13 +53,14 @@ final class ProjectContext {
 
     /// Activate subscriptions for a project. Call from `.task(id: projectId)` —
     /// SwiftUI auto-cancels on disappear or ID change.
-    func activate(accountId: String, projectId: String, userId: String? = nil) {
+    func activate(accountId: String, projectId: String, userId: String? = nil, member: AccountMember? = nil) {
         let isNewProject = currentProjectId != projectId
         stopListeners()
         if isNewProject {
             clearData()
         }
         currentProjectId = projectId
+        financialAccessMember = member
 
         // 1. Project detail
         listeners.append(
@@ -76,8 +80,8 @@ final class ProjectContext {
         listeners.append(
             transactionsService.subscribeToTransactions(accountId: accountId, scope: .project(projectId)) { [weak self] transactions in
                 Task { @MainActor in
-                    self?.transactions = transactions
-                    self?.recomputeBudgetProgress()
+                    self?.rawTransactions = transactions
+                    self?.applyFinancialAccess()
                 }
             }
         )
@@ -100,8 +104,8 @@ final class ProjectContext {
         listeners.append(
             budgetCategoriesService.subscribeToBudgetCategories(accountId: accountId) { [weak self] categories in
                 Task { @MainActor in
-                    self?.budgetCategories = categories
-                    self?.recomputeBudgetProgress()
+                    self?.rawBudgetCategories = categories
+                    self?.applyFinancialAccess()
                 }
             }
         )
@@ -173,6 +177,11 @@ final class ProjectContext {
         listeners.removeAll()
     }
 
+    func updateFinancialAccess(member: AccountMember?) {
+        financialAccessMember = member
+        applyFinancialAccess()
+    }
+
     private func clearData() {
         currentProjectId = nil
         project = nil
@@ -185,6 +194,9 @@ final class ProjectContext {
         budgetProgress = nil
         projectPreferences = nil
         notes = []
+        financialAccessMember = nil
+        rawTransactions = []
+        rawBudgetCategories = []
     }
 
     /// Budget categories enabled for this project (have a ProjectBudgetCategory document).
@@ -202,5 +214,12 @@ final class ProjectContext {
             categories: budgetCategories,
             projectBudgetCategories: projectBudgetCategories
         )
+    }
+
+    private func applyFinancialAccess() {
+        let policy = FinancialAccessPolicy(member: financialAccessMember)
+        budgetCategories = policy.visibleCategories(rawBudgetCategories)
+        transactions = policy.visibleTransactions(rawTransactions, categories: rawBudgetCategories)
+        recomputeBudgetProgress()
     }
 }

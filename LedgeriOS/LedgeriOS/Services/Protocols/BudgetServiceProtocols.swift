@@ -30,4 +30,5 @@ protocol ProjectBudgetCategoriesServiceProtocol: Sendable {
 protocol AccountMembersServiceProtocol: Sendable {
     func subscribeToMember(accountId: String, userId: String, onChange: @escaping (AccountMember?) -> Void) -> ListenerRegistration
     func listMembershipsForUser(userId: String) async throws -> [AccountMember]
+    func updateAccess(accountId: String, userId: String, role: MemberRole, companyFinancialAccess: CompanyFinancialAccess, allowedFeeCategoryIds: [String]) async throws
 }

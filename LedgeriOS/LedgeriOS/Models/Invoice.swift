@@ -92,6 +92,8 @@ struct Invoice: Codable, Identifiable, Hashable {
     /// Snapshot of the net total at creation time. For v2 invoices this is
     /// `sum(lines[].signedAmountCents)`; for v1 invoices it is a pure sum of charges.
     var totalCents: Int?
+    var containsCompanyRevenue: Bool?
+    var feeCategoryIds: [String]?
     var notes: String?
     /// Optional human-readable label, e.g. "INV-001".
     var invoiceNumber: String?
@@ -106,7 +108,7 @@ struct Invoice: Codable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, status, itemIds, transactionIds, lines,
-             totalCents, notes, invoiceNumber,
+             totalCents, containsCompanyRevenue, feeCategoryIds, notes, invoiceNumber,
              dateIssued, dateSent, datePaid, dateVoided,
              createdBy, updatedBy
         // createdAt / updatedAt intentionally omitted — written via FieldValue.serverTimestamp(),

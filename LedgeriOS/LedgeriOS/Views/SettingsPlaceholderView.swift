@@ -11,7 +11,7 @@ struct SettingsPlaceholderView: View {
                     LabeledContent("Name", value: account.name)
                 }
                 if let member = accountContext.member {
-                    LabeledContent("Role", value: member.role?.rawValue.capitalized ?? "—")
+                    LabeledContent("Role", value: member.role?.displayLabel ?? "—")
                     if let email = member.email {
                         LabeledContent("Email", value: email)
                     }

@@ -53,4 +53,5 @@ Last updated: 2026-05-26
 - [shipped] [Project List Bugs](project-list-bugs.md) — Business Inventory card on the Projects screen showed "0 items · 0 transactions" because `InventoryContext` was only activated from the Inventory tab. Fixed by activating it at `MainTabView` for the whole signed-in session. Shipped 2026-04-07.
 
 ### Authentication & Access
+- [new] [Financial Access Controls](financial-access-controls.md) — **Active planned spec.** Member-specific company financial visibility: full, limited-by-fee-category, or none. Intended first use is employees who can see selected fee categories such as Kitchen Fees without seeing broader design-fee revenue or hidden-fee invoices.
 - [tbd] [Authentication & Offline Access](authentication-offline-access.md) — Google Sign-In users have no fallback when Google auth is unavailable; need a workaround for offline/degraded scenarios

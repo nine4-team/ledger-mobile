@@ -82,7 +82,7 @@ private struct GeneralSettingsView: View {
                                     DetailRow(label: "Account", value: account.name)
                                 }
                                 if let member = accountContext.member {
-                                    DetailRow(label: "Role", value: member.role?.rawValue.capitalized ?? "—")
+                                    DetailRow(label: "Role", value: member.role?.displayLabel ?? "—")
                                     if let email = member.email {
                                         DetailRow(label: "Email", value: email)
                                     }

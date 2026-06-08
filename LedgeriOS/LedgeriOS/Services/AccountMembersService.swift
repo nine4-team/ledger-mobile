@@ -1,9 +1,12 @@
 import FirebaseFirestore
 
 struct AccountMembersService: AccountMembersServiceProtocol {
+    private func repo(accountId: String) -> FirestoreRepository<AccountMember> {
+        FirestoreRepository<AccountMember>(path: "accounts/\(accountId)/users")
+    }
+
     func subscribeToMember(accountId: String, userId: String, onChange: @escaping (AccountMember?) -> Void) -> ListenerRegistration {
-        let repo = FirestoreRepository<AccountMember>(path: "accounts/\(accountId)/users")
-        return repo.subscribe(id: userId, onChange: onChange)
+        repo(accountId: accountId).subscribe(id: userId, onChange: onChange)
     }
 
     func listMembershipsForUser(userId: String) async throws -> [AccountMember] {
@@ -18,6 +21,26 @@ struct AccountMembersService: AccountMembersServiceProtocol {
 
         let snapshot = try await query.getDocuments()
         return parseMembers(snapshot.documents)
+    }
+
+    func updateAccess(
+        accountId: String,
+        userId: String,
+        role: MemberRole,
+        companyFinancialAccess: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String]
+    ) async throws {
+        var fields: [String: Any] = [
+            "role": role.rawValue,
+            "companyFinancialAccess": companyFinancialAccess.rawValue,
+            "updatedAt": FieldValue.serverTimestamp(),
+        ]
+        if companyFinancialAccess == .limited {
+            fields["allowedFeeCategoryIds"] = allowedFeeCategoryIds
+        } else {
+            fields["allowedFeeCategoryIds"] = []
+        }
+        try await repo(accountId: accountId).update(id: userId, fields: fields)
     }
 
     private func parseMembers(_ documents: [QueryDocumentSnapshot]) -> [AccountMember] {

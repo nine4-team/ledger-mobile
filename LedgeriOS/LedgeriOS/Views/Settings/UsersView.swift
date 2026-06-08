@@ -11,9 +11,16 @@ struct UsersView: View {
     @State private var invitesListener: ListenerRegistration?
     @State private var showingInviteSheet = false
     @State private var revokeTarget: Invite?
+    @State private var selectedMember: AccountMember?
 
     private let membersService = AccountMembersService()
     private let invitesService = InvitesService()
+
+    private var feeCategories: [BudgetCategory] {
+        accountContext.allBudgetCategories
+            .filter(\.isFeeCategory)
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
 
     var body: some View {
         ScrollView {
@@ -31,7 +38,9 @@ struct UsersView: View {
                         } else {
                             LazyVStack(spacing: Spacing.cardListGap) {
                                 ForEach(members) { member in
-                                    MemberRow(member: member)
+                                    MemberRow(member: member) {
+                                        selectedMember = member
+                                    }
                                 }
                             }
                         }
@@ -85,6 +94,15 @@ struct UsersView: View {
                 createInvite(email: email, role: role)
             }
         }
+        .adaptivePresentation(item: $selectedMember, style: .form) { member in
+            MemberAccessSheet(
+                member: member,
+                feeCategories: feeCategories,
+                currentUserId: authManager.currentUser?.uid
+            ) { member, role, access, allowedIds in
+                try await updateMemberAccess(member: member, role: role, access: access, allowedFeeCategoryIds: allowedIds)
+            }
+        }
         .confirmationDialog(
             "Revoke this invitation?",
             isPresented: Binding(
@@ -134,15 +152,33 @@ struct UsersView: View {
         guard let accountId = accountContext.currentAccountId, let id = invite.id else { return }
         Task { try? await invitesService.revoke(accountId: accountId, inviteId: id) }
     }
+
+    private func updateMemberAccess(
+        member: AccountMember,
+        role: MemberRole,
+        access: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String]
+    ) async throws {
+        guard let accountId = accountContext.currentAccountId,
+              let userId = member.uid ?? member.id else { return }
+        try await membersService.updateAccess(
+            accountId: accountId,
+            userId: userId,
+            role: role,
+            companyFinancialAccess: access,
+            allowedFeeCategoryIds: allowedFeeCategoryIds
+        )
+    }
 }
 
 // MARK: - Member Row
 
 private struct MemberRow: View {
     let member: AccountMember
+    let onTap: () -> Void
 
     var body: some View {
-        Card {
+        Button(action: onTap) {
             HStack {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(member.name ?? member.email ?? "Unknown")
@@ -157,11 +193,200 @@ private struct MemberRow: View {
 
                 Spacer()
 
-                if let role = member.role {
-                    Badge(text: role.rawValue.capitalized)
+                VStack(alignment: .trailing, spacing: Spacing.xs) {
+                    Badge(text: (member.role ?? .user).displayLabel)
+                    Badge(text: member.resolvedCompanyFinancialAccess.displayLabel)
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(BrandColors.textTertiary)
+            }
+        }
+        .buttonStyle(.plain)
+        .cardStyle()
+    }
+}
+
+// MARK: - Member Access Sheet
+
+private struct MemberAccessSheet: View {
+    let member: AccountMember
+    let feeCategories: [BudgetCategory]
+    let currentUserId: String?
+    let onSave: (AccountMember, MemberRole, CompanyFinancialAccess, [String]) async throws -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var role: MemberRole
+    @State private var access: CompanyFinancialAccess
+    @State private var allowedFeeCategoryIds: Set<String>
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    init(
+        member: AccountMember,
+        feeCategories: [BudgetCategory],
+        currentUserId: String?,
+        onSave: @escaping (AccountMember, MemberRole, CompanyFinancialAccess, [String]) async throws -> Void
+    ) {
+        self.member = member
+        self.feeCategories = feeCategories
+        self.currentUserId = currentUserId
+        self.onSave = onSave
+        _role = State(initialValue: member.role ?? .user)
+        _access = State(initialValue: member.resolvedCompanyFinancialAccess)
+        _allowedFeeCategoryIds = State(initialValue: member.resolvedAllowedFeeCategoryIds)
+    }
+
+    var body: some View {
+        FormSheet(
+            title: "Access",
+            description: member.name ?? member.email,
+            primaryAction: FormSheetAction(
+                title: isSaving ? "Saving..." : "Save",
+                isLoading: isSaving,
+                isDisabled: isSaving,
+                action: save
+            ),
+            secondaryAction: FormSheetAction(
+                title: "Cancel",
+                action: { dismiss() }
+            ),
+            error: errorMessage
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                accessSectionTitle("Role")
+                InlineOptionPicker(selection: $role, options: [
+                    InlineOption(id: MemberRole.owner, label: MemberRole.owner.displayLabel),
+                    InlineOption(id: MemberRole.admin, label: MemberRole.admin.displayLabel),
+                    InlineOption(id: MemberRole.user, label: MemberRole.user.displayLabel),
+                ])
+
+                accessSectionTitle("Financial Access")
+                InlineOptionPicker(selection: $access, options: [
+                    InlineOption(id: CompanyFinancialAccess.full, label: CompanyFinancialAccess.full.displayLabel),
+                    InlineOption(id: CompanyFinancialAccess.limited, label: CompanyFinancialAccess.limited.displayLabel),
+                    InlineOption(id: CompanyFinancialAccess.none, label: CompanyFinancialAccess.none.displayLabel),
+                ])
+
+                if access == .limited {
+                    visibleFeeCategoriesSection
+                }
+
+                Text(invoiceAccessText)
+                    .font(Typography.small)
+                    .foregroundStyle(BrandColors.textSecondary)
+            }
+        }
+    }
+
+    private var visibleFeeCategoriesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            accessSectionTitle("Visible Fee Categories")
+
+            if feeCategories.isEmpty {
+                Text("No fee categories have been created yet.")
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textSecondary)
+            } else {
+                VStack(spacing: Spacing.xs) {
+                    ForEach(feeCategories.compactMap { category -> BudgetCategory? in
+                        category.id == nil ? nil : category
+                    }) { category in
+                        CategoryAccessRow(
+                            category: category,
+                            isSelected: allowedFeeCategoryIds.contains(category.id ?? "")
+                        ) {
+                            toggleCategory(category.id)
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private var invoiceAccessText: String {
+        switch access {
+        case .full:
+            return "This user can open all invoices and see all company fee activity."
+        case .limited:
+            return "This user can only open invoices where every fee line is in an allowed category."
+        case .none:
+            return "This user cannot see company fee transactions or invoices containing company revenue."
+        }
+    }
+
+    private func accessSectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.label)
+            .foregroundStyle(BrandColors.textSecondary)
+    }
+
+    private func toggleCategory(_ categoryId: String?) {
+        guard let categoryId else { return }
+        if allowedFeeCategoryIds.contains(categoryId) {
+            allowedFeeCategoryIds.remove(categoryId)
+        } else {
+            allowedFeeCategoryIds.insert(categoryId)
+        }
+    }
+
+    private func save() {
+        errorMessage = nil
+
+        if member.uid == currentUserId || member.id == currentUserId {
+            if role != .owner && role != .admin {
+                errorMessage = "You cannot remove your own admin access."
+                return
+            }
+            if access != .full {
+                errorMessage = "You cannot reduce your own financial access."
+                return
+            }
+        }
+
+        isSaving = true
+        Task {
+            do {
+                try await onSave(member, role, access, Array(allowedFeeCategoryIds).sorted())
+                await MainActor.run {
+                    isSaving = false
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isSaving = false
+                    errorMessage = "Failed to save access. Please try again."
+                }
+            }
+        }
+    }
+}
+
+private struct CategoryAccessRow: View {
+    let category: BudgetCategory
+    let isSelected: Bool
+    let onToggle: () -> Void
+
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(spacing: Spacing.md) {
+                Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                    .foregroundStyle(isSelected ? BrandColors.primary : BrandColors.textSecondary)
+                    .font(.title3)
+
+                Text(category.name)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+
+                Spacer()
+            }
+            .padding(.vertical, Spacing.sm)
+            .padding(.horizontal, Spacing.md)
+            .formInputStyle()
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -35,6 +35,8 @@ const RULES_PATH = resolve(__dirname, '../firestore.rules');
 
 const ACCOUNT_ID = 'acc_rules_test';
 const USER_ID = 'user_rules_test';
+const EMPLOYEE_ID = 'employee_rules_test';
+const TARGET_MEMBER_ID = 'target_member_rules_test';
 const SALE_ID = 'sale_new_perbatch';
 const LEGACY_SALE_ID = 'SALE_legacy_business_to_project_cat1';
 const PURCHASE_ID = 'tx_purchase';
@@ -73,6 +75,15 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     uid: USER_ID,
     role: 'owner',
   });
+  await setDoc(doc(db, `accounts/${ACCOUNT_ID}/users/${EMPLOYEE_ID}`), {
+    uid: EMPLOYEE_ID,
+    role: 'user',
+  });
+  await setDoc(doc(db, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`), {
+    uid: TARGET_MEMBER_ID,
+    role: 'user',
+    email: 'target@example.com',
+  });
 
   // New per-batch Sale transaction (the shape the rule guards).
   await setDoc(doc(db, `accounts/${ACCOUNT_ID}/transactions/${SALE_ID}`), {
@@ -110,9 +121,12 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
 });
 
 const authed = testEnv.authenticatedContext(USER_ID).firestore();
+const employeeAuthed = testEnv.authenticatedContext(EMPLOYEE_ID).firestore();
 const saleRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${SALE_ID}`);
 const legacyRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${LEGACY_SALE_ID}`);
 const purchaseRef = doc(authed, `accounts/${ACCOUNT_ID}/transactions/${PURCHASE_ID}`);
+const targetMemberRef = doc(authed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
+const employeeTargetMemberRef = doc(employeeAuthed, `accounts/${ACCOUNT_ID}/users/${TARGET_MEMBER_ID}`);
 
 console.log('\nRunning Firestore rules tests for Sale immutability:\n');
 
@@ -154,6 +168,30 @@ await run('R9: update projectId on per-batch Sale → rejected', async () => {
 
 await run('R10: update status on per-batch Sale → allowed', async () => {
   await assertSucceeds(updateDoc(saleRef, { status: 'canceled' }));
+});
+
+await run('R11: owner updates member financial access → allowed', async () => {
+  await assertSucceeds(updateDoc(targetMemberRef, {
+    role: 'user',
+    companyFinancialAccess: 'limited',
+    allowedFeeCategoryIds: ['kitchen'],
+    updatedAt: new Date(),
+  }));
+});
+
+await run('R12: employee updates member financial access → rejected', async () => {
+  await assertFails(updateDoc(employeeTargetMemberRef, {
+    companyFinancialAccess: 'full',
+    allowedFeeCategoryIds: [],
+    updatedAt: new Date(),
+  }));
+});
+
+await run('R13: owner updates unrelated membership field → rejected', async () => {
+  await assertFails(updateDoc(targetMemberRef, {
+    email: 'changed@example.com',
+    updatedAt: new Date(),
+  }));
 });
 
 await testEnv.cleanup();

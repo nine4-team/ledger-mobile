@@ -22,6 +22,14 @@ private struct MockAccountMembersService: AccountMembersServiceProtocol {
         if let error = listError { throw error }
         return memberships.filter { $0.uid == userId }
     }
+
+    func updateAccess(
+        accountId: String,
+        userId: String,
+        role: MemberRole,
+        companyFinancialAccess: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String]
+    ) async throws {}
 }
 
 private struct MockAccountsService: AccountsServiceProtocol {

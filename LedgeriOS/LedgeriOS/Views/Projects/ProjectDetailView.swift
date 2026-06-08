@@ -201,8 +201,12 @@ struct ProjectDetailView: View {
             projectContext.activate(
                 accountId: accountId,
                 projectId: projectId,
-                userId: authManager.currentUser?.uid
+                userId: authManager.currentUser?.uid,
+                member: accountContext.member
             )
+        }
+        .onChange(of: accountContext.member) { _, member in
+            projectContext.updateFinancialAccess(member: member)
         }
         .onDisappear {
             projectContext.stopListeners()
