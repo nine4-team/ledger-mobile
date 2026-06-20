@@ -109,34 +109,61 @@ export function checkTransactionLinkageOnCreate(
   return null;
 }
 
+export type LinkageStatus =
+  | { kind: "ok" }
+  | { kind: "reject"; message: string }
+  | { kind: "warn"; message: string };
+
 /**
- * Reject update payloads where the post-update state would leave a project
- * item with no transactionId.
+ * Evaluate the transaction-linkage invariant against an update payload.
+ *
+ * Hard-reject only when the update would CREATE a new orphan (existing item
+ * was fine, post-update would be a project item with no transactionId).
+ *
+ * If the existing item was ALREADY an orphan and the update doesn't fix the
+ * orphan state, allow the write and return a warning so the caller can
+ * surface it. Routine edits (e.g. fixing a typo on a legacy orphan) should
+ * not be blocked by a problem the update didn't introduce.
  */
 export function checkTransactionLinkageOnUpdate(
   existing: { projectId?: string | null; transactionId?: string | null },
   updates: Record<string, unknown>
-): string | null {
+): LinkageStatus {
   const hasProjectIdUpdate = "projectId" in updates;
   const hasTransactionIdUpdate = "transactionId" in updates;
 
+  const prevProjectId = existing.projectId ?? null;
+  const prevTransactionId = existing.transactionId ?? null;
+  const prevHasProject = prevProjectId != null && prevProjectId !== "";
+  const prevHasTransaction = prevTransactionId != null && prevTransactionId !== "";
+  const wasOrphan = prevHasProject && !prevHasTransaction;
+
   const nextProjectId = hasProjectIdUpdate
     ? (updates.projectId as string | null | undefined)
-    : (existing.projectId ?? null);
+    : prevProjectId;
   const nextTransactionId = hasTransactionIdUpdate
     ? (updates.transactionId as string | null | undefined)
-    : (existing.transactionId ?? null);
+    : prevTransactionId;
+  const nextHasProject = nextProjectId != null && nextProjectId !== "";
+  const nextHasTransaction = nextTransactionId != null && nextTransactionId !== "";
+  const willBeOrphan = nextHasProject && !nextHasTransaction;
 
-  const hasProject = nextProjectId != null && nextProjectId !== "";
-  const hasTransaction = nextTransactionId != null && nextTransactionId !== "";
-
-  if (hasProject && !hasTransaction) {
-    return (
-      "Cannot leave an item in a project (projectId set) without a transactionId. " +
-      "Either pass transactionId in the same update, or move the item to business inventory (projectId: null)."
-    );
+  if (!willBeOrphan) return { kind: "ok" };
+  if (wasOrphan) {
+    return {
+      kind: "warn",
+      message:
+        "Item is a legacy orphan (project item with no transactionId). Update applied. " +
+        "To clean up: bulk_update_items with projectId: null moves it to inventory, " +
+        "then sell_items_from_inventory_to_project records the real purchase.",
+    };
   }
-  return null;
+  return {
+    kind: "reject",
+    message:
+      "Cannot leave an item in a project (projectId set) without a transactionId. " +
+      "Either pass transactionId in the same update, or move the item to business inventory (projectId: null).",
+  };
 }
 
 function formatItem(item: Item & { id: string }) {
@@ -496,14 +523,13 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "budgetCategoryId: null. Pass null explicitly to either field to clear it. Moving " +
       "an item from inventory into a project requires passing both projectId AND " +
       "budgetCategoryId in the same update.\n\n" +
-      "Transaction-linkage invariant: items in a project (projectId set) must have a " +
-      "transactionId. Setting projectId on an orphan item (no current transactionId) " +
-      "requires passing transactionId in the same update.\n\n" +
-      "If you hit this rejection while editing a legacy orphan item (one already in a project " +
-      "with no transactionId), STOP. Do not invent a fake transaction to satisfy the rule. " +
-      "The correct fix is a CORRECTION: use bulk_update_items to set projectId: null " +
-      "(which also clears budgetCategoryId), then re-record the real business event with " +
-      "sell_items_from_inventory_to_project. See bulk_update_items doctrine.",
+      "Transaction-linkage invariant: items in a project (projectId set) should have a " +
+      "transactionId. Updates that would CREATE a new project-orphan (e.g. setting projectId " +
+      "without transactionId on a non-orphan item) are rejected. Updates that touch an item " +
+      "that's ALREADY an orphan (legacy data) are allowed and return a warning so you can " +
+      "decide whether to clean it up. Do not invent a fake transactionId to dodge the warning. " +
+      "Correct path: bulk_update_items projectId: null moves the orphan to inventory, then " +
+      "sell_items_from_inventory_to_project records the real Purchase.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -559,14 +585,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         );
       }
 
-      const linkageError = checkTransactionLinkageOnUpdate(existing, updates);
-      if (linkageError) {
+      const linkage = checkTransactionLinkageOnUpdate(existing, updates);
+      if (linkage.kind === "reject") {
         return validation(
-          linkageError,
-          "If this is a legacy orphan (item already in a project with no transactionId) and you're trying to " +
-            "edit fields like source/notes/price: STOP and use the corrections path instead — " +
-            "bulk_update_items with projectId: null moves it to inventory, then sell_items_from_inventory_to_project " +
-            "creates the real Purchase-from-inventory transaction. Do not invent a fake transactionId to satisfy this rule."
+          linkage.message,
+          "Do not invent a fake transactionId to satisfy this rule. If you're trying to fix a legacy orphan, " +
+            "use bulk_update_items with projectId: null to move it to inventory, then sell_items_from_inventory_to_project."
         );
       }
 
@@ -594,7 +618,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         await accountCollection(db, "items").doc(itemId).update(updates);
       }
 
-      return { content: [{ type: "text", text: `Updated item ${itemId}` }] };
+      const responseText =
+        linkage.kind === "warn"
+          ? `Updated item ${itemId}.\n⚠ ${linkage.message}`
+          : `Updated item ${itemId}`;
+      return { content: [{ type: "text", text: responseText }] };
     }
   );
 
@@ -668,7 +696,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
 
       // Preflight: validate the invariant against every matched item.
       const violations: string[] = [];
-      const linkageViolations: string[] = [];
+      const newOrphans: string[] = [];
+      const preExistingOrphans: string[] = [];
       for (const doc of snapshot.docs) {
         const existing = doc.data() as {
           projectId?: string | null;
@@ -676,7 +705,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           transactionId?: string | null;
         };
         if (checkUpdateInvariant(existing, updates)) violations.push(doc.id);
-        if (checkTransactionLinkageOnUpdate(existing, updates)) linkageViolations.push(doc.id);
+        const linkage = checkTransactionLinkageOnUpdate(existing, updates);
+        if (linkage.kind === "reject") newOrphans.push(doc.id);
+        else if (linkage.kind === "warn") preExistingOrphans.push(doc.id);
       }
       if (violations.length > 0) {
         return validation(
@@ -684,12 +715,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           "Narrow the filter, or split the update so inventory items and project items are handled separately."
         );
       }
-      if (linkageViolations.length > 0) {
+      if (newOrphans.length > 0) {
         return validation(
-          `Bulk update would leave ${linkageViolations.length} item(s) in a project with no transactionId: ${linkageViolations.slice(0, 5).join(", ")}${linkageViolations.length > 5 ? "…" : ""}`,
-          "If these are legacy orphans you're trying to clean up, use the corrections path: bulk_update_items " +
-            "with projectId: null relocates them to inventory (no transaction needed), then " +
-            "sell_items_from_inventory_to_project records the real Purchase-from-inventory transaction. Do not fabricate transactionIds to silence this rule."
+          `Bulk update would CREATE ${newOrphans.length} new project-orphan item(s) (project set, no transactionId): ${newOrphans.slice(0, 5).join(", ")}${newOrphans.length > 5 ? "…" : ""}`,
+          "Do not fabricate transactionIds to silence this rule. If you're trying to clean up legacy orphans, " +
+            "use bulk_update_items with projectId: null to move them to inventory, then sell_items_from_inventory_to_project."
         );
       }
 
@@ -712,8 +742,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         processed += batchCount;
       }
 
+      const warning =
+        preExistingOrphans.length > 0
+          ? `\n⚠ ${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
+          : "";
       return {
-        content: [{ type: "text", text: `Updated ${processed} items matching filter.` }],
+        content: [{ type: "text", text: `Updated ${processed} items matching filter.${warning}` }],
       };
     }
   );
@@ -761,6 +795,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       const prepared: PreparedUpdate[] = [];
       const notFoundIds: string[] = [];
       const violations: Array<{ id: string; error: string }> = [];
+      const preExistingOrphans: string[] = [];
 
       for (const { id, ...fields } of updates) {
         const existing = await getDoc<Item>(db, "items", id);
@@ -785,11 +820,12 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           continue;
         }
 
-        const linkErr = checkTransactionLinkageOnUpdate(existing, itemUpdates);
-        if (linkErr) {
-          violations.push({ id, error: linkErr });
+        const linkage = checkTransactionLinkageOnUpdate(existing, itemUpdates);
+        if (linkage.kind === "reject") {
+          violations.push({ id, error: linkage.message });
           continue;
         }
+        if (linkage.kind === "warn") preExistingOrphans.push(id);
 
         prepared.push({ id, data: itemUpdates });
       }
@@ -799,8 +835,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       }
       if (violations.length > 0) {
         return validation(
-          `${violations.length} update(s) would violate the inventory invariant: ${violations.slice(0, 3).map((v) => v.id).join(", ")}${violations.length > 3 ? "…" : ""}`,
-          "Items in business inventory have no budget category. Pass null for budgetCategoryId on inventory items."
+          `${violations.length} update(s) would violate an invariant: ${violations.slice(0, 3).map((v) => v.id).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          "Items in business inventory have no budget category. Project items must have a transactionId — do not fabricate one; relocate orphans to inventory instead."
         );
       }
 
@@ -823,7 +859,11 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         processed += batchCount;
       }
 
-      return { content: [{ type: "text", text: `Updated ${processed} items.` }] };
+      const warning =
+        preExistingOrphans.length > 0
+          ? `\n⚠ ${preExistingOrphans.length} updated item(s) are legacy project-orphans (no transactionId): ${preExistingOrphans.slice(0, 5).join(", ")}${preExistingOrphans.length > 5 ? "…" : ""}. Consider relocating via bulk_update_items projectId: null + sell_items_from_inventory_to_project.`
+          : "";
+      return { content: [{ type: "text", text: `Updated ${processed} items.${warning}` }] };
     }
   );
 
