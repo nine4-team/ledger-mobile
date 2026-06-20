@@ -85,7 +85,7 @@ function checkUpdateInvariant(
   if (isMovingIntoProject && !nextHasCategory) {
     return (
       "Moving an item from business inventory into a project requires a budgetCategoryId. " +
-      "Pass both projectId and budgetCategoryId in the same update, or use sell_items instead."
+      "Pass both projectId and budgetCategoryId in the same update, or use sell_items_from_inventory_to_project instead."
     );
   }
 
@@ -503,7 +503,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "with no transactionId), STOP. Do not invent a fake transaction to satisfy the rule. " +
       "The correct fix is a CORRECTION: use bulk_update_items to set projectId: null " +
       "(which also clears budgetCategoryId), then re-record the real business event with " +
-      "sell_items inventory→project. See bulk_update_items doctrine.",
+      "sell_items_from_inventory_to_project. See bulk_update_items doctrine.",
     {
       itemId: z.string().describe("Item document ID"),
       name: z.string().optional().describe("Item name"),
@@ -565,7 +565,7 @@ export function registerItemTools(server: McpServer, db: Firestore) {
           linkageError,
           "If this is a legacy orphan (item already in a project with no transactionId) and you're trying to " +
             "edit fields like source/notes/price: STOP and use the corrections path instead — " +
-            "bulk_update_items with projectId: null moves it to inventory, then sell_items inventory→project " +
+            "bulk_update_items with projectId: null moves it to inventory, then sell_items_from_inventory_to_project " +
             "creates the real Purchase-from-inventory transaction. Do not invent a fake transactionId to satisfy this rule."
         );
       }
@@ -605,9 +605,9 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "wrong category, wrong vendor on the original record) WITHOUT recording a financial event. " +
       "Use it to relocate misfiled items — most commonly, pass `projectId: null` to move legacy orphans " +
       "(items in a project with no transactionId) back to inventory as a correction; then re-record the " +
-      "real business event via sell_items inventory→project.\n\n" +
+      "real business event via sell_items_from_inventory_to_project.\n\n" +
       "For real business events (items actually changing hands, budgets actually shifting), use " +
-      "sell_items / return_items / move_items_between_projects instead.\n\n" +
+      "sell_items_from_* / return_items instead.\n\n" +
       "Update a field across multiple items matching a filter. Uses Firestore batched writes (max 500 per batch). Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: the update is rejected upfront if applying it to any matched item would violate (projectId null ↔ budgetCategoryId null).",
     {
       filter: z.object({
@@ -688,8 +688,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
         return validation(
           `Bulk update would leave ${linkageViolations.length} item(s) in a project with no transactionId: ${linkageViolations.slice(0, 5).join(", ")}${linkageViolations.length > 5 ? "…" : ""}`,
           "If these are legacy orphans you're trying to clean up, use the corrections path: bulk_update_items " +
-            "with projectId: null relocates them to inventory (no transaction needed), then sell_items " +
-            "inventory→project records the real Purchase-from-inventory transaction. Do not fabricate transactionIds to silence this rule."
+            "with projectId: null relocates them to inventory (no transaction needed), then " +
+            "sell_items_from_inventory_to_project records the real Purchase-from-inventory transaction. Do not fabricate transactionIds to silence this rule."
         );
       }
 
@@ -725,8 +725,8 @@ export function registerItemTools(server: McpServer, db: Firestore) {
       "data-entry mistakes WITHOUT recording a financial event. Use it when each item needs different " +
       "field values (filter-based bulk_update_items can't express that). Most common correction: pass " +
       "`projectId: null` on legacy orphan items to relocate them to inventory, then re-record the real " +
-      "business event with sell_items inventory→project. For real business events (items actually " +
-      "changing hands, budgets actually shifting), use sell_items / return_items / move_items_between_projects.\n\n" +
+      "business event with sell_items_from_inventory_to_project. For real business events (items actually " +
+      "changing hands, budgets actually shifting), use sell_items_from_* / return_items.\n\n" +
       "Update multiple items by ID with per-item field values in a single batched write. Does not support transactionId changes — use update_item individually for that.\n\nInventory invariant: each update is validated against its target item's current state. The whole call is rejected if ANY item would violate (projectId null ↔ budgetCategoryId null).",
     {
       updates: z.array(z.object({

@@ -138,7 +138,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           projectId: z.string().optional().describe("Project ID (omit for business inventory). If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Purchase-from-inventory movement into this project."),
           budgetCategoryId: z.string().describe("Budget category ID"),
           amountCents: z.coerce.number().describe("Total amount in cents"),
-          type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
+          type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items_from_project_to_inventory). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
           source: z.string().optional().describe("Vendor/source name. The account inventory label is a built-in source, not a vendor preset; using it on a project Purchase routes through inventory and sells into the project."),
           transactionDate: z.string().optional(),
           subtotalCents: z.coerce.number().optional(),
@@ -171,8 +171,8 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     withTelemetry("create_transaction_with_items", async ({ transaction, items, notes }) => {
       if (transaction.type === "Sale") {
         return validation(
-          "Cannot create Sale-to-Inventory transactions here — use sell_items instead.",
-          "Sale-to-Inventory transactions require lineage edges and item scope changes that only sell_items can produce."
+          "Cannot create Sale-to-Inventory transactions here — use sell_items_from_project_to_inventory instead.",
+          "Sale-to-Inventory transactions require lineage edges and item scope changes that only sell_items_from_project_to_inventory can produce."
         );
       }
 

@@ -35,7 +35,14 @@ import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventor
 const MAX_BATCH_ITEMS = 100;
 const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
 
-/** Resolve a frozen amount snapshot for a batch of items. */
+/**
+ * Resolve a frozen amount snapshot for a batch of items. Uses
+ * `projectPriceCents` (the client-charged price) exclusively — never falls
+ * back to `purchasePriceCents` (the business's cost). Callers must invoke
+ * `missingProjectPrice` first and bail with a validation error if any item
+ * lacks a non-null, non-zero `projectPriceCents`; this function assumes that
+ * check has already passed and treats a missing/zero price as `0`.
+ */
 function computeBatchTotals(items: (Item & { id: string })[]): {
   subtotalCents: number;
   amountCents: number;
@@ -45,13 +52,33 @@ function computeBatchTotals(items: (Item & { id: string })[]): {
   let amountCents = 0;
   const missingTax: string[] = [];
   for (const item of items) {
-    const price = item.projectPriceCents ?? item.purchasePriceCents ?? 0;
+    const price = item.projectPriceCents ?? 0;
     const rate = item.taxRatePct ?? 0;
     subtotalCents += price;
     amountCents += rate > 0 ? Math.round(price * (1 + rate / 100)) : price;
     if (item.taxRatePct == null) missingTax.push(item.id);
   }
   return { subtotalCents, amountCents, missingTax };
+}
+
+/**
+ * Return the ids of items that lack a usable `projectPriceCents`. Inventory
+ * movements that create a Sale, a Purchase-from-Inventory, or a Return-to-
+ * Inventory must charge at the client-facing project price; silently falling
+ * back to `purchasePriceCents` (cost) would mis-state the project's budget.
+ */
+function missingProjectPrice(items: (Item & { id: string })[]): string[] {
+  return items
+    .filter((i) => i.projectPriceCents == null || i.projectPriceCents === 0)
+    .map((i) => i.id);
+}
+
+function missingProjectPriceError(ids: string[]) {
+  return validation(
+    `${ids.length} item(s) have no projectPriceCents (the client-charged price): ${ids.join(", ")}.`,
+    "Inventory movement amounts must use projectPriceCents, not purchasePriceCents (cost). " +
+      "Set projectPriceCents on each listed item via update_item before retrying."
+  );
 }
 
 /** Build a warning string if any items lack a tax rate. */
@@ -142,68 +169,52 @@ async function validateCategoryInProject(
 // ── Tool Registration ────────────────────────────────────────────────────────
 
 export function registerInventoryOperationTools(server: McpServer, db: Firestore) {
-  // ── sell_items ──────────────────────────────────────────────────────────────
+  // ── sell_items_from_inventory_to_project ───────────────────────────────────
   server.tool(
-    "sell_items",
-    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event (money changes hands, " +
-      "budgets move). Do NOT use it to satisfy a schema rule when an item was logged incorrectly. " +
-      "If you encounter project items with no transaction (legacy orphans, mis-entered items), " +
-      "the fix is `bulk_update_items` with `projectId: null` to relocate them to inventory as a CORRECTION " +
-      "— then sell from inventory normally. Inventing fake inventory movement transactions to retroactively justify bad data pollutes the books.\n\n" +
-      "[destructive] Create an inventory movement transaction between inventory and a project. " +
-      "Direction is derived from the arguments:\n\n" +
-      "• INVENTORY → PROJECT (pass budgetCategoryId): items must currently be in business inventory " +
-      "(projectId == null). Items land in destinationProjectId under the chosen category. The " +
-      "project's budget for that category increases. Ask the user to pick the category from " +
-      "get_project_budget_categories BEFORE calling — one category per batch.\n\n" +
-      "• PROJECT → INVENTORY (omit budgetCategoryId): items must currently be in destinationProjectId " +
-      "AND must have originated in that project (currentSource == source, i.e. the business is acquiring " +
-      "them for inventory for the first time). Items land in inventory with projectId and " +
-      "budgetCategoryId cleared. The source project's budget decreases. For items that came from " +
-      "inventory originally, use return_items (returnTo: 'inventory') instead — that's a Return, not a Sale.\n\n" +
-      "Each call creates ONE new immutable Purchase or Sale transaction with an auto-ID. Shape fields (amountCents, " +
-      "itemIds, budgetCategoryId, projectId, type, source) are frozen at creation. Cap: 100 items per call.\n\n" +
-      "Related: for project→project reallocation, use move_items_between_projects — it runs the correct " +
-      "origin-aware two-hop (Return or Sale-to-Inventory on the first hop, Purchase-from-Inventory on the second).",
+    "sell_items_from_inventory_to_project",
+    "[event] Sell items from business inventory into a project. Creates ONE new immutable Purchase " +
+      "transaction (source: Business Inventory) against destinationProjectId, increasing that " +
+      "project's budget under budgetCategoryId. Every item must currently be in business inventory " +
+      "(projectId == null).\n\n" +
+      "REAL EVENT vs CORRECTION: This records a real business event (money changes hands, budgets " +
+      "move). Do NOT use it to satisfy a schema rule when an item was logged incorrectly. If you " +
+      "encounter project items with no transaction (legacy orphans), the fix is `bulk_update_items` " +
+      "with `projectId: null` to relocate them to inventory as a CORRECTION — then sell from " +
+      "inventory normally. Inventing fake transactions to justify bad data pollutes the books.\n\n" +
+      "Ask the user to pick the category from get_project_budget_categories BEFORE calling — one " +
+      "category per batch. Shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, " +
+      "source) are frozen at creation. Cap: 100 items per call.\n\n" +
+      "PRICING: amountCents/subtotalCents are derived from each item's projectPriceCents (the " +
+      "client-charged price) — NOT purchasePriceCents (cost). Every item must have a non-null, " +
+      "non-zero projectPriceCents; the call fails with the offending IDs otherwise.",
     {
       itemIds: z
         .array(z.string())
         .min(1)
         .max(MAX_BATCH_ITEMS)
-        .describe(`Item document IDs to sell (max ${MAX_BATCH_ITEMS} per call)`),
-      destinationProjectId: z
-        .string()
-        .describe(
-          "The project side of the movement. For inventory→project, this is where items are going. " +
-            "For project→inventory, this is where items are coming from (must match every item's current projectId)."
-        ),
+        .describe(`Item document IDs to sell from inventory (max ${MAX_BATCH_ITEMS} per call). Every item must currently be in business inventory (projectId == null).`),
+      destinationProjectId: z.string().describe("Destination project ID — where items will land."),
       budgetCategoryId: z
         .string()
-        .optional()
         .describe(
-          "Present → inventory→project direction (required: a category enabled in destinationProjectId; " +
-            "ask the user to pick from get_project_budget_categories). " +
-            "Absent → project→inventory direction (business is acquiring items that originated in the project)."
+          "Budget category in destinationProjectId — required, applies to the whole batch. Ask the user to pick from get_project_budget_categories."
         ),
       notes: z
         .string()
         .optional()
         .describe(
-          "Optional prose describing the sale (e.g. 'Sold 5 fixtures into Witzenman — client approved selections'). Free-form. The Sale transaction's createdAt/createdBy + lineage edges are the audit trail; notes is just human-readable context."
+          "Optional prose describing the sale (e.g. 'Sold 5 fixtures into Witzenman — client approved selections'). Free-form. The Purchase transaction's createdAt/createdBy + lineage edges are the audit trail."
         ),
       dryRun: z
         .boolean()
         .default(false)
-        .describe(
-          "If true, compute and return the sale plan without writing anything. Use to preview before committing."
-        ),
+        .describe("If true, compute and return the sale plan without writing anything."),
     },
     withTelemetry(
-      "sell_items",
+      "sell_items_from_inventory_to_project",
       async ({ itemIds, destinationProjectId, budgetCategoryId, notes, dryRun }) => {
         const inventoryLabel = await resolveInventoryLabel(db);
 
-        // Fetch all items.
         const items: (Item & { id: string })[] = [];
         const missing: string[] = [];
         for (const itemId of itemIds) {
@@ -215,96 +226,146 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           return notFound("Items", missing.join(", "), "get_items");
         }
 
-        const direction: "inventoryToProject" | "projectToInventory" =
-          budgetCategoryId ? "inventoryToProject" : "projectToInventory";
-
-        if (direction === "inventoryToProject") {
-          // Every item must currently be in inventory.
-          const notInInventory = items.filter((i) => i.projectId);
-          if (notInInventory.length > 0) {
-            return validation(
-              `${notInInventory.length} item(s) are not in business inventory: ${notInInventory.map((i) => i.id).join(", ")}`,
-              "For items currently in a project, use move_items_between_projects (project→project) or sell_items without budgetCategoryId (project→inventory)."
-            );
-          }
-
-          const catError = await validateCategoryInProject(
-            db,
-            destinationProjectId,
-            budgetCategoryId!
-          );
-          if (catError) return catError;
-
-          const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
-          if (dryRun) {
-            return asToolResponse({
-              dryRun: true,
-              direction,
-              plan: {
-                purchaseTransaction: {
-                  type: "Purchase" as const,
-                  source: inventoryLabel,
-                  projectId: destinationProjectId,
-                  budgetCategoryId: budgetCategoryId!,
-                  amountCents,
-                  subtotalCents,
-                  itemIds: items.map((i) => i.id),
-                },
-                itemUpdates: items.map((i) => ({
-                  itemId: i.id,
-                  set: {
-                    projectId: destinationProjectId,
-                    budgetCategoryId: budgetCategoryId!,
-                    status: "purchased",
-                    currentSource: inventoryLabel,
-                  },
-                })),
-                lineageEdges: items.length,
-              },
-              warning:
-                missingTax.length > 0
-                  ? `${missingTax.length} item(s) missing taxRatePct — amountCents will undercount.`
-                  : null,
-            });
-          }
-          return await commitSellToProject(db, items, destinationProjectId, budgetCategoryId!, {
-            subtotalCents,
-            amountCents,
-            missingTax,
-            notes,
-            inventoryLabel,
-          });
-        }
-
-        // direction === "projectToInventory" — Sale to Inventory.
-        // Every item must currently be in the source project AND must have
-        // originated there (not routed through inventory previously).
-        const wrongProject = items.filter((i) => i.projectId !== destinationProjectId);
-        if (wrongProject.length > 0) {
+        const notInInventory = items.filter((i) => i.projectId);
+        if (notInInventory.length > 0) {
           return validation(
-            `${wrongProject.length} item(s) are not in project ${destinationProjectId}: ${wrongProject.map((i) => i.id).join(", ")}`,
-            "For a project→inventory Sale, every item must currently be in destinationProjectId."
+            `${notInInventory.length} item(s) are not in business inventory: ${notInInventory.map((i) => i.id).join(", ")}`,
+            "For items currently in a project, use sell_items_from_project_to_project or sell_items_from_project_to_inventory."
           );
         }
-        const fromInventory = items.filter((i) => cameFromInventory(i));
-        if (fromInventory.length > 0) {
-          return validation(
-            `${fromInventory.length} item(s) previously passed through inventory (currentSource != source): ${fromInventory.map((i) => i.id).join(", ")}. These must go via return_items (Return), not sell_items.`,
-            "Use return_items with returnTo: 'inventory' for from-inventory items. sell_items (project→inventory) is reserved for items that originated in the project."
-          );
-        }
+
+        const catError = await validateCategoryInProject(
+          db,
+          destinationProjectId,
+          budgetCategoryId
+        );
+        if (catError) return catError;
+
+        const missingPrice = missingProjectPrice(items);
+        if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
 
         const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
         if (dryRun) {
           return asToolResponse({
             dryRun: true,
-            direction,
+            direction: "inventoryToProject",
+            plan: {
+              purchaseTransaction: {
+                type: "Purchase" as const,
+                source: inventoryLabel,
+                projectId: destinationProjectId,
+                budgetCategoryId,
+                amountCents,
+                subtotalCents,
+                itemIds: items.map((i) => i.id),
+              },
+              itemUpdates: items.map((i) => ({
+                itemId: i.id,
+                set: {
+                  projectId: destinationProjectId,
+                  budgetCategoryId,
+                  status: "purchased",
+                  currentSource: inventoryLabel,
+                },
+              })),
+              lineageEdges: items.length,
+            },
+            warning:
+              missingTax.length > 0
+                ? `${missingTax.length} item(s) missing taxRatePct — amountCents will undercount.`
+                : null,
+          });
+        }
+        return await commitSellToProject(db, items, destinationProjectId, budgetCategoryId, {
+          subtotalCents,
+          amountCents,
+          missingTax,
+          notes,
+          inventoryLabel,
+        });
+      }
+    )
+  );
+
+  // ── sell_items_from_project_to_inventory ───────────────────────────────────
+  server.tool(
+    "sell_items_from_project_to_inventory",
+    "[event] Sell project items into business inventory (the business is acquiring items that " +
+      "originated in the project). Creates ONE new immutable Sale transaction against " +
+      "sourceProjectId, decreasing that project's budget. Items land in inventory with projectId " +
+      "and budgetCategoryId cleared.\n\n" +
+      "ORIGIN REQUIREMENT: every item must have originated in the source project (currentSource == " +
+      "source). Items that previously passed through inventory are going HOME — use return_items " +
+      "(returnTo: 'inventory') for those, not this tool.\n\n" +
+      "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes (item " +
+      "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
+      "without creating a transaction.\n\n" +
+      "Shape fields (amountCents, itemIds, projectId, type, source) are frozen at creation. " +
+      "Cap: 100 items per call. PRICING: same projectPriceCents rule as sell_items_from_inventory_to_project.",
+    {
+      itemIds: z
+        .array(z.string())
+        .min(1)
+        .max(MAX_BATCH_ITEMS)
+        .describe(`Item document IDs to sell into inventory (max ${MAX_BATCH_ITEMS} per call). Every item must currently be in sourceProjectId AND have originated there.`),
+      sourceProjectId: z
+        .string()
+        .describe("Source project ID — where items are coming from. Must match every item's current projectId."),
+      notes: z
+        .string()
+        .optional()
+        .describe(
+          "Optional prose describing the sale (e.g. 'Acquiring leftover sconces from Witzenman into inventory'). Free-form. createdAt/createdBy + lineage edges are the audit trail."
+        ),
+      dryRun: z
+        .boolean()
+        .default(false)
+        .describe("If true, compute and return the sale plan without writing anything."),
+    },
+    withTelemetry(
+      "sell_items_from_project_to_inventory",
+      async ({ itemIds, sourceProjectId, notes, dryRun }) => {
+        const inventoryLabel = await resolveInventoryLabel(db);
+
+        const items: (Item & { id: string })[] = [];
+        const missing: string[] = [];
+        for (const itemId of itemIds) {
+          const item = await getDoc<Item>(db, "items", itemId);
+          if (!item) missing.push(itemId);
+          else items.push(item);
+        }
+        if (missing.length > 0) {
+          return notFound("Items", missing.join(", "), "get_items");
+        }
+
+        const wrongProject = items.filter((i) => i.projectId !== sourceProjectId);
+        if (wrongProject.length > 0) {
+          return validation(
+            `${wrongProject.length} item(s) are not in project ${sourceProjectId}: ${wrongProject.map((i) => i.id).join(", ")}`,
+            "Every item must currently be in sourceProjectId."
+          );
+        }
+        const fromInventory = items.filter((i) => cameFromInventory(i));
+        if (fromInventory.length > 0) {
+          return validation(
+            `${fromInventory.length} item(s) previously passed through inventory (currentSource != source): ${fromInventory.map((i) => i.id).join(", ")}. These must go via return_items (Return), not sell_items_from_project_to_inventory.`,
+            "Use return_items with returnTo: 'inventory' for from-inventory items. sell_items_from_project_to_inventory is reserved for items that originated in the project."
+          );
+        }
+
+        const missingPrice = missingProjectPrice(items);
+        if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
+
+        const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
+        if (dryRun) {
+          return asToolResponse({
+            dryRun: true,
+            direction: "projectToInventory",
             plan: {
               saleTransaction: {
                 type: "Sale" as const,
                 source: inventoryLabel,
-                projectId: destinationProjectId,
-                // budgetCategoryId absent → encodes project→inventory direction
+                projectId: sourceProjectId,
                 amountCents,
                 subtotalCents,
                 itemIds: items.map((i) => i.id),
@@ -326,7 +387,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 : null,
           });
         }
-        return await commitSellToInventory(db, items, destinationProjectId, {
+        return await commitSellToInventory(db, items, sourceProjectId, {
           subtotalCents,
           amountCents,
           missingTax,
@@ -340,11 +401,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── return_items ────────────────────────────────────────────────────────────
   server.tool(
     "return_items",
-    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event. Do NOT use it to fix " +
-      "data-entry mistakes (wrong project, wrong vendor on the original record). For corrections, use " +
-      "`bulk_update_items` to relocate items without creating a Return transaction.\n\n" +
-      "[destructive] Return items. A Return is for items going HOME — either back to the vendor they " +
-      "came from, or back to business inventory (if they previously came from inventory).\n\n" +
+    "[event] Return items. A Return is for items going HOME — either back to the vendor they came " +
+      "from, or back to business inventory (if they previously came from inventory).\n\n" +
       "• returnTo: 'vendor' — attaches items to an existing vendor Return transaction. Create the " +
       "Return transaction first via create_transaction (type: 'Return'), then pass its ID as " +
       "returnTransactionId.\n\n" +
@@ -352,12 +410,15 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "ORIGIN REQUIREMENT: every item must have previously passed through inventory " +
       "(currentSource != source). Items that originated in the project and have never been in " +
       "inventory before are NOT a return. For those, decide: was it a real business event " +
-      "(business is genuinely acquiring the items for the first time)? → sell_items without " +
-      "budgetCategoryId. Or was it a data-entry mistake (the item should never have been logged " +
-      "against the project)? → bulk_update_items with projectId: null (corrections doctrine). " +
-      "Creates a new Return transaction with source: 'Business Inventory' " +
+      "(business is genuinely acquiring the items for the first time)? → " +
+      "sell_items_from_project_to_inventory. Or was it a data-entry mistake (the item should never " +
+      "have been logged against the project)? → bulk_update_items with projectId: null " +
+      "(corrections doctrine). Creates a new Return transaction with source: 'Business Inventory' " +
       "(or appends to one if returnTransactionId is provided). Items have budgetCategoryId and " +
       "projectId cleared.\n\n" +
+      "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes " +
+      "(wrong project, wrong vendor on the original record), use `bulk_update_items` to relocate " +
+      "items without creating a Return transaction.\n\n" +
       "Cap: 100 items per call. Set dryRun: true to preview the plan.",
     {
       itemIds: z
@@ -421,18 +482,20 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 
         // Origin guard (inventory path only): Return is ONLY for items that
         // previously passed through inventory. Items that originated in a
-        // project go via sell_items (Sale-to-Inventory).
+        // project go via sell_items_from_project_to_inventory.
         if (returnTo === "inventory") {
           const originated = items.filter((i) => !cameFromInventory(i));
           if (originated.length > 0) {
             return validation(
               `${originated.length} item(s) originated in their current project (currentSource == source) — these are NOT a return: ${originated.map((i) => i.id).join(", ")}.`,
-              "Decide first: REAL EVENT (business genuinely acquiring these for the first time) → sell_items " +
-                "without budgetCategoryId (Sale-to-Inventory). CORRECTION (the item should never have been " +
+              "Decide first: REAL EVENT (business genuinely acquiring these for the first time) → " +
+                "sell_items_from_project_to_inventory. CORRECTION (the item should never have been " +
                 "logged against the project) → bulk_update_items with projectId: null. return_items " +
                 "(returnTo: 'inventory') is reserved for items going HOME to inventory."
             );
           }
+          const missingPrice = missingProjectPrice(items);
+          if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
         }
 
         if (dryRun) {
@@ -469,28 +532,27 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
     )
   );
 
-  // ── move_items_between_projects ────────────────────────────────────────────
+  // ── sell_items_from_project_to_project ─────────────────────────────────────
   server.tool(
-    "move_items_between_projects",
-    "DOCTRINE — REAL EVENT vs CORRECTION: This tool records a real business event (the items physically " +
-      "moved between project sites, the budgets shift accordingly). Do NOT use it to fix data-entry " +
-      "mistakes (item logged on the wrong project from the start). For corrections, use " +
-      "`bulk_update_items` to relocate items without creating Sale/Return transactions.\n\n" +
-      "[destructive] Move items from one project to another. This is a real financial movement — NOT a " +
-      "silent bookkeeping repoint. Implemented as an origin-aware two-hop atomic batch:\n\n" +
+    "sell_items_from_project_to_project",
+    "[event] Sell items from one project directly to another (items physically moved between project " +
+      "sites; budgets shift accordingly). Implemented as an origin-aware two-hop atomic batch:\n\n" +
       "  FIRST HOP (per-item, origin-aware):\n" +
       "   • Items that previously passed through inventory (currentSource != source) → a Return " +
       "transaction against the source project.\n" +
       "   • Items that originated in the source project (currentSource == source) → a Sale-to-Inventory " +
       "transaction (type: 'Sale', no budgetCategoryId) against the source project.\n" +
       "   • Mixed batches produce BOTH first-hop transactions in the same Firestore batch.\n\n" +
-      "  SECOND HOP: one Purchase-from-Inventory transaction (type: 'Purchase', with budgetCategoryId) against " +
-      "the destination project, covering every item in the batch.\n\n" +
+      "  SECOND HOP: one Purchase-from-Inventory transaction (type: 'Purchase', with budgetCategoryId) " +
+      "against the destination project, covering every item in the batch.\n\n" +
+      "REAL EVENT vs CORRECTION: This records real financial movement — NOT a silent bookkeeping " +
+      "repoint. For data-entry mistakes (item logged on the wrong project from the start), use " +
+      "`bulk_update_items` to relocate without creating Sale/Return transactions.\n\n" +
       "All items must be in the same source project. Cap: 100 items per call. One destination category " +
-      "applies to the whole batch — ask the user to pick from get_project_budget_categories before calling. " +
-      "Source and destination must differ.\n\n" +
-      "DO NOT use this as a shortcut for 'the item was entered on the wrong transaction but still belongs to " +
-      "the same project' — that's a reassignment, use update_item to move the item to the correct " +
+      "applies to the whole batch — ask the user to pick from get_project_budget_categories before " +
+      "calling. Source and destination must differ.\n\n" +
+      "DO NOT use this as a shortcut for 'the item was entered on the wrong transaction but still belongs " +
+      "to the same project' — that's a reassignment, use update_item to move the item to the correct " +
       "transaction within the same project.",
     {
       itemIds: z
@@ -513,7 +575,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       dryRun: z.boolean().default(false),
     },
     withTelemetry(
-      "move_items_between_projects",
+      "sell_items_from_project_to_project",
       async ({
         itemIds,
         destinationProjectId,
@@ -538,14 +600,14 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         if (stray.length > 0) {
           return validation(
             `${stray.length} item(s) are not in a project — cannot move-between-projects: ${stray.map((i) => i.id).join(", ")}`,
-            "Use sell_items (inventory→project) for items currently in business inventory."
+            "Use sell_items_from_inventory_to_project for items currently in business inventory."
           );
         }
 
         const sourceProjects = new Set(items.map((i) => i.projectId!));
         if (sourceProjects.size > 1) {
           return validation(
-            `Items span multiple source projects (${[...sourceProjects].join(", ")}). move_items_between_projects handles one source project per call.`,
+            `Items span multiple source projects (${[...sourceProjects].join(", ")}). sell_items_from_project_to_project handles one source project per call.`,
             "Call once per source project."
           );
         }
@@ -565,6 +627,9 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         );
         if (catError) return catError;
 
+        const missingPrice = missingProjectPrice(items);
+        if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
+
         const split = splitByOrigin(items);
         const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
 
@@ -576,7 +641,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                   source: inventoryLabel,
                   projectId: sourceProjectId,
                   amountCents: split.returnItems.reduce(
-                    (sum, i) => sum + (i.purchasePriceCents ?? 0),
+                    (sum, i) => sum + (i.projectPriceCents ?? 0),
                     0
                   ),
                   itemIds: split.returnItems.map((i) => i.id),
@@ -648,7 +713,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// commit: sell_items, inventory → project
+// commit: sell_items_from_inventory_to_project
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function commitSellToProject(
@@ -734,7 +799,7 @@ async function commitSellToProject(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// commit: sell_items, project → inventory (Sale-to-Inventory)
+// commit: sell_items_from_project_to_inventory (Sale-to-Inventory)
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function commitSellToInventory(
@@ -837,8 +902,10 @@ async function commitReturnToInventory(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // Return amount uses purchasePriceCents (what the business actually paid).
-  const returnAmount = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
+  // Return amount uses projectPriceCents (the client-charged price that hit
+  // the project's budget on the way in). Caller validated every item has a
+  // non-null, non-zero projectPriceCents before reaching this commit.
+  const returnAmount = items.reduce((sum, i) => sum + (i.projectPriceCents ?? 0), 0);
   // projectId on the Return tx = source project (budget impact lands there).
   const sourceProjectId = items[0]?.projectId ?? null;
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
@@ -999,7 +1066,7 @@ async function commitReturnToVendor(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// commit: move_items_between_projects, origin-aware two-hop
+// commit: sell_items_from_project_to_project, origin-aware two-hop
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function commitMoveBetweenProjects(
@@ -1029,7 +1096,7 @@ async function commitMoveBetweenProjects(
     const returnRef = txCol.doc();
     returnTxId = returnRef.id;
     const returnAmount = split.returnItems.reduce(
-      (sum, i) => sum + (i.purchasePriceCents ?? 0),
+      (sum, i) => sum + (i.projectPriceCents ?? 0),
       0
     );
     batch.set(returnRef, {

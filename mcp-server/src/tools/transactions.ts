@@ -300,7 +300,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale-to-Inventory transactions must be created via the sell_items tool (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
+      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
@@ -327,7 +327,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
       if (txType === "Sale") {
         return validation(
-          "Cannot create Sale-to-Inventory transactions directly — use sell_items instead.",
+          "Cannot create Sale-to-Inventory transactions directly — use sell_items_from_project_to_inventory instead.",
           "Sale-to-Inventory transactions require lineage edges and item scope changes that create_transaction cannot perform."
         );
       }
@@ -336,7 +336,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (txType === "Purchase" && projectId && isInventorySource(source, inventoryLabel)) {
         return validation(
           "Project purchases with inventory as the source must route through inventory and create a Purchase-from-inventory movement.",
-          "Use create_transaction_with_items when creating new items, or sell_items for existing inventory items. create_transaction alone cannot create the required item updates and lineage edge."
+          "Use create_transaction_with_items when creating new items, or sell_items_from_inventory_to_project for existing inventory items. create_transaction alone cannot create the required item updates and lineage edge."
         );
       }
 

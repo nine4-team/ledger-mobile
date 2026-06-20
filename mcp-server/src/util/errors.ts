@@ -67,8 +67,8 @@ export function validation(
 
 /**
  * Require a non-empty `notes` string on tools that create a brand-new audit
- * record whose notes field IS the primary description (sell_items, return_items,
- * move_items_between_projects, create_*_with_items, add_project_note).
+ * record whose notes field IS the primary description (sell_items_from_*,
+ * return_items, create_*_with_items, add_project_note).
  *
  * Returns a ToolErrorResponse if invalid; null if valid.
  *

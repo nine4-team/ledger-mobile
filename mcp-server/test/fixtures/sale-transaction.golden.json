@@ -1,5 +1,5 @@
 {
-  "_comment": "Shape-parity fixture for Sale transactions. Both MCP and iOS tests assert that their sell-items implementation produces a Sale transaction whose non-timestamp, non-auto-ID fields match this shape exactly. Update this file and both test suites in the same commit — it is the canonical contract.",
+  "_comment": "Shape-parity fixture for inventory→project Purchase transactions. Both MCP and iOS tests assert that their sell_items_from_inventory_to_project implementation produces a Purchase transaction whose non-timestamp, non-auto-ID fields match this shape exactly. Update this file and both test suites in the same commit — it is the canonical contract.",
   "input": {
     "items": [
       {
@@ -21,8 +21,8 @@
     "budgetCategoryId": "cat_furnishings",
     "notes": "4/9 — shape parity test"
   },
-  "expectedSaleTransaction": {
-    "type": "Sale",
+  "expectedTransaction": {
+    "type": "Purchase",
     "source": "Business Inventory",
     "projectId": "proj_dest",
     "budgetCategoryId": "cat_furnishings",

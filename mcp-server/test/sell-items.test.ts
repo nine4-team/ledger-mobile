@@ -40,7 +40,7 @@ const GOLDEN = JSON.parse(readFileSync(GOLDEN_PATH, "utf8")) as {
     budgetCategoryId: string;
     notes: string;
   };
-  expectedSaleTransaction: {
+  expectedTransaction: {
     type: string;
     source: string;
     projectId: string;
@@ -86,10 +86,10 @@ function getText(result: unknown): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// M1 — sell_items happy path
+// M1 — sell_items_from_inventory_to_project happy path
 // ─────────────────────────────────────────────────────────────────────────────
-describe("sell_items", () => {
-  test("M1: happy path creates one Sale transaction with frozen shape", async () => {
+describe("sell_items_from_inventory_to_project", () => {
+  test("M1: happy path creates one Purchase transaction with frozen shape", async () => {
     await seedProject(db, {
       id: "proj_dest",
       budgetCategories: [{ id: "cat_furnishings", budgetCents: 100000 }],
@@ -111,7 +111,7 @@ describe("sell_items", () => {
       budgetCategoryId: null,
     });
 
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds: ["item_1", "item_2"],
       destinationProjectId: "proj_dest",
       budgetCategoryId: "cat_furnishings",
@@ -121,41 +121,41 @@ describe("sell_items", () => {
 
     expect(isError(result)).toBe(false);
 
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(1);
-    const sale = sales[0];
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(1);
+    const purchase = purchases[0];
 
     // Frozen shape fields
-    expect(sale.data.type).toBe("Sale");
-    expect(sale.data.source).toBe("Business Inventory");
-    expect(sale.data.projectId).toBe("proj_dest");
-    expect(sale.data.budgetCategoryId).toBe("cat_furnishings");
-    expect(sale.data.itemIds).toEqual(["item_1", "item_2"]);
+    expect(purchase.data.type).toBe("Purchase");
+    expect(purchase.data.source).toBe("Business Inventory");
+    expect(purchase.data.projectId).toBe("proj_dest");
+    expect(purchase.data.budgetCategoryId).toBe("cat_furnishings");
+    expect(purchase.data.itemIds).toEqual(["item_1", "item_2"]);
     // amountCents = 12000*1.0825 + 6000*1.0825 = 12990 + 6495 = 19485
-    expect(sale.data.amountCents).toBe(19485);
-    expect(sale.data.subtotalCents).toBe(18000);
+    expect(purchase.data.amountCents).toBe(19485);
+    expect(purchase.data.subtotalCents).toBe(18000);
     // No legacy canonical markers
-    expect(sale.data.isCanonicalInventorySale).toBeUndefined();
-    expect(sale.data.inventorySaleDirection).toBeUndefined();
+    expect(purchase.data.isCanonicalInventorySale).toBeUndefined();
+    expect(purchase.data.inventorySaleDirection).toBeUndefined();
     // Auto-ID (not SALE_ prefix)
-    expect(sale.id.startsWith("SALE_")).toBe(false);
+    expect(purchase.id.startsWith("SALE_")).toBe(false);
 
     // Items are updated
     const item1 = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item1?.projectId).toBe("proj_dest");
     expect(item1?.budgetCategoryId).toBe("cat_furnishings");
     expect(item1?.status).toBe("purchased");
-    expect(item1?.transactionId).toBe(sale.id);
+    expect(item1?.transactionId).toBe(purchase.id);
 
     // Lineage edges created
     const edges = await listLineageEdges(db);
     expect(edges.length).toBe(2);
     expect(edges.every((e) => e.data.movementKind === "sold")).toBe(true);
-    expect(edges.every((e) => e.data.toTransactionId === sale.id)).toBe(true);
+    expect(edges.every((e) => e.data.toTransactionId === purchase.id)).toBe(true);
   });
 
   // ─────────────────────────────────────────────────────────────────────────
-  // M2 — sell_items dryRun (no writes)
+  // M2 — sell_items_from_inventory_to_project dryRun (no writes)
   // ─────────────────────────────────────────────────────────────────────────
   test("M2: dryRun returns plan and commits nothing", async () => {
     await seedProject(db, {
@@ -171,7 +171,7 @@ describe("sell_items", () => {
       budgetCategoryId: null,
     });
 
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds: ["item_1"],
       destinationProjectId: "proj_dest",
       budgetCategoryId: "cat_furnishings",
@@ -183,12 +183,12 @@ describe("sell_items", () => {
     const text = getText(result);
     const parsed = JSON.parse(text);
     expect(parsed.dryRun).toBe(true);
-    expect(parsed.plan.saleTransaction.amountCents).toBe(12990);
-    expect(parsed.plan.saleTransaction.projectId).toBe("proj_dest");
+    expect(parsed.plan.purchaseTransaction.amountCents).toBe(12990);
+    expect(parsed.plan.purchaseTransaction.projectId).toBe("proj_dest");
 
     // Nothing committed
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(0);
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(0);
     const item1 = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item1?.projectId).toBeNull();
     expect(item1?.budgetCategoryId).toBeNull();
@@ -213,7 +213,7 @@ describe("sell_items", () => {
     // bypass that — so we test the server-side validateCategoryInProject
     // defense by passing a nonexistent category instead (covered by M4).
     // Here we pass an empty string, which must still hit the validation.
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds: ["item_1"],
       destinationProjectId: "proj_dest",
       budgetCategoryId: "",
@@ -223,8 +223,8 @@ describe("sell_items", () => {
 
     expect(isError(result)).toBe(true);
 
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(0);
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(0);
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ describe("sell_items", () => {
       budgetCategoryId: null,
     });
 
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds: ["item_1"],
       destinationProjectId: "proj_dest",
       budgetCategoryId: "cat_does_not_exist",
@@ -252,8 +252,8 @@ describe("sell_items", () => {
     expect(isError(result)).toBe(true);
     expect(getText(result).toLowerCase()).toContain("not enabled");
 
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(0);
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(0);
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -266,7 +266,7 @@ describe("sell_items", () => {
     });
     const itemIds = Array.from({ length: 101 }, (_, i) => `item_${i}`);
 
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds,
       destinationProjectId: "proj_dest",
       budgetCategoryId: "cat_furnishings",
@@ -280,8 +280,8 @@ describe("sell_items", () => {
     // Regardless of which layer rejects, it must be an error.
     expect(isError(result)).toBe(true);
 
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(0);
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(0);
   });
 });
 
@@ -308,8 +308,12 @@ describe("return_items", () => {
       id: "item_1",
       projectId: "proj_source",
       budgetCategoryId: "cat_furnishings",
-      purchasePriceCents: 10000,
+      purchasePriceCents: 8000,
+      projectPriceCents: 10000,
       transactionId: "prior_sale",
+      // currentSource != source → item came from inventory, eligible for return-to-inventory.
+      source: "Home Depot",
+      currentSource: "Business Inventory",
     });
 
     const result = await callTool("return_items", {
@@ -325,7 +329,8 @@ describe("return_items", () => {
     expect(returns.length).toBe(1);
     const returnTx = returns[0];
     expect(returnTx.data.source).toBe("Business Inventory");
-    expect(returnTx.data.projectId).toBeNull();
+    // Return tx lives on the source project (budget impact lands there).
+    expect(returnTx.data.projectId).toBe("proj_source");
     expect(returnTx.data.itemIds).toEqual(["item_1"]);
     expect(returnTx.data.amountCents).toBe(10000);
 
@@ -344,9 +349,9 @@ describe("return_items", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// M7 — move_items_between_projects
+// M7 — sell_items_from_project_to_project
 // ─────────────────────────────────────────────────────────────────────────────
-describe("move_items_between_projects", () => {
+describe("sell_items_from_project_to_project", () => {
   test("M7: produces one Return + one Sale in a single batch", async () => {
     await seedProject(db, {
       id: "proj_source",
@@ -375,7 +380,7 @@ describe("move_items_between_projects", () => {
       transactionId: "src_sale",
     });
 
-    const result = await callTool("move_items_between_projects", {
+    const result = await callTool("sell_items_from_project_to_project", {
       itemIds: ["item_1"],
       destinationProjectId: "proj_dest",
       destinationBudgetCategoryId: "cat_install",
@@ -386,32 +391,37 @@ describe("move_items_between_projects", () => {
     expect(isError(result)).toBe(false);
 
     const sales = await listTransactionsOfType(db, "Sale");
+    const purchases = await listTransactionsOfType(db, "Purchase");
     const returns = await listTransactionsOfType(db, "Return");
-    // src_sale is still there (legacy Sale), plus the new destination Sale.
+    // Item originated in proj_source (no source field), so first hop is a
+    // Sale-to-Inventory against proj_source; second hop is a Purchase against
+    // proj_dest. src_sale (seed legacy Sale) is still there, no Return.
     expect(sales.length).toBe(2);
-    expect(returns.length).toBe(1);
+    expect(purchases.length).toBe(1);
+    expect(returns.length).toBe(0);
 
-    const newSale = sales.find((s) => s.id !== "src_sale");
-    expect(newSale).toBeDefined();
-    expect(newSale!.data.projectId).toBe("proj_dest");
-    expect(newSale!.data.budgetCategoryId).toBe("cat_install");
-    expect(newSale!.data.itemIds).toEqual(["item_1"]);
+    const firstHopSale = sales.find((s) => s.id !== "src_sale");
+    expect(firstHopSale).toBeDefined();
+    expect(firstHopSale!.data.projectId).toBe("proj_source");
+    expect(firstHopSale!.data.budgetCategoryId).toBeUndefined();
+    expect(firstHopSale!.data.itemIds).toEqual(["item_1"]);
 
-    const newReturn = returns[0];
-    expect(newReturn.data.source).toBe("Business Inventory");
-    expect(newReturn.data.projectId).toBeNull();
-    expect(newReturn.data.itemIds).toEqual(["item_1"]);
+    const destPurchase = purchases[0];
+    expect(destPurchase.data.source).toBe("Business Inventory");
+    expect(destPurchase.data.projectId).toBe("proj_dest");
+    expect(destPurchase.data.budgetCategoryId).toBe("cat_install");
+    expect(destPurchase.data.itemIds).toEqual(["item_1"]);
 
     const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item?.projectId).toBe("proj_dest");
     expect(item?.budgetCategoryId).toBe("cat_install");
-    expect(item?.transactionId).toBe(newSale!.id);
+    expect(item?.transactionId).toBe(destPurchase.id);
 
-    // Lineage: one returned edge + one sold edge per item (= 2)
+    // Lineage: soldToInventory (first hop) + sold (second hop) per item.
     const edges = await listLineageEdges(db);
     expect(edges.length).toBe(2);
     const kinds = edges.map((e) => e.data.movementKind).sort();
-    expect(kinds).toEqual(["returned", "sold"]);
+    expect(kinds).toEqual(["sold", "soldToInventory"]);
   });
 });
 
@@ -509,9 +519,9 @@ describe("update_transaction", () => {
 // M9 — Shape parity with golden fixture
 // ─────────────────────────────────────────────────────────────────────────────
 describe("shape parity", () => {
-  test("M9: sell_items output matches sale-transaction.golden.json exactly", async () => {
+  test("M9: sell_items_from_inventory_to_project output matches sale-transaction.golden.json exactly", async () => {
     const input = GOLDEN.input;
-    const expected = GOLDEN.expectedSaleTransaction;
+    const expected = GOLDEN.expectedTransaction;
 
     await seedProject(db, {
       id: input.destinationProjectId,
@@ -529,7 +539,7 @@ describe("shape parity", () => {
       });
     }
 
-    const result = await callTool("sell_items", {
+    const result = await callTool("sell_items_from_inventory_to_project", {
       itemIds: input.items.map((i) => i.id),
       destinationProjectId: input.destinationProjectId,
       budgetCategoryId: input.budgetCategoryId,
@@ -539,24 +549,26 @@ describe("shape parity", () => {
 
     expect(isError(result)).toBe(false);
 
-    const sales = await listTransactionsOfType(db, "Sale");
-    expect(sales.length).toBe(1);
-    const sale = sales[0];
+    const purchases = await listTransactionsOfType(db, "Purchase");
+    expect(purchases.length).toBe(1);
+    const purchase = purchases[0];
 
     // Field-by-field match against the golden shape.
-    expect(sale.data.type).toBe(expected.type);
-    expect(sale.data.source).toBe(expected.source);
-    expect(sale.data.projectId).toBe(expected.projectId);
-    expect(sale.data.budgetCategoryId).toBe(expected.budgetCategoryId);
-    expect(sale.data.subtotalCents).toBe(expected.subtotalCents);
-    expect(sale.data.amountCents).toBe(expected.amountCents);
-    expect(sale.data.itemIds).toEqual(expected.itemIds);
-    expect(sale.data.status).toBe(expected.status);
-    expect(sale.data.isComplete).toBe(expected.isComplete);
-    expect(sale.data.notes).toBe(expected.notes);
+    expect(purchase.data.type).toBe(expected.type);
+    expect(purchase.data.source).toBe(expected.source);
+    expect(purchase.data.projectId).toBe(expected.projectId);
+    expect(purchase.data.budgetCategoryId).toBe(expected.budgetCategoryId);
+    expect(purchase.data.subtotalCents).toBe(expected.subtotalCents);
+    expect(purchase.data.amountCents).toBe(expected.amountCents);
+    expect(purchase.data.itemIds).toEqual(expected.itemIds);
+    expect(purchase.data.status).toBe(expected.status);
+    expect(purchase.data.isComplete).toBe(expected.isComplete);
+    // tagNotesAsAi prepends an `[AI M/D/YYYY] ` audit marker — check that the
+    // original prose survives at the end.
+    expect(purchase.data.notes as string).toContain(expected.notes);
 
     // No legacy markers leaked in.
-    expect(sale.data.isCanonicalInventorySale).toBeUndefined();
-    expect(sale.data.inventorySaleDirection).toBeUndefined();
+    expect(purchase.data.isCanonicalInventorySale).toBeUndefined();
+    expect(purchase.data.inventorySaleDirection).toBeUndefined();
   });
 });

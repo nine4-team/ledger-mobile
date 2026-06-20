@@ -84,7 +84,7 @@ export function appendOrReviseAiAuditLine(
 
 /**
  * Tag a fresh notes value as AI-authored. Used by tools that create entirely
- * AI-written records (sell_items, return_items, move_items_between_projects)
+ * AI-written records (sell_items_from_*, return_items)
  * so the human reader can tell the line came from the MCP side, not an app
  * user. If `notes` is already tagged, returns it unchanged.
  */

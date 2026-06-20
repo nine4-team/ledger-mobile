@@ -133,6 +133,8 @@ export interface SeedItemOptions {
   taxRatePct?: number;
   transactionId?: string | null;
   status?: string;
+  source?: string;
+  currentSource?: string;
 }
 
 export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<void> {
@@ -149,6 +151,8 @@ export async function seedItem(db: Firestore, opts: SeedItemOptions): Promise<vo
   if (opts.projectPriceCents !== undefined) data.projectPriceCents = opts.projectPriceCents;
   if (opts.taxRatePct !== undefined) data.taxRatePct = opts.taxRatePct;
   if (opts.transactionId !== undefined) data.transactionId = opts.transactionId;
+  if (opts.source !== undefined) data.source = opts.source;
+  if (opts.currentSource !== undefined) data.currentSource = opts.currentSource;
   await ref.set(data);
 }
 

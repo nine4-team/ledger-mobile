@@ -66,15 +66,16 @@ Remove `FIRESTORE_EMULATOR_HOST` to connect to production.
 ### Write
 - `create_project`, `update_project`, `archive_project`
 - `create_transaction`, `update_transaction`, `cancel_transaction`
-  - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items` instead
+  - Note: `create_transaction` rejects `type: "Sale"` — use `sell_items_from_project_to_inventory` instead
 - `create_item`, `update_item`, `delete_item`
 - `create_space`, `update_space`
 - `update_project_budget_allocation`, `enable_category_for_project`
 
 ### Inventory Operations
-- `sell_items` — Sell items from business inventory into a project. Creates ONE new immutable Sale transaction per call (auto-ID, frozen shape). Cap: 100 items. One budget category applies to the whole batch. Per-batch design — no long-lived aggregators.
+- `sell_items_from_inventory_to_project` — Sell items from business inventory into a project. Creates ONE new immutable Purchase transaction per call (auto-ID, frozen shape). Cap: 100 items. One budget category per batch.
+- `sell_items_from_project_to_inventory` — Sell project-originated items into business inventory (the business is acquiring them). Creates ONE new immutable Sale transaction against the source project. Items must have originated in that project; items that previously passed through inventory must use `return_items` instead.
+- `sell_items_from_project_to_project` — Sell items from one project directly to another in a single atomic batch (origin-aware first hop into inventory + Purchase into destination). Cap: 100 items. One destination category per batch.
 - `return_items` — Return items to a vendor (attach to an existing Return transaction) or back to business inventory (new or reused Return transaction with `source: "Business Inventory"`; wipes item category). Cap: 100 items.
-- `move_items_between_projects` — Move items from one project directly to another in a single atomic batch (return-to-inventory + sell-into-destination). Cap: 100 items. One destination category per batch.
 
 Sale transaction shape fields (`amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, `projectId`) are frozen after creation — enforced by Firestore rules and server-side validation. Item invariant: `(projectId == null) ↔ (budgetCategoryId == null)`.
 

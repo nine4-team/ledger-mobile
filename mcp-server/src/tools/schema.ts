@@ -54,7 +54,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     name: "item",
     description:
       "A single line item (physical good) tracked across projects, inventory, and sales. " +
-      "Moved between scopes via sell_items / return_items / move_items_between_projects " +
+      "Moved between scopes via sell_items_from_* / return_items " +
       "(never manually edit transactionId for moves).",
     requiredOnCreate: ["name", "notes"],
     keyFields: [

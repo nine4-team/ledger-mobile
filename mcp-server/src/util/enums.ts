@@ -75,7 +75,7 @@ export const ENUMS: EnumSpec[] = [
     description:
       "Transaction type. 'Purchase' is itemized purchases; 'Expense' is non-itemized third-party " +
       "costs; 'Fee' is money the business charges the client. Inventory movement transactions are created via " +
-      "sell_items, return_items, or move_items_between_projects, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
+      "sell_items_from_* or return_items, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
       "with source: 'Business Inventory'.",
   },
   {
