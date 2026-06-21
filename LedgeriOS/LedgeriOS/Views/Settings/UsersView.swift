@@ -90,8 +90,8 @@ struct UsersView: View {
         .onAppear { startListening() }
         .onDisappear { stopListening() }
         .adaptivePresentation(isPresented: $showingInviteSheet, style: .quickMenu) {
-            InviteUserSheet { email, role in
-                createInvite(email: email, role: role)
+            InviteUserSheet(feeCategories: feeCategories) { email, role, access, allowedIds in
+                createInvite(email: email, role: role, access: access, allowedFeeCategoryIds: allowedIds)
             }
         }
         .adaptivePresentation(item: $selectedMember, style: .form) { member in
@@ -142,10 +142,22 @@ struct UsersView: View {
         invitesListener?.remove()
     }
 
-    private func createInvite(email: String, role: String) {
+    private func createInvite(
+        email: String,
+        role: MemberRole,
+        access: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String]
+    ) {
         guard let accountId = accountContext.currentAccountId,
               let uid = authManager.currentUser?.uid else { return }
-        _ = try? invitesService.create(accountId: accountId, email: email, role: role, createdByUid: uid)
+        _ = try? invitesService.create(
+            accountId: accountId,
+            email: email,
+            role: role,
+            companyFinancialAccess: access,
+            allowedFeeCategoryIds: allowedFeeCategoryIds,
+            createdByUid: uid
+        )
     }
 
     private func revokeInvite(_ invite: Invite) {
@@ -405,14 +417,17 @@ private struct InviteRow: View {
                     Text(invite.email)
                         .font(Typography.body)
                         .foregroundStyle(BrandColors.textPrimary)
-                    Badge(text: invite.role.capitalized)
+                    HStack(spacing: Spacing.xs) {
+                        Badge(text: inviteRoleLabel)
+                        Badge(text: invite.resolvedCompanyFinancialAccess.displayLabel)
+                    }
                 }
 
                 Spacer()
 
                 HStack(spacing: Spacing.md) {
                     Button {
-                        Clipboard.copy(invite.email)
+                        Clipboard.copy(invite.inviteLink?.absoluteString ?? invite.email)
                         showingCopied = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             showingCopied = false
@@ -430,17 +445,24 @@ private struct InviteRow: View {
             }
         }
     }
+
+    private var inviteRoleLabel: String {
+        MemberRole(rawValue: invite.role)?.displayLabel ?? invite.role.capitalized
+    }
 }
 
 // MARK: - Invite User Sheet
 
 private struct InviteUserSheet: View {
-    let onInvite: (String, String) -> Void
+    let feeCategories: [BudgetCategory]
+    let onInvite: (String, MemberRole, CompanyFinancialAccess, [String]) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var email = ""
-    @State private var role = "user"
+    @State private var role: MemberRole = .user
+    @State private var access: CompanyFinancialAccess = .none
+    @State private var allowedFeeCategoryIds: Set<String> = []
     @State private var hasSubmitted = false
 
     private var emailError: String? {
@@ -477,9 +499,59 @@ private struct InviteUserSheet: View {
                         .foregroundStyle(BrandColors.textSecondary)
 
                     InlineOptionPicker(selection: $role, options: [
-                        InlineOption(id: "user", label: "User"),
-                        InlineOption(id: "admin", label: "Admin"),
+                        InlineOption(id: MemberRole.user, label: MemberRole.user.displayLabel),
+                        InlineOption(id: MemberRole.admin, label: MemberRole.admin.displayLabel),
                     ])
+                }
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Financial Access")
+                        .font(Typography.label)
+                        .foregroundStyle(BrandColors.textSecondary)
+
+                    InlineOptionPicker(selection: $access, options: [
+                        InlineOption(id: CompanyFinancialAccess.full, label: CompanyFinancialAccess.full.displayLabel),
+                        InlineOption(id: CompanyFinancialAccess.limited, label: CompanyFinancialAccess.limited.displayLabel),
+                        InlineOption(id: CompanyFinancialAccess.none, label: CompanyFinancialAccess.none.displayLabel),
+                    ])
+                }
+
+                if access == .limited {
+                    visibleFeeCategoriesSection
+                }
+            }
+        }
+        .onChange(of: role) {
+            if role == .admin, access == .none {
+                access = .full
+            } else if role == .user, access == .full {
+                access = .none
+            }
+        }
+    }
+
+    private var visibleFeeCategoriesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Visible Fee Categories")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            if feeCategories.isEmpty {
+                Text("No fee categories have been created yet.")
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textSecondary)
+            } else {
+                VStack(spacing: Spacing.xs) {
+                    ForEach(feeCategories.compactMap { category -> BudgetCategory? in
+                        category.id == nil ? nil : category
+                    }) { category in
+                        CategoryAccessRow(
+                            category: category,
+                            isSelected: allowedFeeCategoryIds.contains(category.id ?? "")
+                        ) {
+                            toggleCategory(category.id)
+                        }
+                    }
                 }
             }
         }
@@ -488,7 +560,21 @@ private struct InviteUserSheet: View {
     private func handleInvite() {
         hasSubmitted = true
         guard emailError == nil else { return }
-        onInvite(email.trimmingCharacters(in: .whitespaces).lowercased(), role)
+        onInvite(
+            email.trimmingCharacters(in: .whitespaces).lowercased(),
+            role,
+            access,
+            Array(allowedFeeCategoryIds).sorted()
+        )
         dismiss()
+    }
+
+    private func toggleCategory(_ categoryId: String?) {
+        guard let categoryId else { return }
+        if allowedFeeCategoryIds.contains(categoryId) {
+            allowedFeeCategoryIds.remove(categoryId)
+        } else {
+            allowedFeeCategoryIds.insert(categoryId)
+        }
     }
 }

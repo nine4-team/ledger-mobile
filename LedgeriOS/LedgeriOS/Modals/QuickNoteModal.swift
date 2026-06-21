@@ -10,6 +10,7 @@ struct QuickNoteModal: View {
     @State private var selectedProject: Project?
     @State private var showProjectPicker = false
     @State private var isSaving = false
+    @State private var errorMessage: String?
 
     @FocusState private var isTextFocused: Bool
 
@@ -36,9 +37,10 @@ struct QuickNoteModal: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { Task { await save() } }
+                    Button(isSaving ? "Saving..." : "Save") { Task { await save() } }
                         .disabled(!canSave)
                 }
             }
@@ -48,6 +50,11 @@ struct QuickNoteModal: View {
                 selectedProject = project
                 showProjectPicker = false
             }
+        }
+        .alert("Error", isPresented: errorAlertBinding) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
         }
         .onAppear {
             prefillProject()
@@ -116,30 +123,35 @@ struct QuickNoteModal: View {
     }
 
     private func save() async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let project = selectedProject,
               let projectId = project.id,
-              let accountId = accountContext.currentAccountId
+              let accountId = accountContext.currentAccountId,
+              !trimmed.isEmpty
         else { return }
 
         isSaving = true
 
-        let note = ProjectNote(
-            text: text.trimmingCharacters(in: .whitespacesAndNewlines),
-            createdBy: authManager.currentUser?.uid ?? "",
-            createdByName: accountContext.member?.name ?? "",
-            source: "text",
-            createdAt: Date()
-        )
-
         do {
-            try await ProjectNotesService().addProjectNote(
+            try await projectContext.addNote(
                 accountId: accountId,
                 projectId: projectId,
-                note: note
+                text: trimmed,
+                source: "text",
+                userId: authManager.currentUser?.uid,
+                userName: accountContext.member?.name
             )
             dismiss()
         } catch {
             isSaving = false
+            errorMessage = "Failed to save note. Please try again."
         }
+    }
+
+    private var errorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )
     }
 }

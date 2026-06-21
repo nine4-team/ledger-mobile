@@ -13,6 +13,7 @@ struct ItemDraftCaptureSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
+    @State private var quantity = 1
     @State private var imageItems: [PhotosPickerItem] = []
     @State private var imageDatas: [Data] = []
     @State private var showImageSourceMenu = false
@@ -23,6 +24,13 @@ struct ItemDraftCaptureSheet: View {
     @State private var errorMessage: String?
 
     private let protoItemsService = ProtoItemsService()
+
+    private var quantityBinding: Binding<Int> {
+        Binding(
+            get: { quantity },
+            set: { quantity = min(max($0, 1), 9999) }
+        )
+    }
 
     private var canSave: Bool {
         !imageDatas.isEmpty && !isSaving
@@ -44,8 +52,60 @@ struct ItemDraftCaptureSheet: View {
         ) {
             VStack(spacing: Spacing.md) {
                 FormField(label: "Name", text: $name, placeholder: "Optional")
+                quantitySection
                 photosSection
             }
+        }
+    }
+
+    private var quantitySection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Quantity")
+                .font(Typography.label)
+                .foregroundStyle(BrandColors.textSecondary)
+
+            HStack(spacing: 0) {
+                TextField("1", value: quantityBinding, format: .number)
+                    .font(Typography.input)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .platformKeyboardType(.numberPad)
+                    .multilineTextAlignment(.leading)
+                    .padding(.leading, Spacing.sm)
+                    .frame(width: 96, alignment: .leading)
+
+                Spacer()
+
+                VStack(spacing: 0) {
+                    Button {
+                        if quantity < 9999 { quantity += 1 }
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(BrandColors.textPrimary)
+                            .frame(width: 36, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        if quantity > 1 { quantity -= 1 }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(quantity > 1 ? BrandColors.textPrimary : BrandColors.textDisabled)
+                            .frame(width: 36, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(quantity <= 1)
+                }
+            }
+            .frame(height: 44)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                    .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+            )
         }
     }
 
@@ -175,6 +235,7 @@ struct ItemDraftCaptureSheet: View {
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             protoItem.name = trimmedName.isEmpty ? nil : trimmedName
             protoItem.sku = extraction.selectedSku
+            protoItem.quantity = quantity > 1 ? quantity : nil
             protoItem.extracted = extraction.protoExtraction
             protoItem.createdBy = authManager.currentUser?.uid
             protoItem.updatedBy = authManager.currentUser?.uid
@@ -183,6 +244,7 @@ struct ItemDraftCaptureSheet: View {
             enqueuePhotos(capturedImageDatas, accountId: accountId, protoItemId: protoItemId)
 
             name = ""
+            quantity = 1
             imageDatas = []
             showImageSourceMenu = true
             mediaUploadQueue.processQueue()

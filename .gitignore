@@ -30,6 +30,8 @@ yarn-error.log
 
 # Firebase
 .firebase/
+firebase/hosting/sparkle/*
+!firebase/hosting/sparkle/.gitkeep
 firebase-export*/
 firebase-debug.log
 firestore-debug.log

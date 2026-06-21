@@ -44,6 +44,10 @@ private struct MockAccountsService: AccountsServiceProtocol {
         return MockListenerRegistration()
     }
 
+    func createAccount(name: String) async throws -> String {
+        "created-account"
+    }
+
     func updateAccount(accountId: String, fields: [String: Any]) async throws {}
 }
 

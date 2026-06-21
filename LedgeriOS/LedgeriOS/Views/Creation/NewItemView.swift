@@ -25,6 +25,7 @@ struct NewItemView: View {
         initialTransactionId: String? = nil,
         initialName: String? = nil,
         initialSku: String? = nil,
+        initialQuantity: Int? = nil,
         initialImageRefs: [AttachmentRef] = [],
         onCreated: (([String]) -> Void)? = nil
     ) {
@@ -32,6 +33,7 @@ struct NewItemView: View {
         self._selectedTransactionId = State(initialValue: initialTransactionId)
         self._name = State(initialValue: initialName ?? "")
         self._sku = State(initialValue: initialSku ?? "")
+        self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
         self.initialImageRefs = initialImageRefs
         self.onCreated = onCreated
     }

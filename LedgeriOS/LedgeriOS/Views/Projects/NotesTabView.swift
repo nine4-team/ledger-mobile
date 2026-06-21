@@ -6,6 +6,9 @@ struct NotesTabView: View {
     @Environment(AuthManager.self) private var authManager
 
     @State private var noteText = ""
+    @State private var editingNote: ProjectNote?
+    @State private var notePendingDelete: ProjectNote?
+    @State private var errorMessage: String?
     @FocusState private var isInputFocused: Bool
 
     // MARK: - Computed
@@ -31,6 +34,23 @@ struct NotesTabView: View {
         content
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 inputBar
+            }
+            .adaptivePresentation(item: $editingNote, style: .form) { note in
+                EditNotesModal(notes: note.text) { newText in
+                    updateNote(note, text: newText)
+                }
+            }
+            .confirmationDialog("Delete Note?", isPresented: deleteConfirmationBinding) {
+                Button("Delete", role: .destructive) {
+                    deletePendingNote()
+                }
+            } message: {
+                Text("This action cannot be undone.")
+            }
+            .alert("Error", isPresented: errorAlertBinding) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage ?? "")
             }
     }
 
@@ -65,7 +85,32 @@ struct NotesTabView: View {
 
     private func noteCard(_ note: ProjectNote) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            SelectableNoteText(text: note.text, style: .body)
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                SelectableNoteText(text: note.text, style: .body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if note.id != nil {
+                    Menu {
+                        Button {
+                            editingNote = note
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+                        Button(role: .destructive) {
+                            notePendingDelete = note
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
+                            .foregroundStyle(BrandColors.textTertiary)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
 
             HStack(spacing: Spacing.sm) {
                 Image(systemName: sourceIcon(note.source))
@@ -158,18 +203,81 @@ struct NotesTabView: View {
         let userName = accountContext.member?.name
         noteText = ""
         Task {
-            try await projectContext.addNote(
-                accountId: accountId,
-                projectId: projectId,
-                text: trimmed,
-                source: "text",
-                userId: userId,
-                userName: userName
-            )
+            do {
+                try await projectContext.addNote(
+                    accountId: accountId,
+                    projectId: projectId,
+                    text: trimmed,
+                    source: "text",
+                    userId: userId,
+                    userName: userName
+                )
+            } catch {
+                noteText = trimmed
+                errorMessage = "Failed to add note. Please try again."
+            }
+        }
+    }
+
+    private func updateNote(_ note: ProjectNote, text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let noteId = note.id,
+              let accountId = accountContext.currentAccountId,
+              let projectId = projectContext.currentProjectId else { return }
+
+        Task {
+            do {
+                try await projectContext.updateNote(
+                    accountId: accountId,
+                    projectId: projectId,
+                    noteId: noteId,
+                    text: trimmed
+                )
+            } catch {
+                errorMessage = "Failed to update note. Please try again."
+            }
+        }
+    }
+
+    private func deletePendingNote() {
+        guard let note = notePendingDelete,
+              let noteId = note.id,
+              let accountId = accountContext.currentAccountId,
+              let projectId = projectContext.currentProjectId else {
+            notePendingDelete = nil
+            return
+        }
+
+        notePendingDelete = nil
+        Task {
+            do {
+                try await projectContext.deleteNote(
+                    accountId: accountId,
+                    projectId: projectId,
+                    noteId: noteId
+                )
+            } catch {
+                errorMessage = "Failed to delete note. Please try again."
+            }
         }
     }
 
     // MARK: - Helpers
+
+    private var deleteConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { notePendingDelete != nil },
+            set: { if !$0 { notePendingDelete = nil } }
+        )
+    }
+
+    private var errorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )
+    }
 
     private func sourceIcon(_ source: String) -> String {
         switch source {

@@ -13,6 +13,7 @@ struct LedgerApp: App {
     @State private var networkMonitor = NetworkMonitor()
     @State private var mediaUploadQueue: MediaUploadQueue
     @State private var findStateManager = FindStateManager()
+    @State private var inviteLinkRouter = InviteLinkRouter()
 
     init() {
         FirebaseApp.configure()
@@ -106,6 +107,7 @@ struct LedgerApp: App {
                 .environment(mediaUploadQueue)
                 .environment(networkMonitor)
                 .environment(findStateManager)
+                .environment(inviteLinkRouter)
                 .preferredColorScheme(resolvedColorScheme)
                 #if DEBUG
                 .overlay(alignment: .top) {
@@ -122,7 +124,9 @@ struct LedgerApp: App {
                 }
                 #endif
                 .onOpenURL { url in
-                    GIDSignIn.sharedInstance.handle(url)
+                    if !GIDSignIn.sharedInstance.handle(url) {
+                        _ = inviteLinkRouter.handle(url: url)
+                    }
                 }
                 .task {
                     networkMonitor.onConnectivityRestored = { [mediaUploadQueue] in

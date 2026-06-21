@@ -6,7 +6,7 @@ import {
   getFirestore,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 
 admin.initializeApp();
@@ -502,6 +502,8 @@ type AcceptInviteResponse = {
   role: string;
 };
 
+type CompanyFinancialAccess = 'full' | 'limited' | 'none';
+
 type CreateAccountRequest = {
   name?: string;
 };
@@ -511,6 +513,55 @@ type CreateAccountResponse = {
   role: 'owner';
   name: string;
 };
+
+function defaultCompanyFinancialAccess(role: string): CompanyFinancialAccess {
+  return role === 'owner' || role === 'admin' ? 'full' : 'none';
+}
+
+function normalizedCompanyFinancialAccess(value: unknown, role: string): CompanyFinancialAccess {
+  return value === 'full' || value === 'limited' || value === 'none'
+    ? value
+    : defaultCompanyFinancialAccess(role);
+}
+
+function normalizedAllowedFeeCategoryIds(value: unknown, access: CompanyFinancialAccess): string[] {
+  if (access !== 'limited' || !Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)));
+}
+
+async function requireBearerUid(request: { headers: { authorization?: string } }): Promise<string> {
+  const authorization = request.headers.authorization ?? '';
+  const match = authorization.match(/^Bearer (.+)$/);
+  if (!match) {
+    throw new HttpsError('unauthenticated', 'Must be signed in.');
+  }
+  const decoded = await admin.auth().verifyIdToken(match[1]);
+  return decoded.uid;
+}
+
+function httpsStatusForError(error: unknown): number {
+  if (error instanceof HttpsError) {
+    switch (error.code) {
+      case 'invalid-argument': return 400;
+      case 'unauthenticated': return 401;
+      case 'permission-denied': return 403;
+      case 'not-found': return 404;
+      case 'already-exists': return 409;
+      case 'deadline-exceeded': return 410;
+      default: return 500;
+    }
+  }
+  return 500;
+}
+
+function errorBody(error: unknown) {
+  return {
+    error: {
+      status: error instanceof HttpsError ? error.code : 'internal',
+      message: error instanceof Error ? error.message : 'Internal error.',
+    }
+  };
+}
 
 type CreateProjectRequest = {
   accountId: string;
@@ -666,13 +717,8 @@ export const onAccountMembershipCreated = onDocumentCreated(
 /**
  * Create a new account and the caller's membership (server-owned).
  */
-export const createAccount = onCall<CreateAccountRequest>(async (request): Promise<CreateAccountResponse> => {
-  const uid = request.auth?.uid;
-  if (!uid) {
-    throw new HttpsError('unauthenticated', 'Must be signed in.');
-  }
-
-  const rawName = request.data?.name;
+async function createAccountForUid(uid: string, data?: CreateAccountRequest): Promise<CreateAccountResponse> {
+  const rawName = data?.name;
   const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim().slice(0, 80) : 'My account';
 
   const db = getFirestore();
@@ -697,6 +743,8 @@ export const createAccount = onCall<CreateAccountRequest>(async (request): Promi
       {
         uid,
         role: 'owner',
+        companyFinancialAccess: 'full',
+        allowedFeeCategoryIds: [],
         joinedAt: now
       },
       { merge: false }
@@ -707,7 +755,34 @@ export const createAccount = onCall<CreateAccountRequest>(async (request): Promi
   await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
 
   return { accountId, role: 'owner', name };
+}
+
+export const createAccount = onCall<CreateAccountRequest>(async (request): Promise<CreateAccountResponse> => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Must be signed in.');
+  }
+
+  return createAccountForUid(uid, request.data);
 });
+
+export const createAccountHttp = onRequest(
+  { invoker: 'public' },
+  async (request, response): Promise<void> => {
+    try {
+      if (request.method !== 'POST') {
+        throw new HttpsError('invalid-argument', 'POST is required.');
+      }
+
+      const uid = await requireBearerUid(request);
+      const data = request.body?.data as CreateAccountRequest | undefined;
+      const result = await createAccountForUid(uid, data);
+      response.status(200).json({ result });
+    } catch (error) {
+      response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
+  }
+);
 
 /**
  * Create a new project (server-owned, entitlements-safe).
@@ -785,82 +860,107 @@ export const createProject = onCall<CreateProjectRequest>(async (request): Promi
  * Accept an invitation token and create/update account membership.
  * This function is idempotent - if the user is already a member, it returns success.
  */
-export const acceptInvite = onCall<AcceptInviteRequest>(
-  async (request): Promise<AcceptInviteResponse> => {
-    const uid = request.auth?.uid;
-    if (!uid) {
-      throw new HttpsError('unauthenticated', 'Must be signed in to accept an invitation.');
-    }
+async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Promise<AcceptInviteResponse> {
+  const { token } = data ?? ({} as AcceptInviteRequest);
+  if (!token || typeof token !== 'string' || !token.trim()) {
+    throw new HttpsError('invalid-argument', 'Invitation token is required.');
+  }
 
-    const { token } = request.data ?? ({} as AcceptInviteRequest);
-    if (!token || typeof token !== 'string' || !token.trim()) {
-      throw new HttpsError('invalid-argument', 'Invitation token is required.');
-    }
+  const db = getFirestore();
+  const now = FieldValue.serverTimestamp();
 
-    const db = getFirestore();
-    const now = FieldValue.serverTimestamp();
+  // Find the invite by token. A production implementation should optimize this lookup
+  // with a token -> accountId/inviteId mapping doc.
+  let inviteRef: DocumentReference | null = null;
+  let accountId: string | null = null;
+  let inviteData: any = null;
 
-    // Find the invite by token
-    // Note: In a real implementation, you might hash the token or use a different lookup strategy.
-    // For now, we'll search invites collections. This assumes tokens are stored as invite IDs or in a token field.
-    // A production implementation should optimize this lookup (e.g., token -> inviteId mapping doc).
-    let inviteRef: DocumentReference | null = null;
-    let accountId: string | null = null;
-    let inviteData: any = null;
+  const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
 
-    // Search all accounts for an invite with this token
-    // This is a simplified implementation - production should use a token lookup index
-    const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
+  if (accountsSnapshot.empty) {
+    const inviteId = token;
+    const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
 
-    if (accountsSnapshot.empty) {
-      // Try searching by invite ID (if token is the invite ID)
-      const inviteId = token;
-      // We need to search across accounts - this is expensive but works for MVP
-      // Production should maintain a token -> accountId/inviteId mapping
-      const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
-      
-      for (const accountDoc of allAccountsSnapshot.docs) {
-        const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
-        const testInviteSnap = await testInviteRef.get();
-        if (testInviteSnap.exists) {
-          inviteRef = testInviteRef;
-          accountId = accountDoc.id;
-          inviteData = testInviteSnap.data();
-          break;
-        }
+    for (const accountDoc of allAccountsSnapshot.docs) {
+      const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
+      const testInviteSnap = await testInviteRef.get();
+      if (testInviteSnap.exists) {
+        inviteRef = testInviteRef;
+        accountId = accountDoc.id;
+        inviteData = testInviteSnap.data();
+        break;
       }
-
-      if (!inviteRef || !accountId) {
-        throw new HttpsError('not-found', 'Invalid or expired invitation link.');
-      }
-    } else {
-      const inviteDoc = accountsSnapshot.docs[0];
-      inviteRef = inviteDoc.ref;
-      inviteData = inviteDoc.data();
-      // Extract accountId from path: accounts/{accountId}/invites/{inviteId}
-      const pathParts = inviteDoc.ref.path.split('/');
-      accountId = pathParts[1];
     }
 
-    if (!accountId || !inviteRef || !inviteData) {
+    if (!inviteRef || !accountId) {
       throw new HttpsError('not-found', 'Invalid or expired invitation link.');
     }
+  } else {
+    const inviteDoc = accountsSnapshot.docs[0];
+    inviteRef = inviteDoc.ref;
+    inviteData = inviteDoc.data();
+    const pathParts = inviteDoc.ref.path.split('/');
+    accountId = pathParts[1];
+  }
 
-    // Validate invite status and expiration
-    const status = inviteData.status;
-    const expiresAt = inviteData.expiresAt as Timestamp | undefined;
-    const acceptedAt = inviteData.acceptedAt as Timestamp | undefined;
-    const acceptedByUid = inviteData.acceptedByUid as string | undefined;
+  if (!accountId || !inviteRef || !inviteData) {
+    throw new HttpsError('not-found', 'Invalid or expired invitation link.');
+  }
 
-    if (status === 'accepted' || acceptedAt) {
-      // Idempotent: if already accepted by this user, return success
-      if (acceptedByUid === uid) {
-        const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
-        const userSnap = await userRef.get();
+  const status = inviteData.status;
+  const expiresAt = inviteData.expiresAt as Timestamp | undefined;
+  const acceptedAt = inviteData.acceptedAt as Timestamp | undefined;
+  const acceptedByUid = inviteData.acceptedByUid as string | undefined;
+
+  if (status === 'accepted' || acceptedAt) {
+    if (acceptedByUid === uid) {
+      const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
+      const userSnap = await userRef.get();
+      if (userSnap.exists) {
+        const userData = userSnap.data();
+        return {
+          accountId,
+          role: (userData?.role as string) || 'user',
+        };
+      }
+    }
+    throw new HttpsError('already-exists', 'This invitation has already been accepted.');
+  }
+
+  if (status === 'revoked' || status === 'cancelled') {
+    throw new HttpsError('permission-denied', 'This invitation has been cancelled.');
+  }
+
+  if (expiresAt && expiresAt.toMillis() < Date.now()) {
+    throw new HttpsError('deadline-exceeded', 'This invitation has expired.');
+  }
+
+  const role = (inviteData.role as string) || 'user';
+  const companyFinancialAccess = normalizedCompanyFinancialAccess(
+    inviteData.companyFinancialAccess,
+    role
+  );
+  const allowedFeeCategoryIds = normalizedAllowedFeeCategoryIds(
+    inviteData.allowedFeeCategoryIds,
+    companyFinancialAccess
+  );
+
+  const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
+
+  const result = await db.runTransaction<AcceptInviteResponse>(async (tx) => {
+    const inviteSnap = await tx.get(inviteRef!);
+    if (!inviteSnap.exists) {
+      throw new HttpsError('not-found', 'Invitation no longer exists.');
+    }
+
+    const currentInviteData = inviteSnap.data();
+    if (currentInviteData?.acceptedAt) {
+      if (currentInviteData.acceptedByUid === uid) {
+        const userSnap = await tx.get(userRef);
         if (userSnap.exists) {
           const userData = userSnap.data();
           return {
-            accountId,
+            accountId: accountId!,
             role: (userData?.role as string) || 'user',
           };
         }
@@ -868,81 +968,65 @@ export const acceptInvite = onCall<AcceptInviteRequest>(
       throw new HttpsError('already-exists', 'This invitation has already been accepted.');
     }
 
-    if (status === 'revoked' || status === 'cancelled') {
-      throw new HttpsError('permission-denied', 'This invitation has been cancelled.');
-    }
+    const userSnap = await tx.get(userRef);
+    const userExists = userSnap.exists;
 
-    if (expiresAt && expiresAt.toMillis() < Date.now()) {
-      throw new HttpsError('deadline-exceeded', 'This invitation has expired.');
-    }
-
-    const role = (inviteData.role as string) || 'user';
-
-    // Check entitlements (e.g., free tier user limits)
-    // For MVP, we'll skip entitlement checks, but this is where you'd add them
-    // Example: check account user count against plan limits
-
-    // Create/update account user membership in a transaction
-    const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
-
-    const result = await db.runTransaction(async (tx) => {
-      // Re-check invite status in transaction
-      const inviteSnap = await tx.get(inviteRef!);
-      if (!inviteSnap.exists) {
-        throw new HttpsError('not-found', 'Invitation no longer exists.');
-      }
-
-      const currentInviteData = inviteSnap.data();
-      if (currentInviteData?.acceptedAt) {
-        // Idempotent: already accepted
-        if (currentInviteData.acceptedByUid === uid) {
-          const userSnap = await tx.get(userRef);
-          if (userSnap.exists) {
-            const userData = userSnap.data();
-            return {
-              accountId: accountId!,
-              role: (userData?.role as string) || 'user',
-            };
-          }
-        }
-        throw new HttpsError('already-exists', 'This invitation has already been accepted.');
-      }
-
-      // Check if user already exists (idempotent)
-      const userSnap = await tx.get(userRef);
-      const userExists = userSnap.exists;
-
-      // Create or update account user doc
-      tx.set(
-        userRef,
-        {
-          uid,
-          role,
-          joinedAt: userExists ? userSnap.data()?.joinedAt : now,
-          joinedBy: userExists ? userSnap.data()?.joinedBy : inviteData.createdBy || null,
-          updatedAt: now,
-        },
-        { merge: true }
-      );
-
-      // Mark invite as accepted
-      tx.update(inviteRef!, {
-        status: 'accepted',
-        acceptedAt: now,
-        acceptedByUid: uid,
-        updatedAt: now,
-      });
-
-      return {
-        accountId: accountId!,
+    tx.set(
+      userRef,
+      {
+        uid,
         role,
-      };
+        companyFinancialAccess,
+        allowedFeeCategoryIds,
+        joinedAt: userExists ? userSnap.data()?.joinedAt : now,
+        joinedBy: userExists ? userSnap.data()?.joinedBy : inviteData.createdByUid || inviteData.createdBy || null,
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+
+    tx.update(inviteRef!, {
+      status: 'accepted',
+      acceptedAt: now,
+      acceptedByUid: uid,
+      updatedAt: now,
     });
 
-    // Ensure required presets exist for newly joined members (idempotent).
-    await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
+    return {
+      accountId: accountId!,
+      role,
+    };
+  });
 
-    return result;
+  await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
+
+  return result;
+}
+
+export const acceptInvite = onCall<AcceptInviteRequest>(async (request): Promise<AcceptInviteResponse> => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Must be signed in to accept an invitation.');
+  }
+
+  return acceptInviteForUid(uid, request.data);
+});
+
+export const acceptInviteHttp = onRequest(
+  { invoker: 'public' },
+  async (request, response): Promise<void> => {
+    try {
+      if (request.method !== 'POST') {
+        throw new HttpsError('invalid-argument', 'POST is required.');
+      }
+
+      const uid = await requireBearerUid(request);
+      const data = request.body?.data as AcceptInviteRequest | undefined;
+      const result = await acceptInviteForUid(uid, data);
+      response.status(200).json({ result });
+    } catch (error) {
+      response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
   }
 );
 

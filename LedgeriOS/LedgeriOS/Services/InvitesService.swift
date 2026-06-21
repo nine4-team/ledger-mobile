@@ -16,14 +16,28 @@ struct InvitesService: InvitesServiceProtocol {
             }
     }
 
-    func create(accountId: String, email: String, role: String, createdByUid: String) throws -> String {
+    func create(
+        accountId: String,
+        email: String,
+        role: MemberRole,
+        companyFinancialAccess: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String],
+        createdByUid: String
+    ) throws -> String {
         var invite = Invite()
         invite.accountId = accountId
         invite.email = email
-        invite.role = role
+        invite.role = role.rawValue
+        invite.companyFinancialAccess = companyFinancialAccess
+        invite.allowedFeeCategoryIds = companyFinancialAccess == .limited ? allowedFeeCategoryIds : []
         invite.token = UUID().uuidString
         invite.createdByUid = createdByUid
-        let id = try repo(accountId: accountId).create(invite)
+        let id = try repo(accountId: accountId).create(invite, additionalFields: [
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp(),
+            "acceptedAt": NSNull(),
+            "revokedAt": NSNull()
+        ])
         return id
     }
 

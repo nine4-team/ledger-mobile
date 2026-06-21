@@ -172,6 +172,26 @@ final class ProjectContext {
         try await projectNotesService.addProjectNote(accountId: accountId, projectId: projectId, note: note)
     }
 
+    func updateNote(accountId: String, projectId: String, noteId: String, text: String) async throws {
+        try await projectNotesService.updateProjectNote(
+            accountId: accountId,
+            projectId: projectId,
+            noteId: noteId,
+            fields: [
+                "text": text,
+                "updatedAt": Date()
+            ]
+        )
+    }
+
+    func deleteNote(accountId: String, projectId: String, noteId: String) async throws {
+        try await projectNotesService.deleteProjectNote(
+            accountId: accountId,
+            projectId: projectId,
+            noteId: noteId
+        )
+    }
+
     func stopListeners() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()

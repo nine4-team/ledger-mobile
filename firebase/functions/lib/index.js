@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInvite = exports.createProject = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -356,6 +356,50 @@ exports.onSpaceArchived = (0, firestore_2.onDocumentUpdated)('accounts/{accountI
         // Items will still be accessible, just with an invalid spaceId reference
     }
 });
+function defaultCompanyFinancialAccess(role) {
+    return role === 'owner' || role === 'admin' ? 'full' : 'none';
+}
+function normalizedCompanyFinancialAccess(value, role) {
+    return value === 'full' || value === 'limited' || value === 'none'
+        ? value
+        : defaultCompanyFinancialAccess(role);
+}
+function normalizedAllowedFeeCategoryIds(value, access) {
+    if (access !== 'limited' || !Array.isArray(value))
+        return [];
+    return Array.from(new Set(value.filter((id) => typeof id === 'string' && id.trim().length > 0)));
+}
+async function requireBearerUid(request) {
+    const authorization = request.headers.authorization ?? '';
+    const match = authorization.match(/^Bearer (.+)$/);
+    if (!match) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    return decoded.uid;
+}
+function httpsStatusForError(error) {
+    if (error instanceof https_1.HttpsError) {
+        switch (error.code) {
+            case 'invalid-argument': return 400;
+            case 'unauthenticated': return 401;
+            case 'permission-denied': return 403;
+            case 'not-found': return 404;
+            case 'already-exists': return 409;
+            case 'deadline-exceeded': return 410;
+            default: return 500;
+        }
+    }
+    return 500;
+}
+function errorBody(error) {
+    return {
+        error: {
+            status: error instanceof https_1.HttpsError ? error.code : 'internal',
+            message: error instanceof Error ? error.message : 'Internal error.',
+        }
+    };
+}
 const normalizeBudgetCategoryType = (value) => (value === 'general' ? 'standard' : value);
 const BUDGET_CATEGORY_PRESET_SEED = [
     {
@@ -464,12 +508,8 @@ exports.onAccountMembershipCreated = (0, firestore_2.onDocumentCreated)('account
 /**
  * Create a new account and the caller's membership (server-owned).
  */
-exports.createAccount = (0, https_1.onCall)(async (request) => {
-    const uid = request.auth?.uid;
-    if (!uid) {
-        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
-    }
-    const rawName = request.data?.name;
+async function createAccountForUid(uid, data) {
+    const rawName = data?.name;
     const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim().slice(0, 80) : 'My account';
     const db = (0, firestore_1.getFirestore)();
     const now = firestore_1.FieldValue.serverTimestamp();
@@ -485,12 +525,35 @@ exports.createAccount = (0, https_1.onCall)(async (request) => {
         tx.set(membershipRef, {
             uid,
             role: 'owner',
+            companyFinancialAccess: 'full',
+            allowedFeeCategoryIds: [],
             joinedAt: now
         }, { merge: false });
     });
     // Bootstrap required presets before returning, to avoid downstream UI/code relying on missing seeds.
     await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
     return { accountId, role: 'owner', name };
+}
+exports.createAccount = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in.');
+    }
+    return createAccountForUid(uid, request.data);
+});
+exports.createAccountHttp = (0, https_1.onRequest)({ invoker: 'public' }, async (request, response) => {
+    try {
+        if (request.method !== 'POST') {
+            throw new https_1.HttpsError('invalid-argument', 'POST is required.');
+        }
+        const uid = await requireBearerUid(request);
+        const data = request.body?.data;
+        const result = await createAccountForUid(uid, data);
+        response.status(200).json({ result });
+    }
+    catch (error) {
+        response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
 });
 /**
  * Create a new project (server-owned, entitlements-safe).
@@ -548,32 +611,21 @@ exports.createProject = (0, https_1.onCall)(async (request) => {
  * Accept an invitation token and create/update account membership.
  * This function is idempotent - if the user is already a member, it returns success.
  */
-exports.acceptInvite = (0, https_1.onCall)(async (request) => {
-    const uid = request.auth?.uid;
-    if (!uid) {
-        throw new https_1.HttpsError('unauthenticated', 'Must be signed in to accept an invitation.');
-    }
-    const { token } = request.data ?? {};
+async function acceptInviteForUid(uid, data) {
+    const { token } = data ?? {};
     if (!token || typeof token !== 'string' || !token.trim()) {
         throw new https_1.HttpsError('invalid-argument', 'Invitation token is required.');
     }
     const db = (0, firestore_1.getFirestore)();
     const now = firestore_1.FieldValue.serverTimestamp();
-    // Find the invite by token
-    // Note: In a real implementation, you might hash the token or use a different lookup strategy.
-    // For now, we'll search invites collections. This assumes tokens are stored as invite IDs or in a token field.
-    // A production implementation should optimize this lookup (e.g., token -> inviteId mapping doc).
+    // Find the invite by token. A production implementation should optimize this lookup
+    // with a token -> accountId/inviteId mapping doc.
     let inviteRef = null;
     let accountId = null;
     let inviteData = null;
-    // Search all accounts for an invite with this token
-    // This is a simplified implementation - production should use a token lookup index
     const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
     if (accountsSnapshot.empty) {
-        // Try searching by invite ID (if token is the invite ID)
         const inviteId = token;
-        // We need to search across accounts - this is expensive but works for MVP
-        // Production should maintain a token -> accountId/inviteId mapping
         const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
         for (const accountDoc of allAccountsSnapshot.docs) {
             const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
@@ -593,20 +645,17 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
         const inviteDoc = accountsSnapshot.docs[0];
         inviteRef = inviteDoc.ref;
         inviteData = inviteDoc.data();
-        // Extract accountId from path: accounts/{accountId}/invites/{inviteId}
         const pathParts = inviteDoc.ref.path.split('/');
         accountId = pathParts[1];
     }
     if (!accountId || !inviteRef || !inviteData) {
         throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
     }
-    // Validate invite status and expiration
     const status = inviteData.status;
     const expiresAt = inviteData.expiresAt;
     const acceptedAt = inviteData.acceptedAt;
     const acceptedByUid = inviteData.acceptedByUid;
     if (status === 'accepted' || acceptedAt) {
-        // Idempotent: if already accepted by this user, return success
         if (acceptedByUid === uid) {
             const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
             const userSnap = await userRef.get();
@@ -627,20 +676,16 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('deadline-exceeded', 'This invitation has expired.');
     }
     const role = inviteData.role || 'user';
-    // Check entitlements (e.g., free tier user limits)
-    // For MVP, we'll skip entitlement checks, but this is where you'd add them
-    // Example: check account user count against plan limits
-    // Create/update account user membership in a transaction
+    const companyFinancialAccess = normalizedCompanyFinancialAccess(inviteData.companyFinancialAccess, role);
+    const allowedFeeCategoryIds = normalizedAllowedFeeCategoryIds(inviteData.allowedFeeCategoryIds, companyFinancialAccess);
     const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
     const result = await db.runTransaction(async (tx) => {
-        // Re-check invite status in transaction
         const inviteSnap = await tx.get(inviteRef);
         if (!inviteSnap.exists) {
             throw new https_1.HttpsError('not-found', 'Invitation no longer exists.');
         }
         const currentInviteData = inviteSnap.data();
         if (currentInviteData?.acceptedAt) {
-            // Idempotent: already accepted
             if (currentInviteData.acceptedByUid === uid) {
                 const userSnap = await tx.get(userRef);
                 if (userSnap.exists) {
@@ -653,18 +698,17 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
             }
             throw new https_1.HttpsError('already-exists', 'This invitation has already been accepted.');
         }
-        // Check if user already exists (idempotent)
         const userSnap = await tx.get(userRef);
         const userExists = userSnap.exists;
-        // Create or update account user doc
         tx.set(userRef, {
             uid,
             role,
+            companyFinancialAccess,
+            allowedFeeCategoryIds,
             joinedAt: userExists ? userSnap.data()?.joinedAt : now,
-            joinedBy: userExists ? userSnap.data()?.joinedBy : inviteData.createdBy || null,
+            joinedBy: userExists ? userSnap.data()?.joinedBy : inviteData.createdByUid || inviteData.createdBy || null,
             updatedAt: now,
         }, { merge: true });
-        // Mark invite as accepted
         tx.update(inviteRef, {
             status: 'accepted',
             acceptedAt: now,
@@ -676,9 +720,29 @@ exports.acceptInvite = (0, https_1.onCall)(async (request) => {
             role,
         };
     });
-    // Ensure required presets exist for newly joined members (idempotent).
     await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
     return result;
+}
+exports.acceptInvite = (0, https_1.onCall)(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new https_1.HttpsError('unauthenticated', 'Must be signed in to accept an invitation.');
+    }
+    return acceptInviteForUid(uid, request.data);
+});
+exports.acceptInviteHttp = (0, https_1.onRequest)({ invoker: 'public' }, async (request, response) => {
+    try {
+        if (request.method !== 'POST') {
+            throw new https_1.HttpsError('invalid-argument', 'POST is required.');
+        }
+        const uid = await requireBearerUid(request);
+        const data = request.body?.data;
+        const result = await acceptInviteForUid(uid, data);
+        response.status(200).json({ result });
+    }
+    catch (error) {
+        response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
 });
 // ---------------------------------------------------------------------------
 // Budget Summary Denormalization

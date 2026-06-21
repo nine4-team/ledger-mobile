@@ -4,6 +4,9 @@ struct AccountGateView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
 
+    @State private var isCreatingAccount = false
+    @State private var createAccountError: String?
+
     var body: some View {
         Group {
             if accountContext.isDiscovering {
@@ -69,16 +72,31 @@ struct AccountGateView: View {
                     .foregroundStyle(BrandColors.textSecondary)
                     .multilineTextAlignment(.center)
 
-                Button {
-                    // Stub — account creation is a future feature
-                } label: {
-                    Text("Create Account")
-                        .font(Typography.button)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.md)
-                        .background(BrandColors.primary, in: RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                if let createAccountError {
+                    Text(createAccountError)
+                        .font(Typography.small)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
                 }
+
+                Button {
+                    createAccount()
+                } label: {
+                    Group {
+                        if isCreatingAccount {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Create Account")
+                                .font(Typography.button)
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md)
+                    .background(BrandColors.primary, in: RoundedRectangle(cornerRadius: Dimensions.buttonRadius))
+                }
+                .disabled(isCreatingAccount)
 
                 Button("Sign Out", role: .destructive) {
                     authManager.signOut()
@@ -134,6 +152,21 @@ struct AccountGateView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BrandColors.background)
+    }
+
+    private func createAccount() {
+        guard let uid = authManager.currentUser?.uid else { return }
+        isCreatingAccount = true
+        createAccountError = nil
+
+        Task {
+            do {
+                try await accountContext.createAccount(name: "My account", userId: uid)
+            } catch {
+                createAccountError = "Could not create an account. Please try again."
+            }
+            isCreatingAccount = false
+        }
     }
 }
 

@@ -45,6 +45,14 @@ struct LedgerCommands: Commands {
             }
             .keyboardShortcut(",", modifiers: .command)
         }
+
+        #if os(macOS)
+        CommandGroup(after: .appInfo) {
+            Button("Check for Updates...") {
+                SparkleUpdateController.shared.checkForUpdates()
+            }
+        }
+        #endif
     }
 }
 

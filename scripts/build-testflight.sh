@@ -49,7 +49,15 @@ for arg in "$@"; do
   esac
 done
 
-CURRENT_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
+CURRENT_BUILD_RAW="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
+CURRENT_BUILD="$CURRENT_BUILD_RAW"
+if [[ ! "$CURRENT_BUILD" =~ ^[0-9]+$ ]]; then
+  CURRENT_BUILD="$(awk -F '=|;' '/CURRENT_PROJECT_VERSION = [0-9]+;/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' "$PROJECT_FILE")"
+fi
+if [[ ! "$CURRENT_BUILD" =~ ^[0-9]+$ ]]; then
+  echo "Could not determine numeric build number from CFBundleVersion or CURRENT_PROJECT_VERSION." >&2
+  exit 1
+fi
 if [[ -z "$BUILD_NUMBER" ]]; then
   BUILD_NUMBER="$((CURRENT_BUILD + 1))"
 fi
@@ -59,7 +67,7 @@ EXPORT_PATH="$BUILD_DIR/export"
 OPTIONS_PLIST="$BUILD_DIR/ExportOptions.plist"
 
 echo "Setting LedgeriOS build number to $BUILD_NUMBER"
-if [[ "$CURRENT_BUILD" != "$BUILD_NUMBER" ]]; then
+if [[ "$CURRENT_BUILD_RAW" =~ ^[0-9]+$ && "$CURRENT_BUILD_RAW" != "$BUILD_NUMBER" ]]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST"
 fi
 perl -0pi -e "s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" "$PROJECT_FILE"

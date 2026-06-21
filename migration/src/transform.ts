@@ -854,12 +854,16 @@ export function transform(
     const mappedRole = (role === 'owner' || role === 'admin' || role === 'user')
       ? role
       : userId === normalizeOptionalId(account.created_by) ? 'owner' : 'user';
+    const companyFinancialAccess =
+      mappedRole === 'owner' || mappedRole === 'admin' ? 'full' : 'none';
 
     addDoc(`accounts/${accountId}/users/${userId}`, {
       id: userId,
       accountId,
       uid: userId,
       role: mappedRole,
+      companyFinancialAccess,
+      allowedFeeCategoryIds: [],
       email: normalizeOptionalString(user.email) ?? null,
       name: normalizeOptionalString(user.display_name) ?? null,
       isDisabled: false,
@@ -889,11 +893,16 @@ export function transform(
   for (const invite of invitations) {
     const inviteId = normalizeOptionalId(invite.id);
     if (!inviteId) continue;
+    const inviteRole = normalizeOptionalString(invite.role) ?? 'user';
+    const inviteCompanyFinancialAccess =
+      inviteRole === 'owner' || inviteRole === 'admin' ? 'full' : 'none';
     addDoc(`accounts/${accountId}/invites/${inviteId}`, {
       id: inviteId,
       accountId,
       email: invite.email ?? '',
-      role: normalizeOptionalString(invite.role) ?? 'user',
+      role: inviteRole,
+      companyFinancialAccess: inviteCompanyFinancialAccess,
+      allowedFeeCategoryIds: [],
       token: invite.token ?? '',
       createdAt: normalizeOptionalString(invite.created_at) ?? null,
       createdByUid: normalizeOptionalId(invite.created_by) ?? null,

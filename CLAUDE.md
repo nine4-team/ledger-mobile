@@ -34,6 +34,64 @@ firebase deploy --only firestore:rules
 
 Local edits to the rules file have **no effect on the running app** until deployed. If you see "Missing or insufficient permissions" after adding or modifying a rule, the most likely cause is that the rules haven't been deployed yet.
 
+## Release & Deployment
+
+Before releasing, check `git status --short` and separate intentional release changes from unrelated dirty files. Run focused tests for the feature being shipped; for financial access / invite work, use:
+
+```bash
+xcodebuild -project LedgeriOS/LedgeriOS.xcodeproj -scheme LedgeriOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test -only-testing:LedgeriOSTests/FinancialAccessPolicyTests
+```
+
+### TestFlight
+
+Use Bundler-managed Fastlane from the repo root. The lane reads the App Store Connect API key from `~/.appstoreconnect/private_keys/AuthKey_X5SX4S7NW5.p8` by default, uses team `5VHL56HV63`, bundle id `apps.nine4.ledger`, project `LedgeriOS/LedgeriOS.xcodeproj`, scheme `LedgeriOS`, and version `1.0` unless overridden.
+
+```bash
+TESTFLIGHT_CHANGELOG='Short release note.' bundle exec fastlane ios upload_testflight
+```
+
+For external testers:
+
+```bash
+TESTFLIGHT_CHANGELOG='Short release note.' bundle exec fastlane ios external_testflight
+```
+
+Fastlane checks App Store Connect and picks the next TestFlight build number for the current marketing version. If a duplicate build or signing error occurs, inspect the latest TestFlight build before rerunning with an explicit `BUILD_NUMBER`.
+
+### macOS Direct Distribution
+
+Ledger's macOS build is direct-distributed and uses Sparkle for in-app updates. See `docs/macos-auto-updates.md` for the full notes.
+
+For a first-install installer DMG:
+
+```bash
+./scripts/build-macos-dmg.sh
+```
+
+That archives the macOS build, exports with Developer ID signing, creates `/tmp/Ledger.dmg`, notarizes/staples it with the `ledger-notarize` notarytool profile, and copies it to `~/Desktop/Ledger.dmg`.
+
+For Sparkle updates:
+
+```bash
+./scripts/build-macos-sparkle-update.sh
+```
+
+That archives/exports the macOS app, notarizes/staples it, creates `firebase/hosting/sparkle/Ledger-<version>-<build>.zip`, writes release notes if missing, and regenerates `firebase/hosting/sparkle/appcast.xml`.
+
+Deploy the staged Sparkle update and appcast to Firebase Hosting with either:
+
+```bash
+DEPLOY=1 ./scripts/build-macos-sparkle-update.sh
+```
+
+or, if the Sparkle files are already staged:
+
+```bash
+firebase deploy --only hosting
+```
+
+The production appcast URL is `https://ledger-nine4.web.app/sparkle/appcast.xml`.
+
 ### Optional: Running Against the Local Emulator
 
 There is a `scripts/dev-native.mjs` workflow that boots Firebase emulators (Auth, Firestore, Storage) with seeded data. This is **not** the day-to-day workflow — only use it when you specifically want to test against an isolated local environment (e.g., destructive integration tests). See `LedgeriOSTests/CLAUDE.md` for the integration-test setup that requires it.

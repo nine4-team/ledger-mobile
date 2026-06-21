@@ -68,6 +68,22 @@ struct FinancialAccessPolicyTests {
         #expect(!policy.canSeeInvoice(invoice, transactions: [], categories: []))
     }
 
+    @Test("Invite links round-trip token through the custom URL scheme")
+    func inviteLinkRoundTrip() throws {
+        let token = "abc-123"
+        let url = try #require(InviteLinks.link(token: token))
+
+        #expect(url.absoluteString == "ledger-nine4://invite?token=abc-123")
+        #expect(InviteLinks.token(from: url) == token)
+    }
+
+    @Test("Invite links parse web fallback tokens")
+    func inviteWebFallbackParsing() throws {
+        let url = try #require(URL(string: "https://ledger-nine4.web.app/invite?token=abc-123"))
+
+        #expect(InviteLinks.token(from: url) == "abc-123")
+    }
+
     private func feeCategory(id: String, name: String) -> BudgetCategory {
         var category = BudgetCategory()
         category.id = id

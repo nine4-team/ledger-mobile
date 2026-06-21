@@ -70,6 +70,12 @@ hdiutil detach "$MOUNT_POINT"
 hdiutil convert "$SPARSE_PATH" -format UDZO -o "$DMG_PATH"
 rm -f "$SPARSE_PATH"
 
+echo "==> Signing DMG..."
+codesign --force \
+  --sign "Developer ID Application: Ben Mackenzie ($TEAM_ID)" \
+  --timestamp \
+  "$DMG_PATH"
+
 echo "==> Notarizing..."
 xcrun notarytool submit "$DMG_PATH" \
   --keychain-profile "$KEYCHAIN_PROFILE" \

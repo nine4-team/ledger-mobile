@@ -51,6 +51,7 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
     var sourceHint: ProtoItemSourceHint?
     var photos: [AttachmentRef]?
     var sku: String?
+    var quantity: Int?
     var notes: String?
     var extracted: ProtoItemExtraction?
     var candidateTransactionId: String?
@@ -65,7 +66,7 @@ struct ProtoItem: Codable, Identifiable, Hashable, @unchecked Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, accountId, projectId, intendedProjectId, transactionId,
-             name, captureContext, status, sourceHint, photos, sku, notes, extracted,
+             name, captureContext, status, sourceHint, photos, sku, quantity, notes, extracted,
              candidateTransactionId, candidateItemId, convertedItemId,
              convertedAt, createdBy, updatedBy, convertedBy,
              createdAt, updatedAt

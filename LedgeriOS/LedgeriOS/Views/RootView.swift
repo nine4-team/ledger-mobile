@@ -5,6 +5,14 @@ struct RootView: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
+    @Environment(InviteLinkRouter.self) private var inviteLinkRouter
+
+    @State private var isAcceptingInvite = false
+    @State private var inviteErrorMessage: String?
+
+    private var inviteTaskId: String {
+        "\(authManager.currentUser?.uid ?? "signed-out"):\(inviteLinkRouter.pendingToken ?? "none")"
+    }
 
     var body: some View {
         Group {
@@ -27,6 +35,12 @@ struct RootView: View {
                     // Show upload status when images are pending/failed
                     .safeAreaInset(edge: .top) {
                         VStack(spacing: Spacing.xs) {
+                            if isAcceptingInvite {
+                                StatusBanner(
+                                    message: "Joining account...",
+                                    variant: .info
+                                )
+                            }
                             if !networkMonitor.isConnected {
                                 StatusBanner(
                                     message: "No internet connection. Viewing cached data.",
@@ -56,10 +70,41 @@ struct RootView: View {
         }
         .animation(.default, value: authManager.isAuthenticated)
         .animation(.default, value: accountContext.currentAccountId)
+        .task(id: inviteTaskId) {
+            await acceptPendingInviteIfPossible()
+        }
+        .alert("Invite Error", isPresented: .init(
+            get: { inviteErrorMessage != nil },
+            set: { if !$0 { inviteErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(inviteErrorMessage ?? "")
+        }
         .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
             if !isAuthenticated {
                 accountContext.deactivate()
             }
+        }
+    }
+
+    private func acceptPendingInviteIfPossible() async {
+        guard !isAcceptingInvite,
+              let token = inviteLinkRouter.pendingToken,
+              let uid = authManager.currentUser?.uid else {
+            return
+        }
+
+        isAcceptingInvite = true
+        defer { isAcceptingInvite = false }
+
+        do {
+            let result = try await InviteAcceptanceService().acceptInvite(token: token)
+            inviteLinkRouter.clear()
+            await accountContext.discoverAccounts(userId: uid)
+            accountContext.selectAccount(accountId: result.accountId, userId: uid)
+        } catch {
+            inviteErrorMessage = "Could not accept this invite. It may be expired, revoked, or already used."
         }
     }
 }
@@ -73,4 +118,5 @@ struct RootView: View {
         ))
         .environment(NetworkMonitor())
         .environment(MediaUploadQueue(mediaService: MediaService()))
+        .environment(InviteLinkRouter())
 }

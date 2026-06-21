@@ -109,6 +109,12 @@ final class AccountContext {
         activate(accountId: accountId, userId: userId)
     }
 
+    func createAccount(name: String, userId: String) async throws {
+        let accountId = try await accountsService.createAccount(name: name)
+        await discoverAccounts(userId: userId)
+        selectAccount(accountId: accountId, userId: userId)
+    }
+
     func activate(accountId: String, userId: String) {
         // Stop listeners and clear data without touching currentAccountId/discoveredAccounts
         // to avoid triggering a RootView re-render back to AccountGateView.

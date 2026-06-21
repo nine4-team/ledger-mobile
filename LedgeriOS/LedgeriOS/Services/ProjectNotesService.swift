@@ -7,11 +7,6 @@ struct ProjectNotesService: ProjectNotesServiceProtocol {
         )
     }
 
-    private func collectionRef(accountId: String, projectId: String) -> CollectionReference {
-        Firestore.firestore()
-            .collection("accounts/\(accountId)/projects/\(projectId)/notes")
-    }
-
     func subscribeToProjectNotes(
         accountId: String,
         projectId: String,
@@ -28,12 +23,20 @@ struct ProjectNotesService: ProjectNotesServiceProtocol {
         _ = try repo(accountId: accountId, projectId: projectId).create(note)
     }
 
+    func updateProjectNote(
+        accountId: String,
+        projectId: String,
+        noteId: String,
+        fields: [String: Any]
+    ) async throws {
+        try await repo(accountId: accountId, projectId: projectId).update(id: noteId, fields: fields)
+    }
+
     func deleteProjectNote(
         accountId: String,
         projectId: String,
         noteId: String
     ) async throws {
-        let docRef = collectionRef(accountId: accountId, projectId: projectId).document(noteId)
-        try await docRef.delete()
+        try await repo(accountId: accountId, projectId: projectId).delete(id: noteId)
     }
 }

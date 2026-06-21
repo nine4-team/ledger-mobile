@@ -22,7 +22,14 @@ protocol VendorDefaultsServiceProtocol: Sendable {
 
 protocol InvitesServiceProtocol: Sendable {
     func subscribe(accountId: String, onChange: @escaping ([Invite]) -> Void) -> ListenerRegistration
-    func create(accountId: String, email: String, role: String, createdByUid: String) throws -> String
+    func create(
+        accountId: String,
+        email: String,
+        role: MemberRole,
+        companyFinancialAccess: CompanyFinancialAccess,
+        allowedFeeCategoryIds: [String],
+        createdByUid: String
+    ) throws -> String
     func revoke(accountId: String, inviteId: String) async throws
 }
 
