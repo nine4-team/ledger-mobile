@@ -49,6 +49,18 @@ find_sparkle_bin() {
   echo "$tmpdir/bin"
 }
 
+prune_old_sparkle_artifacts() {
+  local sparkle_dir="$1"
+  local keep_archive="$2"
+  local keep_notes="$3"
+
+  find "$sparkle_dir" -maxdepth 1 -type f \
+    \( -name 'Ledger-*.zip' -o -name 'Ledger-*.md' -o -name '*.delta' \) \
+    ! -name "$(basename "$keep_archive")" \
+    ! -name "$(basename "$keep_notes")" \
+    -delete
+}
+
 echo "==> Cleaning previous build artifacts..."
 rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH" "$DERIVED_DATA" "$NOTARY_ZIP"
 
@@ -115,12 +127,18 @@ elif [ ! -f "$RELEASE_NOTES_PATH" ]; then
 EOF
 fi
 
+echo "==> Pruning older Sparkle updates..."
+prune_old_sparkle_artifacts "$REPO_ROOT/$HOSTING_SPARKLE_DIR" "$ARCHIVE_PATH_FINAL" "$RELEASE_NOTES_PATH"
+rm -f "$REPO_ROOT/$HOSTING_SPARKLE_DIR/appcast.xml"
+
 SPARKLE_BIN_RESOLVED="$(find_sparkle_bin)"
 
 echo "==> Generating Sparkle appcast..."
 "$SPARKLE_BIN_RESOLVED/generate_appcast" \
   --download-url-prefix "$APPCAST_BASE_URL" \
   --release-notes-url-prefix "$APPCAST_BASE_URL" \
+  --maximum-versions 1 \
+  --maximum-deltas 0 \
   -o "$REPO_ROOT/$HOSTING_SPARKLE_DIR/appcast.xml" \
   "$REPO_ROOT/$HOSTING_SPARKLE_DIR"
 

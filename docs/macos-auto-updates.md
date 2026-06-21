@@ -18,6 +18,9 @@ Build and stage a Sparkle update archive plus appcast:
 ./scripts/build-macos-sparkle-update.sh
 ```
 
+The Sparkle feed is latest-only. The build script prunes older update ZIPs,
+release notes, and delta files before regenerating `appcast.xml`.
+
 To deploy the staged files to Firebase Hosting:
 
 ```bash
