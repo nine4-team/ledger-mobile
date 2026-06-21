@@ -192,7 +192,7 @@ Inventory movement transactions are NOT user-editable. The shape fields are immu
 
 ### Transaction List Grouping
 
-Transaction lists may visually group inventory-movement records so one-off item moves do not flood the list. This grouping is **presentation-only**:
+Transaction lists visually group inventory-movement records so the list reads as movement activity per project/category rather than a stream of per-batch documents. This grouping is **presentation-only**:
 
 - The underlying Sale, Return, and Purchase documents remain separate immutable/auditable records.
 - Transaction detail always opens the real child transaction.
@@ -203,12 +203,14 @@ Groupable records:
 
 | Record | Group row | Notes |
 |---|---|---|
-| Inventory purchase/acquisition (`type: "Purchase"`, `projectId: null`) | `Added to Business Inventory` | Groups inventory-scope acquisition purchases by date/vendor/type. |
-| Inventory → project Purchase (`type: "Purchase"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by date, inventory label, project, category, and transaction type. |
-| Project → inventory Sale (`type: "Sale"`, no `budgetCategoryId`) | `Sold to [inventory label]` | Groups by date, inventory label, project, no-category shape, and transaction type. |
+| Inventory purchase/acquisition (`type: "Purchase"`, `projectId: null`) | `Added to Business Inventory` | Groups inventory-scope acquisition purchases by vendor/type. |
+| Inventory → project Purchase (`type: "Purchase"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by inventory label, project, category, and transaction type. |
+| Project → inventory Sale (`type: "Sale"`, no `budgetCategoryId`) | `Sold to [inventory label]` | Groups by inventory label, project, no-category shape, and transaction type. |
 | Return to inventory (`type: "Return"`, inventory-label source) | `Returned to [inventory label]` | Vendor returns are excluded; only inventory-label returns are grouped. |
 
-The grouping key intentionally includes movement direction, date bucket, source/inventory label, project ID, budget category ID, and transaction type. Charges and credits must not be collapsed into a misleading net row.
+The grouping key includes movement direction, source/inventory label, project ID, budget category ID, and transaction type. **Date is not part of the key** — all matching batches collapse into a single row regardless of when they happened, so a project that pulls from inventory across many days shows one card per (direction, source, category). Charges and credits must not be collapsed into a misleading net row; that's why direction and type are part of the key.
+
+The group's displayed date is the most recent `effectiveSortDate` among its child transactions.
 
 ## Legacy Canonical Sales
 

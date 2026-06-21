@@ -726,6 +726,46 @@ struct InventoryTransactionGroupingTests {
         #expect(titles.contains("Returned to 1584 Design Inventory"))
     }
 
+    @Test("Inventory purchases merge across different dates")
+    func inventoryPurchasesMergeAcrossDates() {
+        var older = makeTransaction(
+            id: "purchase-old",
+            source: "1584 Design Inventory",
+            transactionType: .purchase,
+            budgetCategoryId: "furnishings",
+            amountCents: 3000
+        )
+        older.transactionDate = "2026-03-27"
+        older.projectId = "project-1"
+        older.itemIds = ["item-a"]
+
+        var newer = makeTransaction(
+            id: "purchase-new",
+            source: "1584 Design Inventory",
+            transactionType: .purchase,
+            budgetCategoryId: "furnishings",
+            amountCents: 5000
+        )
+        newer.transactionDate = "2026-06-21"
+        newer.projectId = "project-1"
+        newer.itemIds = ["item-b", "item-c"]
+
+        let rows = TransactionFilterSortCalculations.groupedRows(
+            for: [older, newer],
+            scope: .project
+        )
+
+        #expect(rows.count == 1)
+        guard case .inventoryGroup(let group) = rows.first else {
+            Issue.record("Expected a single merged inventory group across dates")
+            return
+        }
+        #expect(group.title == "From 1584 Design Inventory")
+        #expect(group.amountCents == 8000)
+        #expect(group.itemCount == 3)
+        #expect(group.dateString == "2026-06-21")
+    }
+
     @Test("Vendor returns remain ungrouped")
     func vendorReturnsRemainUngrouped() {
         var vendorReturn = makeTransaction(

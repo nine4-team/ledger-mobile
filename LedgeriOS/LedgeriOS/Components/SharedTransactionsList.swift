@@ -337,7 +337,6 @@ enum TransactionFilterSortCalculations {
 
     private struct InventoryMovementGroupKey: Hashable {
         let direction: InventoryMovementDirection
-        let dateBucket: String
         let source: String
         let projectId: String
         let budgetCategoryId: String
@@ -353,7 +352,6 @@ enum TransactionFilterSortCalculations {
         let source = normalizedGroupValue(transaction.source)
         let projectId = normalizedGroupValue(transaction.projectId)
         let categoryId = normalizedGroupValue(transaction.budgetCategoryId)
-        let date = transaction.effectiveSortDate
         let type = transaction.transactionType?.rawValue ?? "unknown"
 
         if scope == .inventory,
@@ -361,7 +359,6 @@ enum TransactionFilterSortCalculations {
            transaction.projectId == nil {
             return InventoryMovementGroupKey(
                 direction: .addedToInventory,
-                dateBucket: date,
                 source: source,
                 projectId: "inventory",
                 budgetCategoryId: "none",
@@ -375,7 +372,6 @@ enum TransactionFilterSortCalculations {
         case .purchase:
             return InventoryMovementGroupKey(
                 direction: .fromInventory,
-                dateBucket: date,
                 source: source,
                 projectId: projectId,
                 budgetCategoryId: categoryId,
@@ -384,7 +380,6 @@ enum TransactionFilterSortCalculations {
         case .sale:
             return InventoryMovementGroupKey(
                 direction: .soldToInventory,
-                dateBucket: date,
                 source: source,
                 projectId: projectId,
                 budgetCategoryId: "none",
@@ -393,7 +388,6 @@ enum TransactionFilterSortCalculations {
         case .return:
             return InventoryMovementGroupKey(
                 direction: .returnedToInventory,
-                dateBucket: date,
                 source: source,
                 projectId: projectId,
                 budgetCategoryId: "none",
@@ -429,15 +423,16 @@ enum TransactionFilterSortCalculations {
             subtitlePrefix = "Inventory return"
         }
 
-        let dateLabel = TransactionCardCalculations.formattedDate(key.dateBucket)
+        let latestDate = transactions.map(\.effectiveSortDate).max() ?? ""
+        let dateLabel = TransactionCardCalculations.formattedDate(latestDate)
         let subtitle = dateLabel == "—" ? subtitlePrefix : "\(subtitlePrefix) · \(dateLabel)"
 
         return InventoryTransactionGroup(
-            id: "\(key.direction.rawValue)|\(key.dateBucket)|\(key.source)|\(key.projectId)|\(key.budgetCategoryId)|\(key.type)",
+            id: "\(key.direction.rawValue)|\(key.source)|\(key.projectId)|\(key.budgetCategoryId)|\(key.type)",
             title: title,
             subtitle: subtitle,
             badgeText: "Inventory",
-            dateString: key.dateBucket,
+            dateString: latestDate,
             amountCents: totalCents,
             itemCount: itemCount,
             transactions: transactions
