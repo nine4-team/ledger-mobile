@@ -23,15 +23,14 @@ struct InventoryOperationsServiceTests {
 
     // MARK: - computeBatchTotals
 
-    @Test("computeBatchTotals — subtotalCents sums projectPriceCents falling back to purchasePriceCents")
-    func subtotalFallback() {
+    @Test("computeBatchTotals — subtotalCents sums projectPriceCents only")
+    func subtotalProjectPriceOnly() {
         let items = [
             makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: 7000),
             makeItem(id: "i2", purchasePriceCents: 3000, projectPriceCents: nil),
         ]
         let (subtotalCents, _) = InventoryOperationsService.computeBatchTotals(items)
-        // 7000 (projectPrice) + 3000 (purchasePrice fallback) = 10000
-        #expect(subtotalCents == 10000)
+        #expect(subtotalCents == 7000)
     }
 
     @Test("computeBatchTotals — amountCents applies tax when taxRatePct > 0")
@@ -77,6 +76,17 @@ struct InventoryOperationsServiceTests {
         ]
         let (_, amountCents) = InventoryOperationsService.computeBatchTotals(items)
         #expect(amountCents == 6000) // No tax applied
+    }
+
+    @Test("computePurchasePriceTotals — sums purchasePriceCents only")
+    func purchasePriceTotals() {
+        let items = [
+            makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: 7000, taxRatePct: 10),
+            makeItem(id: "i2", purchasePriceCents: nil, projectPriceCents: 3000),
+        ]
+        let (subtotalCents, amountCents) = InventoryOperationsService.computePurchasePriceTotals(items)
+        #expect(subtotalCents == 5000)
+        #expect(amountCents == 5000)
     }
 
     // MARK: - todayDateString

@@ -166,10 +166,10 @@ struct TransactionNextStepsCalculationTests {
 
     // MARK: - 6-step path (itemized category)
 
-    @Test("6-step path: tax-rate step added for itemized category")
+    @Test("6-step path: tax-rate step added for purchase transactions")
     func sixStepTaxRateStepPresent() {
         let cat = makeCategory(id: "cat1", type: .itemized)
-        let tx = makeTransaction(budgetCategoryId: "cat1")
+        let tx = makeTransaction(budgetCategoryId: "cat1", transactionType: .purchase)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
             transaction: tx,
             itemCount: 0,
@@ -182,7 +182,7 @@ struct TransactionNextStepsCalculationTests {
     @Test("6-step path: tax-rate step incomplete when zero")
     func sixStepTaxRateIncomplete() {
         let cat = makeCategory(id: "cat1", type: .itemized)
-        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 0)
+        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 0, transactionType: .purchase)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
             transaction: tx,
             itemCount: 0,
@@ -195,7 +195,7 @@ struct TransactionNextStepsCalculationTests {
     @Test("6-step path: tax-rate step complete when positive")
     func sixStepTaxRateComplete() {
         let cat = makeCategory(id: "cat1", type: .itemized)
-        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 8.5)
+        let tx = makeTransaction(budgetCategoryId: "cat1", taxRatePct: 8.5, transactionType: .purchase)
         let steps = TransactionNextStepsCalculations.computeNextSteps(
             transaction: tx,
             itemCount: 0,

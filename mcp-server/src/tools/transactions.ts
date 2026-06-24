@@ -20,6 +20,10 @@ import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 
+const DiscountInput = z.object({
+  amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
+});
+
 function txTypeName(tx: Transaction): string {
   return tx.type ?? "";
 }
@@ -81,6 +85,7 @@ function formatTransaction(tx: Transaction & { id: string }) {
     type: txTypeName(tx),
     source: tx.source ?? "",
     amount: formatCents(tx.amountCents),
+    discount: tx.discount ?? null,
     date: tx.transactionDate ?? "",
     projectId: tx.projectId ?? null,
     budgetCategoryId: tx.budgetCategoryId ?? null,
@@ -308,6 +313,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25)"),
+      discount: DiscountInput.optional().describe("Transaction-level discount object. amountCents is the exact discount applied to the subtotal, stored as a positive cents value."),
       paymentMethod: z.string().optional().describe("Payment method (e.g. 'Credit Card', 'Cash', 'Check')"),
       purchasedBy: z.string().optional().describe("Who made the purchase"),
       reimbursementType: z.enum(["none", "owed-to-client", "owed-to-company"]).optional().describe("Reimbursement type: 'none', 'owed-to-client', or 'owed-to-company'"),
@@ -325,7 +331,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         linkedIngestionIds: z.array(z.string()).optional(),
       }).optional().describe("Email ingestion metadata: email ID, subject, inbox, match confidence/reason, order number, linked transaction IDs for split shipments."),
     },
-    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
+    async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, discount, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
       if (txType === "Sale") {
         return validation(
           "Cannot create Sale-to-Inventory transactions directly — use sell_items_from_project_to_inventory instead.",
@@ -357,6 +363,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (itemIds?.length) data.itemIds = itemIds;
       if (subtotalCents !== undefined) data.subtotalCents = subtotalCents;
       if (taxRatePct !== undefined) data.taxRatePct = taxRatePct;
+      if (discount !== undefined) data.discount = discount;
       if (paymentMethod) data.paymentMethod = paymentMethod;
       if (purchasedBy) data.purchasedBy = purchasedBy;
       if (reimbursementType && reimbursementType !== "none") data.reimbursementType = reimbursementType;
@@ -392,6 +399,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       amountCents: z.coerce.number().optional().describe("Total amount in cents (including tax)"),
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
+      discount: DiscountInput.nullable().optional().describe("Transaction-level discount object. Pass null to remove it. amountCents is the exact discount applied to the subtotal, stored as a positive cents value."),
       type: z.string().optional().describe("Transaction type: Purchase, Return, Fee, or Expense. Cannot update to/from 'Sale' — it's a frozen field on per-batch Sale-to-Inventory movements. 'To Inventory' is legacy."),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),

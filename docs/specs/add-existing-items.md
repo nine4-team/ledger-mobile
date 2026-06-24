@@ -122,9 +122,16 @@ The system determines the operation automatically based on source and destinatio
 |-------------|-------------------|-----------|-----------|
 | Same project | Same project | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
 | Business inventory | Business inventory | **Correct / Move** (direct reassign) | [reassign-vs-sell.md](reassign-vs-sell.md) §Correct / Move (Reassign) |
-| Business inventory | Project | **Purchase from Inventory** (per-batch) | [sale-transactions.md](sale-transactions.md) |
-| Project | Business inventory | **Return to Inventory** | [return-and-sale-tracking.md](return-and-sale-tracking.md) §Returning to Inventory |
-| Project A | Project B | **Sell to Project** (two-hop: return + sell, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
+| Business inventory | Project | **Sell → Project** (per-batch) | [sale-transactions.md](sale-transactions.md) |
+| Project | Business inventory, item came from inventory | **Return to Inventory** | [return-and-sale-tracking.md](return-and-sale-tracking.md) §Returning to Inventory |
+| Project | Business inventory, item originated in project | **Sell → Business Inventory** | [sale-transactions.md](sale-transactions.md) |
+| Project A | Project B | **Sell → Project** (two-hop, atomic) | [sale-transactions.md](sale-transactions.md) §Project → Project Moves |
+
+Cross-scope price basis follows movement direction:
+
+- Inventory → project uses `projectPriceCents`. If missing, the UI asks what to sell the item for and saves it before moving.
+- Project → business inventory uses `purchasePriceCents`.
+- Project → project applies both rules: source exit at purchase price, destination Purchase at project price.
 
 ### Bulk Selection Across Scopes
 
@@ -136,6 +143,8 @@ When a user selects items spanning multiple source scopes:
 4. Cross-scope groups: sell via request doc (server-side atomic operation)
 
 Groups are processed independently. A failure in one group does not roll back other groups.
+
+If any cross-scope group includes an inventory → project hop and one or more items lack `projectPriceCents`, the user must resolve prices before that group is submitted. Background/tooling paths should reject with a missing-project-price error instead of falling back to purchase price.
 
 ## Field Updates
 

@@ -112,6 +112,7 @@ struct ModelCodableTests {
         tx.itemIds = ["item1", "item2"]
         tx.taxRatePct = 8.25
         tx.subtotalCents = 4620
+        tx.discount = Discount(amountCents: 500)
         tx.isCanonicalInventory = false
         tx.inventorySaleDirection = .businessToProject
         tx.settlementInvoiceId = "inv1"
@@ -127,6 +128,8 @@ struct ModelCodableTests {
         #expect(dict["itemIds"] as? [String] == ["item1", "item2"])
         #expect(dict["taxRatePct"] as? Double == 8.25)
         #expect(dict["subtotalCents"] as? Int == 4620)
+        let discount = dict["discount"] as? [String: Any]
+        #expect(discount?["amountCents"] as? Int == 500)
         #expect(dict["inventorySaleDirection"] as? String == "business_to_project")
         #expect(dict["settlementInvoiceId"] as? String == "inv1")
         #expect(dict["settlementInvoiceLineIds"] as? [String] == ["line1", "line2"])

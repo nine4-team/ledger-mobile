@@ -332,7 +332,7 @@ describe("return_items", () => {
     // Return tx lives on the source project (budget impact lands there).
     expect(returnTx.data.projectId).toBe("proj_source");
     expect(returnTx.data.itemIds).toEqual(["item_1"]);
-    expect(returnTx.data.amountCents).toBe(10000);
+    expect(returnTx.data.amountCents).toBe(8000);
 
     const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item?.projectId).toBeNull();
@@ -405,12 +405,14 @@ describe("sell_items_from_project_to_project", () => {
     expect(firstHopSale!.data.projectId).toBe("proj_source");
     expect(firstHopSale!.data.budgetCategoryId).toBeUndefined();
     expect(firstHopSale!.data.itemIds).toEqual(["item_1"]);
+    expect(firstHopSale!.data.amountCents).toBe(10000);
 
     const destPurchase = purchases[0];
     expect(destPurchase.data.source).toBe("Business Inventory");
     expect(destPurchase.data.projectId).toBe("proj_dest");
     expect(destPurchase.data.budgetCategoryId).toBe("cat_install");
     expect(destPurchase.data.itemIds).toEqual(["item_1"]);
+    expect(destPurchase.data.amountCents).toBe(12990);
 
     const item = await getDocData(db, `accounts/${TEST_ACCOUNT_ID}/items/item_1`);
     expect(item?.projectId).toBe("proj_dest");

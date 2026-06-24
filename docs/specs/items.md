@@ -183,8 +183,7 @@ Actions are built by `ItemMenuBuilder`, which adapts the menu based on **context
 | Move to Return Transaction | yes | yes | Only shown for return statuses |
 | Set Space | yes | yes | |
 | Clear Space | yes | yes | Only shown if item has a space |
-| Sell to Business | yes | no | Moves item from project to business inventory as a sale |
-| Sell to Project | yes | yes | Sells item into a (different) project |
+| Sell | yes | yes | Opens destination choice; project-originated project items can sell to business inventory, all eligible items can sell into a project |
 | Reassign to Inventory | yes | no | Moves item from project to business inventory without sale |
 | Reassign to Project | yes | yes | Moves item to a different project |
 | Make Copies | yes | yes | Creates duplicate item(s) — detail and transaction context only |

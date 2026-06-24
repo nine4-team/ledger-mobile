@@ -262,7 +262,8 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 ## Transaction Budget Attribution
 
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
-- **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. See [sale-transactions.md](sale-transactions.md).
+- **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. Amounts use `projectPriceCents`; if a selected item lacks a project price, the UI collects and saves one before writing. See [sale-transactions.md](sale-transactions.md).
+- **Project → inventory exits**: Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`. In project → project moves, this purchase-price source exit is paired with the destination Purchase at project price.
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution
@@ -277,7 +278,7 @@ Items in business inventory have no category. Items in a project have a category
 
 1. **When creating an item with `projectId == null`** (in business inventory): `budgetCategoryId` is forced to null. Any value passed by the caller is ignored or rejected.
 2. **When creating an item linked to a project transaction**: `item.budgetCategoryId = transaction.budgetCategoryId`.
-3. **When purchasing from inventory into a project**: the user picks a category for the whole batch, which is set on every item AND on the new Purchase transaction.
+3. **When purchasing from inventory into a project**: the user picks a category for the whole batch, which is set on every item AND on the new Purchase transaction. If any item lacks `projectPriceCents`, the user also sets the sale price before the movement commits.
 4. **When returning from a project to inventory**: `item.budgetCategoryId` is wiped to null.
 5. **When reassigning within the same project**: `item.budgetCategoryId` may be updated to match the new transaction's category, but the projectId does not change.
 

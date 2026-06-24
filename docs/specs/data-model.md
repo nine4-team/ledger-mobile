@@ -68,6 +68,7 @@ transactions link back to invoices with `settlementInvoiceId`.
 | amountCents | number, nullable | Total amount in cents (always stored as positive; see Sign Conventions) |
 | subtotalCents | number, nullable | Pre-tax subtotal in cents. When set, should be <= amountCents |
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
+| discount | Discount, nullable | Transaction-level discount applied against the subtotal. Use when a receipt applies one discount across the transaction instead of to individual items |
 | transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"`, `"fee"`, `"expense"` |
 | status | string, nullable | Omitted for active transactions. `"canceled"` is the only canonical stored status. Legacy `"pending"` / `"completed"` should be treated as active/nil. |
 | source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Inventory movement transactions use the inventory label (for example `"Business Inventory"`).** |
@@ -155,6 +156,12 @@ Collection is recorded by ordinary transactions linked with
 | snapshotName | string, nullable | Frozen display label |
 | settlementTransactionIds | array of string, nullable | Optional convenience reverse lookup; transaction settlement fields are source of truth |
 
+`Discount` fields:
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| amountCents | number | Positive discount amount in cents. This is the exact amount used by transaction completeness when present |
+
 ---
 
 ### 3. Item
@@ -179,7 +186,7 @@ A physical or trackable object: furniture, material, supply, etc.
 | marketValueCents | number, nullable | Estimated market value |
 | status | string, nullable | One of: `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"`. `"sold"` is system-set by sale operations |
 | source | string, nullable | **Original vendor** — where the item was first acquired (e.g. "Homegoods", "Wayfair"). Set once at item creation and **never overwritten** by scope moves. Used for routing returns back to the original store, grouping by vendor, and the editable "Source" field in the item detail modal |
-| currentSource | string, nullable | **Immediate source** — denormalized from the item's current transaction `source` so search cards can render the origin without a per-row transaction lookup. Written by `InventoryOperationsService` on `sellToProject` / `returnToInventory` / `moveBetweenProjects` (set to the inventory label). `reassignToProject` and `returnToTransaction` do not touch it (within-project moves don't change the immediate source). At creation time, callers set `currentSource = source`. Legacy items pre-dating this field have `currentSource == nil`; display callers fall back to `source` |
+| currentSource | string, nullable | **Immediate source** — denormalized from the item's current transaction `source` so search cards can render the origin without a per-row transaction lookup. Written by `InventoryOperationsService` on `sellToProject` / `returnToInventory` / `sellItemsFromProjectToProject` (set to the inventory label). `reassignToProject` and `returnToTransaction` do not touch it (within-project moves don't change the immediate source). At creation time, callers set `currentSource = source`. Legacy items pre-dating this field have `currentSource == nil`; display callers fall back to `source` |
 | notes | string, nullable | |
 | bookmark | boolean, nullable | User-set bookmark flag |
 | purchasedBy | string, nullable | |
@@ -575,6 +582,7 @@ Compares linked item prices against the transaction subtotal to measure how well
 | Field | Type | How Computed |
 |-------|------|-------------|
 | itemsNetTotalCents | number | `sum(item.purchasePriceCents)` for all linked items (including returned and sold items from lineage) |
+| discountCents | number | Transaction-level discount applied before comparing item totals to the resolved subtotal. Uses `discount.amountCents` when present |
 | itemsCount | number | Count of all linked items |
 | itemsMissingPriceCount | number | Count of linked items where `purchasePriceCents` is null or 0 |
 | transactionSubtotalCents | number | Resolved subtotal (see resolution order below) |
@@ -582,7 +590,7 @@ Compares linked item prices against the transaction subtotal to measure how well
 | completenessStatus | string | One of: "complete", "near", "incomplete", "over" |
 | missingTaxData | boolean | True when subtotal was derived from amountCents without tax rate |
 | inferredTax | number, nullable | `amountCents - transactionSubtotalCents` when tax rate was used to derive subtotal |
-| varianceCents | number | `itemsNetTotalCents - transactionSubtotalCents` |
+| varianceCents | number | `(itemsNetTotalCents - discountCents) - transactionSubtotalCents` |
 | variancePercent | number | `(varianceCents / transactionSubtotalCents) * 100` |
 | returnedItemsCount | number | Count of returned items from lineage |
 | returnedItemsTotalCents | number | Sum of returned items' purchasePriceCents |
@@ -695,9 +703,9 @@ An entity with `projectId: null` belongs to **business inventory** -- the accoun
 
 When an item moves between scopes, its `projectId` and `budgetCategoryId` are updated together to preserve the invariant `(projectId == null) ↔ (budgetCategoryId == null)`:
 
-- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction. See [sale-transactions.md](sale-transactions.md).
+- **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at project price. If `projectPriceCents` is missing, the UI must ask the user what to sell the item for and persist that value before committing. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
-- **Move between projects** (`moveBetweenProjects`): atomic combination of return-to-inventory + sell-to-destination. Two transactions, one batch. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price and requires `projectPriceCents`. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
 
 **The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
@@ -725,6 +733,13 @@ Centralized in [mcp-server/src/util/budget.ts](../../mcp-server/src/util/budget.
 - `purchasePriceCents`: Non-negative. What was paid for the item.
 - `projectPriceCents`: Non-negative. What the project is charged for the item.
 - `marketValueCents`: Non-negative. Estimated market value.
+
+Inventory movement price basis:
+
+- Inventory → project Purchase amounts use `projectPriceCents`.
+- Project → business inventory Return and Sale-to-Inventory amounts use `purchasePriceCents`.
+- Project → project moves apply both rules: purchase price for the source exit, project price for the destination Purchase.
+- User-facing sell-to-project flows must collect and save a missing `projectPriceCents` before the movement is written. Non-interactive tools reject project-price movements with missing project prices.
 
 ### Budget calculations
 

@@ -37,6 +37,8 @@ This leverages the core invariant `item.projectId == null ↔ item.budgetCategor
 
 **Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
+**Price basis is directional.** Every inventory → project hop uses `projectPriceCents`. Every project → business inventory hop uses `purchasePriceCents`. A project → project move is two hops: the source exit uses purchase price, and the destination Purchase uses project price.
+
 ## Inventory Purchase Transaction Shape
 
 ```typescript
@@ -44,7 +46,7 @@ interface InventoryPurchaseTransaction {
   type: "Purchase";
   projectId: string;                    // destination project
   budgetCategoryId: string;             // destination category
-  amountCents: number;                  // frozen at creation; sum of item projectPriceCents
+  amountCents: number;                  // frozen at creation; project-price basis
   itemIds: string[];                    // frozen at creation, length 1..100
   source: "[Account] Inventory";        // inventory label, the non-project side
   notes?: string;                       // optional audit note
@@ -86,12 +88,15 @@ When a user purchases items from business inventory into a project:
 - Item count must be 1..100.
 - Destination project must exist.
 - Budget category must exist as a `ProjectBudgetCategory` in the destination project. If not, prompt to enable.
+- Every item must have a positive `projectPriceCents`. If any selected item is missing a project price, the UI asks the user what to sell it for and saves the answer before committing. Non-interactive callers reject the operation and instruct the caller to set `projectPriceCents`.
 
 ### 3. Compute the snapshot amount
 
 ```
-amountCents = sum(item.projectPriceCents ?? item.purchasePriceCents ?? 0) for item in items
+amountCents = sum(item.projectPriceCents ?? 0) for item in items
 ```
+
+Inventory → project movements use the project-price basis because this is the amount charged to the destination project/client. If any item lacks a project price, the UI asks the user what they want to sell it for and writes that value to `projectPriceCents` before committing the movement.
 
 ### 4. Build the Firestore batch
 
@@ -134,7 +139,7 @@ Moving items from one project to another is a **two-hop** operation in a single 
 
 The iOS UI presents this as a single "move to project" action. The service layer issues all hops in one atomic Firestore batch. Lineage edges link each hop.
 
-The destination category is collected from the user — items don't carry a category through the inventory hop.
+The destination category is collected from the user — items don't carry a category through the inventory hop. The destination project price must also be present before the batch commits. If any item lacks `projectPriceCents`, the UI asks what to sell it for and writes that value onto the item; MCP/tooling callers reject until the value is supplied.
 
 ## Lineage Edges
 
@@ -150,13 +155,22 @@ Together they record the full path: source project → inventory → destination
 
 The inventory movement transaction's `amountCents` is computed **once**, at creation time:
 
+| Movement | Price basis |
+|---|---|
+| Inventory → project Purchase | Project price (`projectPriceCents`) |
+| Project → inventory Sale-to-Inventory | Purchase price (`purchasePriceCents`) |
+| Return to inventory | Purchase price (`purchasePriceCents`) |
+| Project → project two-hop | First hop follows project → inventory purchase-price basis; second hop follows inventory → project project-price basis |
+
 ```
-amountCents = sum(item.projectPriceCents ?? item.purchasePriceCents ?? 0) for item in items
+amountCents = sum(item.projectPriceCents ?? 0) for item in items
 ```
 
-After creation, `amountCents` does not change, even if an item's `projectPriceCents` is later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
+The formula above is the project-price basis used by any inventory → project hop, including the destination hop in a project → project move. Any project → business inventory hop uses `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
 
-If an item has neither `projectPriceCents` nor `purchasePriceCents` at movement time, it contributes $0 to the total but is still included in `itemIds`.
+After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
+
+If a project-price movement is initiated for an item without `projectPriceCents`, the UI must collect that price from the user and persist it on the item before writing the movement. Non-interactive tools reject the call and instruct the caller to set `projectPriceCents` first.
 
 ## Sign Convention
 
@@ -228,9 +242,10 @@ Existing sale transactions written under the canonical-sale model remain in the 
 
 ## Edge Cases
 
-1. **Item with no price.** Contributes $0 to `amountCents`. Still included in `itemIds`. Lineage edge still created.
-2. **Movement with 0 total amount.** Allowed. Some items may legitimately have no recorded price.
-3. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.
-4. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
-5. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
-6. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.
+1. **Inventory → project item with no project price.** The movement does not proceed until the user provides a project price. The supplied value is persisted on `item.projectPriceCents` and used for the Purchase amount.
+2. **Project → inventory item with no purchase price.** Contributes $0 to the Return or Sale-to-Inventory amount. Still included in `itemIds`. Lineage edge still created.
+3. **Movement with 0 total amount.** Allowed for project → inventory moves when items have no recorded purchase price.
+4. **Category not enabled in destination.** Pre-flight validation rejects with a clear error. UI prompts user to enable or pick a different category.
+5. **Item already in destination project.** Pre-flight validation rejects — the purchase-from-inventory flow only accepts inventory items.
+6. **Concurrent moves of the same item.** Firestore batch atomicity handles this: whichever batch commits second will fail because the item's `projectId` no longer matches inventory state. The user sees a "stale data" error and refreshes.
+7. **Cancellation.** Setting `status: "canceled"` on an inventory movement transaction excludes it from budget calculations. The transaction remains in the data; items are not automatically reverted. Manual cleanup via `update_item` if needed.

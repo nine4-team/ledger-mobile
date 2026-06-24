@@ -866,18 +866,20 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
             overallBudgetCents += budgetCents;
         }
     }
-    // 6. Write to project document. Use `update` (not `set` merge:true) so the
-    // entire `budgetSummary` field is replaced wholesale — otherwise Firestore
-    // deep-merges the `categories` map and stale category entries (e.g. one a
-    // transaction was re-categorized away from) linger forever.
+    // 6. Write to project document. Use `set` with mergeFields so test/emulator
+    // fixtures with synthetic project IDs are created if absent, while the entire
+    // `budgetSummary` field is still replaced wholesale. Plain `set` merge:true
+    // would deep-merge the `categories` map and leave stale category entries.
     const projectRef = db.doc(`accounts/${accountId}/projects/${projectId}`);
-    await projectRef.update({
+    await projectRef.set({
         budgetSummary: {
             spentCents: overallSpentCents,
             totalBudgetCents: overallBudgetCents,
             categories,
             updatedAt: firestore_1.FieldValue.serverTimestamp(),
         },
+    }, {
+        mergeFields: ['budgetSummary'],
     });
 }
 // ---------------------------------------------------------------------------
@@ -1027,9 +1029,15 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
             }
         }
     }
-    // 7. Compute totals and variance
+    // 7. Compute totals and variance. Discounts live at the transaction level
+    // because receipts often apply one promo across all lines rather than per item.
     const itemsSumCents = linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents;
-    const varianceCents = itemsSumCents - resolvedSubtotalCents;
+    const discount = txData.discount && typeof txData.discount === 'object' ? txData.discount : null;
+    const discountCents = typeof discount?.amountCents === 'number'
+        ? Math.max(0, Math.round(discount.amountCents))
+        : 0;
+    const discountedItemsSumCents = Math.max(0, itemsSumCents - discountCents);
+    const varianceCents = discountedItemsSumCents - resolvedSubtotalCents;
     const variancePercent = (varianceCents / resolvedSubtotalCents) * 100;
     const isComplete = Math.abs(variancePercent) <= 1;
     return {
@@ -1037,6 +1045,7 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
         audit: {
             resolvedSubtotalCents,
             itemsSumCents,
+            discountCents,
             varianceCents,
             variancePercent: Math.round(variancePercent * 100) / 100, // 2 decimal places
             linkedItemsSumCents,

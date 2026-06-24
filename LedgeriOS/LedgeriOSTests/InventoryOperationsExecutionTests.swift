@@ -217,7 +217,7 @@ struct SellToProjectExecutionTests {
         #expect(!batch.commitCalled)
     }
 
-    @Test("item without id — skipped in batch but sale still created")
+    @Test("item without document ID throws before creating Purchase transaction")
     func itemWithoutId() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
@@ -226,19 +226,17 @@ struct SellToProjectExecutionTests {
             makeItem(id: "i2", projectId: nil, purchasePriceCents: 3000, projectPriceCents: 3600),
         ]
 
-        try await service.sellToProject(
-            items: items, destinationProjectId: dstProj,
-            budgetCategoryId: catId, accountId: acct
-        )
+        await #expect(throws: InventoryOperationError.self) {
+            try await service.sellToProject(
+                items: items, destinationProjectId: dstProj,
+                budgetCategoryId: catId, accountId: acct
+            )
+        }
 
-        // Purchase still created (nil-id item contributes to itemIds via compactMap)
-        let purchase = batch.sets.first { ($0.fields["type"] as? String) == "Purchase" }!.fields
-        let itemIds = purchase["itemIds"] as? [String] ?? []
-        #expect(itemIds == ["i2"]) // nil-id item excluded
-
-        // Only i2 gets item update
-        #expect(batch.updatesForPath("accounts/\(acct)/items/i2").count == 1)
-        #expect(batch.lineageEdges(accountId: acct).count == 1)
+        #expect(batch.sets.isEmpty)
+        #expect(batch.updates.isEmpty)
+        #expect(batch.autoIdSets.isEmpty)
+        #expect(!batch.commitCalled)
     }
 
     @Test("no source transaction removal when transactionId nil")
@@ -274,8 +272,8 @@ struct SellToProjectExecutionTests {
         #expect(catSets[0].fields["updatedBy"] as? String == "user1")
     }
 
-    @Test("projectPriceCents backfill — nil projectPriceCents with purchasePriceCents")
-    func projectPriceBackfill() async throws {
+    @Test("projectPriceCents missing — not backfilled from purchasePriceCents")
+    func projectPriceNotBackfilledFromPurchasePrice() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let item = makeItem(id: "i1", projectId: nil, purchasePriceCents: 5000, projectPriceCents: nil)
@@ -286,11 +284,11 @@ struct SellToProjectExecutionTests {
         )
 
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
-        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 5000)
+        #expect(itemUpdates[0].fields["projectPriceCents"] == nil)
     }
 
-    @Test("projectPriceCents NOT backfilled when already set")
-    func projectPriceNotBackfilled() async throws {
+    @Test("projectPriceCents written when provided")
+    func projectPriceWrittenWhenProvided() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let item = makeItem(id: "i1", projectId: nil, purchasePriceCents: 5000, projectPriceCents: 3000)
@@ -301,7 +299,7 @@ struct SellToProjectExecutionTests {
         )
 
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
-        #expect(itemUpdates[0].fields["projectPriceCents"] == nil)
+        #expect(itemUpdates[0].fields["projectPriceCents"] as? Int == 3000)
     }
 
     @Test("no isCanonicalInventorySale or inventorySaleDirection fields")
@@ -399,6 +397,22 @@ struct ReturnToInventoryExecutionTests {
         #expect(!batch.commitCalled)
     }
 
+    @Test("item without document ID throws before creating empty Return transaction")
+    func missingItemIdThrowsBeforeCreatingReturn() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        let item = makeItem(id: nil, projectId: "proj1", transactionId: "oldTx")
+
+        await #expect(throws: InventoryOperationError.self) {
+            try await service.returnToInventory(items: [item], accountId: acct)
+        }
+
+        #expect(batch.sets.isEmpty)
+        #expect(batch.updates.isEmpty)
+        #expect(batch.autoIdSets.isEmpty)
+        #expect(!batch.commitCalled)
+    }
+
     @Test("source transaction removal when transactionId present")
     func sourceTransactionRemoval() async throws {
         let batch = RecordingBatch()
@@ -449,12 +463,12 @@ struct ReturnToInventoryExecutionTests {
     }
 }
 
-// MARK: - moveBetweenProjects (I4)
+// MARK: - sellItemsFromProjectToProject (I4)
 
-@Suite("InventoryOperationsService.moveBetweenProjects — per-batch")
-struct MoveBetweenProjectsExecutionTests {
+@Suite("InventoryOperationsService.sellItemsFromProjectToProject — per-batch")
+struct SellItemsFromProjectToProjectExecutionTests {
 
-    // I4: moveBetweenProjects with from-inventory items — Return-leg first hop
+    // I4: sellItemsFromProjectToProject with from-inventory items — Return-leg first hop
     @Test("From-inventory items: 1 Return + 1 destination Purchase, lineage edges cross-linked")
     func happyPathFromInventory() async throws {
         let batch = RecordingBatch()
@@ -467,7 +481,7 @@ struct MoveBetweenProjectsExecutionTests {
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Business Inventory"),
         ]
 
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: items, destinationProjectId: "dstProj",
             destinationCategoryId: "cat1", accountId: acct, userId: "user1"
         )
@@ -528,7 +542,7 @@ struct MoveBetweenProjectsExecutionTests {
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
         ]
 
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: items, destinationProjectId: "dstProj",
             destinationCategoryId: "cat1", accountId: acct, userId: "user1"
         )
@@ -549,6 +563,8 @@ struct MoveBetweenProjectsExecutionTests {
         #expect(toDest != nil)
         #expect(toInventory?.fields["projectId"] as? String == "srcProj")
         #expect(toDest?.fields["projectId"] as? String == "dstProj")
+        #expect(toInventory?.fields["amountCents"] as? Int == 5000)
+        #expect(toDest?.fields["amountCents"] as? Int == 6000)
 
         // Lineage: 2 soldToInventory (hop 1) + 2 sold (hop 2)
         let edges = batch.lineageEdges(accountId: acct)
@@ -570,7 +586,7 @@ struct MoveBetweenProjectsExecutionTests {
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
         ]
 
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: items, destinationProjectId: "dstProj",
             destinationCategoryId: "cat1", accountId: acct, userId: "user1"
         )
@@ -590,11 +606,14 @@ struct MoveBetweenProjectsExecutionTests {
         let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }!
         let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
         #expect(toInventoryItemIds == ["i2"])
+        #expect(toInventory.fields["amountCents"] as? Int == 3000)
+        #expect(returnSets[0].fields["amountCents"] as? Int == 2000)
 
         // Destination Purchase covers both items
         let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!
         let toDestItemIds = toDest.fields["itemIds"] as? [String] ?? []
         #expect(Set(toDestItemIds) == Set(["i1", "i2"]))
+        #expect(toDest.fields["amountCents"] as? Int == 6000)
     }
 
     @Test("items in different source projects — throws mixedSourceProjects")
@@ -607,7 +626,7 @@ struct MoveBetweenProjectsExecutionTests {
         ]
 
         await #expect(throws: InventoryOperationError.self) {
-            try await service.moveBetweenProjects(
+            try await service.sellItemsFromProjectToProject(
                 items: items, destinationProjectId: "dstProj",
                 destinationCategoryId: "cat1", accountId: acct
             )
@@ -622,7 +641,7 @@ struct MoveBetweenProjectsExecutionTests {
         let item = makeItem(id: "i1", projectId: "proj1")
 
         await #expect(throws: InventoryOperationError.self) {
-            try await service.moveBetweenProjects(
+            try await service.sellItemsFromProjectToProject(
                 items: [item], destinationProjectId: "proj1",
                 destinationCategoryId: "cat1", accountId: acct
             )
@@ -636,7 +655,7 @@ struct MoveBetweenProjectsExecutionTests {
         let item = makeItem(id: "i1", projectId: nil)
 
         await #expect(throws: InventoryOperationError.self) {
-            try await service.moveBetweenProjects(
+            try await service.sellItemsFromProjectToProject(
                 items: [item], destinationProjectId: "dstProj",
                 destinationCategoryId: "cat1", accountId: acct
             )
@@ -650,7 +669,7 @@ struct MoveBetweenProjectsExecutionTests {
         let items = (1...101).map { makeItem(id: "i\($0)", projectId: "srcProj") }
 
         await #expect(throws: InventoryOperationError.self) {
-            try await service.moveBetweenProjects(
+            try await service.sellItemsFromProjectToProject(
                 items: items, destinationProjectId: "dstProj",
                 destinationCategoryId: "cat1", accountId: acct
             )
@@ -661,7 +680,7 @@ struct MoveBetweenProjectsExecutionTests {
     func emptyItems() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: [], destinationProjectId: "dstProj",
             destinationCategoryId: "cat1", accountId: acct
         )
@@ -688,20 +707,38 @@ struct ReassignToProjectExecutionTests {
         #expect(!batch.commitCalled)
     }
 
-    @Test("cross-scope throws — item projectId differs from destination")
-    func crossScopeThrows() async throws {
+    @Test("cross-project correction relinks item without sale transactions")
+    func crossProjectCorrection() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "otherProj")
+        let item = makeItem(id: "i1", projectId: "otherProj", transactionId: "oldTx", spaceId: "oldSpace")
 
-        await #expect(throws: InventoryOperationError.self) {
-            try await service.reassignToProject(
-                items: [item], destinationTransactionId: destTx,
-                destinationProjectId: proj, accountId: acct
-            )
+        try await service.reassignToProject(
+            items: [item], destinationTransactionId: destTx,
+            destinationProjectId: proj, destinationBudgetCategoryId: "cat1", accountId: acct
+        )
+
+        #expect(batch.commitCalled)
+
+        let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
+        #expect(itemUpdates.count == 1)
+        #expect(itemUpdates[0].fields["projectId"] as? String == proj)
+        #expect(itemUpdates[0].fields["transactionId"] as? String == destTx)
+        #expect(itemUpdates[0].fields["budgetCategoryId"] as? String == "cat1")
+        #expect(itemUpdates[0].fields["spaceId"] is NSNull)
+
+        let edges = batch.lineageEdges(accountId: acct, itemId: "i1")
+        #expect(edges.count == 1)
+        let ef = edges[0].fields
+        #expect(ef["movementKind"] as? String == "correction")
+        #expect(ef["fromProjectId"] as? String == "otherProj")
+        #expect(ef["toProjectId"] as? String == proj)
+
+        let financialSets = batch.sets.filter {
+            let type = $0.fields["type"] as? String
+            return type == "Purchase" || type == "Sale" || type == "Return"
         }
-
-        #expect(!batch.commitCalled)
+        #expect(financialSets.isEmpty)
     }
 
     @Test("single item happy path — within-scope reassign")
@@ -717,11 +754,11 @@ struct ReassignToProjectExecutionTests {
 
         #expect(batch.commitCalled)
 
-        // Item update — transactionId changed, projectId NOT changed
+        // Item update — transactionId changed and destination project is set
         let itemUpdates = batch.updatesForPath("accounts/\(acct)/items/i1")
         #expect(itemUpdates.count == 1)
         #expect(itemUpdates[0].fields["transactionId"] as? String == destTx)
-        #expect(itemUpdates[0].fields["projectId"] == nil) // Not touched
+        #expect(itemUpdates[0].fields["projectId"] as? String == proj)
 
         // Source transaction — remove item
         let srcUpdates = batch.updatesForPath("accounts/\(acct)/transactions/oldTx")
@@ -736,7 +773,7 @@ struct ReassignToProjectExecutionTests {
         #expect(edges.count == 1)
         let ef = edges[0].fields
         #expect(ef["movementKind"] as? String == "correction")
-        #expect(ef["note"] as? String == "Reassigned to transaction")
+        #expect(ef["note"] as? String == "Reassigned to project transaction")
         #expect(ef["fromTransactionId"] as? String == "oldTx")
         #expect(ef["toTransactionId"] as? String == destTx)
 
@@ -780,16 +817,16 @@ struct ComputeBatchTotalsTests {
         #expect(amountCents == 3600)
     }
 
-    @Test("falls back to purchasePriceCents when projectPriceCents nil")
-    func fallbackToPurchasePrice() {
+    @Test("missing projectPriceCents contributes 0")
+    func missingProjectPriceContributesZero() {
         let items = [
             makeItem(id: "i1", purchasePriceCents: 5000, projectPriceCents: nil),
         ]
 
         let (subtotalCents, amountCents) = InventoryOperationsService.computeBatchTotals(items)
 
-        #expect(subtotalCents == 5000)
-        #expect(amountCents == 5000)
+        #expect(subtotalCents == 0)
+        #expect(amountCents == 0)
     }
 
     @Test("both prices nil — contributes 0")
@@ -890,7 +927,7 @@ struct InventoryLabelTests {
 
 // MARK: - Custom inventoryLabel passthrough
 
-@Suite("sellToProject / returnToInventory / moveBetweenProjects — custom inventoryLabel")
+@Suite("sellToProject / returnToInventory / sellItemsFromProjectToProject — custom inventoryLabel")
 struct InventoryLabelPassthroughTests {
 
     @Test("sellToProject writes custom source label on the Purchase transaction")
@@ -944,8 +981,8 @@ struct InventoryLabelPassthroughTests {
         #expect(ret?["source"] as? String == "1584 Design Inventory")
     }
 
-    @Test("moveBetweenProjects writes custom source label on both Return and Sale")
-    func moveBetweenProjectsCustomLabel() async throws {
+    @Test("sellItemsFromProjectToProject writes custom source label on both Return and Sale")
+    func sellItemsFromProjectToProjectCustomLabel() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
         // From-inventory item — triggers the Return-leg first hop
@@ -955,7 +992,7 @@ struct InventoryLabelPassthroughTests {
                      currentSource: "Business Inventory"),
         ]
 
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: items,
             destinationProjectId: "dstProj",
             destinationCategoryId: "cat1",
@@ -972,7 +1009,7 @@ struct InventoryLabelPassthroughTests {
 
 // MARK: - currentSource denormalization
 
-@Suite("sellToProject / returnToInventory / moveBetweenProjects — currentSource denormalization")
+@Suite("sellToProject / returnToInventory / sellItemsFromProjectToProject — currentSource denormalization")
 struct CurrentSourceDenormalizationTests {
 
     @Test("sellToProject writes currentSource=inventoryLabel on each item update")
@@ -1035,8 +1072,8 @@ struct CurrentSourceDenormalizationTests {
         #expect(update?.fields["source"] == nil)
     }
 
-    @Test("moveBetweenProjects writes currentSource=inventoryLabel on each item update")
-    func moveBetweenProjectsWritesCurrentSource() async throws {
+    @Test("sellItemsFromProjectToProject writes currentSource=inventoryLabel on each item update")
+    func sellItemsFromProjectToProjectWritesCurrentSource() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
         let items = [
@@ -1047,7 +1084,7 @@ struct CurrentSourceDenormalizationTests {
             ),
         ]
 
-        try await service.moveBetweenProjects(
+        try await service.sellItemsFromProjectToProject(
             items: items,
             destinationProjectId: "dstProj",
             destinationCategoryId: "cat1",

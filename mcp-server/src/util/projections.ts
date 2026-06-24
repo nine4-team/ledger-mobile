@@ -45,6 +45,7 @@ export function transactionSummary(tx: Transaction & { id: string }) {
     type: tx.type ?? "",
     source: tx.source ?? "",
     amount: formatCents(tx.amountCents),
+    discount: tx.discount ?? null,
     date: tx.transactionDate ?? "",
     projectId: tx.projectId ?? null,
     budgetCategoryId: tx.budgetCategoryId ?? null,

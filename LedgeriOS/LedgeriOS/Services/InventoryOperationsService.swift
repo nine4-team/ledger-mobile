@@ -3,29 +3,31 @@ import FirebaseFirestore
 // MARK: - Errors
 
 enum InventoryOperationError: Error {
-    /// Caller tried to use `reassignToProject` for a cross-scope (different project) move.
-    /// Cross-scope moves are sells — use `sellToProject` instead.
+    /// Reserved for legacy callers that try to perform an unsupported correction.
     case crossScopeReassign
 
     /// Batch exceeds the 100-item cap. Firestore batch writes allow 500 docs;
     /// 100 items keeps us well under with item updates + txn writes + lineage edges.
     case batchSizeExceeded
 
-    /// moveBetweenProjects requires all items to be in the same source project.
+    /// sellItemsFromProjectToProject requires all items to be in the same source project.
     case mixedSourceProjects
 
-    /// moveBetweenProjects source and destination are the same project.
+    /// sellItemsFromProjectToProject source and destination are the same project.
     case sameSourceAndDestination
 
-    /// moveBetweenProjects requires all items to be in a project (not inventory).
+    /// sellItemsFromProjectToProject requires all items to be in a project (not inventory).
     case itemsNotInProject
+
+    /// Inventory movement writers require persisted item documents with IDs.
+    case itemsMissingIds
 }
 
 // MARK: - Service
 
 /// Multi-step atomic Firestore operations for inventory movements:
 /// purchase into project, sell to inventory, return to inventory, move to inventory
-/// (origin-aware split), move between projects, reassign (within-scope),
+/// (origin-aware split), sell project items to project, reassign (within-scope),
 /// return to transaction.
 ///
 /// ## Per-Batch Inventory Movement Transactions
@@ -43,7 +45,7 @@ enum InventoryOperationError: Error {
 /// This leverages the invariant `item.projectId == null ↔ item.budgetCategoryId == null`.
 ///
 /// ## Return vs. Sale-to-Inventory (project → inventory)
-/// Items moving from a project back to inventory take one of two paths:
+/// Items leaving a project for inventory take one of two financial paths:
 ///   - **Return-to-Inventory**: item originally came from inventory and is
 ///     going home. Creates a `Return` transaction.
 ///   - **Sale-to-Inventory**: item originated in the project (was never in
@@ -53,7 +55,6 @@ enum InventoryOperationError: Error {
 /// Origin is derived from `Item.currentSource` vs. `Item.source`: when
 /// `currentSource == source` (or currentSource is nil), the item was never
 /// moved through inventory → Sale-to-Inventory. Otherwise → Return.
-/// `moveToInventory(items:)` applies the routing automatically.
 ///
 /// ## Batch Cap
 /// All operations are capped at 100 items per call.
@@ -100,6 +101,12 @@ struct InventoryOperationsService {
         self.makeBatch = makeBatch
     }
 
+    private static func requireItemIds(_ items: [Item]) throws -> [String] {
+        let ids = items.compactMap(\.id)
+        guard ids.count == items.count else { throw InventoryOperationError.itemsMissingIds }
+        return ids
+    }
+
     // MARK: - Sell to Project
 
     /// Purchases items from business inventory (or another project) into a destination project.
@@ -120,6 +127,7 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
+        let itemIds = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -147,7 +155,7 @@ struct InventoryOperationsService {
             "budgetCategoryId": budgetCategoryId,
             "amountCents": totals.amountCents,
             "subtotalCents": totals.subtotalCents,
-            "itemIds": items.compactMap(\.id),
+            "itemIds": itemIds,
             "isComplete": true,
             "transactionDate": today,
             "createdAt": FieldValue.serverTimestamp(),
@@ -172,9 +180,8 @@ struct InventoryOperationsService {
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            // Backfill projectPriceCents for legacy items missing it
-            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
-                itemUpdate["projectPriceCents"] = purchasePrice
+            if let projectPrice = item.projectPriceCents {
+                itemUpdate["projectPriceCents"] = projectPrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
@@ -236,6 +243,7 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
+        let itemIds = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -261,7 +269,8 @@ struct InventoryOperationsService {
             "source": inventoryLabel,
             "projectId": sourceProjectId,
             "amountCents": returnAmount,
-            "itemIds": items.compactMap(\.id),
+            "itemIds": itemIds,
+            "status": "completed",
             "transactionDate": today,
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
@@ -350,6 +359,7 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
+        let itemIds = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -360,7 +370,7 @@ struct InventoryOperationsService {
             items: items, batch: batch, txPath: txPath
         )
 
-        let totals = Self.computeBatchTotals(items)
+        let totals = Self.computePurchasePriceTotals(items)
         let sourceProjectId: Any = items.first?.projectId as Any? ?? NSNull()
 
         // 1. Create Sale transaction (project → inventory direction).
@@ -375,7 +385,7 @@ struct InventoryOperationsService {
             "projectId": sourceProjectId,
             "amountCents": totals.amountCents,
             "subtotalCents": totals.subtotalCents,
-            "itemIds": items.compactMap(\.id),
+            "itemIds": itemIds,
             "isComplete": true,
             "transactionDate": today,
             "createdAt": FieldValue.serverTimestamp(),
@@ -450,6 +460,7 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
+        _ = try Self.requireItemIds(items)
 
         let split = Self.splitByOrigin(items)
 
@@ -497,6 +508,7 @@ struct InventoryOperationsService {
             "projectId": returnSourceProjectId,
             "amountCents": returnAmount,
             "itemIds": split.returnItems.compactMap(\.id),
+            "status": "completed",
             "transactionDate": today,
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp(),
@@ -508,7 +520,7 @@ struct InventoryOperationsService {
         // Sale leg (project → inventory). Direction encoded implicitly by
         // absent `budgetCategoryId` — see sellToInventory.
         let saleId = UUID().uuidString
-        let saleTotals = Self.computeBatchTotals(split.saleItems)
+        let saleTotals = Self.computePurchasePriceTotals(split.saleItems)
         let saleSourceProjectId: Any = split.saleItems.first?.projectId as Any? ?? NSNull()
         var saleFields: [String: Any] = [
             "type": "Sale",
@@ -622,10 +634,10 @@ struct InventoryOperationsService {
         return (returnItems, saleItems)
     }
 
-    // MARK: - Move Between Projects
+    // MARK: - Sell Items From Project to Project
 
-    /// Moves items from one project to another in a single atomic batch.
-    /// The move decomposes into two hops through inventory:
+    /// Sells items from one project to another in a single atomic batch.
+    /// The sale decomposes into two hops through inventory:
     ///
     /// **First hop (origin-aware):** items that previously passed through
     /// inventory leave the source project as a `Return` transaction; items
@@ -636,7 +648,7 @@ struct InventoryOperationsService {
     /// covering all items, landing them in the destination project.
     ///
     /// All items must be in the same source project.
-    func moveBetweenProjects(
+    func sellItemsFromProjectToProject(
         items: [Item],
         destinationProjectId: String,
         destinationCategoryId: String,
@@ -649,6 +661,7 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
+        let itemIds = try Self.requireItemIds(items)
 
         // All items must be in a project
         let stray = items.filter { $0.projectId == nil }
@@ -681,13 +694,15 @@ struct InventoryOperationsService {
         if !split.returnItems.isEmpty {
             let id = UUID().uuidString
             returnId = id
-            let returnAmount = split.returnItems.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+            let returnTotals = Self.computePurchasePriceTotals(split.returnItems)
             var returnFields: [String: Any] = [
                 "type": "Return",
                 "source": inventoryLabel,
                 "projectId": sourceProjectId,
-                "amountCents": returnAmount,
+                "amountCents": returnTotals.amountCents,
+                "subtotalCents": returnTotals.subtotalCents,
                 "itemIds": split.returnItems.compactMap(\.id),
+                "status": "completed",
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp(),
@@ -704,7 +719,7 @@ struct InventoryOperationsService {
         if !split.saleItems.isEmpty {
             let id = UUID().uuidString
             firstSaleId = id
-            let saleTotals = Self.computeBatchTotals(split.saleItems)
+            let saleTotals = Self.computePurchasePriceTotals(split.saleItems)
             var saleFields: [String: Any] = [
                 "type": "Sale",
                 "source": inventoryLabel,
@@ -725,7 +740,6 @@ struct InventoryOperationsService {
         // 2. Second hop — Purchase transaction (from inventory) covers all items
         let destPurchaseId = UUID().uuidString
         let totals = Self.computeBatchTotals(items)
-        let itemIdList = items.compactMap(\.id)
         var destPurchaseFields: [String: Any] = [
             "type": "Purchase",
             "source": inventoryLabel,
@@ -733,7 +747,7 @@ struct InventoryOperationsService {
             "budgetCategoryId": destinationCategoryId,
             "amountCents": totals.amountCents,
             "subtotalCents": totals.subtotalCents,
-            "itemIds": itemIdList,
+            "itemIds": itemIds,
             "isComplete": true,
             "transactionDate": today,
             "createdAt": FieldValue.serverTimestamp(),
@@ -753,13 +767,13 @@ struct InventoryOperationsService {
                 "status": "purchased",
                 "transactionId": destPurchaseId,
                 "spaceId": NSNull(),
-                // moveBetweenProjects is modeled as two hops through inventory,
+                // sellItemsFromProjectToProject is modeled as two hops through inventory,
                 // so the immediate source lands on the inventory label.
                 "currentSource": inventoryLabel,
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
-                itemUpdate["projectPriceCents"] = purchasePrice
+            if let projectPrice = item.projectPriceCents {
+                itemUpdate["projectPriceCents"] = projectPrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
@@ -816,13 +830,10 @@ struct InventoryOperationsService {
         try await batch.commit()
     }
 
-    // MARK: - Reassign to Project (within-scope only — C4)
+    // MARK: - Reassign to Project (correction only — no financial movement)
 
-    /// Moves items to a different transaction within the **same** project scope.
-    /// No financial records are created — corrects misallocations within a project.
-    ///
-    /// Throws `InventoryOperationError.crossScopeReassign` if any item has a different
-    /// `projectId` than `destinationProjectId`. Cross-scope moves are sells, not reassigns.
+    /// Corrects items into a destination transaction/project. No financial records
+    /// are created — this is for fixing misallocations, not selling inventory.
     func reassignToProject(
         items: [Item],
         destinationTransactionId: String,
@@ -832,29 +843,26 @@ struct InventoryOperationsService {
         userId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
-
-        // C4: Reassign is within-scope only. All items must already be in the destination project.
-        let crossScope = items.contains { $0.projectId != destinationProjectId }
-        if crossScope { throw InventoryOperationError.crossScopeReassign }
+        _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
+        let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
         for item in items {
             guard let itemId = item.id else { continue }
 
-            // Update item's transaction link (projectId stays the same)
+            // Update item's transaction link and corrected project scope.
             var itemUpdate: [String: Any] = [
+                "projectId": destinationProjectId,
                 "transactionId": destinationTransactionId,
+                "spaceId": NSNull(),
                 "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if item.budgetCategoryId == nil, let categoryId = destinationBudgetCategoryId {
+            if let categoryId = destinationBudgetCategoryId {
                 itemUpdate["budgetCategoryId"] = categoryId
-            }
-            if item.projectPriceCents == nil, let purchasePrice = item.purchasePriceCents {
-                itemUpdate["projectPriceCents"] = purchasePrice
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
@@ -876,16 +884,22 @@ struct InventoryOperationsService {
                 "accountId": accountId,
                 "itemId": itemId,
                 "toTransactionId": destinationTransactionId,
-                "fromProjectId": destinationProjectId,
+                "fromProjectId": item.projectId as Any? ?? NSNull(),
                 "toProjectId": destinationProjectId,
                 "movementKind": "correction",
                 "source": "app",
-                "note": "Reassigned to transaction",
+                "note": "Reassigned to project transaction",
                 "createdAt": FieldValue.serverTimestamp(),
             ]
             if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
             if let userId { edge["createdBy"] = userId }
             batch.setDataAutoId(edge, inCollection: edgesPath)
+        }
+
+        if let categoryId = destinationBudgetCategoryId, categoryId != "uncategorized" {
+            var catFields: [String: Any] = ["updatedAt": FieldValue.serverTimestamp()]
+            if let userId { catFields["updatedBy"] = userId }
+            batch.setData(catFields, forDocumentAt: "\(pbcPath)/\(categoryId)", merge: true)
         }
 
         try await batch.commit()
@@ -905,6 +919,7 @@ struct InventoryOperationsService {
         userId: String? = nil
     ) async throws {
         guard !items.isEmpty else { return }
+        _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
@@ -963,17 +978,17 @@ struct InventoryOperationsService {
 
     // MARK: - Pure Helpers (internal for testability)
 
-    /// Frozen amount snapshot for a batch of items.
-    /// Matches mcp-server/src/tools/inventory-operations.ts `computeBatchTotals`.
+    /// Frozen project-price snapshot for a batch of items.
+    /// Matches mcp-server/src/tools/inventory-operations.ts `computeProjectPriceTotals`.
     ///
-    /// - `subtotalCents`: sum of (projectPriceCents ?? purchasePriceCents ?? 0)
+    /// - `subtotalCents`: sum of (projectPriceCents ?? 0)
     /// - `amountCents`: sum of per-item price-with-tax. If taxRatePct > 0,
     ///   each item contributes round(price * (1 + taxRatePct / 100)). Otherwise, price.
     static func computeBatchTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
         var subtotalCents = 0
         var amountCents = 0
         for item in items {
-            let price = item.projectPriceCents ?? item.purchasePriceCents ?? 0
+            let price = item.projectPriceCents ?? 0
             let rate = item.taxRatePct ?? 0
             subtotalCents += price
             if rate > 0 {
@@ -983,6 +998,12 @@ struct InventoryOperationsService {
             }
         }
         return (subtotalCents, amountCents)
+    }
+
+    /// Frozen purchase-price snapshot for standalone project→inventory moves.
+    static func computePurchasePriceTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
+        let subtotalCents = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+        return (subtotalCents, subtotalCents)
     }
 
     /// Returns the set of source transaction IDs whose shape is frozen by

@@ -15,6 +15,10 @@ import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
 
+const DiscountInput = z.object({
+  amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
+});
+
 /**
  * Task-shaped tools that sit on top of the primitives. Each one
  * collapses a common 5–15-call chain into a single intent verb.
@@ -37,8 +41,10 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
 
       const itemsSumCents = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
       const subtotalCents = tx.subtotalCents ?? null;
+      const discountCents = tx.discount?.amountCents ?? 0;
+      const discountedItemsSumCents = Math.max(0, itemsSumCents - discountCents);
       const varianceCents =
-        subtotalCents !== null ? itemsSumCents - subtotalCents : null;
+        subtotalCents !== null ? discountedItemsSumCents - subtotalCents : null;
       const variancePercent =
         subtotalCents !== null && subtotalCents > 0
           ? Math.round((Math.abs(varianceCents!) / subtotalCents) * 10000) / 100
@@ -86,7 +92,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       ) {
         suggestions.push({
           action: "Resolve item-subtotal variance",
-          detail: `Items sum to ${formatCents(itemsSumCents)} but subtotal is ${formatCents(subtotalCents)} (variance ${variancePercent}%). Either add/remove items or adjust subtotalCents.`,
+          detail: `Items sum to ${formatCents(itemsSumCents)} with discount ${formatCents(discountCents)} but subtotal is ${formatCents(subtotalCents)} (variance ${variancePercent}%). Either add/remove items, set discount.amountCents, or adjust subtotalCents.`,
         });
       }
       if (itemIds.length === 0 && tx.type === "Purchase") {
@@ -109,6 +115,8 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           itemCount: items.length,
           itemsSumCents,
           itemsSum: formatCents(itemsSumCents),
+          discountCents,
+          discount: formatCents(discountCents),
           subtotalCents,
           subtotal: subtotalCents !== null ? formatCents(subtotalCents) : null,
           varianceCents,
@@ -143,6 +151,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
           transactionDate: z.string().optional(),
           subtotalCents: z.coerce.number().optional(),
           taxRatePct: z.coerce.number().optional(),
+          discount: DiscountInput.optional().describe("Transaction-level discount object. amountCents is the exact discount applied to the subtotal, stored as a positive cents value."),
           purchasedBy: z.string().optional(),
           paymentMethod: z.string().optional(),
         })
@@ -211,6 +220,7 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
       if (transaction.transactionDate) txData.transactionDate = transaction.transactionDate;
       if (transaction.subtotalCents !== undefined) txData.subtotalCents = transaction.subtotalCents;
       if (transaction.taxRatePct !== undefined) txData.taxRatePct = transaction.taxRatePct;
+      if (transaction.discount !== undefined) txData.discount = transaction.discount;
       if (transaction.purchasedBy) txData.purchasedBy = transaction.purchasedBy;
       if (transaction.paymentMethod) txData.paymentMethod = transaction.paymentMethod;
 

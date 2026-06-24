@@ -7,8 +7,8 @@ When items need to move between transactions, projects, or business inventory, t
 UI labels (final):
 
 - **Correct / Move** — corrections only, no financial impact. Within-scope reassignment.
-- **Sell to Project** — one menu item that handles moving inventory or another project's items into the destination project (the two-hop is an implementation detail invisible to the user).
-- **Return to Inventory** — items returning home to business inventory (origin-aware under the hood).
+- **Sell** — financial sale flow. User chooses Project or, when eligible, Business Inventory as the destination.
+- **Return to Inventory** — items originally from inventory returning home to business inventory.
 - **Return to Vendor** — items being physically sent back to the vendor.
 
 ## Correct / Move (Reassign)
@@ -43,18 +43,22 @@ Correct/Move reassigns an item from one transaction to another **within the same
 - Source and destination must be in the same scope (same projectId, or both null for business inventory)
 - If scopes differ, the operation is a Sell, not a Correct/Move
 
-## Sell to Project
+## Sell
 
 ### Definition
 
-Sell moves items **into a project**. From the user's perspective this is a single operation regardless of where the item starts — the menu item is **Sell to Project** whether the item is in business inventory or in another project.
+Sell is a financial operation. The user chooses the destination: a project, or business inventory when the selected project items originated in that project.
 
-Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the user picks one budget category that applies to every item in the batch. Two underlying flows, transparent to the user:
+Under the per-batch model ([sale-transactions.md](sale-transactions.md)), project-destination sales require the user to pick one budget category that applies to every item in the batch. Project-destination flows:
 
 - **Inventory → Project** (single Purchase). One new immutable Purchase transaction.
 - **Project A → Project B** (two-hop, atomic). Hop 1 is origin-aware against Project A (Return-to-Inventory if the item came from inventory, Sale-to-Inventory if it originated in Project A). Hop 2 is a new Purchase from inventory into Project B with the chosen category. All writes land in the same Firestore batch.
 
-> **Note:** The reverse direction (project → business inventory) is **not** a Sell from the user's perspective — it's the **Return to Inventory** action below. See [return-and-sale-tracking.md](return-and-sale-tracking.md) for the return flow details.
+Inventory-destination sale:
+
+- **Project → Business Inventory** is a Sale-to-Inventory only when the item originated in the project. The sale uses purchase price because the business is acquiring the item as inventory.
+
+Project-destination sales always charge the destination project at `projectPriceCents`. If any selected item lacks a project price, the UI asks what to sell it for and saves that value before writing the movement.
 
 ### What Changes
 
@@ -69,29 +73,25 @@ Under the per-batch model ([sale-transactions.md](sale-transactions.md)), the us
 
 ### When to Use
 
-- Moving items from business inventory into a project (project is "buying")
+- Selling items from business inventory into a project
+- Selling items from one project to another project
+- Selling project-originated items into business inventory
 
 ### Budget Impact
 
-- Adds to destination project's budget for the chosen category
+- Adds to destination project's budget for the chosen category at project price
+- For project-to-project sales, the source project decreases at purchase price and the destination project increases at project price
+- For project-to-inventory sales, the source project decreases at purchase price
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
 
-## Return to Inventory (Project → Inventory) — Origin-Aware
+## Return to Inventory (Project → Inventory)
 
-A single user action — **Return to Inventory** — routes each item to one of two transaction types based on its origin:
+Return to Inventory is only for items that originally came from inventory.
 
 ### Return to Inventory (item came from inventory)
 
 When `item.currentSource != item.source`, the item passed through inventory before landing in this project. A Return transaction is created (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
-
-### Sale to Inventory (item originated in the project)
-
-When `item.currentSource == item.source` (or `currentSource == nil`), the item has never been in inventory. The business is acquiring it now — creates a **Sale** transaction (`type: "Sale"`, `source: "[Account] Inventory"`, **no `budgetCategoryId`**). This is the restored sell-to-inventory path.
-
-### Mixed Batches
-
-The UI confirms the split before writing, then writes both transactions in a single atomic Firestore batch.
 
 ### What Changes (both paths)
 
@@ -100,12 +100,11 @@ The UI confirms the split before writing, then writes both transactions in a sin
 - `item.transactionId` set to the new transaction ID
 - `item.status` set to `"purchased"` (still owned, now in inventory)
 - `item.currentSource` set to the inventory label
-- Source project's budget decreases by `-1 × amountCents`
+- Source project's budget decreases by `-1 × amountCents`; `amountCents` is based on `purchasePriceCents`
 
 ### Lineage
 
 - Return path emits a `"returned"` edge.
-- Sale-to-Inventory path emits a `"soldToInventory"` edge.
 
 ## Decision Matrix
 
@@ -113,20 +112,22 @@ The UI confirms the split before writing, then writes both transactions in a sin
 |--------|-------------|--------------------|----------------------|------------------|
 | Project A, Transaction X | Project A, Transaction Y | **Correct / Move** | `transactionId` swap | None |
 | Business Inventory, Txn X | Business Inventory, Txn Y | **Correct / Move** | `transactionId` swap | None |
-| Business Inventory | Project A | **Purchase from Inventory** | Single Purchase from inventory | Adds to Project A budget |
+| Business Inventory | Project A | **Sell → Project** | Single Purchase from inventory | Adds to Project A budget |
 | Project A | Business Inventory (item came from inventory) | **Return to Inventory** | Return transaction | Subtracts from Project A budget |
-| Project A | Business Inventory (item originated in A) | **Return to Inventory** | Sale-to-Inventory transaction | Subtracts from Project A budget |
-| Project A | Project B | **Move/Sell to Project** | Two-hop atomic: origin-aware hop 1 + destination Purchase from inventory | Subtracts from A, adds to B |
+| Project A | Business Inventory (item originated in A) | **Sell → Business Inventory** | Sale-to-Inventory transaction | Subtracts from Project A budget |
+| Project A | Project B | **Sell → Project** | Two-hop atomic: origin-aware hop 1 + destination Purchase from inventory | Subtracts from A, adds to B |
 | Project A or Inventory | Vendor | **Return to Vendor** | Vendor Return transaction (new or appended) | Subtracts from source budget (if from project) |
 
-### Sell to Project — Project-to-Project Mechanics
+### Project-to-Project Sale Mechanics
 
-When the source is another project, **Sell to Project** decomposes into a **two-hop** atomic batch. The user does not see this — to them it's a single Sell action. The first hop is origin-aware:
+When the source is another project and the destination is a project, **Sell** decomposes into a **two-hop** atomic batch. The user chooses the destination project; the first hop is origin-aware:
 
 1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory (no `budgetCategoryId`) against Project A. Mixed batches write both.
 2. **Hop 2.** One Purchase from inventory into Project B (`budgetCategoryId` set), covering all items.
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+
+Pricing follows direction, not the user's single action label: Hop 1 uses purchase price because items exit into business inventory; Hop 2 uses project price because the destination project buys from inventory. Missing destination project prices must be collected before commit.
 
 ## Menu Visibility Rules
 
@@ -138,16 +139,17 @@ The actions available to users depend on context.
 - Other transactions exist in the same scope (same projectId, or both null for business inventory)
 - Framed in the UI as a correction — no money moves, no Sale or Return created
 
-### "Sell to Project" is available when:
+### "Sell" is available when:
 
 - Item is in business inventory (projectId is null) AND at least one project exists, OR
 - Item is in a project (projectId is not null) AND at least one other project exists
-- Single menu item regardless of source; underlying single-hop vs two-hop is invisible to the user
+- Item is in a project and originated in that project, allowing the **Business Inventory** destination
+- A project destination uses the single-hop or two-hop mechanics above
 
 ### "Return to Inventory" is available when:
 
 - Item is in a project (projectId is not null)
-- Origin-aware under the hood (Return transaction vs Sale-to-Inventory transaction)
+- Item originally came from inventory (`currentSource != source`)
 
 (Previously "Send to Inventory." Renamed to make it clear this is a Return, not a Sale.)
 
@@ -166,6 +168,8 @@ Under the per-batch model, **inventory items have no `budgetCategoryId`** (the i
 3. The chosen category is set on the new Purchase transaction AND on every item in the batch.
 
 There is no per-item category override and no mixed-category batches. Users wanting mixed categories must sell in separate batches. See [sale-transactions.md](sale-transactions.md) D4a.
+
+The sell flow also requires a project price for every item. Existing `projectPriceCents` values are used as-is. Missing or zero project prices produce a price-entry step before confirmation; the entered values are persisted on the items and become the frozen amount snapshot for the destination Purchase.
 
 ## Design Decision: Why Separate Operations?
 

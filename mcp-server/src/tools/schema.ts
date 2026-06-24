@@ -37,6 +37,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on inventory movement transactions." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
+      { name: "discount", type: "Discount?", description: "Transaction-level discount. amountCents is the exact positive discount applied against subtotal." },
       { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId. FROZEN at creation on inventory movement transactions." },
       { name: "budgetCategoryId", type: "string?", description: "Budget category. FROZEN at creation on inventory movement transactions." },
       { name: "isComplete", type: "boolean", description: "Computed server-side; false means items don't match subtotal within ±1% or missing data." },

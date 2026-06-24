@@ -13,6 +13,7 @@ final class InventoryContext {
     }
 
     private var listeners: [ListenerRegistration] = []
+    private var activeAccountId: String?
     private let itemsService: ItemsServiceProtocol
     private let transactionsService: TransactionsServiceProtocol
     private let spacesService: SpacesServiceProtocol
@@ -29,7 +30,12 @@ final class InventoryContext {
 
     /// Activate inventory-scoped subscriptions. Call from `.task` on InventoryView.
     func activate(accountId: String) {
+        if activeAccountId == accountId, !listeners.isEmpty {
+            return
+        }
+
         deactivate()
+        activeAccountId = accountId
 
         // 1. Items scoped to inventory (projectId == nil)
         listeners.append(
@@ -56,6 +62,7 @@ final class InventoryContext {
     func deactivate() {
         listeners.forEach { $0.remove() }
         listeners.removeAll()
+        activeAccountId = nil
         items = []
         transactions = []
         spaces = []

@@ -36,14 +36,10 @@ const MAX_BATCH_ITEMS = 100;
 const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
 
 /**
- * Resolve a frozen amount snapshot for a batch of items. Uses
- * `projectPriceCents` (the client-charged price) exclusively — never falls
- * back to `purchasePriceCents` (the business's cost). Callers must invoke
- * `missingProjectPrice` first and bail with a validation error if any item
- * lacks a non-null, non-zero `projectPriceCents`; this function assumes that
- * check has already passed and treats a missing/zero price as `0`.
+ * Resolve a frozen project-price snapshot for a batch of items. Used for
+ * inventory→project and project→project movements.
  */
-function computeBatchTotals(items: (Item & { id: string })[]): {
+function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   subtotalCents: number;
   amountCents: number;
   missingTax: string[];
@@ -61,11 +57,21 @@ function computeBatchTotals(items: (Item & { id: string })[]): {
   return { subtotalCents, amountCents, missingTax };
 }
 
+/** Resolve a frozen purchase-price snapshot for standalone project→inventory moves. */
+function computePurchasePriceTotals(items: (Item & { id: string })[]): {
+  subtotalCents: number;
+  amountCents: number;
+  missingTax: string[];
+} {
+  const subtotalCents = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
+  return { subtotalCents, amountCents: subtotalCents, missingTax: [] };
+}
+
 /**
  * Return the ids of items that lack a usable `projectPriceCents`. Inventory
- * movements that create a Sale, a Purchase-from-Inventory, or a Return-to-
- * Inventory must charge at the client-facing project price; silently falling
- * back to `purchasePriceCents` (cost) would mis-state the project's budget.
+ * → project and project → project movements use the client-facing project
+ * price; silently falling back to `purchasePriceCents` (cost) would mis-state
+ * the project's budget.
  */
 function missingProjectPrice(items: (Item & { id: string })[]): string[] {
   return items
@@ -76,7 +82,7 @@ function missingProjectPrice(items: (Item & { id: string })[]): string[] {
 function missingProjectPriceError(ids: string[]) {
   return validation(
     `${ids.length} item(s) have no projectPriceCents (the client-charged price): ${ids.join(", ")}.`,
-    "Inventory movement amounts must use projectPriceCents, not purchasePriceCents (cost). " +
+    "This movement must use projectPriceCents, not purchasePriceCents (cost). " +
       "Set projectPriceCents on each listed item via update_item before retrying."
   );
 }
@@ -244,7 +250,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         const missingPrice = missingProjectPrice(items);
         if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
 
-        const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
+        const { subtotalCents, amountCents, missingTax } = computeProjectPriceTotals(items);
         if (dryRun) {
           return asToolResponse({
             dryRun: true,
@@ -301,7 +307,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
       "without creating a transaction.\n\n" +
       "Shape fields (amountCents, itemIds, projectId, type, source) are frozen at creation. " +
-      "Cap: 100 items per call. PRICING: same projectPriceCents rule as sell_items_from_inventory_to_project.",
+      "Cap: 100 items per call. PRICING: amountCents/subtotalCents use purchasePriceCents.",
     {
       itemIds: z
         .array(z.string())
@@ -353,10 +359,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           );
         }
 
-        const missingPrice = missingProjectPrice(items);
-        if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
-
-        const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
+        const { subtotalCents, amountCents, missingTax } = computePurchasePriceTotals(items);
         if (dryRun) {
           return asToolResponse({
             dryRun: true,
@@ -381,10 +384,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               })),
               lineageEdges: items.length,
             },
-            warning:
-              missingTax.length > 0
-                ? `${missingTax.length} item(s) missing taxRatePct — amountCents will undercount.`
-                : null,
+            warning: null,
           });
         }
         return await commitSellToInventory(db, items, sourceProjectId, {
@@ -494,8 +494,6 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 "(returnTo: 'inventory') is reserved for items going HOME to inventory."
             );
           }
-          const missingPrice = missingProjectPrice(items);
-          if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
         }
 
         if (dryRun) {
@@ -559,7 +557,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         .array(z.string())
         .min(1)
         .max(MAX_BATCH_ITEMS)
-        .describe(`Item document IDs to move (max ${MAX_BATCH_ITEMS} per call). All items must currently be in the same source project.`),
+        .describe(`Item document IDs to sell (max ${MAX_BATCH_ITEMS} per call). All items must currently be in the same source project.`),
       destinationProjectId: z.string().describe("Destination project ID"),
       destinationBudgetCategoryId: z
         .string()
@@ -570,7 +568,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         .string()
         .optional()
         .describe(
-          "Optional prose describing the move (e.g. 'Moved 3 sconces from Witzenman to Bradshaws — client change'). Free-form. createdAt/createdBy + lineage edges are the audit trail."
+          "Optional prose describing the sale (e.g. 'Sold 3 sconces from Witzenman to Bradshaws — client change'). Free-form. createdAt/createdBy + lineage edges are the audit trail."
         ),
       dryRun: z.boolean().default(false),
     },
@@ -599,7 +597,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         const stray = items.filter((i) => !i.projectId);
         if (stray.length > 0) {
           return validation(
-            `${stray.length} item(s) are not in a project — cannot move-between-projects: ${stray.map((i) => i.id).join(", ")}`,
+            `${stray.length} item(s) are not in a project — cannot sell from project to project: ${stray.map((i) => i.id).join(", ")}`,
             "Use sell_items_from_inventory_to_project for items currently in business inventory."
           );
         }
@@ -631,26 +629,27 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
         if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
 
         const split = splitByOrigin(items);
-        const { subtotalCents, amountCents, missingTax } = computeBatchTotals(items);
+        const { subtotalCents, amountCents, missingTax } = computeProjectPriceTotals(items);
 
         if (dryRun) {
           const returnLeg =
             split.returnItems.length > 0
-              ? {
-                  type: "Return" as const,
-                  source: inventoryLabel,
-                  projectId: sourceProjectId,
-                  amountCents: split.returnItems.reduce(
-                    (sum, i) => sum + (i.projectPriceCents ?? 0),
-                    0
-                  ),
-                  itemIds: split.returnItems.map((i) => i.id),
-                }
+              ? (() => {
+                  const t = computePurchasePriceTotals(split.returnItems);
+                  return {
+                    type: "Return" as const,
+                    source: inventoryLabel,
+                    projectId: sourceProjectId,
+                    amountCents: t.amountCents,
+                    subtotalCents: t.subtotalCents,
+                    itemIds: split.returnItems.map((i) => i.id),
+                  };
+                })()
               : null;
           const saleToInventoryLeg =
             split.saleItems.length > 0
               ? (() => {
-                  const t = computeBatchTotals(split.saleItems);
+                  const t = computePurchasePriceTotals(split.saleItems);
                   return {
                     type: "Sale" as const,
                     source: inventoryLabel,
@@ -698,7 +697,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
           });
         }
 
-        return await commitMoveBetweenProjects(
+        return await commitSellItemsFromProjectToProject(
           db,
           items,
           split,
@@ -902,10 +901,9 @@ async function commitReturnToInventory(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // Return amount uses projectPriceCents (the client-charged price that hit
-  // the project's budget on the way in). Caller validated every item has a
-  // non-null, non-zero projectPriceCents before reaching this commit.
-  const returnAmount = items.reduce((sum, i) => sum + (i.projectPriceCents ?? 0), 0);
+  // Standalone project→inventory returns use purchase price: the business is
+  // taking inventory back at cost.
+  const returnAmount = computePurchasePriceTotals(items).amountCents;
   // projectId on the Return tx = source project (budget impact lands there).
   const sourceProjectId = items[0]?.projectId ?? null;
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
@@ -1069,7 +1067,7 @@ async function commitReturnToVendor(
 // commit: sell_items_from_project_to_project, origin-aware two-hop
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function commitMoveBetweenProjects(
+async function commitSellItemsFromProjectToProject(
   db: Firestore,
   items: (Item & { id: string })[],
   split: {
@@ -1095,15 +1093,13 @@ async function commitMoveBetweenProjects(
   if (split.returnItems.length > 0) {
     const returnRef = txCol.doc();
     returnTxId = returnRef.id;
-    const returnAmount = split.returnItems.reduce(
-      (sum, i) => sum + (i.projectPriceCents ?? 0),
-      0
-    );
+    const returnTotals = computePurchasePriceTotals(split.returnItems);
     batch.set(returnRef, {
       type: "Return",
       source: totals.inventoryLabel,
       projectId: sourceProjectId,
-      amountCents: returnAmount,
+      amountCents: returnTotals.amountCents,
+      subtotalCents: returnTotals.subtotalCents,
       itemIds: split.returnItems.map((i) => i.id),
       status: "completed",
       ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
@@ -1118,7 +1114,7 @@ async function commitMoveBetweenProjects(
   if (split.saleItems.length > 0) {
     const saleRef = txCol.doc();
     firstSaleTxId = saleRef.id;
-    const saleTotals = computeBatchTotals(split.saleItems);
+    const saleTotals = computePurchasePriceTotals(split.saleItems);
     batch.set(saleRef, {
       type: "Sale",
       source: totals.inventoryLabel,
@@ -1212,10 +1208,10 @@ async function commitMoveBetweenProjects(
       {
         type: "text" as const,
         text:
-          `Moved ${items.length} item(s) from ${sourceProjectId} to ${destinationProjectId}.\n` +
+          `Sold ${items.length} item(s) from ${sourceProjectId} to ${destinationProjectId}.\n` +
           legs.join("\n") +
           `\nDestination category: ${destinationBudgetCategoryId}\n` +
-          `amountCents (second-hop Sale): ${totals.amountCents} (${formatCents(totals.amountCents)})` +
+          `amountCents (destination Purchase): ${totals.amountCents} (${formatCents(totals.amountCents)})` +
           missingTaxWarning(totals.missingTax, items.length),
       },
     ],

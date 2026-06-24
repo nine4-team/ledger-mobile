@@ -13,6 +13,7 @@ func makeItem(
     notes: String? = nil,
     status: ItemStatus? = nil,
     source: String? = nil,
+    currentSource: String? = nil,
     sku: String? = nil,
     transactionId: String? = nil,
     purchasePriceCents: Int? = nil,
@@ -39,6 +40,7 @@ func makeItem(
     item.notes = notes
     item.status = status
     item.source = source
+    item.currentSource = currentSource
     item.sku = sku
     item.transactionId = transactionId
     item.purchasePriceCents = purchasePriceCents

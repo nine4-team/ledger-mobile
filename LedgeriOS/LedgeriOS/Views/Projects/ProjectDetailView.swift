@@ -208,9 +208,6 @@ struct ProjectDetailView: View {
         .onChange(of: accountContext.member) { _, member in
             projectContext.updateFinancialAccess(member: member)
         }
-        .onDisappear {
-            projectContext.stopListeners()
-        }
         .background(BrandColors.background)
     }
 

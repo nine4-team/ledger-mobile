@@ -67,7 +67,7 @@ struct InventoryItemsSubTab: View {
         }
         .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                SellToProjectModal(items: selectedItems, accountId: accountId) {
+                SellItemsModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
             }

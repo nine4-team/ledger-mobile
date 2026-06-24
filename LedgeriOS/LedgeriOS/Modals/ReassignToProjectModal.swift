@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Moves items from their current project to a different project.
-/// Uses `moveBetweenProjects` (Return + Sale) under the new per-batch model.
-/// Carries forward the items' existing budgetCategoryId for the destination.
+/// Corrects items into a transaction in another project without creating
+/// financial movement transactions. Use SellToProjectModal for actual sales.
 struct ReassignToProjectModal: View {
     let items: [Item]
     let onComplete: () -> Void
@@ -13,6 +12,7 @@ struct ReassignToProjectModal: View {
 
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var selectedProject: Project?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -40,32 +40,53 @@ struct ReassignToProjectModal: View {
                     .padding(.bottom, Spacing.sm)
             }
 
-            ProjectPickerList { project in
-                move(to: project)
+            if let selectedProject {
+                transactionStep(project: selectedProject)
+            } else {
+                ProjectPickerList { project in
+                    selectedProject = project
+                }
             }
         }
         .disabled(isSaving)
     }
 
-    private func move(to project: Project) {
-        guard let accountId = accountContext.currentAccountId,
-              let projectId = project.id else { return }
+    private func transactionStep(project: Project) -> some View {
+        let projectTransactions = accountContext.allTransactions.filter { $0.projectId == project.id }
+        return VStack(alignment: .leading, spacing: Spacing.md) {
+            if projectTransactions.isEmpty {
+                ContentUnavailableView(
+                    "No transactions",
+                    systemImage: "arrow.left.arrow.right",
+                    description: Text("Create a destination transaction in this project before correcting items into it.")
+                )
+            } else {
+                TransactionPickerModal(
+                    transactions: projectTransactions,
+                    selectedId: nil,
+                    onSelect: { transaction in
+                        move(to: project, transaction: transaction)
+                    }
+                )
+            }
+        }
+    }
 
-        // Use the first item's budgetCategoryId as default for the destination
-        let categoryId = items.compactMap(\.budgetCategoryId).first ?? "uncategorized"
+    private func move(to project: Project, transaction: Transaction) {
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = project.id,
+              let transactionId = transaction.id else { return }
 
         isSaving = true
         let service = InventoryOperationsService()
-        let itemsToMove = items
-        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
-                try await service.moveBetweenProjects(
-                    items: itemsToMove,
+                try await service.reassignToProject(
+                    items: items,
+                    destinationTransactionId: transactionId,
                     destinationProjectId: projectId,
-                    destinationCategoryId: categoryId,
+                    destinationBudgetCategoryId: transaction.budgetCategoryId,
                     accountId: accountId,
-                    inventoryLabel: inventoryLabel,
                     userId: authManager.currentUser?.uid
                 )
                 await MainActor.run {

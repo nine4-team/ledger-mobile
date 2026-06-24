@@ -14,7 +14,9 @@ struct ImageThumbnailGeneratorTests {
     /// Creates a JPEG Data from a solid-color image at the given dimensions.
     private func makeTestJPEG(width: Int, height: Int, quality: CGFloat = 0.9) -> Data {
         #if canImport(UIKit)
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: width, height: height))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format)
         return renderer.jpegData(withCompressionQuality: quality) { ctx in
             UIColor.blue.setFill()
             ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))

@@ -19,7 +19,9 @@ Inventory items have no budget category; categories belong to projects. Items mo
 | Category at sell-from-inventory time | Inherited from the item | **Re-resolved** from user input at sell time |
 | Category at return-to-inventory time | Preserved on the item | **Wiped** from the item |
 | Sale transaction shape | Long-lived aggregator per `(project, direction, category)` | New per-batch transaction per user action |
-| Project → project move | Two hops, both as sales | Return-to-inventory + new sale to destination |
+| Project → project move | Two hops, both as sales | Origin-aware project → inventory hop + new Purchase to destination |
+| Inventory → project price | Often fell back to purchase price | **Requires project price**; prompt user if missing |
+| Project → inventory price | Sale-direction behavior varied by path | **Uses purchase price** |
 
 ## The Core Invariant
 
@@ -79,11 +81,14 @@ Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both 
 
 **Sign convention:** both paths subtract from the source project's budget (`-1 × amountCents`).
 
+**Price basis:** standalone project → inventory moves use the item's purchase price (`purchasePriceCents`) because the business is acquiring or taking back inventory at cost.
+
 ### Moving out of inventory (sell-to-project)
 
 - **Triggered by:** the user selling items from inventory into a project.
 - **Requires a budget category.** The user picks one category for the whole batch. The category must be enabled in the destination project. If not enabled, prompt to enable or choose another.
 - **Creates a per-batch Purchase transaction.** See [sale-transactions.md](sale-transactions.md).
+- **Requires project prices.** If any selected item lacks `projectPriceCents`, the UI asks what the item should sell for and saves that value before creating the Purchase transaction.
 - **Sets `budgetCategoryId`** on each item to the chosen category. The category is now part of the item's identity in the destination project.
 - **Sign convention:** budget impact is `+1 * amountCents` on the destination project.
 
@@ -97,7 +102,13 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
    - Mixed batches produce both transactions in the same Firestore batch.
 2. **Second hop** — all items land in the destination project via one Purchase transaction (`budgetCategoryId` set).
 
-All hops commit atomically when the user invokes **Sell to Project** from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
+All hops commit atomically when the user invokes **Sell** with a project destination from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
+
+**Price basis:** each hop follows its normal direction. The source project exits through business inventory at purchase price. The destination project buys from inventory at project price.
+
+If any item lacks a project price for the destination hop, the UI asks what it should sell for and saves that value before the atomic move is committed.
+
+Non-interactive inventory tools must reject project-price movements with missing `projectPriceCents` instead of silently using purchase price or writing a zero-amount destination Purchase.
 
 ## Display
 
@@ -107,7 +118,7 @@ What changes:
 
 - **Items in inventory have no category badge.** UI components that previously displayed a category for inventory items should hide the badge when `projectId == null`.
 - **Inventory item filters by category** are removed. There's no category to filter by.
-- **The project-context "Return to Inventory" action** is origin-aware. The modal shows which items will go as a Return and which as a Sale-to-Inventory based on origin. (This label supersedes a brief "Move to Inventory" interim name; the action has always been a Return semantically.)
+- **The project-context "Return to Inventory" action** is only for items that originally came from inventory. Project-originated items use **Sell → Business Inventory** and create a Sale-to-Inventory transaction.
 - **Transaction lists group inventory movement records visually.** Inventory acquisitions, inventory-to-project Sales, Sale-to-Inventory records, and return-to-inventory records can render as expandable grouped rows. The grouped row is not a transaction and is never written to Firestore; it exists only to keep one-off inventory movements readable in the UI. Expanding the row reveals the underlying child transactions.
 
 ### Transaction List Grouping Rules

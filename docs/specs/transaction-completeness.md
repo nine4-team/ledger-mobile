@@ -27,7 +27,7 @@ The app shows a **"Needs Review" badge** when `isComplete === false`.
 3. **All conditions met** for an itemized category:
    - Tax data present — `subtotalCents` is set (not null/undefined) **or** `taxRatePct` is set (not null/undefined, including `0`)
    - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned"/"sold" exist for this transaction
-   - Items match subtotal — `abs(variancePercent) ≤ 1%` (where `itemsSumCents` includes both linked and lineage items)
+   - Items match subtotal — `abs(variancePercent) ≤ 1%` (where `itemsSumCents` includes both linked and lineage items, with any transaction-level discount applied before comparison)
 
 `isComplete = false` when itemized category **and any** of:
 - Missing tax data (neither `subtotalCents` nor `taxRatePct` is set)
@@ -59,9 +59,10 @@ The Cloud Function writes a nested `audit` object alongside `isComplete`:
   "isComplete": false,
   "audit": {
     "resolvedSubtotalCents": 16973,
-    "itemsSumCents": 15973,
-    "varianceCents": -1000,
-    "variancePercent": -5.89,
+    "itemsSumCents": 17973,
+    "discountCents": 1000,
+    "varianceCents": 0,
+    "variancePercent": 0,
     "linkedItemsSumCents": 12973,
     "returnedItemsSumCents": 3000,
     "returnedItemsCount": 2,
@@ -83,7 +84,8 @@ The Cloud Function writes a nested `audit` object alongside `isComplete`:
 |-------|------|-------------|
 | `resolvedSubtotalCents` | integer (cents) | Pre-tax subtotal used for comparison (per resolution priority) |
 | `itemsSumCents` | integer (cents) | Total: `linkedItemsSumCents + returnedItemsSumCents + soldItemsSumCents` |
-| `varianceCents` | integer (cents) | `itemsSumCents - resolvedSubtotalCents` |
+| `discountCents` | integer (cents) | Transaction-level discount applied before comparing item totals. Uses `discount.amountCents` when present |
+| `varianceCents` | integer (cents) | `(itemsSumCents - discountCents) - resolvedSubtotalCents` |
 | `variancePercent` | decimal | `(varianceCents / resolvedSubtotalCents) × 100` |
 | `linkedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items currently in `itemIds` |
 | `returnedItemsSumCents` | integer (cents) | Sum of `purchasePriceCents` for items that left via `"returned"` lineage edges |

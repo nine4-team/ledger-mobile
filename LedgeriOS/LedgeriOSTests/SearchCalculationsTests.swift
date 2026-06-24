@@ -722,7 +722,7 @@ struct InventoryTransactionGroupingTests {
             if case .inventoryGroup(let group) = row { return group.title }
             return nil
         }
-        #expect(titles.contains("From 1584 Design Inventory"))
+        #expect(titles.contains("Sold to 1584 Design Inventory"))
         #expect(titles.contains("Returned to 1584 Design Inventory"))
     }
 

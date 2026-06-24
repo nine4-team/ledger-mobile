@@ -26,6 +26,7 @@ final class AccountContext {
     private var rawAllTransactions: [Transaction] = []
     private var rawAllBudgetCategories: [BudgetCategory] = []
     private var rawAllInvoices: [Invoice] = []
+    private var activeUserId: String?
     private var listeners: [ListenerRegistration] = []
     private let accountsService: AccountsServiceProtocol
     private let membersService: AccountMembersServiceProtocol
@@ -116,6 +117,10 @@ final class AccountContext {
     }
 
     func activate(accountId: String, userId: String) {
+        if currentAccountId == accountId, activeUserId == userId, !listeners.isEmpty {
+            return
+        }
+
         // Stop listeners and clear data without touching currentAccountId/discoveredAccounts
         // to avoid triggering a RootView re-render back to AccountGateView.
         listeners.forEach { $0.remove() }
@@ -133,6 +138,7 @@ final class AccountContext {
         rawAllInvoices = []
 
         currentAccountId = accountId
+        activeUserId = userId
 
         let accountListener = accountsService.subscribeToAccount(accountId: accountId) { [weak self] account in
             Task { @MainActor in
@@ -207,6 +213,7 @@ final class AccountContext {
         listeners.removeAll()
         lastSelectedAccountId = nil
         currentAccountId = nil
+        activeUserId = nil
         account = nil
         member = nil
         discoveredAccounts = []

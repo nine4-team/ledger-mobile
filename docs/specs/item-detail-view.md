@@ -7,7 +7,7 @@ Last updated: 2026-05-26
 > - **Status editing pulled out of three-dot menu** — Status is a prominent capsule button in the top-right toolbar (ItemDetailView.swift `dispositionButton`) that opens StatusPickerModal directly.
 > - **Notes section pencil-per-section edit** — CollapsibleSection `onEdit` wired on the NOTES section.
 > - **Details section pencil-per-section edit** (2026-04-10) — CollapsibleSection `onEdit` wired on the DETAILS section, opens `EditItemDetailsModal`.
-> - **Three-dot menu reduction** (2026-04-10) — Edit Details and Edit Notes removed from the kebab (now covered by pencil icons); Status submenu suppressed for `context == .detail` in `ItemMenuBuilder.buildSingleItemMenu` (covered by the toolbar capsule). Kebab now only contains Make Copies, Transaction, Space, Move/Sell, Reassign, and Delete.
+> - **Three-dot menu reduction** (2026-04-10) — Edit Details and Edit Notes removed from the kebab (now covered by pencil icons); Status submenu suppressed for `context == .detail` in `ItemMenuBuilder.buildSingleItemMenu` (covered by the toolbar capsule). Kebab now only contains Make Copies, Transaction, Space, Sell, Return, Correct / Move, and Delete where eligible.
 > - **Billing display moved out of item state** (2026-05-26) — Item billing state is now derived from invoice membership. `Item.billingStatus` / `BillingStatus` are historical concepts; use [billing-invoicing.md](billing-invoicing.md) for the canonical invoice/settlement model.
 >
 > **Deferred**:

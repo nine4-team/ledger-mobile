@@ -3,6 +3,8 @@ import SwiftUI
 struct RootView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(AccountContext.self) private var accountContext
+    @Environment(ProjectContext.self) private var projectContext
+    @Environment(InventoryContext.self) private var inventoryContext
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(InviteLinkRouter.self) private var inviteLinkRouter
@@ -84,11 +86,21 @@ struct RootView: View {
         .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
             if !isAuthenticated {
                 accountContext.deactivate()
+                projectContext.deactivate()
+                inventoryContext.deactivate()
+            }
+        }
+        .onChange(of: accountContext.currentAccountId) { oldAccountId, newAccountId in
+            if oldAccountId != nil, oldAccountId != newAccountId {
+                projectContext.deactivate()
+                inventoryContext.deactivate()
             }
         }
     }
 
     private func acceptPendingInviteIfPossible() async {
+        guard !AppRuntime.isUnitTestHost else { return }
+
         guard !isAcceptingInvite,
               let token = inviteLinkRouter.pendingToken,
               let uid = authManager.currentUser?.uid else {
@@ -110,11 +122,37 @@ struct RootView: View {
 }
 
 #Preview {
+    let projectService = ProjectService()
+    let transactionsService = TransactionsService()
+    let itemsService = ItemsService()
+    let spacesService = SpacesService()
+    let budgetCategoriesService = BudgetCategoriesService()
+    let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
+
     RootView()
         .environment(AuthManager())
         .environment(AccountContext(
             accountsService: AccountsService(),
-            membersService: AccountMembersService()
+            membersService: AccountMembersService(),
+            itemsService: itemsService,
+            transactionsService: transactionsService,
+            spacesService: spacesService,
+            budgetCategoriesService: budgetCategoriesService,
+            projectService: projectService,
+            invoicesService: InvoiceService()
+        ))
+        .environment(ProjectContext(
+            projectService: projectService,
+            transactionsService: transactionsService,
+            itemsService: itemsService,
+            spacesService: spacesService,
+            budgetCategoriesService: budgetCategoriesService,
+            projectBudgetCategoriesService: projectBudgetCategoriesService
+        ))
+        .environment(InventoryContext(
+            itemsService: itemsService,
+            transactionsService: transactionsService,
+            spacesService: spacesService
         ))
         .environment(NetworkMonitor())
         .environment(MediaUploadQueue(mediaService: MediaService()))

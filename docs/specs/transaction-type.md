@@ -86,7 +86,7 @@ Flow by kind:
 | `.expense` | shown | Project (pre-filled) | filter: `supportedTypes.contains(.expense)` | shown | shown |
 | `.purchase` | shown | Project OR auto-Inventory (if business-paid) | filter: `supportedTypes.contains(.purchase)` | shown | no |
 | `.return` | skip (business) | Project (pre-filled) OR inventory | filter: `supportedTypes.contains(.return)` | shown (vendor items went back to) | no |
-| *(`.sale` — not user-pickable)* | n/a | written via `sellToProject()` with items | | | |
+| *(`.sale` — not user-pickable)* | n/a | written by inventory operations for project-originated items acquired into business inventory | | | |
 
 Reimbursement toggle semantics are unchanged — see [transaction-creation.md](transaction-creation.md) §Payable Semantics.
 
@@ -111,6 +111,7 @@ Two distinct return operations both write `.return` transactions:
 
 - **Return to vendor** — user-initiated from the wizard. Items physically go back to a store. User picks the vendor on the Vendor step. This is the only path for this operation.
 - **Return to inventory** — item-action-initiated from item detail / action menus, handled by `InventoryOperationsService.returnToInventory()`. Items move from a project back to the business's own inventory. Not created through the wizard.
+- **Sell to project** — item-action-initiated from inventory or another project. Inventory → project writes a `.purchase` at project price. Project → project writes an origin-aware `.return`/`.sale` source exit at purchase price plus a destination `.purchase` at project price. If a destination Purchase would use a missing `projectPriceCents`, the UI collects and saves the project price before writing.
 
 ### Transaction audit gate
 

@@ -1,5 +1,85 @@
 import SwiftUI
 
+/// Sells project-originated items into business inventory.
+struct SellToInventoryModal: View {
+    let items: [Item]
+    let accountId: String
+    let onComplete: () -> Void
+
+    @Environment(AuthManager.self) private var authManager
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    private var split: (returnItems: [Item], saleItems: [Item]) {
+        InventoryOperationsService.splitByOrigin(items)
+    }
+
+    var body: some View {
+        FormSheet(
+            title: "Sale to Inventory",
+            description: "The business will acquire these project-originated items as inventory. A Sale transaction will be recorded using purchase price.",
+            primaryAction: FormSheetAction(
+                title: "Confirm Sale",
+                isLoading: isSaving,
+                isDisabled: !split.returnItems.isEmpty,
+                action: { performSale() }
+            ),
+            secondaryAction: FormSheetAction(title: "Cancel") {
+                dismiss()
+            },
+            error: errorMessage
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("\(split.saleItems.count) item\(split.saleItems.count == 1 ? "" : "s") -> Sale to inventory")
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textSecondary)
+
+                if !split.returnItems.isEmpty {
+                    Text("Items that originally came from inventory should use Return to Inventory.")
+                        .font(Typography.small)
+                        .foregroundStyle(StatusColors.missedText)
+                }
+            }
+        }
+    }
+
+    private func performSale() {
+        guard split.returnItems.isEmpty else {
+            errorMessage = "Use Return to Inventory for items that originally came from inventory."
+            return
+        }
+
+        isSaving = true
+        errorMessage = nil
+        let service = InventoryOperationsService()
+        let itemsToSell = items
+        let acctId = accountId
+        let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        Task {
+            do {
+                try await service.sellToInventory(
+                    items: itemsToSell,
+                    accountId: acctId,
+                    inventoryLabel: inventoryLabel,
+                    userId: authManager.currentUser?.uid
+                )
+                await MainActor.run {
+                    onComplete()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to sell items. Please try again."
+                    isSaving = false
+                }
+            }
+        }
+    }
+}
+
 /// Moves items from a project to business inventory. Routes each item based on
 /// origin:
 ///   - Items that previously passed through inventory → `Return` transaction

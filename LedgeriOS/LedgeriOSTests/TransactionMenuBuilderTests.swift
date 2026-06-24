@@ -77,24 +77,24 @@ struct TransactionMenuBuilderTests {
 
     // MARK: - Detail Menu
 
-    @Test("Detail menu for normal transaction includes Reassign and Delete")
+    @Test("Detail menu for normal transaction includes Correct / Move and Delete")
     func detailMenuNormal() {
         let menu = TransactionMenuBuilder.buildDetailMenu(
             transaction: normalTransaction(),
             callbacks: allCallbacks()
         )
         let menuIds = ids(menu)
-        #expect(menuIds.contains("reassign"))
+        #expect(menuIds.contains("correct-move"))
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Detail menu Reassign subactions include both options")
+    @Test("Detail menu Correct / Move subactions include both options")
     func detailMenuReassignSubactions() {
         let menu = TransactionMenuBuilder.buildDetailMenu(
             transaction: normalTransaction(),
             callbacks: allCallbacks()
         )
-        let subs = subIds(of: menu, parent: "reassign")
+        let subs = subIds(of: menu, parent: "correct-move")
         #expect(subs?.contains("reassign-to-inventory") == true)
         #expect(subs?.contains("reassign-to-project") == true)
     }
@@ -106,18 +106,18 @@ struct TransactionMenuBuilderTests {
             callbacks: allCallbacks()
         )
         let menuIds = ids(menu)
-        #expect(!menuIds.contains("reassign"))
+        #expect(!menuIds.contains("correct-move"))
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Detail menu Delete is always present regardless of nil Reassign callbacks")
+    @Test("Detail menu Delete is always present regardless of nil Correct / Move callbacks")
     func detailMenuDeleteAlwaysPresent() {
         let menu = TransactionMenuBuilder.buildDetailMenu(
             transaction: normalTransaction(),
             callbacks: SingleTransactionMenuCallbacks(onDelete: {})
         )
         #expect(ids(menu).contains("delete"))
-        #expect(!ids(menu).contains("reassign"))
+        #expect(!ids(menu).contains("correct-move"))
     }
 
     // MARK: - Bulk Menu

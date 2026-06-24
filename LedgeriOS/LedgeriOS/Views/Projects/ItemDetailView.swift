@@ -137,10 +137,10 @@ struct ItemDetailView: View {
                 }
             }
         }
-        // Sell to Project
+        // Sell
         .adaptivePresentation(isPresented: $showSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                SellToProjectModal(items: [liveItem], accountId: accountId) {
+                SellItemsModal(items: [liveItem], accountId: accountId) {
                     dismiss()
                 }
             }
@@ -484,7 +484,9 @@ struct ItemDetailView: View {
                 onMoveToReturnTransaction: { showReturnTransactionPicker = true },
                 onSetSpace: { showSetSpace = true },
                 onClearSpace: hasSpace ? { clearItemField("spaceId") } : nil,
-                onReturnToInventory: itemScope == .project ? { showReturnToInventory = true } : nil,
+                onReturnToInventory: itemScope == .project && InventoryOperationsService.cameFromInventory(liveItem)
+                    ? { showReturnToInventory = true }
+                    : nil,
                 onSellToProject: { showSellToProject = true },
                 onReassignToProject: { showReassign = true },
                 onMakeCopies: { showMakeCopies = true },

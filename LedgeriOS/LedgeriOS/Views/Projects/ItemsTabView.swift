@@ -43,6 +43,12 @@ struct ItemsTabView: View {
         }
     }
 
+    private var selectedItemsCanReturnToInventory: Bool {
+        !selectedItems.isEmpty && selectedItems.allSatisfy {
+            InventoryOperationsService.cameFromInventory($0)
+        }
+    }
+
     private var selectedTotalCents: Int? {
         let pairs = projectContext.items.compactMap { item -> (id: String, cents: Int)? in
             guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
@@ -126,7 +132,7 @@ struct ItemsTabView: View {
         }
         .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
             if let accountId = accountContext.currentAccountId {
-                SellToProjectModal(items: selectedItems, accountId: accountId) {
+                SellItemsModal(items: selectedItems, accountId: accountId) {
                     selectedItemIds.removeAll()
                 }
             }
@@ -348,7 +354,9 @@ struct ItemsTabView: View {
                 onClearTransaction: { clearTransactionForSelected() },
                 onSetSpace: { showBulkSetSpace = true },
                 onClearSpace: { clearSpaceForSelected() },
-                onReturnToInventory: { showBulkReturnToInventory = true },
+                onReturnToInventory: selectedItemsCanReturnToInventory
+                    ? { showBulkReturnToInventory = true }
+                    : nil,
                 onSellToProject: { showBulkSellToProject = true },
                 onReassignToProject: { showBulkReassign = true },
                 onCopyIDs: { Clipboard.copyLines(selectedItemIds) },

@@ -38,6 +38,7 @@ export interface Transaction {
   amountCents?: number;
   subtotalCents?: number;
   taxRatePct?: number;
+  discount?: Discount;
   type?: string;
   status?: string;
   source?: string;
@@ -62,6 +63,7 @@ export interface Transaction {
   audit?: {
     resolvedSubtotalCents: number;
     itemsSumCents: number;
+    discountCents?: number;
     varianceCents: number;
     variancePercent: number;
     linkedItemsSumCents?: number;
@@ -95,6 +97,11 @@ export interface Transaction {
   settlementInvoiceLineIds?: string[];
   createdAt?: FirebaseFirestore.Timestamp;
   updatedAt?: FirebaseFirestore.Timestamp;
+}
+
+export interface Discount {
+  /** Positive discount amount in cents, applied against the transaction subtotal. */
+  amountCents: number;
 }
 
 export type InvoiceLineSourceType = "item" | "transaction" | "manual";

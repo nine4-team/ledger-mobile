@@ -194,8 +194,8 @@ enum ItemMenuBuilder {
         }
         if let onSellToProject = callbacks.onSellToProject {
             items.append(ActionMenuItem(
-                id: "sell-to-project",
-                label: "Sell to Project",
+                id: "sell",
+                label: "Sell",
                 icon: "arrow.right.square",
                 onPress: onSellToProject
             ))
@@ -292,8 +292,8 @@ enum ItemMenuBuilder {
         }
         if let onSellToProject = callbacks.onSellToProject {
             items.append(ActionMenuItem(
-                id: "sell-to-project",
-                label: "Sell to Project",
+                id: "sell",
+                label: "Sell",
                 icon: "arrow.right.square",
                 onPress: onSellToProject
             ))

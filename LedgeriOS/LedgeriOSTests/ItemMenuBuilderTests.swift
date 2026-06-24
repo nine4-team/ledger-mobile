@@ -169,60 +169,55 @@ struct ItemMenuBuilderTests {
 
     // MARK: - Scope: Project
 
-    @Test("Project scope shows Sell to Business and Sell to Project")
+    @Test("Project scope shows Return and Sell")
     func projectScopeSell() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: allCallbacks()
         )
-        let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("move-to-inventory") == true)
-        #expect(sellSubs?.contains("sell-to-project") == true)
+        let menuIds = ids(menu)
+        #expect(menuIds.contains("return-to-inventory"))
+        #expect(menuIds.contains("sell"))
     }
 
-    @Test("Project scope shows Reassign to Project")
+    @Test("Project scope shows Correct / Move")
     func projectScopeReassign() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: allCallbacks()
         )
-        let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-project") == true)
+        #expect(ids(menu).contains("correct-move"))
     }
 
     // MARK: - Scope: Inventory
 
-    @Test("Inventory scope hides Move to Inventory and Move to Project")
+    @Test("Inventory scope hides Return and shows Sell")
     func inventoryScopeNoReturnOrMove() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .inventory, callbacks: allCallbacks()
         )
-        let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("move-to-inventory") == false)
-        #expect(sellSubs?.contains("move-to-project") == false)
-        #expect(sellSubs?.contains("sell-to-project") == true)
+        let menuIds = ids(menu)
+        #expect(!menuIds.contains("return-to-inventory"))
+        #expect(menuIds.contains("sell"))
     }
 
-    @Test("Inventory scope still shows Reassign to Project")
+    @Test("Inventory scope still shows Correct / Move")
     func inventoryScopeReassign() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .inventory, callbacks: allCallbacks()
         )
-        let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-project") == true)
+        #expect(ids(menu).contains("correct-move"))
     }
 
     // MARK: - Scope: Search
 
-    @Test("Search scope shows all sell/move and reassign options")
+    @Test("Search scope shows Return, Sell, and Correct / Move")
     func searchScopeAll() {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .search, callbacks: allCallbacks()
         )
-        let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("move-to-inventory") == true)
-        #expect(sellSubs?.contains("sell-to-project") == true)
-        #expect(sellSubs?.contains("move-to-project") == true)
-        let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-project") == true)
+        let menuIds = ids(menu)
+        #expect(menuIds.contains("return-to-inventory"))
+        #expect(menuIds.contains("sell"))
+        #expect(menuIds.contains("correct-move"))
     }
 
     // MARK: - Status Submenu
@@ -258,7 +253,7 @@ struct ItemMenuBuilderTests {
         #expect(!ids(menu).contains("delete"))
     }
 
-    @Test("Missing sell callbacks omit sell submenu entirely")
+    @Test("Missing sell and correction callbacks omit those actions")
     func noSellCallbacksNoSellMenu() {
         var cb = allCallbacks()
         cb.onReturnToInventory = nil
@@ -267,7 +262,10 @@ struct ItemMenuBuilderTests {
         let menu = ItemMenuBuilder.buildSingleItemMenu(
             context: .list, scope: .project, callbacks: cb
         )
-        #expect(!ids(menu).contains("sell"))
+        let menuIds = ids(menu)
+        #expect(!menuIds.contains("return-to-inventory"))
+        #expect(!menuIds.contains("sell"))
+        #expect(!menuIds.contains("correct-move"))
     }
 
     // MARK: - Bulk Menu
@@ -280,20 +278,17 @@ struct ItemMenuBuilderTests {
         #expect(menuIds.contains("transaction"))
         #expect(menuIds.contains("space"))
         #expect(menuIds.contains("sell"))
-        #expect(menuIds.contains("reassign"))
+        #expect(menuIds.contains("correct-move"))
         #expect(menuIds.contains("delete"))
     }
 
-    @Test("Bulk menu inventory scope hides Return to Inventory and Move to Project")
+    @Test("Bulk menu inventory scope hides Return and shows Sell")
     func bulkMenuInventoryScope() {
         let menu = ItemMenuBuilder.buildBulkMenu(scope: .inventory, callbacks: allBulkCallbacks())
-        let sellSubs = subIds(of: menu, parent: "sell")
-        #expect(sellSubs?.contains("move-to-inventory") == false)
-        #expect(sellSubs?.contains("move-to-project") == false)
-        #expect(sellSubs?.contains("sell-to-project") == true)
-        // Reassign is still available
-        let reassignSubs = subIds(of: menu, parent: "reassign")
-        #expect(reassignSubs?.contains("reassign-to-project") == true)
+        let menuIds = ids(menu)
+        #expect(!menuIds.contains("return-to-inventory"))
+        #expect(menuIds.contains("sell"))
+        #expect(menuIds.contains("correct-move"))
     }
 
     @Test("Bulk menu opens Space picker directly")

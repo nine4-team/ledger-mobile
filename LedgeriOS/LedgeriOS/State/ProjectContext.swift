@@ -18,6 +18,8 @@ final class ProjectContext {
     private var financialAccessMember: AccountMember?
     private var rawTransactions: [Transaction] = []
     private var rawBudgetCategories: [BudgetCategory] = []
+    private var activeAccountId: String?
+    private var activeUserId: String?
     private var listeners: [ListenerRegistration] = []
     private let projectService: ProjectServiceProtocol
     private let transactionsService: TransactionsServiceProtocol
@@ -51,14 +53,24 @@ final class ProjectContext {
         self.projectNotesService = projectNotesService
     }
 
-    /// Activate subscriptions for a project. Call from `.task(id: projectId)` —
-    /// SwiftUI auto-cancels on disappear or ID change.
+    /// Activate subscriptions for a project. Re-entering the same account/project/user
+    /// keeps the current listeners and cached data alive.
     func activate(accountId: String, projectId: String, userId: String? = nil, member: AccountMember? = nil) {
-        let isNewProject = currentProjectId != projectId
+        if activeAccountId == accountId,
+           currentProjectId == projectId,
+           activeUserId == userId,
+           !listeners.isEmpty {
+            updateFinancialAccess(member: member)
+            return
+        }
+
+        let isNewProject = currentProjectId != projectId || activeAccountId != accountId
         stopListeners()
         if isNewProject {
             clearData()
         }
+        activeAccountId = accountId
+        activeUserId = userId
         currentProjectId = projectId
         financialAccessMember = member
 
@@ -197,12 +209,19 @@ final class ProjectContext {
         listeners.removeAll()
     }
 
+    func deactivate() {
+        stopListeners()
+        clearData()
+    }
+
     func updateFinancialAccess(member: AccountMember?) {
         financialAccessMember = member
         applyFinancialAccess()
     }
 
     private func clearData() {
+        activeAccountId = nil
+        activeUserId = nil
         currentProjectId = nil
         project = nil
         projects = []

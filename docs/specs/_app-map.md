@@ -1,5 +1,5 @@
 # App Map: Ledger
-Last updated: 2026-05-26
+Last updated: 2026-06-23
 
 ## Overview
 Ledger is an inventory and transaction management app for design teams. It exists as both a web app and a macOS desktop app. The app tracks items (inventory) and transactions across projects and spaces, with budgeting and reporting features.
@@ -21,7 +21,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ## Transaction & Billing Model (Current Understanding)
 
 ### Transaction Structure
-- Projects have one transaction per budget category (e.g., one Furnishings transaction per project that accumulates items over time)
+- Projects have normal project transactions plus immutable per-batch inventory movement transactions. Inventory movement transactions are not long-lived aggregators.
 - Transactions can be purchase transactions (business buys items into inventory, or a project buys items from inventory), return transactions, or Sale-to-Inventory transactions (business acquires project-originated items into inventory)
 - Categories come in two types: **itemized** (individual items tracked with detail — furnishings, accessories, additional requests, mattresses) and **non-itemized/expense** (costs logged at transaction level — install, fuel, delivery). [Full category list needs discovery]
 
@@ -39,7 +39,10 @@ Ledger is an inventory and transaction management app for design teams. It exist
 - Item/transaction billing state is derived from invoice membership and settlement links; there is no item-level billing status field.
 
 ### Inventory Movement Source (Inventory → Project)
-- When items are sold from inventory to a project, a Purchase-from-inventory transaction is created in the project
+- When items are sold from inventory to a project, a Purchase-from-inventory transaction is created in the project at `projectPriceCents`
+- If an item has no project price, the user is asked what to sell it for before the movement is committed, and that value is saved as `projectPriceCents`
+- Project-to-project movement is a two-hop atomic flow: source project exits to business inventory at purchase price, then destination project buys from inventory at project price
+- Project-to-business-inventory movement uses purchase price
 - **Historical state:** The source field on legacy sale transactions was **blank** (empty string)
 - **Legacy transaction IDs** follow the pattern `SALE_[projectId]_business_to_project_[categoryId]` or `SALE_[projectId]_project_to_business_[categoryId]` — structured but not human-readable
 - **purchasedBy** field may also be blank on historical inventory movement transactions
@@ -70,7 +73,7 @@ Items have four statuses (confirmed via Ledger API):
 
 These are designer-facing workflow statuses tracking the physical lifecycle of an item. Billing state is derived from invoices and settlement transactions — see billing-invoicing.md.
 
-**Known issue:** When items are moved from inventory to a project, the status does not auto-update to "Purchased." This requires manual cleanup.
+When items are moved from inventory to a project, the status is set to "Purchased."
 
 ## Data Model Summary
 Key entities include: Items, ProtoItems, Transactions, Invoices, InvoiceLines, Projects, Spaces, Accounts, and Budget Categories. ProtoItems are separate from Items and do not affect budgets, inventory, transactions, invoices, reports, or item counts until resolved.

@@ -129,6 +129,7 @@
 		8C00613033984E48AA7CA714 /* MediaGalleryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4E375CEAC48A9B3799B17 /* MediaGalleryCalculations.swift */; };
 		8C022C22D824861D91971EF3 /* EditProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF04F494E10EB13A2E40A68 /* EditProjectModal.swift */; };
 		8E2660D3F9C826B26BFF25EE /* ProjectFormValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34816D19C30F6D0AB2A9DA29 /* ProjectFormValidation.swift */; };
+		8E9D15A7F8B24657A6B5F9F1 /* LoadingLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D15A7F8B24657A6B5F9F0 /* LoadingLifecycleTests.swift */; };
 		8F2B9C4D1E6A47B8A3C59102 /* SelectableNoteText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2B9C4D1E6A47B8A3C59101 /* SelectableNoteText.swift */; };
 		91546636B6396B2F37B01783 /* EditSpaceDetailsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46454D1B9033E3421C8C03A9 /* EditSpaceDetailsModal.swift */; };
 		92C7FB032A3C1D4B227CBB78 /* InventoryOperationsIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BBAE7CADF9EB10A095711FF /* InventoryOperationsIntegrationTests.swift */; };
@@ -527,6 +528,7 @@
 		A2B3C4D5E6F7089012345607 /* SearchPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPlaceholderView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7089012345609 /* SettingsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaceholderView.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F708901234560B /* AccountDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDiscoveryTests.swift; sourceTree = "<group>"; };
+		8E9D15A7F8B24657A6B5F9F0 /* LoadingLifecycleTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoadingLifecycleTests.swift; sourceTree = "<group>"; };
 		A320503375E44CA2BE691D04 /* ItemCardCalculationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardCalculationTests.swift; sourceTree = "<group>"; };
 		A42382CD300502891CBCC6A1 /* ExportTransactionsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExportTransactionsModal.swift; sourceTree = "<group>"; };
 		A6B6E571B716CBDA0C7C5355 /* ProjectPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LedgeriOS/Models/ProjectPreferences.swift; sourceTree = SOURCE_ROOT; };
@@ -1036,6 +1038,7 @@
 				C3E7DF21CF6EF11ED1B7C1B7 /* Integration */,
 				B090A11277DE4908909DB8F9 /* InventoryOperationsExecutionTests.swift */,
 				06EC92FFA9C18C4F52AD23C1 /* ImageThumbnailGeneratorTests.swift */,
+				8E9D15A7F8B24657A6B5F9F0 /* LoadingLifecycleTests.swift */,
 			);
 			path = LedgeriOSTests;
 			sourceTree = "<group>";
@@ -1830,6 +1833,7 @@
 				DE3BB99843848D19F4B865BC /* SpaceCRUDIntegrationTests.swift in Sources */,
 				6013465FFB8316F5C15E9838 /* InventoryOperationsExecutionTests.swift in Sources */,
 				BA9FA5CF36AA56B2BEFE2F40 /* ImageThumbnailGeneratorTests.swift in Sources */,
+				8E9D15A7F8B24657A6B5F9F1 /* LoadingLifecycleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1991,7 +1995,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2030,7 +2034,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (

@@ -3,6 +3,12 @@ import FirebaseCore
 import FirebaseFirestore
 import GoogleSignIn
 
+enum AppRuntime {
+    static var isUnitTestHost: Bool {
+        ProcessInfo.processInfo.environment["LEDGER_UNIT_TEST_HOST"] == "1"
+    }
+}
+
 @main
 struct LedgerApp: App {
     @State private var authManager: AuthManager
@@ -129,6 +135,8 @@ struct LedgerApp: App {
                     }
                 }
                 .task {
+                    guard !AppRuntime.isUnitTestHost else { return }
+
                     networkMonitor.onConnectivityRestored = { [mediaUploadQueue] in
                         mediaUploadQueue.processQueue()
                     }

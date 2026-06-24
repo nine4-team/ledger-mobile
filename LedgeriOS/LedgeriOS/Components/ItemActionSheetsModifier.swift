@@ -60,7 +60,7 @@ private struct ItemActionSheetsModifier: ViewModifier {
             }
             .adaptivePresentation(item: $controller.sellToProjectItem, style: .form) { item in
                 if let accountId {
-                    SellToProjectModal(items: [item], accountId: accountId) {
+                    SellItemsModal(items: [item], accountId: accountId) {
                         onActionComplete?()
                     }
                 }

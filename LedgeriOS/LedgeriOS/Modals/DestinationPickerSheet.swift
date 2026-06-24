@@ -1,5 +1,4 @@
 import SwiftUI
-import FirebaseFirestore
 
 /// Picker sheet for selecting an item destination — either Business Inventory
 /// or a specific project. Used in item creation to scope the item's Firestore path.
@@ -11,9 +10,11 @@ struct DestinationPickerSheet: View {
     @Environment(AccountContext.self) private var accountContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var projects: [Project] = []
-    @State private var isLoading = true
-    @State private var listener: ListenerRegistration?
+    private var projects: [Project] {
+        accountContext.allProjects
+            .filter { $0.isArchived != true }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -23,40 +24,30 @@ struct DestinationPickerSheet: View {
                 .padding(.horizontal, Spacing.screenPadding)
                 .padding(.top, Spacing.screenPadding)
 
-            if isLoading {
-                LoadingScreen(message: "Loading...")
-                    .frame(maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        destinationRow(
-                            label: "Business Inventory",
-                            sublabel: nil,
-                            icon: "building.2"
-                        ) {
-                            onSelect(.inventory, nil)
-                            dismiss()
-                        }
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    destinationRow(
+                        label: "Business Inventory",
+                        sublabel: nil,
+                        icon: "building.2"
+                    ) {
+                        onSelect(.inventory, nil)
+                        dismiss()
+                    }
 
-                        ForEach(projects) { project in
-                            destinationRow(
-                                label: project.name.isEmpty ? "(unnamed)" : project.name,
-                                sublabel: project.clientName.isEmpty ? nil : project.clientName,
-                                icon: "folder"
-                            ) {
-                                guard let id = project.id else { return }
-                                onSelect(.project(id, spaceId: nil), project)
-                                dismiss()
-                            }
+                    ForEach(projects) { project in
+                        destinationRow(
+                            label: project.name.isEmpty ? "(unnamed)" : project.name,
+                            sublabel: project.clientName.isEmpty ? nil : project.clientName,
+                            icon: "folder"
+                        ) {
+                            guard let id = project.id else { return }
+                            onSelect(.project(id, spaceId: nil), project)
+                            dismiss()
                         }
                     }
                 }
             }
-        }
-        .task { await setupListener() }
-        .onDisappear {
-            listener?.remove()
-            listener = nil
         }
     }
 
@@ -94,23 +85,5 @@ struct DestinationPickerSheet: View {
 
         Divider()
             .padding(.horizontal, Spacing.screenPadding)
-    }
-
-    private func setupListener() async {
-        guard let accountId = accountContext.currentAccountId else {
-            isLoading = false
-            return
-        }
-
-        listener?.remove()
-        let service = ProjectService()
-        listener = service.subscribeToProjects(accountId: accountId) { newProjects in
-            Task { @MainActor in
-                self.projects = newProjects
-                    .filter { $0.isArchived != true }
-                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-                self.isLoading = false
-            }
-        }
     }
 }

@@ -13,7 +13,7 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     /// **Original vendor** — where the item was first acquired (e.g. "Homegoods",
     /// "Wayfair"). Free-form string set once at item creation and **never
     /// overwritten** by scope moves (sell-to-project, return-to-inventory,
-    /// move-between-projects). Used for: routing returns back to the original
+    /// project-to-project sales). Used for: routing returns back to the original
     /// store, grouping items by vendor, the editable "Source" field in the item
     /// detail modal, and picker filters that match items to a transaction's
     /// vendor. **Not what you want on a search card** — use `currentSource` for
@@ -30,8 +30,8 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
     ///   or "1584 Design Inventory") — items sold from inventory are "from
     ///   Inventory" from the project's perspective.
     /// - `returnToInventory`: set to the inventory label (items returning home).
-    /// - `moveBetweenProjects`: set to the inventory label (the move is
-    ///   modeled internally as Return + Sale via inventory).
+    /// - `sellItemsFromProjectToProject`: set to the inventory label (the sale is
+    ///   modeled internally as two hops via inventory).
     /// - `reassignToProject` / `returnToTransaction`: **not touched** (within-
     ///   project moves don't change the immediate source).
     ///

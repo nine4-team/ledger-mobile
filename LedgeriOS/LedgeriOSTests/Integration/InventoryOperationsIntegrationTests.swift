@@ -207,19 +207,180 @@ struct InventoryOperationsIntegrationTests {
         #expect(edgeData?["movementKind"] as? String == "correction")
     }
 
-    @Test("reassignToProject — cross-scope throws crossScopeReassign error")
-    func reassignCrossScopeThrows() async throws {
+    @Test("reassignToProject — cross-project correction relinks item without sale")
+    func reassignCrossProjectCorrection() async throws {
         try await FirestoreTestHelper.signIn()
-        let item = makeItem(id: UUID().uuidString, projectId: "projA")
+        let itemId = UUID().uuidString
+        let oldTxId = UUID().uuidString
+        let newTxId = UUID().uuidString
+        let sourceProjectId = "projA-\(UUID().uuidString)"
+        let destProjectId = "projB-\(UUID().uuidString)"
+        let categoryId = "cat-\(UUID().uuidString)"
 
-        await #expect(throws: InventoryOperationError.crossScopeReassign) {
-            try await service.reassignToProject(
-                items: [item],
-                destinationTransactionId: "tx-dest",
-                destinationProjectId: "projB", // different from item's projectId
-                accountId: accountId
-            )
+        let item = makeItem(id: itemId, projectId: sourceProjectId, transactionId: oldTxId, budgetCategoryId: "oldCat")
+        let oldTx = makeTransaction(id: oldTxId, projectId: sourceProjectId, itemIds: [itemId])
+        let newTx = makeTransaction(id: newTxId, projectId: destProjectId, itemIds: [], budgetCategoryId: categoryId)
+
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+        try FirestoreTestHelper.write(oldTx, toCollection: txPath, id: oldTxId)
+        try FirestoreTestHelper.write(newTx, toCollection: txPath, id: newTxId)
+
+        try await service.reassignToProject(
+            items: [item],
+            destinationTransactionId: newTxId,
+            destinationProjectId: destProjectId,
+            destinationBudgetCategoryId: categoryId,
+            accountId: accountId
+        )
+
+        let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+        #expect(resultItem.projectId == destProjectId)
+        #expect(resultItem.transactionId == newTxId)
+        #expect(resultItem.budgetCategoryId == categoryId)
+
+        let resultOld: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: oldTxId))
+        #expect(resultOld.itemIds?.contains(itemId) != true)
+
+        let resultNew: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: newTxId))
+        #expect(resultNew.itemIds?.contains(itemId) == true)
+
+        let edges = try await Firestore.firestore()
+            .collection(edgesPath)
+            .whereField("itemId", isEqualTo: itemId)
+            .getDocuments()
+        let correction = edges.documents.map { $0.data() }.first { $0["movementKind"] as? String == "correction" }
+        #expect(correction?["fromProjectId"] as? String == sourceProjectId)
+        #expect(correction?["toProjectId"] as? String == destProjectId)
+    }
+
+    // MARK: - sellItemsFromProjectToProject
+
+    @Test("sellItemsFromProjectToProject — from-inventory item returns at purchase price, then purchases at project price")
+    func projectToProjectFromInventoryItem() async throws {
+        try await FirestoreTestHelper.signIn()
+        let itemId = UUID().uuidString
+        let oldTxId = UUID().uuidString
+        let sourceProjectId = "projA-\(UUID().uuidString)"
+        let destProjectId = "projB-\(UUID().uuidString)"
+        let categoryId = "catFurnishings"
+
+        let item = makeItem(
+            id: itemId,
+            projectId: sourceProjectId,
+            source: "Wayfair",
+            currentSource: "Business Inventory",
+            transactionId: oldTxId,
+            purchasePriceCents: 20_000,
+            projectPriceCents: 25_000,
+            budgetCategoryId: "oldCat"
+        )
+        let oldTx = makeTransaction(id: oldTxId, projectId: sourceProjectId, itemIds: [itemId])
+
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+        try FirestoreTestHelper.write(oldTx, toCollection: txPath, id: oldTxId)
+
+        try await service.sellItemsFromProjectToProject(
+            items: [item],
+            destinationProjectId: destProjectId,
+            destinationCategoryId: categoryId,
+            accountId: accountId
+        )
+
+        let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+        #expect(resultItem.projectId == destProjectId)
+        #expect(resultItem.budgetCategoryId == categoryId)
+        #expect(resultItem.currentSource == "Business Inventory")
+
+        let resultOld: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: oldTxId))
+        #expect(resultOld.itemIds?.contains(itemId) != true)
+
+        let txDocs = try await Firestore.firestore().collection(txPath)
+            .whereField("itemIds", arrayContains: itemId)
+            .getDocuments()
+        let txs = txDocs.documents.map { $0.data() }
+        let returnTx = txs.first { $0["type"] as? String == "Return" }
+        let purchaseTx = txs.first {
+            ($0["type"] as? String) == "Purchase" &&
+            ($0["projectId"] as? String) == destProjectId
         }
+        #expect(returnTx?["projectId"] as? String == sourceProjectId)
+        #expect(returnTx?["amountCents"] as? Int == 20_000)
+        #expect(returnTx?["budgetCategoryId"] == nil)
+        #expect(purchaseTx?["budgetCategoryId"] as? String == categoryId)
+        #expect(purchaseTx?["amountCents"] as? Int == 25_000)
+
+        let edges = try await Firestore.firestore()
+            .collection(edgesPath)
+            .whereField("itemId", isEqualTo: itemId)
+            .getDocuments()
+        let edgeKinds = Set(edges.documents.compactMap { $0.data()["movementKind"] as? String })
+        #expect(edgeKinds.contains("returned"))
+        #expect(edgeKinds.contains("sold"))
+    }
+
+    @Test("sellItemsFromProjectToProject — project-originated item sells to inventory at purchase price, then purchases at project price")
+    func projectToProjectOriginatedHereItem() async throws {
+        try await FirestoreTestHelper.signIn()
+        let itemId = UUID().uuidString
+        let oldTxId = UUID().uuidString
+        let sourceProjectId = "projA-\(UUID().uuidString)"
+        let destProjectId = "projB-\(UUID().uuidString)"
+        let categoryId = "catInstall"
+
+        let item = makeItem(
+            id: itemId,
+            projectId: sourceProjectId,
+            source: "Project Vendor",
+            currentSource: "Project Vendor",
+            transactionId: oldTxId,
+            purchasePriceCents: 30_000,
+            projectPriceCents: 35_000,
+            budgetCategoryId: "oldCat"
+        )
+        let oldTx = makeTransaction(id: oldTxId, projectId: sourceProjectId, itemIds: [itemId])
+
+        try FirestoreTestHelper.write(item, toCollection: itemsPath, id: itemId)
+        try FirestoreTestHelper.write(oldTx, toCollection: txPath, id: oldTxId)
+
+        try await service.sellItemsFromProjectToProject(
+            items: [item],
+            destinationProjectId: destProjectId,
+            destinationCategoryId: categoryId,
+            accountId: accountId
+        )
+
+        let resultItem: Item = try #require(await FirestoreTestHelper.read(Item.self, fromCollection: itemsPath, id: itemId))
+        #expect(resultItem.projectId == destProjectId)
+        #expect(resultItem.budgetCategoryId == categoryId)
+        #expect(resultItem.currentSource == "Business Inventory")
+
+        let resultOld: LedgeriOS.Transaction = try #require(await FirestoreTestHelper.read(LedgeriOS.Transaction.self, fromCollection: txPath, id: oldTxId))
+        #expect(resultOld.itemIds?.contains(itemId) != true)
+
+        let txDocs = try await Firestore.firestore().collection(txPath)
+            .whereField("itemIds", arrayContains: itemId)
+            .getDocuments()
+        let txs = txDocs.documents.map { $0.data() }
+        let saleTx = txs.first {
+            ($0["type"] as? String) == "Sale" &&
+            ($0["projectId"] as? String) == sourceProjectId
+        }
+        let purchaseTx = txs.first {
+            ($0["type"] as? String) == "Purchase" &&
+            ($0["projectId"] as? String) == destProjectId
+        }
+        #expect(saleTx?["amountCents"] as? Int == 30_000)
+        #expect(saleTx?["budgetCategoryId"] == nil)
+        #expect(purchaseTx?["budgetCategoryId"] as? String == categoryId)
+        #expect(purchaseTx?["amountCents"] as? Int == 35_000)
+
+        let edges = try await Firestore.firestore()
+            .collection(edgesPath)
+            .whereField("itemId", isEqualTo: itemId)
+            .getDocuments()
+        let edgeKinds = Set(edges.documents.compactMap { $0.data()["movementKind"] as? String })
+        #expect(edgeKinds.contains("soldToInventory"))
+        #expect(edgeKinds.contains("sold"))
     }
 
     // MARK: - E4: Price change after sale

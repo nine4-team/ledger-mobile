@@ -1,6 +1,102 @@
 import SwiftUI
 import FirebaseFirestore
 
+/// Entry point for financial sale flows.
+/// Inventory-originated project items return to inventory through the Return
+/// action; project-originated items can be sold to business inventory here.
+struct SellItemsModal: View {
+    let items: [Item]
+    let accountId: String
+    let onComplete: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var destination: Destination?
+
+    private enum Destination {
+        case project
+        case inventory
+    }
+
+    private var canSellToInventory: Bool {
+        !items.isEmpty
+            && items.allSatisfy { $0.projectId != nil }
+            && items.allSatisfy { !InventoryOperationsService.cameFromInventory($0) }
+    }
+
+    var body: some View {
+        Group {
+            switch destination {
+            case .project:
+                SellToProjectModal(items: items, accountId: accountId, onComplete: onComplete)
+            case .inventory:
+                SellToInventoryModal(items: items, accountId: accountId, onComplete: onComplete)
+            case nil:
+                destinationPicker
+            }
+        }
+    }
+
+    private var destinationPicker: some View {
+        FormSheet(
+            title: "Sell",
+            description: "Choose where these items are being sold.",
+            primaryAction: FormSheetAction(title: "Cancel", action: { dismiss() })
+        ) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                destinationButton(
+                    title: "Project",
+                    subtitle: "Create a sale into a project budget.",
+                    icon: "folder",
+                    action: { destination = .project }
+                )
+
+                if canSellToInventory {
+                    destinationButton(
+                        title: "Business Inventory",
+                        subtitle: "Create a sale from the project into inventory.",
+                        icon: "shippingbox",
+                        action: { destination = .inventory }
+                    )
+                }
+            }
+        }
+    }
+
+    private func destinationButton(
+        title: String,
+        subtitle: String,
+        icon: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: Spacing.md) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(BrandColors.primary)
+                    .frame(width: 28)
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(title)
+                        .font(Typography.body)
+                        .foregroundStyle(BrandColors.textPrimary)
+                    Text(subtitle)
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(BrandColors.textTertiary)
+            }
+            .padding(Spacing.md)
+            .background(BrandColors.surfaceTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 /// Two-step flow for selling items to a project.
 /// Steps: (1) pick destination project, (2) pick budget category + confirm.
 /// One category applies to the entire batch.
@@ -16,6 +112,7 @@ struct SellToProjectModal: View {
     @State private var step = 1
     @State private var destinationProject: Project?
     @State private var destinationCategoryId: String?
+    @State private var projectPriceTexts: [String: String] = [:]
     @State private var isSaving = false
     @State private var errorMessage: String?
     /// Budget categories fetched independently for the destination project step.
@@ -32,6 +129,8 @@ struct SellToProjectModal: View {
             case 1:
                 step1DestinationProject
             case 2:
+                step2ProjectPrices
+            case 3:
                 step2CategoryAndConfirm
             default:
                 EmptyView()
@@ -49,7 +148,11 @@ struct SellToProjectModal: View {
         HStack {
             if step > 1 {
                 Button {
-                    step -= 1
+                    if step == 3 && missingProjectPriceItems.isEmpty {
+                        step = 1
+                    } else {
+                        step -= 1
+                    }
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundStyle(BrandColors.primary)
@@ -78,7 +181,8 @@ struct SellToProjectModal: View {
     private var stepTitle: String {
         switch step {
         case 1: return "Sell to Project"
-        case 2: return "Budget Category"
+        case 2: return "Project Price"
+        case 3: return "Budget Category"
         default: return "Sell to Project"
         }
     }
@@ -95,8 +199,52 @@ struct SellToProjectModal: View {
             ProjectPickerList { project in
                 destinationProject = project
                 loadAccountCategories()
-                step = 2
+                prepareProjectPricePrompts()
+                step = missingProjectPriceItems.isEmpty ? 3 : 2
             }
+        }
+    }
+
+    // MARK: - Step 2: Missing project prices
+
+    private var step2ProjectPrices: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Set the sale price for each item.")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+                .padding(.horizontal, Spacing.screenPadding)
+
+            if let error = errorMessage {
+                Text(error)
+                    .font(Typography.small)
+                    .foregroundStyle(StatusColors.missedText)
+                    .padding(.horizontal, Spacing.screenPadding)
+            }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    ForEach(missingProjectPriceItems) { item in
+                        FormField(
+                            label: item.displayName.isEmpty ? "Item" : item.displayName,
+                            text: Binding(
+                                get: { projectPriceTexts[item.id ?? ""] ?? "" },
+                                set: { projectPriceTexts[item.id ?? ""] = $0 }
+                            ),
+                            placeholder: "0.00",
+                            helperText: item.sku
+                        )
+                    }
+                }
+                .padding(.horizontal, Spacing.screenPadding)
+            }
+
+            AppButton(title: "Continue") {
+                guard validateProjectPrices() else { return }
+                errorMessage = nil
+                step = 3
+            }
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.bottom, Spacing.screenPadding)
         }
     }
 
@@ -149,22 +297,39 @@ struct SellToProjectModal: View {
             return
         }
 
+        guard let pricedItems = itemsWithProjectPrices() else {
+            errorMessage = "Enter a project price for each item."
+            step = 2
+            return
+        }
+
         isSaving = true
         errorMessage = nil
         let service = InventoryOperationsService()
-        let itemsToSell = items
+        let itemsToSell = pricedItems
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
         Task {
             do {
-                try await service.sellToProject(
-                    items: itemsToSell,
-                    destinationProjectId: projectId,
-                    budgetCategoryId: categoryId,
-                    accountId: acctId,
-                    inventoryLabel: inventoryLabel,
-                    userId: authManager.currentUser?.uid
-                )
+                if itemsToSell.allSatisfy({ $0.projectId == nil }) {
+                    try await service.sellToProject(
+                        items: itemsToSell,
+                        destinationProjectId: projectId,
+                        budgetCategoryId: categoryId,
+                        accountId: acctId,
+                        inventoryLabel: inventoryLabel,
+                        userId: authManager.currentUser?.uid
+                    )
+                } else {
+                    try await service.sellItemsFromProjectToProject(
+                        items: itemsToSell,
+                        destinationProjectId: projectId,
+                        destinationCategoryId: categoryId,
+                        accountId: acctId,
+                        inventoryLabel: inventoryLabel,
+                        userId: authManager.currentUser?.uid
+                    )
+                }
                 await MainActor.run {
                     onComplete()
                     dismiss()
@@ -176,6 +341,59 @@ struct SellToProjectModal: View {
                 }
             }
         }
+    }
+
+    private var missingProjectPriceItems: [Item] {
+        items.filter { ($0.projectPriceCents ?? 0) <= 0 }
+    }
+
+    private func prepareProjectPricePrompts() {
+        for item in missingProjectPriceItems {
+            guard let id = item.id else { continue }
+            projectPriceTexts[id] = item.projectPriceCents.map { Self.centsToText($0) } ?? ""
+        }
+    }
+
+    private func validateProjectPrices() -> Bool {
+        for item in missingProjectPriceItems {
+            guard let id = item.id,
+                  let cents = Self.parseCents(projectPriceTexts[id]),
+                  cents > 0 else {
+                errorMessage = "Enter a valid project price for each item."
+                return false
+            }
+        }
+        return true
+    }
+
+    private func itemsWithProjectPrices() -> [Item]? {
+        var result = items
+        for index in result.indices {
+            guard (result[index].projectPriceCents ?? 0) <= 0 else { continue }
+            guard let id = result[index].id,
+                  let cents = Self.parseCents(projectPriceTexts[id]),
+                  cents > 0 else {
+                return nil
+            }
+            result[index].projectPriceCents = cents
+        }
+        return result
+    }
+
+    private static func parseCents(_ text: String?) -> Int? {
+        guard let text else { return nil }
+        let cleaned = text.replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty, let value = Decimal(string: cleaned), value > 0 else { return nil }
+        let cents = NSDecimalNumber(decimal: value)
+            .multiplying(by: 100)
+            .rounding(accordingToBehavior: nil)
+        return cents.intValue
+    }
+
+    private static func centsToText(_ cents: Int) -> String {
+        String(format: "%.2f", Double(cents) / 100.0)
     }
 
     private func loadAccountCategories() {

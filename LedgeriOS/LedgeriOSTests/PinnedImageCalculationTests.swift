@@ -99,10 +99,10 @@ struct PinnedImageCalculationTests {
         #expect(PinnedImageCalculations.canPin(attachment) == true)
     }
 
-    @Test("Cannot pin PDF attachment")
-    func cannotPinPDF() {
+    @Test("Can pin PDF attachment")
+    func canPinPDF() {
         let attachment = AttachmentRef(url: "https://example.com/doc.pdf", kind: .pdf)
-        #expect(PinnedImageCalculations.canPin(attachment) == false)
+        #expect(PinnedImageCalculations.canPin(attachment) == true)
     }
 
     @Test("Cannot pin file attachment")

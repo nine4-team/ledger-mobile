@@ -13,6 +13,7 @@ struct IngestionMeta: Codable, Hashable {
 struct TransactionAudit: Codable, Hashable {
     var resolvedSubtotalCents: Int?
     var itemsSumCents: Int?
+    var discountCents: Int?
     var varianceCents: Int?
     var variancePercent: Double?
     var linkedItemsSumCents: Int?
@@ -23,6 +24,10 @@ struct TransactionAudit: Codable, Hashable {
     var itemsMissingTaxRateCount: Int?
     var itemsMissingTaxRate: [String]?
     var totalItemCount: Int?
+}
+
+struct Discount: Codable, Hashable {
+    var amountCents: Int
 }
 
 struct Transaction: Codable, Identifiable, Hashable {
@@ -51,6 +56,7 @@ struct Transaction: Codable, Identifiable, Hashable {
     var audit: TransactionAudit?
     var taxRatePct: Double?
     var subtotalCents: Int?
+    var discount: Discount?
     var ingestionSource: String?
     var ingestionStatus: String?
     var ingestionMeta: IngestionMeta?
@@ -65,7 +71,7 @@ struct Transaction: Codable, Identifiable, Hashable {
              isCanonicalInventory, canonicalKind, isCanonicalInventorySale, inventorySaleDirection,
              itemIds, status, purchasedBy, reimbursementType, notes,
              budgetCategoryId, paymentMethod, receiptImages, otherImages, transactionImages,
-             isComplete, audit, taxRatePct, subtotalCents,
+             isComplete, audit, taxRatePct, subtotalCents, discount,
              ingestionSource, ingestionStatus, ingestionMeta, triggerEvent,
              settlementInvoiceId, settlementInvoiceLineIds,
              createdAt, updatedAt

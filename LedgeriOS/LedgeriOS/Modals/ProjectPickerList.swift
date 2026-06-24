@@ -1,17 +1,18 @@
 import SwiftUI
-import FirebaseFirestore
 
-/// Single-select project picker that loads all account projects via real-time subscription.
+/// Single-select project picker backed by the account-level project cache.
 struct ProjectPickerList: View {
     let onSelect: (Project) -> Void
 
     @Environment(AccountContext.self) private var accountContext
 
-    @State private var projects: [Project] = []
-    @State private var isLoading = true
-    @State private var listener: ListenerRegistration?
-
     @Environment(\.dismiss) private var dismiss
+
+    private var projects: [Project] {
+        accountContext.allProjects.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -32,20 +33,13 @@ struct ProjectPickerList: View {
             .padding(.bottom, Spacing.md)
 
             Group {
-                if isLoading {
-                    LoadingScreen(message: "Loading projects...")
-                } else if projects.isEmpty {
+                if projects.isEmpty {
                     ContentUnavailableView("No projects", systemImage: "folder")
                         .frame(maxHeight: .infinity)
                 } else {
                     projectList
                 }
             }
-        }
-        .task { await setupListener() }
-        .onDisappear {
-            listener?.remove()
-            listener = nil
         }
     }
 
@@ -84,24 +78,6 @@ struct ProjectPickerList: View {
                     Divider()
                         .padding(.horizontal, Spacing.screenPadding)
                 }
-            }
-        }
-    }
-
-    private func setupListener() async {
-        guard let accountId = accountContext.currentAccountId else {
-            isLoading = false
-            return
-        }
-
-        listener?.remove()
-        let service = ProjectService()
-        listener = service.subscribeToProjects(accountId: accountId) { newProjects in
-            Task { @MainActor in
-                self.projects = newProjects.sorted {
-                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-                }
-                self.isLoading = false
             }
         }
     }

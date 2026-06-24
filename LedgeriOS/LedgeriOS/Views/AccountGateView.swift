@@ -18,6 +18,8 @@ struct AccountGateView: View {
             }
         }
         .task {
+            guard !AppRuntime.isUnitTestHost else { return }
+
             guard let uid = authManager.currentUser?.uid else {
                 print("🟡 AccountGateView.task: uid is nil, returning early")
                 return
