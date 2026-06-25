@@ -42,7 +42,7 @@ export type ItemStatus = (typeof itemStatuses)[number];
 export const invoiceStatuses = ["draft", "sent", "paid", "voided"] as const;
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
-export const movementKinds = ["sold", "returned", "transferred"] as const;
+export const movementKinds = ["sold", "soldToInventory", "returned", "transferred"] as const;
 export type MovementKind = (typeof movementKinds)[number];
 
 /**

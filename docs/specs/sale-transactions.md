@@ -4,17 +4,17 @@
 
 ## Overview
 
-When items move between business inventory and a project, the system creates an immutable **inventory movement transaction** to represent the financial impact on the project's budget. Inventory → project is a **Purchase** from inventory. Project → inventory acquisition is a **Sale** to inventory. This document is the source of truth for how these per-batch inventory movements work.
+When items move between business inventory and a project, the system creates a per-batch **inventory movement transaction** to represent the financial impact on the project's budget. Inventory → project is a **Purchase** from inventory. Project → inventory acquisition is a **Sale** to inventory. This document is the source of truth for how these per-batch inventory movements work.
 
 ## The Per-Batch Model
 
-Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written once, with a frozen list of items and a frozen amount snapshot, and is **never mutated after creation**. If the user purchases more inventory items into the project later, that's a separate transaction.
+Every user action that moves items from inventory into a project creates **one new purchase transaction**. The transaction is written with a frozen amount snapshot and an initial active item list. If items later leave through return or sale, they are removed from `itemIds` and preserved through lineage.
 
 This is different from the legacy canonical-sale model, where one long-lived transaction per `(project, direction, category)` triple aggregated every inventory movement over time. The legacy model is preserved for historical data — see "Legacy Canonical Sales" below.
 
 ### Why per-batch
 
-- **Drift impossible.** Each movement is an immutable document. There's no shared mutable state across implementations to drift.
+- **Aggregator drift avoided.** Each movement is a per-batch document instead of a shared long-lived aggregator. Source `itemIds` still update for normal return/sale membership changes.
 - **Accounting-correct.** Historical movement amounts never shift retroactively. A movement records what was true at the moment it happened.
 - **Matches user mental model.** "I bought these five things from inventory for Hawaii under Furnishings" = one transaction. Not "this category in this project has accumulated $X of inventory transfers."
 - **Atomic failure.** A failed batch fails as a unit. There's no partial state where some items moved and others didn't.
@@ -47,7 +47,7 @@ interface InventoryPurchaseTransaction {
   projectId: string;                    // destination project
   budgetCategoryId: string;             // destination category
   amountCents: number;                  // frozen at creation; project-price basis
-  itemIds: string[];                    // frozen at creation, length 1..100
+  itemIds: string[];                    // active membership, length 0..100 after returns/sales
   source: "[Account] Inventory";        // inventory label, the non-project side
   notes?: string;                       // optional audit note
   createdAt: Timestamp;
@@ -64,8 +64,8 @@ interface InventoryPurchaseTransaction {
 
 The following invariants are enforced by Firestore security rules and by tests in both iOS and the MCP server:
 
-1. **Immutability after creation.** `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it's created. Mutable fields: `notes`, `status`, `updatedAt`.
-2. **Batch size cap.** `itemIds.length >= 1 && itemIds.length <= 100`. Both clients enforce locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
+1. **Accounting immutability after creation.** `amountCents`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it's created. Mutable fields include `itemIds`, `notes`, `status`, `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
+2. **Batch size cap.** Initial `itemIds.length >= 1 && itemIds.length <= 100`. Later returns/sales can reduce `itemIds` to zero on the source transaction. Both clients enforce the initial cap locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
 4. **Direction is shape-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source and no category is project → inventory acquisition. The direction is derivable from `(type, source, budgetCategoryId)` alone — no dedicated field.
 5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the purchase. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
@@ -200,15 +200,15 @@ Resolution is implemented in `TransactionDisplayCalculations.displayName(for:)` 
 - **Type badge:** "Purchase", "Sale", or "Return" (type only — never direction).
 - **Source field:** the inventory label for inventory-involved transactions, the vendor name for vendor transactions.
 - **Amount:** the frozen `amountCents`.
-- **Items:** rendered from `itemIds`.
+- **Items:** current active items rendered from `itemIds`; items that left via return/sale render from lineage sections.
 
-Inventory movement transactions are NOT user-editable. The shape fields are immutable. Users can edit `notes` and add/cancel via `status`.
+Inventory movement transactions are NOT user-editable for accounting shape. Users can edit `notes` and add/cancel via `status`; inventory flows may update `itemIds` as items leave via return/sale.
 
 ### Transaction List Grouping
 
 Transaction lists visually group inventory-movement records so the list reads as movement activity per project/category rather than a stream of per-batch documents. This grouping is **presentation-only**:
 
-- The underlying Sale, Return, and Purchase documents remain separate immutable/auditable records.
+- The underlying Sale, Return, and Purchase documents remain separate auditable records with frozen accounting fields.
 - Transaction detail always opens the real child transaction.
 - Bulk selection, export, and totals operate on the child transaction IDs.
 - No grouped row is written back to Firestore and no grouped row becomes a canonical aggregate.

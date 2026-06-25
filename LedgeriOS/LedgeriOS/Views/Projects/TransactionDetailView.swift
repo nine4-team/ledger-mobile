@@ -99,13 +99,6 @@ struct TransactionDetailView: View {
         if currentTransaction.isReturnTransaction {
             return transactionItems
         }
-        // Inventory movement transactions show all items regardless of status.
-        // Their itemIds are frozen movement snapshots; status-based filtering
-        // only applies to normal purchase transactions whose moved-out items
-        // are tracked via lineage in separate sections.
-        if currentTransaction.isInventoryMovement {
-            return transactionItems
-        }
         return transactionItems.filter { $0.status != .returned && $0.status != .sold }
     }
 
@@ -998,7 +991,7 @@ struct TransactionDetailView: View {
                 guard let itemId = edge.itemId,
                       edge.fromTransactionId == transactionId,
                       let kind = edge.movementKind,
-                      (kind == "returned" || kind == "sold"),
+                      (kind == "returned" || kind == "sold" || kind == "soldToInventory"),
                       !currentItemIds.contains(itemId) else { continue }
 
                 if let existing = latestByItem[itemId] {
@@ -1011,10 +1004,21 @@ struct TransactionDetailView: View {
             }
 
             let returnedIds = Set(latestByItem.filter { $0.value.movementKind == "returned" }.keys)
-            let soldIds = Set(latestByItem.filter { $0.value.movementKind == "sold" }.keys)
+            let soldIds = Set(latestByItem.filter {
+                $0.value.movementKind == "sold" || $0.value.movementKind == "soldToInventory"
+            }.keys)
 
-            // Resolve items from project context (returned items stay in same project)
-            let returnedFromContext = projectContext.items.filter { returnedIds.contains($0.id ?? "") }
+            var returnedResolved = projectContext.items.filter { returnedIds.contains($0.id ?? "") }
+            let foundReturnedIds = Set(returnedResolved.compactMap(\.id))
+            let missingReturnedIds = returnedIds.subtracting(foundReturnedIds)
+            if !missingReturnedIds.isEmpty {
+                let service = ItemsService()
+                for itemId in missingReturnedIds {
+                    if let item = try? await service.getItem(accountId: accountId, itemId: itemId) {
+                        returnedResolved.append(item)
+                    }
+                }
+            }
 
             // Sold items may have left the project — try context first, then fetch missing
             var soldResolved = projectContext.items.filter { soldIds.contains($0.id ?? "") }
@@ -1029,7 +1033,7 @@ struct TransactionDetailView: View {
                 }
             }
 
-            lineageReturnedItems = returnedFromContext
+            lineageReturnedItems = returnedResolved
             lineageSoldItems = soldResolved
         } catch {
             // Fail silently — sections just won't show. Offline-first: no spinner.

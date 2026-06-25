@@ -165,7 +165,7 @@ This is a reassign. All writes are client-side (Tier 1: fire-and-forget).
 
 ### Adding Item to a Transaction (Cross-Scope)
 
-This is a sell or return-to-inventory, depending on direction. Each is one Firestore batch (the destination transaction is a brand-new immutable document, not an aggregator). See [sale-transactions.md](sale-transactions.md) and [return-and-sale-tracking.md](return-and-sale-tracking.md) for the full write sequences.
+This is a sell or return-to-inventory, depending on direction. Each is one Firestore batch (the destination transaction is a brand-new per-batch document, not an aggregator). See [sale-transactions.md](sale-transactions.md) and [return-and-sale-tracking.md](return-and-sale-tracking.md) for the full write sequences.
 
 **Inventory → project (per-batch Purchase):**
 
@@ -177,7 +177,7 @@ This is a sell or return-to-inventory, depending on direction. Each is one Fires
 | `item.budgetCategoryId` | Set to the chosen batch category |
 | `item.status` | Set to `"purchased"` |
 | Source `transaction.itemIds` | Remove item ID (if any prior transaction) |
-| New Purchase transaction | Created with `itemIds` and `amountCents` frozen at this batch |
+| New Purchase transaction | Created with active `itemIds` and frozen `amountCents` for this batch |
 
 **Lineage:** A `sold` edge is created client-side per item.
 

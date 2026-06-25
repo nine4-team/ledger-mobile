@@ -89,7 +89,7 @@ function getText(result: unknown): string {
 // M1 — sell_items_from_inventory_to_project happy path
 // ─────────────────────────────────────────────────────────────────────────────
 describe("sell_items_from_inventory_to_project", () => {
-  test("M1: happy path creates one Purchase transaction with frozen shape", async () => {
+  test("M1: happy path creates one Purchase transaction with frozen accounting shape", async () => {
     await seedProject(db, {
       id: "proj_dest",
       budgetCategories: [{ id: "cat_furnishings", budgetCents: 100000 }],
@@ -486,7 +486,38 @@ describe("update_transaction", () => {
     expect(isError(result)).toBe(false);
   });
 
-  test("M8c: legacy canonical sale updates allowed", async () => {
+  test("M8c: update_transaction itemIds on Sale is allowed for active membership", async () => {
+    await seedProject(db, {
+      id: "proj_dest",
+      budgetCategories: [{ id: "cat_furnishings" }],
+    });
+    await seedTransaction(db, {
+      id: "sale_perbatch",
+      type: "Sale",
+      source: "Business Inventory",
+      projectId: "proj_dest",
+      budgetCategoryId: "cat_furnishings",
+      amountCents: 10000,
+      itemIds: ["item_x", "item_y"],
+    });
+
+    const result = await callTool("update_transaction", {
+      transactionId: "sale_perbatch",
+      itemIds: ["item_y"],
+      notes: "4/9 — M8c returned item_x",
+    });
+
+    expect(isError(result)).toBe(false);
+
+    const tx = await getDocData(
+      db,
+      `accounts/${TEST_ACCOUNT_ID}/transactions/sale_perbatch`
+    );
+    expect(tx?.itemIds).toEqual(["item_y"]);
+    expect(tx?.amountCents).toBe(10000);
+  });
+
+  test("M8d: legacy canonical sale updates allowed", async () => {
     await seedTransaction(db, {
       id: "SALE_legacy_canonical",
       type: "Sale",

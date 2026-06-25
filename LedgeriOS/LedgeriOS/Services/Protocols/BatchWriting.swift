@@ -19,7 +19,7 @@ protocol BatchWriting {
 
     /// Returns the value of a single string field on a document, or nil if the
     /// document or field is missing. Used to classify source transactions before
-    /// writes (e.g., "don't arrayRemove from a Sale's itemIds").
+    /// writes.
     func stringField(_ field: String, atPath path: String) async throws -> String?
 }
 

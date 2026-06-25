@@ -21,7 +21,7 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ## Transaction & Billing Model (Current Understanding)
 
 ### Transaction Structure
-- Projects have normal project transactions plus immutable per-batch inventory movement transactions. Inventory movement transactions are not long-lived aggregators.
+- Projects have normal project transactions plus per-batch inventory movement transactions. Inventory movement transactions are not long-lived aggregators; their accounting fields are frozen while `itemIds` tracks current active membership.
 - Transactions can be purchase transactions (business buys items into inventory, or a project buys items from inventory), return transactions, or Sale-to-Inventory transactions (business acquires project-originated items into inventory)
 - Categories come in two types: **itemized** (individual items tracked with detail — furnishings, accessories, additional requests, mattresses) and **non-itemized/expense** (costs logged at transaction level — install, fuel, delivery). [Full category list needs discovery]
 

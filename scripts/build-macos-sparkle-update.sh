@@ -43,9 +43,9 @@ find_sparkle_bin() {
   local tmpdir
   tmpdir="$(mktemp -d /tmp/sparkle-tools.XXXXXX)"
   curl -L --fail \
-    -o "$tmpdir/Sparkle-2.9.2.tar.xz" \
-    https://github.com/sparkle-project/Sparkle/releases/download/2.9.2/Sparkle-2.9.2.tar.xz
-  tar -xf "$tmpdir/Sparkle-2.9.2.tar.xz" -C "$tmpdir"
+    -o "$tmpdir/Sparkle-2.9.3.tar.xz" \
+    https://github.com/sparkle-project/Sparkle/releases/download/2.9.3/Sparkle-2.9.3.tar.xz
+  tar -xf "$tmpdir/Sparkle-2.9.3.tar.xz" -C "$tmpdir"
   echo "$tmpdir/bin"
 }
 

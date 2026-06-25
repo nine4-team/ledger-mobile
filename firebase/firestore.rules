@@ -182,10 +182,11 @@ service cloud.firestore {
     }
 
     // Inventory movement transaction immutability.
-    // New per-batch inventory movement transactions are frozen after creation —
-    // `amountCents`, `itemIds`, `budgetCategoryId`, `type`, `source`,
-    // `projectId` must never change. Mutable fields: `notes`, `status`,
-    // `updatedAt`, `isComplete`, `audit`, any other non-shape fields.
+    // New per-batch inventory movement transactions keep their accounting
+    // shape frozen after creation: `amountCents`, `budgetCategoryId`, `type`,
+    // `source`, `projectId` must never change. `itemIds` remains mutable so
+    // returns/sales can remove items from the source transaction while lineage
+    // preserves the historical membership.
     // Inventory→project is an inventory-labeled Purchase. Project→inventory
     // acquisition is a Sale with no category. Legacy canonical sales are
     // exempt so existing flows (cancel_transaction, etc.) continue to work.
@@ -201,12 +202,11 @@ service cloud.firestore {
                     && resource.data.get('source', '').matches('.* Inventory$')))
               && resource.data.get('isCanonicalInventorySale', false) != true)
             || resource.data.get('isCanonicalInventorySale', false) == true
-            || (request.resource.data.amountCents == resource.data.amountCents
-                && request.resource.data.itemIds == resource.data.itemIds
-                && request.resource.data.budgetCategoryId == resource.data.budgetCategoryId
-                && request.resource.data.type == resource.data.type
-                && request.resource.data.source == resource.data.source
-                && request.resource.data.projectId == resource.data.projectId));
+            || (request.resource.data.get('amountCents', null) == resource.data.get('amountCents', null)
+                && request.resource.data.get('budgetCategoryId', null) == resource.data.get('budgetCategoryId', null)
+                && request.resource.data.get('type', null) == resource.data.get('type', null)
+                && request.resource.data.get('source', null) == resource.data.get('source', null)
+                && request.resource.data.get('projectId', null) == resource.data.get('projectId', null)));
     }
 
     match /accounts/{accountId}/invoices/{invoiceId} {

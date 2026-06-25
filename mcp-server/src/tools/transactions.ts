@@ -30,7 +30,7 @@ function txTypeName(tx: Transaction): string {
 
 /**
  * Server-side defense matching Firestore rules: per-batch inventory movement
- * transactions have frozen shape fields (amountCents, itemIds,
+ * transactions have frozen accounting shape fields (amountCents,
  * budgetCategoryId, type, source, projectId). Legacy canonical sales
  * (isCanonicalInventorySale == true) are exempt so cancel_transaction, etc.
  * still work on historical docs.
@@ -39,7 +39,6 @@ function txTypeName(tx: Transaction): string {
  */
 const FROZEN_MOVEMENT_FIELDS = [
   "amountCents",
-  "itemIds",
   "budgetCategoryId",
   "type",
   "source",
@@ -63,10 +62,10 @@ function checkInventoryMovementImmutability(
   if (violated.length === 0) return null;
 
   return validation(
-    `Inventory movement transaction ${existing.id} has frozen shape fields; cannot update: ${violated.join(", ")}.`,
+    `Inventory movement transaction ${existing.id} has frozen accounting fields; cannot update: ${violated.join(", ")}.`,
     "Per-batch inventory movement transactions are immutable after creation. If the movement needs to be " +
       "corrected, cancel it via cancel_transaction and issue a new one via inventory movement tools. " +
-      "Mutable fields: notes, status, updatedAt."
+      "Mutable fields include itemIds, notes, status, updatedAt."
   );
 }
 
@@ -225,7 +224,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
 
         for (const edge of [...fromEdges, ...toEdges]) {
           if (edge.fromTransactionId !== transactionId) continue;
-          if (edge.movementKind !== "returned" && edge.movementKind !== "sold") continue;
+          if (edge.movementKind !== "returned" && edge.movementKind !== "sold" && edge.movementKind !== "soldToInventory") continue;
           if (!edge.itemId || currentItemIds.has(edge.itemId)) continue;
 
           const existing = latestByItem.get(edge.itemId);
@@ -235,7 +234,9 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         }
 
         const returnedIds = [...latestByItem.entries()].filter(([, e]) => e.movementKind === "returned").map(([id]) => id);
-        const soldIds = [...latestByItem.entries()].filter(([, e]) => e.movementKind === "sold").map(([id]) => id);
+        const soldIds = [...latestByItem.entries()]
+          .filter(([, e]) => e.movementKind === "sold" || e.movementKind === "soldToInventory")
+          .map(([id]) => id);
 
         if (returnedIds.length) {
           const results = await Promise.all(returnedIds.map((id) => getDoc<Item>(db, "items", id)));
@@ -504,7 +505,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }
       if (violations.length > 0) {
         return validation(
-          `Bulk update would touch frozen shape fields on ${violations.length} inventory movement transaction(s): ${violations.slice(0, 3).join(", ")}${violations.length > 3 ? "…" : ""}`,
+          `Bulk update would touch frozen accounting fields on ${violations.length} inventory movement transaction(s): ${violations.slice(0, 3).join(", ")}${violations.length > 3 ? "…" : ""}`,
           "Per-batch inventory movement transactions are immutable after creation. Narrow the filter or drop the frozen field from the update."
         );
       }

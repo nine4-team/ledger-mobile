@@ -60,7 +60,6 @@
     "source",
     "projectId",
     "budgetCategoryId",
-    "amountCents",
-    "itemIds"
+    "amountCents"
   ]
 }

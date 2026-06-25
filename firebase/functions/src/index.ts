@@ -207,7 +207,7 @@ export const onLineageEdgeCreated = onDocumentCreated(
     if (!data) return;
 
     const movementKind = data.movementKind as string | undefined;
-    if (movementKind !== 'returned' && movementKind !== 'sold') return;
+    if (movementKind !== 'returned' && movementKind !== 'sold' && movementKind !== 'soldToInventory') return;
 
     const fromTransactionId = data.fromTransactionId as string | undefined;
     if (!fromTransactionId) return;
@@ -334,7 +334,7 @@ export const onItemPriceChanged = onDocumentUpdated(
         for (const edgeDoc of edgesSnapshot.docs) {
           const edge = edgeDoc.data() ?? {};
           const kind = edge.movementKind as string | undefined;
-          if (kind !== 'returned' && kind !== 'sold') continue;
+          if (kind !== 'returned' && kind !== 'sold' && kind !== 'soldToInventory') continue;
           const fromTxId = edge.fromTransactionId as string | undefined;
           if (fromTxId) sourceTransactionIds.add(fromTxId);
         }
@@ -1293,7 +1293,7 @@ async function computeIsComplete(
   for (const edgeDoc of edgesSnapshot.docs) {
     const edge = edgeDoc.data() ?? {};
     const kind = edge.movementKind as string | undefined;
-    if (kind !== 'returned' && kind !== 'sold') continue;
+    if (kind !== 'returned' && kind !== 'sold' && kind !== 'soldToInventory') continue;
     const edgeItemId = edge.itemId as string | undefined;
     if (!edgeItemId) continue;
     // Skip items still in itemIds (prevent double-counting)
@@ -1373,7 +1373,7 @@ async function computeIsComplete(
         if (edgeInfo?.movementKind === 'returned') {
           returnedItemsSumCents += priceCents;
           returnedItemsCount++;
-        } else if (edgeInfo?.movementKind === 'sold') {
+        } else if (edgeInfo?.movementKind === 'sold' || edgeInfo?.movementKind === 'soldToInventory') {
           soldItemsSumCents += priceCents;
           soldItemsCount++;
         }

@@ -17,9 +17,10 @@ import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventor
 // LedgeriOS/Services/InventoryOperationsService.swift.
 //
 // Key invariants (also enforced by Firestore rules):
-//   • Each inventory movement creates at least one new immutable Purchase,
-//     Sale, or Return transaction with an auto-ID. Shape fields (amountCents,
-//     itemIds, budgetCategoryId, type, source, projectId) are frozen at creation.
+//   • Each inventory movement creates at least one new Purchase, Sale, or
+//     Return transaction with an auto-ID. Accounting shape fields (amountCents,
+//     budgetCategoryId, type, source, projectId) are frozen at creation;
+//     itemIds tracks current active membership.
 //   • Inventory movement direction is derived from transaction shape:
 //        - inventory → project: Purchase with `budgetCategoryId` set.
 //        - project → inventory acquisition: Sale with `budgetCategoryId` absent.
@@ -128,23 +129,17 @@ function splitByOrigin(items: (Item & { id: string })[]): {
 }
 
 /**
- * Pre-fetch each distinct source transaction's type. Inventory movement
- * transactions are frozen; their itemIds cannot be mutated via arrayRemove.
- * The commit helpers skip arrayRemove for these sources.
+ * Source transaction itemIds now represent active membership for every
+ * transaction type. Kept as a compatibility shim for older call sites that
+ * still pass a "frozen" set into applyArrayRemoves.
  */
 async function frozenSourceTxIds(
   db: Firestore,
   items: (Item & { id: string })[]
 ): Promise<Set<string>> {
-  const unique = new Set(items.map((i) => i.transactionId).filter(Boolean) as string[]);
-  const frozen = new Set<string>();
-  for (const txId of unique) {
-    const tx = await getDoc<Transaction>(db, "transactions", txId);
-    const isInventoryPurchase =
-      tx?.type === "Purchase" && typeof tx.source === "string" && tx.source.endsWith(" Inventory");
-    if (tx && (tx.type === "Sale" || tx.type === "Return" || isInventoryPurchase)) frozen.add(txId);
-  }
-  return frozen;
+  void db;
+  void items;
+  return new Set<string>();
 }
 
 /** Validate that a budget category exists and is enabled in a project. */
@@ -178,7 +173,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   // ── sell_items_from_inventory_to_project ───────────────────────────────────
   server.tool(
     "sell_items_from_inventory_to_project",
-    "[event] Sell items from business inventory into a project. Creates ONE new immutable Purchase " +
+    "[event] Sell items from business inventory into a project. Creates ONE new Purchase " +
       "transaction (source: Business Inventory) against destinationProjectId, increasing that " +
       "project's budget under budgetCategoryId. Every item must currently be in business inventory " +
       "(projectId == null).\n\n" +
@@ -188,8 +183,8 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "with `projectId: null` to relocate them to inventory as a CORRECTION — then sell from " +
       "inventory normally. Inventing fake transactions to justify bad data pollutes the books.\n\n" +
       "Ask the user to pick the category from get_project_budget_categories BEFORE calling — one " +
-      "category per batch. Shape fields (amountCents, itemIds, budgetCategoryId, projectId, type, " +
-      "source) are frozen at creation. Cap: 100 items per call.\n\n" +
+      "category per batch. Accounting fields (amountCents, budgetCategoryId, projectId, type, " +
+      "source) are frozen at creation; itemIds tracks active membership. Cap: 100 items per call.\n\n" +
       "PRICING: amountCents/subtotalCents are derived from each item's projectPriceCents (the " +
       "client-charged price) — NOT purchasePriceCents (cost). Every item must have a non-null, " +
       "non-zero projectPriceCents; the call fails with the offending IDs otherwise.",
@@ -297,7 +292,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
   server.tool(
     "sell_items_from_project_to_inventory",
     "[event] Sell project items into business inventory (the business is acquiring items that " +
-      "originated in the project). Creates ONE new immutable Sale transaction against " +
+      "originated in the project). Creates ONE new Sale transaction against " +
       "sourceProjectId, decreasing that project's budget. Items land in inventory with projectId " +
       "and budgetCategoryId cleared.\n\n" +
       "ORIGIN REQUIREMENT: every item must have originated in the source project (currentSource == " +
@@ -306,7 +301,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes (item " +
       "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
       "without creating a transaction.\n\n" +
-      "Shape fields (amountCents, itemIds, projectId, type, source) are frozen at creation. " +
+      "Accounting fields (amountCents, projectId, type, source) are frozen at creation. " +
       "Cap: 100 items per call. PRICING: amountCents/subtotalCents use purchasePriceCents.",
     {
       itemIds: z
@@ -731,7 +726,7 @@ async function commitSellToProject(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // 1. New Purchase transaction (frozen shape).
+  // 1. New Purchase transaction (frozen accounting shape).
   const purchaseRef = txCol.doc();
   batch.set(purchaseRef, {
     type: "Purchase",
@@ -763,7 +758,7 @@ async function commitSellToProject(
     });
   }
 
-  // 3. Remove from prior tx itemIds — skip frozen Sale/Return sources.
+  // 3. Remove from prior tx active membership.
   applyArrayRemoves(batch, txCol, items, frozen, now);
 
   // 4. Lineage edges.
@@ -847,7 +842,7 @@ async function commitSellToInventory(
     });
   }
 
-  // 3. Remove from prior tx itemIds — skip frozen sources.
+  // 3. Remove from prior tx active membership.
   applyArrayRemoves(batch, txCol, items, frozen, now);
 
   // 4. Lineage edges — "soldToInventory" signals project → inventory acquisition.
@@ -955,7 +950,7 @@ async function commitReturnToInventory(
     });
   }
 
-  // Remove from prior tx itemIds — skip frozen + the return tx itself.
+  // Remove from prior tx active membership; skip the return tx itself.
   const frozenPlusReturn = new Set(frozen);
   frozenPlusReturn.add(returnTxRef.id);
   applyArrayRemoves(batch, txCol, items, frozenPlusReturn, now);
@@ -1017,9 +1012,7 @@ async function commitReturnToVendor(
     });
   }
 
-  // Vendor return tx is itself a Return, so its itemIds is frozen — use
-  // update-with-arrayUnion (allowed by rules because itemIds arrayUnion is
-  // permitted for mutable-append fields; matches prior behavior).
+  // Append into the destination Return transaction's active membership.
   const mergedNotes = tagged
     ? returnTx.notes
       ? `${returnTx.notes}\n\n${tagged}`
@@ -1031,7 +1024,7 @@ async function commitReturnToVendor(
     ...(mergedNotes !== undefined ? { notes: mergedNotes } : {}),
   });
 
-  // Remove from prior tx itemIds — skip frozen sources and the return tx itself.
+  // Remove from prior tx active membership; skip the return tx itself.
   const frozenPlusReturn = new Set(frozen);
   frozenPlusReturn.add(returnTx.id);
   applyArrayRemoves(batch, txCol, items, frozenPlusReturn, now);
@@ -1164,7 +1157,7 @@ async function commitSellItemsFromProjectToProject(
     });
   }
 
-  // 4. Remove from prior tx itemIds — skip frozen.
+  // 4. Remove from prior tx active membership.
   applyArrayRemoves(batch, txCol, items, frozen, now);
 
   // 5. Lineage edges — two per item.
@@ -1223,9 +1216,8 @@ async function commitSellItemsFromProjectToProject(
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Remove items from their prior source transaction's itemIds — one update per
- * distinct source tx. Sale and Return sources (listed in `frozen`) are skipped
- * because Firestore rules reject mutations to their itemIds array.
+ * Remove items from their prior source transaction's active itemIds — one
+ * update per distinct source tx.
  */
 function applyArrayRemoves(
   batch: FirebaseFirestore.WriteBatch,

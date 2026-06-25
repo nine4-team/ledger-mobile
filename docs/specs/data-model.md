@@ -99,18 +99,17 @@ transactions link back to invoices with `settlementInvoiceId`.
 
 **Why `type` is aliased to `transactionType`:** The Firestore field is named `type`, but application code maps it to `transactionType` to avoid collisions with language-reserved keywords and for clarity.
 
-#### Sale and Return-to-Inventory Immutability
+#### Inventory Movement Accounting Immutability
 
-**Per-batch inventory movement transactions** (inventory → project `type: "Purchase"` with an inventory source; project → inventory acquisition `type: "Sale"` with no `budgetCategoryId`; return-to-inventory `type: "Return"` with an inventory source) are **immutable after creation** for their shape fields:
+**Per-batch inventory movement transactions** (inventory → project `type: "Purchase"` with an inventory source; project → inventory acquisition `type: "Sale"` with no `budgetCategoryId`; return-to-inventory `type: "Return"` with an inventory source) keep their accounting shape immutable after creation:
 
 - `type`
 - `source`
 - `projectId`
 - `amountCents`
-- `itemIds`
 - `budgetCategoryId`
 
-Mutable fields: `notes`, `status`, `updatedAt`. Cancellation works by setting `status: "canceled"` — the shape fields stay frozen.
+Mutable fields include `itemIds`, `notes`, `status`, `updatedAt`. `itemIds` represents current active membership: returns, sales, and corrections remove items from the source transaction while lineage records the historical membership. Cancellation works by setting `status: "canceled"` — the accounting fields stay frozen.
 
 Enforced by Firestore security rules ([firebase/firestore.rules](../../firebase/firestore.rules)). Both clients additionally enforce on the write side. Legacy canonical sales (`isCanonicalInventorySale == true`) are exempt from this rule for backwards compatibility — see [canonical-sales.md](canonical-sales.md).
 
@@ -540,7 +539,7 @@ Embedded within Checklist.
 >
 > Card and list views use `transaction.itemIds` for counts. Detail views must use the same source. This has caused bugs when the wrong lookup direction was used.
 >
-> **Per-batch inventory movement immutability:** under the per-batch inventory movement model (see [sale-transactions.md](sale-transactions.md)), `transaction.itemIds` is set once at movement creation and never mutated. The same applies to Return-to-Inventory transactions (with the documented coalescing exception). This makes `itemIds` reliably authoritative for these transaction types.
+> **Per-batch inventory movement membership:** under the per-batch inventory movement model (see [sale-transactions.md](sale-transactions.md)), `transaction.itemIds` is authoritative for current active membership. Items that left the transaction via return or sale are resolved from lineage edges and shown in the Returned/Sold sections.
 
 ### Relationships Table
 

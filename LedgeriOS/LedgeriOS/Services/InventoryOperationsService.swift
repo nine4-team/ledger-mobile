@@ -31,10 +31,11 @@ enum InventoryOperationError: Error {
 /// return to transaction.
 ///
 /// ## Per-Batch Inventory Movement Transactions
-/// Inventory → project creates ONE new immutable Purchase transaction with an auto-ID.
-/// Project → inventory acquisition creates ONE new immutable Sale transaction.
-/// Shape fields (amountCents, itemIds, budgetCategoryId, type, source,
-/// projectId) are frozen at creation and never mutated.
+/// Inventory → project creates ONE new Purchase transaction with an auto-ID.
+/// Project → inventory acquisition creates ONE new Sale transaction.
+/// Accounting shape fields (amountCents, budgetCategoryId, type, source,
+/// projectId) are frozen at creation and never mutated. `itemIds` tracks
+/// current membership and can change when items leave via returns/sales.
 ///
 /// Inventory movement direction is implicit in the transaction shape:
 ///   - Inventory → project: `type == .purchase`, `source` is the inventory
@@ -110,10 +111,10 @@ struct InventoryOperationsService {
     // MARK: - Sell to Project
 
     /// Purchases items from business inventory (or another project) into a destination project.
-    /// Creates ONE new immutable Purchase transaction per call. No long-lived aggregators.
+    /// Creates ONE new Purchase transaction per call. No long-lived aggregators.
     ///
-    /// The Purchase transaction's shape (amountCents, itemIds, budgetCategoryId, projectId,
-    /// type, source) is frozen at creation — Firestore security rules enforce this.
+    /// The Purchase transaction's accounting shape (amountCents,
+    /// budgetCategoryId, projectId, type, source) is frozen at creation.
     func sellToProject(
         items: [Item],
         destinationProjectId: String,
@@ -135,16 +136,10 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        // Pre-fetch source tx types — frozen movement docs must not have
-        // their itemIds array mutated (Firestore rules reject; spec says immutable).
-        let frozenSources = try await Self.frozenSourceTxIds(
-            items: items, batch: batch, txPath: txPath
-        )
-
         // Frozen amount snapshot
         let totals = Self.computeBatchTotals(items)
 
-        // 1. Create new Purchase transaction (auto-ID via UUID, frozen shape)
+        // 1. Create new Purchase transaction (auto-ID, frozen accounting shape)
         let purchaseId = UUID().uuidString
         let purchaseDocPath = "\(txPath)/\(purchaseId)"
         let today = Self.todayDateString()
@@ -185,9 +180,8 @@ struct InventoryOperationsService {
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove item from its source transaction's itemIds — skipped
-            // when source is a frozen movement document (itemIds is immutable there).
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            // 3. Remove item from its source transaction's active membership.
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -250,10 +244,6 @@ struct InventoryOperationsService {
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
-        let frozenSources = try await Self.frozenSourceTxIds(
-            items: items, batch: batch, txPath: txPath
-        )
-
         // Return amount uses purchasePriceCents (what the business actually paid)
         let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
 
@@ -297,9 +287,8 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove from source transaction's itemIds — skipped for
-            // frozen Sale/Return sources.
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            // 3. Remove from source transaction's active membership.
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -366,10 +355,6 @@ struct InventoryOperationsService {
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
-        let frozenSources = try await Self.frozenSourceTxIds(
-            items: items, batch: batch, txPath: txPath
-        )
-
         let totals = Self.computePurchasePriceTotals(items)
         let sourceProjectId: Any = items.first?.projectId as Any? ?? NSNull()
 
@@ -411,8 +396,8 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // 3. Remove from source transaction's itemIds — skipped for frozen sources
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            // 3. Remove from source transaction's active membership.
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -493,9 +478,6 @@ struct InventoryOperationsService {
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
-        let frozenSources = try await Self.frozenSourceTxIds(
-            items: items, batch: batch, txPath: txPath
-        )
         let today = Self.todayDateString()
 
         // Return leg
@@ -551,7 +533,7 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -584,7 +566,7 @@ struct InventoryOperationsService {
                 "updatedAt": FieldValue.serverTimestamp(),
             ], forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -682,10 +664,6 @@ struct InventoryOperationsService {
         let edgesPath = "accounts/\(accountId)/lineageEdges"
         let pbcPath = "accounts/\(accountId)/projects/\(destinationProjectId)/budgetCategories"
 
-        let frozenSources = try await Self.frozenSourceTxIds(
-            items: items, batch: batch, txPath: txPath
-        )
-
         let split = Self.splitByOrigin(items)
         let today = Self.todayDateString()
 
@@ -777,8 +755,8 @@ struct InventoryOperationsService {
             }
             batch.updateData(itemUpdate, forDocumentAt: "\(itemsPath)/\(itemId)")
 
-            // Remove from source transaction's itemIds — skipped for frozen sources
-            if let fromTxId = item.transactionId, !frozenSources.contains(fromTxId) {
+            // Remove from source transaction's active membership.
+            if let fromTxId = item.transactionId {
                 batch.updateData(
                     ["itemIds": FieldValue.arrayRemove([itemId])],
                     forDocumentAt: "\(txPath)/\(fromTxId)"
@@ -1004,32 +982,6 @@ struct InventoryOperationsService {
     static func computePurchasePriceTotals(_ items: [Item]) -> (subtotalCents: Int, amountCents: Int) {
         let subtotalCents = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
         return (subtotalCents, subtotalCents)
-    }
-
-    /// Returns the set of source transaction IDs whose shape is frozen by
-    /// Firestore rules, so the service must not attempt `arrayRemove` on
-    /// their `itemIds`.
-    ///
-    /// Deduplicates across items so the same source is fetched once.
-    static func frozenSourceTxIds(
-        items: [Item],
-        batch: any BatchWriting,
-        txPath: String
-    ) async throws -> Set<String> {
-        let uniqueSourceIds = Set(items.compactMap(\.transactionId))
-        guard !uniqueSourceIds.isEmpty else { return [] }
-
-        var frozen: Set<String> = []
-        for txId in uniqueSourceIds {
-            let path = "\(txPath)/\(txId)"
-            let type = try await batch.stringField("type", atPath: path)
-            let source = try await batch.stringField("source", atPath: path) ?? ""
-            let isInventoryPurchase = type == "Purchase" && source.hasSuffix(" Inventory")
-            if type == "Sale" || type == "Return" || isInventoryPurchase {
-                frozen.insert(txId)
-            }
-        }
-        return frozen
     }
 
     /// Today's date as a yyyy-MM-dd string for `transactionDate`.

@@ -26,8 +26,8 @@ const ENTITIES: Record<string, EntitySchema> = {
     description:
       "A purchase, return, sale-to-inventory, fee, or expense. Owned by an account; may belong to a project. " +
       "Completeness (`isComplete`) is computed server-side — do not set manually. " +
-      "Inventory movement transactions are per-batch and immutable after creation (amountCents, " +
-      "itemIds, budgetCategoryId, type, source, projectId are frozen).",
+      "Inventory movement transactions are per-batch. Accounting fields are immutable after creation " +
+      "(amountCents, budgetCategoryId, type, source, projectId are frozen); itemIds tracks active membership.",
     requiredOnCreate: ["budgetCategoryId", "amountCents", "type", "notes"],
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
@@ -38,7 +38,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
       { name: "discount", type: "Discount?", description: "Transaction-level discount. amountCents is the exact positive discount applied against subtotal." },
-      { name: "itemIds", type: "string[]", description: "CANONICAL link: transaction owns the item IDs; never filter items by item.transactionId. FROZEN at creation on inventory movement transactions." },
+      { name: "itemIds", type: "string[]", description: "CANONICAL active-membership link: transaction owns the current item IDs; never filter items by item.transactionId. Items that left via return/sale are resolved from lineage." },
       { name: "budgetCategoryId", type: "string?", description: "Budget category. FROZEN at creation on inventory movement transactions." },
       { name: "isComplete", type: "boolean", description: "Computed server-side; false means items don't match subtotal within ±1% or missing data." },
       { name: "notes", type: "string", description: "REQUIRED on writes — dated audit note." },
@@ -47,7 +47,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     notes: [
       "Every mutation must include a dated audit note in `notes`.",
       "Canceled transactions contribute $0 to budget calculations.",
-      "Inventory movement transaction shape fields (amountCents, itemIds, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. Only notes, status, and updatedAt are mutable.",
+      "Inventory movement accounting fields (amountCents, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. itemIds, notes, status, and updatedAt are mutable.",
       "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
     ],
   },

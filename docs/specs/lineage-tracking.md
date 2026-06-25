@@ -175,7 +175,7 @@ Same two-query-and-merge pattern as above.
 
 ### Transaction Audit Completeness
 
-Lineage edges with `movementKind` "returned" or "sold" are included in the source transaction's audit calculation. The Cloud Function (`computeIsComplete`) queries these edges from `fromTransactionId`, fetches the referenced items, and adds their `purchasePriceCents` to the transaction's `itemsSumCents`. This ensures a transaction's completeness status reflects its full purchase history — items that were returned or sold still count toward the audit, preventing false "incomplete" flags after returns.
+Lineage edges with `movementKind` "returned", "sold", or "soldToInventory" are included in the source transaction's audit calculation. The Cloud Function (`computeIsComplete`) queries these edges from `fromTransactionId`, fetches the referenced items, and adds their `purchasePriceCents` to the transaction's `itemsSumCents`. This ensures a transaction's completeness status reflects its full purchase history — items that were returned or sold still count toward the audit, preventing false "incomplete" flags after returns.
 
 ## Relationship to Other Systems
 

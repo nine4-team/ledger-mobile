@@ -26,12 +26,12 @@ The app shows a **"Needs Review" badge** when `isComplete === false`.
 2. **Non-itemized category** — budget category's `metadata.categoryType` is not `"itemized"` (includes `"general"`, `"standard"`, `"fee"`, or no category)
 3. **All conditions met** for an itemized category:
    - Tax data present — `subtotalCents` is set (not null/undefined) **or** `taxRatePct` is set (not null/undefined, including `0`)
-   - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned"/"sold" exist for this transaction
+   - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned", "sold", or "soldToInventory" exist for this transaction
    - Items match subtotal — `abs(variancePercent) ≤ 1%` (where `itemsSumCents` includes both linked and lineage items, with any transaction-level discount applied before comparison)
 
 `isComplete = false` when itemized category **and any** of:
 - Missing tax data (neither `subtotalCents` nor `taxRatePct` is set)
-- No items linked and no qualifying lineage edges (`itemIds` is null/empty AND no returned/sold edges)
+- No items linked and no qualifying lineage edges (`itemIds` is null/empty AND no returned/sold/soldToInventory edges)
 - Items don't match subtotal (variance > ±1%)
 - No amount data (`amountCents` is null or 0)
 
@@ -105,7 +105,7 @@ Fires on every transaction create, update, or delete. Computes `isComplete` + `a
 
 ### 2. Item Price Change
 
-When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction.
+When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold", "soldToInventory"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction.
 
 ### 3. Budget Category Type Change (`onAccountBudgetCategoryWritten`)
 
@@ -116,7 +116,7 @@ When `metadata.categoryType` changes on an account-level budget category:
 
 ### 4. Lineage Edge Creation (`onLineageEdgeCreated`)
 
-When a lineage edge is created with `movementKind` "returned" or "sold", recomputes `isComplete` + `audit` on the source transaction (`fromTransactionId`). This is a safety net for non-atomic flows where the edge is created after the transaction's `itemIds` was already updated.
+When a lineage edge is created with `movementKind` "returned", "sold", or "soldToInventory", recomputes `isComplete` + `audit` on the source transaction (`fromTransactionId`). This is a safety net for non-atomic flows where the edge is created after the transaction's `itemIds` was already updated.
 
 Guards:
 - Skip if `movementKind` is not "returned" or "sold" (avoids cascading on frequent "association" edges)

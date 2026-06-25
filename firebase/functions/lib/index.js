@@ -134,7 +134,7 @@ exports.onLineageEdgeCreated = (0, firestore_2.onDocumentCreated)('accounts/{acc
     if (!data)
         return;
     const movementKind = data.movementKind;
-    if (movementKind !== 'returned' && movementKind !== 'sold')
+    if (movementKind !== 'returned' && movementKind !== 'sold' && movementKind !== 'soldToInventory')
         return;
     const fromTransactionId = data.fromTransactionId;
     if (!fromTransactionId)
@@ -232,7 +232,7 @@ exports.onItemPriceChanged = (0, firestore_2.onDocumentUpdated)('accounts/{accou
             for (const edgeDoc of edgesSnapshot.docs) {
                 const edge = edgeDoc.data() ?? {};
                 const kind = edge.movementKind;
-                if (kind !== 'returned' && kind !== 'sold')
+                if (kind !== 'returned' && kind !== 'sold' && kind !== 'soldToInventory')
                     continue;
                 const fromTxId = edge.fromTransactionId;
                 if (fromTxId)
@@ -943,7 +943,7 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
     for (const edgeDoc of edgesSnapshot.docs) {
         const edge = edgeDoc.data() ?? {};
         const kind = edge.movementKind;
-        if (kind !== 'returned' && kind !== 'sold')
+        if (kind !== 'returned' && kind !== 'sold' && kind !== 'soldToInventory')
             continue;
         const edgeItemId = edge.itemId;
         if (!edgeItemId)
@@ -1022,7 +1022,7 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
                     returnedItemsSumCents += priceCents;
                     returnedItemsCount++;
                 }
-                else if (edgeInfo?.movementKind === 'sold') {
+                else if (edgeInfo?.movementKind === 'sold' || edgeInfo?.movementKind === 'soldToInventory') {
                     soldItemsSumCents += priceCents;
                     soldItemsCount++;
                 }

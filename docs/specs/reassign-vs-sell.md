@@ -51,7 +51,7 @@ Sell is a financial operation. The user chooses the destination: a project, or b
 
 Under the per-batch model ([sale-transactions.md](sale-transactions.md)), project-destination sales require the user to pick one budget category that applies to every item in the batch. Project-destination flows:
 
-- **Inventory → Project** (single Purchase). One new immutable Purchase transaction.
+- **Inventory → Project** (single Purchase). One new per-batch Purchase transaction.
 - **Project A → Project B** (two-hop, atomic). Hop 1 is origin-aware against Project A (Return-to-Inventory if the item came from inventory, Sale-to-Inventory if it originated in Project A). Hop 2 is a new Purchase from inventory into Project B with the chosen category. All writes land in the same Firestore batch.
 
 Inventory-destination sale:
@@ -66,7 +66,7 @@ Project-destination sales always charge the destination project at `projectPrice
 - `item.budgetCategoryId` set to the chosen batch category
 - `item.transactionId` set to the new Purchase transaction ID
 - `item.status` set to `"purchased"`
-- A new Purchase transaction is created (auto-ID, frozen `amountCents` and `itemIds`)
+- A new Purchase transaction is created (auto-ID, frozen `amountCents`, current `itemIds`)
 - Items removed from any prior transaction's `itemIds`
 - One `"sold"` lineage edge per item
 - Budget spend in the destination project increases
