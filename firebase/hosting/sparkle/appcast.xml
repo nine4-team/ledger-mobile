@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>LedgeriOS</title>
+        <item>
+            <title>1.0</title>
+            <pubDate>Thu, 25 Jun 2026 11:31:36 -0600</pubDate>
+            <sparkle:version>20</sparkle:version>
+            <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:releaseNotesLink>https://ledger-nine4.web.app/sparkle/Ledger-1.0-20.md</sparkle:releaseNotesLink>
+            <enclosure url="https://ledger-nine4.web.app/sparkle/Ledger-1.0-20.zip" length="19948737" type="application/octet-stream" sparkle:edSignature="ELyZHSjB+lbh4On3czNNzUApKJgBURTRHQPoUZApXeCYIwXT2tuZHeRoUsNqxhOZocx5iXC/T46si0WmFp/OBQ=="/>
+        </item>
+    </channel>
+</rss>

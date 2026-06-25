@@ -6,7 +6,7 @@ struct LineageEdge: Codable, Identifiable {
     var itemId: String?
     var fromTransactionId: String?
     var toTransactionId: String?
-    var movementKind: String?   // "sold" | "returned" | "correction" | "association"
+    var movementKind: String?   // "sold" | "soldToInventory" | "returned" | "correction" | "association"
     var source: String?         // "app" | "server" | "migration"
     var fromProjectId: String?
     var toProjectId: String?

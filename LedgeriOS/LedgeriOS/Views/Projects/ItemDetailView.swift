@@ -21,6 +21,9 @@ struct ItemDetailView: View {
     @State private var liveTransactionData: Transaction?
     @State private var transactionListener: ListenerRegistration?
     @State private var transactionLookupCompleted = false
+    @State private var lineageEdges: [LineageEdge] = []
+    @State private var lineageTransactions: [String: Transaction] = [:]
+    @State private var lineageLoadTask: Task<Void, Never>?
     @State private var navigationTransaction: Transaction?
     @State private var navigationSpace: Space?
 
@@ -206,15 +209,22 @@ struct ItemDetailView: View {
         .onAppear {
             startItemListener()
             startTransactionListener(for: normalizedTransactionId)
+            loadItemLineage()
         }
         .onChange(of: normalizedTransactionId) { _, transactionId in
             startTransactionListener(for: transactionId)
+            loadItemLineage()
+        }
+        .onChange(of: liveItem.id) { _, _ in
+            loadItemLineage()
         }
         .onDisappear {
             itemListener?.remove()
             itemListener = nil
             transactionListener?.remove()
             transactionListener = nil
+            lineageLoadTask?.cancel()
+            lineageLoadTask = nil
         }
     }
 
@@ -265,6 +275,9 @@ struct ItemDetailView: View {
                         .font(Typography.small)
                         .foregroundStyle(BrandColors.textPrimary)
                 }
+            }
+            if lineageChain.count > 1 {
+                itemLineageChain
             }
             HStack(spacing: Spacing.xs) {
                 Text("Space:")
@@ -533,6 +546,75 @@ struct ItemDetailView: View {
             }
     }
 
+    private var lineageChain: [Transaction] {
+        var orderedIds: [String] = []
+        var seenIds = Set<String>()
+
+        func append(_ transactionId: String?) {
+            guard let transactionId, seenIds.insert(transactionId).inserted else { return }
+            orderedIds.append(transactionId)
+        }
+
+        for edge in lineageEdges {
+            append(edge.fromTransactionId)
+            append(edge.toTransactionId)
+        }
+        append(normalizedTransactionId)
+
+        return orderedIds.compactMap { transactionId in
+            resolvedLineageTransaction(for: transactionId)
+        }
+    }
+
+    private func resolvedLineageTransaction(for transactionId: String) -> Transaction? {
+        if liveTransactionData?.id == transactionId { return liveTransactionData }
+        return lineageTransactions[transactionId]
+            ?? projectContext.transactions.first(where: { $0.id == transactionId })
+            ?? accountContext.allTransactions.first(where: { $0.id == transactionId })
+    }
+
+    @ViewBuilder
+    private var itemLineageChain: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Lineage:")
+                .font(Typography.small)
+                .foregroundStyle(BrandColors.textSecondary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(Array(lineageChain.enumerated()), id: \.offset) { index, transaction in
+                        if index > 0 {
+                            Image(systemName: "arrow.right")
+                                .font(Typography.caption)
+                                .foregroundStyle(BrandColors.textTertiary)
+                        }
+                        Button {
+                            navigationTransaction = transaction
+                        } label: {
+                            Text(lineageTransactionLabel(transaction))
+                                .font(Typography.small.weight(.medium))
+                                .foregroundStyle(BrandColors.primary)
+                                .lineLimit(1)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func lineageTransactionLabel(_ transaction: Transaction) -> String {
+        let type = transaction.transactionType?.displayLabel ?? "Transaction"
+        let source = transaction.source?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let amount = TransactionCardCalculations.formattedAmount(
+            amountCents: transaction.amountCents,
+            transactionType: transaction.transactionType
+        )
+        if let source, !source.isEmpty {
+            return "\(type): \(source) \(amount)"
+        }
+        return "\(type): \(amount)"
+    }
+
     private var linkedSpace: Space? {
         guard let spaceId = liveItem.spaceId else { return nil }
         return projectContext.spaces.first(where: { $0.id == spaceId })
@@ -656,6 +738,56 @@ struct ItemDetailView: View {
                 self.liveTransactionData = transaction
                 self.transactionLookupCompleted = true
             }
+    }
+
+    private func loadItemLineage() {
+        lineageLoadTask?.cancel()
+        guard let accountId = accountContext.currentAccountId,
+              let itemId = liveItem.id else {
+            lineageEdges = []
+            lineageTransactions = [:]
+            return
+        }
+
+        lineageLoadTask = Task {
+            do {
+                let edges = try await LineageEdgesService().edges(forItem: itemId, accountId: accountId)
+                var transactionIds = Set<String>()
+                for edge in edges {
+                    if let fromTransactionId = edge.fromTransactionId {
+                        transactionIds.insert(fromTransactionId)
+                    }
+                    if let toTransactionId = edge.toTransactionId {
+                        transactionIds.insert(toTransactionId)
+                    }
+                }
+                if let currentTransactionId = ItemDetailCalculations.normalizedTransactionId(liveItem.transactionId) {
+                    transactionIds.insert(currentTransactionId)
+                }
+
+                let service = TransactionsService()
+                var resolved: [String: Transaction] = [:]
+                for transactionId in transactionIds {
+                    if let local = resolvedLineageTransaction(for: transactionId) {
+                        resolved[transactionId] = local
+                    } else if let fetched = try? await service.getTransaction(accountId: accountId, transactionId: transactionId) {
+                        resolved[transactionId] = fetched
+                    }
+                }
+
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    lineageEdges = edges
+                    lineageTransactions = resolved
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    lineageEdges = []
+                    lineageTransactions = [:]
+                }
+            }
+        }
     }
 
     private func clearItemField(_ fieldName: String) {
