@@ -14,6 +14,7 @@ struct ItemDetailView: View {
     @State private var isMediaExpanded = true
     @State private var isNotesExpanded = true
     @State private var isDetailsExpanded = true
+    @State private var isHistoryExpanded = true
 
     // Live document subscription
     @State private var liveItemData: Item?
@@ -276,9 +277,6 @@ struct ItemDetailView: View {
                         .foregroundStyle(BrandColors.textPrimary)
                 }
             }
-            if lineageChain.count > 1 {
-                itemLineageChain
-            }
             HStack(spacing: Spacing.xs) {
                 Text("Space:")
                     .font(Typography.small)
@@ -380,6 +378,15 @@ struct ItemDetailView: View {
             ) {
                 detailsContent
             }
+
+            if lineageChain.count > 1 {
+                Divider()
+                    .padding(.vertical, Spacing.xs)
+
+                CollapsibleSection(title: "HISTORY", isExpanded: $isHistoryExpanded) {
+                    historyContent
+                }
+            }
         }
         .cardStyle()
     }
@@ -439,6 +446,12 @@ struct ItemDetailView: View {
             }
         }
         .padding(.top, Spacing.xs)
+    }
+
+    @ViewBuilder
+    private var historyContent: some View {
+        itemLineageChain
+            .padding(.top, Spacing.xs)
     }
 
     // MARK: - Toolbar Buttons
@@ -577,27 +590,45 @@ struct ItemDetailView: View {
     private var itemLineageChain: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Lineage:")
-                .font(Typography.small)
+                .font(Typography.caption)
                 .foregroundStyle(BrandColors.textSecondary)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Spacing.xs) {
-                    ForEach(Array(lineageChain.enumerated()), id: \.offset) { index, transaction in
-                        if index > 0 {
-                            Image(systemName: "arrow.right")
-                                .font(Typography.caption)
-                                .foregroundStyle(BrandColors.textTertiary)
+            ZStack(alignment: .trailing) {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    HStack(spacing: Spacing.xs) {
+                        ForEach(Array(lineageChain.enumerated()), id: \.offset) { index, transaction in
+                            if index > 0 {
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(BrandColors.textTertiary)
+                            }
+                            Button {
+                                navigationTransaction = transaction
+                            } label: {
+                                Text(lineageTransactionLabel(transaction))
+                                    .font(Typography.caption.weight(.medium))
+                                    .foregroundStyle(BrandColors.primary)
+                                    .lineLimit(1)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        Button {
-                            navigationTransaction = transaction
-                        } label: {
-                            Text(lineageTransactionLabel(transaction))
-                                .font(Typography.small.weight(.medium))
-                                .foregroundStyle(BrandColors.primary)
-                                .lineLimit(1)
-                        }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.trailing, Spacing.lg)
                 }
+
+                HStack(spacing: 0) {
+                    LinearGradient(
+                        colors: [BrandColors.surface.opacity(0), BrandColors.surface],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: 28)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(BrandColors.textTertiary)
+                        .frame(width: 14)
+                }
+                .allowsHitTesting(false)
             }
         }
     }

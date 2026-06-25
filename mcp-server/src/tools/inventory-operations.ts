@@ -38,7 +38,7 @@ const INVENTORY_LABEL = DEFAULT_INVENTORY_LABEL;
 
 /**
  * Resolve a frozen project-price snapshot for a batch of items. Used for
- * inventory→project and project→project movements.
+ * inventory→project destination purchases.
  */
 function computeProjectPriceTotals(items: (Item & { id: string })[]): {
   subtotalCents: number;
@@ -70,9 +70,9 @@ function computePurchasePriceTotals(items: (Item & { id: string })[]): {
 
 /**
  * Return the ids of items that lack a usable `projectPriceCents`. Inventory
- * → project and project → project movements use the client-facing project
- * price; silently falling back to `purchasePriceCents` (cost) would mis-state
- * the project's budget.
+ * → project destination purchases use the client-facing project price;
+ * silently falling back to `purchasePriceCents` (cost) would mis-state the
+ * destination project's budget.
  */
 function missingProjectPrice(items: (Item & { id: string })[]): string[] {
   return items
@@ -700,7 +700,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 
         if (dryRun) {
           const returnLegs = sourceCategoryGroups(split.returnItems).map((group) => {
-            const t = computeProjectPriceTotals(group.items);
+            const t = computePurchasePriceTotals(group.items);
             return {
                     type: "Return" as const,
                     source: inventoryLabel,
@@ -712,7 +712,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             };
           });
           const saleToInventoryLegs = sourceCategoryGroups(split.saleItems).map((group) => {
-            const t = computeProjectPriceTotals(group.items);
+            const t = computePurchasePriceTotals(group.items);
             return {
                     type: "Sale" as const,
                     source: inventoryLabel,
@@ -1172,7 +1172,7 @@ async function commitSellItemsFromProjectToProject(
   const returnTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(split.returnItems)) {
     const returnRef = txCol.doc();
-    const returnTotals = computeProjectPriceTotals(group.items);
+    const returnTotals = computePurchasePriceTotals(group.items);
     batch.set(returnRef, {
       type: "Return",
       source: totals.inventoryLabel,
@@ -1194,7 +1194,7 @@ async function commitSellItemsFromProjectToProject(
   const firstSaleTxByItemId = new Map<string, string>();
   for (const group of sourceCategoryGroups(split.saleItems)) {
     const saleRef = txCol.doc();
-    const saleTotals = computeProjectPriceTotals(group.items);
+    const saleTotals = computePurchasePriceTotals(group.items);
     batch.set(saleRef, {
       type: "Sale",
       source: totals.inventoryLabel,

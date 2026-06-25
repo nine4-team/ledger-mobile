@@ -80,7 +80,7 @@ Project-destination sales always charge the destination project at `projectPrice
 ### Budget Impact
 
 - Adds to destination project's budget for the chosen category at project price
-- For project-to-project sales, the source project decreases at project price and the destination project increases at project price
+- For project-to-project sales, the source project decreases at purchase price and the destination project increases at project price
 - For project-to-inventory sales, the source project decreases at purchase price
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
@@ -127,7 +127,7 @@ When the source is another project and the destination is a project, **Sell** de
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
-Pricing follows the sale destination: project-to-project uses project price for both Hop 1 and Hop 2. Standalone project-to-business-inventory uses purchase price. Missing project prices must be collected before commit for project-destination sales.
+Pricing follows the sale destination: project-to-project uses purchase price for Hop 1 and project price for Hop 2. Standalone project-to-business-inventory uses purchase price. Missing project prices must be collected before commit for project-destination sales.
 
 ## Menu Visibility Rules
 

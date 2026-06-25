@@ -494,7 +494,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let ret = returnSets[0].fields
         #expect(ret["projectId"] as? String == "srcProj")
         #expect(ret["budgetCategoryId"] as? String == "cat_src")
-        #expect(ret["amountCents"] as? Int == 6000)
+        #expect(ret["amountCents"] as? Int == 5000)
 
         let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
         #expect(purchaseSets.count == 1)
@@ -565,7 +565,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
         #expect(toDest != nil)
         #expect(toInventory?.fields["projectId"] as? String == "srcProj")
         #expect(toDest?.fields["projectId"] as? String == "dstProj")
-        #expect(toInventory?.fields["amountCents"] as? Int == 6000)
+        #expect(toInventory?.fields["amountCents"] as? Int == 5000)
         #expect(toDest?.fields["amountCents"] as? Int == 6000)
 
         // Lineage: 2 soldToInventory (hop 1) + 2 sold (hop 2)
@@ -608,8 +608,8 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat_src" }!
         let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
         #expect(toInventoryItemIds == ["i2"])
-        #expect(toInventory.fields["amountCents"] as? Int == 3500)
-        #expect(returnSets[0].fields["amountCents"] as? Int == 2500)
+        #expect(toInventory.fields["amountCents"] as? Int == 3000)
+        #expect(returnSets[0].fields["amountCents"] as? Int == 2000)
 
         // Destination Purchase covers both items
         let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!

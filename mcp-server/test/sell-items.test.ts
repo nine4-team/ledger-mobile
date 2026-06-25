@@ -406,7 +406,7 @@ describe("sell_items_from_project_to_project", () => {
     expect(firstHopSale!.data.projectId).toBe("proj_source");
     expect(firstHopSale!.data.budgetCategoryId).toBe("cat_furnishings");
     expect(firstHopSale!.data.itemIds).toEqual(["item_1"]);
-    expect(firstHopSale!.data.amountCents).toBe(12990);
+    expect(firstHopSale!.data.amountCents).toBe(10000);
 
     const destPurchase = purchases[0];
     expect(destPurchase.data.source).toBe("Business Inventory");

@@ -32,7 +32,7 @@ Project to business inventory:
 
 Project to project, two-hop flow:
 
-- Source project exit transaction uses project price.
+- Source project exit transaction uses purchase price.
 - Source project exit transaction writes `budgetCategoryId` from the item's current source project category.
 - Destination project Purchase writes its own `budgetCategoryId` from the destination category selected by the user.
 - Each persisted transaction stands alone for accounting; no source/destination category pair is needed on one transaction.

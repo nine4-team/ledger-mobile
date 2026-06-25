@@ -723,7 +723,7 @@ struct InventoryOperationsService {
         // 1a. First hop — Return leg (items that came from inventory)
         for group in returnGroups {
             let id = UUID().uuidString
-            let returnTotals = Self.computeBatchTotals(group.items)
+            let returnTotals = Self.computePurchasePriceTotals(group.items)
             var returnFields: [String: Any] = [
                 "type": "Return",
                 "source": inventoryLabel,
@@ -748,7 +748,7 @@ struct InventoryOperationsService {
         // 1b. First hop — Sale-to-Inventory leg (items that originated here).
         for group in saleGroups {
             let id = UUID().uuidString
-            let saleTotals = Self.computeBatchTotals(group.items)
+            let saleTotals = Self.computePurchasePriceTotals(group.items)
             var saleFields: [String: Any] = [
                 "type": "Sale",
                 "source": inventoryLabel,

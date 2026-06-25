@@ -104,7 +104,7 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
 
 All hops commit atomically when the user invokes **Sell** with a project destination from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
 
-**Price basis:** project → project uses project price for both the source project exit and the destination project Purchase.
+**Price basis:** project → project uses purchase price for the source project exit and project price for the destination project Purchase.
 
 If any item lacks a project price for the destination hop, the UI asks what it should sell for and saves that value before the atomic move is committed.
 

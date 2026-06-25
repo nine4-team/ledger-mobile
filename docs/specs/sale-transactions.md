@@ -37,7 +37,7 @@ Item category and transaction category are different concepts. Inventory items h
 
 **Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
-**Price basis is directional.** Inventory → project and project → project hops use `projectPriceCents`. Standalone project → business inventory uses `purchasePriceCents`.
+**Price basis is directional.** Any project-destination Purchase uses `projectPriceCents`. Any project → business inventory exit uses `purchasePriceCents`, including the source exit of a project → project two-hop.
 
 ## Inventory Purchase Transaction Shape
 
@@ -160,13 +160,14 @@ The inventory movement transaction's `amountCents` is computed **once**, at crea
 | Inventory → project Purchase | Project price (`projectPriceCents`) |
 | Project → inventory Sale-to-Inventory | Purchase price (`purchasePriceCents`) |
 | Return to inventory | Purchase price (`purchasePriceCents`) |
-| Project → project two-hop | Source exit and destination Purchase both use project price |
+| Project → project source exit | Purchase price (`purchasePriceCents`) |
+| Project → project destination Purchase | Project price (`projectPriceCents`) |
 
 ```
 amountCents = sum(item.projectPriceCents ?? 0) for item in items
 ```
 
-The formula above is the project-price basis used by inventory → project and project → project movement. Standalone project → business inventory uses `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
+The formula above is the project-price basis used by inventory → project and the destination Purchase in project → project movement. Project → business inventory exits use `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
 
 After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
 

@@ -263,7 +263,7 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
 - **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. Amounts use `projectPriceCents`; if a selected item lacks a project price, the UI collects and saves one before writing. See [sale-transactions.md](sale-transactions.md).
-- **Project → inventory exits**: standalone Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`. In project → project moves, the source exit and destination Purchase both use project price.
+- **Project → inventory exits**: Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`, including the source exit of project → project moves. The destination Purchase in project → project moves uses project price.
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution

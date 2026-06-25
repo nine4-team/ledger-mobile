@@ -256,7 +256,7 @@ struct InventoryOperationsIntegrationTests {
 
     // MARK: - sellItemsFromProjectToProject
 
-    @Test("sellItemsFromProjectToProject — from-inventory item returns at project price, then purchases at project price")
+    @Test("sellItemsFromProjectToProject — from-inventory item returns at purchase price, then purchases at project price")
     func projectToProjectFromInventoryItem() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
@@ -305,7 +305,7 @@ struct InventoryOperationsIntegrationTests {
             ($0["projectId"] as? String) == destProjectId
         }
         #expect(returnTx?["projectId"] as? String == sourceProjectId)
-        #expect(returnTx?["amountCents"] as? Int == 25_000)
+        #expect(returnTx?["amountCents"] as? Int == 20_000)
         #expect(returnTx?["budgetCategoryId"] as? String == "oldCat")
         #expect(purchaseTx?["budgetCategoryId"] as? String == categoryId)
         #expect(purchaseTx?["amountCents"] as? Int == 25_000)
@@ -319,7 +319,7 @@ struct InventoryOperationsIntegrationTests {
         #expect(edgeKinds.contains("sold"))
     }
 
-    @Test("sellItemsFromProjectToProject — project-originated item sells to inventory at project price, then purchases at project price")
+    @Test("sellItemsFromProjectToProject — project-originated item sells to inventory at purchase price, then purchases at project price")
     func projectToProjectOriginatedHereItem() async throws {
         try await FirestoreTestHelper.signIn()
         let itemId = UUID().uuidString
@@ -370,7 +370,7 @@ struct InventoryOperationsIntegrationTests {
             ($0["type"] as? String) == "Purchase" &&
             ($0["projectId"] as? String) == destProjectId
         }
-        #expect(saleTx?["amountCents"] as? Int == 35_000)
+        #expect(saleTx?["amountCents"] as? Int == 30_000)
         #expect(saleTx?["budgetCategoryId"] as? String == "oldCat")
         #expect(purchaseTx?["budgetCategoryId"] as? String == categoryId)
         #expect(purchaseTx?["amountCents"] as? Int == 35_000)
