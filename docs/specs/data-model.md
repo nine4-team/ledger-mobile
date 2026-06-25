@@ -101,7 +101,7 @@ transactions link back to invoices with `settlementInvoiceId`.
 
 #### Inventory Movement Accounting Immutability
 
-**Per-batch inventory movement transactions** (inventory → project `type: "Purchase"` with an inventory source; project → inventory acquisition `type: "Sale"` with no `budgetCategoryId`; return-to-inventory `type: "Return"` with an inventory source) keep their accounting shape immutable after creation:
+**Per-batch inventory movement transactions** (inventory -> project `type: "Purchase"` with an inventory source and destination `budgetCategoryId`; project -> inventory acquisition `type: "Sale"` with source `budgetCategoryId`; return-to-inventory `type: "Return"` with an inventory source and source `budgetCategoryId`) keep their accounting shape immutable after creation:
 
 - `type`
 - `source`
@@ -704,7 +704,7 @@ When an item moves between scopes, its `projectId` and `budgetCategoryId` are up
 
 - **Sell to project** (`sellToProject`): item moves from inventory to a project. `projectId` set to destination project ID, `budgetCategoryId` set to the chosen batch category, `spaceId` set to null, `status` set to `"purchased"`. Creates a per-batch Purchase-from-inventory transaction at project price. If `projectPriceCents` is missing, the UI must ask the user what to sell the item for and persist that value before committing. See [sale-transactions.md](sale-transactions.md).
 - **Return to inventory** (`returnToInventory`): item moves from a project back to inventory. `projectId` set to null, **`budgetCategoryId` wiped to null**, `spaceId` set to null, `status` set to `"purchased"`. Creates a Return transaction with `source: "Business Inventory"`. See [return-and-sale-tracking.md](return-and-sale-tracking.md).
-- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses purchase price. The destination Purchase uses project price and requires `projectPriceCents`. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
+- **Sell project items to project** (`sellItemsFromProjectToProject`): atomic two-hop sale through business inventory. The source-project exit is origin-aware (Return for items that came from inventory, Sale-to-Inventory for project-originated items) and uses project price. The destination Purchase also uses project price and requires `projectPriceCents`. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 - **Reassign within scope** (`reassignToProject`, `reassignToInventory`): non-financial moves within the same scope or correcting a scope error. Updates `projectId` and (if needed) `budgetCategoryId` to maintain the invariant.
 
 **The invariant is enforced on every write.** This replaces the legacy "items carry budgetCategoryId across scope moves" model. See [inventory-as-store.md](inventory-as-store.md) for the rationale.
@@ -720,7 +720,7 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 - **Purchases:** Stored as positive. Adds to project spend.
 - **Returns** (vendor or to inventory): Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
 - **Per-batch inventory → project Purchase transactions** (`type == "Purchase"` with an inventory source and `budgetCategoryId` set): Stored as positive. **Adds** to project spend.
-- **Per-batch project → inventory Sale transactions** (`type == "Sale"` with an inventory source and no `budgetCategoryId`): Stored as positive. **Multiplied by -1** in budget calculations. This path is only for project-originated items acquired into inventory.
+- **Per-batch project → inventory Sale transactions** (`type == "Sale"` with an inventory source and source `budgetCategoryId`): Stored as positive. **Multiplied by -1** in budget calculations. This path is only for project-originated items acquired into inventory.
 - **LEGACY canonical sales, `business_to_project`:** Stored as positive. **Adds** to project spend. Historical only.
 - **LEGACY canonical sales, `project_to_business`:** Stored as positive. **Multiplied by -1** in budget calculations. Historical only.
 - **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `status == "canceled"`.
@@ -737,7 +737,7 @@ Inventory movement price basis:
 
 - Inventory → project Purchase amounts use `projectPriceCents`.
 - Project → business inventory Return and Sale-to-Inventory amounts use `purchasePriceCents`.
-- Project → project moves apply both rules: purchase price for the source exit, project price for the destination Purchase.
+- Project → project moves use project price for both the source exit and destination Purchase.
 - User-facing sell-to-project flows must collect and save a missing `projectPriceCents` before the movement is written. Non-interactive tools reject project-price movements with missing project prices.
 
 ### Budget calculations

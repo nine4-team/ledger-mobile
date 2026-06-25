@@ -6,7 +6,7 @@
 
 **Business inventory is a store the business stocks via two paths.** Projects can buy from inventory (a Purchase, inventory → project) and projects can return to inventory (a Return, project → inventory) when an item is going home. But projects can also **sell** items into inventory — when an item originated in the project and the business is acquiring it for future use. That acquisition is a Sale (project → inventory), not a Return. A Return is reserved for items that came from inventory to begin with.
 
-Inventory items have no budget category; categories belong to projects. Items moving into inventory lose their category; items moving out acquire one.
+Inventory items have no budget category; categories belong to projects. Items moving into inventory lose their item category, but the source project Sale/Return transaction keeps `budgetCategoryId` as frozen accounting attribution. Items moving out acquire a destination category.
 
 ## What Changed
 
@@ -14,7 +14,7 @@ Inventory items have no budget category; categories belong to projects. Items mo
 |---|---|---|
 | Inventory → project | Sale transaction (`business_to_project` direction) | **Purchase transaction**, `budgetCategoryId` set |
 | Project → inventory (item came from inventory) | Sale transaction (`project_to_business` direction) | **Return transaction** |
-| Project → inventory (item originated in project) | Sale transaction (`project_to_business` direction) | **Sale transaction, `budgetCategoryId` absent** |
+| Project → inventory (item originated in project) | Sale transaction (`project_to_business` direction) | **Sale transaction, source `budgetCategoryId` set** |
 | Items in inventory | Carry their `budgetCategoryId` across scope moves | Have `budgetCategoryId == null` |
 | Category at sell-from-inventory time | Inherited from the item | **Re-resolved** from user input at sell time |
 | Category at return-to-inventory time | Preserved on the item | **Wiped** from the item |
@@ -73,7 +73,7 @@ A return transaction is a return transaction, whether the items go back to a ven
 The user performs a single **Return to Inventory** action. The service routes each item based on origin:
 
 - **Item came from inventory (`item.currentSource != item.source`)** → creates a **Return** transaction (`type: "Return"`, `source: "[Account] Inventory"`). The item is going home.
-- **Item originated in the project (`item.currentSource == item.source`, or `currentSource == nil`)** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
+- **Item originated in the project (`item.currentSource == item.source`, or `currentSource == nil`)** → creates a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`, `source: "[Account] Inventory"`). The business is acquiring the item for the first time.
 
 Both paths wipe the item's `budgetCategoryId` and set `projectId` to null. Both emit a lineage edge — `returned` for the Return path, `soldToInventory` for the Sale-to-Inventory path.
 
@@ -104,7 +104,7 @@ The model has no direct project-to-project transfer. The flow is a two-hop routi
 
 All hops commit atomically when the user invokes **Sell** with a project destination from a project context. Lineage edges link the path. The two-hop mechanic is invisible to the user — from their perspective it's a single Sell action.
 
-**Price basis:** each hop follows its normal direction. The source project exits through business inventory at purchase price. The destination project buys from inventory at project price.
+**Price basis:** project → project uses project price for both the source project exit and the destination project Purchase.
 
 If any item lacks a project price for the destination hop, the UI asks what it should sell for and saves that value before the atomic move is committed.
 
@@ -129,7 +129,7 @@ Group these records:
 
 - Inventory-scope purchases (`type: "Purchase"`, `projectId: null`) as `Added to Business Inventory`.
 - Inventory → project Purchases (`type: "Purchase"`, `budgetCategoryId` set) as `From [inventory label]`.
-- Project → inventory Sales (`type: "Sale"`, `budgetCategoryId` absent) as `Sold to [inventory label]`.
+- Project → inventory Sales (`type: "Sale"`, source `budgetCategoryId`) as `Sold to [inventory label]`.
 - Return-to-inventory transactions (`type: "Return"`, source is the inventory label) as `Returned to [inventory label]`.
 
 Do not group normal project purchases, fees, expenses, vendor returns, or ambiguous records. Grouping keys include date bucket, movement direction, source/inventory label, project ID, category ID where present, and transaction type so opposite financial effects are never merged.

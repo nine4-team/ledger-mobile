@@ -137,7 +137,7 @@ enum BudgetTabCalculations {
     ///    - `.businessToProject` (inventory → project) → +abs(amount)
     ///    - `.projectToBusiness` (project → inventory) → -abs(amount)
     /// 4. Legacy canonical sale with no direction → amount as-stored
-    /// 5. `type == .sale` with no direction → +abs(amount) (pre-direction per-batch)
+    /// 5. `type == .sale` with no direction → -abs(amount) (project egress)
     /// 6. Everything else (Purchase, etc.) → amount as-stored
     static func normalizeTransactionAmount(_ transaction: Transaction) -> Int {
         guard transaction.status != .canceled else { return 0 }
@@ -162,7 +162,7 @@ enum BudgetTabCalculations {
         }
 
         if transaction.transactionType == .sale {
-            return abs(amount)
+            return -abs(amount)
         }
 
         return amount

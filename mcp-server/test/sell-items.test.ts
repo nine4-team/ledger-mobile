@@ -331,6 +331,7 @@ describe("return_items", () => {
     expect(returnTx.data.source).toBe("Business Inventory");
     // Return tx lives on the source project (budget impact lands there).
     expect(returnTx.data.projectId).toBe("proj_source");
+    expect(returnTx.data.budgetCategoryId).toBe("cat_furnishings");
     expect(returnTx.data.itemIds).toEqual(["item_1"]);
     expect(returnTx.data.amountCents).toBe(8000);
 
@@ -403,9 +404,9 @@ describe("sell_items_from_project_to_project", () => {
     const firstHopSale = sales.find((s) => s.id !== "src_sale");
     expect(firstHopSale).toBeDefined();
     expect(firstHopSale!.data.projectId).toBe("proj_source");
-    expect(firstHopSale!.data.budgetCategoryId).toBeUndefined();
+    expect(firstHopSale!.data.budgetCategoryId).toBe("cat_furnishings");
     expect(firstHopSale!.data.itemIds).toEqual(["item_1"]);
-    expect(firstHopSale!.data.amountCents).toBe(10000);
+    expect(firstHopSale!.data.amountCents).toBe(12990);
 
     const destPurchase = purchases[0];
     expect(destPurchase.data.source).toBe("Business Inventory");

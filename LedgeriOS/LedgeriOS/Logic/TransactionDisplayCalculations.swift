@@ -21,7 +21,7 @@ enum TransactionDisplayCalculations {
     ///
     /// Inventory movement direction is derived implicitly from the transaction
     /// shape. Inventory → project is a Purchase from an inventory source.
-    /// Project → inventory acquisition is a Sale with no category. Legacy
+    /// Project → inventory acquisition is a Sale with source-category `budgetCategoryId`. Legacy
     /// canonical sales that carry `inventorySaleDirection` are honored as a
     /// fallback.
     ///
@@ -47,12 +47,7 @@ enum TransactionDisplayCalculations {
                     case .businessToProject: return "Purchase from \(source)"
                     }
                 }
-                // No explicit direction — derive from budgetCategoryId presence.
-                // Sale-to-inventory has no category (inventory items are uncategorized).
-                if transaction.budgetCategoryId == nil {
-                    return "Sale to \(source)"
-                }
-                return "Purchase from \(source)"
+                return "Sale to \(source)"
             case .return:
                 return "Return to \(source)"
             case .fee:

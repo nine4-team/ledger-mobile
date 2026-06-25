@@ -13,7 +13,7 @@ Last updated: 2026-06-23
 ## Feature Areas
 
 ### Sale Transactions & Inventory (Per-Batch Redesign)
-- [new] [Inventory Movement Transactions](sale-transactions.md) — **Active.** Per-batch inventory movement transactions: inventory → project writes a Purchase at project price; project → inventory writes an origin-aware Return or Sale-to-Inventory at purchase price. Accounting fields are frozen; `itemIds` tracks current active membership. Replaces the canonical-sale aggregator model.
+- [new] [Inventory Movement Transactions](sale-transactions.md) — **Active.** Per-batch inventory movement transactions: inventory → project writes a Purchase at project price; standalone project → inventory writes an origin-aware Return or Sale-to-Inventory at purchase price; project → project uses project price for both source exit and destination Purchase. Accounting fields are frozen; `itemIds` tracks current active membership. Replaces the canonical-sale aggregator model.
 - [new] [Inventory as a Store](inventory-as-store.md) — **Active.** Conceptual model: business inventory is treated like any vendor/store. Items in inventory have `budgetCategoryId == null`. Project → inventory is origin-aware. Project-price movement prompts for missing `projectPriceCents`.
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 

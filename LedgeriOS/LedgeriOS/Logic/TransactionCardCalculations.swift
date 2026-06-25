@@ -34,7 +34,7 @@ enum TransactionCardCalculations {
             let label: String
             let color: Color
             if type == .sale,
-               (inventorySaleDirection == .businessToProject || (inventorySaleDirection == nil && budgetCategoryId != nil)) {
+               inventorySaleDirection == .businessToProject {
                 // Inventory -> project uses the Purchase label, including
                 // legacy Sale-shaped records that predate the type correction.
                 label = TransactionType.purchase.displayLabel

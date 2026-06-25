@@ -52,7 +52,7 @@ Valid shapes:
 
 The UI's category-creation picker surfaces these four as named options. Arbitrary subsets of `{purchase, return, expense}` are schema-valid but the UI doesn't emit them; they exist only as a safety-net for legacy derivation edge cases.
 
-Sales (`.sale`) are not included in any `supportedTypes` list — sale-to-inventory transactions have no category because items leave the project's category system. Inventory → project movements are Purchases and link to the destination category.
+Sales (`.sale`) are not included in any `supportedTypes` list. Sale-to-inventory transactions still carry `budgetCategoryId` for source-project accounting, but itemized category support continues to be modeled through Purchase/Return categories. Inventory → project movements are Purchases and link to the destination category.
 
 ### Invariants
 
@@ -111,7 +111,7 @@ Two distinct return operations both write `.return` transactions:
 
 - **Return to vendor** — user-initiated from the wizard. Items physically go back to a store. User picks the vendor on the Vendor step. This is the only path for this operation.
 - **Return to inventory** — item-action-initiated from item detail / action menus, handled by `InventoryOperationsService.returnToInventory()`. Items move from a project back to the business's own inventory. Not created through the wizard.
-- **Sell to project** — item-action-initiated from inventory or another project. Inventory → project writes a `.purchase` at project price. Project → project writes an origin-aware `.return`/`.sale` source exit at purchase price plus a destination `.purchase` at project price. If a destination Purchase would use a missing `projectPriceCents`, the UI collects and saves the project price before writing.
+- **Sell to project** — item-action-initiated from inventory or another project. Inventory → project writes a `.purchase` at project price. Project → project writes an origin-aware `.return`/`.sale` source exit at project price plus a destination `.purchase` at project price. If a project-destination movement would use a missing `projectPriceCents`, the UI collects and saves the project price before writing.
 
 ### Transaction audit gate
 

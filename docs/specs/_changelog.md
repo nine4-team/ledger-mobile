@@ -16,7 +16,7 @@
 
 ## 2026-04-14
 - **Restored Sell-to-Inventory as a bidirectional Sale path.** The 2026-04-11 per-batch-sale redesign had removed sell-to-inventory on the "inventory is a store; you don't sell back to it" metaphor. That was a semantic regression: items that originated in a project are never "returning" when the business acquires them — they're being sold. Restored `sellToInventory` in `InventoryOperationsService`; `moveToInventory` now routes per-item based on origin (`item.currentSource != item.source` → Return; otherwise → Sale-to-Inventory). Mixed batches write both transactions atomically. `sellItemsFromProjectToProject` takes the origin-aware first hop too.
-- **Direction is shape-derived, not a field.** A Purchase with an inventory source and `budgetCategoryId` set is inventory → project; a Sale with `budgetCategoryId` absent is project → inventory. No new field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.
+- **Direction is type/source-derived, not a field.** A Purchase with an inventory source is inventory → project; a Sale with an inventory source is project → inventory and carries the source accounting `budgetCategoryId`. No new direction field added. The legacy `inventorySaleDirection` enum is honored only on legacy canonical sales.
 - **Naming convention.** Display name resolution renders direction explicitly: `"Purchase from [source]"` (inventory → project), `"Sale to [source]"` (project → inventory), `"Return to [source]"` (any Return). Updated in `TransactionDisplayCalculations`; `SearchCalculations.transactionDisplayName` now delegates to it.
 - Updated `sale-transactions.md`, `inventory-as-store.md` to reflect Purchase-from-inventory, Sale-to-Inventory, and the shape-derived rule.
 

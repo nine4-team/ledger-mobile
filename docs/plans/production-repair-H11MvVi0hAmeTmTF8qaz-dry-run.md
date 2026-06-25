@@ -112,7 +112,7 @@ Data:
 }
 ```
 
-This follows the current Sale-to-Inventory shape: Sale transaction, source is the business inventory label, no `budgetCategoryId`, purchase-price amount.
+Superseding note, 2026-06-25: the Sale-to-Inventory repair should carry transaction `budgetCategoryId` for source-project accounting. The earlier no-`budgetCategoryId` shape was wrong because it confused item placement state with transaction accounting attribution.
 
 ### 2. Create First-Hop Intent Lineage Edges
 
@@ -177,8 +177,8 @@ No source-transaction array update is proposed. The source transaction `dT91f6ji
 
 The append-only writes above restore the missing first-hop transaction and intent lineage trail, but there is a code-level budget-rollup caveat:
 
-- Current Sale-to-Inventory transaction shape has no `budgetCategoryId`.
-- The deployed `recalculateProjectBudgetSummary` function only includes transactions that have a `budgetCategoryId`.
+- The repair Sale-to-Inventory transaction should have `budgetCategoryId`.
+- The deployed `recalculateProjectBudgetSummary` function only includes transactions that have a `budgetCategoryId`; source-project egress also needs negative sign handling.
 - Therefore, creating this no-category Sale-to-Inventory transaction will not, by itself, decrement the source project's denormalized `budgetSummary`.
 
 The source transaction audit is already complete because the existing direct `sold` edges from `dT91f6jiZXVRmkX8RN7t` count both items as sold:
@@ -208,4 +208,3 @@ After approved write mode:
 - Re-read source transaction `dT91f6jiZXVRmkX8RN7t` audit.
 - Re-read destination transaction `E614DE46-40F0-4D95-99EC-CD9F2E59432C` audit.
 - Re-read source and destination project budget summaries after Functions drain.
-

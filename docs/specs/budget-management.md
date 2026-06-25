@@ -163,7 +163,7 @@ The system handles current per-batch inventory movement transactions plus legacy
 
 - **Legacy canonical sales** (`isCanonicalInventorySale == true`): sign depends on `inventorySaleDirection`. `business_to_project` → +1. `project_to_business` → -1. These are historical documents only; no new code writes them.
 - **Inventory → project purchases** (`type == "Purchase"`, inventory source, `budgetCategoryId` set): always +1.
-- **Project → inventory sales** (`type == "Sale"`, no `isCanonicalInventorySale` flag, no category): subtract from the source project conceptually; these records do not attach to a destination category because items leave the category system.
+- **Project → inventory sales** (`type == "Sale"`, no `isCanonicalInventorySale` flag): subtract from the transaction `budgetCategoryId`, which is the frozen source project accounting category.
 - **Returns** (`type == "Return"`): always -1. Includes both vendor returns and return-to-inventory transactions.
 
 ### Full table
@@ -173,7 +173,7 @@ The system handles current per-batch inventory movement transactions plus legacy
 | Purchase | +1 | Adds to spent |
 | Return (vendor or inventory) | -1 | Subtracts from spent |
 | Inventory → project Purchase (`type: "Purchase"`, inventory source) | +1 | Adds to spent |
-| Project → inventory Sale (`type: "Sale"`, no category) | -1 | Subtracts from project spend |
+| Project → inventory Sale (`type: "Sale"`, source category) | -1 | Subtracts from project spend |
 | **Legacy** canonical sale, `business_to_project` | +1 | Adds to spent |
 | **Legacy** canonical sale, `project_to_business` | -1 | Subtracts from spent |
 | Canceled transactions (`status == "canceled"`, any type) | excluded | No effect |
@@ -263,7 +263,7 @@ Users can pin budget categories to customize their view. Pins are per-user, per-
 
 - **Purchase / Return transactions**: Category selected by user via form picker, which only shows categories enabled for the current project (those with a `ProjectBudgetCategory` document). Pre-filled from account default if that category is enabled.
 - **Per-batch inventory purchases** (new model): Category collected from the user at movement time and applied to every item in the batch. One category per Purchase transaction; no per-item category. Amounts use `projectPriceCents`; if a selected item lacks a project price, the UI collects and saves one before writing. See [sale-transactions.md](sale-transactions.md).
-- **Project → inventory exits**: Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`. In project → project moves, this purchase-price source exit is paired with the destination Purchase at project price.
+- **Project → inventory exits**: standalone Return and Sale-to-Inventory transactions subtract from the source project at `purchasePriceCents`. In project → project moves, the source exit and destination Purchase both use project price.
 - **Legacy canonical sales**: Category was derived from the item's `budgetCategoryId` at the time of writing. Historical reads only.
 
 ## Item Budget Category Attribution

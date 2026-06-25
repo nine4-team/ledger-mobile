@@ -332,7 +332,7 @@ struct ReturnToInventoryExecutionTests {
         let items = (1...3).map { i in
             makeItem(
                 id: "i\(i)", projectId: "srcProj",
-                budgetCategoryId: "cat\(i)",
+                budgetCategoryId: "cat1",
                 purchasePriceCents: 1000 * i,
                 transactionId: "oldTx"
             )
@@ -349,6 +349,7 @@ struct ReturnToInventoryExecutionTests {
         #expect(ret["type"] as? String == "Return")
         #expect(ret["source"] as? String == "Business Inventory")
         #expect(ret["projectId"] as? String == "srcProj")
+        #expect(ret["budgetCategoryId"] as? String == "cat1")
         #expect(ret["status"] as? String == "completed")
         // amountCents = sum of purchasePriceCents: 1000 + 2000 + 3000 = 6000
         #expect(ret["amountCents"] as? Int == 6000)
@@ -389,7 +390,7 @@ struct ReturnToInventoryExecutionTests {
     func batchSizeExceeded() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let items = (1...101).map { makeItem(id: "i\($0)", projectId: "proj1") }
+        let items = (1...101).map { makeItem(id: "i\($0)", projectId: "proj1", budgetCategoryId: "cat1") }
 
         await #expect(throws: InventoryOperationError.self) {
             try await service.returnToInventory(items: items, accountId: acct)
@@ -401,7 +402,7 @@ struct ReturnToInventoryExecutionTests {
     func missingItemIdThrowsBeforeCreatingReturn() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: nil, projectId: "proj1", transactionId: "oldTx")
+        let item = makeItem(id: nil, projectId: "proj1", budgetCategoryId: "cat1", transactionId: "oldTx")
 
         await #expect(throws: InventoryOperationError.self) {
             try await service.returnToInventory(items: [item], accountId: acct)
@@ -417,7 +418,7 @@ struct ReturnToInventoryExecutionTests {
     func sourceTransactionRemoval() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "proj1", transactionId: "oldTx")
+        let item = makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", transactionId: "oldTx")
 
         try await service.returnToInventory(items: [item], accountId: acct)
 
@@ -430,7 +431,7 @@ struct ReturnToInventoryExecutionTests {
     func noSourceRemovalWhenNil() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "proj1", transactionId: nil)
+        let item = makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", transactionId: nil)
 
         try await service.returnToInventory(items: [item], accountId: acct)
 
@@ -442,7 +443,7 @@ struct ReturnToInventoryExecutionTests {
     func userIdPresent() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "proj1")
+        let item = makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1")
 
         try await service.returnToInventory(items: [item], accountId: acct, userId: "user1")
 
@@ -454,7 +455,7 @@ struct ReturnToInventoryExecutionTests {
     func userIdNil() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let item = makeItem(id: "i1", projectId: "proj1")
+        let item = makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1")
 
         try await service.returnToInventory(items: [item], accountId: acct, userId: nil)
 
@@ -475,9 +476,9 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let service = makeService(batch: batch)
         // currentSource != source ⇒ items previously passed through inventory
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+            makeItem(id: "i1", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 2000, transactionId: "oldTx",
                      projectPriceCents: 2500, source: "Wayfair", currentSource: "Business Inventory"),
-            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+            makeItem(id: "i2", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 3000, transactionId: "oldTx",
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Business Inventory"),
         ]
 
@@ -492,7 +493,8 @@ struct SellItemsFromProjectToProjectExecutionTests {
         #expect(returnSets.count == 1)
         let ret = returnSets[0].fields
         #expect(ret["projectId"] as? String == "srcProj")
-        #expect(ret["amountCents"] as? Int == 5000)
+        #expect(ret["budgetCategoryId"] as? String == "cat_src")
+        #expect(ret["amountCents"] as? Int == 6000)
 
         let purchaseSets = batch.sets.filter { ($0.fields["type"] as? String) == "Purchase" }
         #expect(purchaseSets.count == 1)
@@ -536,9 +538,9 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let service = makeService(batch: batch)
         // currentSource == source ⇒ items originated in srcProj, never touched inventory
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+            makeItem(id: "i1", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 2000, transactionId: "oldTx",
                      projectPriceCents: 2500, source: "Wayfair", currentSource: "Wayfair"),
-            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+            makeItem(id: "i2", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 3000, transactionId: "oldTx",
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
         ]
 
@@ -557,13 +559,13 @@ struct SellItemsFromProjectToProjectExecutionTests {
         #expect(saleSets.count == 1)
         #expect(purchaseSets.count == 1)
 
-        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }
+        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat_src" }
         let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }
         #expect(toInventory != nil)
         #expect(toDest != nil)
         #expect(toInventory?.fields["projectId"] as? String == "srcProj")
         #expect(toDest?.fields["projectId"] as? String == "dstProj")
-        #expect(toInventory?.fields["amountCents"] as? Int == 5000)
+        #expect(toInventory?.fields["amountCents"] as? Int == 6000)
         #expect(toDest?.fields["amountCents"] as? Int == 6000)
 
         // Lineage: 2 soldToInventory (hop 1) + 2 sold (hop 2)
@@ -580,9 +582,9 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 2000, transactionId: "oldTx",
+            makeItem(id: "i1", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 2000, transactionId: "oldTx",
                      projectPriceCents: 2500, source: "Wayfair", currentSource: "Business Inventory"),
-            makeItem(id: "i2", projectId: "srcProj", purchasePriceCents: 3000, transactionId: "oldTx",
+            makeItem(id: "i2", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 3000, transactionId: "oldTx",
                      projectPriceCents: 3500, source: "Wayfair", currentSource: "Wayfair"),
         ]
 
@@ -602,12 +604,12 @@ struct SellItemsFromProjectToProjectExecutionTests {
         let returnItemIds = returnSets[0].fields["itemIds"] as? [String] ?? []
         #expect(returnItemIds == ["i1"])
 
-        // Sale-to-Inventory (no budgetCategoryId) covers only i2
-        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == nil }!
+        // Sale-to-Inventory covers only i2 and carries the source category
+        let toInventory = saleSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat_src" }!
         let toInventoryItemIds = toInventory.fields["itemIds"] as? [String] ?? []
         #expect(toInventoryItemIds == ["i2"])
-        #expect(toInventory.fields["amountCents"] as? Int == 3000)
-        #expect(returnSets[0].fields["amountCents"] as? Int == 2000)
+        #expect(toInventory.fields["amountCents"] as? Int == 3500)
+        #expect(returnSets[0].fields["amountCents"] as? Int == 2500)
 
         // Destination Purchase covers both items
         let toDest = purchaseSets.first { ($0.fields["budgetCategoryId"] as? String) == "cat1" }!
@@ -666,7 +668,7 @@ struct SellItemsFromProjectToProjectExecutionTests {
     func batchSizeExceeded() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
-        let items = (1...101).map { makeItem(id: "i\($0)", projectId: "srcProj") }
+        let items = (1...101).map { makeItem(id: "i\($0)", projectId: "srcProj", budgetCategoryId: "cat1") }
 
         await #expect(throws: InventoryOperationError.self) {
             try await service.sellItemsFromProjectToProject(
@@ -885,10 +887,10 @@ struct NormalizeTransactionAmountTests {
         #expect(BudgetTabCalculations.normalizeTransactionAmount(tx) == -2000)
     }
 
-    @Test("new per-batch sale → +abs(amount)")
+    @Test("new per-batch sale → -abs(amount)")
     func newPerBatchSale() {
         let tx = makeTx(type: .sale, amountCents: 4000)
-        #expect(BudgetTabCalculations.normalizeTransactionAmount(tx) == 4000)
+        #expect(BudgetTabCalculations.normalizeTransactionAmount(tx) == -4000)
     }
 
     @Test("purchase → amount as-stored")
@@ -969,7 +971,7 @@ struct InventoryLabelPassthroughTests {
     func returnToInventoryCustomLabel() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
-        let items = [makeItem(id: "i1", projectId: "proj1", purchasePriceCents: 1000)]
+        let items = [makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", purchasePriceCents: 1000)]
 
         try await service.returnToInventory(
             items: items,
@@ -987,8 +989,8 @@ struct InventoryLabelPassthroughTests {
         let service = InventoryOperationsService(makeBatch: { batch })
         // From-inventory item — triggers the Return-leg first hop
         let items = [
-            makeItem(id: "i1", projectId: "srcProj", purchasePriceCents: 1000,
-                     projectPriceCents: 1200, source: "Wayfair",
+            makeItem(id: "i1", projectId: "srcProj", budgetCategoryId: "cat_src", purchasePriceCents: 1000,
+                     transactionId: "oldTx", projectPriceCents: 1200, source: "Wayfair",
                      currentSource: "Business Inventory"),
         ]
 
@@ -1059,7 +1061,7 @@ struct CurrentSourceDenormalizationTests {
     func returnToInventoryWritesCurrentSource() async throws {
         let batch = RecordingBatch()
         let service = InventoryOperationsService(makeBatch: { batch })
-        let items = [makeItem(id: "i1", projectId: "proj1", purchasePriceCents: 1000)]
+        let items = [makeItem(id: "i1", projectId: "proj1", budgetCategoryId: "cat1", purchasePriceCents: 1000)]
 
         try await service.returnToInventory(
             items: items,
@@ -1079,8 +1081,12 @@ struct CurrentSourceDenormalizationTests {
         let items = [
             makeItem(
                 id: "i1", projectId: "srcProj",
+                budgetCategoryId: "cat_src",
                 purchasePriceCents: 1000,
-                projectPriceCents: 1200
+                transactionId: "oldTx",
+                projectPriceCents: 1200,
+                source: "Business Inventory",
+                currentSource: "Business Inventory"
             ),
         ]
 

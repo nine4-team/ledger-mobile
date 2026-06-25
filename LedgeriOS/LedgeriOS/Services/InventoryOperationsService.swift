@@ -21,6 +21,10 @@ enum InventoryOperationError: Error {
 
     /// Inventory movement writers require persisted item documents with IDs.
     case itemsMissingIds
+
+    /// Source project egress needs the item's current project budget category
+    /// so the source project budget can subtract from the right category.
+    case missingSourceBudgetCategory
 }
 
 // MARK: - Service
@@ -41,7 +45,7 @@ enum InventoryOperationError: Error {
 ///   - Inventory → project: `type == .purchase`, `source` is the inventory
 ///     label, and `budgetCategoryId` is set (destination category).
 ///   - Project → inventory acquisition: `type == .sale`, `source` is the
-///     inventory label, and `budgetCategoryId` is absent.
+///     inventory label, and `budgetCategoryId` is the source project category.
 ///
 /// This leverages the invariant `item.projectId == null ↔ item.budgetCategoryId == null`.
 ///
@@ -106,6 +110,25 @@ struct InventoryOperationsService {
         let ids = items.compactMap(\.id)
         guard ids.count == items.count else { throw InventoryOperationError.itemsMissingIds }
         return ids
+    }
+
+    private static func sourceCategoryGroups(_ items: [Item]) throws -> [(categoryId: String, items: [Item])] {
+        var order: [String] = []
+        var groups: [String: [Item]] = [:]
+
+        for item in items {
+            guard let rawCategoryId = item.budgetCategoryId?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !rawCategoryId.isEmpty else {
+                throw InventoryOperationError.missingSourceBudgetCategory
+            }
+            if groups[rawCategoryId] == nil {
+                order.append(rawCategoryId)
+                groups[rawCategoryId] = []
+            }
+            groups[rawCategoryId]?.append(item)
+        }
+
+        return order.map { ($0, groups[$0] ?? []) }
     }
 
     // MARK: - Sell to Project
@@ -237,77 +260,81 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
-        let itemIds = try Self.requireItemIds(items)
+        _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
-        // Return amount uses purchasePriceCents (what the business actually paid)
-        let returnAmount = items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
-
-        // Determine source projectId for the Return transaction (budget impact)
-        let sourceProjectId: Any = items.first?.projectId as Any? ?? NSNull()
-
-        // 1. Create Return transaction
-        let returnId = UUID().uuidString
-        let returnDocPath = "\(txPath)/\(returnId)"
         let today = Self.todayDateString()
-        var returnFields: [String: Any] = [
-            "type": "Return",
-            "source": inventoryLabel,
-            "projectId": sourceProjectId,
-            "amountCents": returnAmount,
-            "itemIds": itemIds,
-            "status": "completed",
-            "transactionDate": today,
-            "createdAt": FieldValue.serverTimestamp(),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ]
-        if let notes { returnFields["notes"] = notes }
-        if let userId { returnFields["createdBy"] = userId }
-        batch.setData(returnFields, forDocumentAt: returnDocPath, merge: false)
+        let categoryGroups = try Self.sourceCategoryGroups(items)
 
-        // 2. Update each item
-        for item in items {
-            guard let itemId = item.id else { continue }
+        for group in categoryGroups {
+            let groupItemIds = group.items.compactMap(\.id)
+            let returnAmount = group.items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+            let sourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
 
-            batch.updateData([
-                "projectId": NSNull(),
-                "budgetCategoryId": NSNull(),
-                "spaceId": NSNull(),
-                "status": "purchased",
-                "transactionId": returnId,
-                // Immediate source becomes the inventory label now that the
-                // item is back in inventory. Original `source` (vendor) is
-                // preserved so the designer can still route a return to the
-                // store it was originally bought from.
-                "currentSource": inventoryLabel,
-                "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
-
-            // 3. Remove from source transaction's active membership.
-            if let fromTxId = item.transactionId {
-                batch.updateData(
-                    ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocumentAt: "\(txPath)/\(fromTxId)"
-                )
-            }
-
-            // 4. Lineage edge (returned)
-            var edge: [String: Any] = [
-                "accountId": accountId,
-                "itemId": itemId,
-                "toTransactionId": returnId,
-                "movementKind": "returned",
-                "source": "app",
+            // 1. Create Return transaction
+            let returnId = UUID().uuidString
+            let returnDocPath = "\(txPath)/\(returnId)"
+            var returnFields: [String: Any] = [
+                "type": "Return",
+                "source": inventoryLabel,
+                "projectId": sourceProjectId,
+                "budgetCategoryId": group.categoryId,
+                "amountCents": returnAmount,
+                "subtotalCents": returnAmount,
+                "itemIds": groupItemIds,
+                "status": "completed",
+                "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
-            if let userId { edge["createdBy"] = userId }
-            batch.setDataAutoId(edge, inCollection: edgesPath)
+            if let notes { returnFields["notes"] = notes }
+            if let userId { returnFields["createdBy"] = userId }
+            batch.setData(returnFields, forDocumentAt: returnDocPath, merge: false)
+
+            // 2. Update each item
+            for item in group.items {
+                guard let itemId = item.id else { continue }
+
+                batch.updateData([
+                    "projectId": NSNull(),
+                    "budgetCategoryId": NSNull(),
+                    "spaceId": NSNull(),
+                    "status": "purchased",
+                    "transactionId": returnId,
+                    // Immediate source becomes the inventory label now that the
+                    // item is back in inventory. Original `source` (vendor) is
+                    // preserved so the designer can still route a return to the
+                    // store it was originally bought from.
+                    "currentSource": inventoryLabel,
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ], forDocumentAt: "\(itemsPath)/\(itemId)")
+
+                // 3. Remove from source transaction's active membership.
+                if let fromTxId = item.transactionId {
+                    batch.updateData(
+                        ["itemIds": FieldValue.arrayRemove([itemId])],
+                        forDocumentAt: "\(txPath)/\(fromTxId)"
+                    )
+                }
+
+                // 4. Lineage edge (returned)
+                var edge: [String: Any] = [
+                    "accountId": accountId,
+                    "itemId": itemId,
+                    "toTransactionId": returnId,
+                    "movementKind": "returned",
+                    "source": "app",
+                    "createdAt": FieldValue.serverTimestamp(),
+                ]
+                if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
+                if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+                if let userId { edge["createdBy"] = userId }
+                batch.setDataAutoId(edge, inCollection: edgesPath)
+            }
         }
 
         // 5. Auto-credit for items previously on a paid invoice.
@@ -348,75 +375,77 @@ struct InventoryOperationsService {
         guard items.count <= Self.maxBatchItems else {
             throw InventoryOperationError.batchSizeExceeded
         }
-        let itemIds = try Self.requireItemIds(items)
+        _ = try Self.requireItemIds(items)
 
         let batch = makeBatch()
         let itemsPath = "accounts/\(accountId)/items"
         let txPath = "accounts/\(accountId)/transactions"
         let edgesPath = "accounts/\(accountId)/lineageEdges"
 
-        let totals = Self.computePurchasePriceTotals(items)
-        let sourceProjectId: Any = items.first?.projectId as Any? ?? NSNull()
-
-        // 1. Create Sale transaction (project → inventory direction).
-        // Direction is encoded implicitly: `source` is the inventory label and
-        // `budgetCategoryId` is absent (inventory items have no category). A
-        // Sale with a set budgetCategoryId goes inventory → project.
-        let saleId = UUID().uuidString
         let today = Self.todayDateString()
-        var saleFields: [String: Any] = [
-            "type": "Sale",
-            "source": inventoryLabel,
-            "projectId": sourceProjectId,
-            "amountCents": totals.amountCents,
-            "subtotalCents": totals.subtotalCents,
-            "itemIds": itemIds,
-            "isComplete": true,
-            "transactionDate": today,
-            "createdAt": FieldValue.serverTimestamp(),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ]
-        if let notes { saleFields["notes"] = notes }
-        if let userId { saleFields["createdBy"] = userId }
-        batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
+        let categoryGroups = try Self.sourceCategoryGroups(items)
 
-        // 2. Update each item — lands in inventory
-        for item in items {
-            guard let itemId = item.id else { continue }
+        for group in categoryGroups {
+            let totals = Self.computePurchasePriceTotals(group.items)
+            let sourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
 
-            batch.updateData([
-                "projectId": NSNull(),
-                "budgetCategoryId": NSNull(),
-                "spaceId": NSNull(),
-                "status": "purchased",
-                "transactionId": saleId,
-                // The business acquired the item; its immediate source is now
-                // the inventory label. Original `source` (vendor) is preserved.
-                "currentSource": inventoryLabel,
-                "updatedAt": FieldValue.serverTimestamp(),
-            ], forDocumentAt: "\(itemsPath)/\(itemId)")
-
-            // 3. Remove from source transaction's active membership.
-            if let fromTxId = item.transactionId {
-                batch.updateData(
-                    ["itemIds": FieldValue.arrayRemove([itemId])],
-                    forDocumentAt: "\(txPath)/\(fromTxId)"
-                )
-            }
-
-            // 4. Lineage edge — acquired into inventory (sold from project to business)
-            var edge: [String: Any] = [
-                "accountId": accountId,
-                "itemId": itemId,
-                "toTransactionId": saleId,
-                "movementKind": "soldToInventory",
-                "source": "app",
+            // 1. Create Sale transaction (project → inventory direction).
+            let saleId = UUID().uuidString
+            var saleFields: [String: Any] = [
+                "type": "Sale",
+                "source": inventoryLabel,
+                "projectId": sourceProjectId,
+                "budgetCategoryId": group.categoryId,
+                "amountCents": totals.amountCents,
+                "subtotalCents": totals.subtotalCents,
+                "itemIds": group.items.compactMap(\.id),
+                "isComplete": true,
+                "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
             ]
-            if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
-            if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
-            if let userId { edge["createdBy"] = userId }
-            batch.setDataAutoId(edge, inCollection: edgesPath)
+            if let notes { saleFields["notes"] = notes }
+            if let userId { saleFields["createdBy"] = userId }
+            batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
+
+            // 2. Update each item — lands in inventory
+            for item in group.items {
+                guard let itemId = item.id else { continue }
+
+                batch.updateData([
+                    "projectId": NSNull(),
+                    "budgetCategoryId": NSNull(),
+                    "spaceId": NSNull(),
+                    "status": "purchased",
+                    "transactionId": saleId,
+                    // The business acquired the item; its immediate source is now
+                    // the inventory label. Original `source` (vendor) is preserved.
+                    "currentSource": inventoryLabel,
+                    "updatedAt": FieldValue.serverTimestamp(),
+                ], forDocumentAt: "\(itemsPath)/\(itemId)")
+
+                // 3. Remove from source transaction's active membership.
+                if let fromTxId = item.transactionId {
+                    batch.updateData(
+                        ["itemIds": FieldValue.arrayRemove([itemId])],
+                        forDocumentAt: "\(txPath)/\(fromTxId)"
+                    )
+                }
+
+                // 4. Lineage edge — acquired into inventory (sold from project to business)
+                var edge: [String: Any] = [
+                    "accountId": accountId,
+                    "itemId": itemId,
+                    "toTransactionId": saleId,
+                    "movementKind": "soldToInventory",
+                    "source": "app",
+                    "createdAt": FieldValue.serverTimestamp(),
+                ]
+                if let fromProjectId = item.projectId { edge["fromProjectId"] = fromProjectId }
+                if let fromTxId = item.transactionId { edge["fromTransactionId"] = fromTxId }
+                if let userId { edge["createdBy"] = userId }
+                batch.setDataAutoId(edge, inCollection: edgesPath)
+            }
         }
 
         try await batch.commit()
@@ -480,49 +509,67 @@ struct InventoryOperationsService {
 
         let today = Self.todayDateString()
 
-        // Return leg
-        let returnId = UUID().uuidString
-        let returnAmount = split.returnItems.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
-        let returnSourceProjectId: Any = split.returnItems.first?.projectId as Any? ?? NSNull()
-        var returnFields: [String: Any] = [
-            "type": "Return",
-            "source": inventoryLabel,
-            "projectId": returnSourceProjectId,
-            "amountCents": returnAmount,
-            "itemIds": split.returnItems.compactMap(\.id),
-            "status": "completed",
-            "transactionDate": today,
-            "createdAt": FieldValue.serverTimestamp(),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ]
-        if let notes { returnFields["notes"] = notes }
-        if let userId { returnFields["createdBy"] = userId }
-        batch.setData(returnFields, forDocumentAt: "\(txPath)/\(returnId)", merge: false)
+        let returnGroups = try Self.sourceCategoryGroups(split.returnItems)
+        let saleGroups = try Self.sourceCategoryGroups(split.saleItems)
+        var returnTxByItemId: [String: String] = [:]
+        var saleTxByItemId: [String: String] = [:]
 
-        // Sale leg (project → inventory). Direction encoded implicitly by
-        // absent `budgetCategoryId` — see sellToInventory.
-        let saleId = UUID().uuidString
-        let saleTotals = Self.computePurchasePriceTotals(split.saleItems)
-        let saleSourceProjectId: Any = split.saleItems.first?.projectId as Any? ?? NSNull()
-        var saleFields: [String: Any] = [
-            "type": "Sale",
-            "source": inventoryLabel,
-            "projectId": saleSourceProjectId,
-            "amountCents": saleTotals.amountCents,
-            "subtotalCents": saleTotals.subtotalCents,
-            "itemIds": split.saleItems.compactMap(\.id),
-            "isComplete": true,
-            "transactionDate": today,
-            "createdAt": FieldValue.serverTimestamp(),
-            "updatedAt": FieldValue.serverTimestamp(),
-        ]
-        if let notes { saleFields["notes"] = notes }
-        if let userId { saleFields["createdBy"] = userId }
-        batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
+        // Return legs
+        for group in returnGroups {
+            let returnId = UUID().uuidString
+            let returnAmount = group.items.reduce(0) { $0 + ($1.purchasePriceCents ?? 0) }
+            let returnSourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
+            var returnFields: [String: Any] = [
+                "type": "Return",
+                "source": inventoryLabel,
+                "projectId": returnSourceProjectId,
+                "budgetCategoryId": group.categoryId,
+                "amountCents": returnAmount,
+                "subtotalCents": returnAmount,
+                "itemIds": group.items.compactMap(\.id),
+                "status": "completed",
+                "transactionDate": today,
+                "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let notes { returnFields["notes"] = notes }
+            if let userId { returnFields["createdBy"] = userId }
+            batch.setData(returnFields, forDocumentAt: "\(txPath)/\(returnId)", merge: false)
+            for item in group.items {
+                if let itemId = item.id { returnTxByItemId[itemId] = returnId }
+            }
+        }
+
+        // Sale legs
+        for group in saleGroups {
+            let saleId = UUID().uuidString
+            let saleTotals = Self.computePurchasePriceTotals(group.items)
+            let saleSourceProjectId: Any = group.items.first?.projectId as Any? ?? NSNull()
+            var saleFields: [String: Any] = [
+                "type": "Sale",
+                "source": inventoryLabel,
+                "projectId": saleSourceProjectId,
+                "budgetCategoryId": group.categoryId,
+                "amountCents": saleTotals.amountCents,
+                "subtotalCents": saleTotals.subtotalCents,
+                "itemIds": group.items.compactMap(\.id),
+                "isComplete": true,
+                "transactionDate": today,
+                "createdAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp(),
+            ]
+            if let notes { saleFields["notes"] = notes }
+            if let userId { saleFields["createdBy"] = userId }
+            batch.setData(saleFields, forDocumentAt: "\(txPath)/\(saleId)", merge: false)
+            for item in group.items {
+                if let itemId = item.id { saleTxByItemId[itemId] = saleId }
+            }
+        }
 
         // Item updates + lineage edges
         for item in split.returnItems {
             guard let itemId = item.id else { continue }
+            guard let returnId = returnTxByItemId[itemId] else { continue }
             batch.updateData([
                 "projectId": NSNull(),
                 "budgetCategoryId": NSNull(),
@@ -556,6 +603,7 @@ struct InventoryOperationsService {
 
         for item in split.saleItems {
             guard let itemId = item.id else { continue }
+            guard let saleId = saleTxByItemId[itemId] else { continue }
             batch.updateData([
                 "projectId": NSNull(),
                 "budgetCategoryId": NSNull(),
@@ -667,19 +715,23 @@ struct InventoryOperationsService {
         let split = Self.splitByOrigin(items)
         let today = Self.todayDateString()
 
+        let returnGroups = try Self.sourceCategoryGroups(split.returnItems)
+        let saleGroups = try Self.sourceCategoryGroups(split.saleItems)
+        var returnTxByItemId: [String: String] = [:]
+        var saleTxByItemId: [String: String] = [:]
+
         // 1a. First hop — Return leg (items that came from inventory)
-        var returnId: String? = nil
-        if !split.returnItems.isEmpty {
+        for group in returnGroups {
             let id = UUID().uuidString
-            returnId = id
-            let returnTotals = Self.computePurchasePriceTotals(split.returnItems)
+            let returnTotals = Self.computeBatchTotals(group.items)
             var returnFields: [String: Any] = [
                 "type": "Return",
                 "source": inventoryLabel,
                 "projectId": sourceProjectId,
+                "budgetCategoryId": group.categoryId,
                 "amountCents": returnTotals.amountCents,
                 "subtotalCents": returnTotals.subtotalCents,
-                "itemIds": split.returnItems.compactMap(\.id),
+                "itemIds": group.items.compactMap(\.id),
                 "status": "completed",
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
@@ -688,23 +740,23 @@ struct InventoryOperationsService {
             if let notes { returnFields["notes"] = notes }
             if let userId { returnFields["createdBy"] = userId }
             batch.setData(returnFields, forDocumentAt: "\(txPath)/\(id)", merge: false)
+            for item in group.items {
+                if let itemId = item.id { returnTxByItemId[itemId] = id }
+            }
         }
 
         // 1b. First hop — Sale-to-Inventory leg (items that originated here).
-        // Direction (project → inventory) encoded implicitly via absent
-        // `budgetCategoryId`.
-        var firstSaleId: String? = nil
-        if !split.saleItems.isEmpty {
+        for group in saleGroups {
             let id = UUID().uuidString
-            firstSaleId = id
-            let saleTotals = Self.computePurchasePriceTotals(split.saleItems)
+            let saleTotals = Self.computeBatchTotals(group.items)
             var saleFields: [String: Any] = [
                 "type": "Sale",
                 "source": inventoryLabel,
                 "projectId": sourceProjectId,
+                "budgetCategoryId": group.categoryId,
                 "amountCents": saleTotals.amountCents,
                 "subtotalCents": saleTotals.subtotalCents,
-                "itemIds": split.saleItems.compactMap(\.id),
+                "itemIds": group.items.compactMap(\.id),
                 "isComplete": true,
                 "transactionDate": today,
                 "createdAt": FieldValue.serverTimestamp(),
@@ -713,6 +765,9 @@ struct InventoryOperationsService {
             if let notes { saleFields["notes"] = notes }
             if let userId { saleFields["createdBy"] = userId }
             batch.setData(saleFields, forDocumentAt: "\(txPath)/\(id)", merge: false)
+            for item in group.items {
+                if let itemId = item.id { saleTxByItemId[itemId] = id }
+            }
         }
 
         // 2. Second hop — Purchase transaction (from inventory) covers all items
@@ -765,7 +820,7 @@ struct InventoryOperationsService {
 
             // First-hop lineage edge — "returned" or "soldToInventory" per origin
             let cameFrom = Self.cameFromInventory(item)
-            let firstHopTxId = cameFrom ? returnId : firstSaleId
+            let firstHopTxId = cameFrom ? returnTxByItemId[itemId] : saleTxByItemId[itemId]
             let firstHopKind = cameFrom ? "returned" : "soldToInventory"
             if let firstHopTxId {
                 var firstEdge: [String: Any] = [

@@ -188,7 +188,7 @@ service cloud.firestore {
     // returns/sales can remove items from the source transaction while lineage
     // preserves the historical membership.
     // Inventory→project is an inventory-labeled Purchase. Project→inventory
-    // acquisition is a Sale with no category. Legacy canonical sales are
+    // acquisition is a Sale with the source project category. Legacy canonical sales are
     // exempt so existing flows (cancel_transaction, etc.) continue to work.
     // Other transactions remain unrestricted.
     match /accounts/{accountId}/transactions/{transactionId} {

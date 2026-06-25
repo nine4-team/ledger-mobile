@@ -31,13 +31,13 @@ Direction is not stored as a dedicated field. It is **implicit in the transactio
 | Direction | `type` | `source` | `budgetCategoryId` | Project's budget |
 |---|---|---|---|---|
 | Inventory → Project | `Purchase` | inventory label | set (destination category) | **increases** |
-| Project → Inventory | `Sale` | inventory label | absent | **decreases** |
+| Project → Inventory | `Sale` | inventory label | set (source category) | **decreases** |
 
-This leverages the core invariant `item.projectId == null ↔ item.budgetCategoryId == null`: inventory items have no category, so a Sale involving inventory as destination cannot carry one.
+Item category and transaction category are different concepts. Inventory items have no category, so item `budgetCategoryId` is wiped when the item lands in inventory. The Sale transaction still carries `budgetCategoryId` as frozen source-project accounting attribution.
 
 **Item origin governs which direction applies for project → inventory moves.** Items whose most recent scope move passed through inventory (`currentSource != source`) go back via a Return. Items that originated in the project (`currentSource == source`) go via Sale-to-Inventory. See [reassign-vs-sell.md](reassign-vs-sell.md) for UI routing and [inventory-as-store.md](inventory-as-store.md) for the semantic model.
 
-**Price basis is directional.** Every inventory → project hop uses `projectPriceCents`. Every project → business inventory hop uses `purchasePriceCents`. A project → project move is two hops: the source exit uses purchase price, and the destination Purchase uses project price.
+**Price basis is directional.** Inventory → project and project → project hops use `projectPriceCents`. Standalone project → business inventory uses `purchasePriceCents`.
 
 ## Inventory Purchase Transaction Shape
 
@@ -67,9 +67,9 @@ The following invariants are enforced by Firestore security rules and by tests i
 1. **Accounting immutability after creation.** `amountCents`, `budgetCategoryId`, `type`, `source`, and `projectId` cannot be updated on an inventory movement transaction after it's created. Mutable fields include `itemIds`, `notes`, `status`, `updatedAt`. `itemIds` is current active membership; lineage carries returned/sold historical membership.
 2. **Batch size cap.** Initial `itemIds.length >= 1 && itemIds.length <= 100`. Later returns/sales can reduce `itemIds` to zero on the source transaction. Both clients enforce the initial cap locally; the cap exists because Firestore batch writes have a 500-doc limit and a 100-item movement touches ~305 docs.
 3. **Non-negative amount.** `amountCents >= 0`.
-4. **Direction is shape-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source and no category is project → inventory acquisition. The direction is derivable from `(type, source, budgetCategoryId)` alone — no dedicated field.
+4. **Direction is type/source-derived.** `type == "Purchase"` with an inventory source is inventory → project. `type == "Sale"` with an inventory source is project → inventory acquisition. No dedicated direction field is written for new per-batch movements.
 5. **Category must be enabled (inventory → project only).** When `budgetCategoryId` is present, it must exist as an enabled `ProjectBudgetCategory` in the destination project at the time of the purchase. Both clients validate before writing; if the category is missing, the user is prompted to enable it (or a different category).
-6. **One category per batch.** An inventory → project purchase has exactly one `budgetCategoryId`. There's no per-item category override. Users wanting mixed categories must move items in separate batches. Project → inventory sales have no category (items leave the project's category system entirely).
+6. **One accounting category per transaction.** Inventory → project purchases use one destination `budgetCategoryId`. Source project egress transactions use one source `budgetCategoryId`; mixed source categories are split into separate first-hop transactions.
 
 ## The Sell Flow
 
@@ -133,7 +133,7 @@ Moving items from one project to another is a **two-hop** operation in a single 
 
 1. **First hop (per-item, per origin):**
    - From-inventory items (`currentSource != source`) → a **Return** transaction against the source project.
-   - Items that originated in the source project (`currentSource == source`) → a **Sale-to-Inventory** transaction (`type: "Sale"`, no `budgetCategoryId`) against the source project.
+   - Items that originated in the source project (`currentSource == source`) → a **Sale-to-Inventory** transaction (`type: "Sale"`, source `budgetCategoryId`) against the source project.
    - Mixed batches produce **both** first-hop transactions in the same Firestore batch.
 2. **Second hop:** one **Purchase-from-Inventory** transaction (`type: "Purchase"`, with `budgetCategoryId`) against the destination project. Covers every item in the batch.
 
@@ -160,13 +160,13 @@ The inventory movement transaction's `amountCents` is computed **once**, at crea
 | Inventory → project Purchase | Project price (`projectPriceCents`) |
 | Project → inventory Sale-to-Inventory | Purchase price (`purchasePriceCents`) |
 | Return to inventory | Purchase price (`purchasePriceCents`) |
-| Project → project two-hop | First hop follows project → inventory purchase-price basis; second hop follows inventory → project project-price basis |
+| Project → project two-hop | Source exit and destination Purchase both use project price |
 
 ```
 amountCents = sum(item.projectPriceCents ?? 0) for item in items
 ```
 
-The formula above is the project-price basis used by any inventory → project hop, including the destination hop in a project → project move. Any project → business inventory hop uses `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
+The formula above is the project-price basis used by inventory → project and project → project movement. Standalone project → business inventory uses `sum(item.purchasePriceCents ?? 0)` because the business is taking the item into inventory at cost.
 
 After creation, `amountCents` does not change, even if an item's prices are later updated. This is intentional — historical movement records should not retroactively shift in price. The `onItemPriceChanged` Cloud Function explicitly skips frozen inventory movement transactions.
 
@@ -177,7 +177,7 @@ If a project-price movement is initiated for an item without `projectPriceCents`
 | Transaction | Multiplier on project budget | Effect |
 |---|---|---|
 | Purchase, inventory → project (`type: "Purchase"`, `budgetCategoryId` set, inventory source) | +1 | Adds to project spend (destination category) |
-| Sale, project → inventory (`type: "Sale"`, `budgetCategoryId` absent) | –1 | Items leave the project; item-level category is wiped on the item |
+| Sale, project → inventory (`type: "Sale"`, source `budgetCategoryId`) | –1 | Items leave the project; item-level category is wiped on the item |
 | Return (`type: "Return"`) | –1 | Subtracts from project spend; items leave |
 | Legacy canonical sale (`isCanonicalInventorySale: true`) | direction-based | See "Legacy Canonical Sales" below |
 
@@ -190,7 +190,7 @@ Inventory movement direction is rendered in the transaction's **display name**, 
 | Direction | Display name | Example |
 |---|---|---|
 | Inventory → Project (Purchase with `budgetCategoryId`) | `Purchase from [source]` | `Purchase from 1584 Design Inventory` |
-| Project → Inventory (Sale without `budgetCategoryId`) | `Sale to [source]` | `Sale to 1584 Design Inventory` |
+| Project → Inventory (Sale with source `budgetCategoryId`) | `Sale to [source]` | `Sale to 1584 Design Inventory` |
 | Return to inventory (`type: "Return"`) | `Return to [source]` | `Return to 1584 Design Inventory` |
 | Return to vendor (`type: "Return"`) | `Return to [source]` | `Return to Wayfair` |
 
@@ -219,7 +219,7 @@ Groupable records:
 |---|---|---|
 | Inventory purchase/acquisition (`type: "Purchase"`, `projectId: null`) | `Added to Business Inventory` | Groups inventory-scope acquisition purchases by vendor/type. |
 | Inventory → project Purchase (`type: "Purchase"`, `budgetCategoryId` set) | `From [inventory label]` | Groups by inventory label, project, category, and transaction type. |
-| Project → inventory Sale (`type: "Sale"`, no `budgetCategoryId`) | `Sold to [inventory label]` | Groups by inventory label, project, no-category shape, and transaction type. |
+| Project -> inventory Sale (`type: "Sale"`, source `budgetCategoryId`) | `Sold to [inventory label]` | Groups by inventory label, project, category, and transaction type. |
 | Return to inventory (`type: "Return"`, inventory-label source) | `Returned to [inventory label]` | Vendor returns are excluded; only inventory-label returns are grouped. |
 
 The grouping key includes movement direction, source/inventory label, project ID, budget category ID, and transaction type. **Date is not part of the key** — all matching batches collapse into a single row regardless of when they happened, so a project that pulls from inventory across many days shows one card per (direction, source, category). Charges and credits must not be collapsed into a misleading net row; that's why direction and type are part of the key.

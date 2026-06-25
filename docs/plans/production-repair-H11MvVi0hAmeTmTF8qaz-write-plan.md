@@ -32,7 +32,7 @@ Preferred order:
 1. Implement and deploy the budget-rollup fix in `budget-rollup-inventory-egress-plan.md`.
 2. Run this one-off repair.
 
-Reason: the repair transaction should carry `sourceBudgetCategoryId`, and the deployed rollup should understand that field before or immediately after the transaction is created. If this repair is applied first, the audit/trail backfill will still be correct, but source-project budget summary will need a later recompute after the code fix deploys.
+Superseding note, 2026-06-25: the repair transaction should carry `budgetCategoryId`, not `sourceBudgetCategoryId`. The deployed rollup should use transaction `budgetCategoryId` for project-side Sale/Return egress.
 
 ## Write Plan
 
@@ -93,7 +93,7 @@ Fields:
   "type": "Sale",
   "source": "1584 Design Inventory",
   "projectId": "405GIhLoU2pLY4zqb71R",
-  "sourceBudgetCategoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
+  "budgetCategoryId": "da556858-1df8-40be-b10c-b15710d7cc9a",
   "amountCents": 98998,
   "subtotalCents": 98998,
   "itemIds": [
@@ -110,7 +110,7 @@ Fields:
 }
 ```
 
-`budgetCategoryId` remains absent. `sourceBudgetCategoryId` preserves the source project category for budget rollup without changing the shape rule that project -> inventory Sale transactions have no destination budget category.
+`budgetCategoryId` is the source project accounting category. The item-level `budgetCategoryId` can still be cleared when an item lands in business inventory; the transaction-level `budgetCategoryId` remains frozen historical accounting attribution.
 
 ### 4. Add First-Hop Intent Lineage
 
@@ -163,7 +163,7 @@ Do not delete the repair transaction or lineage edges as a normal rollback. If a
   - `type: Sale`
   - `source: 1584 Design Inventory`
   - `projectId: 405GIhLoU2pLY4zqb71R`
-  - `sourceBudgetCategoryId: da556858-1df8-40be-b10c-b15710d7cc9a`
+  - initially created with `sourceBudgetCategoryId: da556858-1df8-40be-b10c-b15710d7cc9a`; this should be patched to `budgetCategoryId: da556858-1df8-40be-b10c-b15710d7cc9a`
   - `amountCents: 98998`
   - `itemIds: Dcysdan3I84AOmFMfrMd, H11MvVi0hAmeTmTF8qaz`
 - Created lineage edges:
@@ -176,3 +176,11 @@ Do not delete the repair transaction or lineage edges as a normal rollback. If a
   - source transaction audit remains complete with `soldItemsCount: 2`, `soldItemsSumCents: 98998`, `varianceCents: 0`
   - destination transaction audit remains complete with `linkedItemsSumCents: 98998`, `varianceCents: 0`
 - Budget summaries recalculated after the write, but the source project budget still does not decrement for this Sale-to-Inventory transaction until `budget-rollup-inventory-egress-plan.md` is implemented.
+
+2026-06-25 follow-up:
+
+- Add and run `mcp-server/scripts/patch-H11MvVi0hAmeTmTF8qaz-budget-category.mjs --commit` after production credentials are available.
+- Expected patch:
+  - set `budgetCategoryId: da556858-1df8-40be-b10c-b15710d7cc9a`
+  - delete `sourceBudgetCategoryId`
+  - leave amount, project, item ids, and lineage edges unchanged

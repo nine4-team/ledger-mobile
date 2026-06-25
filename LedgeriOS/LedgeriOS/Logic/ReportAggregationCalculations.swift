@@ -93,9 +93,9 @@ enum ReportAggregationCalculations {
             return nil
         }
 
-        // Pre-direction per-batch Sale — assume business → project
+        // Non-legacy Sale is project egress into inventory.
         if tx.transactionType == .sale {
-            return .owedToCompany
+            return .owedToClient
         }
 
         return nil

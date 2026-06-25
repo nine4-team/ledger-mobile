@@ -80,7 +80,7 @@ Project-destination sales always charge the destination project at `projectPrice
 ### Budget Impact
 
 - Adds to destination project's budget for the chosen category at project price
-- For project-to-project sales, the source project decreases at purchase price and the destination project increases at project price
+- For project-to-project sales, the source project decreases at project price and the destination project increases at project price
 - For project-to-inventory sales, the source project decreases at purchase price
 
 See [sale-transactions.md](sale-transactions.md) for the full per-batch inventory movement flow.
@@ -122,12 +122,12 @@ When `item.currentSource != item.source`, the item passed through inventory befo
 
 When the source is another project and the destination is a project, **Sell** decomposes into a **two-hop** atomic batch. The user chooses the destination project; the first hop is origin-aware:
 
-1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory (no `budgetCategoryId`) against Project A. Mixed batches write both.
+1. **Hop 1 (per origin).** From-inventory items → Return against Project A. Originated-in-A items → Sale-to-Inventory with source `budgetCategoryId` against Project A. Mixed batches write both.
 2. **Hop 2.** One Purchase from inventory into Project B (`budgetCategoryId` set), covering all items.
 
 All writes land in the same Firestore batch. Lineage edges link the path. See [sale-transactions.md](sale-transactions.md) "Project → Project Moves."
 
-Pricing follows direction, not the user's single action label: Hop 1 uses purchase price because items exit into business inventory; Hop 2 uses project price because the destination project buys from inventory. Missing destination project prices must be collected before commit.
+Pricing follows the sale destination: project-to-project uses project price for both Hop 1 and Hop 2. Standalone project-to-business-inventory uses purchase price. Missing project prices must be collected before commit for project-destination sales.
 
 ## Menu Visibility Rules
 

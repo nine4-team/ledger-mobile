@@ -121,15 +121,15 @@ struct TransactionDisplayCalculationTests {
         #expect(TransactionDisplayCalculations.displayName(for: txn) == "Return to Wayfair")
     }
 
-    // Sale shape without explicit direction: budgetCategoryId presence determines direction
-    @Test("Sale with budgetCategoryId → 'Purchase from [source]'")
-    func displayNameSaleWithCategoryIsPurchase() {
+    // Sale shape without explicit direction is project egress, even with a budget category.
+    @Test("Sale with budgetCategoryId → 'Sale to [source]'")
+    func displayNameSaleWithCategoryIsSale() {
         let txn = makeTransaction(
             source: "Business Inventory",
             transactionType: .sale,
             budgetCategoryId: "cat1"
         )
-        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Purchase from Business Inventory")
+        #expect(TransactionDisplayCalculations.displayName(for: txn) == "Sale to Business Inventory")
     }
 
     @Test("Sale without budgetCategoryId → 'Sale to [source]'")

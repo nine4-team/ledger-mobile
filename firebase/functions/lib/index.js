@@ -835,6 +835,9 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
                     ? -Math.abs(amount)
                     : Math.abs(amount);
         }
+        else if (txType === 'sale') {
+            amount = -Math.abs(amount);
+        }
         spentByCategory[categoryId] = (spentByCategory[categoryId] ?? 0) + amount;
     }
     // 5. Build the summary — only include categories with non-zero budget or spend

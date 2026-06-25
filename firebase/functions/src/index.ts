@@ -1161,6 +1161,8 @@ async function recalculateProjectBudgetSummary(
         tx.inventorySaleDirection === 'project_to_business'
           ? -Math.abs(amount)
           : Math.abs(amount);
+    } else if (txType === 'sale') {
+      amount = -Math.abs(amount);
     }
 
     spentByCategory[categoryId] = (spentByCategory[categoryId] ?? 0) + amount;

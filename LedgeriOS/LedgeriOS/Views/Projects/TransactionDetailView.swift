@@ -1089,7 +1089,7 @@ struct TransactionDetailView: View {
 
     private func displayTransactionType(for transaction: Transaction) -> String {
         if transaction.transactionType == .sale,
-           (transaction.inventorySaleDirection == .businessToProject || (transaction.inventorySaleDirection == nil && transaction.budgetCategoryId != nil)) {
+           transaction.inventorySaleDirection == .businessToProject {
             return TransactionType.purchase.displayLabel
         }
         return transaction.transactionType?.displayLabel ?? "—"

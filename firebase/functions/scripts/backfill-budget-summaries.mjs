@@ -46,6 +46,9 @@ function normalizeSpendAmount(tx) {
       ? -Math.abs(amount)
       : Math.abs(amount);
   }
+  if (txType === 'sale') {
+    return -Math.abs(amount);
+  }
   return amount;
 }
 

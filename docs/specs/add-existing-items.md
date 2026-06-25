@@ -131,7 +131,7 @@ Cross-scope price basis follows movement direction:
 
 - Inventory → project uses `projectPriceCents`. If missing, the UI asks what to sell the item for and saves it before moving.
 - Project → business inventory uses `purchasePriceCents`.
-- Project → project applies both rules: source exit at purchase price, destination Purchase at project price.
+- Project → project uses project price for both the source exit and destination Purchase.
 
 ### Bulk Selection Across Scopes
 

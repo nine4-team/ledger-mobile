@@ -23,7 +23,7 @@ import { DEFAULT_INVENTORY_LABEL, resolveInventoryLabel } from "../util/inventor
 //     itemIds tracks current active membership.
 //   • Inventory movement direction is derived from transaction shape:
 //        - inventory → project: Purchase with `budgetCategoryId` set.
-//        - project → inventory acquisition: Sale with `budgetCategoryId` absent.
+//        - project → inventory acquisition: Sale with source-category `budgetCategoryId`.
 //   • Return is RESERVED for items going HOME to inventory — i.e., items
 //     that previously passed through inventory (currentSource != source).
 //     Items that originated in a project and are moving to inventory are a
@@ -126,6 +126,44 @@ function splitByOrigin(items: (Item & { id: string })[]): {
     else saleItems.push(item);
   }
   return { returnItems, saleItems };
+}
+
+function sourceCategoryGroups(items: (Item & { id: string })[]): Array<{
+  budgetCategoryId: string;
+  items: (Item & { id: string })[];
+}> {
+  const order: string[] = [];
+  const groups = new Map<string, (Item & { id: string })[]>();
+  for (const item of items) {
+    const categoryId = item.budgetCategoryId?.trim();
+    if (!categoryId) {
+      throw new Error(
+        `Item ${item.id} is missing budgetCategoryId; source-project egress requires a source category.`
+      );
+    }
+    if (!groups.has(categoryId)) {
+      order.push(categoryId);
+      groups.set(categoryId, []);
+    }
+    groups.get(categoryId)!.push(item);
+  }
+  return order.map((budgetCategoryId) => ({
+    budgetCategoryId,
+    items: groups.get(budgetCategoryId)!,
+  }));
+}
+
+function missingSourceBudgetCategory(items: (Item & { id: string })[]): string[] {
+  return items
+    .filter((item) => !item.budgetCategoryId?.trim())
+    .map((item) => item.id);
+}
+
+function missingSourceBudgetCategoryError(ids: string[]) {
+  return validation(
+    `${ids.length} source item(s) are missing budgetCategoryId: ${ids.join(", ")}.`,
+    "Correct the item/category before selling or returning it out of the source project."
+  );
 }
 
 /**
@@ -301,7 +339,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "REAL EVENT vs CORRECTION: This records a real business event. For data-entry mistakes (item " +
       "logged against the wrong project), use `bulk_update_items` with `projectId: null` to relocate " +
       "without creating a transaction.\n\n" +
-      "Accounting fields (amountCents, projectId, type, source) are frozen at creation. " +
+      "Accounting fields (amountCents, budgetCategoryId, projectId, type, source) are frozen at creation. " +
       "Cap: 100 items per call. PRICING: amountCents/subtotalCents use purchasePriceCents.",
     {
       itemIds: z
@@ -353,21 +391,30 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
             "Use return_items with returnTo: 'inventory' for from-inventory items. sell_items_from_project_to_inventory is reserved for items that originated in the project."
           );
         }
+        const missingSourceCategory = missingSourceBudgetCategory(items);
+        if (missingSourceCategory.length > 0) {
+          return missingSourceBudgetCategoryError(missingSourceCategory);
+        }
 
         const { subtotalCents, amountCents, missingTax } = computePurchasePriceTotals(items);
         if (dryRun) {
+          const saleTransactions = sourceCategoryGroups(items).map((group) => {
+            const totals = computePurchasePriceTotals(group.items);
+            return {
+              type: "Sale" as const,
+              source: inventoryLabel,
+              projectId: sourceProjectId,
+              budgetCategoryId: group.budgetCategoryId,
+              amountCents: totals.amountCents,
+              subtotalCents: totals.subtotalCents,
+              itemIds: group.items.map((i) => i.id),
+            };
+          });
           return asToolResponse({
             dryRun: true,
             direction: "projectToInventory",
             plan: {
-              saleTransaction: {
-                type: "Sale" as const,
-                source: inventoryLabel,
-                projectId: sourceProjectId,
-                amountCents,
-                subtotalCents,
-                itemIds: items.map((i) => i.id),
-              },
+              saleTransactions,
               itemUpdates: items.map((i) => ({
                 itemId: i.id,
                 set: {
@@ -379,6 +426,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
               })),
               lineageEdges: items.length,
             },
+            totals: { amountCents, subtotalCents },
             warning: null,
           });
         }
@@ -489,6 +537,26 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
                 "(returnTo: 'inventory') is reserved for items going HOME to inventory."
             );
           }
+          const missingSourceCategory = missingSourceBudgetCategory(items);
+          if (missingSourceCategory.length > 0) {
+            return missingSourceBudgetCategoryError(missingSourceCategory);
+          }
+          if (existingReturnTx) {
+            const groups = sourceCategoryGroups(items);
+            const existingCategory = existingReturnTx.budgetCategoryId?.trim();
+            if (!existingCategory) {
+              return validation(
+                `Existing Return transaction ${existingReturnTx.id} has no budgetCategoryId.`,
+                "Use a new inventory Return transaction so the source category can be recorded."
+              );
+            }
+            if (groups.length !== 1 || groups[0].budgetCategoryId !== existingCategory) {
+              return validation(
+                `Existing Return transaction ${existingReturnTx.id} uses budgetCategoryId ${existingCategory}, but selected items need ${groups.map((g) => g.budgetCategoryId).join(", ")}.`,
+                "Return items separately by source budget category, or omit returnTransactionId to create new grouped Return transactions."
+              );
+            }
+          }
         }
 
         if (dryRun) {
@@ -534,7 +602,7 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
       "   • Items that previously passed through inventory (currentSource != source) → a Return " +
       "transaction against the source project.\n" +
       "   • Items that originated in the source project (currentSource == source) → a Sale-to-Inventory " +
-      "transaction (type: 'Sale', no budgetCategoryId) against the source project.\n" +
+      "transaction (type: 'Sale', source-category budgetCategoryId) against the source project.\n" +
       "   • Mixed batches produce BOTH first-hop transactions in the same Firestore batch.\n\n" +
       "  SECOND HOP: one Purchase-from-Inventory transaction (type: 'Purchase', with budgetCategoryId) " +
       "against the destination project, covering every item in the batch.\n\n" +
@@ -622,46 +690,45 @@ export function registerInventoryOperationTools(server: McpServer, db: Firestore
 
         const missingPrice = missingProjectPrice(items);
         if (missingPrice.length > 0) return missingProjectPriceError(missingPrice);
+        const missingSourceCategory = missingSourceBudgetCategory(items);
+        if (missingSourceCategory.length > 0) {
+          return missingSourceBudgetCategoryError(missingSourceCategory);
+        }
 
         const split = splitByOrigin(items);
         const { subtotalCents, amountCents, missingTax } = computeProjectPriceTotals(items);
 
         if (dryRun) {
-          const returnLeg =
-            split.returnItems.length > 0
-              ? (() => {
-                  const t = computePurchasePriceTotals(split.returnItems);
-                  return {
+          const returnLegs = sourceCategoryGroups(split.returnItems).map((group) => {
+            const t = computeProjectPriceTotals(group.items);
+            return {
                     type: "Return" as const,
                     source: inventoryLabel,
                     projectId: sourceProjectId,
+              budgetCategoryId: group.budgetCategoryId,
                     amountCents: t.amountCents,
                     subtotalCents: t.subtotalCents,
-                    itemIds: split.returnItems.map((i) => i.id),
-                  };
-                })()
-              : null;
-          const saleToInventoryLeg =
-            split.saleItems.length > 0
-              ? (() => {
-                  const t = computePurchasePriceTotals(split.saleItems);
-                  return {
+              itemIds: group.items.map((i) => i.id),
+            };
+          });
+          const saleToInventoryLegs = sourceCategoryGroups(split.saleItems).map((group) => {
+            const t = computeProjectPriceTotals(group.items);
+            return {
                     type: "Sale" as const,
                     source: inventoryLabel,
                     projectId: sourceProjectId,
-                    // budgetCategoryId absent → project→inventory
+              budgetCategoryId: group.budgetCategoryId,
                     amountCents: t.amountCents,
                     subtotalCents: t.subtotalCents,
-                    itemIds: split.saleItems.map((i) => i.id),
-                  };
-                })()
-              : null;
+              itemIds: group.items.map((i) => i.id),
+            };
+          });
           return asToolResponse({
             dryRun: true,
             plan: {
               firstHop: {
-                returnLeg,
-                saleToInventoryLeg,
+                returnLegs,
+                saleToInventoryLegs,
               },
               secondHop: {
                 purchaseFromInventory: {
@@ -811,31 +878,38 @@ async function commitSellToInventory(
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
 
-  // 1. New Sale transaction. budgetCategoryId absent encodes project→inventory direction.
-  const saleRef = txCol.doc();
-  batch.set(saleRef, {
-    type: "Sale",
-    source: totals.inventoryLabel,
-    projectId: sourceProjectId,
-    amountCents: totals.amountCents,
-    subtotalCents: totals.subtotalCents,
-    itemIds: items.map((i) => i.id),
-    status: "completed",
-    isComplete: true,
-    ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
-    createdAt: now,
-    updatedAt: now,
-    createdBy: uid,
-  });
+  const saleTxByItemId = new Map<string, string>();
+  for (const group of sourceCategoryGroups(items)) {
+    const saleRef = txCol.doc();
+    const groupTotals = computePurchasePriceTotals(group.items);
+    batch.set(saleRef, {
+      type: "Sale",
+      source: totals.inventoryLabel,
+      projectId: sourceProjectId,
+      budgetCategoryId: group.budgetCategoryId,
+      amountCents: groupTotals.amountCents,
+      subtotalCents: groupTotals.subtotalCents,
+      itemIds: group.items.map((i) => i.id),
+      status: "completed",
+      isComplete: true,
+      ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
+      createdAt: now,
+      updatedAt: now,
+      createdBy: uid,
+    });
+    for (const item of group.items) saleTxByItemId.set(item.id, saleRef.id);
+  }
 
   // 2. Each item: land in inventory.
   for (const item of items) {
+    const saleTxId = saleTxByItemId.get(item.id);
+    if (!saleTxId) continue;
     batch.update(itemsCol.doc(item.id), {
       projectId: null,
       budgetCategoryId: null,
       spaceId: null,
       status: "purchased",
-      transactionId: saleRef.id,
+      transactionId: saleTxId,
       currentSource: totals.inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
@@ -847,10 +921,12 @@ async function commitSellToInventory(
 
   // 4. Lineage edges — "soldToInventory" signals project → inventory acquisition.
   for (const item of items) {
+    const saleTxId = saleTxByItemId.get(item.id);
+    if (!saleTxId) continue;
     batch.set(edgesCol.doc(), {
       itemId: item.id,
       fromTransactionId: item.transactionId ?? null,
-      toTransactionId: saleRef.id,
+      toTransactionId: saleTxId,
       fromProjectId: sourceProjectId,
       toProjectId: null,
       movementKind: "soldToInventory",
@@ -867,7 +943,7 @@ async function commitSellToInventory(
         type: "text" as const,
         text:
           `Sold ${items.length} item(s) from project ${sourceProjectId} to business inventory (business acquisition).\n` +
-          `New Sale transaction: ${saleRef.id}\n` +
+          `New Sale transaction(s): ${[...new Set(saleTxByItemId.values())].join(", ")}\n` +
           `amountCents: ${totals.amountCents} (${formatCents(totals.amountCents)})\n` +
           `Items now have projectId: null and budgetCategoryId: null.` +
           missingTaxWarning(totals.missingTax, items.length),
@@ -903,10 +979,10 @@ async function commitReturnToInventory(
   const sourceProjectId = items[0]?.projectId ?? null;
   const tagged = notes ? tagNotesAsAi(notes) : undefined;
 
-  let returnTxRef: FirebaseFirestore.DocumentReference;
+  const returnTxByItemId = new Map<string, string>();
   let isNewReturnTx: boolean;
   if (existingReturnTx) {
-    returnTxRef = txCol.doc(existingReturnTx.id);
+    const returnTxRef = txCol.doc(existingReturnTx.id);
     isNewReturnTx = false;
     const prevAmount = existingReturnTx.amountCents ?? 0;
     const mergedNotes = tagged
@@ -920,30 +996,39 @@ async function commitReturnToInventory(
       updatedAt: now,
       ...(mergedNotes !== undefined ? { notes: mergedNotes } : {}),
     });
+    for (const item of items) returnTxByItemId.set(item.id, returnTxRef.id);
   } else {
-    returnTxRef = txCol.doc();
     isNewReturnTx = true;
-    batch.set(returnTxRef, {
-      type: "Return",
-      source: inventoryLabel,
-      projectId: sourceProjectId,
-      amountCents: returnAmount,
-      itemIds: items.map((i) => i.id),
-      status: "completed",
-      ...(tagged ? { notes: tagged } : {}),
-      createdAt: now,
-      updatedAt: now,
-      createdBy: uid,
-    });
+    for (const group of sourceCategoryGroups(items)) {
+      const returnTxRef = txCol.doc();
+      const groupAmount = computePurchasePriceTotals(group.items).amountCents;
+      batch.set(returnTxRef, {
+        type: "Return",
+        source: inventoryLabel,
+        projectId: sourceProjectId,
+        budgetCategoryId: group.budgetCategoryId,
+        amountCents: groupAmount,
+        subtotalCents: groupAmount,
+        itemIds: group.items.map((i) => i.id),
+        status: "completed",
+        ...(tagged ? { notes: tagged } : {}),
+        createdAt: now,
+        updatedAt: now,
+        createdBy: uid,
+      });
+      for (const item of group.items) returnTxByItemId.set(item.id, returnTxRef.id);
+    }
   }
 
   for (const item of items) {
+    const returnTxId = returnTxByItemId.get(item.id);
+    if (!returnTxId) continue;
     batch.update(itemsCol.doc(item.id), {
       projectId: null,
       budgetCategoryId: null,
       spaceId: null,
       status: "returned",
-      transactionId: returnTxRef.id,
+      transactionId: returnTxId,
       currentSource: inventoryLabel,
       updatedAt: now,
       updatedBy: uid,
@@ -952,14 +1037,16 @@ async function commitReturnToInventory(
 
   // Remove from prior tx active membership; skip the return tx itself.
   const frozenPlusReturn = new Set(frozen);
-  frozenPlusReturn.add(returnTxRef.id);
+  for (const txId of returnTxByItemId.values()) frozenPlusReturn.add(txId);
   applyArrayRemoves(batch, txCol, items, frozenPlusReturn, now);
 
   for (const item of items) {
+    const returnTxId = returnTxByItemId.get(item.id);
+    if (!returnTxId) continue;
     batch.set(edgesCol.doc(), {
       itemId: item.id,
       fromTransactionId: item.transactionId ?? null,
-      toTransactionId: returnTxRef.id,
+      toTransactionId: returnTxId,
       fromProjectId: item.projectId ?? null,
       toProjectId: null,
       movementKind: "returned",
@@ -976,7 +1063,7 @@ async function commitReturnToInventory(
         type: "text" as const,
         text:
           `Returned ${items.length} item(s) to business inventory.\n` +
-          `${isNewReturnTx ? "New Return transaction" : "Appended to existing Return transaction"}: ${returnTxRef.id}\n` +
+          `${isNewReturnTx ? "New Return transaction(s)" : "Appended to existing Return transaction"}: ${[...new Set(returnTxByItemId.values())].join(", ")}\n` +
           `Items now have projectId: null and budgetCategoryId: null.`,
       },
     ],
@@ -1082,40 +1169,40 @@ async function commitSellItemsFromProjectToProject(
   const uid = safeGetUserId();
 
   // 1a. First hop — Return leg (items that previously came from inventory).
-  let returnTxId: string | null = null;
-  if (split.returnItems.length > 0) {
+  const returnTxByItemId = new Map<string, string>();
+  for (const group of sourceCategoryGroups(split.returnItems)) {
     const returnRef = txCol.doc();
-    returnTxId = returnRef.id;
-    const returnTotals = computePurchasePriceTotals(split.returnItems);
+    const returnTotals = computeProjectPriceTotals(group.items);
     batch.set(returnRef, {
       type: "Return",
       source: totals.inventoryLabel,
       projectId: sourceProjectId,
+      budgetCategoryId: group.budgetCategoryId,
       amountCents: returnTotals.amountCents,
       subtotalCents: returnTotals.subtotalCents,
-      itemIds: split.returnItems.map((i) => i.id),
+      itemIds: group.items.map((i) => i.id),
       status: "completed",
       ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
       createdAt: now,
       updatedAt: now,
       createdBy: uid,
     });
+    for (const item of group.items) returnTxByItemId.set(item.id, returnRef.id);
   }
 
   // 1b. First hop — Sale-to-Inventory leg (items that originated in the source project).
-  let firstSaleTxId: string | null = null;
-  if (split.saleItems.length > 0) {
+  const firstSaleTxByItemId = new Map<string, string>();
+  for (const group of sourceCategoryGroups(split.saleItems)) {
     const saleRef = txCol.doc();
-    firstSaleTxId = saleRef.id;
-    const saleTotals = computePurchasePriceTotals(split.saleItems);
+    const saleTotals = computeProjectPriceTotals(group.items);
     batch.set(saleRef, {
       type: "Sale",
       source: totals.inventoryLabel,
       projectId: sourceProjectId,
-      // budgetCategoryId absent → project→inventory direction
+      budgetCategoryId: group.budgetCategoryId,
       amountCents: saleTotals.amountCents,
       subtotalCents: saleTotals.subtotalCents,
-      itemIds: split.saleItems.map((i) => i.id),
+      itemIds: group.items.map((i) => i.id),
       status: "completed",
       isComplete: true,
       ...(totals.notes ? { notes: tagNotesAsAi(totals.notes) } : {}),
@@ -1123,6 +1210,7 @@ async function commitSellItemsFromProjectToProject(
       updatedAt: now,
       createdBy: uid,
     });
+    for (const item of group.items) firstSaleTxByItemId.set(item.id, saleRef.id);
   }
 
   // 2. Second hop — Purchase-from-Inventory (destination) covers every item.
@@ -1163,7 +1251,9 @@ async function commitSellItemsFromProjectToProject(
   // 5. Lineage edges — two per item.
   for (const item of items) {
     const cameFrom = cameFromInventory(item);
-    const firstHopTxId = cameFrom ? returnTxId : firstSaleTxId;
+    const firstHopTxId = cameFrom
+      ? returnTxByItemId.get(item.id) ?? null
+      : firstSaleTxByItemId.get(item.id) ?? null;
     const firstHopKind = cameFrom ? "returned" : "soldToInventory";
     if (firstHopTxId) {
       batch.set(edgesCol.doc(), {
@@ -1192,8 +1282,10 @@ async function commitSellItemsFromProjectToProject(
   await batch.commit();
 
   const legs: string[] = [];
-  if (returnTxId) legs.push(`Return (from-inventory leg): ${returnTxId}`);
-  if (firstSaleTxId) legs.push(`Sale-to-Inventory (originated-in-project leg): ${firstSaleTxId}`);
+  const returnTxIds = [...new Set(returnTxByItemId.values())];
+  const firstSaleTxIds = [...new Set(firstSaleTxByItemId.values())];
+  if (returnTxIds.length > 0) legs.push(`Return (from-inventory leg): ${returnTxIds.join(", ")}`);
+  if (firstSaleTxIds.length > 0) legs.push(`Sale-to-Inventory (originated-in-project leg): ${firstSaleTxIds.join(", ")}`);
   legs.push(`Purchase-from-Inventory (destination): ${destPurchaseRef.id}`);
 
   return {
