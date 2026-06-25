@@ -56,7 +56,13 @@ For external testers:
 TESTFLIGHT_CHANGELOG='Short release note.' bundle exec fastlane ios external_testflight
 ```
 
-Fastlane checks App Store Connect and picks the next TestFlight build number for the current marketing version. If a duplicate build or signing error occurs, inspect the latest TestFlight build before rerunning with an explicit `BUILD_NUMBER`.
+`upload_testflight` uploads the build and distributes it to internal testers only. External testers do not get the build until it is explicitly attached to an external group. To distribute an already-uploaded build, use the wrapper script:
+
+```bash
+./scripts/distribute-testflight-external.sh <build-number> --groups "External Testing" --changelog "Short release note."
+```
+
+Fastlane checks App Store Connect and picks the next TestFlight build number for the current marketing version. If a duplicate build or signing error occurs, inspect the latest TestFlight build before rerunning with an explicit `BUILD_NUMBER`. External distribution may require Beta App Review; do not treat the build as available to external testers until Fastlane/App Store Connect reports that it was distributed to the external group.
 
 ### macOS Direct Distribution
 
