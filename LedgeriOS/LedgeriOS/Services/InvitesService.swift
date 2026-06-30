@@ -11,7 +11,9 @@ struct InvitesService: InvitesServiceProtocol {
             .whereField("revokedAt", isEqualTo: NSNull())
             .addSnapshotListener { snapshot, error in
                 guard let docs = snapshot?.documents else { return }
-                let invites = docs.compactMap { try? $0.data(as: Invite.self) }
+                let invites = docs
+                    .compactMap { try? $0.data(as: Invite.self) }
+                    .filter { $0.acceptedAt == nil }
                 onChange(invites)
             }
     }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
+exports.backfillIsComplete = exports.backfillBudgetSummaries = exports.onAccountBudgetCategoryWritten = exports.onProjectBudgetCategoryWritten = exports.onTransactionWritten = exports.acceptInviteHttp = exports.acceptInvite = exports.previewInviteHttp = exports.createProject = exports.createAccountHttp = exports.createAccount = exports.onAccountMembershipCreated = exports.onSpaceArchived = exports.onItemPriceChanged = exports.onLineageEdgeCreated = exports.onItemTransactionIdChanged = exports.createWithQuota = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-admin/firestore");
 const https_1 = require("firebase-functions/v2/https");
@@ -400,6 +400,50 @@ function errorBody(error) {
         }
     };
 }
+async function findInviteByToken(token) {
+    if (!token || typeof token !== 'string' || !token.trim()) {
+        throw new https_1.HttpsError('invalid-argument', 'Invitation token is required.');
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
+    if (!accountsSnapshot.empty) {
+        const inviteDoc = accountsSnapshot.docs[0];
+        const pathParts = inviteDoc.ref.path.split('/');
+        const accountId = pathParts[1];
+        const inviteData = inviteDoc.data();
+        if (!accountId || !inviteData) {
+            throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
+        }
+        return { inviteRef: inviteDoc.ref, accountId, inviteData };
+    }
+    const inviteId = token;
+    const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
+    for (const accountDoc of allAccountsSnapshot.docs) {
+        const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
+        const testInviteSnap = await testInviteRef.get();
+        if (testInviteSnap.exists) {
+            const inviteData = testInviteSnap.data();
+            if (!inviteData)
+                break;
+            return { inviteRef: testInviteRef, accountId: accountDoc.id, inviteData };
+        }
+    }
+    throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
+}
+function assertInviteCanBeAccepted(inviteData) {
+    const status = inviteData.status;
+    const expiresAt = inviteData.expiresAt;
+    const acceptedAt = inviteData.acceptedAt;
+    if (status === 'accepted' || acceptedAt) {
+        throw new https_1.HttpsError('already-exists', 'This invitation has already been accepted.');
+    }
+    if (status === 'revoked' || status === 'cancelled' || inviteData.revokedAt) {
+        throw new https_1.HttpsError('permission-denied', 'This invitation has been cancelled.');
+    }
+    if (expiresAt && expiresAt.toMillis() < Date.now()) {
+        throw new https_1.HttpsError('deadline-exceeded', 'This invitation has expired.');
+    }
+}
 const normalizeBudgetCategoryType = (value) => (value === 'general' ? 'standard' : value);
 const BUDGET_CATEGORY_PRESET_SEED = [
     {
@@ -618,39 +662,7 @@ async function acceptInviteForUid(uid, data) {
     }
     const db = (0, firestore_1.getFirestore)();
     const now = firestore_1.FieldValue.serverTimestamp();
-    // Find the invite by token. A production implementation should optimize this lookup
-    // with a token -> accountId/inviteId mapping doc.
-    let inviteRef = null;
-    let accountId = null;
-    let inviteData = null;
-    const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
-    if (accountsSnapshot.empty) {
-        const inviteId = token;
-        const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
-        for (const accountDoc of allAccountsSnapshot.docs) {
-            const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
-            const testInviteSnap = await testInviteRef.get();
-            if (testInviteSnap.exists) {
-                inviteRef = testInviteRef;
-                accountId = accountDoc.id;
-                inviteData = testInviteSnap.data();
-                break;
-            }
-        }
-        if (!inviteRef || !accountId) {
-            throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
-        }
-    }
-    else {
-        const inviteDoc = accountsSnapshot.docs[0];
-        inviteRef = inviteDoc.ref;
-        inviteData = inviteDoc.data();
-        const pathParts = inviteDoc.ref.path.split('/');
-        accountId = pathParts[1];
-    }
-    if (!accountId || !inviteRef || !inviteData) {
-        throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
-    }
+    const { inviteRef, accountId, inviteData } = await findInviteByToken(token);
     const status = inviteData.status;
     const expiresAt = inviteData.expiresAt;
     const acceptedAt = inviteData.acceptedAt;
@@ -674,6 +686,17 @@ async function acceptInviteForUid(uid, data) {
     }
     if (expiresAt && expiresAt.toMillis() < Date.now()) {
         throw new https_1.HttpsError('deadline-exceeded', 'This invitation has expired.');
+    }
+    const inviteEmail = typeof inviteData.email === 'string' ? inviteData.email.trim().toLowerCase() : '';
+    const authUser = await admin.auth().getUser(uid);
+    const authEmail = authUser.email?.trim().toLowerCase() ?? '';
+    if (!inviteEmail || !authEmail || inviteEmail !== authEmail) {
+        throw new https_1.HttpsError('permission-denied', 'This invitation must be accepted by the invited email address.');
+    }
+    const createdAt = authUser.metadata.creationTime ? Date.parse(authUser.metadata.creationTime) : Number.NaN;
+    const fifteenMinutesMs = 15 * 60 * 1000;
+    if (!Number.isFinite(createdAt) || Date.now() - createdAt > fifteenMinutesMs) {
+        throw new https_1.HttpsError('already-exists', 'An account already exists for this email.');
     }
     const role = inviteData.role || 'user';
     const companyFinancialAccess = normalizedCompanyFinancialAccess(inviteData.companyFinancialAccess, role);
@@ -723,6 +746,31 @@ async function acceptInviteForUid(uid, data) {
     await ensureBudgetCategoryPresetsSeeded({ accountId, createdBy: uid });
     return result;
 }
+async function previewInvite(data) {
+    const { token } = data ?? {};
+    const { inviteData } = await findInviteByToken(token);
+    assertInviteCanBeAccepted(inviteData);
+    const email = typeof inviteData.email === 'string' ? inviteData.email.trim().toLowerCase() : '';
+    if (!email) {
+        throw new https_1.HttpsError('not-found', 'Invalid or expired invitation link.');
+    }
+    const role = inviteData.role || 'user';
+    const companyFinancialAccess = normalizedCompanyFinancialAccess(inviteData.companyFinancialAccess, role);
+    return { email, role, companyFinancialAccess };
+}
+exports.previewInviteHttp = (0, https_1.onRequest)({ invoker: 'public' }, async (request, response) => {
+    try {
+        if (request.method !== 'POST') {
+            throw new https_1.HttpsError('invalid-argument', 'POST is required.');
+        }
+        const data = request.body?.data;
+        const result = await previewInvite(data);
+        response.status(200).json({ result });
+    }
+    catch (error) {
+        response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
+});
 exports.acceptInvite = (0, https_1.onCall)(async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {

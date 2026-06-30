@@ -14,14 +14,14 @@ Native SwiftUI iOS app for inventory and project ledger management.
 
 ## Running the App
 
-**The app runs against production Firebase by default.** Build and run from Xcode using the `LedgeriOS (Emulator)` scheme — despite the name, this is the day-to-day scheme and it talks to production Firestore/Auth/Storage unless `FirebaseEmulatorConfig` is explicitly toggled on. The "(Emulator)" suffix is vestigial from when emulator-first was the default.
+**The app runs against production Firebase by default when using the `LedgeriOS` scheme.** For normal simulator QA, invite testing, sign-in testing, and day-to-day development, build and run the plain `LedgeriOS` scheme. Do not use `LedgeriOS (Emulator)` unless you are intentionally running the Firebase emulator stack.
 
 ### Build-Only Check
 
 To verify code compiles, use xcodebuild directly:
 
 ```bash
-cd LedgeriOS && xcodebuild build -scheme "LedgeriOS (Emulator)" -destination 'platform=iOS Simulator,name=iPhone 17e' -derivedDataPath DerivedData -quiet 2>&1 | tail -5
+cd LedgeriOS && xcodebuild build -scheme "LedgeriOS" -destination 'platform=iOS Simulator,name=iPhone 17e' -derivedDataPath DerivedData -quiet 2>&1 | tail -5
 ```
 
 ### Deploying Firestore Rules
@@ -100,7 +100,7 @@ The production appcast URL is `https://ledger-nine4.web.app/sparkle/appcast.xml`
 
 ### Optional: Running Against the Local Emulator
 
-There is a `scripts/dev-native.mjs` workflow that boots Firebase emulators (Auth, Firestore, Storage) with seeded data. This is **not** the day-to-day workflow — only use it when you specifically want to test against an isolated local environment (e.g., destructive integration tests). See `LedgeriOSTests/CLAUDE.md` for the integration-test setup that requires it.
+There is a `scripts/dev-native.mjs` workflow that boots Firebase emulators (Auth, Firestore, Storage) with seeded data. This is **not** the day-to-day workflow. Only use it when you specifically want to test against an isolated local environment, such as destructive integration tests. See `LedgeriOSTests/CLAUDE.md` for the integration-test setup that requires it.
 
 ## Architecture
 

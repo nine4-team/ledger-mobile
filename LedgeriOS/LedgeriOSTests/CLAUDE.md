@@ -9,7 +9,7 @@ Two test layers: **unit tests** (no emulator) and **integration tests** (Firesto
 Pure function tests — calculations, validation, menu builders, Codable round-trips, RecordingBatch batch-write verification. No Firebase dependency at runtime.
 
 ```bash
-cd LedgeriOS && xcodebuild test -scheme "LedgeriOS (Emulator)" \
+cd LedgeriOS && xcodebuild test -scheme "LedgeriOS" \
   -destination 'platform=iOS Simulator,name=iPhone 16e' \
   -skip-testing:LedgeriOSTests/ItemCRUDIntegrationTests \
   -skip-testing:LedgeriOSTests/TransactionCRUDIntegrationTests \

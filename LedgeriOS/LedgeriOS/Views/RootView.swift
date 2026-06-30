@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 struct RootView: View {
     @Environment(AuthManager.self) private var authManager
@@ -9,16 +10,16 @@ struct RootView: View {
     @Environment(MediaUploadQueue.self) private var mediaUploadQueue
     @Environment(InviteLinkRouter.self) private var inviteLinkRouter
 
-    @State private var isAcceptingInvite = false
     @State private var inviteErrorMessage: String?
-
-    private var inviteTaskId: String {
-        "\(authManager.currentUser?.uid ?? "signed-out"):\(inviteLinkRouter.pendingToken ?? "none")"
-    }
 
     var body: some View {
         Group {
-            if !authManager.isAuthenticated {
+            if inviteLinkRouter.pendingToken != nil {
+                InviteSignupView()
+                    #if os(macOS)
+                    .frame(minWidth: 400, minHeight: 500)
+                    #endif
+            } else if !authManager.isAuthenticated {
                 AuthView()
                     #if os(macOS)
                     .frame(minWidth: 400, minHeight: 500)
@@ -37,12 +38,6 @@ struct RootView: View {
                     // Show upload status when images are pending/failed
                     .safeAreaInset(edge: .top) {
                         VStack(spacing: Spacing.xs) {
-                            if isAcceptingInvite {
-                                StatusBanner(
-                                    message: "Joining account...",
-                                    variant: .info
-                                )
-                            }
                             if !networkMonitor.isConnected {
                                 StatusBanner(
                                     message: "No internet connection. Viewing cached data.",
@@ -72,9 +67,6 @@ struct RootView: View {
         }
         .animation(.default, value: authManager.isAuthenticated)
         .animation(.default, value: accountContext.currentAccountId)
-        .task(id: inviteTaskId) {
-            await acceptPendingInviteIfPossible()
-        }
         .alert("Invite Error", isPresented: .init(
             get: { inviteErrorMessage != nil },
             set: { if !$0 { inviteErrorMessage = nil } }
@@ -97,27 +89,187 @@ struct RootView: View {
             }
         }
     }
+}
 
-    private func acceptPendingInviteIfPossible() async {
-        guard !AppRuntime.isUnitTestHost else { return }
+private struct InviteSignupView: View {
+    @Environment(AuthManager.self) private var authManager
+    @Environment(AccountContext.self) private var accountContext
+    @Environment(InviteLinkRouter.self) private var inviteLinkRouter
 
-        guard !isAcceptingInvite,
-              let token = inviteLinkRouter.pendingToken,
-              let uid = authManager.currentUser?.uid else {
-            return
+    @State private var invite: InvitePreviewResult?
+    @State private var password = ""
+    @State private var confirmPassword = ""
+    @State private var errorMessage: String?
+    @State private var isLoading = false
+    @State private var isSubmitting = false
+
+    private var passwordsMatch: Bool {
+        !confirmPassword.isEmpty && password == confirmPassword
+    }
+
+    private var canSubmit: Bool {
+        invite != nil && !password.isEmpty && passwordsMatch && !isLoading && !isSubmitting
+    }
+
+    var body: some View {
+        AdaptiveContentWidth(maxWidth: Dimensions.formMaxWidth) {
+            VStack(spacing: Spacing.xl) {
+                Spacer()
+
+                VStack(spacing: Spacing.sm) {
+                    Text("Ledger")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundStyle(BrandColors.primary)
+
+                    Text("Create your password")
+                        .font(Typography.h2)
+                        .foregroundStyle(BrandColors.textPrimary)
+                }
+
+                if isLoading {
+                    ProgressView()
+                } else {
+                    formContent
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.xxl)
         }
+        .task(id: inviteLinkRouter.pendingToken) {
+            await loadInvite()
+        }
+    }
 
-        isAcceptingInvite = true
-        defer { isAcceptingInvite = false }
+    @ViewBuilder
+    private var formContent: some View {
+        if let invite {
+            VStack(spacing: Spacing.md) {
+                TextField("Email", text: .constant(invite.email))
+                    .textContentType(.emailAddress)
+                    .disabled(true)
+                    .padding()
+                    .background(Color.secondarySystemBackground)
+                    .cornerRadius(Dimensions.inputRadius)
+
+                SecureField("Password", text: $password)
+                    .textContentType(.newPassword)
+                    .padding()
+                    .background(Color.secondarySystemBackground)
+                    .cornerRadius(Dimensions.inputRadius)
+
+                SecureField("Confirm Password", text: $confirmPassword)
+                    .textContentType(.newPassword)
+                    .padding()
+                    .background(Color.secondarySystemBackground)
+                    .cornerRadius(Dimensions.inputRadius)
+
+                if !confirmPassword.isEmpty && !passwordsMatch {
+                    Text("Passwords do not match")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button {
+                    createPasswordAndAcceptInvite()
+                } label: {
+                    Group {
+                        if isSubmitting {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Create Password")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(BrandColors.primary)
+                    .foregroundStyle(.white)
+                    .cornerRadius(Dimensions.buttonRadius)
+                }
+                .disabled(!canSubmit)
+            }
+        } else {
+            VStack(spacing: Spacing.md) {
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(Typography.body)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button("Back to Sign In") {
+                    inviteLinkRouter.clear()
+                }
+                .font(Typography.button)
+            }
+        }
+    }
+
+    private func loadInvite() async {
+        guard !AppRuntime.isUnitTestHost else { return }
+        guard let token = inviteLinkRouter.pendingToken else { return }
+
+        isLoading = true
+        errorMessage = nil
+        invite = nil
+        defer { isLoading = false }
 
         do {
-            let result = try await InviteAcceptanceService().acceptInvite(token: token)
-            inviteLinkRouter.clear()
-            await accountContext.discoverAccounts(userId: uid)
-            accountContext.selectAccount(accountId: result.accountId, userId: uid)
+            invite = try await InviteAcceptanceService().previewInvite(token: token)
+        } catch let error as InviteAcceptanceError {
+            errorMessage = error.userMessage
         } catch {
-            inviteErrorMessage = "Could not accept this invite. It may be expired, revoked, or already used."
+            errorMessage = "Could not load this invite."
         }
+    }
+
+    private func createPasswordAndAcceptInvite() {
+        guard passwordsMatch else {
+            errorMessage = "Passwords do not match"
+            return
+        }
+        guard let token = inviteLinkRouter.pendingToken, let invite else { return }
+
+        isSubmitting = true
+        errorMessage = nil
+
+        Task {
+            do {
+                try await authManager.signUp(email: invite.email, password: password)
+                let result = try await InviteAcceptanceService().acceptInvite(token: token)
+                guard let uid = authManager.currentUser?.uid else {
+                    throw InviteAcceptanceError.unauthenticated
+                }
+
+                inviteLinkRouter.clear()
+                await accountContext.discoverAccounts(userId: uid)
+                accountContext.selectAccount(accountId: result.accountId, userId: uid)
+            } catch let error as InviteAcceptanceError {
+                errorMessage = error.userMessage
+            } catch {
+                errorMessage = friendlyAuthError(error)
+            }
+            isSubmitting = false
+        }
+    }
+
+    private func friendlyAuthError(_ error: Error) -> String {
+        let nsError = error as NSError
+        if nsError.domain == AuthErrorDomain,
+           nsError.code == AuthErrorCode.emailAlreadyInUse.rawValue {
+            return "An account already exists for this email."
+        }
+        return error.localizedDescription
     }
 }
 

@@ -502,6 +502,16 @@ type AcceptInviteResponse = {
   role: string;
 };
 
+type InvitePreviewRequest = {
+  token: string;
+};
+
+type InvitePreviewResponse = {
+  email: string;
+  role: string;
+  companyFinancialAccess: CompanyFinancialAccess;
+};
+
 type CompanyFinancialAccess = 'full' | 'limited' | 'none';
 
 type CreateAccountRequest = {
@@ -561,6 +571,63 @@ function errorBody(error: unknown) {
       message: error instanceof Error ? error.message : 'Internal error.',
     }
   };
+}
+
+async function findInviteByToken(token: string): Promise<{
+  inviteRef: DocumentReference;
+  accountId: string;
+  inviteData: DocumentData;
+}> {
+  if (!token || typeof token !== 'string' || !token.trim()) {
+    throw new HttpsError('invalid-argument', 'Invitation token is required.');
+  }
+
+  const db = getFirestore();
+  const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
+
+  if (!accountsSnapshot.empty) {
+    const inviteDoc = accountsSnapshot.docs[0];
+    const pathParts = inviteDoc.ref.path.split('/');
+    const accountId = pathParts[1];
+    const inviteData = inviteDoc.data();
+    if (!accountId || !inviteData) {
+      throw new HttpsError('not-found', 'Invalid or expired invitation link.');
+    }
+    return { inviteRef: inviteDoc.ref, accountId, inviteData };
+  }
+
+  const inviteId = token;
+  const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
+
+  for (const accountDoc of allAccountsSnapshot.docs) {
+    const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
+    const testInviteSnap = await testInviteRef.get();
+    if (testInviteSnap.exists) {
+      const inviteData = testInviteSnap.data();
+      if (!inviteData) break;
+      return { inviteRef: testInviteRef, accountId: accountDoc.id, inviteData };
+    }
+  }
+
+  throw new HttpsError('not-found', 'Invalid or expired invitation link.');
+}
+
+function assertInviteCanBeAccepted(inviteData: DocumentData) {
+  const status = inviteData.status;
+  const expiresAt = inviteData.expiresAt as Timestamp | undefined;
+  const acceptedAt = inviteData.acceptedAt as Timestamp | undefined;
+
+  if (status === 'accepted' || acceptedAt) {
+    throw new HttpsError('already-exists', 'This invitation has already been accepted.');
+  }
+
+  if (status === 'revoked' || status === 'cancelled' || inviteData.revokedAt) {
+    throw new HttpsError('permission-denied', 'This invitation has been cancelled.');
+  }
+
+  if (expiresAt && expiresAt.toMillis() < Date.now()) {
+    throw new HttpsError('deadline-exceeded', 'This invitation has expired.');
+  }
 }
 
 type CreateProjectRequest = {
@@ -869,43 +936,7 @@ async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Prom
   const db = getFirestore();
   const now = FieldValue.serverTimestamp();
 
-  // Find the invite by token. A production implementation should optimize this lookup
-  // with a token -> accountId/inviteId mapping doc.
-  let inviteRef: DocumentReference | null = null;
-  let accountId: string | null = null;
-  let inviteData: any = null;
-
-  const accountsSnapshot = await db.collectionGroup('invites').where('token', '==', token).limit(1).get();
-
-  if (accountsSnapshot.empty) {
-    const inviteId = token;
-    const allAccountsSnapshot = await db.collection('accounts').limit(100).get();
-
-    for (const accountDoc of allAccountsSnapshot.docs) {
-      const testInviteRef = db.doc(`accounts/${accountDoc.id}/invites/${inviteId}`);
-      const testInviteSnap = await testInviteRef.get();
-      if (testInviteSnap.exists) {
-        inviteRef = testInviteRef;
-        accountId = accountDoc.id;
-        inviteData = testInviteSnap.data();
-        break;
-      }
-    }
-
-    if (!inviteRef || !accountId) {
-      throw new HttpsError('not-found', 'Invalid or expired invitation link.');
-    }
-  } else {
-    const inviteDoc = accountsSnapshot.docs[0];
-    inviteRef = inviteDoc.ref;
-    inviteData = inviteDoc.data();
-    const pathParts = inviteDoc.ref.path.split('/');
-    accountId = pathParts[1];
-  }
-
-  if (!accountId || !inviteRef || !inviteData) {
-    throw new HttpsError('not-found', 'Invalid or expired invitation link.');
-  }
+  const { inviteRef, accountId, inviteData } = await findInviteByToken(token);
 
   const status = inviteData.status;
   const expiresAt = inviteData.expiresAt as Timestamp | undefined;
@@ -935,6 +966,18 @@ async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Prom
     throw new HttpsError('deadline-exceeded', 'This invitation has expired.');
   }
 
+  const inviteEmail = typeof inviteData.email === 'string' ? inviteData.email.trim().toLowerCase() : '';
+  const authUser = await admin.auth().getUser(uid);
+  const authEmail = authUser.email?.trim().toLowerCase() ?? '';
+  if (!inviteEmail || !authEmail || inviteEmail !== authEmail) {
+    throw new HttpsError('permission-denied', 'This invitation must be accepted by the invited email address.');
+  }
+  const createdAt = authUser.metadata.creationTime ? Date.parse(authUser.metadata.creationTime) : Number.NaN;
+  const fifteenMinutesMs = 15 * 60 * 1000;
+  if (!Number.isFinite(createdAt) || Date.now() - createdAt > fifteenMinutesMs) {
+    throw new HttpsError('already-exists', 'An account already exists for this email.');
+  }
+
   const role = (inviteData.role as string) || 'user';
   const companyFinancialAccess = normalizedCompanyFinancialAccess(
     inviteData.companyFinancialAccess,
@@ -948,7 +991,7 @@ async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Prom
   const userRef = db.doc(`accounts/${accountId}/users/${uid}`);
 
   const result = await db.runTransaction<AcceptInviteResponse>(async (tx) => {
-    const inviteSnap = await tx.get(inviteRef!);
+    const inviteSnap = await tx.get(inviteRef);
     if (!inviteSnap.exists) {
       throw new HttpsError('not-found', 'Invitation no longer exists.');
     }
@@ -985,7 +1028,7 @@ async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Prom
       { merge: true }
     );
 
-    tx.update(inviteRef!, {
+    tx.update(inviteRef, {
       status: 'accepted',
       acceptedAt: now,
       acceptedByUid: uid,
@@ -1002,6 +1045,39 @@ async function acceptInviteForUid(uid: string, data?: AcceptInviteRequest): Prom
 
   return result;
 }
+
+async function previewInvite(data?: InvitePreviewRequest): Promise<InvitePreviewResponse> {
+  const { token } = data ?? ({} as InvitePreviewRequest);
+  const { inviteData } = await findInviteByToken(token);
+  assertInviteCanBeAccepted(inviteData);
+
+  const email = typeof inviteData.email === 'string' ? inviteData.email.trim().toLowerCase() : '';
+  if (!email) {
+    throw new HttpsError('not-found', 'Invalid or expired invitation link.');
+  }
+
+  const role = (inviteData.role as string) || 'user';
+  const companyFinancialAccess = normalizedCompanyFinancialAccess(inviteData.companyFinancialAccess, role);
+
+  return { email, role, companyFinancialAccess };
+}
+
+export const previewInviteHttp = onRequest(
+  { invoker: 'public' },
+  async (request, response): Promise<void> => {
+    try {
+      if (request.method !== 'POST') {
+        throw new HttpsError('invalid-argument', 'POST is required.');
+      }
+
+      const data = request.body?.data as InvitePreviewRequest | undefined;
+      const result = await previewInvite(data);
+      response.status(200).json({ result });
+    } catch (error) {
+      response.status(httpsStatusForError(error)).json(errorBody(error));
+    }
+  }
+);
 
 export const acceptInvite = onCall<AcceptInviteRequest>(async (request): Promise<AcceptInviteResponse> => {
   const uid = request.auth?.uid;

@@ -57,7 +57,39 @@ struct InviteAcceptanceResult: Decodable {
     let role: String
 }
 
+struct InvitePreviewResult: Decodable {
+    let email: String
+    let role: String
+    let companyFinancialAccess: CompanyFinancialAccess
+}
+
 struct InviteAcceptanceService {
+    func previewInvite(token: String) async throws -> InvitePreviewResult {
+        guard let url = functionURL(name: "previewInviteHttp") else {
+            throw InviteAcceptanceError.missingFunctionURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "data": ["token": token]
+        ])
+
+        let (responseData, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw InviteAcceptanceError.invalidResponse
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw InviteAcceptanceError.callFailed(
+                statusCode: httpResponse.statusCode,
+                message: Self.errorMessage(from: responseData)
+            )
+        }
+
+        return try JSONDecoder().decode(InviteCallableEnvelope<InvitePreviewResult>.self, from: responseData).result
+    }
+
     func acceptInvite(token: String) async throws -> InviteAcceptanceResult {
         guard let url = functionURL(name: "acceptInviteHttp") else {
             throw InviteAcceptanceError.missingFunctionURL
@@ -79,10 +111,17 @@ struct InviteAcceptanceService {
             throw InviteAcceptanceError.invalidResponse
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw InviteAcceptanceError.callFailed(statusCode: httpResponse.statusCode)
+            throw InviteAcceptanceError.callFailed(
+                statusCode: httpResponse.statusCode,
+                message: Self.errorMessage(from: responseData)
+            )
         }
 
         return try JSONDecoder().decode(InviteCallableEnvelope<InviteAcceptanceResult>.self, from: responseData).result
+    }
+
+    private static func errorMessage(from data: Data) -> String? {
+        try? JSONDecoder().decode(InviteErrorEnvelope.self, from: data).error.message
     }
 
     private func functionURL(name: String) -> URL? {
@@ -101,11 +140,32 @@ enum InviteAcceptanceError: Error {
     case missingFunctionURL
     case unauthenticated
     case invalidResponse
-    case callFailed(statusCode: Int)
+    case callFailed(statusCode: Int, message: String?)
+
+    var userMessage: String {
+        switch self {
+        case .missingFunctionURL:
+            return "Invite service is not configured."
+        case .unauthenticated:
+            return "Create your password to accept this invite."
+        case .invalidResponse:
+            return "Invite service returned an invalid response."
+        case .callFailed(_, let message):
+            return message ?? "Could not accept this invite."
+        }
+    }
 }
 
 private struct InviteCallableEnvelope<Result: Decodable>: Decodable {
     let result: Result
+}
+
+private struct InviteErrorEnvelope: Decodable {
+    struct InviteError: Decodable {
+        let message: String
+    }
+
+    let error: InviteError
 }
 
 private extension String {
