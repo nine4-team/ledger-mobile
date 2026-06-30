@@ -33,7 +33,7 @@ struct SettingsView: View {
                 case "general":
                     GeneralSettingsView()
                 case "presets":
-                    PresetsSettingsView(isAdmin: isAdmin)
+                    PresetsSettingsView()
                 case "users":
                     UsersView()
                 case "account":
@@ -115,48 +115,32 @@ private struct GeneralSettingsView: View {
 // MARK: - Presets Settings (sub-tabs)
 
 private struct PresetsSettingsView: View {
-    let isAdmin: Bool
     @State private var selectedPreset = "categories"
 
     var body: some View {
-        if isAdmin {
-            VStack(spacing: 0) {
-                SegmentedControl(selection: $selectedPreset, options: [
-                    SegmentOption(id: "categories", label: "Categories"),
-                    SegmentOption(id: "templates", label: "Templates"),
-                    SegmentOption(id: "vendors", label: "Vendors"),
-                ])
-                .frame(maxWidth: Dimensions.contentMaxWidth)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, Spacing.screenPadding)
-                .padding(.vertical, Spacing.sm)
+        VStack(spacing: 0) {
+            SegmentedControl(selection: $selectedPreset, options: [
+                SegmentOption(id: "categories", label: "Categories"),
+                SegmentOption(id: "templates", label: "Templates"),
+                SegmentOption(id: "vendors", label: "Vendors"),
+            ])
+            .frame(maxWidth: Dimensions.contentMaxWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, Spacing.screenPadding)
+            .padding(.vertical, Spacing.sm)
 
-                Group {
-                    switch selectedPreset {
-                    case "categories":
-                        BudgetCategoryManagementView()
-                    case "templates":
-                        SpaceTemplateManagementView()
-                    case "vendors":
-                        VendorDefaultsView()
-                    default:
-                        BudgetCategoryManagementView()
-                    }
+            Group {
+                switch selectedPreset {
+                case "categories":
+                    BudgetCategoryManagementView()
+                case "templates":
+                    SpaceTemplateManagementView()
+                case "vendors":
+                    VendorDefaultsView()
+                default:
+                    BudgetCategoryManagementView()
                 }
             }
-        } else {
-            VStack(spacing: Spacing.lg) {
-                Spacer()
-                Image(systemName: "lock")
-                    .font(.system(size: 32))
-                    .foregroundStyle(BrandColors.textTertiary)
-                Text("Presets are only configurable by account administrators.")
-                    .font(Typography.body)
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .multilineTextAlignment(.center)
-                Spacer()
-            }
-            .padding(Spacing.screenPadding)
         }
     }
 }

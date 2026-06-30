@@ -44,9 +44,9 @@ struct SpaceDetailCalculationTests {
         #expect(SpaceDetailCalculations.canSaveAsTemplate(userRole: "admin") == true)
     }
 
-    @Test("Member cannot save as template")
-    func memberCannotSaveAsTemplate() {
-        #expect(SpaceDetailCalculations.canSaveAsTemplate(userRole: "member") == false)
+    @Test("Employee can save as template")
+    func employeeCanSaveAsTemplate() {
+        #expect(SpaceDetailCalculations.canSaveAsTemplate(userRole: "user") == true)
     }
 
     @Test("Unknown role cannot save as template")

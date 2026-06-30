@@ -7,9 +7,9 @@ enum SpaceDetailCalculations {
     // MARK: - Role Gate
 
     /// Returns `true` if the user's role permits saving a space as a template.
-    /// Only "owner" and "admin" roles are allowed.
+    /// Account members with edit access may create reusable space templates.
     static func canSaveAsTemplate(userRole: String) -> Bool {
-        userRole == "owner" || userRole == "admin"
+        userRole == "owner" || userRole == "admin" || userRole == "user"
     }
 
     // MARK: - Item Grouping

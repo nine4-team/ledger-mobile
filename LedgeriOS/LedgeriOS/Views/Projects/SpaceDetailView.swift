@@ -45,7 +45,7 @@ struct SpaceDetailView: View {
 
     private var canSaveAsTemplate: Bool {
         guard let member = accountContext.member else { return false }
-        return member.role == .owner || member.role == .admin
+        return SpaceDetailCalculations.canSaveAsTemplate(userRole: member.role?.rawValue ?? "")
     }
 
     // MARK: - Body
