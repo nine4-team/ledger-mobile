@@ -31,6 +31,30 @@ enum TransactionCreationStep: Hashable {
     case details              // full detail form
 }
 
+enum TransactionCreationStepResolver {
+    static func orderedSteps(
+        type: TransactionType?,
+        context: TransactionCreationContext,
+        destinationProjectId: String?,
+        skipVendor: Bool = false
+    ) -> [TransactionCreationStep] {
+        guard let type else { return [.typeSelection] }
+
+        var steps: [TransactionCreationStep] = [.typeSelection]
+        if type != .return { steps.append(.whoPaid) }
+        if shouldSelectDestination(for: context) { steps.append(.destination) }
+        if destinationProjectId != nil { steps.append(.budgetCategory) }
+        if !skipVendor { steps.append(.vendor) }
+        steps.append(.details)
+        return steps
+    }
+
+    private static func shouldSelectDestination(for context: TransactionCreationContext) -> Bool {
+        if case .inventory = context { return true }
+        return false
+    }
+}
+
 /// Multi-step bottom sheet form for creating a new transaction.
 /// See docs/specs/transaction-creation.md and docs/specs/transaction-type.md for the flow spec.
 struct NewTransactionView: View {
@@ -131,11 +155,6 @@ struct NewTransactionView: View {
         return selectedCategory?.isItemsCategory == true
     }
 
-    /// Return: items physically go back to a vendor; who-paid doesn't apply.
-    private var skipWhoPaid: Bool {
-        transactionType == .return
-    }
-
     private var skipVendor: Bool { false }
 
     private var showsReimbursementToggle: Bool { transactionType == .purchase }
@@ -149,16 +168,12 @@ struct NewTransactionView: View {
 
     /// The ordered list of steps for the current branch.
     private var orderedSteps: [TransactionCreationStep] {
-        guard let type = transactionType else { return [.typeSelection] }
-
-        var steps: [TransactionCreationStep] = [.typeSelection]
-        if !skipWhoPaid { steps.append(.whoPaid) }
-        steps.append(.destination)
-        if destinationProjectId != nil { steps.append(.budgetCategory) }
-        if !skipVendor { steps.append(.vendor) }
-        steps.append(.details)
-        _ = type // silence unused
-        return steps
+        TransactionCreationStepResolver.orderedSteps(
+            type: transactionType,
+            context: context,
+            destinationProjectId: destinationProjectId,
+            skipVendor: skipVendor
+        )
     }
 
     private var currentStepIndex: Int {

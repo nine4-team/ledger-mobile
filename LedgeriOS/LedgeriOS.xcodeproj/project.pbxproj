@@ -295,6 +295,7 @@
 		ITX000010000000000000003 /* ItemTagExtractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ITX000020000000000000003 /* ItemTagExtractionTests.swift */; };
 		NLCB0001B001 /* NativeListControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = NLCB0001F001 /* NativeListControlBar.swift */; };
 		NT0001010000000000000001 /* NotesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = NT0002010000000000000001 /* NotesTabView.swift */; };
+		NTSTEP001000000000T001 /* TransactionCreationStepResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = NTSTEP001000000000F001 /* TransactionCreationStepResolverTests.swift */; };
 		PDFT0001000000000000B001 /* PDFThumbnailTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFT0001000000000000F001 /* PDFThumbnailTile.swift */; };
 		PDFV0001000000000000B001 /* PDFViewerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = PDFV0001000000000000F001 /* PDFViewerSheet.swift */; };
 		PIN00001000000000000B001 /* PinnedImagePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = PIN00001000000000000F001 /* PinnedImagePanel.swift */; };
@@ -672,6 +673,7 @@
 		ITX000020000000000000003 /* ItemTagExtractionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ItemTagExtractionTests.swift; sourceTree = "<group>"; };
 		NLCB0001F001 /* NativeListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeListControlBar.swift; sourceTree = "<group>"; };
 		NT0002010000000000000001 /* NotesTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotesTabView.swift; sourceTree = "<group>"; };
+		NTSTEP001000000000F001 /* TransactionCreationStepResolverTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionCreationStepResolverTests.swift; sourceTree = "<group>"; };
 		PDFT0001000000000000F001 /* PDFThumbnailTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFThumbnailTile.swift; sourceTree = "<group>"; };
 		PDFV0001000000000000F001 /* PDFViewerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerSheet.swift; sourceTree = "<group>"; };
 		PIN00001000000000000F001 /* PinnedImagePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedImagePanel.swift; sourceTree = "<group>"; };
@@ -1029,6 +1031,7 @@
 				WP07F00100000000000X0001 /* TransactionCardCalculationTests.swift */,
 				4EFE03C96BEEB754F812F939 /* TransactionExportCalculationTests.swift */,
 				WP04F00100000000001X0001 /* TransactionNextStepsCalculationTests.swift */,
+				NTSTEP001000000000F001 /* TransactionCreationStepResolverTests.swift */,
 				C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */,
 				TDC00F00100000000T0001 /* TransactionDisplayCalculationTests.swift */,
 				SCT00F00100000000T0001 /* SearchCalculationsTests.swift */,
@@ -1818,6 +1821,7 @@
 				WP07B00100000000000X0001 /* TransactionCardCalculationTests.swift in Sources */,
 				3F582B99A07E893EB77D4930 /* TransactionExportCalculationTests.swift in Sources */,
 				WP04B00100000000001X0001 /* TransactionNextStepsCalculationTests.swift in Sources */,
+				NTSTEP001000000000T001 /* TransactionCreationStepResolverTests.swift in Sources */,
 				770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */,
 				TDC00B00100000000T0001 /* TransactionDisplayCalculationTests.swift in Sources */,
 				SCT00B00100000000T0001 /* SearchCalculationsTests.swift in Sources */,
