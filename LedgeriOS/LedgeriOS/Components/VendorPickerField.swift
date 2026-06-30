@@ -248,6 +248,7 @@ struct InlineVendorPicker: View {
     @Binding var selectedValue: String
     @Binding var otherMode: Bool
     @Binding var otherText: String
+    @Binding var saveOtherAsPreset: Bool
     var otherFocused: FocusState<Bool>.Binding
     var fixedOptions: [String] = []
 
@@ -261,12 +262,30 @@ struct InlineVendorPicker: View {
     private var displayVendors: [String] {
         var seen = Set<String>()
         return (fixedOptions + vendors).filter { v in
-            let trimmed = v.trimmingCharacters(in: .whitespaces)
+            let trimmed = VendorDefaultsService.cleanedVendorName(v)
             guard !trimmed.isEmpty, !seen.contains(trimmed) else { return false }
             seen.insert(trimmed)
             return true
         }
     }
+
+    private var cleanedOtherText: String {
+        VendorDefaultsService.cleanedVendorName(otherText)
+    }
+
+    private var typedValueAlreadyExists: Bool {
+        let normalized = VendorDefaultsService.normalizedVendorName(otherText)
+        guard !normalized.isEmpty else { return false }
+        return displayVendors.contains {
+            VendorDefaultsService.normalizedVendorName($0) == normalized
+        }
+    }
+
+    private var shouldShowSavePresetToggle: Bool {
+        otherMode && !cleanedOtherText.isEmpty && !typedValueAlreadyExists
+    }
+
+    private let otherEntryBlockId = "otherVendorEntryBlock"
 
     var body: some View {
         Group {
@@ -280,6 +299,7 @@ struct InlineVendorPicker: View {
                                 otherMode = false
                                 otherFocused.wrappedValue = false
                                 selectedValue = vendor
+                                saveOtherAsPreset = false
                             }
                         }
 
@@ -287,27 +307,52 @@ struct InlineVendorPicker: View {
                             otherMode = true
                             selectedValue = ""
                             otherText = ""
+                            saveOtherAsPreset = false
                         }
 
                         if otherMode {
-                            TextField("e.g. Home Depot, Amazon", text: $otherText)
-                                .font(Typography.input)
-                                .padding(.horizontal, Spacing.md)
-                                .frame(minHeight: 44)
-                                .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Dimensions.inputRadius)
-                                        .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
-                                )
-                                .focused(otherFocused)
-                                .padding(.top, Spacing.xs)
-                                .id("otherTextField")
-                                .onAppear {
-                                    otherFocused.wrappedValue = true
-                                    withAnimation {
-                                        proxy.scrollTo("otherTextField", anchor: .bottom)
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
+                                TextField("e.g. Home Depot, Amazon", text: $otherText)
+                                    .font(Typography.input)
+                                    .padding(.horizontal, Spacing.md)
+                                    .frame(minHeight: 44)
+                                    .clipShape(RoundedRectangle(cornerRadius: Dimensions.inputRadius))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Dimensions.inputRadius)
+                                            .stroke(BrandColors.border, lineWidth: Dimensions.borderWidth)
+                                    )
+                                    .focused(otherFocused)
+                                    .onAppear {
+                                        otherFocused.wrappedValue = true
+                                        scrollOtherEntryIntoView(proxy)
                                     }
+                                    .onChange(of: otherText) { _, _ in
+                                        if typedValueAlreadyExists {
+                                            saveOtherAsPreset = false
+                                        }
+                                    }
+
+                                if shouldShowSavePresetToggle {
+                                    FormToggle(
+                                        label: "Save \"\(cleanedOtherText)\" for next time",
+                                        isOn: $saveOtherAsPreset
+                                    )
                                 }
+                            }
+                            .id(otherEntryBlockId)
+                            .padding(.top, Spacing.xs)
+                            .onChange(of: otherFocused.wrappedValue) { _, isFocused in
+                                if isFocused {
+                                    scrollOtherEntryIntoView(proxy)
+                                }
+                            }
+                            .onChange(of: shouldShowSavePresetToggle) { _, shouldShow in
+                                if !shouldShow {
+                                    saveOtherAsPreset = false
+                                } else if otherFocused.wrappedValue {
+                                    scrollOtherEntryIntoView(proxy)
+                                }
+                            }
                         }
                     }
                 }
@@ -315,6 +360,19 @@ struct InlineVendorPicker: View {
         }
         .onAppear { startListening() }
         .onDisappear { listener?.remove() }
+    }
+
+    private func scrollOtherEntryIntoView(_ proxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            withAnimation {
+                proxy.scrollTo(otherEntryBlockId, anchor: .bottom)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            withAnimation {
+                proxy.scrollTo(otherEntryBlockId, anchor: .bottom)
+            }
+        }
     }
 
     @ViewBuilder

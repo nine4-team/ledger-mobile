@@ -30,10 +30,34 @@ struct VendorDefaultsService: VendorDefaultsServiceProtocol {
         documentRef(accountId: accountId).setData(data, merge: true)
     }
 
+    func addVendorIfMissing(accountId: String, name: String) async throws {
+        let cleaned = Self.cleanedVendorName(name)
+        guard !cleaned.isEmpty else { return }
+
+        let snapshot = try await documentRef(accountId: accountId).getDocument()
+        var vendors = (try? snapshot.data(as: VendorDefaults.self).vendors) ?? []
+        let normalized = Self.normalizedVendorName(cleaned)
+        guard !vendors.contains(where: { Self.normalizedVendorName($0) == normalized }) else { return }
+
+        vendors.append(cleaned)
+        try save(accountId: accountId, vendors: vendors)
+    }
+
     func initializeDefaults(accountId: String) async throws {
         let snapshot = try await documentRef(accountId: accountId).getDocument()
         if !snapshot.exists {
             try save(accountId: accountId, vendors: Self.defaultVendors)
         }
+    }
+
+    static func cleanedVendorName(_ name: String) -> String {
+        name
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    static func normalizedVendorName(_ name: String) -> String {
+        cleanedVendorName(name).lowercased()
     }
 }

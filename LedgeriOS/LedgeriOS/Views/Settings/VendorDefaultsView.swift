@@ -99,11 +99,12 @@ struct VendorDefaultsView: View {
 
     private func addVendor(_ name: String) {
         guard let accountId = accountContext.currentAccountId else { return }
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = VendorDefaultsService.cleanedVendorName(name)
         guard !trimmed.isEmpty else { return }
 
-        vendors.append(trimmed)
-        try? service.save(accountId: accountId, vendors: vendors)
+        Task {
+            try? await service.addVendorIfMissing(accountId: accountId, name: trimmed)
+        }
     }
 
     private func removeVendor(_ name: String) {

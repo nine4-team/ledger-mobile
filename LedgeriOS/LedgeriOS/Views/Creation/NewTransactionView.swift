@@ -52,6 +52,7 @@ struct NewTransactionView: View {
     @State private var vendor = ""
     @State private var otherVendorMode = false
     @State private var otherVendorText = ""
+    @State private var saveOtherVendorAsPreset = false
     @FocusState private var otherVendorFocused: Bool
 
     // Details fields
@@ -85,6 +86,7 @@ struct NewTransactionView: View {
     @State private var enabledCategoryIds: Set<String> = []
 
     private let transactionsService = TransactionsService()
+    private let vendorDefaultsService = VendorDefaultsService()
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol = ProjectBudgetCategoriesService()
 
     init(context: TransactionCreationContext, onCreated: ((Transaction) -> Void)? = nil) {
@@ -432,6 +434,7 @@ struct NewTransactionView: View {
                     selectedValue: $vendor,
                     otherMode: $otherVendorMode,
                     otherText: $otherVendorText,
+                    saveOtherAsPreset: $saveOtherVendorAsPreset,
                     otherFocused: $otherVendorFocused,
                     fixedOptions: fixedSourceOptions
                 )
@@ -830,6 +833,14 @@ struct NewTransactionView: View {
             } else {
                 txId = try transactionsService.createTransaction(accountId: accountId, transaction: transaction)
             }
+            if shouldSaveOtherVendorAsPreset {
+                Task {
+                    try? await vendorDefaultsService.addVendorIfMissing(
+                        accountId: accountId,
+                        name: effectiveSource
+                    )
+                }
+            }
             submissionError = nil
             if routeThroughInventory {
                 createdTransactionId = txId
@@ -841,6 +852,12 @@ struct NewTransactionView: View {
         } catch {
             submissionError = "Couldn't save the transaction: \(error.localizedDescription)"
         }
+    }
+
+    private var shouldSaveOtherVendorAsPreset: Bool {
+        otherVendorMode
+            && saveOtherVendorAsPreset
+            && !otherVendorText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// Narrow-semantic reimbursement derivation:

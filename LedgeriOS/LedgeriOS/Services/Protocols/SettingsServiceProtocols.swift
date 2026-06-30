@@ -15,6 +15,7 @@ protocol SpaceTemplatesServiceProtocol: Sendable {
 protocol VendorDefaultsServiceProtocol: Sendable {
     func subscribe(accountId: String, onChange: @escaping (VendorDefaults?) -> Void) -> ListenerRegistration
     func save(accountId: String, vendors: [String]) throws
+    func addVendorIfMissing(accountId: String, name: String) async throws
     func initializeDefaults(accountId: String) async throws
 }
 
