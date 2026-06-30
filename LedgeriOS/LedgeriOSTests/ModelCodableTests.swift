@@ -32,9 +32,12 @@ struct ModelCodableTests {
         item.purchasePriceCents = 15000
         item.status = .purchased
         item.source = "Amazon"
+        item.currentSource = "1584 Design Inventory"
         item.bookmark = true
         item.images = [AttachmentRef(url: "https://example.com/img.jpg")]
         item.createdBy = "user123"
+        item.createdAt = Date(timeIntervalSince1970: 1_000)
+        item.updatedAt = Date(timeIntervalSince1970: 2_000)
 
         let dict = try encodeToDict(item)
 
@@ -42,8 +45,11 @@ struct ModelCodableTests {
         #expect(dict["purchasePriceCents"] as? Int == 15000)
         #expect(dict["status"] as? String == "purchased")
         #expect(dict["source"] as? String == "Amazon")
+        #expect(dict["currentSource"] as? String == "1584 Design Inventory")
         #expect(dict["bookmark"] as? Bool == true)
         #expect(dict["createdBy"] as? String == "user123")
+        #expect(dict["createdAt"] != nil)
+        #expect(dict["updatedAt"] != nil)
 
         let images = dict["images"] as? [[String: Any]]
         #expect(images?.count == 1)

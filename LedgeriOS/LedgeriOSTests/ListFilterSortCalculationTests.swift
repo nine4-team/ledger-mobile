@@ -11,6 +11,7 @@ private func makeItem(
     bookmark: Bool? = nil,
     status: ItemStatus? = nil,
     source: String? = nil,
+    currentSource: String? = nil,
     projectId: String? = nil,
     spaceId: String? = nil,
     projectPriceCents: Int? = nil,
@@ -27,6 +28,7 @@ private func makeItem(
     item.bookmark = bookmark
     item.status = status
     item.source = source
+    item.currentSource = currentSource
     item.projectId = projectId
     item.spaceId = spaceId
     item.projectPriceCents = projectPriceCents
@@ -69,17 +71,19 @@ struct ListFilterSortCalculationTests {
 
     // MARK: - Filter: .fromInventory
 
-    @Test("From inventory filter returns items without a projectId")
+    @Test("From inventory filter returns project items whose current source is inventory")
     func fromInventoryFilter() {
         let items = [
-            makeItem(name: "Inventory item", projectId: nil),
-            makeItem(name: "Project item", projectId: "proj-1"),
-            makeItem(name: "Empty projectId", projectId: ""),
+            makeItem(name: "From business inventory", source: "Wayfair", currentSource: "Business Inventory", projectId: "proj-1"),
+            makeItem(name: "From account inventory", source: "Homegoods", currentSource: "1584 Design Inventory", projectId: "proj-1"),
+            makeItem(name: "Currently in inventory", source: "Business Inventory", currentSource: "Business Inventory", projectId: nil),
+            makeItem(name: "Direct project item", source: "Wayfair", currentSource: "Wayfair", projectId: "proj-1"),
+            makeItem(name: "Legacy missing current source", source: "Wayfair", projectId: "proj-1"),
         ]
         let result = ListFilterSortCalculations.applyFilter(items, filter: .fromInventory)
         #expect(result.count == 2)
-        #expect(result.map(\.name).contains("Inventory item"))
-        #expect(result.map(\.name).contains("Empty projectId"))
+        #expect(result.map(\.name).contains("From business inventory"))
+        #expect(result.map(\.name).contains("From account inventory"))
     }
 
     // MARK: - Filter: .toReturn

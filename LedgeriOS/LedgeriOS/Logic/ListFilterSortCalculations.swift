@@ -14,7 +14,13 @@ enum ListFilterSortCalculations {
         case .bookmarked:
             return { $0.bookmark == true }
         case .fromInventory:
-            return { $0.projectId == nil || $0.projectId?.isEmpty == true }
+            return { item in
+                let currentSource = item.currentSource?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let originalSource = item.source?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                guard !currentSource.isEmpty else { return false }
+                return currentSource.localizedCaseInsensitiveContains("inventory")
+                    && currentSource.caseInsensitiveCompare(originalSource) != .orderedSame
+            }
         case .toReturn:
             return { $0.status == .toReturn }
         case .returned:

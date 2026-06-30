@@ -71,6 +71,6 @@ struct Item: Codable, Identifiable, Hashable, @unchecked Sendable {
              transactionId, purchasePriceCents, projectPriceCents, marketValueCents,
              purchasedBy, bookmark, budgetCategoryId, quantity,
              taxRatePct, taxAmountPurchasePriceCents, taxAmountProjectPriceCents,
-             images, createdBy, updatedBy
+             images, createdBy, updatedBy, createdAt, updatedAt
     }
 }
