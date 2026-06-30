@@ -1,0 +1,471 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { type Firestore, FieldValue } from "firebase-admin/firestore";
+import { z } from "zod";
+import type { AttachmentRef, Item, ProtoItem, Transaction } from "../types.js";
+import { getAccountId, getUid } from "../context.js";
+import { accountCollection, getDoc, queryDocs } from "../util/query.js";
+import { quickDraftItemMatches } from "../util/search.js";
+import {
+  ProjectionMode,
+  ResponseLimitArg,
+  asToolResponse,
+  capResponse,
+  pickFields,
+  quickDraftItemSummary,
+} from "../util/projections.js";
+import { notFound, validation } from "../util/errors.js";
+import { withTelemetry } from "../util/telemetry.js";
+import {
+  quickDraftCaptureContexts,
+  quickDraftItemStatuses,
+  quickDraftSourceHints,
+} from "../util/enums.js";
+import { checkTransactionLinkageOnCreate } from "./items.js";
+
+const QuickDraftStatus = z.enum(quickDraftItemStatuses);
+const QuickDraftCaptureContext = z.enum(quickDraftCaptureContexts);
+const QuickDraftSourceHint = z.enum(quickDraftSourceHints);
+
+const AttachmentInput = z.object({
+  url: z.string(),
+  thumbnailUrlSm: z.string().optional(),
+  thumbnailUrlMd: z.string().optional(),
+  kind: z.string().default("image"),
+  fileName: z.string().optional(),
+  contentType: z.string().optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+const ExtractionInput = z.object({
+  rawText: z.string().optional(),
+  barcodePayloads: z.array(z.string()).optional(),
+  skuCandidates: z.array(z.string()).optional(),
+  confidence: z.coerce.number().optional(),
+}).optional();
+
+function defaultCaptureContext(args: {
+  transactionId?: string;
+  projectId?: string | null;
+}): "project" | "inventory" | "transaction" {
+  if (args.transactionId) return "transaction";
+  if (args.projectId) return "project";
+  return "inventory";
+}
+
+function formatQuickDraftItem(draft: ProtoItem & { id: string }) {
+  return {
+    id: draft.id,
+    accountId: draft.accountId ?? null,
+    projectId: draft.projectId ?? null,
+    intendedProjectId: draft.intendedProjectId ?? null,
+    transactionId: draft.transactionId ?? null,
+    name: draft.name ?? "",
+    captureContext: draft.captureContext ?? defaultCaptureContext(draft),
+    status: draft.status ?? "open",
+    sourceHint: draft.sourceHint ?? "unknown",
+    sku: draft.sku ?? "",
+    quantity: draft.quantity ?? 1,
+    notes: draft.notes ?? "",
+    extracted: draft.extracted ?? null,
+    candidateTransactionId: draft.candidateTransactionId ?? null,
+    candidateItemId: draft.candidateItemId ?? null,
+    convertedItemId: draft.convertedItemId ?? null,
+    convertedAt: draft.convertedAt ?? null,
+    photoCount: draft.photos?.length ?? 0,
+    photos: (draft.photos ?? []).map((ref: AttachmentRef) => ({
+      url: ref.url,
+      thumbnailUrlSm: ref.thumbnailUrlSm ?? null,
+      thumbnailUrlMd: ref.thumbnailUrlMd ?? null,
+      kind: ref.kind ?? "image",
+      fileName: ref.fileName ?? null,
+      contentType: ref.contentType ?? null,
+      isPrimary: ref.isPrimary ?? false,
+    })),
+  };
+}
+
+function projectDraft(
+  draft: ProtoItem & { id: string },
+  mode: "summary" | "full",
+  fields: string[] | undefined
+): Record<string, unknown> {
+  const full = formatQuickDraftItem(draft) as Record<string, unknown>;
+  if (fields && fields.length > 0) return pickFields(full, fields);
+  return mode === "full"
+    ? full
+    : (quickDraftItemSummary(draft) as unknown as Record<string, unknown>);
+}
+
+function cleanString(value: string | undefined | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function mergeAttachments(existing: AttachmentRef[], incoming: AttachmentRef[]): AttachmentRef[] {
+  const seen = new Set(existing.map((ref) => ref.url).filter(Boolean));
+  const merged = [...existing];
+  for (const ref of incoming) {
+    if (!ref.url || seen.has(ref.url)) continue;
+    seen.add(ref.url);
+    merged.push({ ...ref, isPrimary: merged.length === 0 ? (ref.isPrimary ?? true) : (ref.isPrimary ?? false) });
+  }
+  if (merged.length > 0 && !merged.some((ref) => ref.isPrimary === true)) {
+    merged[0] = { ...merged[0], isPrimary: true };
+  }
+  return merged;
+}
+
+export function registerQuickDraftItemTools(server: McpServer, db: Firestore) {
+  // ── list_quick_draft_items ────────────────────────────────────────────────
+  server.tool(
+    "list_quick_draft_items",
+    "[read-only] List item quick drafts from accounts/{accountId}/protoItems. These are photo-first draft captures that are not real items until promoted. Supports exact-match filters and pagination.",
+    {
+      projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for inventory-scope drafts with no project."),
+      intendedProjectId: z.string().optional().describe("Filter by intended destination project ID."),
+      transactionId: z.string().optional().describe("Filter by linked transaction ID."),
+      status: QuickDraftStatus.optional().describe("Filter by draft status."),
+      captureContext: QuickDraftCaptureContext.optional().describe("Filter by capture context."),
+      sourceHint: QuickDraftSourceHint.optional().describe("Filter by source hint."),
+      activeOnly: z.boolean().default(false).describe("When true, only return open/in_review drafts."),
+      limit: z.coerce.number().default(50).describe("Max results (ignored when fetchAll is true)."),
+      offset: z.coerce.number().default(0).describe("Number of results to skip."),
+      fetchAll: z.boolean().default(false).describe("Return all matching drafts subject to the response byte budget."),
+      mode: ProjectionMode.describe("'summary' (default) or 'full'."),
+      fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
+      responseLimit: ResponseLimitArg,
+    },
+    withTelemetry("list_quick_draft_items", async ({ projectId, intendedProjectId, transactionId, status, captureContext, sourceHint, activeOnly, limit, offset, fetchAll, mode, fields, responseLimit }) => {
+      let query: FirebaseFirestore.Query = accountCollection(db, "protoItems");
+
+      if (projectId === "inventory") query = query.where("projectId", "==", null);
+      else if (projectId) query = query.where("projectId", "==", projectId);
+      if (intendedProjectId) query = query.where("intendedProjectId", "==", intendedProjectId);
+      if (transactionId) query = query.where("transactionId", "==", transactionId);
+      if (status) query = query.where("status", "==", status);
+      if (captureContext) query = query.where("captureContext", "==", captureContext);
+      if (sourceHint) query = query.where("sourceHint", "==", sourceHint);
+      if (activeOnly && !status) query = query.where("status", "in", ["open", "in_review"]);
+
+      if (!fetchAll) query = query.offset(offset).limit(limit);
+      let drafts = await queryDocs<ProtoItem>(query);
+      if (activeOnly && status) {
+        drafts = drafts.filter((draft) => draft.status === "open" || draft.status === "in_review");
+      }
+      const page = fetchAll ? drafts : drafts.slice(0, limit);
+      const projected = page.map((draft) => projectDraft(draft, mode, fields));
+      return asToolResponse(capResponse(projected, { limitBytes: responseLimit, offset, fetchAll }));
+    })
+  );
+
+  // ── get_quick_draft_item ─────────────────────────────────────────────────
+  server.tool(
+    "get_quick_draft_item",
+    "[read-only] Get one item quick draft with all details, including photos[].",
+    { quickDraftItemId: z.string().describe("Quick draft item document ID from protoItems.") },
+    withTelemetry("get_quick_draft_item", async ({ quickDraftItemId }) => {
+      const draft = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
+      if (!draft) return notFound("Quick draft item", quickDraftItemId, "list_quick_draft_items");
+      return asToolResponse(formatQuickDraftItem(draft));
+    })
+  );
+
+  // ── search_quick_draft_items ─────────────────────────────────────────────
+  server.tool(
+    "search_quick_draft_items",
+    "[read-only] Search item quick drafts by name, notes, SKU, extracted text, barcodes, and SKU candidates.",
+    {
+      query: z.string().describe("Search term."),
+      projectId: z.string().optional().describe("Scope to a project, or 'inventory' for inventory-scope drafts."),
+      status: QuickDraftStatus.optional().describe("Optional status filter."),
+      activeOnly: z.boolean().default(false).describe("When true, only search open/in_review drafts."),
+      limit: z.coerce.number().default(25).describe("Max results."),
+      offset: z.coerce.number().default(0).describe("Number of matches to skip."),
+      mode: ProjectionMode.describe("'summary' (default) or 'full'."),
+      fields: z.array(z.string()).optional().describe("Explicit field list. Overrides mode."),
+      responseLimit: ResponseLimitArg,
+    },
+    withTelemetry("search_quick_draft_items", async ({ query: searchTerm, projectId, status, activeOnly, limit, offset, mode, fields, responseLimit }) => {
+      let q: FirebaseFirestore.Query = accountCollection(db, "protoItems");
+      if (projectId === "inventory") q = q.where("projectId", "==", null);
+      else if (projectId) q = q.where("projectId", "==", projectId);
+      if (status) q = q.where("status", "==", status);
+      if (activeOnly && !status) q = q.where("status", "in", ["open", "in_review"]);
+
+      let all = await queryDocs<ProtoItem>(q);
+      if (activeOnly && status) {
+        all = all.filter((draft) => draft.status === "open" || draft.status === "in_review");
+      }
+      const matched = all
+        .filter((draft) => quickDraftItemMatches(draft, searchTerm))
+        .slice(offset, offset + limit);
+      const projected = matched.map((draft) => projectDraft(draft, mode, fields));
+      return asToolResponse(capResponse(projected, { limitBytes: responseLimit, offset }));
+    })
+  );
+
+  // ── create_quick_draft_item ──────────────────────────────────────────────
+  server.tool(
+    "create_quick_draft_item",
+    "[mutating] Create a photo-first item quick draft. This does not create a real item or touch transactions.",
+    {
+      projectId: z.string().nullable().optional().describe("Project where the draft was captured. Omit/null for inventory."),
+      intendedProjectId: z.string().nullable().optional().describe("Optional intended destination project."),
+      transactionId: z.string().optional().describe("Optional linked transaction."),
+      name: z.string().optional().describe("Draft item name."),
+      captureContext: QuickDraftCaptureContext.optional().describe("Defaults from transactionId/projectId."),
+      status: QuickDraftStatus.default("open").describe("Draft lifecycle status."),
+      sourceHint: QuickDraftSourceHint.default("unknown").describe("Source hint."),
+      photos: z.array(AttachmentInput).default([]).describe("Photo attachment refs."),
+      sku: z.string().optional().describe("SKU."),
+      quantity: z.coerce.number().int().positive().default(1).describe("Quantity."),
+      notes: z.string().optional().describe("Draft notes."),
+      extracted: ExtractionInput,
+      candidateTransactionId: z.string().optional().describe("Suggested transaction match."),
+      candidateItemId: z.string().optional().describe("Suggested existing item match."),
+    },
+    withTelemetry("create_quick_draft_item", async (args) => {
+      const now = new Date();
+      const uid = getUid();
+      const projectId = args.projectId ?? null;
+      const data: Record<string, unknown> = {
+        accountId: getAccountId(),
+        projectId,
+        intendedProjectId: args.intendedProjectId ?? null,
+        captureContext: args.captureContext ?? defaultCaptureContext({ transactionId: args.transactionId, projectId }),
+        status: args.status,
+        sourceHint: args.sourceHint,
+        quantity: args.quantity,
+        photos: args.photos,
+        createdBy: uid,
+        updatedBy: uid,
+        createdAt: now,
+        updatedAt: now,
+      };
+      for (const key of ["transactionId", "name", "sku", "notes", "extracted", "candidateTransactionId", "candidateItemId"] as const) {
+        const value = args[key];
+        if (value !== undefined) data[key] = value;
+      }
+      const ref = await accountCollection(db, "protoItems").add(data);
+      return asToolResponse({ quickDraftItemId: ref.id, status: args.status });
+    })
+  );
+
+  // ── update_quick_draft_item ──────────────────────────────────────────────
+  server.tool(
+    "update_quick_draft_item",
+    "[mutating] Update quick draft item metadata. Use promote_quick_draft_item when it is ready to become a real item.",
+    {
+      quickDraftItemId: z.string().describe("Quick draft item ID."),
+      projectId: z.string().nullable().optional().describe("Project ID. Pass null to clear."),
+      intendedProjectId: z.string().nullable().optional().describe("Intended project ID. Pass null to clear."),
+      transactionId: z.string().nullable().optional().describe("Linked transaction ID. Pass null to clear."),
+      name: z.string().nullable().optional().describe("Draft name. Pass null to clear."),
+      captureContext: QuickDraftCaptureContext.optional(),
+      status: QuickDraftStatus.optional(),
+      sourceHint: QuickDraftSourceHint.optional(),
+      photos: z.array(AttachmentInput).optional().describe("Replace the photos array."),
+      sku: z.string().nullable().optional().describe("SKU. Pass null to clear."),
+      quantity: z.coerce.number().int().positive().optional(),
+      notes: z.string().nullable().optional().describe("Notes. Pass null to clear."),
+      extracted: ExtractionInput,
+      candidateTransactionId: z.string().nullable().optional().describe("Candidate transaction. Pass null to clear."),
+      candidateItemId: z.string().nullable().optional().describe("Candidate item. Pass null to clear."),
+    },
+    withTelemetry("update_quick_draft_item", async ({ quickDraftItemId, ...fields }) => {
+      const existing = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
+      if (!existing) return notFound("Quick draft item", quickDraftItemId, "list_quick_draft_items");
+
+      const updates: Record<string, unknown> = {
+        updatedAt: new Date(),
+        updatedBy: getUid(),
+      };
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined) updates[key] = value;
+      }
+      await accountCollection(db, "protoItems").doc(quickDraftItemId).update(updates);
+      return asToolResponse({ quickDraftItemId, updated: Object.keys(updates).filter((k) => k !== "updatedAt") });
+    })
+  );
+
+  // ── delete_quick_draft_item ──────────────────────────────────────────────
+  server.tool(
+    "delete_quick_draft_item",
+    "[mutating] Delete one quick draft item document. This does not delete Storage media.",
+    { quickDraftItemId: z.string().describe("Quick draft item ID.") },
+    withTelemetry("delete_quick_draft_item", async ({ quickDraftItemId }) => {
+      const existing = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
+      if (!existing) return notFound("Quick draft item", quickDraftItemId, "list_quick_draft_items");
+      await accountCollection(db, "protoItems").doc(quickDraftItemId).delete();
+      return asToolResponse({ quickDraftItemId, deleted: true });
+    })
+  );
+
+  // ── mark_quick_draft_item_in_review ──────────────────────────────────────
+  server.tool(
+    "mark_quick_draft_item_in_review",
+    "[mutating] Mark a quick draft item as in_review.",
+    { quickDraftItemId: z.string().describe("Quick draft item ID.") },
+    withTelemetry("mark_quick_draft_item_in_review", async ({ quickDraftItemId }) => {
+      const existing = await getDoc<ProtoItem>(db, "protoItems", quickDraftItemId);
+      if (!existing) return notFound("Quick draft item", quickDraftItemId, "list_quick_draft_items");
+      await accountCollection(db, "protoItems").doc(quickDraftItemId).update({
+        status: "in_review",
+        updatedAt: new Date(),
+        updatedBy: getUid(),
+      });
+      return asToolResponse({ quickDraftItemId, status: "in_review" });
+    })
+  );
+
+  // ── promote_quick_draft_item ─────────────────────────────────────────────
+  server.tool(
+    "promote_quick_draft_item",
+    "[mutating] Promote one quick draft item into a real item, then mark the draft converted. Photos become item images. Project items must have a transactionId; inventory items must not have budgetCategoryId.",
+    {
+      quickDraftItemId: z.string().describe("Quick draft item ID."),
+      name: z.string().optional().describe("Override item name. Defaults to draft name, SKU, or 'Untitled item'."),
+      projectId: z.string().nullable().optional().describe("Override project ID. Omit to use draft projectId. Pass null for inventory."),
+      transactionId: z.string().nullable().optional().describe("Override transaction ID. Omit to use draft transactionId/candidateTransactionId. Pass null to clear."),
+      budgetCategoryId: z.string().nullable().optional().describe("Budget category. Auto-inherited from transaction when possible. Must be absent/null for inventory."),
+      spaceId: z.string().optional().describe("Optional destination space."),
+      status: z.string().default("purchased").describe("Real item status."),
+      source: z.string().optional().describe("Vendor/source for the real item."),
+      sku: z.string().optional().describe("Override SKU. Defaults to draft SKU."),
+      quantity: z.coerce.number().int().positive().optional().describe("Override quantity. Defaults to draft quantity or 1."),
+      purchasePriceCents: z.coerce.number().optional(),
+      projectPriceCents: z.coerce.number().optional(),
+      marketValueCents: z.coerce.number().optional(),
+      taxRatePct: z.coerce.number().optional().describe("Auto-inherited from transaction when omitted."),
+      notes: z.string().optional().describe("Optional item notes. Defaults to draft notes."),
+      mergeIntoItemId: z.string().optional().describe("Instead of creating a new item, merge draft photos/SKU into an existing item and mark the draft converted."),
+    },
+    withTelemetry("promote_quick_draft_item", async (args) => {
+      const draft = await getDoc<ProtoItem>(db, "protoItems", args.quickDraftItemId);
+      if (!draft) return notFound("Quick draft item", args.quickDraftItemId, "list_quick_draft_items");
+      if (draft.status === "converted") {
+        return validation(
+          `Quick draft item ${args.quickDraftItemId} is already converted.`,
+          "Use get_quick_draft_item to inspect convertedItemId.",
+          { convertedItemId: draft.convertedItemId }
+        );
+      }
+
+      const now = new Date();
+      const uid = getUid();
+      const draftPhotos = draft.photos ?? [];
+
+      if (args.mergeIntoItemId) {
+        const existingItem = await getDoc<Item>(db, "items", args.mergeIntoItemId);
+        if (!existingItem) return notFound("Item", args.mergeIntoItemId, "list_items");
+        const updates: Record<string, unknown> = {
+          images: mergeAttachments(existingItem.images ?? [], draftPhotos),
+          updatedAt: now,
+          updatedBy: uid,
+        };
+        const draftSku = cleanString(args.sku) ?? cleanString(draft.sku);
+        if (!cleanString(existingItem.sku) && draftSku) updates.sku = draftSku;
+
+        const batch = db.batch();
+        batch.update(accountCollection(db, "items").doc(args.mergeIntoItemId), updates);
+        batch.update(accountCollection(db, "protoItems").doc(args.quickDraftItemId), {
+          status: "converted",
+          convertedItemId: args.mergeIntoItemId,
+          convertedAt: now,
+          convertedBy: uid,
+          updatedAt: now,
+          updatedBy: uid,
+        });
+        await batch.commit();
+        return asToolResponse({
+          quickDraftItemId: args.quickDraftItemId,
+          itemId: args.mergeIntoItemId,
+          merged: true,
+          status: "converted",
+        });
+      }
+
+      const resolvedProjectId = args.projectId !== undefined ? args.projectId : (draft.projectId ?? null);
+      const resolvedTransactionId =
+        args.transactionId !== undefined
+          ? (args.transactionId ?? undefined)
+          : (draft.transactionId ?? draft.candidateTransactionId);
+
+      let resolvedTaxRate = args.taxRatePct;
+      let resolvedBudgetCategoryId = args.budgetCategoryId ?? undefined;
+      if ((resolvedTaxRate === undefined || resolvedBudgetCategoryId === undefined) && resolvedTransactionId) {
+        const tx = await getDoc<Transaction>(db, "transactions", resolvedTransactionId);
+        if (resolvedTaxRate === undefined && tx?.taxRatePct != null) resolvedTaxRate = tx.taxRatePct;
+        if (resolvedBudgetCategoryId === undefined && tx?.budgetCategoryId) {
+          resolvedBudgetCategoryId = tx.budgetCategoryId;
+        }
+      }
+      if (!resolvedProjectId) resolvedBudgetCategoryId = undefined;
+
+      if (!resolvedProjectId && resolvedBudgetCategoryId) {
+        return validation(
+          "Cannot promote a quick draft into an inventory item with budgetCategoryId.",
+          "Omit budgetCategoryId for inventory, or provide projectId and transactionId for a project item."
+        );
+      }
+
+      const linkageError = checkTransactionLinkageOnCreate(resolvedProjectId, resolvedTransactionId);
+      if (linkageError) {
+        return validation(
+          linkageError,
+          "Pass transactionId alongside projectId, or promote the draft into business inventory with projectId: null."
+        );
+      }
+
+      const itemRef = accountCollection(db, "items").doc();
+      const itemData: Record<string, unknown> = {
+        name: cleanString(args.name) ?? cleanString(draft.name) ?? cleanString(draft.sku) ?? "Untitled item",
+        status: args.status,
+        quantity: args.quantity ?? draft.quantity ?? 1,
+        images: draftPhotos,
+        createdBy: uid,
+        updatedBy: uid,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (resolvedProjectId) itemData.projectId = resolvedProjectId;
+      if (resolvedTransactionId) itemData.transactionId = resolvedTransactionId;
+      if (resolvedBudgetCategoryId) itemData.budgetCategoryId = resolvedBudgetCategoryId;
+      if (args.spaceId) itemData.spaceId = args.spaceId;
+      if (args.source) itemData.source = args.source;
+      const sku = cleanString(args.sku) ?? cleanString(draft.sku);
+      if (sku) itemData.sku = sku;
+      const notes = args.notes !== undefined ? args.notes : draft.notes;
+      if (notes) itemData.notes = notes;
+      if (args.purchasePriceCents !== undefined) itemData.purchasePriceCents = args.purchasePriceCents;
+      if (args.projectPriceCents !== undefined) itemData.projectPriceCents = args.projectPriceCents;
+      if (args.marketValueCents !== undefined) itemData.marketValueCents = args.marketValueCents;
+      if (resolvedTaxRate !== undefined) itemData.taxRatePct = resolvedTaxRate;
+
+      const batch = db.batch();
+      batch.set(itemRef, itemData);
+      if (resolvedTransactionId) {
+        batch.update(accountCollection(db, "transactions").doc(resolvedTransactionId), {
+          itemIds: FieldValue.arrayUnion(itemRef.id),
+          updatedAt: now,
+        });
+      }
+      batch.update(accountCollection(db, "protoItems").doc(args.quickDraftItemId), {
+        status: "converted",
+        convertedItemId: itemRef.id,
+        convertedAt: now,
+        convertedBy: uid,
+        updatedAt: now,
+        updatedBy: uid,
+      });
+      await batch.commit();
+
+      return asToolResponse({
+        quickDraftItemId: args.quickDraftItemId,
+        itemId: itemRef.id,
+        merged: false,
+        status: "converted",
+      });
+    })
+  );
+}

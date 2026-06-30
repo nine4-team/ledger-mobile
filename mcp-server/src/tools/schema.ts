@@ -74,6 +74,31 @@ const ENTITIES: Record<string, EntitySchema> = {
       "Items in business inventory have no budget category.",
     ],
   },
+  quick_draft_item: {
+    name: "quick_draft_item",
+    description:
+      "A photo-first draft capture for an item that is not yet a real item. " +
+      "Stored as protoItems and converted via promote_quick_draft_item. " +
+      "Use this when the user captured photos or partial item details before the financial record is ready.",
+    requiredOnCreate: [],
+    keyFields: [
+      { name: "id", type: "string", description: "Opaque protoItems document ID." },
+      { name: "projectId", type: "string?", description: "Project where the draft was captured; null for inventory-scope drafts." },
+      { name: "intendedProjectId", type: "string?", description: "Optional intended destination project." },
+      { name: "transactionId", type: "string?", description: "Optional linked transaction used when promoting into a project item." },
+      { name: "captureContext", type: "enum(quickDraftCaptureContext)", description: "project, inventory, or transaction." },
+      { name: "status", type: "enum(quickDraftItemStatus)", description: "open, in_review, or converted." },
+      { name: "sourceHint", type: "enum(quickDraftSourceHint)", description: "client_purchase, business_purchase, from_inventory, or unknown." },
+      { name: "photos", type: "AttachmentRef[]", description: "Draft photos; become item images during promotion." },
+      { name: "convertedItemId", type: "string?", description: "Real item ID after promotion/conversion." },
+    ],
+    enums: ["quickDraftItemStatus", "quickDraftCaptureContext", "quickDraftSourceHint"],
+    notes: [
+      "Quick draft items are separate from real items; list_items/search_items do not return them.",
+      "Promoting creates a real item or merges into an existing item, then marks the draft converted.",
+      "Project promotions follow normal item invariants: project items need transactionId; inventory items have no budgetCategoryId.",
+    ],
+  },
   project: {
     name: "project",
     description: "A client project with a budget, items, transactions, and spaces.",

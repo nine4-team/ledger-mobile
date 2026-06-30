@@ -9,7 +9,7 @@ import { withTelemetry } from "../util/telemetry.js";
  * without hard-coding assumptions.
  */
 
-export const SERVER_VERSION = "1.1.0";
+export const SERVER_VERSION = "1.2.0";
 
 export const SERVER_FEATURES = {
   bulkGetters: true,
@@ -21,6 +21,7 @@ export const SERVER_FEATURES = {
   compositeTools: true,
   invoiceTools: true,
   invoiceSettlementTransactions: true,
+  quickDraftItemTools: true,
   schemaIntrospection: true,
   telemetry: true,
   cursorPagination: false,

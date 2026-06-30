@@ -168,6 +168,54 @@ export interface Item {
   updatedAt?: FirebaseFirestore.Timestamp;
 }
 
+export type ProtoItemStatus = "open" | "in_review" | "converted";
+export type ProtoItemCaptureContext = "project" | "inventory" | "transaction";
+export type ProtoItemSourceHint =
+  | "client_purchase"
+  | "business_purchase"
+  | "from_inventory"
+  | "unknown";
+
+export interface ProtoItemExtraction {
+  rawText?: string;
+  barcodePayloads?: string[];
+  skuCandidates?: string[];
+  confidence?: number;
+  extractedAt?: FirebaseFirestore.Timestamp;
+}
+
+/**
+ * Photo-first capture object for "this will become an item later".
+ *
+ * Stored in accounts/{accountId}/protoItems. MCP tools expose these as
+ * quick draft items to match the product language.
+ */
+export interface ProtoItem {
+  id: string;
+  accountId?: string;
+  projectId?: string | null;
+  intendedProjectId?: string | null;
+  transactionId?: string;
+  name?: string;
+  captureContext?: ProtoItemCaptureContext;
+  status?: ProtoItemStatus;
+  sourceHint?: ProtoItemSourceHint;
+  photos?: AttachmentRef[];
+  sku?: string;
+  quantity?: number;
+  notes?: string;
+  extracted?: ProtoItemExtraction;
+  candidateTransactionId?: string;
+  candidateItemId?: string;
+  convertedItemId?: string;
+  convertedAt?: FirebaseFirestore.Timestamp;
+  createdBy?: string;
+  updatedBy?: string;
+  convertedBy?: string;
+  createdAt?: FirebaseFirestore.Timestamp;
+  updatedAt?: FirebaseFirestore.Timestamp;
+}
+
 export interface Space {
   id: string;
   accountId?: string;

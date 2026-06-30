@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import type { Transaction, Item, Project, Invoice } from "../types.js";
+import type { Transaction, Item, ProtoItem, Project, Invoice } from "../types.js";
 import { formatCents } from "./format.js";
 
 /**
@@ -65,6 +65,24 @@ export function itemSummary(item: Item & { id: string }) {
     transactionId: item.transactionId ?? null,
     purchasePrice: formatCents(item.purchasePriceCents),
     budgetCategoryId: item.budgetCategoryId ?? null,
+  };
+}
+
+export function quickDraftItemSummary(draft: ProtoItem & { id: string }) {
+  return {
+    id: draft.id,
+    name: draft.name ?? "",
+    status: draft.status ?? "open",
+    captureContext: draft.captureContext ?? "",
+    projectId: draft.projectId ?? null,
+    intendedProjectId: draft.intendedProjectId ?? null,
+    transactionId: draft.transactionId ?? null,
+    sourceHint: draft.sourceHint ?? null,
+    sku: draft.sku ?? "",
+    quantity: draft.quantity ?? 1,
+    photoCount: draft.photos?.length ?? 0,
+    candidateItemId: draft.candidateItemId ?? null,
+    convertedItemId: draft.convertedItemId ?? null,
   };
 }
 

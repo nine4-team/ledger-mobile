@@ -1,4 +1,4 @@
-import type { Transaction, Item } from "../types.js";
+import type { Transaction, Item, ProtoItem } from "../types.js";
 
 /** Case-insensitive substring match. */
 export function textMatch(
@@ -92,4 +92,33 @@ export function itemMatches(
   if (amounts.some((a) => amountMatch(query, a))) return true;
 
   return false;
+}
+
+/** Matches a quick draft item against a search query using text + SKU strategies. */
+export function quickDraftItemMatches(
+  draft: ProtoItem & { id: string },
+  query: string
+): boolean {
+  if (!query) return true;
+
+  const textFields = [
+    draft.name,
+    draft.sku,
+    draft.notes,
+    draft.extracted?.rawText,
+    ...(draft.extracted?.barcodePayloads ?? []),
+    ...(draft.extracted?.skuCandidates ?? []),
+  ];
+  if (textFields.some((f) => textMatch(query, f))) return true;
+
+  const skuValues = [
+    draft.sku,
+    ...(draft.extracted?.barcodePayloads ?? []),
+    ...(draft.extracted?.skuCandidates ?? []),
+  ];
+  const normalizedQuery = normalizedSKU(query);
+  return skuValues.some((sku) => {
+    if (!sku || !normalizedQuery) return false;
+    return normalizedSKU(sku).includes(normalizedQuery);
+  });
 }

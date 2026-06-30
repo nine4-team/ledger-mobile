@@ -34,6 +34,20 @@ export type IngestionStatus = (typeof ingestionStatuses)[number];
 export const itemStatuses = ["to purchase", "purchased", "to return", "returned"] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
 
+export const quickDraftItemStatuses = ["open", "in_review", "converted"] as const;
+export type QuickDraftItemStatus = (typeof quickDraftItemStatuses)[number];
+
+export const quickDraftCaptureContexts = ["project", "inventory", "transaction"] as const;
+export type QuickDraftCaptureContext = (typeof quickDraftCaptureContexts)[number];
+
+export const quickDraftSourceHints = [
+  "client_purchase",
+  "business_purchase",
+  "from_inventory",
+  "unknown",
+] as const;
+export type QuickDraftSourceHint = (typeof quickDraftSourceHints)[number];
+
 export const invoiceStatuses = ["draft", "sent", "paid", "voided"] as const;
 export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
@@ -91,6 +105,21 @@ export const ENUMS: EnumSpec[] = [
     name: "itemStatus",
     values: itemStatuses,
     description: "Item lifecycle status.",
+  },
+  {
+    name: "quickDraftItemStatus",
+    values: quickDraftItemStatuses,
+    description: "Quick draft item lifecycle status before/after conversion to a real item.",
+  },
+  {
+    name: "quickDraftCaptureContext",
+    values: quickDraftCaptureContexts,
+    description: "Where a quick draft item was captured: project, inventory, or transaction.",
+  },
+  {
+    name: "quickDraftSourceHint",
+    values: quickDraftSourceHints,
+    description: "Optional hint for whether the eventual item is client-purchased, business-purchased, from inventory, or unknown.",
   },
   {
     name: "invoiceStatus",
