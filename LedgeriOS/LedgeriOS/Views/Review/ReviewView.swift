@@ -92,7 +92,6 @@ struct ReviewView: View {
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }
-        .universalAddButton()
         .background(BrandColors.background)
         .onChange(of: activeProjects.map { $0.id ?? "" }) { _, _ in
             let validIds = Set(tabItems.map(\.id))

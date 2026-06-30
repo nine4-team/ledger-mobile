@@ -111,7 +111,6 @@ struct ProjectsListView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createProject)) { _ in
             showNewProject = true
         }
-        .universalAddButton()
         .background(BrandColors.background)
     }
 
