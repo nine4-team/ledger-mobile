@@ -91,7 +91,7 @@ struct InvoiceDetailView: View {
             Button("Mark Collected") { performMarkCollected() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Creates a fee transaction for the collected payment and links it to this invoice.")
+            Text("Creates payment-to-business transaction records for the collected payment and links them to this invoice.")
         }
         .confirmationDialog(
             "Void this invoice?",
@@ -101,7 +101,7 @@ struct InvoiceDetailView: View {
             Button("Void Invoice", role: .destructive) { performVoid() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Voided invoices are removed from totals. The items and expenses on this invoice become billable again.")
+            Text("Voided invoices are removed from totals. The items and project costs on this invoice become billable again.")
         }
         .alert("Error", isPresented: .init(
             get: { errorMessage != nil },
@@ -243,7 +243,6 @@ struct InvoiceDetailView: View {
         let source = inv.invoiceNumber?.isEmpty == false
             ? "Collected \(inv.invoiceNumber!)"
             : "Collected invoice"
-        let feeCategoryId = projectContext.budgetCategories.first { $0.isFeeCategory }?.id
         let lineIds = inv.lines?.map(\.id)
         runService {
             _ = try await InvoiceService().markCollected(
@@ -252,7 +251,6 @@ struct InvoiceDetailView: View {
                 projectId: projectId,
                 amountCents: amount,
                 source: source,
-                budgetCategoryId: feeCategoryId,
                 settlementInvoiceLineIds: lineIds,
                 userId: userId
             )

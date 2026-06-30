@@ -1,5 +1,5 @@
 # Ledger — Specification Index
-Last updated: 2026-06-23
+Last updated: 2026-06-29
 
 ## Status Key
 - [current] — Already built, keeping as-is
@@ -23,7 +23,7 @@ Last updated: 2026-06-23
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.
 
 ### Billing & Invoicing
-- [modify] [Billing & Invoicing](billing-invoicing.md) — **Active canonical spec.** Transactions record money movement; invoices demand money; invoice lines can source from items, existing transactions, or manual New Charge lines. Collection is tracked by linking real money-movement transactions back to invoices.
+- [modify] [Billing & Invoicing](billing-invoicing.md) — **Active canonical spec.** Transactions record money movement; invoices demand money; invoice lines can source from items, existing transactions, or manual New Charge lines. Collection is tracked by linking real money-movement transactions back to invoices. Returned paid items create ordinary draft invoice credit lines, not synthetic credit transactions.
 - [superseded] [Billing & Invoicing v2](billing-invoicing-v2.md) — **Historical implementation spec.** Shipped 2026-04-21; superseded as the active product spec by `billing-invoicing.md` on 2026-05-26.
 
 ### Lists & Layout

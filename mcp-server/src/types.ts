@@ -113,6 +113,7 @@ export interface InvoiceLine {
   sourceId?: string;
   amountCents: number;
   sign: InvoiceLineSign;
+  budgetCategoryId?: string;
   snapshotName?: string;
   settlementTransactionIds?: string[];
 }

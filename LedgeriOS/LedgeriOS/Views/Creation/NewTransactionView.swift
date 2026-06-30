@@ -23,7 +23,7 @@ enum TransactionDestination: Hashable {
 enum TaxMode: Hashable { case none, rate, subtotal }
 
 enum TransactionCreationStep: Hashable {
-    case typeSelection        // Fee / Expense / Purchase (items) / Return (items)
+    case typeSelection        // Fee / Expense / Purchase / Return
     case whoPaid              // Client / Design Business (Expense + Purchase)
     case destination          // Project picker (not auto-inventory routing)
     case budgetCategory       // pick a BudgetCategory
@@ -99,7 +99,7 @@ struct NewTransactionView: View {
     }
 
     /// Entry-context projectId. Used only as a handoff to `ItemEntryFlowView`
-    /// after an itemized purchase routes through inventory.
+    /// after a business-paid itemized category routes through inventory.
     private var entryProjectId: String? {
         switch context {
         case .project(let id): return id
@@ -107,18 +107,7 @@ struct NewTransactionView: View {
         }
     }
 
-    private var isItemized: Bool {
-        transactionType == .purchase || transactionType == .return
-    }
-
-    /// `.purchase` with business-paid auto-routes to inventory (projectId cleared).
-    private var autoInventoryRouting: Bool {
-        transactionType == .purchase && purchasedBy == "design-business"
-    }
-
     /// The built-in inventory source is always available in the source picker.
-    /// Choosing it from a project purchase creates the items in inventory first,
-    /// then hands them to the sell-to-project flow for the selected project.
     private var inventorySourceLabel: String {
         InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
     }
@@ -127,28 +116,27 @@ struct NewTransactionView: View {
         [inventorySourceLabel]
     }
 
-    private var inventorySourceSelected: Bool {
-        let selected = (vendor.isEmpty ? source : vendor).trimmingCharacters(in: .whitespacesAndNewlines)
-        return selected == inventorySourceLabel
-    }
-
-    private var routeThroughInventorySource: Bool {
-        transactionType == .purchase && destinationProjectId != nil && inventorySourceSelected
-    }
-
+    /// Inventory routing is a category + purchaser decision, matching the
+    /// pre-taxonomy flow: business-paid itemized categories go through business
+    /// inventory first. Plain purchases/services do not.
     private var routeThroughInventory: Bool {
-        autoInventoryRouting || routeThroughInventorySource
+        isItemizedCategory && purchasedBy == "design-business"
     }
 
-    /// Fee: counterparty is the business; who-paid is always the business.
+    /// Itemized behavior is still owned by budget category metadata.
+    private var isItemizedCategory: Bool {
+        if selectedCategory?.metadata?.categoryType == .itemized { return true }
+        return selectedCategory?.isItemsCategory == true
+    }
+
     /// Return: items physically go back to a vendor; who-paid doesn't apply.
     private var skipWhoPaid: Bool {
-        transactionType == .fee || transactionType == .return
+        transactionType == .return
     }
 
-    private var skipVendor: Bool { transactionType == .fee }
+    private var skipVendor: Bool { false }
 
-    private var showsReimbursementToggle: Bool { transactionType == .expense }
+    private var showsReimbursementToggle: Bool { transactionType == .purchase }
 
     /// The project the transaction will land on, if any. `nil` means the
     /// transaction lives on inventory (no project).
@@ -163,7 +151,7 @@ struct NewTransactionView: View {
 
         var steps: [TransactionCreationStep] = [.typeSelection]
         if !skipWhoPaid { steps.append(.whoPaid) }
-        if !autoInventoryRouting { steps.append(.destination) }
+        steps.append(.destination)
         if destinationProjectId != nil { steps.append(.budgetCategory) }
         if !skipVendor { steps.append(.vendor) }
         steps.append(.details)
@@ -302,10 +290,8 @@ struct NewTransactionView: View {
             primaryAction: FormSheetAction(title: "Cancel") { dismiss() }
         ) {
             VStack(spacing: Spacing.md) {
-                typeCard("Purchase (items)", icon: "cart", type: .purchase)
-                typeCard("Return (items)", icon: "arrow.uturn.left", type: .return)
-                typeCard("Expense", icon: "tray", type: .expense)
-                typeCard("Fee", icon: "banknote", type: .fee)
+                typeCard("Purchase", icon: "cart", type: .purchase)
+                typeCard("Return", icon: "arrow.uturn.left", type: .return)
             }
         }
     }
@@ -314,22 +300,11 @@ struct NewTransactionView: View {
         Button {
             transactionType = type
             selectedCategoryId = nil
-            if type == .fee {
-                applyFeeImplicitValues()
-            }
             advance()
         } label: {
             optionCardLabel(label, icon: icon)
         }
         .buttonStyle(.plain)
-    }
-
-    /// Fee implicit values: who paid is the business, counterparty is the
-    /// business itself. Reimbursement is left as `none` (not a handoff).
-    private func applyFeeImplicitValues() {
-        purchasedBy = "design-business"
-        source = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
-        vendor = ""
     }
 
     // MARK: - Step: Who Paid
@@ -412,14 +387,26 @@ struct NewTransactionView: View {
         }
     }
 
-    /// Budget-category options filtered to categories whose `supportedTypes`
-    /// include the picked transaction type.
+    /// Budget-category options filtered to categories that accept the picked
+    /// transaction type without relying on unsupported mixed category shapes.
     private var categoryOptions: [InlineOption<String?>] {
         guard let type = transactionType else { return [] }
         let filtered = destinationCategories.filter {
-            $0.resolvedSupportedTypes.contains(type)
+            category($0, accepts: type)
         }
         return filtered.map { InlineOption(id: $0.id, label: $0.name) }
+    }
+
+    private func category(_ category: BudgetCategory, accepts type: TransactionType) -> Bool {
+        let supported = category.resolvedSupportedTypes
+        switch type {
+        case .purchase:
+            return !supported.contains(.fee)
+        case .return:
+            return category.isItemsCategory
+        case .sale, .fee, .expense, .paymentToBusiness:
+            return false
+        }
     }
 
     // MARK: - Step: Vendor
@@ -440,7 +427,7 @@ struct NewTransactionView: View {
             secondaryAction: FormSheetAction(title: "Back") { goBack() }
         ) {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                autoInventoryRoutingNote
+                inventoryRoutingNote
                 InlineVendorPicker(
                     selectedValue: $vendor,
                     otherMode: $otherVendorMode,
@@ -458,24 +445,19 @@ struct NewTransactionView: View {
         case .sale: return "Who was this sold to?"
         case .return: return "Where was this returned?"
         case .expense: return "Paid to whom?"
-        case .fee, nil: return "Vendor"
+        case .fee, .paymentToBusiness, nil: return "Vendor"
         }
     }
 
-    /// Surfaces the auto-inventory routing rule on the steps after Who Paid.
-    /// `purchase + design-business` always books to the business's inventory
-    /// first, even when the form was started from a project. Without this note
-    /// the routing is invisible and the post-create "Sell to Project?" sheet
-    /// looks like a non-sequitur.
+    /// Surfaces the category-based inventory routing rule once the selected
+    /// category proves this is an itemized, business-paid purchase.
     @ViewBuilder
-    private var autoInventoryRoutingNote: some View {
+    private var inventoryRoutingNote: some View {
         if routeThroughInventory {
             let projectName = originProject?.name
             let suffix = projectName.map { " You'll be offered to sell items to \($0) after." }
                 ?? " You'll be offered to sell items to a project after."
-            let prefix = routeThroughInventorySource
-                ? "Inventory was selected as the source, so items will be created in inventory first."
-                : "This will be recorded as a business-inventory purchase."
+            let prefix = "This itemized business purchase will be recorded in inventory first."
             HStack(alignment: .top, spacing: Spacing.sm) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(BrandColors.primary)
@@ -495,8 +477,8 @@ struct NewTransactionView: View {
     }
 
     /// The project the user was inside when they opened the form, if any.
-    /// Used only for display messaging — the actual routing is decided by
-    /// `autoInventoryRouting` and the cleared `transaction.projectId`.
+    /// Used only for display messaging — the actual routing is decided by the
+    /// selected category and purchaser.
     private var originProject: Project? {
         guard let id = entryProjectId else { return nil }
         return accountContext.allProjects.first { $0.id == id }
@@ -517,23 +499,21 @@ struct NewTransactionView: View {
             error: submissionError
         ) {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                autoInventoryRoutingNote
-                if transactionType != .fee {
-                    if !vendor.isEmpty {
-                        VendorPickerField(
-                            value: $vendor,
-                            label: "Source / Vendor",
-                            showPicker: $showVendorPicker,
-                            fixedOptions: fixedSourceOptions
-                        )
-                    } else {
-                        VendorPickerField(
-                            value: $source,
-                            label: "Source / Vendor",
-                            showPicker: $showVendorPicker,
-                            fixedOptions: fixedSourceOptions
-                        )
-                    }
+                inventoryRoutingNote
+                if !vendor.isEmpty {
+                    VendorPickerField(
+                        value: $vendor,
+                        label: "Source / Vendor",
+                        showPicker: $showVendorPicker,
+                        fixedOptions: fixedSourceOptions
+                    )
+                } else {
+                    VendorPickerField(
+                        value: $source,
+                        label: "Source / Vendor",
+                        showPicker: $showVendorPicker,
+                        fixedOptions: fixedSourceOptions
+                    )
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -578,7 +558,7 @@ struct NewTransactionView: View {
                 FormField(label: "Amount", text: $amount, placeholder: "0.00")
                     .platformKeyboardType(.decimalPad)
 
-                if isItemized {
+                if isItemizedCategory {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         Text("Tax Rate")
                             .font(Typography.label)
@@ -811,7 +791,7 @@ struct NewTransactionView: View {
         }
 
         transaction.budgetCategoryId = routeThroughInventory ? nil : selectedCategoryId
-        if isItemized {
+        if isItemizedCategory {
             let amountCents = transaction.amountCents ?? 0
             switch taxMode {
             case .none:

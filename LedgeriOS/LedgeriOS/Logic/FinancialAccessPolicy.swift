@@ -79,7 +79,9 @@ struct FinancialAccessPolicy: Equatable {
                 }
             case .manual:
                 if line.sign == .charge {
-                    return false
+                    sawCompanyRevenue = true
+                    guard let categoryId = line.budgetCategoryId else { return false }
+                    feeCategoryIds.insert(categoryId)
                 }
             case .item:
                 continue
@@ -107,6 +109,7 @@ struct FinancialAccessPolicy: Equatable {
     }
 
     private func isCompanyFee(_ transaction: Transaction, categories: [BudgetCategory]) -> Bool {
+        if transaction.transactionType == .paymentToBusiness { return true }
         let category = categories.first { $0.id == transaction.budgetCategoryId }
         let storedType = transaction.transactionType ?? .purchase
         return TransactionTaxonomy.resolve(storedType: storedType, category: category) == .fee

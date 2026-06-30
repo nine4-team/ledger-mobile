@@ -72,18 +72,38 @@ enum ItemStatus: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     var displayLabel: String { rawValue.capitalized }
 }
 
-/// The kind of a transaction. Five values covering both money-out (fee/expense/purchase)
-/// and money-in-or-item-movement (sale/return) flows.
+/// The kind of transaction event stored on a Transaction.
 ///
-/// - `purchase` means **itemized purchase only** — items that flow through the inventory/item
-///   model. Pre-migration, legacy `purchase` documents may semantically be a fee or expense;
-///   use `TransactionTaxonomy.resolve(...)` at read time to normalize.
-/// - `fee` and `expense` were added in the taxonomy migration. See
-///   `docs/specs/transaction-type.md`.
+/// - `purchase` means money spent to buy goods or services. Itemized/inventory behavior
+///   is determined by the linked budget category, not by this enum case alone.
+/// - `paymentToBusiness` means money actually received from the client by the
+///   design business, usually through invoice collection.
+/// - `fee` and `expense` are legacy read-compatible values only. New normal write
+///   paths should not create them.
 enum TransactionType: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     case purchase, sale, fee, expense
+    case paymentToBusiness
     case `return` = "return"
-    var displayLabel: String { rawValue.capitalized }
+
+    static let legacyAliases = [
+        "to inventory": "return",
+        "paymenttobusiness": "paymentToBusiness",
+        "payment_to_business": "paymentToBusiness",
+        "payment-to-business": "paymentToBusiness",
+    ]
+
+    static var normalEntryCases: [TransactionType] { [.purchase, .return] }
+
+    var isLegacyWriteType: Bool {
+        self == .fee || self == .expense
+    }
+
+    var displayLabel: String {
+        switch self {
+        case .paymentToBusiness: return "Payment to Business"
+        default: return rawValue.capitalized
+        }
+    }
 }
 
 /// Transaction lifecycle state. Only `.canceled` is a real value; nil means

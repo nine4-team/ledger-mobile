@@ -8,24 +8,19 @@
  */
 
 /**
- * Transaction types. Five canonical values. "Fee" and "Expense" were added in
- * the taxonomy migration — see docs/specs/transaction-type.md. "Purchase" means
- * itemized purchase; non-itemized payments to third parties use "Expense";
- * money the business charges the client uses "Fee".
- *
- * "To Inventory" is legacy — new writes use type: "Return" with
- * source: "Business Inventory" instead. It remains here so queries against
- * historical docs still work.
+ * Transaction types. Canonical new writes use Purchase, Return, Sale, and
+ * paymentToBusiness. Fee, Expense, and To Inventory are legacy read-compatible
+ * values only.
  */
 export const transactionTypes = [
   "Purchase",
   "Return",
   "Sale",
-  "Fee",
-  "Expense",
-  "To Inventory",
+  "paymentToBusiness",
 ] as const;
 export type TransactionType = (typeof transactionTypes)[number];
+
+export const legacyTransactionTypes = ["Fee", "Expense", "To Inventory"] as const;
 
 export const transactionStatuses = ["canceled"] as const;
 export type TransactionStatus = (typeof transactionStatuses)[number];
@@ -58,7 +53,7 @@ export const inventorySaleDirections = [
 /** @deprecated See `inventorySaleDirections` comment. */
 export type InventorySaleDirection = (typeof inventorySaleDirections)[number];
 
-export const categoryTypes = ["general", "labor", "materials", "fees", "reimbursable"] as const;
+export const categoryTypes = ["general", "itemized", "fee", "expense"] as const;
 export type CategoryType = (typeof categoryTypes)[number];
 
 /** Describes an enum for introspection output. */
@@ -71,12 +66,11 @@ export interface EnumSpec {
 export const ENUMS: EnumSpec[] = [
   {
     name: "transactionType",
-    values: transactionTypes,
+    values: [...transactionTypes, ...legacyTransactionTypes],
     description:
-      "Transaction type. 'Purchase' is itemized purchases; 'Expense' is non-itemized third-party " +
-      "costs; 'Fee' is money the business charges the client. Inventory movement transactions are created via " +
-      "sell_items_from_* or return_items, not create_transaction. 'To Inventory' is legacy — for new writes use 'Return' " +
-      "with source: 'Business Inventory'.",
+      "Transaction type. New writes use Purchase, Return, Sale, or paymentToBusiness. " +
+      "Purchase covers goods and services; itemization is owned by budget category. " +
+      "Fee, Expense, and To Inventory are legacy read-compatible values only.",
   },
   {
     name: "transactionStatus",
@@ -118,6 +112,8 @@ export const ENUMS: EnumSpec[] = [
   {
     name: "categoryType",
     values: categoryTypes,
-    description: "Budget category classification.",
+    description:
+      "Legacy budget category metadata classification. Prefer supportedTypes. " +
+      "Current values are general/expense for non-itemized project costs, itemized for item categories, and fee for fee categories.",
   },
 ];

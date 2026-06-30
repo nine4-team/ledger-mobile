@@ -1,5 +1,11 @@
 # Ledger Specs — Changelog
 
+## 2026-06-29
+- **Clarified returned paid item credits.** Returning an item that was already charged on a paid invoice creates invoice credit demand, not a synthetic transaction. The active model writes an ordinary draft invoice with manual credit lines, copies amount/category from the original paid invoice line, and dedupes by deterministic line ID.
+- **Rejected extra credit schema for now.** No new invoice purpose, credit reason enum, credited item field, source invoice field, or source invoice line field is added for this workflow. Deterministic line identity plus invoice notes cover the current need.
+- **Blocked net-negative collection semantics.** Credit-only or net-negative invoice selections must not create `paymentToBusiness` transactions because those rows mean money came in from the client.
+- **Marked the historical v2 return-credit transaction rule as superseded.** `billing-invoicing-v2.md` now explicitly points readers back to the active no-synthetic-transaction model.
+
 ## 2026-05-26
 - **Rewrote Billing & Invoicing as the canonical active spec.** Removed the active v1/v2 split in favor of one model: transactions record money movement, invoices demand money, and invoice lines describe demand components.
 - **Added manual New Charge invoice lines.** Manual lines cover design fees, retainers, project management fees, storage fees, and other invoice demands that are not backed by prior money movement.

@@ -144,6 +144,10 @@ enum BudgetTabCalculations {
 
         let amount = transaction.amountCents ?? 0
 
+        if transaction.transactionType == .paymentToBusiness {
+            return 0
+        }
+
         if transaction.transactionType == .return {
             return -abs(amount)
         }

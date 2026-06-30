@@ -23,6 +23,9 @@ struct InvoiceLine: Codable, Hashable {
     var sourceId: String?
     var amountCents: Int
     var sign: InvoiceLineSign
+    /// Budget category represented by this demand line. Required for new lines
+    /// so collection can create one payment transaction per category.
+    var budgetCategoryId: String?
     /// Optional display-name snapshot taken when the line was added, so historical
     /// invoices still render sensibly after the source item/transaction is renamed.
     var snapshotName: String?
@@ -38,6 +41,7 @@ struct InvoiceLine: Codable, Hashable {
         sourceId: String? = nil,
         amountCents: Int,
         sign: InvoiceLineSign,
+        budgetCategoryId: String? = nil,
         snapshotName: String? = nil,
         settlementTransactionIds: [String]? = nil
     ) {
@@ -46,12 +50,13 @@ struct InvoiceLine: Codable, Hashable {
         self.sourceId = sourceId
         self.amountCents = amountCents
         self.sign = sign
+        self.budgetCategoryId = budgetCategoryId
         self.snapshotName = snapshotName
         self.settlementTransactionIds = settlementTransactionIds
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, sourceType, sourceId, amountCents, sign, snapshotName, settlementTransactionIds
+        case id, sourceType, sourceId, amountCents, sign, budgetCategoryId, snapshotName, settlementTransactionIds
     }
 
     init(from decoder: Decoder) throws {
@@ -61,12 +66,13 @@ struct InvoiceLine: Codable, Hashable {
         sourceId = try container.decodeIfPresent(String.self, forKey: .sourceId)
         amountCents = try container.decode(Int.self, forKey: .amountCents)
         sign = try container.decode(InvoiceLineSign.self, forKey: .sign)
+        budgetCategoryId = try container.decodeIfPresent(String.self, forKey: .budgetCategoryId)
         snapshotName = try container.decodeIfPresent(String.self, forKey: .snapshotName)
         settlementTransactionIds = try container.decodeIfPresent([String].self, forKey: .settlementTransactionIds)
     }
 }
 
-/// A project-scoped invoice that references items + non-itemized expense transactions.
+/// A project-scoped invoice that references items + non-itemized project-cost transactions.
 /// Stored at `accounts/{accountId}/invoices/{invoiceId}` with a `projectId` field.
 ///
 /// Lifecycle: draft → sent → paid (or → voided).
@@ -85,7 +91,7 @@ struct Invoice: Codable, Identifiable, Hashable {
     var status: InvoiceStatus?
     /// Itemized references — items billed on this invoice. Flat membership index.
     var itemIds: [String]?
-    /// Non-itemized expense references — transactions billed on this invoice. Flat membership index.
+    /// Non-itemized project-cost references — transactions billed on this invoice. Flat membership index.
     var transactionIds: [String]?
     /// Signed line entries (v2). Nil on legacy v1 invoices.
     var lines: [InvoiceLine]?

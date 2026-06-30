@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Transaction, Item, AttachmentRef, LineageEdge } from "../types.js";
+import type { Transaction, Item, AttachmentRef, LineageEdge, BudgetCategory } from "../types.js";
 import { accountCollection, accountPath, queryDocs, getDoc } from "../util/query.js";
 import { formatCents, formatDate } from "../util/format.js";
 import { uploadToStorage, deleteFromStorage } from "../storage.js";
@@ -19,6 +19,7 @@ import { notFound, validation } from "../util/errors.js";
 import { appendOrReviseAiAuditLine, tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { DEFAULT_INVENTORY_LABEL, isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
+import { resolveSupportedTypes } from "../util/budget.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
@@ -26,6 +27,23 @@ const DiscountInput = z.object({
 
 function txTypeName(tx: Transaction): string {
   return tx.type ?? "";
+}
+
+async function getBudgetCategory(db: Firestore, budgetCategoryId: string) {
+  const ref = db.doc(`${accountPath()}/presets/default/budgetCategories/${budgetCategoryId}`);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  return { ...(snap.data() as BudgetCategory), id: snap.id };
+}
+
+function isItemizedCategory(category: BudgetCategory): boolean {
+  const supported = new Set(resolveSupportedTypes(category));
+  return supported.size === 2 && supported.has("purchase") && supported.has("return");
+}
+
+function isFeeCategory(category: BudgetCategory): boolean {
+  const supported = new Set(resolveSupportedTypes(category));
+  return supported.size === 1 && supported.has("fee");
 }
 
 /**
@@ -110,7 +128,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
     {
       projectId: z.string().optional().describe("Filter by project ID. Use 'inventory' for business inventory (projectId is null)."),
       budgetCategoryId: z.string().optional().describe("Filter by budget category ID"),
-      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, Fee, Expense). 'Fee' and 'Expense' were added in the taxonomy migration. 'To Inventory' is legacy — use 'Return' + source: 'Business Inventory' for new data."),
+      type: z.string().optional().describe("Filter by transaction type (Purchase, Return, Sale, paymentToBusiness; legacy reads may include Fee, Expense, or To Inventory)."),
       purchasedBy: z.string().optional().describe("Filter by purchasedBy value (e.g. 'client-card', 'design-business', 'Client')"),
       source: z.string().optional().describe("Filter by source/vendor name"),
       isComplete: z.boolean().optional().describe("Filter by completeness. false = needs review (missing data or items don't match subtotal). true = complete."),
@@ -307,7 +325,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type: Purchase, Return, Fee, or Expense. 'Purchase' means itemized purchase (items flow through inventory). 'Expense' is a non-itemized third-party cost. 'Fee' is money the business charges the client. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory (per-batch, immutable). Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'."),
+      type: z.string().default("Purchase").describe("Transaction type for normal writes: Purchase or Return. Purchase covers goods and services; itemization is owned by budget category. paymentToBusiness is created by invoice collection. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory. Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'. Fee, Expense, and To Inventory are legacy read-only values."),
       source: z.string().optional().describe("Vendor/source name"),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
@@ -337,6 +355,33 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
         return validation(
           "Cannot create Sale-to-Inventory transactions directly — use sell_items_from_project_to_inventory instead.",
           "Sale-to-Inventory transactions require lineage edges and item scope changes that create_transaction cannot perform."
+        );
+      }
+      if (["Fee", "fee", "Expense", "expense", "To Inventory", "to inventory", "PaymentToBusiness", "paymentToBusiness"].includes(txType)) {
+        return validation(
+          `${txType} is not a normal create_transaction write type.`,
+          "Use Purchase/Return for project cost transactions. Use mark_invoice_collected for paymentToBusiness. Legacy Fee, Expense, and To Inventory values are read-only."
+        );
+      }
+      const category = await getBudgetCategory(db, budgetCategoryId);
+      if (!category) return notFound("Budget category", budgetCategoryId);
+      const categoryIsItemized = isItemizedCategory(category);
+      if (isFeeCategory(category)) {
+        return validation(
+          "create_transaction cannot write fee-category transactions.",
+          "Use invoice/manual charge flows for demands and mark_invoice_collected for paymentToBusiness records."
+        );
+      }
+      if (txType === "Return" && !categoryIsItemized) {
+        return validation(
+          "Return transactions require an itemized budget category.",
+          "For service/cost adjustments, use invoice credit lines or an approved non-transaction adjustment flow."
+        );
+      }
+      if (!categoryIsItemized && (itemIds?.length || subtotalCents !== undefined || taxRatePct !== undefined)) {
+        return validation(
+          "Item IDs and tax/subtotal fields require an itemized budget category.",
+          "Use a purchase/return item category for itemized receipts, or omit item/tax fields for non-itemized service purchases."
         );
       }
 
@@ -401,7 +446,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       subtotalCents: z.coerce.number().optional().describe("Pre-tax subtotal in cents. Should be <= amountCents. When set with taxRatePct, the system can infer tax amount as amountCents - subtotalCents"),
       taxRatePct: z.coerce.number().optional().describe("Tax rate as a percentage (0-100, e.g. 8.25). When set with amountCents, the system infers subtotal as amountCents / (1 + taxRatePct / 100)"),
       discount: DiscountInput.nullable().optional().describe("Transaction-level discount object. Pass null to remove it. amountCents is the exact discount applied to the subtotal, stored as a positive cents value."),
-      type: z.string().optional().describe("Transaction type: Purchase, Return, Fee, or Expense. Cannot update to/from 'Sale' — it's a frozen field on per-batch Sale-to-Inventory movements. 'To Inventory' is legacy."),
+      type: z.string().optional().describe("Transaction type: Purchase or Return for normal edits. Cannot update to/from Sale or paymentToBusiness here. Fee, Expense, and To Inventory are legacy read-only values."),
       status: z.string().optional().describe("Transaction status (e.g. 'returned')"),
       source: z.string().optional().describe("Vendor/source name"),
       notes: z.string().optional().describe("If provided, REPLACES the entire notes field. Pass the full new content. Use `aiAuditAppend` instead if you just want to add a one-line audit entry."),
@@ -426,6 +471,13 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (fields.notes !== undefined) mergedNotes = fields.notes;
       if (fields.aiAuditAppend !== undefined) {
         mergedNotes = appendOrReviseAiAuditLine(mergedNotes, fields.aiAuditAppend);
+      }
+
+      if (fields.type && ["Sale", "PaymentToBusiness", "paymentToBusiness", "Fee", "fee", "Expense", "expense", "To Inventory", "to inventory"].includes(fields.type)) {
+        return validation(
+          `${fields.type} cannot be set through update_transaction.`,
+          "Use inventory operation tools for Sale, invoice collection for paymentToBusiness, and do not write legacy Fee/Expense/To Inventory values."
+        );
       }
 
       const updates: Record<string, unknown> = { updatedAt: new Date() };

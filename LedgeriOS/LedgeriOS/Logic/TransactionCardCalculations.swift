@@ -48,6 +48,7 @@ enum TransactionCardCalculations {
                 case .return:    color = StatusColors.badgeNeedsReview
                 case .fee:       color = StatusColors.badgeWarning
                 case .expense:   color = BrandColors.primary
+                case .paymentToBusiness: color = StatusColors.metText
                 case .purchase:  color = BrandColors.primary
                 }
             }

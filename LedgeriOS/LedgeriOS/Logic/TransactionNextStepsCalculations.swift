@@ -71,11 +71,10 @@ enum TransactionNextStepsCalculations {
             ))
         }
 
-        // 6. Tax rate — only for tx types that carry items (purchase/return),
-        // and skipped for inventory movements (sales + return-to-inventory).
-        // Category shape is no longer the gate; a Mixed category can hold
-        // both items and expenses. See docs/specs/transaction-type.md.
-        if transaction.needsItemizedAudit && !transaction.isInventoryMovement {
+        // 6. Tax rate — only for itemized categories, skipped for inventory
+        // movements (sales + return-to-inventory).
+        let category = transaction.budgetCategoryId.flatMap { budgetCategories[$0] }
+        if transaction.needsItemizedAudit(category: category) && !transaction.isInventoryMovement {
             let hasTaxRate = (transaction.taxRatePct ?? 0) > 0
             steps.append(NextStep(
                 id: "tax-rate",

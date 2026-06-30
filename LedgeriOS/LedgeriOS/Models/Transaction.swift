@@ -83,12 +83,18 @@ struct Transaction: Codable, Identifiable, Hashable {
         transactionType == .return
     }
 
-    /// True when this transaction type carries physical items and therefore
-    /// gates on tax/subtotal data during the completeness audit. Drives the
-    /// "Needs Review" badge and the tax/subtotal Details-form fields. See
-    /// `docs/specs/transaction-type.md` §"Transaction audit gate".
+    /// Legacy fallback only. Itemized audit behavior is category-driven; use
+    /// `needsItemizedAudit(category:)` whenever category context is available.
     var needsItemizedAudit: Bool {
         transactionType == .purchase || transactionType == .return
+    }
+
+    /// True when the linked budget category is an item category and therefore
+    /// gates item/tax/subtotal completeness. If the category is unavailable,
+    /// falls back to the legacy type heuristic for old call sites/read models.
+    func needsItemizedAudit(category: BudgetCategory?) -> Bool {
+        guard let category else { return needsItemizedAudit }
+        return category.isItemsCategory
     }
 
     /// True for transactions that move items between business inventory and

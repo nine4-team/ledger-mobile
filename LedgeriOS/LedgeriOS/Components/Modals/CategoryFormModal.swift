@@ -6,21 +6,18 @@ struct CategoryFormModal: View {
         case edit(BudgetCategory)
     }
 
-    /// The four user-pickable category kinds. Plural because a category
-    /// collects many transactions. Maps to `supportedTypes: [TransactionType]`.
-    /// See `docs/specs/transaction-type.md` for why `mixed` exists.
+    /// Category kinds. Plural because a category collects many transactions.
+    /// Maps to `supportedTypes: [TransactionType]`.
     enum Kind: Hashable {
         case fees
         case expenses
         case itemsPurchasesReturns
-        case mixed
 
         var label: String {
             switch self {
             case .fees: return "Fees"
             case .expenses: return "Expenses"
             case .itemsPurchasesReturns: return "Purchases/Returns (items)"
-            case .mixed: return "Mixed (items + expenses)"
             }
         }
 
@@ -29,7 +26,6 @@ struct CategoryFormModal: View {
             case .fees: return [.fee]
             case .expenses: return [.expense]
             case .itemsPurchasesReturns: return [.purchase, .return]
-            case .mixed: return [.purchase, .return, .expense]
             }
         }
 
@@ -40,7 +36,6 @@ struct CategoryFormModal: View {
             let supported = Set(category.resolvedSupportedTypes)
             if supported == [.fee] { self = .fees }
             else if supported == [.purchase, .return] { self = .itemsPurchasesReturns }
-            else if supported.contains(.purchase) && supported.contains(.expense) { self = .mixed }
             else { self = .expenses }
         }
     }
@@ -58,6 +53,14 @@ struct CategoryFormModal: View {
     @State private var excludeFromOverallBudget: Bool
     @State private var validationError: String?
     @State private var hasSubmitted = false
+
+    private var kindOptions: [InlineOption<Kind>] {
+        [
+            InlineOption(id: Kind.fees, label: Kind.fees.label),
+            InlineOption(id: Kind.expenses, label: Kind.expenses.label),
+            InlineOption(id: Kind.itemsPurchasesReturns, label: Kind.itemsPurchasesReturns.label),
+        ]
+    }
 
     init(
         mode: Mode,
@@ -110,12 +113,7 @@ struct CategoryFormModal: View {
                     Text("Type")
                         .font(Typography.label)
                         .foregroundStyle(BrandColors.textSecondary)
-                    InlineOptionPicker(selection: $kind, options: [
-                        InlineOption(id: .fees, label: Kind.fees.label),
-                        InlineOption(id: .expenses, label: Kind.expenses.label),
-                        InlineOption(id: .itemsPurchasesReturns, label: Kind.itemsPurchasesReturns.label),
-                        InlineOption(id: .mixed, label: Kind.mixed.label),
-                    ])
+                    InlineOptionPicker(selection: $kind, options: kindOptions)
                 }
 
                 Toggle("Exclude from Overall Budget", isOn: $excludeFromOverallBudget)

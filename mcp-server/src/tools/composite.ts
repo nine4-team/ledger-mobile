@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type Firestore, FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import type { Transaction, Item } from "../types.js";
-import { accountCollection, queryDocs, getDoc, getDocs } from "../util/query.js";
+import type { Transaction, Item, BudgetCategory } from "../types.js";
+import { accountCollection, accountPath, queryDocs, getDoc, getDocs } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import {
   asToolResponse,
@@ -14,10 +14,23 @@ import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
 import { withTelemetry } from "../util/telemetry.js";
 import { isInventorySource, resolveInventoryLabel } from "../util/inventory.js";
+import { resolveSupportedTypes } from "../util/budget.js";
 
 const DiscountInput = z.object({
   amountCents: z.coerce.number().int().nonnegative().describe("Positive discount amount in cents, applied against the transaction subtotal."),
 });
+
+async function getBudgetCategory(db: Firestore, budgetCategoryId: string) {
+  const ref = db.doc(`${accountPath()}/presets/default/budgetCategories/${budgetCategoryId}`);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  return { ...(snap.data() as BudgetCategory), id: snap.id };
+}
+
+function isItemizedCategory(category: BudgetCategory): boolean {
+  const supported = new Set(resolveSupportedTypes(category));
+  return supported.size === 2 && supported.has("purchase") && supported.has("return");
+}
 
 /**
  * Task-shaped tools that sit on top of the primitives. Each one
@@ -143,10 +156,10 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
     {
       transaction: z
         .object({
-          projectId: z.string().optional().describe("Project ID (omit for business inventory). If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Purchase-from-inventory movement into this project."),
+          projectId: z.string().optional().describe("Project ID (omit for business inventory). This tool is only for itemized budget categories. If this is a Purchase with source equal to the account inventory label, the tool creates the purchase/items in inventory first, then creates a Purchase-from-inventory movement into this project."),
           budgetCategoryId: z.string().describe("Budget category ID"),
           amountCents: z.coerce.number().describe("Total amount in cents"),
-          type: z.string().default("Purchase").describe("Purchase or Return (never Sale — use sell_items_from_project_to_inventory). 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
+          type: z.string().default("Purchase").describe("Purchase or Return for itemized receipts only. Never Sale — use sell_items_from_project_to_inventory. 'To Inventory' is legacy; to return items to business inventory, use return_items with returnTo: 'inventory'."),
           source: z.string().optional().describe("Vendor/source name. The account inventory label is a built-in source, not a vendor preset; using it on a project Purchase routes through inventory and sells into the project."),
           transactionDate: z.string().optional(),
           subtotalCents: z.coerce.number().optional(),
@@ -182,6 +195,20 @@ export function registerCompositeTools(server: McpServer, db: Firestore) {
         return validation(
           "Cannot create Sale-to-Inventory transactions here — use sell_items_from_project_to_inventory instead.",
           "Sale-to-Inventory transactions require lineage edges and item scope changes that only sell_items_from_project_to_inventory can produce."
+        );
+      }
+      if (["Fee", "fee", "Expense", "expense", "To Inventory", "to inventory", "PaymentToBusiness", "paymentToBusiness"].includes(transaction.type)) {
+        return validation(
+          `${transaction.type} is not a normal create_transaction_with_items write type.`,
+          "Use Purchase/Return for itemized receipts. Use mark_invoice_collected for paymentToBusiness. Legacy Fee, Expense, and To Inventory values are read-only."
+        );
+      }
+      const category = await getBudgetCategory(db, transaction.budgetCategoryId);
+      if (!category) return notFound("Budget category", transaction.budgetCategoryId);
+      if (!isItemizedCategory(category)) {
+        return validation(
+          "create_transaction_with_items requires an itemized budget category.",
+          "Use create_transaction without items for non-itemized service/cost purchases."
         );
       }
 

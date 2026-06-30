@@ -393,7 +393,7 @@ enum TransactionFilterSortCalculations {
                 budgetCategoryId: "none",
                 type: type
             )
-        case .fee, .expense, nil:
+        case .fee, .expense, .paymentToBusiness, nil:
             return nil
         }
     }

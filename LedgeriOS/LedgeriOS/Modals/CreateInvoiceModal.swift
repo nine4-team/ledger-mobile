@@ -23,6 +23,7 @@ struct CreateInvoiceModal: View {
     @State private var notes: String
     @State private var newChargeName = ""
     @State private var newChargeAmount = ""
+    @State private var newChargeCategoryId = ""
     @State private var searchText = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -51,7 +52,17 @@ struct CreateInvoiceModal: View {
             items: projectContext.items,
             transactions: projectContext.transactions,
             invoices: accountContext.allInvoices,
+            budgetCategories: categoryLookup,
             excludingInvoiceId: editingInvoice?.id
+        )
+    }
+
+    private var categoryLookup: [String: BudgetCategory] {
+        Dictionary(
+            uniqueKeysWithValues: projectContext.budgetCategories.compactMap { category in
+                guard let id = category.id else { return nil }
+                return (id, category)
+            }
         )
     }
 
@@ -122,6 +133,16 @@ struct CreateInvoiceModal: View {
         !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !manualLines.isEmpty
     }
 
+    private var categoryOptions: [(String, String)] {
+        projectContext.budgetCategories
+            .filter { $0.isArchived != true }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .compactMap { category in
+                guard let id = category.id else { return nil }
+                return (id, category.name)
+            }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -129,8 +150,8 @@ struct CreateInvoiceModal: View {
             title: step == 1 ? (isEditing ? "Edit Invoice" : "Create Invoice") : "Review Invoice",
             description: step == 1
                 ? (isEditing
-                    ? "Update the items and expenses billed on this invoice."
-                    : "Select items and expenses to bill the client for.")
+                    ? "Update the items and project costs billed on this invoice."
+                    : "Select items and project costs to bill the client for.")
                 : "Add an optional invoice name and notes, then save.",
             currentStep: step,
             totalSteps: 2,
@@ -176,7 +197,7 @@ struct CreateInvoiceModal: View {
     @ViewBuilder
     private var step1Content: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            SearchField(text: $searchText, placeholder: "Search items, expenses, and charges...")
+            SearchField(text: $searchText, placeholder: "Search items, project costs, and charges...")
 
             HStack {
                 Text("Selected total")
@@ -192,7 +213,7 @@ struct CreateInvoiceModal: View {
             newChargeEditor
 
             if billableItems.isEmpty && billableTransactions.isEmpty && manualLines.isEmpty {
-                Text("Nothing to bill — every item and expense in this project has already been invoiced or paid.")
+                Text("Nothing to bill — every item and project cost in this project has already been invoiced or paid.")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
                     .padding(.vertical, Spacing.md)
@@ -265,6 +286,7 @@ struct CreateInvoiceModal: View {
                 .sectionLabelStyle()
             FormField(label: "Name", text: $newChargeName, placeholder: "Design Fee 1 of 3")
             FormField(label: "Amount", text: $newChargeAmount, placeholder: "$2,500")
+            FormSelect(label: "Category", selection: $newChargeCategoryId, options: categoryOptions)
             Button {
                 addManualLine()
             } label: {
@@ -288,6 +310,11 @@ struct CreateInvoiceModal: View {
                 Text("Manual charge")
                     .font(Typography.caption)
                     .foregroundStyle(BrandColors.textSecondary)
+                if let categoryName = categoryName(forCategoryId: line.budgetCategoryId) {
+                    Text(categoryName)
+                        .font(Typography.caption)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
             }
             Spacer()
             Text(CurrencyFormatting.formatCents(line.signedAmountCents))
@@ -370,7 +397,7 @@ struct CreateInvoiceModal: View {
             FormField(label: "Invoice Name (optional)", text: $invoiceName, placeholder: "Phase 1 — Furnishings")
             FormField(label: "Notes (optional)", text: $notes, placeholder: "")
 
-            Text("\(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) expense\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
+            Text("\(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) project cost\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
         }
@@ -402,19 +429,25 @@ struct CreateInvoiceModal: View {
     private var canAddManualLine: Bool {
         !newChargeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && parseCents(newChargeAmount) != nil
+            && !newChargeCategoryId.isEmpty
     }
 
     private func addManualLine() {
         let name = newChargeName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, let cents = parseCents(newChargeAmount) else { return }
+        guard !name.isEmpty,
+              let cents = parseCents(newChargeAmount),
+              !newChargeCategoryId.isEmpty
+        else { return }
         manualLines.append(InvoiceLine(
             sourceType: .manual,
             amountCents: cents,
             sign: .charge,
+            budgetCategoryId: newChargeCategoryId,
             snapshotName: name
         ))
         newChargeName = ""
         newChargeAmount = ""
+        newChargeCategoryId = ""
     }
 
     private func removeManualLine(id: String) {
@@ -475,6 +508,11 @@ struct CreateInvoiceModal: View {
         let projId = projectId
         let editingId = editingInvoice?.id
         let lines = draftLines(itemIds: itemIds, txIds: txIds)
+        guard lines.allSatisfy({ $0.budgetCategoryId?.isEmpty == false }) else {
+            errorMessage = "Every invoice line needs a budget category."
+            isSaving = false
+            return
+        }
 
         Task {
             do {

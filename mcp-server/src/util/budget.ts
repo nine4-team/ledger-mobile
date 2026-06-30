@@ -57,6 +57,10 @@ export function normalizeSpendAmount(tx: Transaction): number {
   const amount = tx.amountCents;
   const rawType = typeof tx.type === "string" ? tx.type.trim().toLowerCase() : null;
 
+  if (rawType === "paymenttobusiness" || rawType === "payment_to_business" || rawType === "payment-to-business") {
+    return 0;
+  }
+
   // Case 1: Returns — always negative.
   if (rawType === "return") {
     return -Math.abs(amount);

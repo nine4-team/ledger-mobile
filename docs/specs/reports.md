@@ -80,5 +80,8 @@ Reports are generated entirely client-side. No server-side rendering is needed. 
 1. **No items/transactions:** Show empty report with message "No data for this report"
 2. **Items without prices:** Include in report with "No Price" or $0.00
 3. **Offline generation:** Works fully offline from cached data
-4. **Collected fee transactions:** Settlement transactions linked by `settlementInvoiceId` are excluded from the active invoiceable pool. They record money received; they are not a new demand for money.
+4. **Collected payment transactions:** `paymentToBusiness` settlement
+   transactions linked by `settlementInvoiceId` are excluded from the active
+   invoiceable pool. They record money received; they are not a new demand for
+   money and are not project spend.
 5. **Canceled transactions:** Excluded from all reports

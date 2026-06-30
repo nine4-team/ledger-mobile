@@ -23,6 +23,14 @@ struct BillingSummaryCalculationTests {
         return inv
     }
 
+    private func makeCategory(id: String, supportedTypes: [TransactionType]) -> BudgetCategory {
+        var category = BudgetCategory()
+        category.id = id
+        category.name = id
+        category.supportedTypes = supportedTypes
+        return category
+    }
+
     @Test("Membership across draft/sent/paid/voided produces correct totals")
     func mixedStatuses() {
         let projectId = "p1"
@@ -77,13 +85,106 @@ struct BillingSummaryCalculationTests {
 
     @Test("Itemized transactions are excluded")
     func itemizedExcluded() {
-        let tx = makeTransaction(id: "t", projectId: "p1", amountCents: 10_000, itemIds: ["x"])
+        let tx = makeTransaction(
+            id: "t",
+            projectId: "p1",
+            amountCents: 10_000,
+            itemIds: ["x"],
+            budgetCategoryId: "items"
+        )
         let inv = makeInvoice(id: "inv", projectId: "p1", status: .paid, transactionIds: ["t"])
         let summary = BillingSummaryCalculations.summarize(
-            projectId: "p1", items: [], transactions: [tx], invoices: [inv]
+            projectId: "p1",
+            items: [],
+            transactions: [tx],
+            invoices: [inv],
+            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
         )
         #expect(summary.totalSpentCents == 0)
         #expect(summary.collectedCents == 0)
+    }
+
+    @Test("Itemized-category transaction with missing itemIds is not treated as non-itemized")
+    func itemizedCategoryWithMissingItemsExcluded() {
+        let tx = makeTransaction(
+            id: "t",
+            projectId: "p1",
+            amountCents: 10_000,
+            itemIds: [],
+            budgetCategoryId: "items"
+        )
+        let summary = BillingSummaryCalculations.summarize(
+            projectId: "p1",
+            items: [],
+            transactions: [tx],
+            invoices: [],
+            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
+        )
+        #expect(summary.totalSpentCents == 0)
+        #expect(BillingSummaryCalculations.isNonItemized(
+            tx,
+            budgetCategories: ["items": makeCategory(id: "items", supportedTypes: [.purchase, .return])]
+        ) == false)
+    }
+
+    @Test("Non-itemized purchase category remains directly billable")
+    func nonItemizedPurchaseCategoryIncluded() {
+        let tx = makeTransaction(
+            id: "t",
+            projectId: "p1",
+            amountCents: 12_345,
+            itemIds: [],
+            transactionType: .purchase,
+            budgetCategoryId: "services"
+        )
+        let summary = BillingSummaryCalculations.summarize(
+            projectId: "p1",
+            items: [],
+            transactions: [tx],
+            invoices: [],
+            budgetCategories: ["services": makeCategory(id: "services", supportedTypes: [.expense])]
+        )
+        #expect(summary.totalSpentCents == 12_345)
+        #expect(BillingSummaryCalculations.isNonItemized(
+            tx,
+            budgetCategories: ["services": makeCategory(id: "services", supportedTypes: [.expense])]
+        ) == true)
+    }
+
+    @Test("Billable membership uses category itemization instead of empty itemIds")
+    func billableMembershipUsesCategoryItemization() {
+        let itemized = makeTransaction(
+            id: "t-itemized-missing-items",
+            projectId: "p1",
+            amountCents: 10_000,
+            itemIds: [],
+            reimbursementType: "owed-to-company",
+            transactionType: .purchase,
+            budgetCategoryId: "items"
+        )
+        let service = makeTransaction(
+            id: "t-service",
+            projectId: "p1",
+            amountCents: 2_500,
+            itemIds: [],
+            reimbursementType: "owed-to-company",
+            transactionType: .purchase,
+            budgetCategoryId: "services"
+        )
+
+        let membership = InvoiceLineCalculations.billableMembership(
+            projectId: "p1",
+            items: [],
+            transactions: [itemized, service],
+            invoices: [],
+            budgetCategories: [
+                "items": makeCategory(id: "items", supportedTypes: [.purchase, .return]),
+                "services": makeCategory(id: "services", supportedTypes: [.expense]),
+            ]
+        )
+
+        #expect(!membership.toInvoiceTransactionIds.contains("t-itemized-missing-items"))
+        #expect(membership.toInvoiceTransactionIds.contains("t-service"))
     }
 
     @Test("Manual invoice lines count as demand and settlement transactions count as collected")

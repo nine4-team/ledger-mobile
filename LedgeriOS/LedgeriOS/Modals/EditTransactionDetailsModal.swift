@@ -50,9 +50,7 @@ struct EditTransactionDetailsModal: View {
     }
 
     private var isItemizedCategory: Bool {
-        // Audit/itemized gate is tx-type-based now — a category can be Mixed
-        // and hold both items and expenses. See docs/specs/transaction-type.md.
-        transaction.needsItemizedAudit
+        transaction.needsItemizedAudit(category: selectedCategory)
     }
 
     private var computedTaxAmount: String {
@@ -97,7 +95,7 @@ struct EditTransactionDetailsModal: View {
 
                 // 6. Transaction Type
                 FormSelect(label: "Transaction Type", selection: $transactionType, options:
-                    TransactionType.allCases.map { ($0.rawValue, $0.displayLabel) }
+                    TransactionType.normalEntryCases.map { ($0.rawValue, $0.displayLabel) }
                 )
 
                 // 7. Payable

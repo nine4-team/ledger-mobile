@@ -84,34 +84,36 @@ Access levels:
 
 | Level | Behavior |
 |---|---|
-| `full` | Can see all fee transactions, revenue invoices, billing summaries, and company-revenue reports. |
-| `limited` | Can see only fee transactions whose fee category is explicitly allowed. Can open only invoices whose fee categories are all allowed. |
-| `none` | Cannot see fee transactions or invoices containing company revenue. |
+| `full` | Can see all company-revenue transactions, revenue invoices, billing summaries, and company-revenue reports. |
+| `limited` | Can see only company-revenue transactions whose revenue category is explicitly allowed. Can open only invoices whose revenue categories are all allowed. |
+| `none` | Cannot see company-revenue transactions or invoices containing company revenue. |
 
 `allowedFeeCategoryIds` is used only for Limited access. Missing or empty means
-no fee categories are visible.
+no revenue/fee categories are visible.
 
-## Fee Visibility
+## Company Revenue Visibility
 
-A fee transaction is a transaction with:
+A company-revenue transaction is a transaction with:
 
 ```text
-type == "fee"
+type == "paymentToBusiness"
+AND budgetCategoryId is a revenue/fee category
 ```
 
 Rules:
 
-- Full financial access can read every fee transaction.
-- Limited financial access can read a fee transaction only when
+- Full financial access can read every company-revenue transaction.
+- Limited financial access can read a company-revenue transaction only when
   `budgetCategoryId` is included in `allowedFeeCategoryIds`.
-- No financial access cannot read fee transactions.
-- A fee transaction without `budgetCategoryId` is visible only to full-access
-  users.
-- Settlement transactions linked to invoices are still ordinary fee
-  transactions and follow the same rules.
+- No financial access cannot read company-revenue transactions.
+- A company-revenue transaction without `budgetCategoryId` is invalid under the
+  target model; if found in legacy data, it is visible only to full-access users
+  until categorized.
+- Settlement transactions linked to invoices follow these rules when they carry
+  company-revenue categories.
 
-Non-fee transactions remain readable to account members in v1, subject to the
-existing account membership rules.
+Non-company-revenue transactions remain readable to account members in v1,
+subject to the existing account membership rules.
 
 ## Invoice Visibility
 
@@ -218,21 +220,21 @@ application code.
 
 MCP tools must:
 
-- Filter hidden fee transactions and invoices.
+- Filter hidden company-revenue transactions and invoices.
 - Avoid summarizing hidden totals.
 - Write invoice visibility metadata when creating or updating invoices.
 - Write required category metadata for manual revenue lines where possible.
 
 ## Backfill
 
-Existing invoices and fee transactions must be audited before rules are fully
-enabled.
+Existing invoices and historical fee/payment transactions must be audited before
+rules are fully enabled.
 
 Backfill requirements:
 
 - Compute `containsCompanyRevenue` and `feeCategoryIds` for every invoice.
-- Identify fee transactions missing `budgetCategoryId`.
-- Identify manual revenue lines missing fee category.
+- Identify historical fee/payment transactions missing `budgetCategoryId`.
+- Identify manual revenue lines missing fee/revenue category.
 - Treat unresolved revenue as full-access-only until categorized.
 - Produce a report that owners/admins can use to clean up ambiguous data.
 

@@ -26,16 +26,17 @@ Both paths can be used for the same type of item (e.g., furnishings), which lead
 - The concept of "who purchased" (business vs. client) is preserved
 
 ### Changing
-- **Path A (direct to project) is eliminated for physical/itemized items.** All furnishings, accessories, additional requests, and other itemized categories must flow through inventory first, even if they're immediately sold to a project in the same action.
-- **Category selection becomes the routing decision.** The first step of transaction creation is choosing a category. The category type (itemized vs. non-itemized) determines which flow the user enters — no manual choice of "inventory or project?"
+- **Path A (direct to project) is eliminated for business-purchased physical/itemized items.** Furnishings, accessories, additional requests, and other itemized categories must flow through inventory first when the design business paid, even if they're immediately sold to a project in the same action. Client-purchased itemized items go direct to the project because the business never held them as inventory.
+- **Category selection plus purchaser becomes the routing decision.** The category type (itemized vs. non-itemized) and who purchased (business vs. client) determine which flow the user enters — no manual choice of "inventory or project?"
 
 ### Adding
-- **Immediate sell-to-project option at inventory entry.** When entering items into inventory under an itemized category, the user is prompted: "Do you want to sell this entire transaction to a project?" or "Do you want to select specific items to sell to a project?" This makes inventory → sell feel like one step, not two, while still routing through the consistent pipeline.
+- **Immediate sell-to-project option at inventory entry.** When entering business-purchased items into inventory under an itemized category, the user is prompted after items exist: "Do you want to sell this entire transaction to a project?" or "Do you want to select specific items to sell to a project?" This makes inventory → sell feel like one step, not two, while still routing through the consistent pipeline.
 - **Direct-to-project flow for non-itemized expense categories.** Categories like install, fuel, delivery, and other service/expense categories skip inventory entirely. These aren't physical goods — they go straight to a project. The flow asks: which project? Who purchased it?
+- **Direct-to-project flow for client-purchased itemized items.** When the client's card was used, the items go straight to the project — they were never business inventory.
 - **Proto item capture as the lightweight intake path.** For physical items where details are unknown, the designer can create proto items from project or inventory context, then resolve them into real items later.
 
 ### Removing
-- **The ability to add itemized items directly to a project as "business purchased, client owes."** This path goes away. If it's an itemized category, it goes through inventory (even if it's immediately sold onward).
+- **The ability to add business-purchased itemized items directly to a project.** This path goes away for business-purchased items. If it's an itemized category and the business paid, it goes through inventory (even if it's immediately sold onward). Client-purchased items are unaffected.
 
 ## How It Works
 
@@ -48,16 +49,19 @@ When creating a new transaction, the user first selects a budget category. Categ
 
 The category type determines which flow comes next.
 
-### Step 2a: Itemized Category Flow (Inventory First)
-If the user selects an itemized category:
+### Step 2a: Itemized Category Flow
+If the user selects an itemized category and the design business paid:
 
 1. User enters item details as they do today (name, cost, vendor, quantity, images, etc.)
 2. Items are created in inventory, tied to a purchase transaction
-3. At the bottom of the entry flow, the user sees a prompt:
+3. After at least one item has been added, the user sees a prompt:
    - **"Sell entire transaction to a project"** — all items on this transaction get sold to a specific project. User selects the project.
    - **"Select items to sell to a project"** — user picks which items to sell now and which to leave in inventory. User selects items, then selects the project.
    - **"Keep in inventory"** — items stay in inventory for now. Can be sold to a project later through the existing sell flow.
 4. If sold to a project, items land in the project's transaction for that category (e.g., the project's single Furnishings transaction)
+
+If the user selects an itemized category and the client paid, the transaction
+and items go direct to the project. The inventory sell prompt is not shown.
 
 ### Step 2b: Non-Itemized Category Flow (Direct to Project)
 If the user selects a non-itemized/expense category:

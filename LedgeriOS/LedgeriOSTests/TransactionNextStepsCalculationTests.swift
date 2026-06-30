@@ -35,6 +35,14 @@ struct TransactionNextStepsCalculationTests {
         return cat
     }
 
+    private func makeCategory(id: String, supportedTypes: [TransactionType]) -> BudgetCategory {
+        var cat = BudgetCategory()
+        cat.id = id
+        cat.name = "Test Category"
+        cat.supportedTypes = supportedTypes
+        return cat
+    }
+
     // MARK: - 5-step path (non-itemized category)
 
     @Test("5-step path: all steps incomplete")
@@ -375,6 +383,38 @@ struct TransactionNextStepsCalculationTests {
             transaction: tx,
             itemCount: 0,
             budgetCategories: [:]
+        )
+        #expect(steps.contains { $0.id == "tax-rate" })
+    }
+
+    @Test("Purchase in non-itemized category omits the tax-rate step")
+    func purchaseInNonItemizedCategoryOmitsTaxRate() {
+        let category = makeCategory(id: "services", supportedTypes: [.expense])
+        let tx = makeTransaction(
+            budgetCategoryId: "services",
+            transactionType: .purchase,
+            source: "Installer"
+        )
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["services": category]
+        )
+        #expect(!steps.contains { $0.id == "tax-rate" })
+    }
+
+    @Test("Purchase in itemized category keeps the tax-rate step")
+    func purchaseInItemizedCategoryKeepsTaxRate() {
+        let category = makeCategory(id: "items", supportedTypes: [.purchase, .return])
+        let tx = makeTransaction(
+            budgetCategoryId: "items",
+            transactionType: .purchase,
+            source: "Vendor"
+        )
+        let steps = TransactionNextStepsCalculations.computeNextSteps(
+            transaction: tx,
+            itemCount: 0,
+            budgetCategories: ["items": category]
         )
         #expect(steps.contains { $0.id == "tax-rate" })
     }

@@ -13,8 +13,9 @@ import Foundation
 /// - **Outstanding** — sent invoice demand minus linked settlements.
 ///
 /// A transaction counts as "non-itemized" (and therefore directly billable)
-/// when it has no child items. Itemized transactions are excluded so their
-/// amounts are not double-counted; their items are summed instead.
+/// when its linked budget category is not itemized. Empty `itemIds` is not
+/// proof that a transaction is non-itemized; itemized rows can have missing
+/// child item data that needs repair rather than invoice-as-service handling.
 enum BillingSummaryCalculations {
 
     struct Summary: Equatable {
@@ -28,7 +29,8 @@ enum BillingSummaryCalculations {
         projectId: String?,
         items: [Item],
         transactions: [Transaction],
-        invoices: [Invoice]
+        invoices: [Invoice],
+        budgetCategories: [String: BudgetCategory] = [:]
     ) -> Summary {
         let scopedItems = items.filter { item in
             guard let pid = projectId else { return true }
@@ -44,7 +46,7 @@ enum BillingSummaryCalculations {
             return (id, item.purchasePriceCents ?? 0)
         })
         let nonItemizedTxAmounts = Dictionary(uniqueKeysWithValues: scopedTransactions.compactMap { tx -> (String, Int)? in
-            guard let id = tx.id, isNonItemized(tx) else { return nil }
+            guard let id = tx.id, isNonItemized(tx, budgetCategories: budgetCategories) else { return nil }
             return (id, tx.amountCents ?? 0)
         })
 
@@ -59,7 +61,7 @@ enum BillingSummaryCalculations {
         var collected = settlementByInvoiceId.values.reduce(0, +)
         var outstanding = 0
 
-        for tx in scopedTransactions where isNonItemized(tx) {
+        for tx in scopedTransactions where isNonItemized(tx, budgetCategories: budgetCategories) {
             totalSpent += tx.amountCents ?? 0
         }
 
@@ -98,11 +100,23 @@ enum BillingSummaryCalculations {
         )
     }
 
-    /// A transaction is treated as a directly-billable line when it has no
-    /// child items. Itemized transactions derive their billing state from
-    /// their items.
-    static func isNonItemized(_ tx: Transaction) -> Bool {
-        tx.settlementInvoiceId == nil && (tx.itemIds ?? []).isEmpty
+    /// A transaction is treated as a directly-billable line when its category
+    /// is non-itemized. If category context is unavailable, falls back to the
+    /// legacy itemIds heuristic for read compatibility.
+    static func isNonItemized(
+        _ tx: Transaction,
+        budgetCategories: [String: BudgetCategory] = [:]
+    ) -> Bool {
+        guard tx.settlementInvoiceId == nil,
+              tx.transactionType != .paymentToBusiness else {
+            return false
+        }
+
+        if let category = tx.budgetCategoryId.flatMap({ budgetCategories[$0] }) {
+            return !category.isItemsCategory
+        }
+
+        return (tx.itemIds ?? []).isEmpty
     }
 
     private static func demandCents(

@@ -69,7 +69,7 @@ transactions link back to invoices with `settlementInvoiceId`.
 | subtotalCents | number, nullable | Pre-tax subtotal in cents. When set, should be <= amountCents |
 | taxRatePct | number, nullable | Tax rate as a percentage (0-100) |
 | discount | Discount, nullable | Transaction-level discount applied against the subtotal. Use when a receipt applies one discount across the transaction instead of to individual items |
-| transactionType | string, nullable | **Firestore field name is `type`**. One of: `"purchase"`, `"sale"`, `"return"`, `"fee"`, `"expense"` |
+| transactionType | string, nullable | **Firestore field name is `type`**. Canonical new values: `"purchase"`, `"sale"`, `"return"`, `"paymentToBusiness"`. Legacy read-compatible values: `"fee"`, `"expense"`, `"to inventory"` |
 | status | string, nullable | Omitted for active transactions. `"canceled"` is the only canonical stored status. Legacy `"pending"` / `"completed"` should be treated as active/nil. |
 | source | string, nullable | Vendor/source name (e.g. "Amazon", "Wayfair"). This is the vendor field. **Inventory movement transactions use the inventory label (for example `"Business Inventory"`).** |
 | transactionDate | string, nullable | Date of the transaction (stored as a string, not a timestamp) |
@@ -152,8 +152,39 @@ Collection is recorded by ordinary transactions linked with
 | sourceId | string, nullable | Item/transaction ID for sourced lines; omitted for manual New Charge lines |
 | amountCents | number | Positive magnitude |
 | sign | number | `1` charge, `-1` credit |
+| budgetCategoryId | string, nullable | Required on new lines. Manual New Charge lines must provide it explicitly; sourced item/transaction lines resolve it from their source record. |
 | snapshotName | string, nullable | Frozen display label |
 | settlementTransactionIds | array of string, nullable | Optional convenience reverse lookup; transaction settlement fields are source of truth |
+
+#### Returned Paid Item Credits
+
+When a paid item is returned to inventory, the client credit is represented as an
+ordinary invoice line, not as a synthetic transaction.
+
+Persisted shape:
+
+- `sourceType: "manual"`
+- `sourceId: null`
+- `sign: -1`
+- `amountCents`: copied from the original paid invoice line
+- `budgetCategoryId`: copied from the original paid invoice line
+- `snapshotName`: human-readable returned-item credit label
+
+The enclosing invoice is an ordinary draft invoice with `itemIds: []` and
+`transactionIds: []`. This prevents the returned item from being claimed again
+as a normal invoice item.
+
+The line `id` is deterministic and derived from:
+
+```text
+returnCredit:{paidInvoiceId}:{paidInvoiceLineId}:{itemId}
+```
+
+Implementations may encode or hash that tuple for storage. The deterministic ID
+is the dedupe key across non-voided invoices. Do not add separate persisted
+fields such as `creditReason`, `creditedItemId`, `paidInvoiceId`, or
+`paidInvoiceLineId` unless a future workflow needs more than deterministic
+dedupe and human-readable invoice notes.
 
 `Discount` fields:
 
@@ -478,13 +509,13 @@ Embedded within BudgetCategory documents.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
-| categoryType | string, nullable | One of: "general", "standard", "itemized", "fee". Defaults to "general" if not set |
+| categoryType | string, nullable | Legacy field. Historical values include `"general"`, `"expense"`, `"itemized"`, and `"fee"`. New behavior should prefer BudgetCategory `supportedTypes`. |
 | excludeFromOverallBudget | boolean, nullable | When true, this category's spend is not included in the project's overall budget totals |
 
-**Category types explained:**
-- **general** / **standard**: Normal spend categories (purchases, materials)
-- **itemized**: Categories where individual items are tracked with prices for completeness auditing
-- **fee**: Revenue/income categories (e.g. design fees). Display uses "received" instead of "spent"
+**Category behavior:**
+- `supportedTypes = ["purchase", "return"]`: itemized/item category. Drives item entry, tax/subtotal audit, and inventory routing eligibility.
+- `supportedTypes = ["expense"]`: non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
+- `supportedTypes = ["fee"]`: fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
 
 ### ProjectBudgetSummary
 
@@ -721,6 +752,7 @@ All monetary values are stored in **cents** (integer). The stored value in Fires
 - **Returns** (vendor or to inventory): Stored as positive. **Multiplied by -1** in budget calculations (subtracts from project spend). Identified by `transactionType == "return"`.
 - **Per-batch inventory → project Purchase transactions** (`type == "Purchase"` with an inventory source and `budgetCategoryId` set): Stored as positive. **Adds** to project spend.
 - **Per-batch project → inventory Sale transactions** (`type == "Sale"` with an inventory source and source `budgetCategoryId`): Stored as positive. **Multiplied by -1** in budget calculations. This path is only for project-originated items acquired into inventory.
+- **Payment to business** (`type == "paymentToBusiness"`): Stored as the collected amount for the invoice/category. **Excluded from project spend**; counted only in collection/payment contexts.
 - **LEGACY canonical sales, `business_to_project`:** Stored as positive. **Adds** to project spend. Historical only.
 - **LEGACY canonical sales, `project_to_business`:** Stored as positive. **Multiplied by -1** in budget calculations. Historical only.
 - **Canceled transactions:** Always contribute **$0** regardless of amount. Identified by `status == "canceled"`.
@@ -768,7 +800,7 @@ Inventory movement price basis:
 
 ### Nullable Array Fields
 
-- `itemIds`: When null or empty, the transaction has no linked items. Treat null and empty array identically.
+- `itemIds`: When null or empty, the transaction has no linked items. Treat null and empty array identically. Do not infer non-itemized behavior from this field; itemization is owned by the linked budget category.
 - `pinnedBudgetCategoryIds`: When null or empty, no categories are pinned. Treat null and empty array identically.
 - `images`, `receiptImages`, `otherImages`, `transactionImages`: When null, treat as empty array.
 - `checklists`: When null, treat as empty array.
@@ -780,7 +812,7 @@ All enum-like fields use **lowercase with spaces** for multi-word values. Swift 
 | Field | Valid values |
 |-------|-------------|
 | `item.status` | `"to purchase"`, `"purchased"`, `"to return"`, `"returned"`, `"sold"` |
-| `transaction.type` | `"purchase"`, `"sale"`, `"return"`, `"fee"`, `"expense"` |
+| `transaction.type` | Canonical new values: `"purchase"`, `"sale"`, `"return"`, `"paymentToBusiness"`. Legacy read-compatible values: `"fee"`, `"expense"`, `"to inventory"` |
 | `transaction.status` | `"canceled"` only; omit when active |
 
 - `source` (vendor) values are case-sensitive display strings; do not normalize.

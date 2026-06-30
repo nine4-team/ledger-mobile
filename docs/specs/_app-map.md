@@ -34,7 +34,10 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ### Invoicing
 - Ledger stores project-scoped invoices as demands for money.
 - Invoice lines can reference existing items, existing transactions, or manual **New Charge** lines such as design-fee milestones.
-- Transactions remain records of actual money movement. Marking an invoice collected creates one normal Fee transaction linked by `settlementInvoiceId`.
+- Transactions remain records of actual money movement. Marking an invoice
+  collected creates categorized `paymentToBusiness` settlement transaction(s)
+  linked by `settlementInvoiceId`; if the invoice spans multiple budget
+  categories, collection creates one settlement transaction per category.
 - Ad-hoc invoices can include pre-existing transactions and manual charges in the same invoice.
 - Item/transaction billing state is derived from invoice membership and settlement links; there is no item-level billing status field.
 

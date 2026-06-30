@@ -90,9 +90,13 @@ struct ItemEntryFlowView: View {
             title: "Add Items",
             description: "Add items to this transaction. Items will be created in inventory.",
             primaryAction: FormSheetAction(
-                title: transactionItems.isEmpty ? "Skip" : "Next"
+                title: transactionItems.isEmpty ? "Done" : "Next"
             ) {
-                currentStep = .sellPrompt
+                if transactionItems.isEmpty {
+                    dismiss()
+                } else {
+                    currentStep = .sellPrompt
+                }
             },
             secondaryAction: FormSheetAction(title: "Done") {
                 dismiss()
@@ -153,34 +157,40 @@ struct ItemEntryFlowView: View {
                 let itemCount = transactionItems.count
                 let itemNoun = itemCount == 1 ? "item" : "items"
 
-                sellOptionCard(
-                    originProject.map { "Sell All to \($0.name)" } ?? "Sell All to a Project",
-                    icon: "arrow.right.circle",
-                    description: "\(itemCount) \(itemNoun) will be sold"
-                ) {
-                    selectedItemIds = Set(transactionItems.compactMap(\.id))
-                    proceedToSellTarget()
-                }
-
-                if originProject != nil {
+                if itemCount == 0 {
+                    Text("No items have been added yet.")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                } else {
                     sellOptionCard(
-                        "Sell to a Different Project",
-                        icon: "arrow.triangle.branch",
-                        description: "Pick another project for these \(itemNoun)"
+                        originProject.map { "Sell All to \($0.name)" } ?? "Sell All to a Project",
+                        icon: "arrow.right.circle",
+                        description: "\(itemCount) \(itemNoun) will be sold"
                     ) {
                         selectedItemIds = Set(transactionItems.compactMap(\.id))
-                        showProjectPicker = true
+                        proceedToSellTarget()
                     }
-                }
 
-                if itemCount > 1 {
-                    sellOptionCard(
-                        "Select Items to Sell",
-                        icon: "checklist",
-                        description: "Choose which items to sell to a project"
-                    ) {
-                        selectedItemIds = []
-                        currentStep = .selectItems
+                    if originProject != nil {
+                        sellOptionCard(
+                            "Sell to a Different Project",
+                            icon: "arrow.triangle.branch",
+                            description: "Pick another project for these \(itemNoun)"
+                        ) {
+                            selectedItemIds = Set(transactionItems.compactMap(\.id))
+                            showProjectPicker = true
+                        }
+                    }
+
+                    if itemCount > 1 {
+                        sellOptionCard(
+                            "Select Items to Sell",
+                            icon: "checklist",
+                            description: "Choose which items to sell to a project"
+                        ) {
+                            selectedItemIds = []
+                            currentStep = .selectItems
+                        }
                     }
                 }
             }

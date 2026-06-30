@@ -108,10 +108,10 @@ enum ReportAggregationCalculations {
         items: [Item],
         categories: [BudgetCategory]
     ) -> InvoiceReportData {
-        // Fee transactions represent income the business charges the client, not charges
-        // passed through on the invoice. Exclude them directly by type; also exclude any
-        // transaction that links to a fee-only category (covers legacy `.purchase`
-        // transactions stored against fee categories).
+        // Payment-to-business transactions represent money collected by the
+        // business, not charges passed through on the invoice. Exclude them
+        // directly by type; also exclude legacy fee-shaped rows while migration
+        // compatibility remains.
         let categoryMap = Dictionary(
             categories.compactMap { cat -> (String, BudgetCategory)? in
                 guard let id = cat.id else { return nil }
@@ -123,6 +123,7 @@ enum ReportAggregationCalculations {
         let active = transactions.filter { tx in
             guard tx.status != .canceled else { return false }
             guard tx.settlementInvoiceId == nil else { return false }
+            guard tx.transactionType != .paymentToBusiness else { return false }
             let category = tx.budgetCategoryId.flatMap { categoryMap[$0] }
             let resolvedType = TransactionTaxonomy.resolve(
                 storedType: tx.transactionType ?? .purchase,
@@ -190,7 +191,7 @@ enum ReportAggregationCalculations {
     }
 
     /// Per-invoice aggregation: builds an InvoiceReportData containing exactly
-    /// the items and non-itemized expenses referenced by the given Invoice.
+    /// the items and non-itemized project costs referenced by the given Invoice.
     ///
     /// v2 invoices carry signed `lines`. Lines with sign == .credit render as
     /// the Credits section of the PDF. v1 invoices (no `lines`) fall back to

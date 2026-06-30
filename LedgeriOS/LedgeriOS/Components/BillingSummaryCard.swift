@@ -12,7 +12,17 @@ struct BillingSummaryCard: View {
             projectId: projectContext.currentProjectId,
             items: projectContext.items,
             transactions: projectContext.transactions,
-            invoices: accountContext.allInvoices
+            invoices: accountContext.allInvoices,
+            budgetCategories: categoryLookup
+        )
+    }
+
+    private var categoryLookup: [String: BudgetCategory] {
+        Dictionary(
+            uniqueKeysWithValues: projectContext.budgetCategories.compactMap { category in
+                guard let id = category.id else { return nil }
+                return (id, category)
+            }
         )
     }
 

@@ -50,7 +50,7 @@ struct BudgetSummaryCategory: Codable, Hashable {
         case "expense":  return [.expense]
         case "general":  return [.expense]
         case "itemized": return [.purchase, .return]
-        default:         return [.purchase, .return, .expense]
+        default:         return [.expense]
         }
     }
 }

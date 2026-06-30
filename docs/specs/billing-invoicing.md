@@ -1,6 +1,6 @@
 # Billing & Invoicing
 Status: active redesign
-Last updated: 2026-05-26
+Last updated: 2026-06-29
 Implementation plan: [../plans/billing-invoicing-canonical-implementation.md](../plans/billing-invoicing-canonical-implementation.md)
 
 ## Summary
@@ -14,8 +14,9 @@ actually moved.
 
 Ledger supports two invoice workflows:
 
-1. **Ad-hoc invoices** built from existing project records: items, reimbursable
-   expenses, credits, and other transactions where money already moved.
+1. **Ad-hoc invoices** built from existing project records: items,
+   non-itemized project costs, credits, and other transactions where money
+   already moved.
 2. **Manual charge invoices** built from new invoice lines that are not backed by
    prior transactions, such as design fees, retainers, storage fees, or project
    management fees.
@@ -95,6 +96,7 @@ struct InvoiceLine {
     var id: String
     var sourceType: InvoiceLineSourceType
     var sourceId: String?
+    var budgetCategoryId: String?
     var amountCents: Int
     var sign: InvoiceLineSign
     var snapshotName: String?
@@ -104,25 +106,37 @@ struct InvoiceLine {
 
 `id` is needed so settlement transactions can optionally target specific lines.
 `sourceId` is nil for manual lines.
+`budgetCategoryId` is required for manual New Charge lines and should be
+resolved for item/transaction-sourced lines from the source record. Invoice
+settlement uses this category to create categorized payment transactions.
 
 Line ID policy:
 
 - New invoice lines use UUID strings created when the draft line is added.
 - Backfilled historical lines use deterministic IDs derived from invoice id,
   source type, source id, and line index so migration is idempotent.
+- System-generated returned-paid-item credit lines use deterministic IDs derived
+  from the original paid invoice id, original paid invoice line id, and returned
+  item id. The line ID is the machine-readable dedupe key.
 - Line IDs survive draft edits and are frozen into sent invoices.
 
 Source meanings:
 
 - `item` — demand is based on a project item.
 - `transaction` — demand or credit is based on money that already moved, such as
-  a reimbursable expense or client-paid credit.
+  a non-itemized project cost or client-paid credit.
 - `manual` — demand is entered directly on the invoice, not backed by an item or
   prior transaction.
+- `manual` with `sign == credit` may also represent a system-generated credit
+  demand that should not claim a source item or transaction as normal invoice
+  membership, such as a paid item returned to inventory.
 
 The UI should label the action for adding a manual line as **New Charge**.
 Examples: "Design Fee 1 of 3", "Retainer", "Project Management Fee", "Storage
 Fee", "Adjustment".
+
+Manual New Charge lines must require the user to pick a budget category. Do not
+silently default the category.
 
 ## Billable Pool
 
@@ -137,8 +151,9 @@ Existing transactions are billable only when their shape represents money that
 should be demanded or credited on an invoice. Settlement transactions are never
 billable.
 
-Fee transactions are treated as money movement. A fee transaction created when
-the client pays the business is settlement evidence, not a planned receivable.
+`paymentToBusiness` transactions are treated as money-in movement. A
+`paymentToBusiness` transaction created when the client pays the business is
+settlement evidence, not a planned receivable.
 
 Manual New Charge lines are not discovered from the pool because they do not
 exist until the user adds them to a draft invoice. They are invoice demand lines,
@@ -182,8 +197,9 @@ Draft invoice:
 Those lines may live on a draft invoice before it is sent. They are invoice
 lines, not transactions.
 
-When the client pays, Ledger creates or links a fee transaction for the payment
-event and links that transaction to the invoice or specific invoice lines.
+When the client pays, Ledger creates or links categorized `paymentToBusiness`
+transaction(s) for the payment event and links those transaction(s) to the
+invoice or specific invoice lines.
 
 ### Mixed Invoice
 
@@ -197,8 +213,11 @@ Invoice:
 - New Charge: Design Fee 1 of 3                            $2,500
 
 Client pays $2,800:
-- Create one transaction for the $2,800 payment event.
-- Link it to the invoice.
+- Create categorized `paymentToBusiness` settlement transaction(s).
+- If all settled lines share one budget category, one transaction is enough.
+- If settled lines span multiple budget categories, create one transaction per
+  budget category.
+- Link the settlement transaction(s) to the invoice.
 ```
 
 The existing expense transaction records money out. The settlement transaction
@@ -209,13 +228,26 @@ only the expense transaction is an invoice-line source.
 
 Ledger should support collecting at invoice or line granularity:
 
-- **Whole invoice collected** — create or link one transaction for the amount
-  collected and set `settlementInvoiceId`.
-- **Selected lines collected** — create or link one transaction for the payment
-  event and set `settlementInvoiceLineIds` to the settled lines.
+- **Whole invoice collected** — create or link categorized `paymentToBusiness`
+  transaction(s) for the collected amount and set `settlementInvoiceId`.
+- **Selected lines collected** — create or link categorized `paymentToBusiness`
+  transaction(s) and set `settlementInvoiceLineIds` to the settled lines.
 
-Collection should follow real payment events. If one check/ACH/card payment
-settles multiple lines, create one transaction, not one transaction per line.
+Collection should follow real payment events and budget-category attribution. If
+one check/ACH/card payment settles multiple lines in one budget category, create
+one transaction for that category. If it settles multiple budget categories,
+create one `paymentToBusiness` transaction per budget category represented by the
+settled lines.
+
+Every settlement transaction must have a `budgetCategoryId`. If a selected line
+cannot resolve a budget category, the app should block collection until the line
+or source record is categorized.
+
+Collection must not create `paymentToBusiness` transactions for a net-negative
+selection or invoice. `paymentToBusiness` means money came in from the client to
+the business. A credit-only invoice represents value owed to the client; if money
+later moves back to the client, that refund/payment is a separate
+money-movement transaction.
 
 Marking an invoice paid may create a settlement transaction as part of the
 workflow. If a transaction already exists, the user should be able to link it
@@ -256,11 +288,39 @@ collected signal until a reviewed settlement backfill is intentionally run.
 
 Credits remain invoice lines with negative sign.
 
-If an item on a paid invoice is returned, Ledger may create a credit source
-transaction or a manual credit line depending on the operation. The resulting
-credit appears on a later invoice as a credit line. The credit source must be
-clearly separated from settlement transactions so it does not get excluded from
-the billable pool by mistake.
+If an item on a collected invoice is returned or otherwise removed from the
+project after the client paid, represent the client credit as negative invoice
+demand / a credit line. Do not create an `expense`, `purchase`, or other
+synthetic transaction for that credit. If money later moves back to the client,
+that refund/payment is a separate money-movement transaction.
+
+Returned paid item credits are created as ordinary draft invoices containing
+only manual credit lines:
+
+- `itemIds = []`
+- `transactionIds = []`
+- `sourceType = manual`
+- `sourceId = nil`
+- `sign = credit`
+- `amountCents` copied from the original paid invoice line
+- `budgetCategoryId` copied from the original paid invoice line
+- `snapshotName` set to a human-readable returned-item credit label
+
+The system must not mutate the original paid invoice. The original paid invoice
+is a frozen historical demand. The draft credit invoice is a new demand artifact
+that the user can review, send, void, or otherwise handle through the existing
+invoice workflow.
+
+The credit line's deterministic ID encodes or hashes:
+
+```text
+returnCredit:{paidInvoiceId}:{paidInvoiceLineId}:{itemId}
+```
+
+That ID prevents duplicate returned-paid-item credits across all non-voided
+invoices. Human-readable explanation belongs in the credit line label and invoice
+notes; the data model does not add separate returned-item credit metadata fields
+unless a future workflow needs them.
 
 ## MCP and Contract Ingestion
 
@@ -277,8 +337,8 @@ Needed capabilities:
 - Create or link settlement transactions.
 - List invoice settlement state and outstanding balances.
 
-Contract ingestion should create or update project fields and draft invoice
-manual lines for fee schedules. It should not create fee transactions until
+Contract ingestion should create or update project fields and categorized draft
+invoice manual lines for fee schedules. It should not create transactions until
 payment is actually collected.
 
 ## Implementation Notes

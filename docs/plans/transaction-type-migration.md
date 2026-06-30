@@ -2,6 +2,13 @@
 
 **Spec:** [../specs/transaction-type.md](../specs/transaction-type.md)
 
+> **Paused / correction required (2026-06-26).** This plan narrowed
+> `TransactionType.purchase` to "itemized purchase only" and proposed removing
+> category itemization metadata. That drift caused inventory routing to trigger
+> for ordinary business-paid purchases. Do not run Phase 4 or clear
+> `metadata.categoryType` until [inventory-routing-taxonomy-remediation.md](inventory-routing-taxonomy-remediation.md)
+> is implemented and the replacement semantics are approved.
+
 Phased migration from the two-enum model (`Transaction.transactionType` + `BudgetCategory.metadata.categoryType`) to a single-enum model where categories reference `TransactionType` values directly via `supportedTypes: [TransactionType]`.
 
 ## Goals
@@ -15,9 +22,9 @@ Phased migration from the two-enum model (`Transaction.transactionType` + `Budge
 | Phase | Status | Notes |
 |---|---|---|
 | Phase 1 — enum + resolver + new field (code only) | ✅ Done | Shipped; iOS + MCP + Functions all build clean. |
-| Phase 2 — swap readers | ✅ Done | All display/logic sites migrated. Audit gate moved to tx-type-based (see spec §"Transaction audit gate"). `CategoryFormModal` offers 4 options (Fees / Expenses / Items / Mixed). Cloud Function `computeIsComplete` rewritten. Dual-write on category create turned off. |
+| Phase 2 — swap readers | ✅ Done / partially corrected | All display/logic sites migrated. Audit gate moved to tx-type-based (now under correction). `CategoryFormModal` no longer offers Mixed for new categories. Cloud Function `computeIsComplete` still needs review. Dual-write on category create turned off. |
 | Phase 3 — backfill historical data | 🟢 Done on 1584 | **Committed 2026-04-20.** Pre-backup export at `gs://ledger-nine4-backups/pre-taxonomy-20260420-135945/` (5.25 MiB, 26 shards, SUCCESSFUL). Cloud Functions deployed ahead of backfill. Categories: 8 written with per-category overrides. Transactions: 286 updated (2 → fee, 8 → expense, 276 case-normalized to lowercase). Both scripts re-run clean (0 candidates) — idempotent. Changelog at [scripts/migration-logs/tx-1dd4fd75-8eea-4f7a-98e7-bf45b987ae94-commit-2026-04-21T00-20-11-153Z.jsonl](../../scripts/migration-logs/). Other production accounts (Ben's Biz, Assiist Biz, Ben's Bonks) not yet run — do when you're ready by re-pointing `--account` or using `--all`. |
-| Phase 4 — retire legacy enum | ⚪ Not started | Cloud Functions change already shipped in Phase 3 deploy. Still to do: Script 3 (clear `metadata.categoryType`), delete `BudgetCategoryType` from Swift, remove fallback derivation, add write-path guard for `.purchase`, update seed data. |
+| Phase 4 — retire legacy enum | ⛔ Paused | Do not clear `metadata.categoryType`, delete `BudgetCategoryType`, or add a `.purchase` item-only write guard. Category itemization metadata is still the approved inventory-routing signal. |
 
 ### Verification in progress on 1584
 
@@ -40,6 +47,10 @@ Checklist:
 - [ ] Edit modal on an Expense txn — tax/subtotal fields hidden
 - [ ] Category management — Install / Additional Requests / Kitchen pill shows "Mixed"
 - [ ] Wizard — Mixed categories surface for both Purchase/Return AND Expense type picks
+
+> 2026-06-26 correction: Mixed category creation is paused. Existing Mixed data
+> may still display for compatibility, but the category form should not offer
+> Mixed as a normal new-category option.
 - [ ] Reports tab on Hyer's Martinique — Payable cards unchanged from pre-migration
 - [ ] Budget tab — category totals + fee-received labels unchanged
 
@@ -57,7 +68,7 @@ Checklist:
 
 **Scope:** add the new `TransactionType` cases, add `supportedTypes` to `BudgetCategory`, add the resolver, update the create flows to write new values going forward. No modifications to existing Firestore documents.
 
-1. **Expand `TransactionType`** in [LedgeriOS/LedgeriOS/Models/Shared/Enums.swift](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift). Add cases `.fee` and `.expense`. Existing cases `.purchase`, `.sale`, `.return` stay unchanged. Add a doc comment that `.purchase` now means itemized purchase only.
+1. **Expand `TransactionType`** in [LedgeriOS/LedgeriOS/Models/Shared/Enums.swift](../../LedgeriOS/LedgeriOS/Models/Shared/Enums.swift). Add cases `.fee` and `.expense`. Existing cases `.purchase`, `.sale`, `.return` stay unchanged. Do **not** redefine `.purchase` as itemized-only; itemization belongs to the budget category.
 
 2. **Add `supportedTypes` to `BudgetCategory`.** Decodable — if the field is missing on a document (all legacy docs), derive it from `metadata.categoryType`:
 
@@ -221,6 +232,22 @@ Migrating these (plus deploying) before clearing is load-bearing.
 **Verification:** after the run — no `purchase`-typed transaction links to a category with derived `supportedTypes == [fee]` or `== [expense]`. Every category has a non-empty `supportedTypes`. Resolver is a no-op in practice (the fallback derivation still matters for docs that existed before Phase 3 if the script was incomplete, and for the `.general` → `[.expense]` mapping until Phase 4).
 
 ## Phase 4 — Retire the legacy enum and lock in invariants
+
+**Paused.** The original Phase 4 scope below would remove category itemization
+metadata and move audit/item routing decisions to transaction type. That is not
+safe while `purchase` remains normal money-spent language. Before reviving this
+phase, define and approve a replacement for category itemization.
+
+For now, the safe routing rule is:
+
+```text
+Inventory item-entry routing =
+  selected category is itemized
+  AND purchasedBy == design-business
+```
+
+Business-paid non-itemized purchases must stay direct-to-project and must not
+open `ItemEntryFlowView`.
 
 **Scope:** migrate Cloud Functions off `metadata.categoryType`, move the audit gate to tx-type-based, clear the legacy field, then remove `BudgetCategoryType` from the codebase.
 

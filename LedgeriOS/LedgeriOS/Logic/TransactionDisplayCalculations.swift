@@ -29,7 +29,8 @@ enum TransactionDisplayCalculations {
     /// - Purchase, inventory → project → `"Purchase from [source]"`
     /// - Sale, project → inventory → `"Sale to [source]"`
     /// - Return → `"Return to [source]"`
-    /// - Fee → "Fee" (source is the business itself — no counterparty)
+    /// - Payment to Business → "Payment to Business"
+    /// - Fee → "Fee" (legacy)
     /// - Expense → source as-is (vendor name)
     /// - Purchase / other → source as-is
     /// - Legacy canonical sale with empty source → "Purchase from Inventory" /
@@ -52,6 +53,8 @@ enum TransactionDisplayCalculations {
                 return "Return to \(source)"
             case .fee:
                 return "Fee"
+            case .paymentToBusiness:
+                return "Payment to Business"
             case .purchase:
                 if transaction.isInventoryMovement {
                     return "Purchase from \(source)"
@@ -66,6 +69,9 @@ enum TransactionDisplayCalculations {
         // (counterparty is implicitly the business).
         if transaction.transactionType == .fee {
             return "Fee"
+        }
+        if transaction.transactionType == .paymentToBusiness {
+            return "Payment to Business"
         }
 
         // Legacy canonical inventory sale with empty source
