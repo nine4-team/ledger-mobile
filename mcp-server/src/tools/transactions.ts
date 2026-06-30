@@ -325,8 +325,8 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       projectId: z.string().optional().describe("Project ID (omit for business inventory). To match a receipt to a project, check the project's notes field — it may contain payment method details (card last 4), billing address, or other identifiers that help determine which project a purchase belongs to."),
       budgetCategoryId: z.string().describe("Budget category ID"),
       amountCents: z.coerce.number().describe("Amount in cents (positive)"),
-      type: z.string().default("Purchase").describe("Transaction type for normal writes: Purchase or Return. Purchase covers goods and services; itemization is owned by budget category. paymentToBusiness is created by invoice collection. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory. Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'. Fee, Expense, and To Inventory are legacy read-only values."),
-      source: z.string().optional().describe("Vendor/source name"),
+      type: z.string().default("Purchase").describe("Transaction type for normal writes: Purchase, Return, or paymentToBusiness. Purchase covers goods/services; itemization is owned by budget category. paymentToBusiness records a client payment and requires a feeCategory budget category. Sale-to-Inventory transactions must be created via sell_items_from_project_to_inventory. Return transactions back to inventory are created automatically by return_items with returnTo: 'inventory'. Fee, Expense, and To Inventory are legacy read-only values."),
+      source: z.string().optional().describe("Vendor/source name for purchases/returns. Omit for paymentToBusiness client payments."),
       transactionDate: z.string().optional().describe("Date string (e.g. '2024-03-15')"),
       notes: z.string().optional().describe("Optional prose describing what the transaction is (e.g. 'Home Depot receipt — drywall + paint for guest bath'). Free-form, no required format."),
       itemIds: z.array(z.string()).optional().describe("Item IDs to link to this transaction"),
@@ -351,28 +351,51 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }).optional().describe("Email ingestion metadata: email ID, subject, inbox, match confidence/reason, order number, linked transaction IDs for split shipments."),
     },
     async ({ projectId, budgetCategoryId, amountCents, type: txType, source, transactionDate, notes, itemIds, subtotalCents, taxRatePct, discount, paymentMethod, purchasedBy, reimbursementType, receiptEmailed, status, ingestionSource, ingestionStatus, ingestionMeta }) => {
+      const normalizedTxType = txType === "PaymentToBusiness" ? "paymentToBusiness" : txType;
       if (txType === "Sale") {
         return validation(
           "Cannot create Sale-to-Inventory transactions directly — use sell_items_from_project_to_inventory instead.",
           "Sale-to-Inventory transactions require lineage edges and item scope changes that create_transaction cannot perform."
         );
       }
-      if (["Fee", "fee", "Expense", "expense", "To Inventory", "to inventory", "PaymentToBusiness", "paymentToBusiness"].includes(txType)) {
+      if (["Fee", "fee", "Expense", "expense", "To Inventory", "to inventory"].includes(txType)) {
         return validation(
           `${txType} is not a normal create_transaction write type.`,
-          "Use Purchase/Return for project cost transactions. Use mark_invoice_collected for paymentToBusiness. Legacy Fee, Expense, and To Inventory values are read-only."
+          "Use Purchase/Return for project cost transactions or paymentToBusiness for client payments. Legacy Fee, Expense, and To Inventory values are read-only."
         );
       }
       const category = await getBudgetCategory(db, budgetCategoryId);
       if (!category) return notFound("Budget category", budgetCategoryId);
       const categoryIsItemized = isItemizedCategory(category);
-      if (isFeeCategory(category)) {
+      const categoryIsFee = isFeeCategory(category);
+      if (normalizedTxType === "paymentToBusiness") {
+        if (!categoryIsFee) {
+          return validation(
+            "Client payments require a fee/revenue budget category.",
+            "Choose a categoryKind == feeCategory category such as Design Fee."
+          );
+        }
+        if (
+          source?.trim() ||
+          itemIds?.length ||
+          subtotalCents !== undefined ||
+          taxRatePct !== undefined ||
+          discount !== undefined ||
+          purchasedBy?.trim() ||
+          (reimbursementType !== undefined && reimbursementType !== "none")
+        ) {
+          return validation(
+            "Client payments cannot include vendor/source, items, tax/subtotal, discount, purchaser, or reimbursement fields.",
+            "Use amountCents, projectId, budgetCategoryId, transactionDate, paymentMethod, receipt fields, and notes for paymentToBusiness rows."
+          );
+        }
+      } else if (categoryIsFee) {
         return validation(
           "create_transaction cannot write fee-category transactions.",
-          "Use invoice/manual charge flows for demands and mark_invoice_collected for paymentToBusiness records."
+          "Use paymentToBusiness for client payments, or invoice/manual charge flows for payment demand before money moves."
         );
       }
-      if (txType === "Return" && !categoryIsItemized) {
+      if (normalizedTxType === "Return" && !categoryIsItemized) {
         return validation(
           "Return transactions require an itemized budget category.",
           "For service/cost adjustments, use invoice credit lines or an approved non-transaction adjustment flow."
@@ -386,7 +409,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       }
 
       const inventoryLabel = await resolveInventoryLabel(db);
-      if (txType === "Purchase" && projectId && isInventorySource(source, inventoryLabel)) {
+      if (normalizedTxType === "Purchase" && projectId && isInventorySource(source, inventoryLabel)) {
         return validation(
           "Project purchases with inventory as the source must route through inventory and create a Purchase-from-inventory movement.",
           "Use create_transaction_with_items when creating new items, or sell_items_from_inventory_to_project for existing inventory items. create_transaction alone cannot create the required item updates and lineage edge."
@@ -396,14 +419,14 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       const data: Record<string, unknown> = {
         budgetCategoryId,
         amountCents,
-        type: txType,
+        type: normalizedTxType,
         isComplete: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       if (status) data.status = status;
       if (projectId) data.projectId = projectId;
-      if (source) data.source = source;
+      if (source && normalizedTxType !== "paymentToBusiness") data.source = source;
       if (transactionDate) data.transactionDate = transactionDate;
       if (notes) data.notes = tagNotesAsAi(notes);
       if (itemIds?.length) data.itemIds = itemIds;
@@ -476,7 +499,7 @@ export function registerTransactionTools(server: McpServer, db: Firestore) {
       if (fields.type && ["Sale", "PaymentToBusiness", "paymentToBusiness", "Fee", "fee", "Expense", "expense", "To Inventory", "to inventory"].includes(fields.type)) {
         return validation(
           `${fields.type} cannot be set through update_transaction.`,
-          "Use inventory operation tools for Sale, invoice collection for paymentToBusiness, and do not write legacy Fee/Expense/To Inventory values."
+          "Use inventory operation tools for Sale, create_transaction/Client Payment for paymentToBusiness, and do not write legacy Fee/Expense/To Inventory values."
         );
       }
 

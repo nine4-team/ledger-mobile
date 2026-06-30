@@ -6,26 +6,26 @@ struct CategoryFormModal: View {
         case edit(BudgetCategory)
     }
 
-    /// Category kinds. Plural because a category collects many transactions.
-    /// Maps to `supportedTypes: [TransactionType]`.
+    /// App-facing category kinds. The persisted `supportedTypes` values are kept
+    /// for storage compatibility, but the UI names use the product model.
     enum Kind: Hashable {
-        case fees
-        case expenses
-        case itemsPurchasesReturns
+        case feeCategories
+        case projectCosts
+        case items
 
         var label: String {
             switch self {
-            case .fees: return "Fees"
-            case .expenses: return "Expenses"
-            case .itemsPurchasesReturns: return "Purchases/Returns (items)"
+            case .feeCategories: return "Fee Categories"
+            case .projectCosts: return "Project Costs"
+            case .items: return "Items"
             }
         }
 
         var supportedTypes: [TransactionType] {
             switch self {
-            case .fees: return [.fee]
-            case .expenses: return [.expense]
-            case .itemsPurchasesReturns: return [.purchase, .return]
+            case .feeCategories: return [.fee]
+            case .projectCosts: return [.expense]
+            case .items: return [.purchase, .return]
             }
         }
 
@@ -33,10 +33,11 @@ struct CategoryFormModal: View {
         /// `resolvedSupportedTypes` so it works for both new-model docs and
         /// legacy docs (which derive supportedTypes from metadata.categoryType).
         init(from category: BudgetCategory) {
-            let supported = Set(category.resolvedSupportedTypes)
-            if supported == [.fee] { self = .fees }
-            else if supported == [.purchase, .return] { self = .itemsPurchasesReturns }
-            else { self = .expenses }
+            switch category.categoryKind {
+            case .feeCategory: self = .feeCategories
+            case .items: self = .items
+            case .projectCost, .unknown: self = .projectCosts
+            }
         }
     }
 
@@ -56,9 +57,9 @@ struct CategoryFormModal: View {
 
     private var kindOptions: [InlineOption<Kind>] {
         [
-            InlineOption(id: Kind.fees, label: Kind.fees.label),
-            InlineOption(id: Kind.expenses, label: Kind.expenses.label),
-            InlineOption(id: Kind.itemsPurchasesReturns, label: Kind.itemsPurchasesReturns.label),
+            InlineOption(id: Kind.feeCategories, label: Kind.feeCategories.label),
+            InlineOption(id: Kind.projectCosts, label: Kind.projectCosts.label),
+            InlineOption(id: Kind.items, label: Kind.items.label),
         ]
     }
 
@@ -74,7 +75,7 @@ struct CategoryFormModal: View {
         switch mode {
         case .create:
             _name = State(initialValue: "")
-            _kind = State(initialValue: .expenses)
+            _kind = State(initialValue: .projectCosts)
             _excludeFromOverallBudget = State(initialValue: false)
         case .edit(let category):
             _name = State(initialValue: category.name)

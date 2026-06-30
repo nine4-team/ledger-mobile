@@ -23,13 +23,13 @@ Ledger is an inventory and transaction management app for design teams. It exist
 ### Transaction Structure
 - Projects have normal project transactions plus per-batch inventory movement transactions. Inventory movement transactions are not long-lived aggregators; their accounting fields are frozen while `itemIds` tracks current active membership.
 - Transactions can be purchase transactions (business buys items into inventory, or a project buys items from inventory), return transactions, or Sale-to-Inventory transactions (business acquires project-originated items into inventory)
-- Categories come in two types: **itemized** (individual items tracked with detail — furnishings, accessories, additional requests, mattresses) and **non-itemized/expense** (costs logged at transaction level — install, fuel, delivery). [Full category list needs discovery]
+- Categories expose app-facing `categoryKind`: **items** (individual items tracked with detail — furnishings, accessories, additional requests, mattresses), **projectCost** (costs logged at transaction level — install services, install supplies, fuel, delivery/receiving), and **feeCategory** (company revenue/payment categories). Raw `supportedTypes` values are storage compatibility fields.
 
 ### Item Entry (Current — Being Redesigned)
 - **Path A (being removed for itemized categories):** Items added directly to a project, marked as "business purchased, client owes"
 - **Path B (becoming the standard for itemized categories):** Items enter inventory via purchase transaction, then sold/moved to a project
 - **Proto item capture (new redesign):** Physical objects can be captured first as persistent photo groups (`protoItems`) from project, inventory, or transaction context, then converted later into real items, existing receipt-created items, or inventory-to-project flows. See `proto-item-capture.md`.
-- Non-itemized expenses currently [needs discovery — unclear how these are handled today]
+- Non-itemized project costs are `purchase` transactions under `categoryKind = projectCost` categories, without item rows.
 
 ### Invoicing
 - Ledger stores project-scoped invoices as demands for money.

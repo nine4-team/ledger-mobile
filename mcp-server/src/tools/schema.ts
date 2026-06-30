@@ -32,8 +32,8 @@ const ENTITIES: Record<string, EntitySchema> = {
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
       { name: "projectId", type: "string?", description: "Null = business inventory." },
-      { name: "type", type: "enum(transactionType)", description: "Purchase covers goods/services; inventory -> project uses Purchase; project-originated item -> inventory uses Sale; item going home to inventory uses Return; invoice collection uses paymentToBusiness." },
-      { name: "source", type: "string", description: "Vendor for normal purchases; inventory label for inventory movement transactions." },
+      { name: "type", type: "enum(transactionType)", description: "Normal creates accept enum(transactionTypeForCreate): Purchase, Return, or paymentToBusiness. Purchase covers goods/services; categoryKind owns itemization. Client payments write paymentToBusiness and require categoryKind == feeCategory. Inventory operations create Sale. Legacy Fee/Expense/To Inventory are read/filter only." },
+      { name: "source", type: "string", description: "Vendor for purchases/returns; inventory label for inventory movement transactions. Omit for paymentToBusiness client payments." },
       { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on inventory movement transactions." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
       { name: "taxRatePct", type: "number?", description: "Percent, e.g. 8.25." },
@@ -46,6 +46,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     enums: ["transactionType", "transactionStatus", "reimbursementType", "ingestionStatus"],
     notes: [
       "Every mutation must include a dated audit note in `notes`.",
+      "Client payments are paymentToBusiness transactions with categoryKind == feeCategory, no source/vendor, no item/tax/subtotal/discount fields, and no purchaser/reimbursement fields.",
       "Canceled transactions contribute $0 to budget calculations.",
       "Inventory movement accounting fields (amountCents, budgetCategoryId, type, source, projectId) are frozen after creation — enforced by Firestore rules and server-side validation. itemIds, notes, status, and updatedAt are mutable.",
       "Legacy canonical sales (isCanonicalInventorySale == true) are exempt from Sale immutability for backwards compatibility.",
@@ -153,10 +154,12 @@ const ENTITIES: Record<string, EntitySchema> = {
     requiredOnCreate: [],
     keyFields: [
       { name: "budgetCategoryId", type: "string", description: "Account-level preset category." },
+      { name: "categoryKind", type: "enum(categoryKind)", description: "Recommended behavior/display field derived from supportedTypes/categoryType: items, projectCost, feeCategory, or unknown." },
+      { name: "supportedTypes", type: "string[]", description: "Storage compatibility field. Do not use raw ['expense'] as a transaction type signal; categoryKind == projectCost is the product concept." },
       { name: "budgetCents", type: "number", description: "Allocation on a specific project." },
       { name: "excludeFromOverallBudget", type: "boolean", description: "When true, does not count toward project total." },
     ],
-    enums: ["categoryType"],
+    enums: ["categoryKind", "categoryType"],
   },
 };
 

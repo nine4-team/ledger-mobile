@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { BudgetCategory, ProjectBudgetCategory, Transaction } from "../types.js";
 import { accountCollection, subcollection, queryDocs } from "../util/query.js";
 import { formatCents } from "../util/format.js";
-import { normalizeSpendAmount, resolveSupportedTypes } from "../util/budget.js";
+import { budgetCategoryKind, normalizeSpendAmount, resolveSupportedTypes } from "../util/budget.js";
 
 export function registerBudgetTools(server: McpServer, db: Firestore) {
   // ── list_budget_categories ─────────────────────────────────────────────────
@@ -27,6 +27,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
       const rows = categories.map((c) => ({
         id: c.id,
         name: c.name,
+        categoryKind: budgetCategoryKind(c),
         categoryType: c.metadata?.categoryType ?? "general",
         supportedTypes: resolveSupportedTypes(c),
         excludeFromOverallBudget: c.metadata?.excludeFromOverallBudget ?? false,
@@ -72,6 +73,7 @@ export function registerBudgetTools(server: McpServer, db: Firestore) {
         return {
           id: alloc.id,
           name: cat?.name ?? "",
+          categoryKind: cat ? budgetCategoryKind(cat) : "items",
           categoryType: cat?.metadata?.categoryType ?? "general",
           supportedTypes: cat ? resolveSupportedTypes(cat) : ["purchase", "return"],
           budget: formatCents(alloc.budgetCents),

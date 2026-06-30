@@ -29,9 +29,9 @@ enum TransactionDisplayCalculations {
     /// - Purchase, inventory → project → `"Purchase from [source]"`
     /// - Sale, project → inventory → `"Sale to [source]"`
     /// - Return → `"Return to [source]"`
-    /// - Payment to Business → "Payment to Business"
+    /// - Client Payment → "Client Payment"
     /// - Fee → "Fee" (legacy)
-    /// - Expense → source as-is (vendor name)
+    /// - Expense → source as-is (legacy)
     /// - Purchase / other → source as-is
     /// - Legacy canonical sale with empty source → "Purchase from Inventory" /
     ///   "Sale to Inventory" / "Inventory Transfer"
@@ -54,7 +54,7 @@ enum TransactionDisplayCalculations {
             case .fee:
                 return "Fee"
             case .paymentToBusiness:
-                return "Payment to Business"
+                return TransactionType.paymentToBusiness.displayLabel
             case .purchase:
                 if transaction.isInventoryMovement {
                     return "Purchase from \(source)"
@@ -71,7 +71,7 @@ enum TransactionDisplayCalculations {
             return "Fee"
         }
         if transaction.transactionType == .paymentToBusiness {
-            return "Payment to Business"
+            return TransactionType.paymentToBusiness.displayLabel
         }
 
         // Legacy canonical inventory sale with empty source
@@ -161,10 +161,9 @@ enum TransactionDisplayCalculations {
     ///   absence.
     ///
     /// Note: this returns `"Business Inventory"` for any transaction with a null
-    /// `projectId`, including non-itemized types (Fee, Expense). If those have
-    /// no project they're business-overhead, but for now we treat null as
-    /// inventory uniformly. Refine if/when a separate "Business Overhead" scope
-    /// is introduced.
+    /// `projectId`, including legacy non-itemized rows. If those have no project
+    /// they're business-overhead, but for now we treat null as inventory
+    /// uniformly. Refine if/when a separate "Business Overhead" scope is introduced.
     static func projectLabel(for transaction: Transaction, projects: [Project]) -> String {
         if let projectId = transaction.projectId {
             return projects.first(where: { $0.id == projectId })?.name ?? "Unknown Project"

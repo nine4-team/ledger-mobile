@@ -513,9 +513,12 @@ Embedded within BudgetCategory documents.
 | excludeFromOverallBudget | boolean, nullable | When true, this category's spend is not included in the project's overall budget totals |
 
 **Category behavior:**
-- `supportedTypes = ["purchase", "return"]`: itemized/item category. Drives item entry, tax/subtotal audit, and inventory routing eligibility.
-- `supportedTypes = ["expense"]`: non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
-- `supportedTypes = ["fee"]`: fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
+- `categoryKind = items` (`supportedTypes = ["purchase", "return"]`): itemized/item category. Drives item entry, tax/subtotal audit, and inventory routing eligibility.
+- `categoryKind = projectCost` (`supportedTypes = ["expense"]`): non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
+- `categoryKind = feeCategory` (`supportedTypes = ["fee"]`): fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
+
+`supportedTypes` is still stored for compatibility. App and agent behavior should
+prefer derived `categoryKind` names.
 
 ### ProjectBudgetSummary
 

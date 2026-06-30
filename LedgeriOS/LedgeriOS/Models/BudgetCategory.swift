@@ -20,13 +20,18 @@ struct BudgetCategory: Codable, Identifiable, Hashable {
 }
 
 extension BudgetCategory {
-    /// A fee category accepts only `.fee` transactions — the distinction that
-    /// drives budget-tracker coloring and "received" vs "spent" labeling.
-    var isFeeCategory: Bool { resolvedSupportedTypes == [.fee] }
+    /// A fee category drives budget-tracker coloring and "received" vs "spent" labeling.
+    var isFeeCategory: Bool { categoryKind == .feeCategory }
 
-    /// An items category accepts only `.purchase` and `.return` — the distinction
-    /// that gates item entry and tax/subtotal fields on the transaction form.
-    var isItemsCategory: Bool { resolvedSupportedTypes == [.purchase, .return] }
+    /// An items category gates item entry and tax/subtotal fields on the transaction form.
+    var isItemsCategory: Bool { categoryKind == .items }
+
+    /// A project cost category stores transaction-level purchases without item rows.
+    var isProjectCostCategory: Bool { categoryKind == .projectCost }
+
+    var categoryKind: BudgetCategoryKind {
+        BudgetCategoryKind(supportedTypes: resolvedSupportedTypes)
+    }
 
     /// The transaction kinds this category accepts. Falls back to deriving from
     /// legacy `metadata.categoryType` when `supportedTypes` is absent (pre-migration docs).
@@ -38,6 +43,39 @@ extension BudgetCategory {
         case .general:  return [.expense]
         case .itemized: return [.purchase, .return]
         case nil:       return [.purchase, .return]
+        }
+    }
+}
+
+// MARK: - BudgetCategoryKind
+
+/// App-facing category behavior. This hides legacy storage literals like
+/// `supportedTypes == [.expense]` behind names that match the product model.
+enum BudgetCategoryKind: String, Codable, Hashable {
+    case items
+    case projectCost
+    case feeCategory
+    case unknown
+
+    init(supportedTypes: [TransactionType]) {
+        let set = Set(supportedTypes)
+        if set == [.fee] {
+            self = .feeCategory
+        } else if set == [.expense] {
+            self = .projectCost
+        } else if set == [.purchase, .return] {
+            self = .items
+        } else {
+            self = .unknown
+        }
+    }
+
+    var displayLabel: String {
+        switch self {
+        case .items: return "Items"
+        case .projectCost: return "Project Cost"
+        case .feeCategory: return "Fee Category"
+        case .unknown: return "General"
         }
     }
 }
@@ -67,39 +105,28 @@ enum TransactionTaxonomy {
 /// in settings rows, the budget tab, and anywhere else a category surfaces.
 enum CategoryDisplay {
     static func pillLabel(for category: BudgetCategory) -> String {
-        pillLabel(for: category.resolvedSupportedTypes)
+        category.categoryKind.displayLabel
     }
 
     static func pillColor(for category: BudgetCategory) -> Color {
-        pillColor(for: category.resolvedSupportedTypes)
+        pillColor(for: category.categoryKind)
     }
 
     static func pillLabel(for supportedTypes: [TransactionType]) -> String {
-        switch shape(of: supportedTypes) {
-        case .fee: return "Fee"
-        case .expense: return "Expense"
-        case .itemsPurchasesReturns: return "Items"
-        case .unknown: return "General"
-        }
+        BudgetCategoryKind(supportedTypes: supportedTypes).displayLabel
     }
 
     static func pillColor(for supportedTypes: [TransactionType]) -> Color {
-        switch shape(of: supportedTypes) {
-        case .fee: return StatusColors.badgeWarning
-        case .expense: return BrandColors.primary
-        case .itemsPurchasesReturns: return StatusColors.badgeInfo
-        case .unknown: return BrandColors.primary
-        }
+        pillColor(for: BudgetCategoryKind(supportedTypes: supportedTypes))
     }
 
-    private enum Shape { case fee, expense, itemsPurchasesReturns, unknown }
-
-    private static func shape(of supportedTypes: [TransactionType]) -> Shape {
-        let set = Set(supportedTypes)
-        if set == [.fee] { return .fee }
-        if set == [.expense] { return .expense }
-        if set == [.purchase, .return] { return .itemsPurchasesReturns }
-        return .unknown
+    private static func pillColor(for kind: BudgetCategoryKind) -> Color {
+        switch kind {
+        case .feeCategory: return StatusColors.badgeWarning
+        case .projectCost: return BrandColors.primary
+        case .items: return StatusColors.badgeInfo
+        case .unknown: return BrandColors.primary
+        }
     }
 }
 

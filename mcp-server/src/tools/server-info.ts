@@ -45,6 +45,10 @@ export function registerServerInfoTools(server: McpServer, db: Firestore) {
           auditNotes: "Every mutation requires a dated note in `notes`, e.g. '4/6 — short reason'.",
           ids: "Opaque strings; never truncate.",
           money: "Integer cents.",
+          transactionTaxonomy:
+            "Normal transaction writes use Purchase/Return/paymentToBusiness. paymentToBusiness is Client Payment and requires a feeCategory budget category with no source/vendor/items/tax/subtotal/discount/purchaser/reimbursement. Sale is inventory-system-created. Fee/Expense/To Inventory are legacy read/filter values only.",
+          categoryTaxonomy:
+            "Use categoryKind for behavior: items, projectCost, feeCategory. Raw supportedTypes/categoryType values are storage compatibility fields.",
         },
       })
     )

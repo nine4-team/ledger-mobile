@@ -93,14 +93,18 @@ enum TransactionType: String, Codable, CaseIterable, CaseInsensitiveStringEnum {
     ]
 
     static var normalEntryCases: [TransactionType] { [.purchase, .return] }
+    static var canonicalEventCases: [TransactionType] { [.purchase, .return, .sale, .paymentToBusiness] }
+    static var legacyReadCases: [TransactionType] { [.fee, .expense] }
 
-    var isLegacyWriteType: Bool {
+    var isLegacyReadType: Bool {
         self == .fee || self == .expense
     }
 
+    var isLegacyWriteType: Bool { isLegacyReadType }
+
     var displayLabel: String {
         switch self {
-        case .paymentToBusiness: return "Payment to Business"
+        case .paymentToBusiness: return "Client Payment"
         default: return rawValue.capitalized
         }
     }

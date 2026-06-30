@@ -4,7 +4,8 @@
 
 The New Transaction flow records actual financial events. It does not create
 invoice demand. Planned design fees, retainers, and other New Charges belong on
-invoices until money actually moves.
+invoices until money actually moves. When money has moved, users can record it
+as a Client Payment.
 
 ## Transaction Types
 
@@ -12,12 +13,13 @@ Normal user-created transactions use:
 
 - `purchase` — money spent to buy goods or services.
 - `return` — money credited/refunded back from a vendor, or item return flows.
+- `paymentToBusiness` — money actually received from the client by the design
+  business. Shown in the UI as **Client Payment**.
 
 Other transaction types are system-created:
 
 - `sale` — inventory operation when the business acquires project-originated
   items into inventory.
-- `paymentToBusiness` — invoice collection when the client pays the business.
 
 Legacy read-compatible values:
 
@@ -42,13 +44,18 @@ The transaction type alone must never trigger item entry or inventory routing.
 
 ## Steps
 
-1. **Type** — Purchase or Return.
+1. **Type** — Purchase, Return, or Client Payment.
 2. **Who paid?** — shown for Purchase. Return skips this.
 3. **Destination** — project selection.
 4. **Budget Category** — required.
-5. **Vendor / Source** — required for normal purchases and returns.
+5. **Vendor / Source** — required for purchases and returns. Skipped for Client
+   Payment.
 6. **Details** — date, amount, notes, receipt fields, and itemized-only tax /
    subtotal fields when the selected category is itemized.
+
+For Client Payment, budget categories are limited to fee/revenue categories such
+as Design Fee. Client Payment never asks for items, tax/subtotal audit, source,
+vendor, purchaser, or reimbursement fields.
 
 ## Inventory Routing
 

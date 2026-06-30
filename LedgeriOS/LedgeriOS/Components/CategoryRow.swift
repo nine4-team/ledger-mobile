@@ -40,7 +40,7 @@ struct CategoryRow: View {
     }
 }
 
-#Preview("Expense") {
+#Preview("Project Cost") {
     CategoryRow(name: "Materials", supportedTypes: [.expense])
         .padding(Spacing.screenPadding)
 }
@@ -50,7 +50,7 @@ struct CategoryRow: View {
         .padding(Spacing.screenPadding)
 }
 
-#Preview("Fee") {
+#Preview("Fee Category") {
     CategoryRow(name: "Architect Fee", supportedTypes: [.fee])
         .padding(Spacing.screenPadding)
 }

@@ -70,8 +70,9 @@ struct TransactionFilterMenu: View {
                 ("purchase", "Purchase"),
                 ("return", "Return"),
                 ("sale", "Sale"),
-                ("fee", "Fee"),
-                ("expense", "Expense"),
+                ("paymentToBusiness", TransactionType.paymentToBusiness.displayLabel),
+                ("fee", "Fee (legacy)"),
+                ("expense", "Expense (legacy)"),
             ]
         ))
 

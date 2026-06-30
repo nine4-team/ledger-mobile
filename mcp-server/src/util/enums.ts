@@ -8,15 +8,19 @@
  */
 
 /**
- * Transaction types. Canonical new writes use Purchase, Return, Sale, and
- * paymentToBusiness. Fee, Expense, and To Inventory are legacy read-compatible
- * values only.
+ * Transaction types. Normal user/tool writes use Purchase, Return, and
+ * paymentToBusiness. Inventory workflows create Sale. Fee, Expense, and To
+ * Inventory are legacy read-compatible values only.
  */
+export const writableTransactionTypes = ["Purchase", "Return", "paymentToBusiness"] as const;
+export type WritableTransactionType = (typeof writableTransactionTypes)[number];
+
+export const systemTransactionTypes = ["Sale"] as const;
+export type SystemTransactionType = (typeof systemTransactionTypes)[number];
+
 export const transactionTypes = [
-  "Purchase",
-  "Return",
-  "Sale",
-  "paymentToBusiness",
+  ...writableTransactionTypes,
+  ...systemTransactionTypes,
 ] as const;
 export type TransactionType = (typeof transactionTypes)[number];
 
@@ -70,6 +74,9 @@ export type InventorySaleDirection = (typeof inventorySaleDirections)[number];
 export const categoryTypes = ["general", "itemized", "fee", "expense"] as const;
 export type CategoryType = (typeof categoryTypes)[number];
 
+export const categoryKinds = ["items", "projectCost", "feeCategory", "unknown"] as const;
+export type CategoryKind = (typeof categoryKinds)[number];
+
 /** Describes an enum for introspection output. */
 export interface EnumSpec {
   name: string;
@@ -79,10 +86,18 @@ export interface EnumSpec {
 
 export const ENUMS: EnumSpec[] = [
   {
+    name: "transactionTypeForCreate",
+    values: writableTransactionTypes,
+    description:
+      "Allowed type values for normal create_transaction writes. Purchase covers goods/services; " +
+      "Return covers refunds/item returns; paymentToBusiness covers manually recorded client payments and requires a feeCategory budget category.",
+  },
+  {
     name: "transactionType",
     values: [...transactionTypes, ...legacyTransactionTypes],
     description:
-      "Transaction type. New writes use Purchase, Return, Sale, or paymentToBusiness. " +
+      "Transaction type for reads/filters. Normal writes use Purchase, Return, or paymentToBusiness; " +
+      "inventory workflows create Sale. Invoice collection also creates paymentToBusiness. " +
       "Purchase covers goods and services; itemization is owned by budget category. " +
       "Fee, Expense, and To Inventory are legacy read-compatible values only.",
   },
@@ -142,7 +157,14 @@ export const ENUMS: EnumSpec[] = [
     name: "categoryType",
     values: categoryTypes,
     description:
-      "Legacy budget category metadata classification. Prefer supportedTypes. " +
-      "Current values are general/expense for non-itemized project costs, itemized for item categories, and fee for fee categories.",
+      "Legacy budget category metadata classification. Prefer categoryKind for business logic and display. " +
+      "Storage values general/expense mean non-itemized project cost, itemized means items, and fee means fee category.",
+  },
+  {
+    name: "categoryKind",
+    values: categoryKinds,
+    description:
+      "App-facing budget category behavior derived from supportedTypes/categoryType. " +
+      "items categories can contain item rows; projectCost categories are non-itemized purchases; feeCategory categories are company revenue/payment categories.",
   },
 ];

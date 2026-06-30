@@ -18,6 +18,7 @@ Last updated: 2026-06-29
 - [superseded] [Canonical Sales](canonical-sales.md) — **Legacy.** The original aggregator-based sale model. Preserved for historical reads and the dual-read sign convention path. New work should reference `sale-transactions.md` instead.
 
 ### Transactions & Item Entry
+- [shipped] [Agent Transaction Taxonomy Guide](agent-transaction-taxonomy-guide.md) — Canonical short guide for AI/MCP clients: normal writes use `purchase`/`return`, system workflows create `sale`/`paymentToBusiness`, legacy `fee`/`expense`/`to inventory` are read-compatible only, and `categoryKind` owns itemization/routing.
 - [new] [Proto Item Capture](proto-item-capture.md) — **Active redesign.** Persistent photo-first item intake queue. Designers capture physical objects quickly; reviewers later create/merge items, match transactions, or sell from inventory.
 - [modify] [Item & Expense Entry Flow](item-entry-flow.md) — Category-based routing remains the financial model, but physical item intake is being redesigned around proto item capture.
 - [shipped] [Inventory Source & Naming](inventory-source-naming.md) — Transaction source labeling for inventory sales, original source preservation, and client-facing source masking. Two-field source split: `item.source` (original vendor, immutable) + `item.currentSource` (immediate source, mutable). Reports and search cards read `currentSource`. All items backfilled 2026-04-11.

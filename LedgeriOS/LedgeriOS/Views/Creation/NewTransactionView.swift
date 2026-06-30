@@ -23,11 +23,11 @@ enum TransactionDestination: Hashable {
 enum TaxMode: Hashable { case none, rate, subtotal }
 
 enum TransactionCreationStep: Hashable {
-    case typeSelection        // Fee / Expense / Purchase / Return
-    case whoPaid              // Client / Design Business (Expense + Purchase)
+    case typeSelection        // Purchase / Return / Client Payment
+    case whoPaid              // Client / Design Business (Purchase)
     case destination          // Project picker (not auto-inventory routing)
     case budgetCategory       // pick a BudgetCategory
-    case vendor               // vendor picker (skipped for Fee)
+    case vendor               // vendor/source picker
     case details              // full detail form
 }
 
@@ -41,7 +41,7 @@ enum TransactionCreationStepResolver {
         guard let type else { return [.typeSelection] }
 
         var steps: [TransactionCreationStep] = [.typeSelection]
-        if type != .return { steps.append(.whoPaid) }
+        if type == .purchase { steps.append(.whoPaid) }
         if shouldSelectDestination(for: context) { steps.append(.destination) }
         if destinationProjectId != nil { steps.append(.budgetCategory) }
         if !skipVendor { steps.append(.vendor) }
@@ -155,9 +155,11 @@ struct NewTransactionView: View {
         return selectedCategory?.isItemsCategory == true
     }
 
-    private var skipVendor: Bool { false }
+    private var skipVendor: Bool { transactionType == .paymentToBusiness }
 
     private var showsReimbursementToggle: Bool { transactionType == .purchase }
+
+    private var showsSourceVendorField: Bool { transactionType != .paymentToBusiness }
 
     /// The project the transaction will land on, if any. `nil` means the
     /// transaction lives on inventory (no project).
@@ -309,6 +311,7 @@ struct NewTransactionView: View {
             VStack(spacing: Spacing.md) {
                 typeCard("Purchase", icon: "cart", type: .purchase)
                 typeCard("Return", icon: "arrow.uturn.left", type: .return)
+                typeCard("Client Payment", icon: "dollarsign.circle", type: .paymentToBusiness)
             }
         }
     }
@@ -421,7 +424,9 @@ struct NewTransactionView: View {
             return !supported.contains(.fee)
         case .return:
             return category.isItemsCategory
-        case .sale, .fee, .expense, .paymentToBusiness:
+        case .paymentToBusiness:
+            return category.isFeeCategory
+        case .sale, .fee, .expense:
             return false
         }
     }
@@ -518,20 +523,22 @@ struct NewTransactionView: View {
         ) {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 inventoryRoutingNote
-                if !vendor.isEmpty {
-                    VendorPickerField(
-                        value: $vendor,
-                        label: "Source / Vendor",
-                        showPicker: $showVendorPicker,
-                        fixedOptions: fixedSourceOptions
-                    )
-                } else {
-                    VendorPickerField(
-                        value: $source,
-                        label: "Source / Vendor",
-                        showPicker: $showVendorPicker,
-                        fixedOptions: fixedSourceOptions
-                    )
+                if showsSourceVendorField {
+                    if !vendor.isEmpty {
+                        VendorPickerField(
+                            value: $vendor,
+                            label: "Source / Vendor",
+                            showPicker: $showVendorPicker,
+                            fixedOptions: fixedSourceOptions
+                        )
+                    } else {
+                        VendorPickerField(
+                            value: $source,
+                            label: "Source / Vendor",
+                            showPicker: $showVendorPicker,
+                            fixedOptions: fixedSourceOptions
+                        )
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -794,12 +801,13 @@ struct NewTransactionView: View {
         var transaction = Transaction()
         transaction.projectId = destinationProjectId
         transaction.transactionType = transactionType
-        transaction.source = effectiveSource.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSource = effectiveSource.trimmingCharacters(in: .whitespacesAndNewlines)
+        transaction.source = trimmedSource.isEmpty || transactionType == .paymentToBusiness ? nil : trimmedSource
         if let transactionDate {
             transaction.transactionDate = dateFormatter.string(from: transactionDate)
         }
         transaction.amountCents = parseCents(amount)
-        transaction.purchasedBy = purchasedBy
+        transaction.purchasedBy = transactionType == .purchase ? purchasedBy : nil
         transaction.reimbursementType = resolvedReimbursementType
         transaction.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? nil : notes.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -876,9 +884,9 @@ struct NewTransactionView: View {
     }
 
     /// Narrow-semantic reimbursement derivation:
-    /// - Expense with the "needs reimbursement" toggle on → direction inferred
+    /// - Purchase with the "needs reimbursement" toggle on → direction inferred
     ///   from who paid (client-paid → owed-to-client; business-paid → owed-to-company).
-    /// - Everything else → nil. Fees, Purchases, Returns, Sales, toggle-off all
+    /// - Everything else → nil. Returns, Sales, payment collection, toggle-off all
     ///   leave this empty.
     private var resolvedReimbursementType: String? {
         guard showsReimbursementToggle, needsReimbursement else { return nil }

@@ -12,7 +12,7 @@ Canonical transaction event types:
 | `purchase` | Money spent to buy goods or services. | New Transaction, MCP create transaction |
 | `return` | Vendor return/refund or item return movement. | New Transaction, inventory operations |
 | `sale` | Business acquires project-originated items into inventory. | Inventory operations only |
-| `paymentToBusiness` | Client pays the design business. | Invoice collection only |
+| `paymentToBusiness` | Client pays the design business. | New Transaction Client Payment branch, invoice collection |
 
 Legacy read-compatible values:
 
@@ -46,11 +46,13 @@ Every transaction must have `budgetCategoryId`.
 During migration, readers may derive category behavior from legacy
 `metadata.categoryType` or `supportedTypes`, but the target behavior is:
 
-- itemized/items categories support item-backed purchases and returns.
-- non-itemized project cost categories support purchase transactions without
-  item rows.
-- invoice collection creates categorized `paymentToBusiness` transactions using
-  the budget category stored on each invoice line.
+- `categoryKind = items`: item-backed purchases and returns.
+- `categoryKind = projectCost`: non-itemized project cost purchases without
+  item rows. The storage shape may still be `supportedTypes = ["expense"]`;
+  that is not a transaction type recommendation.
+- `categoryKind = feeCategory`: company revenue/payment categories. Invoice
+  collection and manual Client Payment entry create categorized
+  `paymentToBusiness` transactions using fee/revenue categories.
 
 Mixed budget categories with `supportedTypes = ["purchase", "return",
 "expense"]` are not an approved product concept. They are migration-era data
@@ -62,6 +64,12 @@ Invoices are demand. Transactions are money movement.
 
 When an invoice is marked collected, the system groups settled invoice lines by
 `budgetCategoryId` and creates one `paymentToBusiness` transaction per category.
+
+Users may also record a Client Payment directly from New Transaction when money
+has actually moved outside the invoice collection workflow. This writes
+`type = paymentToBusiness`, requires a `categoryKind = feeCategory` budget
+category, omits vendor/source, and must not include item, subtotal, tax,
+discount, purchaser, or reimbursement fields.
 
 Every settlement transaction stores:
 

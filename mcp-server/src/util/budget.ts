@@ -1,5 +1,7 @@
 import type { BudgetCategory, Transaction } from "../types.js";
 
+export type BudgetCategoryKind = "items" | "projectCost" | "feeCategory" | "unknown";
+
 /**
  * Derive `supportedTypes` for a budget category, falling back to the legacy
  * `metadata.categoryType` when the new field is absent. Mirrors the
@@ -22,15 +24,32 @@ export function resolveSupportedTypes(c: BudgetCategory): string[] {
 }
 
 /**
- * Human-readable category-type label derived from supportedTypes.
- * "Fee" / "Expense" / "Items" / "General" — matches the iOS pill label.
+ * App-facing category behavior derived from supportedTypes. This hides legacy
+ * storage literals like ["expense"] behind product names.
+ */
+export function budgetCategoryKind(c: BudgetCategory): BudgetCategoryKind {
+  const supported = new Set(resolveSupportedTypes(c));
+  if (supported.size === 1 && supported.has("fee")) return "feeCategory";
+  if (supported.size === 1 && supported.has("expense")) return "projectCost";
+  if (supported.size === 2 && supported.has("purchase") && supported.has("return")) return "items";
+  return "unknown";
+}
+
+/**
+ * Human-readable category-type label derived from categoryKind.
+ * "Fee Category" / "Project Cost" / "Items" / "General" — matches the iOS pill label.
  */
 export function categoryPillLabel(c: BudgetCategory): string {
-  const supported = new Set(resolveSupportedTypes(c));
-  if (supported.size === 1 && supported.has("fee")) return "Fee";
-  if (supported.size === 1 && supported.has("expense")) return "Expense";
-  if (supported.has("purchase") && supported.has("return")) return "Items";
-  return "General";
+  switch (budgetCategoryKind(c)) {
+    case "feeCategory":
+      return "Fee Category";
+    case "projectCost":
+      return "Project Cost";
+    case "items":
+      return "Items";
+    case "unknown":
+      return "General";
+  }
 }
 
 /**

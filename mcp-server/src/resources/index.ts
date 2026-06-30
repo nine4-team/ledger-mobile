@@ -4,7 +4,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { Project, BudgetCategory, Item } from "../types.js";
 import { accountCollection, subcollection, queryDocs, getDoc } from "../util/query.js";
 import { formatCents } from "../util/format.js";
-import { normalizeSpendAmount, resolveSupportedTypes, categoryPillLabel } from "../util/budget.js";
+import { budgetCategoryKind, normalizeSpendAmount, resolveSupportedTypes, categoryPillLabel } from "../util/budget.js";
 import type { Transaction, ProjectBudgetCategory } from "../types.js";
 
 export function registerResources(server: McpServer, db: Firestore) {
@@ -145,6 +145,7 @@ export function registerResources(server: McpServer, db: Firestore) {
       const rows = categories.map((c) => ({
         id: c.id,
         name: c.name,
+        categoryKind: budgetCategoryKind(c),
         categoryType: c.metadata?.categoryType ?? "general",
         supportedTypes: resolveSupportedTypes(c),
         excludeFromOverallBudget: c.metadata?.excludeFromOverallBudget ?? false,

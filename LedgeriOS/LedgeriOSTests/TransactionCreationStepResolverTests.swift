@@ -52,4 +52,20 @@ struct TransactionCreationStepResolverTests {
             .details,
         ])
     }
+
+    @Test("Project-scoped client payment skips who paid and vendor")
+    func projectClientPaymentSkipsWhoPaidAndVendorSelection() {
+        let steps = TransactionCreationStepResolver.orderedSteps(
+            type: .paymentToBusiness,
+            context: .project("project-123"),
+            destinationProjectId: "project-123",
+            skipVendor: true
+        )
+
+        #expect(steps == [
+            .typeSelection,
+            .budgetCategory,
+            .details,
+        ])
+    }
 }
