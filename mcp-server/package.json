@@ -10,7 +10,8 @@
     "dev": "tsc --watch",
     "start:stdio": "node build/index.js",
     "start:http": "node build/http.js",
-    "test": "vitest run --pool=forks --poolOptions.forks.singleFork"
+    "test": "node -e \"console.error('MCP npm test is intentionally disabled: it uses the legacy Firestore emulator harness. Use npm run build plus a real-Firestore disposable smoke test. If you are intentionally working on the legacy harness, run npm run test:legacy:emulator.'); process.exit(1)\"",
+    "test:legacy:emulator": "vitest run --pool=forks --poolOptions.forks.singleFork"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

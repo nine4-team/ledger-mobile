@@ -1,6 +1,8 @@
 # Firebase Emulator Setup & Usage
 
-This project uses the Firebase Emulator Suite for local development. This guide covers how to start the emulators with data persistence, seed data if necessary, and manage test users.
+This guide covers the Firebase Emulator Suite for app/offline experiments, data persistence, seed data, and test users.
+
+> **Do not use this as the default MCP validation path.** Ledger MCP local development should run against real Firestore with a Firebase Admin service-account key, matching the deployed MCP server. The emulator-backed MCP Vitest harness is legacy coverage for specific inventory movement tests and is not the recommended way to verify normal MCP tool changes.
 
 ## 🚀 Quick Start
 

@@ -1,5 +1,9 @@
 /**
- * Test helpers for the MCP server per-batch sale tests.
+ * Legacy test helpers for the MCP server per-batch sale tests.
+ *
+ * Normal MCP validation should use real Firestore with a Firebase Admin
+ * service-account key. This emulator harness exists only for the older
+ * inventory movement Vitest coverage.
  *
  * Strategy:
  * - Firestore emulator provides the backing store (set FIRESTORE_EMULATOR_HOST

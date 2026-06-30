@@ -214,7 +214,7 @@ or { error: { code, message, hint } }</div>
 <p>Inside <a href="../../mcp-server/src/">mcp-server/src/</a>:</p>
 <table>
   <tr><td>index.ts</td><td>Entry point. Registers every tool + resource. The <code>instructions</code> field (lines 28–35) is what Claude reads on connect.</td></tr>
-  <tr><td>firebase.ts</td><td>Firebase Admin SDK init. Honors <code>FIRESTORE_EMULATOR_HOST</code> for local dev.</td></tr>
+  <tr><td>firebase.ts</td><td>Firebase Admin SDK init. Local MCP validation should use real Firestore with a service-account key. <code>FIRESTORE_EMULATOR_HOST</code> is only for the legacy emulator test harness.</td></tr>
   <tr><td>tools/transactions.ts</td><td>list / get / search / create / update / bulk-update / cancel.</td></tr>
   <tr><td>tools/items.ts</td><td>Item CRUD + bulk ops + items_needing_attention.</td></tr>
   <tr><td>tools/projects.ts</td><td>Project CRUD + health + budget breakdowns.</td></tr>

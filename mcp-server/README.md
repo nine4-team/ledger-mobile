@@ -14,37 +14,50 @@ The MCP config is in `.mcp.json` at the repo root. Claude Code will prompt you t
 
 ## Usage
 
-### With Firebase Emulators (Development)
+### Local MCP Against Real Firestore
 
-Start the emulators first:
+Use the real Firebase project for local MCP work. The repo's `.mcp.json` should point at the built server and a Firebase Admin service-account key. Do **not** set `FIRESTORE_EMULATOR_HOST` for normal MCP development or validation.
 
-```bash
-npm run dev:native
-```
-
-The `.mcp.json` config already points at the local emulators. Restart Claude Code after building.
-
-### With Production Firestore
-
-Update `.mcp.json` env vars:
+Example `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "ledger": {
       "command": "node",
-      "args": ["mcp-server/build/index.js"],
+      "args": [
+        "mcp-server/build/index.js",
+        "--credentials",
+        "/Users/benjaminmackenzie/.config/gcloud/ledger-nine4-firebase-adminsdk.json"
+      ],
       "env": {
         "FIREBASE_PROJECT_ID": "ledger-nine4",
-        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/service-account.json",
-        "LEDGER_ACCOUNT_ID": "your-account-id"
+        "LEDGER_ACCOUNT_ID": "1dd4fd75-8eea-4f7a-98e7-bf45b987ae94"
       }
     }
   }
 }
 ```
 
-Remove `FIRESTORE_EMULATOR_HOST` to connect to production.
+Alternative: omit `--credentials` and set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json` in `env`.
+
+If you see `invalid_grant`, `invalid_rapt`, or other ADC reauth errors, use the service-account key path above instead of Application Default Credentials.
+
+### Validation
+
+For MCP changes, the minimum local checks are:
+
+```bash
+cd mcp-server
+npm run build
+git diff --check
+```
+
+For write-path changes, run a disposable smoke against real Firestore using a service account, then clean up the created documents. Prefer a tiny create/read/update/promote/delete flow over the old emulator harness, because the app and remote MCP server operate against real Firestore.
+
+### Legacy Emulator Harness
+
+`npm test` currently uses an older Firestore emulator-based Vitest harness under `mcp-server/test/`. Treat it as legacy coverage for specific inventory movement tests, not as the default way to validate MCP behavior. Do not start or debug emulators just to verify ordinary MCP changes unless you are intentionally working on that test harness.
 
 ## Available Tools
 

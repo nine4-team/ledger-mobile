@@ -1,5 +1,9 @@
 /**
- * Per-batch sale redesign — MCP test matrix (M1-M9).
+ * Legacy emulator coverage: per-batch sale redesign — MCP test matrix (M1-M9).
+ *
+ * Do not use this harness as the default MCP validation path. Normal MCP
+ * smoke tests should run against real Firestore with a Firebase Admin
+ * service-account key, matching local/deployed MCP behavior.
  *
  * Requires Firestore emulator running on 127.0.0.1:8181:
  *   firebase emulators:start --only firestore --project demo-mcp-test
