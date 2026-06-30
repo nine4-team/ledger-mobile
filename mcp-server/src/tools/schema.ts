@@ -167,7 +167,7 @@ export function registerSchemaTools(server: McpServer, db: Firestore) {
     "[read-only] Return enum values, key fields, and business rules for ledger entities. Call this ONCE per session instead of guessing. Omit `entity` for the full manifest.",
     {
       entity: z
-        .enum(["transaction", "item", "project", "invoice", "space", "budget"])
+        .enum(["transaction", "item", "quick_draft_item", "project", "invoice", "space", "budget"])
         .optional()
         .describe("Which entity to describe. Omit for all."),
     },
