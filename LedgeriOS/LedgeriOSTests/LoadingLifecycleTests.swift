@@ -304,6 +304,26 @@ struct LoadingLifecycleTests {
         #expect(context.items.isEmpty)
     }
 
+    @Test("Separate ProjectContext instances keep independent active projects")
+    @MainActor
+    func separateProjectContextsDoNotClearEachOther() {
+        let counter = ListenerCounter()
+        let first = makeProjectContext(counter: counter)
+        let second = makeProjectContext(counter: counter)
+
+        first.activate(accountId: "account-1", projectId: "project-1")
+        first.items = [Item()]
+
+        second.activate(accountId: "account-1", projectId: "project-2")
+
+        #expect(first.currentProjectId == "project-1")
+        #expect(second.currentProjectId == "project-2")
+        #expect(first.items.count == 1)
+        #expect(counter.projectDetailSubscriptions == 2)
+        #expect(counter.projectBudgetCategorySubscriptions == 2)
+        #expect(counter.removeCalls == 0)
+    }
+
     @Test("InventoryContext re-activating same account keeps existing listeners")
     @MainActor
     func inventoryActivationIsIdempotentForSameAccount() {

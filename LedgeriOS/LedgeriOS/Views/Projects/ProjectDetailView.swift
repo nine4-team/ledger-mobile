@@ -3,7 +3,6 @@ import SwiftUI
 struct ProjectDetailView: View {
     let project: Project
     @Environment(AccountContext.self) private var accountContext
-    @Environment(AuthManager.self) private var authManager
     @Environment(ProjectContext.self) private var projectContext
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = "items"
@@ -194,19 +193,6 @@ struct ProjectDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
-        }
-        .task(id: project.id) {
-            guard let accountId = accountContext.currentAccountId,
-                  let projectId = project.id else { return }
-            projectContext.activate(
-                accountId: accountId,
-                projectId: projectId,
-                userId: authManager.currentUser?.uid,
-                member: accountContext.member
-            )
-        }
-        .onChange(of: accountContext.member) { _, member in
-            projectContext.updateFinancialAccess(member: member)
         }
         .background(BrandColors.background)
     }

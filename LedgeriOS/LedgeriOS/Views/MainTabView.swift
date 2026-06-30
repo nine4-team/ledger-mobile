@@ -47,7 +47,7 @@ struct MainTabView: View {
                 case .projects:
                     ProjectsListView()
                         .navigationDestination(for: Project.self) { project in
-                            ProjectDetailView(project: project)
+                            ProjectDetailContainer(project: project)
                         }
                         .navigationDestination(for: AppDestination.self) { dest in
                             switch dest {
@@ -118,7 +118,7 @@ struct MainTabView: View {
                 NavigationStack {
                     ProjectsListView()
                         .navigationDestination(for: Project.self) { project in
-                            ProjectDetailView(project: project)
+                            ProjectDetailContainer(project: project)
                         }
                         .navigationDestination(for: AppDestination.self) { dest in
                             switch dest {

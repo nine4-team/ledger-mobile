@@ -102,6 +102,7 @@
 		770CC1EE918C82E1E33BA382 /* ExportFieldConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48B0FF5FB9BE38F1A67838A /* ExportFieldConfigTests.swift */; };
 		7718EF434235ECBC2E40280A /* SellToProjectModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9694C3A83A4F85B321C80E /* SellToProjectModal.swift */; };
 		7AD70C88BBA1DF5E11328F28 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */; };
+		1B036B9136C14C9282ED3AA9 /* ProjectDetailContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2BA5A28A1BD49C98C32E035 /* ProjectDetailContainer.swift */; };
 		7B96D5C66E33AEEF52C96952 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6019DE1D2956133DB34D47E4 /* Foundation.framework */; };
 		7BB72213AC112E76A44E9F5E /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A074B54DC26CF87DC9E20BE /* ImageCache.swift */; };
 		7BE4EF8DD3F2F66B7C978C6E /* ItemsServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E66FA7331B717CBB40F84F76 /* ItemsServiceProtocol.swift */; };
@@ -617,6 +618,7 @@
 		CH01F00100000000000C0002 /* CardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardHeader.swift; sourceTree = "<group>"; };
 		CH01F00100000000000C0003 /* CardActionButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardActionButtons.swift; sourceTree = "<group>"; };
 		D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		F2BA5A28A1BD49C98C32E035 /* ProjectDetailContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectDetailContainer.swift; sourceTree = "<group>"; };
 		D4E5F6071829304D5E6F7081 /* ItemsListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListControlBar.swift; sourceTree = "<group>"; };
 		D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectBudgetCategoriesService.swift; sourceTree = "<group>"; };
 		D5B86A1C58FBF298270046AF /* AttachmentRef.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttachmentRef.swift; sourceTree = "<group>"; };
@@ -810,8 +812,9 @@
 				BL00000000000000000F0013 /* InvoiceDetailView.swift */,
 				47359CC9BAC54F429C12F3FA /* AccountingTabView.swift */,
 				01B811FD8239474CAE880515 /* FinancesTabView.swift */,
-				4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */,
-				D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */,
+					4BFD4CDF0707CCDC5992843F /* ProjectsListView.swift */,
+					F2BA5A28A1BD49C98C32E035 /* ProjectDetailContainer.swift */,
+					D1579F51AFF3B2C527A3ECC5 /* ProjectDetailView.swift */,
 				5DD203EAE8B8232355376751 /* BudgetTabView.swift */,
 				0830037BA7D2372C6ABB41EA /* ItemsTabPlaceholder.swift */,
 				0018DD39ACA68B77F5C8E4BC /* TransactionsTabPlaceholder.swift */,
@@ -1620,9 +1623,10 @@
 				WP09B00100000000000L0001 /* ListFilterSortCalculations.swift in Sources */,
 				73740CD6B2FDB6C3E2ED5D9F /* BudgetTabCalculations.swift in Sources */,
 				EABB457123AEA19069EE5474 /* ScrollableTabBar.swift in Sources */,
-				4736BEA99AE52195374A39CB /* ProjectCard.swift in Sources */,
-				757A49D8CE3DB66051F509B3 /* ProjectsListView.swift in Sources */,
-				7AD70C88BBA1DF5E11328F28 /* ProjectDetailView.swift in Sources */,
+					4736BEA99AE52195374A39CB /* ProjectCard.swift in Sources */,
+					757A49D8CE3DB66051F509B3 /* ProjectsListView.swift in Sources */,
+					1B036B9136C14C9282ED3AA9 /* ProjectDetailContainer.swift in Sources */,
+					7AD70C88BBA1DF5E11328F28 /* ProjectDetailView.swift in Sources */,
 				B6E0ED19457893CB889A0B25 /* BudgetTabView.swift in Sources */,
 				E7C0699A2217595E80D1CFD6 /* ItemsTabPlaceholder.swift in Sources */,
 				41D9319222D75C37A1DA765A /* TransactionsTabPlaceholder.swift in Sources */,

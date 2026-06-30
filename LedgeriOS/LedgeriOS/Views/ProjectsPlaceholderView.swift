@@ -20,7 +20,7 @@ struct ProjectsPlaceholderView: View {
         )
         .navigationTitle("Projects")
         .navigationDestination(for: Project.self) { project in
-            Text("Project: \(project.name)")
+            ProjectDetailContainer(project: project)
         }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
