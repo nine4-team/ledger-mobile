@@ -9,6 +9,9 @@ set -euo pipefail
 #   APPCAST_BASE_URL=https://ledger-nine4.web.app/sparkle/
 #   SPARKLE_BIN=/path/to/Sparkle/bin
 #   SPARKLE_RELEASE_NOTES_FILE=/path/to/release-notes.md
+#   SPARKLE_DERIVED_DATA=/path/to/DerivedData  # default: stable cache under ~/Library/Developer/Xcode/DerivedData
+#   CLEAN_SPARKLE_BUILD=1  # remove Sparkle DerivedData before building
+#   XCODE_FORMATTER=xcbeautify|xcpretty|cat  # default: auto-detect
 #   DEPLOY=1  # run firebase deploy --only hosting after staging files
 
 TEAM_ID="5VHL56HV63"
@@ -19,11 +22,52 @@ HOSTING_SPARKLE_DIR="${HOSTING_SPARKLE_DIR:-firebase/hosting/sparkle}"
 ARCHIVE_PATH="/tmp/LedgeriOS-Sparkle.xcarchive"
 EXPORT_PATH="/tmp/LedgeriOS-Sparkle-Export"
 EXPORT_PLIST="/tmp/LedgeriOS-Sparkle-ExportOptions.plist"
-DERIVED_DATA="/tmp/LedgeriOS-Sparkle-DerivedData-$(date +%s)"
+DERIVED_DATA="${SPARKLE_DERIVED_DATA:-$HOME/Library/Developer/Xcode/DerivedData/LedgeriOS-Sparkle}"
 NOTARY_ZIP="/tmp/Ledger-Sparkle-Notary.zip"
+LOG_DIR="${SPARKLE_LOG_DIR:-/tmp/ledger-sparkle-logs}"
 
 cd "$(dirname "$0")/.."
 REPO_ROOT="$(pwd)"
+
+choose_xcode_formatter() {
+  if [ -n "${XCODE_FORMATTER:-}" ]; then
+    echo "$XCODE_FORMATTER"
+  elif command -v xcbeautify >/dev/null 2>&1; then
+    echo "xcbeautify"
+  elif command -v xcpretty >/dev/null 2>&1; then
+    echo "xcpretty"
+  else
+    echo "cat"
+  fi
+}
+
+run_xcodebuild_logged() {
+  local log_file="$1"
+  shift
+
+  local formatter
+  formatter="$(choose_xcode_formatter)"
+
+  echo "    raw log: $log_file"
+  case "$formatter" in
+    xcbeautify)
+      set -o pipefail
+      xcodebuild "$@" 2>&1 | tee "$log_file" | xcbeautify
+      ;;
+    xcpretty)
+      set -o pipefail
+      xcodebuild "$@" 2>&1 | tee "$log_file" | xcpretty --no-color
+      ;;
+    cat)
+      set -o pipefail
+      xcodebuild "$@" 2>&1 | tee "$log_file"
+      ;;
+    *)
+      echo "Unknown XCODE_FORMATTER '$formatter' (expected xcbeautify, xcpretty, or cat)" >&2
+      return 2
+      ;;
+  esac
+}
 
 find_sparkle_bin() {
   if [ -n "${SPARKLE_BIN:-}" ] && [ -x "$SPARKLE_BIN/generate_appcast" ]; then
@@ -62,7 +106,15 @@ prune_old_sparkle_artifacts() {
 }
 
 echo "==> Cleaning previous build artifacts..."
-rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH" "$DERIVED_DATA" "$NOTARY_ZIP"
+rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH" "$NOTARY_ZIP"
+mkdir -p "$LOG_DIR"
+
+if [ "${CLEAN_SPARKLE_BUILD:-0}" = "1" ]; then
+  echo "==> Cleaning Sparkle DerivedData cache..."
+  rm -rf "$DERIVED_DATA"
+fi
+
+echo "==> Using DerivedData cache: $DERIVED_DATA"
 
 echo "==> Writing ExportOptions.plist..."
 cat > "$EXPORT_PLIST" <<'EOF'
@@ -78,7 +130,8 @@ cat > "$EXPORT_PLIST" <<'EOF'
 EOF
 
 echo "==> Archiving for macOS..."
-xcodebuild archive \
+run_xcodebuild_logged "$LOG_DIR/archive-$(date +%Y%m%d-%H%M%S).log" \
+  archive \
   -project "$REPO_ROOT/LedgeriOS/LedgeriOS.xcodeproj" \
   -scheme "$SCHEME" \
   -destination 'generic/platform=macOS' \
@@ -90,7 +143,8 @@ xcodebuild archive \
   -derivedDataPath "$DERIVED_DATA"
 
 echo "==> Exporting with Developer ID signing..."
-xcodebuild -exportArchive \
+run_xcodebuild_logged "$LOG_DIR/export-$(date +%Y%m%d-%H%M%S).log" \
+  -exportArchive \
   -archivePath "$ARCHIVE_PATH" \
   -exportPath "$EXPORT_PATH" \
   -exportOptionsPlist "$EXPORT_PLIST" \
