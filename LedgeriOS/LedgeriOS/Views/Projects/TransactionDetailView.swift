@@ -29,6 +29,8 @@ struct TransactionDetailView: View {
     @State private var showCreateItemDraft = false
     @State private var selectedProtoItem: ProtoItem?
     @State private var navigationItem: Item?
+    @State private var selectedItemIds: Set<String> = []
+    @State private var itemActions = ItemActionsController()
     @State private var protoItemPendingDelete: ProtoItem?
     @State private var protoItemPendingConvert: ProtoItem?
     @State private var protoItemPendingMerge: ProtoItem?
@@ -36,6 +38,16 @@ struct TransactionDetailView: View {
     @State private var protoItemToastTask: Task<Void, Never>?
     @State private var showReassign = false
     @State private var menuPendingAction: (() -> Void)?
+
+    // Bulk item actions
+    @State private var showBulkActionMenu = false
+    @State private var showBulkStatusPicker = false
+    @State private var showBulkSetSpace = false
+    @State private var showBulkReturnToInventory = false
+    @State private var showBulkSellToProject = false
+    @State private var showBulkReassign = false
+    @State private var showBulkTransactionPicker = false
+    @State private var showBulkDeleteConfirmation = false
 
     // Image pinning
     @State private var pinnedAttachment: AttachmentRef?
@@ -100,6 +112,28 @@ struct TransactionDetailView: View {
             return transactionItems
         }
         return transactionItems.filter { $0.status != .returned && $0.status != .sold }
+    }
+
+    private var selectedItems: [Item] {
+        activeItems.filter { item in
+            guard let id = item.id else { return false }
+            return selectedItemIds.contains(id)
+        }
+    }
+
+    private var selectedItemsCanReturnToInventory: Bool {
+        !selectedItems.isEmpty && selectedItems.allSatisfy {
+            InventoryOperationsService.cameFromInventory($0)
+        }
+    }
+
+    private var selectedTotalCents: Int? {
+        let pairs = activeItems.compactMap { item -> (id: String, cents: Int)? in
+            guard let id = item.id, let cents = item.projectPriceCents ?? item.purchasePriceCents else { return nil }
+            return (id, cents)
+        }
+        let total = SelectionCalculations.totalCentsForSelected(selectedIds: selectedItemIds, items: pairs)
+        return total > 0 ? total : nil
     }
 
     private var returnedItems: [Item] { lineageReturnedItems }
@@ -181,6 +215,16 @@ struct TransactionDetailView: View {
         }
         .findEntity(id: transaction.id)
         .background(BrandColors.background)
+        .safeAreaInset(edge: .bottom) {
+            if !selectedItemIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedItemIds.count,
+                    totalCents: selectedTotalCents,
+                    onBulkActions: { showBulkActionMenu = true },
+                    onClear: { selectedItemIds.removeAll() }
+                )
+            }
+        }
         .navigationDestination(item: $selectedProtoItem) { protoItem in
             ItemQuickDraftDetailView(protoItem: protoItem)
         }
@@ -236,6 +280,23 @@ struct TransactionDetailView: View {
                 onSelectAction: { action in menuPendingAction = action }
             )
         }
+        .adaptivePresentation(isPresented: $showBulkActionMenu, style: .quickMenu) {
+            ActionMenuSheet(
+                title: "\(selectedItemIds.count) selected",
+                items: bulkActionMenuItems + [
+                    ActionMenuItem(id: "clear-selection", label: "Clear Selection", icon: "xmark.circle", onPress: {
+                        selectedItemIds.removeAll()
+                    })
+                ]
+            )
+        }
+        .itemActionSheets(
+            itemActions,
+            spaces: projectContext.spaces,
+            transactions: projectContext.transactions,
+            accountId: accountContext.currentAccountId,
+            onActionComplete: { selectedItemIds.removeAll() }
+        )
         .confirmationDialog("Delete Transaction?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 deleteTransaction()
@@ -376,6 +437,54 @@ struct TransactionDetailView: View {
                 projectId: projectContext.project?.id,
                 onDismiss: { showAddExistingItems = false }
             )
+        }
+        .adaptivePresentation(isPresented: $showBulkStatusPicker, style: .quickMenu) {
+            StatusPickerModal { status in updateStatusForSelected(status) }
+        }
+        .adaptivePresentation(isPresented: $showBulkSetSpace, style: .picker) {
+            SetSpaceModal(
+                spaces: projectContext.spaces,
+                currentSpaceId: nil,
+                onSelect: { space in setSpaceForSelected(spaceId: space?.id) }
+            )
+        }
+        .adaptivePresentation(isPresented: $showBulkTransactionPicker, style: .picker) {
+            TransactionPickerModal(
+                transactions: projectContext.transactions,
+                selectedId: currentTransaction.id,
+                onSelect: { tx in
+                    if let txId = tx.id { setTransactionForSelected(transactionId: txId) }
+                }
+            )
+        }
+        .adaptivePresentation(isPresented: $showBulkReturnToInventory, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                MoveToInventoryModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                    Task { await loadLineageItems() }
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkSellToProject, style: .form) {
+            if let accountId = accountContext.currentAccountId {
+                SellItemsModal(items: selectedItems, accountId: accountId) {
+                    selectedItemIds.removeAll()
+                    Task {
+                        await loadLineageItems()
+                        await loadExternalItems()
+                    }
+                }
+            }
+        }
+        .adaptivePresentation(isPresented: $showBulkReassign, style: .form) {
+            ReassignToProjectModal(items: selectedItems) {
+                selectedItemIds.removeAll()
+            }
+        }
+        .confirmationDialog("Delete \(selectedItemIds.count) items?", isPresented: $showBulkDeleteConfirmation) {
+            Button("Delete", role: .destructive) { deleteSelected() }
+        } message: {
+            Text("This action cannot be undone.")
         }
     }
 
@@ -786,8 +895,11 @@ struct TransactionDetailView: View {
                 mode: .embedded(items: activeItems, onItemPress: { itemId in
                     navigationItem = activeItems.first { $0.id == itemId }
                 }),
+                getMenuItems: { singleItemMenuItems(for: $0) },
                 emptyMessage: "No items yet",
                 onAdd: { showAddItemMenu = true },
+                getBulkMenuItems: { bulkActionMenuItems },
+                selectedIds: $selectedItemIds,
                 useNavigationLinks: false,
                 filterScope: .project,
                 inline: true,
@@ -936,6 +1048,19 @@ struct TransactionDetailView: View {
         return names.first
     }
 
+    // MARK: - Item Menus
+
+    private func singleItemMenuItems(for item: Item) -> [ActionMenuItem] {
+        guard let itemId = item.id else { return [] }
+        return itemActions.buildMenu(
+            for: item,
+            scope: .project,
+            menuContext: .transaction,
+            accountId: accountContext.currentAccountId,
+            onSelect: { selectedItemIds.insert(itemId) }
+        )
+    }
+
     // 8. Transaction Audit (collapsed, conditional)
     // Only show for itemized categories when audit data is stored by Cloud Function.
     @ViewBuilder
@@ -968,6 +1093,27 @@ struct TransactionDetailView: View {
                 onReassignToProject: { showReassign = true },
                 onCopyID: currentTransaction.id.map { id in { Clipboard.copy(id) } },
                 onDelete: { showDeleteConfirmation = true }
+            )
+        )
+    }
+
+    private var bulkActionMenuItems: [ActionMenuItem] {
+        ItemMenuBuilder.buildBulkMenu(
+            context: .transaction,
+            scope: .project,
+            callbacks: BulkItemMenuCallbacks(
+                onStatusChange: { _ in showBulkStatusPicker = true },
+                onSetTransaction: { showBulkTransactionPicker = true },
+                onClearTransaction: { clearTransactionForSelected() },
+                onSetSpace: { showBulkSetSpace = true },
+                onClearSpace: { clearSpaceForSelected() },
+                onReturnToInventory: selectedItemsCanReturnToInventory
+                    ? { showBulkReturnToInventory = true }
+                    : nil,
+                onSellToProject: { showBulkSellToProject = true },
+                onReassignToProject: { showBulkReassign = true },
+                onCopyIDs: { Clipboard.copyLines(selectedItemIds) },
+                onDelete: { showBulkDeleteConfirmation = true }
             )
         )
     }
@@ -1247,6 +1393,64 @@ struct TransactionDetailView: View {
                 print("🔴 moveToInventory failed: \(error)")
             }
         }
+    }
+
+    private func updateStatusForSelected(_ status: ItemStatus) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["status": status.rawValue]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setSpaceForSelected(spaceId: String?) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        nonisolated(unsafe) let fields: [String: Any] = spaceId != nil ? ["spaceId": spaceId!] : ["spaceId": NSNull()]
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: fields) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearSpaceForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["spaceId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func setTransactionForSelected(transactionId: String) {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": transactionId]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func clearTransactionForSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let service = ItemsService()
+        for item in selectedItems {
+            guard let itemId = item.id else { continue }
+            Task { try? await service.updateItem(accountId: accountId, itemId: itemId, fields: ["transactionId": NSNull()]) }
+        }
+        selectedItemIds.removeAll()
+    }
+
+    private func deleteSelected() {
+        guard let accountId = accountContext.currentAccountId else { return }
+        let items = Array(selectedItems)
+        Task { try? await ItemsService().deleteItems(accountId: accountId, items: items) }
+        selectedItemIds.removeAll()
     }
 
     private func updateTransaction(fields: [String: Any]) {
