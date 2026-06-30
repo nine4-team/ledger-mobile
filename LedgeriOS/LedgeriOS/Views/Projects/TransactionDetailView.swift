@@ -727,7 +727,7 @@ struct TransactionDetailView: View {
                 DetailRow(label: "Transaction Type", value: displayTransactionType(for: currentTransaction))
                 DetailRow(label: "Payable", value: displayPayable(currentTransaction.reimbursementType))
                 DetailRow(label: "Budget Category", value: selectedCategory?.name ?? (currentTransaction.budgetCategoryId == "uncategorized" ? "Uncategorized" : "—"))
-                if currentTransaction.needsItemizedAudit {
+                if currentTransaction.needsItemizedAudit(category: selectedCategory) {
                     DetailRow(label: "Email Receipt", value: (currentTransaction.hasEmailReceipt ?? false) ? "Yes" : "No")
                     DetailRow(
                         label: "Subtotal",
@@ -941,7 +941,7 @@ struct TransactionDetailView: View {
     @ViewBuilder
     private var transactionAuditSection: some View {
         if let audit = storedAudit,
-           currentTransaction.needsItemizedAudit {
+           currentTransaction.needsItemizedAudit(category: selectedCategory) {
             CollapsibleSection(
                 title: "Transaction Audit",
                 isExpanded: sectionBinding("transaction-audit"),
@@ -1228,12 +1228,19 @@ struct TransactionDetailView: View {
         let items = transactionItems
         guard !items.isEmpty else { return }
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let split = InventoryOperationsService.splitByOrigin(items)
+        let returnedPaidItemCredits = InvoiceLineCalculations.returnedPaidItemCreditContexts(
+            for: split.returnItems,
+            invoices: accountContext.allInvoices
+        )
         Task {
             do {
                 try await InventoryOperationsService().moveToInventory(
                     items: items,
                     accountId: accountId,
-                    inventoryLabel: inventoryLabel
+                    inventoryLabel: inventoryLabel,
+                    userId: authManager.currentUser?.uid,
+                    returnedPaidItemCredits: returnedPaidItemCredits
                 )
                 await MainActor.run { dismiss() }
             } catch {

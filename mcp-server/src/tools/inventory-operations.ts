@@ -1,8 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { type Firestore, FieldValue } from "firebase-admin/firestore";
+import { type Firestore, type WriteBatch, FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { Item, Transaction } from "../types.js";
-import { accountCollection, subcollection, getDoc } from "../util/query.js";
+import type { Invoice, InvoiceLine, Item, Transaction } from "../types.js";
+import { accountCollection, accountPath, subcollection, getDoc, queryDocs } from "../util/query.js";
 import { formatCents } from "../util/format.js";
 import { notFound, validation } from "../util/errors.js";
 import { tagNotesAsAi } from "../util/notes.js";
@@ -66,6 +67,140 @@ function computePurchasePriceTotals(items: (Item & { id: string })[]): {
 } {
   const subtotalCents = items.reduce((sum, i) => sum + (i.purchasePriceCents ?? 0), 0);
   return { subtotalCents, amountCents: subtotalCents, missingTax: [] };
+}
+
+type ReturnedPaidItemCreditContext = {
+  itemId: string;
+  itemName: string;
+  projectId: string;
+  amountCents: number;
+  budgetCategoryId: string;
+  paidInvoiceId: string;
+  paidInvoiceLineId: string;
+  lineId: string;
+};
+
+function returnedPaidItemCreditLineId(paidInvoiceId: string, paidInvoiceLineId: string, itemId: string) {
+  return `returnCredit:${paidInvoiceId}:${paidInvoiceLineId}:${itemId}`;
+}
+
+function invoiceDateMillis(invoice: Invoice) {
+  const value = invoice.datePaid ?? invoice.dateSent ?? invoice.dateIssued ?? invoice.createdAt;
+  if (!value) return 0;
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === "object" && "toDate" in value && typeof value.toDate === "function") {
+    return value.toDate().getTime();
+  }
+  return 0;
+}
+
+async function returnedPaidItemCreditContexts(
+  db: Firestore,
+  items: (Item & { id: string })[]
+): Promise<ReturnedPaidItemCreditContext[]> {
+  const selected = new Map(items.map((item) => [item.id, item]));
+  if (!selected.size) return [];
+
+  const projectIds = [...new Set(items.map((item) => item.projectId).filter((id): id is string => Boolean(id)))];
+  const allInvoices: (Invoice & { id: string })[] = [];
+  for (const projectId of projectIds) {
+    const invoices = await queryDocs<Invoice>(accountCollection(db, "invoices").where("projectId", "==", projectId));
+    allInvoices.push(...invoices);
+  }
+
+  const existingCreditLineIds = new Set<string>();
+  for (const invoice of allInvoices) {
+    if (invoice.status === "voided") continue;
+    for (const line of invoice.lines ?? []) {
+      if (line.id?.startsWith("returnCredit:")) existingCreditLineIds.add(line.id);
+    }
+  }
+
+  const candidatesByItemId = new Map<string, { invoice: Invoice & { id: string }; line: InvoiceLine; item: Item & { id: string }; lineId: string }[]>();
+  for (const invoice of allInvoices) {
+    if (invoice.status !== "paid") continue;
+    for (const line of invoice.lines ?? []) {
+      if (line.sourceType !== "item") continue;
+      if (line.sign !== 1) continue;
+      if (!line.sourceId || !line.id) continue;
+      if (!line.budgetCategoryId) continue;
+      const item = selected.get(line.sourceId);
+      if (!item) continue;
+      const lineId = returnedPaidItemCreditLineId(invoice.id, line.id, item.id);
+      if (existingCreditLineIds.has(lineId)) continue;
+      const existing = candidatesByItemId.get(item.id) ?? [];
+      existing.push({ invoice, line, item, lineId });
+      candidatesByItemId.set(item.id, existing);
+    }
+  }
+
+  return [...candidatesByItemId.entries()].sort(([a], [b]) => a.localeCompare(b)).flatMap(([, candidates]) => {
+    const candidate = candidates.sort((a, b) => {
+      const dateDelta = invoiceDateMillis(b.invoice) - invoiceDateMillis(a.invoice);
+      if (dateDelta !== 0) return dateDelta;
+      return b.invoice.id.localeCompare(a.invoice.id);
+    })[0];
+    if (!candidate.line.budgetCategoryId) return [];
+    const projectId = candidate.item.projectId ?? candidate.invoice.projectId;
+    if (!projectId) return [];
+    return [{
+      itemId: candidate.item.id,
+      itemName: candidate.item.name ?? candidate.item.description ?? "item",
+      projectId,
+      amountCents: candidate.line.amountCents,
+      budgetCategoryId: candidate.line.budgetCategoryId,
+      paidInvoiceId: candidate.invoice.id,
+      paidInvoiceLineId: candidate.line.id ?? "",
+      lineId: candidate.lineId,
+    }];
+  });
+}
+
+function appendReturnedPaidItemCreditDrafts(
+  batch: WriteBatch,
+  db: Firestore,
+  credits: ReturnedPaidItemCreditContext[],
+  uid: string
+) {
+  if (!credits.length) return [];
+  const byProject = new Map<string, ReturnedPaidItemCreditContext[]>();
+  for (const credit of credits) {
+    const existing = byProject.get(credit.projectId) ?? [];
+    existing.push(credit);
+    byProject.set(credit.projectId, existing);
+  }
+
+  const invoiceIds: string[] = [];
+  const now = FieldValue.serverTimestamp();
+  for (const [projectId, projectCredits] of byProject.entries()) {
+    const invoiceRef = accountCollection(db, "invoices").doc(randomUUID());
+    invoiceIds.push(invoiceRef.id);
+    const lines = projectCredits
+      .sort((a, b) => a.lineId.localeCompare(b.lineId))
+      .map((credit) => ({
+        id: credit.lineId,
+        sourceType: "manual",
+        amountCents: credit.amountCents,
+        sign: -1,
+        budgetCategoryId: credit.budgetCategoryId,
+        snapshotName: `Credit: returned ${credit.itemName}`,
+      }));
+    batch.set(invoiceRef, {
+      accountId: accountPath().split("/")[1],
+      projectId,
+      status: "draft",
+      itemIds: [],
+      transactionIds: [],
+      lines,
+      notes: "Credit for paid item(s) returned to inventory.",
+      dateIssued: now,
+      createdAt: now,
+      updatedAt: now,
+      createdBy: uid,
+      updatedBy: uid,
+    });
+  }
+  return invoiceIds;
 }
 
 /**
@@ -841,7 +976,6 @@ async function commitSellToProject(
       createdAt: now,
     });
   }
-
   await batch.commit();
 
   return {
@@ -934,7 +1068,6 @@ async function commitSellToInventory(
       createdAt: now,
     });
   }
-
   await batch.commit();
 
   return {
@@ -971,6 +1104,7 @@ async function commitReturnToInventory(
   const edgesCol = accountCollection(db, "lineageEdges");
   const now = FieldValue.serverTimestamp();
   const uid = safeGetUserId();
+  const returnedPaidCredits = await returnedPaidItemCreditContexts(db, items);
 
   // Standalone project→inventory returns use purchase price: the business is
   // taking inventory back at cost.
@@ -1055,6 +1189,8 @@ async function commitReturnToInventory(
     });
   }
 
+  const creditInvoiceIds = appendReturnedPaidItemCreditDrafts(batch, db, returnedPaidCredits, uid);
+
   await batch.commit();
 
   return {
@@ -1064,7 +1200,8 @@ async function commitReturnToInventory(
         text:
           `Returned ${items.length} item(s) to business inventory.\n` +
           `${isNewReturnTx ? "New Return transaction(s)" : "Appended to existing Return transaction"}: ${[...new Set(returnTxByItemId.values())].join(", ")}\n` +
-          `Items now have projectId: null and budgetCategoryId: null.`,
+          `Items now have projectId: null and budgetCategoryId: null.` +
+          `${creditInvoiceIds.length ? `\nDraft credit invoice(s): ${creditInvoiceIds.join(", ")}` : ""}`,
       },
     ],
   };

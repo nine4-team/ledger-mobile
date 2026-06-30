@@ -244,17 +244,16 @@ struct InventoryOperationsService {
     /// `"Business Inventory"`; pass `inventoryLabel` for a branded label.
     /// Items have budgetCategoryId and projectId wiped (inventory invariant).
     ///
-    /// `paidInvoiceItemIds` — item IDs currently on any paid invoice. Any item
-    /// in `items` whose id is in this set triggers an auto-generated credit
-    /// transaction on the source project (billing-invoicing.md, §"Returns
-    /// after a paid invoice"). Pass an empty set to disable.
+    /// `returnedPaidItemCredits` — runtime invoice contexts for items already
+    /// charged on a paid invoice. These create draft invoice credit lines in the
+    /// same batch as the return. Pass an empty array when no paid credits apply.
     func returnToInventory(
         items: [Item],
         accountId: String,
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil,
-        paidInvoiceItemIds: Set<String> = []
+        returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -337,12 +336,12 @@ struct InventoryOperationsService {
             }
         }
 
-        // 5. Auto-credit for items previously on a paid invoice.
-        Self.appendPaidReturnCredits(
-            items: items,
-            paidInvoiceItemIds: paidInvoiceItemIds,
+        // 5. Draft invoice credits for items previously charged on a paid invoice.
+        Self.appendReturnedPaidItemCredits(
+            returnedItems: items,
+            returnedPaidItemCredits: returnedPaidItemCredits,
+            accountId: accountId,
             batch: batch,
-            txPath: txPath,
             userId: userId
         )
 
@@ -468,7 +467,7 @@ struct InventoryOperationsService {
         inventoryLabel: String = Self.defaultInventoryLabel,
         userId: String? = nil,
         notes: String? = nil,
-        paidInvoiceItemIds: Set<String> = []
+        returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] = []
     ) async throws {
         guard !items.isEmpty else { return }
         guard items.count <= Self.maxBatchItems else {
@@ -496,7 +495,7 @@ struct InventoryOperationsService {
                 inventoryLabel: inventoryLabel,
                 userId: userId,
                 notes: notes,
-                paidInvoiceItemIds: paidInvoiceItemIds
+                returnedPaidItemCredits: returnedPaidItemCredits
             )
             return
         }
@@ -635,14 +634,12 @@ struct InventoryOperationsService {
             batch.setDataAutoId(edge, inCollection: edgesPath)
         }
 
-        // Auto-credit for returning items previously on a paid invoice.
-        // Only applies to the Return leg — items originating in the project
-        // (the Sale leg) were never client-paid inventory.
-        Self.appendPaidReturnCredits(
-            items: split.returnItems,
-            paidInvoiceItemIds: paidInvoiceItemIds,
+        // Draft invoice credits only apply to the Return leg.
+        Self.appendReturnedPaidItemCredits(
+            returnedItems: split.returnItems,
+            returnedPaidItemCredits: returnedPaidItemCredits,
+            accountId: accountId,
             batch: batch,
-            txPath: txPath,
             userId: userId
         )
 
@@ -1048,39 +1045,22 @@ struct InventoryOperationsService {
         return f.string(from: Date())
     }
 
-    /// Append one owed-to-client credit transaction per returning item that
-    /// is currently on a paid invoice. Lands on the item's source project so
-    /// the derived billable-membership query picks it up in the To Invoice tab.
-    /// See `docs/specs/billing-invoicing.md` §"Returns after a paid invoice".
-    static func appendPaidReturnCredits(
-        items: [Item],
-        paidInvoiceItemIds: Set<String>,
+    /// Append ordinary draft invoice credit lines for returning items that were
+    /// previously charged on a paid invoice. This does not create transactions.
+    static func appendReturnedPaidItemCredits(
+        returnedItems: [Item],
+        returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext],
+        accountId: String,
         batch: any BatchWriting,
-        txPath: String,
         userId: String?
     ) {
-        guard !paidInvoiceItemIds.isEmpty else { return }
-        let today = todayDateString()
-        for item in items {
-            guard let itemId = item.id, paidInvoiceItemIds.contains(itemId) else { continue }
-            guard let projectId = item.projectId else { continue }
-
-            let amount = item.projectPriceCents ?? item.purchasePriceCents ?? 0
-            let name = item.displayName.isEmpty ? "item" : item.displayName
-
-            var creditFields: [String: Any] = [
-                "type": TransactionType.expense.rawValue,
-                "projectId": projectId,
-                "amountCents": amount,
-                "source": "Credit: returned \(name)",
-                "reimbursementType": "owed-to-client",
-                "transactionDate": today,
-                "isComplete": true,
-                "createdAt": FieldValue.serverTimestamp(),
-                "updatedAt": FieldValue.serverTimestamp(),
-            ]
-            if let userId { creditFields["createdBy"] = userId }
-            batch.setDataAutoId(creditFields, inCollection: txPath)
-        }
+        let returnedItemIds = Set(returnedItems.compactMap(\.id))
+        let credits = returnedPaidItemCredits.filter { returnedItemIds.contains($0.itemId) }
+        InvoiceService.appendReturnedPaidItemCreditDrafts(
+            accountId: accountId,
+            credits: credits,
+            batch: batch,
+            userId: userId
+        )
     }
 }

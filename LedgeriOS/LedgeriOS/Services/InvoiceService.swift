@@ -13,6 +13,13 @@ import FirebaseFirestore
 /// item / transaction state. Readers of a draft recompute the displayed total
 /// from that live state; readers of a sent / paid invoice read the frozen snapshot.
 struct InvoiceService: InvoiceServiceProtocol {
+    enum InvoiceServiceError: Error {
+        case invoiceMissingId
+        case invoiceLineMissingCategory(lineId: String)
+        case noCollectibleLines
+        case nonPositiveCollection
+    }
+
     private let makeBatch: @Sendable () -> any BatchWriting
 
     init(
@@ -184,32 +191,60 @@ struct InvoiceService: InvoiceServiceProtocol {
         projectId: String,
         amountCents: Int,
         source: String,
-        budgetCategoryId: String?,
         settlementInvoiceLineIds: [String]?,
         userId: String?
-    ) async throws -> String {
-        guard let invoiceId = invoice.id else { return "" }
+    ) async throws -> [String] {
+        guard let invoiceId = invoice.id else { throw InvoiceServiceError.invoiceMissingId }
+        guard let invoiceLines = invoice.lines, !invoiceLines.isEmpty else {
+            throw InvoiceServiceError.noCollectibleLines
+        }
+
+        let selectedLineIds = settlementInvoiceLineIds.map(Set.init)
+        let lines = invoiceLines.filter { line in
+            selectedLineIds?.contains(line.id) ?? true
+        }
+        guard !lines.isEmpty else { throw InvoiceServiceError.noCollectibleLines }
+        let selectedTotal = lines.reduce(0) { $0 + $1.signedAmountCents }
+        guard selectedTotal > 0 else { throw InvoiceServiceError.nonPositiveCollection }
+
+        var grouped: [String: [InvoiceLine]] = [:]
+        for line in lines {
+            guard let categoryId = line.budgetCategoryId, !categoryId.isEmpty else {
+                throw InvoiceServiceError.invoiceLineMissingCategory(lineId: line.id)
+            }
+            grouped[categoryId, default: []].append(line)
+        }
 
         let batch = makeBatch()
         let now = FieldValue.serverTimestamp()
-        let transactionId = UUID().uuidString
-        let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
 
-        var txFields: [String: Any] = [
-            "projectId": projectId,
-            "amountCents": amountCents,
-            "type": TransactionType.fee.rawValue,
-            "source": source,
-            "transactionDate": Self.todayString(),
-            "isComplete": true,
-            "settlementInvoiceId": invoiceId,
-            "createdAt": now,
-            "updatedAt": now,
-        ]
-        if let budgetCategoryId { txFields["budgetCategoryId"] = budgetCategoryId }
-        if let lineIds = settlementInvoiceLineIds, !lineIds.isEmpty {
-            txFields["settlementInvoiceLineIds"] = lineIds
+        var transactionIds: [String] = []
+        for (categoryId, categoryLines) in grouped.sorted(by: { $0.key < $1.key }) {
+            let categoryAmount = categoryLines.reduce(0) { $0 + $1.signedAmountCents }
+            guard categoryAmount > 0 else { throw InvoiceServiceError.nonPositiveCollection }
+
+            let transactionId = UUID().uuidString
+            transactionIds.append(transactionId)
+            let txPath = "accounts/\(accountId)/transactions/\(transactionId)"
+            let lineIds = categoryLines.map(\.id)
+
+            let txFields: [String: Any] = [
+                "projectId": projectId,
+                "amountCents": categoryAmount,
+                "type": TransactionType.paymentToBusiness.rawValue,
+                "source": source,
+                "transactionDate": Self.todayString(),
+                "isComplete": true,
+                "budgetCategoryId": categoryId,
+                "settlementInvoiceId": invoiceId,
+                "settlementInvoiceLineIds": lineIds,
+                "createdAt": now,
+                "updatedAt": now,
+            ]
+            batch.setData(txFields, forDocumentAt: txPath, merge: false)
         }
+
+        guard !transactionIds.isEmpty else { throw InvoiceServiceError.noCollectibleLines }
 
         var invoiceFields: [String: Any] = [
             "status": InvoiceStatus.paid.rawValue,
@@ -218,10 +253,9 @@ struct InvoiceService: InvoiceServiceProtocol {
         ]
         if let userId { invoiceFields["updatedBy"] = userId }
 
-        batch.setData(txFields, forDocumentAt: txPath, merge: false)
         batch.updateData(invoiceFields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)")
         try await batch.commit()
-        return transactionId
+        return transactionIds
     }
 
     // MARK: - Void (status only — members return to pool via derived query)
@@ -243,6 +277,53 @@ struct InvoiceService: InvoiceServiceProtocol {
     }
 
     // MARK: - Helpers
+
+    static func appendReturnedPaidItemCreditDrafts(
+        accountId: String,
+        credits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext],
+        batch: any BatchWriting,
+        userId: String?
+    ) {
+        guard !credits.isEmpty else { return }
+
+        let grouped = Dictionary(grouping: credits, by: \.projectId)
+        let now = FieldValue.serverTimestamp()
+
+        for (projectId, projectCredits) in grouped {
+            let invoiceId = UUID().uuidString
+            let lines = projectCredits
+                .sorted { $0.lineId < $1.lineId }
+                .map { credit in
+                    InvoiceLine(
+                        id: credit.lineId,
+                        sourceType: .manual,
+                        sourceId: nil,
+                        amountCents: credit.amountCents,
+                        sign: .credit,
+                        budgetCategoryId: credit.budgetCategoryId,
+                        snapshotName: "Credit: returned \(credit.itemName)"
+                    )
+                }
+
+            var fields: [String: Any] = [
+                "accountId": accountId,
+                "projectId": projectId,
+                "status": InvoiceStatus.draft.rawValue,
+                "itemIds": [],
+                "transactionIds": [],
+                "lines": lines.map(Self.encodeLine),
+                "notes": "Credit for paid item(s) returned to inventory.",
+                "dateIssued": now,
+                "createdAt": now,
+                "updatedAt": now,
+            ]
+            if let userId {
+                fields["createdBy"] = userId
+                fields["updatedBy"] = userId
+            }
+            batch.setData(fields, forDocumentAt: "\(Self.invoicesPath(accountId))/\(invoiceId)", merge: false)
+        }
+    }
 
     /// Derive the flat membership index (itemIds, transactionIds) from a list of
     /// signed lines. Order preserved, duplicates stripped (shouldn't occur in
@@ -268,7 +349,7 @@ struct InvoiceService: InvoiceServiceProtocol {
     }
 
     /// Encode an InvoiceLine as a plain `[String: Any]` for Firestore's untyped batch writer.
-    private static func encodeLine(_ line: InvoiceLine) -> [String: Any] {
+    static func encodeLine(_ line: InvoiceLine) -> [String: Any] {
         var dict: [String: Any] = [
             "id": line.id,
             "sourceType": line.sourceType.rawValue,
@@ -276,6 +357,7 @@ struct InvoiceService: InvoiceServiceProtocol {
             "sign": line.sign.rawValue,
         ]
         if let sourceId = line.sourceId { dict["sourceId"] = sourceId }
+        if let categoryId = line.budgetCategoryId { dict["budgetCategoryId"] = categoryId }
         if let name = line.snapshotName { dict["snapshotName"] = name }
         if let settlementIds = line.settlementTransactionIds { dict["settlementTransactionIds"] = settlementIds }
         return dict

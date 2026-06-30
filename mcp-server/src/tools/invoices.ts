@@ -22,6 +22,7 @@ const invoiceLineInput = z.object({
   sourceId: z.string().optional().describe("Item or transaction id. Omit for manual New Charge lines."),
   amountCents: z.coerce.number().int().nonnegative().describe("Positive line amount in cents."),
   sign: z.union([z.literal(1), z.literal(-1)]).default(1).describe("1 = charge, -1 = credit."),
+  budgetCategoryId: z.string().optional().describe("Budget category represented by this invoice line. Required for manual New Charge lines; sourced lines can derive it from their item/transaction."),
   snapshotName: z.string().optional().describe("Frozen display name for the line."),
 });
 
@@ -32,6 +33,7 @@ function serializeLine(line: InvoiceLine): Record<string, unknown> {
     ...(line.sourceId ? { sourceId: line.sourceId } : {}),
     amountCents: line.amountCents,
     sign: line.sign,
+    ...(line.budgetCategoryId ? { budgetCategoryId: line.budgetCategoryId } : {}),
     ...(line.snapshotName ? { snapshotName: line.snapshotName } : {}),
     ...(line.settlementTransactionIds?.length ? { settlementTransactionIds: line.settlementTransactionIds } : {}),
   };
@@ -44,6 +46,7 @@ function normalizeLine(input: z.infer<typeof invoiceLineInput>): InvoiceLine {
     sourceId: input.sourceType === "manual" ? undefined : input.sourceId,
     amountCents: input.amountCents,
     sign: input.sign as InvoiceLineSign,
+    budgetCategoryId: input.budgetCategoryId,
     snapshotName: input.snapshotName,
   };
 }
@@ -76,9 +79,10 @@ function todayString() {
 function canBillTransaction(tx: Transaction & { id: string }) {
   if (tx.status === "canceled") return false;
   if (tx.settlementInvoiceId) return false;
+  if (tx.type === "PaymentToBusiness" || tx.type === "paymentToBusiness") return false;
   if (tx.itemIds?.length) return false;
   if (tx.reimbursementType === "owed-to-client" || tx.reimbursementType === "owed-to-company") return true;
-  return tx.type === "Fee" || tx.type === "Expense" || tx.type === "fee" || tx.type === "expense";
+  return tx.type === "Purchase" || tx.type === "purchase";
 }
 
 function lineForItem(item: Item & { id: string }): InvoiceLine {
@@ -88,6 +92,7 @@ function lineForItem(item: Item & { id: string }): InvoiceLine {
     sourceId: item.id,
     amountCents: item.projectPriceCents && item.projectPriceCents > 0 ? item.projectPriceCents : item.purchasePriceCents ?? 0,
     sign: 1,
+    budgetCategoryId: item.budgetCategoryId,
     snapshotName: item.name ?? item.description,
   };
 }
@@ -101,13 +106,19 @@ function lineForTransaction(tx: Transaction & { id: string }): InvoiceLine | nul
     sourceId: tx.id,
     amountCents: tx.amountCents ?? 0,
     sign,
+    budgetCategoryId: tx.budgetCategoryId,
     snapshotName: tx.source ?? tx.notes,
   };
 }
 
 async function validateLines(db: Firestore, projectId: string, lines: InvoiceLine[]) {
   for (const line of lines) {
-    if (line.sourceType === "manual") continue;
+    if (line.sourceType === "manual") {
+      if (!line.budgetCategoryId) {
+        return validation("Manual New Charge lines require budgetCategoryId.", "Choose the budget category represented by this invoice demand.");
+      }
+      continue;
+    }
     if (!line.sourceId) {
       return validation("Sourced invoice lines require sourceId.", "Pass an item id for item lines or transaction id for transaction lines.");
     }
@@ -117,6 +128,10 @@ async function validateLines(db: Firestore, projectId: string, lines: InvoiceLin
       if (item.projectId !== projectId) {
         return validation(`Item ${line.sourceId} is not on project ${projectId}.`, "Invoice lines must belong to the same project as the invoice.");
       }
+      line.budgetCategoryId = line.budgetCategoryId ?? item.budgetCategoryId;
+      if (!line.budgetCategoryId) {
+        return validation(`Item ${line.sourceId} is missing budgetCategoryId.`, "Repair the item category before invoicing it.");
+      }
     }
     if (line.sourceType === "transaction") {
       const tx = await getDoc<Transaction>(db, "transactions", line.sourceId);
@@ -124,9 +139,108 @@ async function validateLines(db: Firestore, projectId: string, lines: InvoiceLin
       if (tx.projectId !== projectId) {
         return validation(`Transaction ${line.sourceId} is not on project ${projectId}.`, "Invoice lines must belong to the same project as the invoice.");
       }
+      line.budgetCategoryId = line.budgetCategoryId ?? tx.budgetCategoryId;
+      if (!line.budgetCategoryId) {
+        return validation(`Transaction ${line.sourceId} is missing budgetCategoryId.`, "Repair the transaction category before invoicing it.");
+      }
     }
   }
   return null;
+}
+
+function selectedInvoiceLines(invoice: Invoice, settlementInvoiceLineIds?: string[]) {
+  const lines = invoice.lines ?? [];
+  if (!settlementInvoiceLineIds?.length) return lines;
+  const lineSet = new Set(settlementInvoiceLineIds);
+  return lines.filter((line) => line.id && lineSet.has(line.id));
+}
+
+function groupLinesByCategory(lines: InvoiceLine[]) {
+  const groups = new Map<string, InvoiceLine[]>();
+  for (const line of lines) {
+    if (!line.budgetCategoryId) {
+      return { error: validation(`Invoice line ${line.id ?? "(missing id)"} is missing budgetCategoryId.`, "Backfill invoice line categories before marking it collected.") };
+    }
+    const existing = groups.get(line.budgetCategoryId) ?? [];
+    existing.push(line);
+    groups.set(line.budgetCategoryId, existing);
+  }
+  return { groups };
+}
+
+async function writeGroupedPaymentTransactions(args: {
+  db: Firestore;
+  invoice: Invoice;
+  invoiceId: string;
+  source?: string;
+  settlementInvoiceLineIds?: string[];
+  userId?: string;
+  markPaid: boolean;
+}) {
+  const { db, invoice, invoiceId, source, settlementInvoiceLineIds, userId, markPaid } = args;
+  if (!invoice.projectId) return validation("Invoice is missing projectId.", "Repair the invoice before marking it collected.");
+  const selected = selectedInvoiceLines(invoice, settlementInvoiceLineIds);
+  if (settlementInvoiceLineIds?.length && selected.length !== settlementInvoiceLineIds.length) {
+    return validation("One or more line IDs are not on this invoice.", "Call get_invoice and pass exact line ids.");
+  }
+  if (!selected.length) return validation("Invoice has no collectible lines.", "Send or backfill invoice lines before collection.");
+  const grouped = groupLinesByCategory(selected);
+  if (grouped.error) return grouped.error;
+  const selectedTotal = totalCents(selected);
+  if (selectedTotal <= 0) {
+    return validation(
+      "Selected invoice lines do not represent money received from the client.",
+      "Use collection only for positive client payments. Credit-only or net-negative invoices should be handled as client credits, not paymentToBusiness transactions."
+    );
+  }
+
+  const now = FieldValue.serverTimestamp();
+  const batch = db.batch();
+  const transactionIds: string[] = [];
+  const paymentSource = source ?? `Collected ${invoice.invoiceNumber || invoice.id || invoiceId}`;
+
+  for (const [budgetCategoryId, lines] of Array.from(grouped.groups!.entries()).sort(([a], [b]) => a.localeCompare(b))) {
+    const amountCents = totalCents(lines);
+    if (amountCents <= 0) {
+      return validation(
+        "A settled budget category nets to zero or a client credit.",
+        "Do not create paymentToBusiness transactions for non-positive category totals."
+      );
+    }
+    const txId = randomUUID();
+    transactionIds.push(txId);
+    batch.set(accountCollection(db, "transactions").doc(txId), {
+      projectId: invoice.projectId,
+      budgetCategoryId,
+      amountCents,
+      type: "paymentToBusiness",
+      source: paymentSource,
+      transactionDate: todayString(),
+      isComplete: true,
+      settlementInvoiceId: invoiceId,
+      settlementInvoiceLineIds: lines.map((line) => line.id).filter(Boolean),
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  if (!transactionIds.length) return validation("Collected invoice lines net to zero.", "Choose charge lines or handle zero-net credits outside collection.");
+
+  batch.update(accountCollection(db, "invoices").doc(invoiceId), {
+    ...(markPaid ? { status: "paid", datePaid: now } : {}),
+    updatedAt: now,
+    ...(userId ? { updatedBy: userId } : {}),
+  });
+  await batch.commit();
+
+  return asToolResponse({
+    invoiceId,
+    status: markPaid ? "paid" : invoice.status,
+    transactionIds,
+    amountCents: selected.reduce((sum, line) => sum + line.amountCents * line.sign, 0),
+    amount: formatCents(selected.reduce((sum, line) => sum + line.amountCents * line.sign, 0)),
+    settledLineIds: selected.map((line) => line.id).filter(Boolean),
+  });
 }
 
 export function registerInvoiceTools(server: McpServer, db: Firestore) {
@@ -142,6 +256,7 @@ export function registerInvoiceTools(server: McpServer, db: Firestore) {
       designFeePayments: z.array(z.object({
         label: z.string().describe("Line label, e.g. Design Fee 1 of 3."),
         amountCents: z.coerce.number().int().nonnegative(),
+        budgetCategoryId: z.string().describe("Budget category represented by this manual invoice demand."),
       })).optional().describe("Manual New Charge lines to place on a draft invoice."),
       invoiceNumber: z.string().optional(),
       userId: z.string().optional(),
@@ -185,11 +300,12 @@ export function registerInvoiceTools(server: McpServer, db: Firestore) {
 
       let invoiceId: string | null = null;
       if (designFeePayments?.length) {
-        const lines: InvoiceLine[] = designFeePayments.map((payment: { label: string; amountCents: number }) => ({
+        const lines: InvoiceLine[] = designFeePayments.map((payment: { label: string; amountCents: number; budgetCategoryId: string }) => ({
           id: randomUUID(),
           sourceType: "manual",
           amountCents: payment.amountCents,
           sign: 1,
+          budgetCategoryId: payment.budgetCategoryId,
           snapshotName: payment.label,
         }));
         const ref = accountCollection(db, "invoices").doc(randomUUID());
@@ -455,97 +571,36 @@ export function registerInvoiceTools(server: McpServer, db: Firestore) {
 
   server.tool(
     "mark_invoice_collected",
-    "[mutating] Record collection for an invoice by creating one normal Fee transaction linked with settlementInvoiceId, then marking the invoice paid. Use for money actually received from the client.",
+    "[mutating] Record collection for an invoice by creating categorized paymentToBusiness transaction(s) linked with settlementInvoiceId, then marking the invoice paid. Use for money actually received from the client.",
     {
       invoiceId: z.string(),
-      amountCents: z.coerce.number().int().positive().optional().describe("Collected amount. Defaults to positive invoice net total."),
       source: z.string().optional().describe("Transaction source label. Defaults to Collected <invoice number/id>."),
-      budgetCategoryId: z.string().optional().describe("Optional fee budget category id."),
-      settlementInvoiceLineIds: z.array(z.string()).optional().describe("Optional subset of invoice line ids settled by this transaction."),
+      settlementInvoiceLineIds: z.array(z.string()).optional().describe("Optional subset of invoice line ids settled by this collection."),
       userId: z.string().optional(),
     },
-    withTelemetry("mark_invoice_collected", async ({ invoiceId, amountCents, source, budgetCategoryId, settlementInvoiceLineIds, userId }) => {
+    withTelemetry("mark_invoice_collected", async ({ invoiceId, source, settlementInvoiceLineIds, userId }) => {
       const invoice = await getDoc<Invoice>(db, "invoices", invoiceId);
       if (!invoice) return notFound("Invoice", invoiceId, "list_invoices");
       if (!invoice.projectId) return validation("Invoice is missing projectId.", "Repair the invoice before marking it collected.");
       if (invoice.status === "voided") return validation("Voided invoices cannot be collected.", "Create a new invoice demand if money is owed.");
-      const computedTotal = invoice.totalCents ?? totalCents(invoice.lines ?? []);
-      const collectedCents = amountCents ?? Math.max(computedTotal, 0);
-      if (collectedCents <= 0) return validation("Collected amount must be positive.", "Pass amountCents for a partial or adjusted collection.");
-      const txId = randomUUID();
-      const now = FieldValue.serverTimestamp();
-      const txData: Record<string, unknown> = {
-        projectId: invoice.projectId,
-        amountCents: collectedCents,
-        type: "Fee",
-        source: source ?? `Collected ${invoice.invoiceNumber || invoice.id}`,
-        transactionDate: todayString(),
-        isComplete: true,
-        settlementInvoiceId: invoiceId,
-        createdAt: now,
-        updatedAt: now,
-      };
-      if (budgetCategoryId) txData.budgetCategoryId = budgetCategoryId;
-      if (settlementInvoiceLineIds?.length) txData.settlementInvoiceLineIds = settlementInvoiceLineIds;
-      const invoiceUpdate: Record<string, unknown> = {
-        status: "paid",
-        datePaid: now,
-        updatedAt: now,
-      };
-      if (userId) invoiceUpdate.updatedBy = userId;
-      const batch = db.batch();
-      batch.set(accountCollection(db, "transactions").doc(txId), txData);
-      batch.update(accountCollection(db, "invoices").doc(invoiceId), invoiceUpdate);
-      await batch.commit();
-      return asToolResponse({ invoiceId, status: "paid", transactionId: txId, amountCents: collectedCents, amount: formatCents(collectedCents) });
+      return writeGroupedPaymentTransactions({ db, invoice, invoiceId, source, settlementInvoiceLineIds, userId, markPaid: true });
     })
   );
 
   server.tool(
     "mark_invoice_lines_collected",
-    "[mutating] Record one real payment event that settles selected invoice lines. Creates one normal Fee transaction linked to settlementInvoiceId and settlementInvoiceLineIds.",
+    "[mutating] Record real payment event(s) that settle selected invoice lines. Creates categorized paymentToBusiness transaction(s) linked to settlementInvoiceId and settlementInvoiceLineIds.",
     {
       invoiceId: z.string(),
       settlementInvoiceLineIds: z.array(z.string()).min(1),
-      amountCents: z.coerce.number().int().positive().optional().describe("Collected amount. Defaults to the selected line net total when available."),
       source: z.string().optional(),
-      budgetCategoryId: z.string().optional(),
       userId: z.string().optional(),
     },
-    withTelemetry("mark_invoice_lines_collected", async ({ invoiceId, settlementInvoiceLineIds, amountCents, source, budgetCategoryId, userId }) => {
+    withTelemetry("mark_invoice_lines_collected", async ({ invoiceId, settlementInvoiceLineIds, source, userId }) => {
       const invoice = await getDoc<Invoice>(db, "invoices", invoiceId);
       if (!invoice) return notFound("Invoice", invoiceId, "list_invoices");
       if (!invoice.projectId) return validation("Invoice is missing projectId.", "Repair the invoice before marking it collected.");
-      const lineSet = new Set(settlementInvoiceLineIds);
-      const selected = (invoice.lines ?? []).filter((line) => line.id && lineSet.has(line.id));
-      if (selected.length !== settlementInvoiceLineIds.length) {
-        return validation("One or more line IDs are not on this invoice.", "Call get_invoice and pass exact line ids.");
-      }
-      const selectedTotal = Math.max(totalCents(selected), 0);
-      const collectedCents = amountCents ?? selectedTotal;
-      if (collectedCents <= 0) return validation("Collected amount must be positive.", "Pass amountCents for a partial or adjusted collection.");
-      const txId = randomUUID();
-      const now = FieldValue.serverTimestamp();
-      const batch = db.batch();
-      batch.set(accountCollection(db, "transactions").doc(txId), {
-        projectId: invoice.projectId,
-        amountCents: collectedCents,
-        type: "Fee",
-        source: source ?? `Collected ${invoice.invoiceNumber || invoice.id}`,
-        transactionDate: todayString(),
-        isComplete: true,
-        settlementInvoiceId: invoiceId,
-        settlementInvoiceLineIds,
-        ...(budgetCategoryId ? { budgetCategoryId } : {}),
-        createdAt: now,
-        updatedAt: now,
-      });
-      batch.update(accountCollection(db, "invoices").doc(invoiceId), {
-        updatedAt: now,
-        ...(userId ? { updatedBy: userId } : {}),
-      });
-      await batch.commit();
-      return asToolResponse({ invoiceId, transactionId: txId, amountCents: collectedCents, amount: formatCents(collectedCents), settledLineIds: settlementInvoiceLineIds });
+      return writeGroupedPaymentTransactions({ db, invoice, invoiceId, source, settlementInvoiceLineIds, userId, markPaid: false });
     })
   );
 }

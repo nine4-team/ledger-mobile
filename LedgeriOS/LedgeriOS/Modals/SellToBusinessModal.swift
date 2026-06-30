@@ -104,6 +104,13 @@ struct MoveToInventoryModal: View {
         InventoryOperationsService.splitByOrigin(items)
     }
 
+    private var returnedPaidItemCredits: [InvoiceLineCalculations.ReturnedPaidItemCreditContext] {
+        InvoiceLineCalculations.returnedPaidItemCreditContexts(
+            for: split.returnItems,
+            invoices: accountContext.allInvoices
+        )
+    }
+
     private var title: String {
         let (returns, sales) = split
         switch (returns.isEmpty, sales.isEmpty) {
@@ -162,6 +169,12 @@ struct MoveToInventoryModal: View {
                         .font(Typography.body)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
+                let credits = returnedPaidItemCredits
+                if !credits.isEmpty {
+                    Text("\(credits.count) paid item credit\(credits.count == 1 ? "" : "s") will be added as a draft credit invoice.")
+                        .font(Typography.small)
+                        .foregroundStyle(BrandColors.textSecondary)
+                }
             }
         }
     }
@@ -173,13 +186,15 @@ struct MoveToInventoryModal: View {
         let itemsToMove = items
         let acctId = accountId
         let inventoryLabel = InventoryOperationsService.inventoryLabel(for: accountContext.account?.name)
+        let credits = returnedPaidItemCredits
         Task {
             do {
                 try await service.moveToInventory(
                     items: itemsToMove,
                     accountId: acctId,
                     inventoryLabel: inventoryLabel,
-                    userId: authManager.currentUser?.uid
+                    userId: authManager.currentUser?.uid,
+                    returnedPaidItemCredits: credits
                 )
                 await MainActor.run {
                     onComplete()

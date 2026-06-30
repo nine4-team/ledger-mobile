@@ -24,7 +24,7 @@ const ENTITIES: Record<string, EntitySchema> = {
   transaction: {
     name: "transaction",
     description:
-      "A purchase, return, sale-to-inventory, fee, or expense. Owned by an account; may belong to a project. " +
+      "A purchase, return, sale-to-inventory, or payment-to-business event. Owned by an account; may belong to a project. " +
       "Completeness (`isComplete`) is computed server-side — do not set manually. " +
       "Inventory movement transactions are per-batch. Accounting fields are immutable after creation " +
       "(amountCents, budgetCategoryId, type, source, projectId are frozen); itemIds tracks active membership.",
@@ -32,7 +32,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     keyFields: [
       { name: "id", type: "string", description: "Opaque document ID. Store exactly as returned." },
       { name: "projectId", type: "string?", description: "Null = business inventory." },
-      { name: "type", type: "enum(transactionType)", description: "Inventory → project uses Purchase; project-originated item → inventory uses Sale; item going home to inventory uses Return." },
+      { name: "type", type: "enum(transactionType)", description: "Purchase covers goods/services; inventory -> project uses Purchase; project-originated item -> inventory uses Sale; item going home to inventory uses Return; invoice collection uses paymentToBusiness." },
       { name: "source", type: "string", description: "Vendor for normal purchases; inventory label for inventory movement transactions." },
       { name: "amountCents", type: "number", description: "Total amount including tax, in cents. FROZEN at creation on inventory movement transactions." },
       { name: "subtotalCents", type: "number?", description: "Pre-tax subtotal in cents." },
@@ -98,6 +98,7 @@ const ENTITIES: Record<string, EntitySchema> = {
       { name: "projectId", type: "string", description: "Project being billed." },
       { name: "status", type: "enum(invoiceStatus)", description: "draft, sent, paid, or voided." },
       { name: "lines", type: "InvoiceLine[]", description: "Authoritative demand lines. sourceType is item, transaction, or manual (New Charge)." },
+      { name: "lines[].budgetCategoryId", type: "string", description: "Required budget category represented by each invoice line. Manual New Charge lines must provide this explicitly." },
       { name: "itemIds", type: "string[]", description: "Membership index derived from item lines." },
       { name: "transactionIds", type: "string[]", description: "Membership index derived from transaction lines." },
       { name: "totalCents", type: "number?", description: "Frozen net total once sent. Drafts may recompute from lines." },
@@ -105,7 +106,7 @@ const ENTITIES: Record<string, EntitySchema> = {
     enums: ["invoiceStatus"],
     notes: [
       "Manual invoice lines are UI-labeled New Charge and do not create transactions by themselves.",
-      "Marking an invoice collected creates one normal Fee transaction with settlementInvoiceId; it does not create one transaction per line.",
+      "Marking an invoice collected creates one categorized paymentToBusiness transaction per budget category represented by the settled lines. Returned paid item credits are invoice credit lines, not synthetic transactions.",
       "Existing transaction-backed invoice lines remain supported for ad-hoc invoices.",
     ],
   },

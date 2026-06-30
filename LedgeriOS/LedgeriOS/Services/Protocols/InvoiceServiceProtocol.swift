@@ -54,19 +54,18 @@ protocol InvoiceServiceProtocol: Sendable {
     /// collection flows so a real settlement transaction is created.
     func markPaid(invoice: Invoice, accountId: String, userId: String?) async throws
 
-    /// Record collection by creating one fee transaction for the real payment
-    /// event, linking it to the invoice (and optionally selected line ids), then
-    /// marking the invoice paid.
+    /// Record collection by creating categorized payment-to-business
+    /// transactions for the real payment event, linking them to the invoice and
+    /// settled line ids, then marking the invoice paid.
     func markCollected(
         invoice: Invoice,
         accountId: String,
         projectId: String,
         amountCents: Int,
         source: String,
-        budgetCategoryId: String?,
         settlementInvoiceLineIds: [String]?,
         userId: String?
-    ) async throws -> String
+    ) async throws -> [String]
 
     /// Status-only transition. Updates `invoice.status = .voided` and stamps `dateVoided`.
     /// Does not cascade — voided invoices' members return to the unbilled pool

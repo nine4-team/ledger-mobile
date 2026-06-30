@@ -7,12 +7,115 @@ import Foundation
 /// See `docs/specs/billing-invoicing.md` for the rules.
 enum InvoiceLineCalculations {
 
+    struct ReturnedPaidItemCreditContext: Hashable {
+        var itemId: String
+        var itemName: String
+        var projectId: String
+        var amountCents: Int
+        var budgetCategoryId: String
+        var paidInvoiceId: String
+        var paidInvoiceLineId: String
+        var lineId: String
+    }
+
+    private struct ReturnedPaidItemCreditCandidate {
+        var invoice: Invoice
+        var line: InvoiceLine
+        var item: Item
+        var itemId: String
+        var lineId: String
+    }
+
+    static func returnedPaidItemCreditLineId(
+        paidInvoiceId: String,
+        paidInvoiceLineId: String,
+        itemId: String
+    ) -> String {
+        "returnCredit:\(paidInvoiceId):\(paidInvoiceLineId):\(itemId)"
+    }
+
+    static func returnedPaidItemCreditContexts(
+        for items: [Item],
+        invoices: [Invoice]
+    ) -> [ReturnedPaidItemCreditContext] {
+        let selectedItemsById: [String: Item] = Dictionary(uniqueKeysWithValues: items.compactMap { item in
+            guard let id = item.id else { return nil }
+            return (id, item)
+        })
+        guard !selectedItemsById.isEmpty else { return [] }
+
+        let existingCreditLineIds = Set(
+            invoices
+                .filter { $0.status != .voided }
+                .flatMap { $0.lines ?? [] }
+                .map(\.id)
+                .filter { $0.hasPrefix("returnCredit:") }
+        )
+
+        var candidatesByItemId: [String: [ReturnedPaidItemCreditCandidate]] = [:]
+        for invoice in invoices {
+            guard invoice.status == .paid else { continue }
+            guard let invoiceId = invoice.id else { continue }
+            for line in invoice.lines ?? [] {
+                guard line.sourceType == .item,
+                      line.sign == .charge,
+                      let itemId = line.sourceId,
+                      let item = selectedItemsById[itemId],
+                      let paidLineCategoryId = line.budgetCategoryId?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !paidLineCategoryId.isEmpty else {
+                    continue
+                }
+                let creditLineId = returnedPaidItemCreditLineId(
+                    paidInvoiceId: invoiceId,
+                    paidInvoiceLineId: line.id,
+                    itemId: itemId
+                )
+                guard !existingCreditLineIds.contains(creditLineId) else { continue }
+                candidatesByItemId[itemId, default: []].append(
+                    ReturnedPaidItemCreditCandidate(invoice: invoice, line: line, item: item, itemId: itemId, lineId: creditLineId)
+                )
+            }
+        }
+
+        return candidatesByItemId.keys.sorted().compactMap { itemId in
+            guard let candidate = candidatesByItemId[itemId]?.sorted(by: candidateSort).first else {
+                return nil
+            }
+            guard let projectId = candidate.item.projectId ?? candidate.invoice.projectId else { return nil }
+            guard let categoryId = candidate.line.budgetCategoryId?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !categoryId.isEmpty else {
+                return nil
+            }
+            let itemName = candidate.item.displayName.isEmpty ? "item" : candidate.item.displayName
+            return ReturnedPaidItemCreditContext(
+                itemId: candidate.itemId,
+                itemName: itemName,
+                projectId: projectId,
+                amountCents: candidate.line.amountCents,
+                budgetCategoryId: categoryId,
+                paidInvoiceId: candidate.invoice.id ?? "",
+                paidInvoiceLineId: candidate.line.id,
+                lineId: candidate.lineId
+            )
+        }
+    }
+
+    private static func candidateSort(
+        lhs: ReturnedPaidItemCreditCandidate,
+        rhs: ReturnedPaidItemCreditCandidate
+    ) -> Bool {
+        let leftDate = lhs.invoice.datePaid ?? lhs.invoice.dateSent ?? lhs.invoice.dateIssued ?? lhs.invoice.createdAt ?? .distantPast
+        let rightDate = rhs.invoice.datePaid ?? rhs.invoice.dateSent ?? rhs.invoice.dateIssued ?? rhs.invoice.createdAt ?? .distantPast
+        if leftDate != rightDate { return leftDate > rightDate }
+        return (lhs.invoice.id ?? "") > (rhs.invoice.id ?? "")
+    }
+
     // MARK: - Sign derivation
 
     /// Items in a project represent goods purchased for the client, so every
     /// project item is a charge. Returned items that were on a paid invoice
-    /// generate a separate credit *transaction* (see `InventoryOperationsService`);
-    /// the item itself isn't signed as a credit.
+    /// generate ordinary draft invoice credit lines; the item itself isn't
+    /// signed as a credit.
     static func sign(for item: Item) -> InvoiceLineSign {
         .charge
     }
@@ -26,6 +129,7 @@ enum InvoiceLineCalculations {
     static func sign(for tx: Transaction) -> InvoiceLineSign? {
         guard tx.status != .canceled else { return nil }
         guard tx.settlementInvoiceId == nil else { return nil }
+        guard tx.transactionType != .paymentToBusiness else { return nil }
         guard let direction = ReportAggregationCalculations.reimbursementDirection(for: tx) else {
             return nil
         }
@@ -49,6 +153,7 @@ enum InvoiceLineCalculations {
             sourceId: id,
             amountCents: amountCents(for: item),
             sign: sign(for: item),
+            budgetCategoryId: item.budgetCategoryId,
             snapshotName: item.displayName.isEmpty ? nil : item.displayName
         )
     }
@@ -63,6 +168,7 @@ enum InvoiceLineCalculations {
             sourceId: id,
             amountCents: tx.amountCents ?? 0,
             sign: sign,
+            budgetCategoryId: tx.budgetCategoryId,
             snapshotName: tx.source ?? tx.notes
         )
     }
@@ -112,6 +218,7 @@ enum InvoiceLineCalculations {
         items: [Item],
         transactions: [Transaction],
         invoices: [Invoice],
+        budgetCategories: [String: BudgetCategory] = [:],
         excludingInvoiceId: String? = nil
     ) -> BillableMembership {
         var draftItems: Set<String> = []
@@ -162,7 +269,7 @@ enum InvoiceLineCalculations {
             guard tx.projectId == projectId else { continue }
             // Only non-itemized transactions enter the pool directly — itemized
             // purchases bill via their items.
-            guard BillingSummaryCalculations.isNonItemized(tx) else { continue }
+            guard BillingSummaryCalculations.isNonItemized(tx, budgetCategories: budgetCategories) else { continue }
             // Must be billable by shape (sign exists and non-canceled).
             guard sign(for: tx) != nil else { continue }
             guard !onAnyTx.contains(id) else { continue }
@@ -205,7 +312,8 @@ enum InvoiceLineCalculations {
         projectId: String,
         items: [Item],
         transactions: [Transaction],
-        invoices: [Invoice]
+        invoices: [Invoice],
+        budgetCategories: [String: BudgetCategory] = [:]
     ) -> PayableBalance {
         var toBusiness = 0
         var toClient = 0
@@ -227,7 +335,8 @@ enum InvoiceLineCalculations {
             projectId: projectId,
             items: items,
             transactions: transactions,
-            invoices: invoices
+            invoices: invoices,
+            budgetCategories: budgetCategories
         )
         for item in items {
             guard let id = item.id, membership.toInvoiceItemIds.contains(id) else { continue }

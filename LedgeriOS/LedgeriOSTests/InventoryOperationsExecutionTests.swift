@@ -983,6 +983,57 @@ struct InventoryLabelPassthroughTests {
         #expect(ret?["source"] as? String == "1584 Design Inventory")
     }
 
+    @Test("returnToInventory writes paid item credit as draft invoice, not transaction")
+    func returnToInventoryWritesPaidCreditDraftInvoice() async throws {
+        let batch = RecordingBatch()
+        let service = InventoryOperationsService(makeBatch: { batch })
+        let items = [
+            makeItem(
+                id: "i1",
+                projectId: "proj1",
+                budgetCategoryId: "cat1",
+                purchasePriceCents: 1000,
+                transactionId: "oldTx",
+                projectPriceCents: 1500
+            ),
+        ]
+        let credit = InvoiceLineCalculations.ReturnedPaidItemCreditContext(
+            itemId: "i1",
+            itemName: "item",
+            projectId: "proj1",
+            amountCents: 1500,
+            budgetCategoryId: "cat1",
+            paidInvoiceId: "paidInv",
+            paidInvoiceLineId: "paidLine",
+            lineId: "returnCredit:paidInv:paidLine:i1"
+        )
+
+        try await service.returnToInventory(
+            items: items,
+            accountId: acct,
+            returnedPaidItemCredits: [credit]
+        )
+
+        let txSets = batch.sets.filter { $0.path.contains("/transactions/") }
+        #expect(txSets.count == 1)
+        #expect(txSets[0].fields["type"] as? String == "Return")
+        #expect(batch.autoIdSetsInCollection("accounts/\(acct)/transactions").isEmpty)
+
+        let invoiceSets = batch.sets.filter { $0.path.contains("/invoices/") }
+        #expect(invoiceSets.count == 1)
+        let invoice = invoiceSets[0].fields
+        #expect(invoice["status"] as? String == "draft")
+        #expect(invoice["projectId"] as? String == "proj1")
+        #expect(invoice["itemIds"] as? [String] == [])
+        #expect(invoice["transactionIds"] as? [String] == [])
+        let lines = try #require(invoice["lines"] as? [[String: Any]])
+        #expect(lines.count == 1)
+        #expect(lines[0]["id"] as? String == "returnCredit:paidInv:paidLine:i1")
+        #expect(lines[0]["sourceType"] as? String == "manual")
+        #expect(lines[0]["sign"] as? Int == -1)
+        #expect(lines[0]["budgetCategoryId"] as? String == "cat1")
+    }
+
     @Test("sellItemsFromProjectToProject writes custom source label on both Return and Sale")
     func sellItemsFromProjectToProjectCustomLabel() async throws {
         let batch = RecordingBatch()

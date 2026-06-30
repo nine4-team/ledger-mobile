@@ -132,6 +132,32 @@ When a user returns items from a project to business inventory, the flow:
 
 All in one Firestore batch. Atomic.
 
+### Paid Invoice Credits
+
+If a returned item appears as a charge line on a paid invoice, the return flow
+also creates client credit demand in invoicing. It must not create a synthetic
+credit transaction.
+
+The credit is written as an ordinary draft invoice containing manual credit
+lines:
+
+- `sourceType: "manual"`
+- `sourceId: null`
+- `sign: -1`
+- `amountCents`: copied from the original paid invoice line
+- `budgetCategoryId`: copied from the original paid invoice line
+- `itemIds: []`
+- `transactionIds: []`
+
+The credit line ID is deterministic from the original paid invoice id, original
+paid invoice line id, and returned item id. That ID prevents duplicate credits
+across non-voided invoices.
+
+The inventory return movement and draft credit invoice should be written in the
+same Firestore batch when invoice context is available. If a caller cannot
+resolve invoice context, it should route through a context-aware flow or surface
+a blocking warning instead of silently skipping the credit.
+
 ### Coalescing Returns
 
 A return-to-inventory transaction can grow during a single user session — if the user returns 3 items, then 2 more in the same flow, both batches can write to the same Return transaction's `itemIds` (using `arrayUnion`) and recalculate `amountCents`. Once the user leaves the flow (or 24h passes), the transaction is treated as closed and clients should create a new one for subsequent returns.

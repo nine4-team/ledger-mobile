@@ -41,7 +41,7 @@ function createServer(): McpServer {
         "If the entity already has notes, append your note on a new line so existing context is preserved. " +
         "This applies to every write operation, not just sales or moves.\n\n" +
         "INVENTORY MOVEMENTS: Inventory → project creates ONE new Purchase transaction; project → inventory acquisition creates ONE Sale transaction; returns to inventory create Return transactions. Accounting shape fields (amountCents, budgetCategoryId, projectId, type, source) are frozen at creation; itemIds tracks current active membership and can change when items leave via returns/sales. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Inventory ↔ project and project ↔ project movements are split by source/destination: sell_items_from_inventory_to_project, sell_items_from_project_to_inventory, sell_items_from_project_to_project.\n\n" +
-        "INVOICING: Invoices are demands for money; transactions are records of money movement. Use invoice lines with sourceType item, transaction, or manual (shown to users as New Charge). Marking an invoice collected creates one normal Fee transaction linked by settlementInvoiceId.",
+        "INVOICING: Invoices are demands for money; transactions are records of money movement. Use invoice lines with sourceType item, transaction, or manual (shown to users as New Charge). Every invoice line needs budgetCategoryId. Marking an invoice collected creates categorized paymentToBusiness transaction(s) linked by settlementInvoiceId. Returned paid item credits are manual invoice credit lines on draft invoices; never create synthetic Credit: returned transactions.",
     },
   );
 

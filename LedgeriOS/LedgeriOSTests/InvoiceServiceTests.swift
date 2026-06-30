@@ -156,45 +156,188 @@ struct InvoiceServiceTests {
 
     // MARK: - markCollected
 
-    @Test("markCollected — creates settlement transaction and marks invoice paid")
-    func markCollectedCreatesSettlementTransaction() async throws {
+    @Test("markCollected — creates categorized payment transactions and marks invoice paid")
+    func markCollectedCreatesCategorizedPaymentTransactions() async throws {
         let batch = RecordingBatch()
         let service = makeService(batch: batch)
         var invoice = Invoice()
         invoice.id = invoiceId
+        invoice.lines = [
+            InvoiceLine(id: "line1", sourceType: .manual, amountCents: 2_000_00, sign: .charge, budgetCategoryId: "cat-a", snapshotName: "Design Fee"),
+            InvoiceLine(id: "line2", sourceType: .manual, amountCents: 800_00, sign: .charge, budgetCategoryId: "cat-b", snapshotName: "Install"),
+        ]
 
-        let txId = try await service.markCollected(
+        let txIds = try await service.markCollected(
             invoice: invoice,
             accountId: acct,
             projectId: "proj1",
             amountCents: 2_800_00,
             source: "Collected INV-1",
-            budgetCategoryId: "fee-cat",
             settlementInvoiceLineIds: ["line1", "line2"],
             userId: "user1"
         )
 
-        #expect(!txId.isEmpty)
+        #expect(txIds.count == 2)
         #expect(batch.commitCalled)
-        #expect(batch.sets.count == 1)
+        #expect(batch.sets.count == 2)
         #expect(batch.updates.count == 1)
 
-        let set = batch.sets[0]
-        #expect(set.path == "accounts/\(acct)/transactions/\(txId)")
-        #expect(set.fields["projectId"] as? String == "proj1")
-        #expect(set.fields["amountCents"] as? Int == 2_800_00)
-        #expect(set.fields["type"] as? String == "fee")
-        #expect(set.fields["source"] as? String == "Collected INV-1")
-        #expect(set.fields["budgetCategoryId"] as? String == "fee-cat")
-        #expect(set.fields["settlementInvoiceId"] as? String == invoiceId)
-        #expect(set.fields["settlementInvoiceLineIds"] as? [String] == ["line1", "line2"])
-        #expect(set.fields["isComplete"] as? Bool == true)
-        #expect(set.fields["transactionDate"] != nil)
+        let first = batch.sets[0]
+        #expect(first.fields["projectId"] as? String == "proj1")
+        #expect(first.fields["amountCents"] as? Int == 2_000_00)
+        #expect(first.fields["type"] as? String == "paymentToBusiness")
+        #expect(first.fields["source"] as? String == "Collected INV-1")
+        #expect(first.fields["budgetCategoryId"] as? String == "cat-a")
+        #expect(first.fields["settlementInvoiceId"] as? String == invoiceId)
+        #expect(first.fields["settlementInvoiceLineIds"] as? [String] == ["line1"])
+        #expect(first.fields["isComplete"] as? Bool == true)
+        #expect(first.fields["transactionDate"] != nil)
+
+        let second = batch.sets[1]
+        #expect(second.fields["amountCents"] as? Int == 800_00)
+        #expect(second.fields["type"] as? String == "paymentToBusiness")
+        #expect(second.fields["budgetCategoryId"] as? String == "cat-b")
+        #expect(second.fields["settlementInvoiceLineIds"] as? [String] == ["line2"])
 
         let update = batch.updates[0]
         #expect(update.path == invoicePath)
         #expect(update.fields["status"] as? String == "paid")
         #expect(update.fields["updatedBy"] as? String == "user1")
         #expect(update.fields["datePaid"] != nil)
+    }
+
+    @Test("markCollected — blocks credit-only invoice from paymentToBusiness")
+    func markCollectedBlocksCreditOnlyInvoice() async throws {
+        let batch = RecordingBatch()
+        let service = makeService(batch: batch)
+        var invoice = Invoice()
+        invoice.id = invoiceId
+        invoice.lines = [
+            InvoiceLine(id: "credit1", sourceType: .manual, amountCents: 500_00, sign: .credit, budgetCategoryId: "cat-a", snapshotName: "Returned item credit"),
+        ]
+
+        do {
+            _ = try await service.markCollected(
+                invoice: invoice,
+                accountId: acct,
+                projectId: "proj1",
+                amountCents: -500_00,
+                source: "Collected INV-1",
+                settlementInvoiceLineIds: nil,
+                userId: "user1"
+            )
+            Issue.record("Expected markCollected to reject credit-only invoice")
+        } catch InvoiceService.InvoiceServiceError.nonPositiveCollection {
+            #expect(batch.sets.isEmpty)
+            #expect(batch.updates.isEmpty)
+            #expect(!batch.commitCalled)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("appendReturnedPaidItemCreditDrafts — writes ordinary draft invoice with manual credit line")
+    func appendReturnedPaidItemCreditDraftsWritesDraftInvoice() async throws {
+        let batch = RecordingBatch()
+        let credit = InvoiceLineCalculations.ReturnedPaidItemCreditContext(
+            itemId: "item1",
+            itemName: "Sofa",
+            projectId: "proj1",
+            amountCents: 1_200_00,
+            budgetCategoryId: "cat-furnishings",
+            paidInvoiceId: "paid-inv",
+            paidInvoiceLineId: "paid-line",
+            lineId: "returnCredit:paid-inv:paid-line:item1"
+        )
+
+        InvoiceService.appendReturnedPaidItemCreditDrafts(
+            accountId: acct,
+            credits: [credit],
+            batch: batch,
+            userId: "user1"
+        )
+
+        #expect(batch.sets.count == 1)
+        let set = batch.sets[0]
+        #expect(set.path.hasPrefix("accounts/\(acct)/invoices/"))
+        #expect(set.fields["status"] as? String == "draft")
+        #expect(set.fields["projectId"] as? String == "proj1")
+        #expect(set.fields["itemIds"] as? [String] == [])
+        #expect(set.fields["transactionIds"] as? [String] == [])
+        #expect(set.fields["createdBy"] as? String == "user1")
+
+        let lines = try #require(set.fields["lines"] as? [[String: Any]])
+        #expect(lines.count == 1)
+        #expect(lines[0]["id"] as? String == "returnCredit:paid-inv:paid-line:item1")
+        #expect(lines[0]["sourceType"] as? String == "manual")
+        #expect(lines[0]["sourceId"] == nil)
+        #expect(lines[0]["sign"] as? Int == -1)
+        #expect(lines[0]["amountCents"] as? Int == 1_200_00)
+        #expect(lines[0]["budgetCategoryId"] as? String == "cat-furnishings")
+        #expect(lines[0]["snapshotName"] as? String == "Credit: returned Sofa")
+    }
+}
+
+@Suite("InvoiceLineCalculations — returned paid item credits")
+struct ReturnedPaidItemCreditContextTests {
+
+    @Test("paid item invoice line creates deterministic credit context")
+    func paidItemInvoiceLineCreatesCreditContext() throws {
+        var item = Item()
+        item.id = "item1"
+        item.projectId = "proj1"
+        item.name = "Sofa"
+
+        var invoice = Invoice()
+        invoice.id = "paid-inv"
+        invoice.projectId = "proj1"
+        invoice.status = .paid
+        invoice.datePaid = Date(timeIntervalSince1970: 100)
+        invoice.lines = [
+            InvoiceLine(id: "paid-line", sourceType: .item, sourceId: "item1", amountCents: 2_500_00, sign: .charge, budgetCategoryId: "cat-furnishings", snapshotName: "Sofa"),
+        ]
+
+        let contexts = InvoiceLineCalculations.returnedPaidItemCreditContexts(
+            for: [item],
+            invoices: [invoice]
+        )
+
+        #expect(contexts.count == 1)
+        #expect(contexts[0].itemId == "item1")
+        #expect(contexts[0].itemName == "Sofa")
+        #expect(contexts[0].projectId == "proj1")
+        #expect(contexts[0].amountCents == 2_500_00)
+        #expect(contexts[0].budgetCategoryId == "cat-furnishings")
+        #expect(contexts[0].lineId == "returnCredit:paid-inv:paid-line:item1")
+    }
+
+    @Test("existing non-voided deterministic credit line dedupes")
+    func existingCreditLineDedupes() throws {
+        var item = Item()
+        item.id = "item1"
+        item.projectId = "proj1"
+
+        var paidInvoice = Invoice()
+        paidInvoice.id = "paid-inv"
+        paidInvoice.projectId = "proj1"
+        paidInvoice.status = .paid
+        paidInvoice.lines = [
+            InvoiceLine(id: "paid-line", sourceType: .item, sourceId: "item1", amountCents: 1_000, sign: .charge, budgetCategoryId: "cat1"),
+        ]
+
+        var creditInvoice = Invoice()
+        creditInvoice.id = "credit-inv"
+        creditInvoice.projectId = "proj1"
+        creditInvoice.status = .draft
+        creditInvoice.lines = [
+            InvoiceLine(id: "returnCredit:paid-inv:paid-line:item1", sourceType: .manual, amountCents: 1_000, sign: .credit, budgetCategoryId: "cat1"),
+        ]
+
+        let contexts = InvoiceLineCalculations.returnedPaidItemCreditContexts(
+            for: [item],
+            invoices: [paidInvoice, creditInvoice]
+        )
+
+        #expect(contexts.isEmpty)
     }
 }

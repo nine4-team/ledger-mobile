@@ -11,6 +11,11 @@ Grounding: [../plans/money-story.md](../plans/money-story.md), [../plans/invoici
 > [billing-invoicing.md](billing-invoicing.md), which keeps signed invoice lines
 > but clarifies that transactions record money movement, invoices demand money,
 > and manual New Charge lines cover fees before collection.
+>
+> Important supersession: this historical document's "credit transaction" rule
+> for returns after paid invoices is no longer valid. Active behavior is defined
+> in [billing-invoicing.md](billing-invoicing.md): returned paid items create
+> invoice credit demand, not synthetic transactions.
 
 ## Summary
 
@@ -113,7 +118,7 @@ Migration plan is out of scope for this spec. Implementation doc will cover it.
 
 ## Resolved Decisions
 
-- **Returns after a paid invoice.** When an item on a paid invoice is returned to inventory, the system generates a credit transaction on the project automatically. That credit lands in the project's To Invoice tab and is picked up on the next invoice the user creates. No automatic invoice generation — only the credit-in-pool step is automatic.
+- **Returns after a paid invoice.** Superseded by the active billing spec. The shipped v2 idea was to generate a credit transaction on the project automatically. That is now rejected because no money moved. The active model creates ordinary draft invoice credit lines for returned paid items and does not create a synthetic transaction.
 - **Partial payments.** Not doing it. An invoice is fully paid or not.
 - **Multiple open drafts per project.** Allowed. A transaction can only be on one invoice at a time (see Core Model) — the picker enforces this.
 - **One project per invoice.** An invoice covers lines from one project. Cross-project moves (project A → inventory → project B) produce the source project's exit transaction (Return or Sale-to-Inventory) plus the destination project's Purchase-from-inventory transaction; each project only invoices its own eligible lines.
