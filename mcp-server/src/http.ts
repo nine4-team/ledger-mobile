@@ -2,68 +2,16 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import express from "express";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { initFirebase } from "./firebase.js";
 import { verifyToken, resolveAccountId } from "./auth.js";
 import { requestContext } from "./context.js";
 import { getActiveAccountForUid } from "./userState.js";
 import { registerOAuthRoutes, verifyAccessToken } from "./oauth.js";
-import { registerProjectTools } from "./tools/projects.js";
-import { registerTransactionTools } from "./tools/transactions.js";
-import { registerItemTools } from "./tools/items.js";
-import { registerSpaceTools } from "./tools/spaces.js";
-import { registerBudgetTools } from "./tools/budget.js";
-import { registerLineageTools } from "./tools/lineage.js";
-import { registerAnalyticsTools } from "./tools/analytics.js";
-import { registerAccountTools } from "./tools/accounts.js";
-import { registerInventoryOperationTools } from "./tools/inventory-operations.js";
-import { registerResources } from "./resources/index.js";
-import { registerBulkGetterTools } from "./tools/bulk-getters.js";
-import { registerSchemaTools } from "./tools/schema.js";
-import { registerServerInfoTools } from "./tools/server-info.js";
-import { registerCompositeTools } from "./tools/composite.js";
-import { registerProjectNoteTools } from "./tools/project-notes.js";
-import { registerInvoiceTools } from "./tools/invoices.js";
+import { createLedgerServer, SERVER_VERSION } from "./server.js";
 
 const db = initFirebase();
 const PORT = parseInt(process.env.PORT || "8080", 10);
-
-function createServer(): McpServer {
-  const server = new McpServer(
-    { name: "ledger", version: "1.0.0" },
-    {
-      instructions:
-        "All entity IDs (projects, transactions, items, spaces, budgetCategories) are opaque strings that MUST be stored and used exactly as returned. Never truncate, abbreviate, or shorten IDs.\n\n" +
-        "AUDIT TRAIL: Every time you create or update an entity (transaction, item, project, space), include a brief, " +
-        "natural note in the `notes` field explaining what you did and why — written as if you're leaving a quick message " +
-        "for a teammate. Always prefix with today's date. Example: '4/2 — Moved 3 lighting fixtures from inventory into Witzenman project, client approved selections.' " +
-        "If the entity already has notes, append your note on a new line so existing context is preserved. " +
-        "This applies to every write operation, not just sales or moves.\n\n" +
-        "INVENTORY MOVEMENTS: Inventory → project creates ONE new Purchase transaction; project → inventory acquisition creates ONE Sale transaction; returns to inventory create Return transactions. Accounting shape fields (amountCents, budgetCategoryId, projectId, type, source) are frozen at creation; itemIds tracks current active membership and can change when items leave via returns/sales. Items in business inventory (projectId: null) have budgetCategoryId: null — enforced on write. Inventory ↔ project and project ↔ project movements are split by source/destination: sell_items_from_inventory_to_project, sell_items_from_project_to_inventory, sell_items_from_project_to_project.\n\n" +
-        "INVOICING: Invoices are demands for money; transactions are records of money movement. Use invoice lines with sourceType item, transaction, or manual (shown to users as New Charge). Every invoice line needs budgetCategoryId. Marking an invoice collected creates categorized paymentToBusiness transaction(s) linked by settlementInvoiceId. Returned paid item credits are manual invoice credit lines on draft invoices; never create synthetic Credit: returned transactions.",
-    },
-  );
-
-  registerProjectTools(server, db);
-  registerTransactionTools(server, db);
-  registerItemTools(server, db);
-  registerSpaceTools(server, db);
-  registerBudgetTools(server, db);
-  registerLineageTools(server, db);
-  registerAnalyticsTools(server, db);
-  registerAccountTools(server, db);
-  registerInventoryOperationTools(server, db);
-  registerBulkGetterTools(server, db);
-  registerSchemaTools(server, db);
-  registerServerInfoTools(server, db);
-  registerCompositeTools(server, db);
-  registerProjectNoteTools(server, db);
-  registerInvoiceTools(server, db);
-  registerResources(server, db);
-
-  return server;
-}
 
 const app = express();
 app.set("trust proxy", true); // Cloud Run runs behind a load balancer
@@ -76,7 +24,7 @@ app.use(express.static(join(__dirname, "..", "public")));
 
 // Health check (no auth required)
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", server: "ledger-mcp", version: "1.0.0" });
+  res.json({ status: "ok", server: "ledger-mcp", version: SERVER_VERSION });
 });
 
 // OAuth routes (discovery, registration, authorize, token)
@@ -165,7 +113,7 @@ app.post(MCP_PATHS, async (req, res) => {
     );
 
     await requestContext.run(effective, async () => {
-      const server = createServer();
+      const server = createLedgerServer(db);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
       });
