@@ -41,7 +41,8 @@ enum ImageThumbnailGenerator {
     static func generateThumbnailData(
         from sourceData: Data,
         maxDimension: Int,
-        quality: CGFloat
+        quality: CGFloat,
+        force: Bool = false
     ) -> Data? {
         guard let source = CGImageSourceCreateWithData(sourceData as CFData, nil) else { return nil }
 
@@ -49,7 +50,8 @@ enum ImageThumbnailGenerator {
         if let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
            let width = properties[kCGImagePropertyPixelWidth] as? Int,
            let height = properties[kCGImagePropertyPixelHeight] as? Int,
-           max(width, height) <= maxDimension {
+           max(width, height) <= maxDimension,
+           !force {
             return nil
         }
 
@@ -77,8 +79,8 @@ enum ImageThumbnailGenerator {
     }
 
     /// Convenience: generates thumbnail data for a predefined `ThumbnailSize`.
-    static func generateThumbnailData(from sourceData: Data, size: ThumbnailSize) -> Data? {
-        generateThumbnailData(from: sourceData, maxDimension: size.maxDimension, quality: size.quality)
+    static func generateThumbnailData(from sourceData: Data, size: ThumbnailSize, force: Bool = false) -> Data? {
+        generateThumbnailData(from: sourceData, maxDimension: size.maxDimension, quality: size.quality, force: force)
     }
 
     /// Derives the thumbnail storage path from an original path.

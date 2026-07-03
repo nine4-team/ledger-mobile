@@ -1270,10 +1270,17 @@ struct TransactionDetailView: View {
             filename: filename
         )
         let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
+        let thumbnails = await mediaService.uploadThumbnails(
+            for: upload.data,
+            originalPath: path,
+            contentType: upload.contentType
+        )
         var images = currentTransaction.receiptImages ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(
             url: url,
+            thumbnailUrlSm: thumbnails.sm,
+            thumbnailUrlMd: thumbnails.md,
             fileName: upload.displayFileName,
             contentType: upload.contentType,
             isPrimary: isPrimary
@@ -1336,10 +1343,17 @@ struct TransactionDetailView: View {
             filename: filename
         )
         let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
+        let thumbnails = await mediaService.uploadThumbnails(
+            for: upload.data,
+            originalPath: path,
+            contentType: upload.contentType
+        )
         var images = currentTransaction.otherImages ?? []
         let isPrimary = images.isEmpty
         images.append(AttachmentRef(
             url: url,
+            thumbnailUrlSm: thumbnails.sm,
+            thumbnailUrlMd: thumbnails.md,
             fileName: upload.displayFileName,
             contentType: upload.contentType,
             isPrimary: isPrimary

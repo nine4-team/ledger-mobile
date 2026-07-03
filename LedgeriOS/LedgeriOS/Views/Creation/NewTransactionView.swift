@@ -684,9 +684,16 @@ struct NewTransactionView: View {
             filename: filename
         )
         let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
+        let thumbnails = await mediaService.uploadThumbnails(
+            for: upload.data,
+            originalPath: path,
+            contentType: upload.contentType
+        )
         let isPrimary = receiptImages.isEmpty
         receiptImages.append(AttachmentRef(
             url: url,
+            thumbnailUrlSm: thumbnails.sm,
+            thumbnailUrlMd: thumbnails.md,
             fileName: upload.displayFileName,
             contentType: upload.contentType,
             isPrimary: isPrimary

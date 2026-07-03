@@ -186,20 +186,11 @@ final class MediaUploadQueue {
         let isImage = metadata.contentType.hasPrefix("image/")
         guard isImage else { return (nil, nil) }
 
-        var smUrl: String?
-        var mdUrl: String?
-
-        if let smPath = metadata.thumbnailStoragePathSm,
-           let smData = ImageThumbnailGenerator.generateThumbnailData(from: sourceData, size: .sm) {
-            smUrl = try? await mediaService.uploadData(smData, path: smPath, contentType: "image/jpeg")
-        }
-
-        if let mdPath = metadata.thumbnailStoragePathMd,
-           let mdData = ImageThumbnailGenerator.generateThumbnailData(from: sourceData, size: .md) {
-            mdUrl = try? await mediaService.uploadData(mdData, path: mdPath, contentType: "image/jpeg")
-        }
-
-        return (smUrl, mdUrl)
+        return await mediaService.uploadThumbnails(
+            for: sourceData,
+            originalPath: metadata.storagePath,
+            contentType: metadata.contentType
+        )
     }
 
     private func writeBackURL(

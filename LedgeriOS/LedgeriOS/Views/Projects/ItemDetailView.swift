@@ -683,16 +683,25 @@ struct ItemDetailView: View {
 
         // Upload bytes (H8: MediaService retries on transient failures)
         let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
+        let thumbnails = await mediaService.uploadThumbnails(
+            for: upload.data,
+            originalPath: path,
+            contentType: upload.contentType
+        )
 
         // Replace placeholder with real URL
         var updatedImages = liveItem.images ?? []
         if let idx = updatedImages.firstIndex(where: { $0.url.isEmpty && $0.fileName == upload.displayFileName }) {
             updatedImages[idx].url = url
+            updatedImages[idx].thumbnailUrlSm = thumbnails.sm
+            updatedImages[idx].thumbnailUrlMd = thumbnails.md
             updatedImages[idx].isUploading = nil
         } else {
             // Listener hasn't reflected the placeholder yet — append the resolved ref directly
             updatedImages.append(AttachmentRef(
                 url: url,
+                thumbnailUrlSm: thumbnails.sm,
+                thumbnailUrlMd: thumbnails.md,
                 fileName: upload.displayFileName,
                 contentType: upload.contentType,
                 isPrimary: isPrimary

@@ -90,6 +90,28 @@ final class MediaService {
         throw lastError!
     }
 
+    /// Uploads browser-renderable JPEG thumbnail derivatives for image attachments.
+    /// HEIC/HEIF originals force derivative generation even when the source is already small,
+    /// because most report/browser surfaces cannot render the raw original.
+    func uploadThumbnails(for data: Data, originalPath: String, contentType: String) async -> (sm: String?, md: String?) {
+        guard contentType.hasPrefix("image/") else { return (nil, nil) }
+
+        let paths = ImageThumbnailGenerator.thumbnailPaths(for: originalPath)
+        let forceJpegDerivative = contentType == "image/heic" || contentType == "image/heif"
+        var smUrl: String?
+        var mdUrl: String?
+
+        if let smData = ImageThumbnailGenerator.generateThumbnailData(from: data, size: .sm, force: forceJpegDerivative) {
+            smUrl = try? await uploadData(smData, path: paths.sm, contentType: "image/jpeg")
+        }
+
+        if let mdData = ImageThumbnailGenerator.generateThumbnailData(from: data, size: .md, force: forceJpegDerivative) {
+            mdUrl = try? await uploadData(mdData, path: paths.md, contentType: "image/jpeg")
+        }
+
+        return (smUrl, mdUrl)
+    }
+
     // MARK: - Delete
 
     /// Deletes the file at the given download URL from Firebase Storage.
