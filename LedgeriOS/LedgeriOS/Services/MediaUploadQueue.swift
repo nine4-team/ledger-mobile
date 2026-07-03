@@ -27,6 +27,8 @@ struct UploadMetadata: Codable {
         switch contentType {
         case "image/png": "png"
         case "image/jpeg": "jpg"
+        case "image/heic": "heic"
+        case "image/heif": "heif"
         case "application/pdf": "pdf"
         default: "dat"
         }
@@ -135,7 +137,7 @@ final class MediaUploadQueue {
     /// Returns a local file URL for an image that hasn't uploaded yet,
     /// allowing `FirebaseImage` to display it from disk.
     func localImageURL(for uploadId: String) -> URL? {
-        for ext in ["jpg", "png", "dat"] {
+        for ext in ["jpg", "jpeg", "png", "heic", "heif", "dat", "pdf"] {
             let url = Self.directory.appendingPathComponent("\(uploadId).\(ext)")
             if FileManager.default.fileExists(atPath: url.path) { return url }
         }
@@ -227,6 +229,7 @@ final class MediaUploadQueue {
             var entry: [String: Any] = ["url": url, "kind": kind]
             if isPrimary { entry["isPrimary"] = true }
             if let fileName = metadata.fileName { entry["fileName"] = fileName }
+            entry["contentType"] = metadata.contentType
             if let smUrl = thumbnailUrlSm { entry["thumbnailUrlSm"] = smUrl }
             if let mdUrl = thumbnailUrlMd { entry["thumbnailUrlMd"] = mdUrl }
             try await docRef.updateData([field: FieldValue.arrayUnion([entry])])

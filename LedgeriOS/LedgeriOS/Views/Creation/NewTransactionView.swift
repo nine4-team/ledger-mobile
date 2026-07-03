@@ -646,8 +646,8 @@ struct NewTransactionView: View {
                 MediaGallerySection(
                     title: "Receipts",
                     attachments: receiptImages,
-                    onUploadAttachment: { data in
-                        try await uploadReceiptImage(data)
+                    onUploadAttachmentFile: { upload in
+                        try await uploadReceiptImage(upload)
                     },
                     onUploadDocument: { data, fileName in
                         try await uploadReceiptPDF(data, fileName: fileName)
@@ -673,19 +673,24 @@ struct NewTransactionView: View {
         return id
     }
 
-    private func uploadReceiptImage(_ data: Data) async throws {
+    private func uploadReceiptImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
               let txId = ensurePendingTransactionId() else { return }
-        let filename = "\(UUID().uuidString).jpg"
+        let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
             entityType: "transactions",
             entityId: txId,
             filename: filename
         )
-        let url = try await mediaService.uploadImage(data, path: path)
+        let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
         let isPrimary = receiptImages.isEmpty
-        receiptImages.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        receiptImages.append(AttachmentRef(
+            url: url,
+            fileName: upload.displayFileName,
+            contentType: upload.contentType,
+            isPrimary: isPrimary
+        ))
     }
 
     private func uploadReceiptPDF(_ data: Data, fileName: String) async throws {

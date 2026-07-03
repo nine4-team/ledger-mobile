@@ -1,14 +1,16 @@
 import SwiftUI
 import PhotosUI
+import UniformTypeIdentifiers
 
 struct MediaGallerySection: View {
     let title: String
     let attachments: [AttachmentRef]
     var maxAttachments: Int = 50
     var allowedKinds: [AttachmentKind] = [.image, .pdf]
-    /// Called when the user confirms image selection. Receives JPEG data; caller should upload
+    /// Called when the user confirms image selection. Receives image data; caller should upload
     /// via MediaService and append the resulting AttachmentRef to the entity's images array.
     var onUploadAttachment: ((Data) async throws -> Void)?
+    var onUploadAttachmentFile: ((AttachmentUpload) async throws -> Void)?
     var onUploadDocument: ((Data, String) async throws -> Void)?
     var sourceImages: [AttachmentRef] = []
     var sourceImagesTitle: String = "Transaction Images"
@@ -30,6 +32,7 @@ struct MediaGallerySection: View {
     @State private var showCamera = false
     @State private var showPhotoPicker = false
     @State private var showDocumentPicker = false
+    @State private var showFileImporter = false
     @State private var showPDFViewer = false
     @State private var selectedPDFAttachment: AttachmentRef?
     @State private var showSourceImagePicker = false
@@ -38,6 +41,10 @@ struct MediaGallerySection: View {
 
     private var canAdd: Bool {
         MediaGalleryCalculations.canAddAttachment(current: attachments, maxAttachments: maxAttachments)
+    }
+
+    private var canUploadImages: Bool {
+        onUploadAttachment != nil || onUploadAttachmentFile != nil
     }
 
     private var displayAttachments: [AttachmentRef] {
@@ -89,7 +96,7 @@ struct MediaGallerySection: View {
                 } headerAction: {
                     // The empty state shows a prominent centered Add CTA, so the
                     // header link is reserved for when there's already content.
-                    if canAdd, onUploadAttachment != nil, !attachments.isEmpty {
+                    if canAdd, canUploadImages, !attachments.isEmpty {
                         if isUploading {
                             ProgressView()
                                 .scaleEffect(0.7)
@@ -189,6 +196,7 @@ struct MediaGallerySection: View {
             selection: $pickerItems,
             maxSelectionCount: remainingSlots,
             matching: .images,
+            preferredItemEncoding: .current,
             photoLibrary: .shared()
         )
         .onChange(of: pickerItems) { _, newItems in
@@ -200,6 +208,22 @@ struct MediaGallerySection: View {
                 pickerItems = []
             }
         }
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: allowedFileImportTypes,
+            allowsMultipleSelection: remainingSlots > 1
+        ) { result in
+            Task {
+                await handleImportedFiles(result)
+            }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            guard canAdd else { return false }
+            Task {
+                await handleDroppedFileURLs(urls)
+            }
+            return true
+        } isTargeted: { _ in }
         .alert("Image", isPresented: .init(
             get: { saveAlertMessage != nil },
             set: { if !$0 { saveAlertMessage = nil } }
@@ -233,20 +257,29 @@ struct MediaGallerySection: View {
     private func handlePickedItem(_ item: PhotosPickerItem) async {
         do {
             guard let data = try await item.loadTransferable(type: Data.self) else { return }
-            await handlePickedImageData(data)
+            let contentType = item.supportedContentTypes.first(where: { $0.conforms(to: .image) })
+            await handlePickedImageUpload(.image(data: data, contentType: contentType))
         } catch {
             uploadError = error.localizedDescription
         }
     }
 
     private func handlePickedImageData(_ data: Data) async {
-        guard let onUploadAttachment else { return }
+        await handlePickedImageUpload(.image(data: data))
+    }
+
+    private func handlePickedImageUpload(_ upload: AttachmentUpload) async {
+        guard canUploadImages else { return }
         isUploading = true
         uploadError = nil
         defer { isUploading = false }
 
         do {
-            try await onUploadAttachment(data)
+            if let onUploadAttachmentFile {
+                try await onUploadAttachmentFile(upload)
+            } else {
+                try await onUploadAttachment?(upload.data)
+            }
         } catch {
             uploadError = error.localizedDescription
         }
@@ -268,11 +301,54 @@ struct MediaGallerySection: View {
         }
     }
 
+    private func handleImportedFiles(_ result: Result<[URL], Error>) async {
+        do {
+            let urls = try result.get()
+            await handleFileURLs(urls)
+        } catch {
+            uploadError = error.localizedDescription
+        }
+    }
+
+    private func handleDroppedFileURLs(_ urls: [URL]) async {
+        await handleFileURLs(urls)
+    }
+
+    private func handleFileURLs(_ urls: [URL]) async {
+        let limitedUrls = Array(urls.prefix(remainingSlots))
+        guard !limitedUrls.isEmpty else { return }
+
+        for url in limitedUrls {
+            let didAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if didAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            do {
+                let resourceValues = try url.resourceValues(forKeys: [.contentTypeKey, .localizedTypeDescriptionKey])
+                let type = resourceValues.contentType ?? UTType(filenameExtension: url.pathExtension)
+
+                guard let type else { continue }
+                let data = try Data(contentsOf: url)
+
+                if type.conforms(to: .image) {
+                    await handlePickedImageUpload(.file(data: data, fileName: url.lastPathComponent, contentType: type))
+                } else if type.conforms(to: .pdf), allowedKinds.contains(.pdf), onUploadDocument != nil {
+                    await handlePickedDocumentData(data, fileName: url.lastPathComponent)
+                }
+            } catch {
+                uploadError = error.localizedDescription
+            }
+        }
+    }
+
     // MARK: - Empty State
 
     private var emptyState: some View {
         Group {
-            if canAdd, onUploadAttachment != nil {
+            if canAdd, canUploadImages {
                 if isUploading {
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -310,7 +386,7 @@ struct MediaGallerySection: View {
             attachments: displayAttachments,
             showPrimaryBadge: true,
             showOptionsButton: hasOptionsButton,
-            showAddTile: canAdd && onUploadAttachment != nil,
+            showAddTile: canAdd && canUploadImages,
             onThumbnailTap: { index in
                 guard index < displayAttachments.count else { return }
                 let attachment = displayAttachments[index]
@@ -380,6 +456,17 @@ struct MediaGallerySection: View {
             )
         }
 
+        items.append(
+            ActionMenuItem(
+                id: "files",
+                label: "Files",
+                icon: "folder",
+                onPress: {
+                    showFileImporter = true
+                }
+            )
+        )
+
         #if canImport(UIKit)
         if allowedKinds.contains(.pdf), onUploadDocument != nil {
             items.append(
@@ -396,6 +483,17 @@ struct MediaGallerySection: View {
         #endif
 
         return items
+    }
+
+    private var allowedFileImportTypes: [UTType] {
+        var types: [UTType] = []
+        if allowedKinds.contains(.image) {
+            types.append(.image)
+        }
+        if allowedKinds.contains(.pdf), onUploadDocument != nil {
+            types.append(.pdf)
+        }
+        return types.isEmpty ? [.data] : types
     }
 
     // MARK: - Attachment Menu

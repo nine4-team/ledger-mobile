@@ -233,6 +233,7 @@
 		CH01B00100000000000C0002 /* CardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH01F00100000000000C0002 /* CardHeader.swift */; };
 		CH01B00100000000000C0003 /* CardActionButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH01F00100000000000C0003 /* CardActionButtons.swift */; };
 		D013515AC042723CCE142203 /* AttachmentRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B86A1C58FBF298270046AF /* AttachmentRef.swift */; };
+		D013515AC042723CCE142204 /* AttachmentUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B86A1C58FBF298270046B0 /* AttachmentUpload.swift */; };
 		D3B67B529B1D16D871E1E49D /* InvitesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB5D61D94493FC634E268F2 /* InvitesService.swift */; };
 		A11E00010000000000000001 /* InviteLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11E00010000000000000002 /* InviteLinks.swift */; };
 		D70496EBF6B840E2AD61B041 /* AppDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B2D2ED0E4448B6B3A822FC /* AppDestination.swift */; };
@@ -621,6 +622,7 @@
 		D4E5F6071829304D5E6F7081 /* ItemsListControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsListControlBar.swift; sourceTree = "<group>"; };
 		D514FB553339620B157AAB4B /* ProjectBudgetCategoriesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectBudgetCategoriesService.swift; sourceTree = "<group>"; };
 		D5B86A1C58FBF298270046AF /* AttachmentRef.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttachmentRef.swift; sourceTree = "<group>"; };
+		D5B86A1C58FBF298270046B0 /* AttachmentUpload.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttachmentUpload.swift; sourceTree = "<group>"; };
 		D7184640FD902E9E64F1779F /* EditItemDetailsModal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditItemDetailsModal.swift; sourceTree = "<group>"; };
 		D728B501E3FD1CF2F39E557D /* ProjectCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProjectCard.swift; sourceTree = "<group>"; };
 		D98FEC1B725CD1AE834DD69B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
@@ -1171,6 +1173,7 @@
 			children = (
 				F7B2D2ED0E4448B6B3A822FC /* AppDestination.swift */,
 				D5B86A1C58FBF298270046AF /* AttachmentRef.swift */,
+				D5B86A1C58FBF298270046B0 /* AttachmentUpload.swift */,
 				47370982DDDB5064026D1B45 /* Enums.swift */,
 				WP01F00100000000000S0001 /* ActionMenuItem.swift */,
 				WP01F00100000000000S0003 /* FormSheetAction.swift */,
@@ -1516,6 +1519,7 @@
 				A1000101000000000000AA0B /* MainTabView.swift in Sources */,
 				A1000101000000000000AA0C /* RootView.swift in Sources */,
 				D013515AC042723CCE142203 /* AttachmentRef.swift in Sources */,
+				D013515AC042723CCE142204 /* AttachmentUpload.swift in Sources */,
 				AB715A496DC6CDD4A8EA2C1B /* Enums.swift in Sources */,
 				C1CF755D2AE8CCEB427F39F2 /* Account.swift in Sources */,
 				DA7CB034BD9DE929759FE561 /* AccountMember.swift in Sources */,
@@ -1999,7 +2003,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2038,7 +2042,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LedgeriOS/LedgeriOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 5VHL56HV63;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (

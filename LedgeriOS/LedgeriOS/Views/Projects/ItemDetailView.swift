@@ -396,8 +396,8 @@ struct ItemDetailView: View {
         MediaGallerySection(
             title: "",
             attachments: liveItem.images ?? [],
-            onUploadAttachment: { data in
-                try await uploadImage(data)
+            onUploadAttachmentFile: { upload in
+                try await uploadImage(upload)
             },
             sourceImages: linkedTransactionImages,
             sourceImagesTitle: "Transaction Images",
@@ -658,10 +658,10 @@ struct ItemDetailView: View {
 
     // MARK: - Image Management
 
-    private func uploadImage(_ data: Data) async throws {
+    private func uploadImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
               let itemId = item.id else { return }
-        let filename = "\(UUID().uuidString).jpg"
+        let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
             entityType: "items",
@@ -672,20 +672,31 @@ struct ItemDetailView: View {
         // H7: Write placeholder first so the Firestore record survives upload failures
         var images = liveItem.images ?? []
         let isPrimary = images.isEmpty
-        images.append(AttachmentRef(url: "", fileName: filename, isPrimary: isPrimary, isUploading: true))
+        images.append(AttachmentRef(
+            url: "",
+            fileName: upload.displayFileName,
+            contentType: upload.contentType,
+            isPrimary: isPrimary,
+            isUploading: true
+        ))
         updateItem(fields: ["images": images.map(attachmentDict)])
 
         // Upload bytes (H8: MediaService retries on transient failures)
-        let url = try await mediaService.uploadImage(data, path: path)
+        let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
 
         // Replace placeholder with real URL
         var updatedImages = liveItem.images ?? []
-        if let idx = updatedImages.firstIndex(where: { $0.fileName == filename }) {
+        if let idx = updatedImages.firstIndex(where: { $0.url.isEmpty && $0.fileName == upload.displayFileName }) {
             updatedImages[idx].url = url
             updatedImages[idx].isUploading = nil
         } else {
             // Listener hasn't reflected the placeholder yet — append the resolved ref directly
-            updatedImages.append(AttachmentRef(url: url, fileName: filename, isPrimary: isPrimary))
+            updatedImages.append(AttachmentRef(
+                url: url,
+                fileName: upload.displayFileName,
+                contentType: upload.contentType,
+                isPrimary: isPrimary
+            ))
         }
         updateItem(fields: ["images": updatedImages.map(attachmentDict)])
     }

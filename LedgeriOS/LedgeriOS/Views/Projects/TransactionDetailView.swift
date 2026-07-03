@@ -757,8 +757,8 @@ struct TransactionDetailView: View {
             MediaGallerySection(
                 title: "",
                 attachments: currentTransaction.receiptImages ?? [],
-                onUploadAttachment: { data in
-                    try await uploadReceiptImage(data)
+                onUploadAttachmentFile: { upload in
+                    try await uploadReceiptImage(upload)
                 },
                 onUploadDocument: { data, fileName in
                     try await uploadReceiptPDF(data, fileName: fileName)
@@ -787,8 +787,8 @@ struct TransactionDetailView: View {
             MediaGallerySection(
                 title: "",
                 attachments: currentTransaction.otherImages ?? [],
-                onUploadAttachment: { data in
-                    try await uploadOtherImage(data)
+                onUploadAttachmentFile: { upload in
+                    try await uploadOtherImage(upload)
                 },
                 onRemoveAttachment: { attachment in
                     removeOtherImage(attachment)
@@ -1259,20 +1259,25 @@ struct TransactionDetailView: View {
 
     // MARK: - Image Management (Receipts)
 
-    private func uploadReceiptImage(_ data: Data) async throws {
+    private func uploadReceiptImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
               let transactionId = transaction.id else { return }
-        let filename = "\(UUID().uuidString).jpg"
+        let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
             entityType: "transactions",
             entityId: transactionId,
             filename: filename
         )
-        let url = try await mediaService.uploadImage(data, path: path)
+        let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
         var images = currentTransaction.receiptImages ?? []
         let isPrimary = images.isEmpty
-        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        images.append(AttachmentRef(
+            url: url,
+            fileName: upload.displayFileName,
+            contentType: upload.contentType,
+            isPrimary: isPrimary
+        ))
         updateTransaction(fields: ["receiptImages": images.map(attachmentDict)])
     }
 
@@ -1320,20 +1325,25 @@ struct TransactionDetailView: View {
 
     // MARK: - Image Management (Other Images)
 
-    private func uploadOtherImage(_ data: Data) async throws {
+    private func uploadOtherImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
               let transactionId = transaction.id else { return }
-        let filename = "\(UUID().uuidString).jpg"
+        let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
             entityType: "transactions",
             entityId: transactionId,
             filename: filename
         )
-        let url = try await mediaService.uploadImage(data, path: path)
+        let url = try await mediaService.uploadData(upload.data, path: path, contentType: upload.contentType)
         var images = currentTransaction.otherImages ?? []
         let isPrimary = images.isEmpty
-        images.append(AttachmentRef(url: url, isPrimary: isPrimary))
+        images.append(AttachmentRef(
+            url: url,
+            fileName: upload.displayFileName,
+            contentType: upload.contentType,
+            isPrimary: isPrimary
+        ))
         updateTransaction(fields: ["otherImages": images.map(attachmentDict)])
     }
 
@@ -1364,6 +1374,8 @@ struct TransactionDetailView: View {
         if let fileName = ref.fileName { dict["fileName"] = fileName }
         if let contentType = ref.contentType { dict["contentType"] = contentType }
         if let isPrimary = ref.isPrimary { dict["isPrimary"] = isPrimary }
+        if let thumbnailUrlSm = ref.thumbnailUrlSm { dict["thumbnailUrlSm"] = thumbnailUrlSm }
+        if let thumbnailUrlMd = ref.thumbnailUrlMd { dict["thumbnailUrlMd"] = thumbnailUrlMd }
         return dict
     }
 
