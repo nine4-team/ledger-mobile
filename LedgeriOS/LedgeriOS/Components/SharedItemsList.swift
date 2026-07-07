@@ -13,6 +13,9 @@ struct SharedItemsList: View {
     var getBulkMenuItems: (() -> [ActionMenuItem])?
     var selectedIds: Binding<Set<String>>?
     var useNavigationLinks: Bool = false
+    /// When set, item cards navigate via a stable `ItemRoute` value instead of
+    /// the mutable `Item` model. Returning nil skips the link for that item.
+    var itemRoute: ((Item) -> ItemRoute?)?
     var emptyIcon: String = "tray"
     var filterScope: ItemFilterScope?
     var inline: Bool = false
@@ -460,10 +463,9 @@ struct SharedItemsList: View {
                                 )
 
                                 if useNavigationLinks && resolvedSelectedIds.wrappedValue.isEmpty {
-                                    NavigationLink(value: item) {
+                                    itemNavigationLink(for: item) {
                                         card
                                     }
-                                    .buttonStyle(.plain)
                                 } else {
                                     card
                                 }
@@ -489,6 +491,27 @@ struct SharedItemsList: View {
 
     // MARK: - Item Cards
 
+    /// Wraps a card in a NavigationLink using a stable `ItemRoute` when an
+    /// `itemRoute` builder is provided, falling back to the mutable `Item`
+    /// value for call sites not yet migrated to stable routes.
+    @ViewBuilder
+    private func itemNavigationLink<Label: View>(
+        for item: Item,
+        @ViewBuilder label: () -> Label
+    ) -> some View {
+        if let route = itemRoute?(item) {
+            NavigationLink(value: route) {
+                label()
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(value: item) {
+                label()
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     @ViewBuilder
     private func singleItemCard(for item: Item) -> some View {
         // Issue 5: Skip items with nil IDs entirely
@@ -500,7 +523,7 @@ struct SharedItemsList: View {
             if isPicker {
                 pickerItemCard(for: item, itemId: itemId, isItemSelected: ids.contains(itemId))
             } else if useNavigationLinks && ids.isEmpty {
-                NavigationLink(value: item) {
+                itemNavigationLink(for: item) {
                     ItemCard(
                         item: item,
                         priceLabel: displayPrice(for: item),
@@ -513,7 +536,6 @@ struct SharedItemsList: View {
                         warningMessage: warning
                     )
                 }
-                .buttonStyle(.plain)
             } else {
                 ItemCard(
                     item: item,
@@ -710,10 +732,9 @@ struct SharedItemsList: View {
                 )
 
                 if useNavigationLinks && ids.isEmpty && !shouldUseInlinePressNavigation {
-                    NavigationLink(value: item) {
+                    itemNavigationLink(for: item) {
                         card
                     }
-                    .buttonStyle(.plain)
                 } else {
                     card
                 }

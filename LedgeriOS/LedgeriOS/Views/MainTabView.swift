@@ -46,8 +46,13 @@ struct MainTabView: View {
                 switch selectedTab {
                 case .projects:
                     ProjectsListView()
-                        .navigationDestination(for: Project.self) { project in
-                            ProjectDetailContainer(project: project)
+                        .navigationDestination(for: ProjectRoute.self) { route in
+                            ProjectDetailContainer(
+                                projectId: route.id,
+                                initialProject: NavigationRouteResolution.project(
+                                    id: route.id, in: accountContext.allProjects
+                                )
+                            )
                         }
                         .navigationDestination(for: AppDestination.self) { dest in
                             switch dest {
@@ -117,8 +122,13 @@ struct MainTabView: View {
             Tab("Projects", systemImage: "folder", value: .projects) {
                 NavigationStack {
                     ProjectsListView()
-                        .navigationDestination(for: Project.self) { project in
-                            ProjectDetailContainer(project: project)
+                        .navigationDestination(for: ProjectRoute.self) { route in
+                            ProjectDetailContainer(
+                                projectId: route.id,
+                                initialProject: NavigationRouteResolution.project(
+                                    id: route.id, in: accountContext.allProjects
+                                )
+                            )
                         }
                         .navigationDestination(for: AppDestination.self) { dest in
                             switch dest {

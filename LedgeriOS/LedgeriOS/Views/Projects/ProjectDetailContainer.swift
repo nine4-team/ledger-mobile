@@ -4,15 +4,21 @@ import SwiftUI
 ///
 /// Each open project detail needs an independent ProjectContext so macOS
 /// windows can compare different projects without sharing active budget/items.
+///
+/// Route identity is the **project ID**, not a mutable `Project` value. The
+/// displayed project resolves from live context / account data, falling back to
+/// an optional initial snapshot for immediate first paint.
 struct ProjectDetailContainer: View {
-    let project: Project
+    let projectId: String
+    let initialProject: Project?
 
     @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
     @State private var projectContext: ProjectContext
 
-    init(project: Project) {
-        self.project = project
+    init(projectId: String, initialProject: Project? = nil) {
+        self.projectId = projectId
+        self.initialProject = initialProject
 
         let projectService = ProjectService()
         let transactionsService = TransactionsService()
@@ -31,8 +37,20 @@ struct ProjectDetailContainer: View {
         ))
     }
 
+    /// Live project for display. Prefers the focused project listener, then the
+    /// account-level list, then the initial snapshot passed at push time.
+    private var displayProject: Project? {
+        if let project = projectContext.project, project.id == projectId {
+            return project
+        }
+        if let project = NavigationRouteResolution.project(id: projectId, in: accountContext.allProjects) {
+            return project
+        }
+        return initialProject
+    }
+
     var body: some View {
-        ProjectDetailView(project: project)
+        content
             .environment(projectContext)
             .task(id: activationKey) {
                 activateProjectContext()
@@ -42,18 +60,31 @@ struct ProjectDetailContainer: View {
             }
     }
 
+    @ViewBuilder
+    private var content: some View {
+        if let displayProject {
+            ProjectDetailView(project: displayProject)
+        } else {
+            // Project listener hasn't returned yet and there is no cached
+            // snapshot. This is first-paint only, not the rename path.
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(BrandColors.background)
+        }
+    }
+
     private var activationKey: String {
         [
             accountContext.currentAccountId ?? "",
-            project.id ?? "",
+            projectId,
             authManager.currentUser?.uid ?? ""
         ].joined(separator: "|")
     }
 
     private func activateProjectContext() {
-        guard let accountId = accountContext.currentAccountId,
-              let projectId = project.id else { return }
+        guard let accountId = accountContext.currentAccountId else { return }
 
+        NavLifecycleLog.log("ProjectDetailContainer.activate key=\(activationKey)")
         projectContext.activate(
             accountId: accountId,
             projectId: projectId,

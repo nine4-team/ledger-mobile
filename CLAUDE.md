@@ -169,18 +169,36 @@ Key invariants:
 
 One `NavigationStack` per tab. Use `NavigationLink(value:)` with `.navigationDestination(for:)` — not the deprecated label-based `NavigationLink`.
 
+**Do not pass mutable Firestore models as navigation values.** A `Project`, `Item`, `Transaction`, or `Space` struct changes on every listener reconciliation, optimistic write, or thumbnail update. Using the whole model as a `NavigationLink(value:)` payload couples navigation identity to ordinary data changes, which makes the destination churn (spinners, list rebuilds, delayed menus).
+
+Instead:
+
+- Route with small `Hashable` route structs/enums that hold **stable IDs** and minimal immutable context (see `Models/NavigationRoutes.swift` — `ProjectRoute`, `ItemRoute`).
+- Register the destination for the **route type**, not the model.
+- Resolve the current model inside the destination from `AccountContext`, `ProjectContext`, `InventoryContext`, or a focused listener (see `Logic/NavigationRouteResolution.swift`). Pass an optional initial snapshot for immediate first paint — as display fallback, never as route identity.
+- Keep existing content visible while a focused listener refreshes; render a non-loading unavailable state for deleted records.
+- Whole-model navigation is allowed only for static, non-persisted, non-mutating values (e.g. `AppDestination.inventory`, `ReportType`).
+
 ```swift
 NavigationStack {
     List(items) { item in
-        NavigationLink(value: item) {
-            ItemRow(item: item)
+        if let itemId = item.id {
+            NavigationLink(value: ItemRoute(id: itemId, projectId: projectId)) {
+                ItemRow(item: item)
+            }
         }
     }
-    .navigationDestination(for: Item.self) { item in
-        ItemDetailView(item: item)
+    .navigationDestination(for: ItemRoute.self) { route in
+        ItemDetailView(
+            itemId: route.id,
+            projectId: route.projectId,
+            initialItem: projectContext.items.first { $0.id == route.id }
+        )
     }
 }
 ```
+
+> Migration status: project and project-item routes use stable IDs. Inventory, search, review, transaction, space, and invoice routes still pass mutable models (`.navigationDestination(for: Item.self)` etc.) and are being migrated in follow-up milestones — see `docs/plans/stable-id-navigation-remediation-plan.md`.
 
 ### App Entry Point
 

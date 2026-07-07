@@ -54,6 +54,16 @@ struct ProjectDetailView: View {
                 }
             }
         }
+        .navigationDestination(for: ItemRoute.self) { route in
+            ItemDetailView(
+                itemId: route.id,
+                projectId: route.projectId,
+                initialItem: projectContext.items.first { $0.id == route.id }
+            )
+        }
+        // TODO(stable-id-navigation): FinancesTabView still pushes `Item` values.
+        // Remove this destination once the finance/invoice routes are migrated in
+        // a follow-up milestone.
         .navigationDestination(for: Item.self) { item in
             ItemDetailView(item: item)
         }

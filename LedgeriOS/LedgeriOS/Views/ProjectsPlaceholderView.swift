@@ -19,8 +19,8 @@ struct ProjectsPlaceholderView: View {
             description: Text("Projects will appear here.")
         )
         .navigationTitle("Projects")
-        .navigationDestination(for: Project.self) { project in
-            ProjectDetailContainer(project: project)
+        .navigationDestination(for: ProjectRoute.self) { route in
+            ProjectDetailContainer(projectId: route.id)
         }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {

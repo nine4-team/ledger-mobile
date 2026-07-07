@@ -65,14 +65,16 @@ struct ProjectsListView: View {
                                 spacing: Spacing.cardListGap
                             ) {
                                 ForEach(filteredProjects) { project in
-                                    NavigationLink(value: project) {
-                                        ProjectCard(
-                                            project: project,
-                                            budgetPreview: budgetPreviewFor(project)
-                                        )
+                                    if let projectId = project.id {
+                                        NavigationLink(value: ProjectRoute(id: projectId)) {
+                                            ProjectCard(
+                                                project: project,
+                                                budgetPreview: budgetPreviewFor(project)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                        .id(projectId)
                                     }
-                                    .buttonStyle(.plain)
-                                    .id(project.id ?? "")
                                 }
                             }
                             .padding(.horizontal, Spacing.screenPadding)
@@ -157,7 +159,7 @@ struct ProjectsListView: View {
                 name: catData.name ?? "",
                 budgetCents: catData.budgetCents ?? 0,
                 spentCents: catData.spentCents ?? 0,
-                categoryType: BudgetCategoryType(rawValue: catData.categoryType ?? "") ?? .general,
+                categoryType: catData.resolvedCategoryType,
                 supportedTypes: catData.resolvedSupportedTypes,
                 excludeFromOverallBudget: catData.excludeFromOverallBudget ?? false
             )

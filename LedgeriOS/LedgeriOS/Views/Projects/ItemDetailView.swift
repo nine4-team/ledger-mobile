@@ -2,7 +2,26 @@ import FirebaseFirestore
 import SwiftUI
 
 struct ItemDetailView: View {
-    let item: Item
+    /// Route identity is the item ID. The displayed item resolves from the
+    /// focused listener, then project/account context, then the initial
+    /// snapshot — never from a mutable model held as route identity.
+    let itemId: String
+    let projectId: String?
+    let initialItem: Item?
+
+    /// Primary initializer — item detail is addressable by stable ID.
+    init(itemId: String, projectId: String? = nil, initialItem: Item? = nil) {
+        self.itemId = itemId
+        self.projectId = projectId
+        self.initialItem = initialItem
+    }
+
+    // TODO(stable-id-navigation): Temporary compatibility for call sites still
+    // pushing mutable `Item` values (inventory, search, transaction detail,
+    // finances). Remove once those routes migrate to stable IDs.
+    init(item: Item) {
+        self.init(itemId: item.id ?? "", projectId: item.projectId, initialItem: item)
+    }
 
     @Environment(ProjectContext.self) private var projectContext
     @Environment(AccountContext.self) private var accountContext
@@ -18,6 +37,8 @@ struct ItemDetailView: View {
 
     // Live document subscription
     @State private var liveItemData: Item?
+    /// Set true only when the focused listener reports the document is gone.
+    @State private var itemMissing = false
     @State private var itemListener: ListenerRegistration?
     @State private var liveTransactionData: Transaction?
     @State private var transactionListener: ListenerRegistration?
@@ -51,7 +72,20 @@ struct ItemDetailView: View {
 
     // MARK: - Computed
 
-    private var liveItem: Item { liveItemData ?? item }
+    /// Live item for display. Prefers the focused listener, then project /
+    /// account context, then the initial snapshot. Keeps showing the last known
+    /// item while the listener refreshes so edits never blank the screen.
+    private var liveItem: Item {
+        if let liveItemData, liveItemData.id == itemId { return liveItemData }
+        if let resolved = NavigationRouteResolution.item(
+            id: itemId,
+            projectItems: projectContext.items,
+            accountItems: accountContext.allItems
+        ) {
+            return resolved
+        }
+        return initialItem ?? Item()
+    }
 
     var body: some View {
         PinnedImageLayout(
@@ -76,8 +110,18 @@ struct ItemDetailView: View {
                 }
             }
         }
-        .findEntity(id: item.id)
+        .findEntity(id: itemId)
         .background(BrandColors.background)
+        .overlay {
+            if itemMissing {
+                ContentUnavailableView(
+                    "Item Unavailable",
+                    systemImage: "cube.box",
+                    description: Text("This item no longer exists.")
+                )
+                .background(BrandColors.background)
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .trailingNavBar) {
                 dispositionButton
@@ -208,6 +252,7 @@ struct ItemDetailView: View {
             SpaceDetailView(space: space)
         }
         .onAppear {
+            NavLifecycleLog.log("ItemDetailView.onAppear itemId=\(itemId)")
             startItemListener()
             startTransactionListener(for: normalizedTransactionId)
             loadItemLineage()
@@ -220,6 +265,7 @@ struct ItemDetailView: View {
             loadItemLineage()
         }
         .onDisappear {
+            NavLifecycleLog.log("ItemDetailView.onDisappear itemId=\(itemId)")
             itemListener?.remove()
             itemListener = nil
             transactionListener?.remove()
@@ -660,7 +706,7 @@ struct ItemDetailView: View {
 
     private func uploadImage(_ upload: AttachmentUpload) async throws {
         guard let accountId = accountContext.currentAccountId,
-              let itemId = item.id else { return }
+              !itemId.isEmpty else { return }
         let filename = upload.storageFileName
         let path = mediaService.uploadPath(
             accountId: accountId,
@@ -767,11 +813,20 @@ struct ItemDetailView: View {
 
     private func startItemListener() {
         guard let accountId = accountContext.currentAccountId,
-              let itemId = item.id else { return }
+              !itemId.isEmpty else { return }
+        NavLifecycleLog.log("ItemDetailView.startItemListener itemId=\(itemId)")
         itemListener?.remove()
         itemListener = ItemsService()
             .subscribeToItem(accountId: accountId, itemId: itemId) { updatedItem in
-                self.liveItemData = updatedItem
+                if let updatedItem {
+                    self.liveItemData = updatedItem
+                    self.itemMissing = false
+                } else {
+                    // Document deleted — show a non-loading unavailable state
+                    // rather than spinning or holding stale content forever.
+                    self.liveItemData = nil
+                    self.itemMissing = true
+                }
             }
     }
 
@@ -847,7 +902,7 @@ struct ItemDetailView: View {
 
     private func updateItem(fields: [String: Any]) {
         guard let accountId = accountContext.currentAccountId,
-              let itemId = item.id else {
+              !itemId.isEmpty else {
             print("⚠️ updateItem skipped — missing accountId or itemId")
             return
         }
@@ -869,8 +924,9 @@ struct ItemDetailView: View {
     private func deleteItem() {
         guard let accountId = accountContext.currentAccountId else { return }
         let service = ItemsService()
+        let itemSnapshot = liveItem
         Task {
-            try? await service.deleteItem(accountId: accountId, item: item)
+            try? await service.deleteItem(accountId: accountId, item: itemSnapshot)
             await MainActor.run { dismiss() }
         }
     }

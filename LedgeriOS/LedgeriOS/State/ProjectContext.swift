@@ -60,11 +60,13 @@ final class ProjectContext {
            currentProjectId == projectId,
            activeUserId == userId,
            !listeners.isEmpty {
+            NavLifecycleLog.log("ProjectContext.activate early-return (same project=\(projectId))")
             updateFinancialAccess(member: member)
             return
         }
 
         let isNewProject = currentProjectId != projectId || activeAccountId != accountId
+        NavLifecycleLog.log("ProjectContext.activate restart project=\(projectId) isNewProject=\(isNewProject)")
         stopListeners()
         if isNewProject {
             clearData()
@@ -205,11 +207,15 @@ final class ProjectContext {
     }
 
     func stopListeners() {
+        if !listeners.isEmpty {
+            NavLifecycleLog.log("ProjectContext.stopListeners count=\(listeners.count) project=\(currentProjectId ?? "nil")")
+        }
         listeners.forEach { $0.remove() }
         listeners.removeAll()
     }
 
     func deactivate() {
+        NavLifecycleLog.log("ProjectContext.deactivate project=\(currentProjectId ?? "nil")")
         stopListeners()
         clearData()
     }
