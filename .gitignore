@@ -42,6 +42,9 @@ ui-debug.log
 .cursor/
 .vscode/
 
+# Agent scratch notes
+.codex-notes/
+
 # Worktrees
 .worktrees/
 scripts/migration-logs/
