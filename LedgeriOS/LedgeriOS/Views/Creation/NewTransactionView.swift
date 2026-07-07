@@ -418,10 +418,9 @@ struct NewTransactionView: View {
     }
 
     private func category(_ category: BudgetCategory, accepts type: TransactionType) -> Bool {
-        let supported = category.resolvedSupportedTypes
         switch type {
         case .purchase:
-            return !supported.contains(.fee)
+            return category.resolvedCategoryType != .fee
         case .return:
             return category.isItemsCategory
         case .paymentToBusiness:

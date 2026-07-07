@@ -2,7 +2,7 @@
 
 ## Overview
 
-The transaction completeness system determines whether a transaction has been fully accounted for. A Cloud Function is the **single source of truth** — it computes `isComplete` and a stored `audit` object on every transaction write, item price change, or budget category type change. All clients (MCP server, Swift app) read stored data; no client recomputes completeness.
+The transaction completeness system determines whether a transaction has been fully accounted for. A Cloud Function is the **single source of truth** — it computes `isComplete` and a stored `audit` object on every transaction write, item price change, or relevant budget category shape change. All clients (MCP server, Swift app) read stored data; no client recomputes completeness.
 
 The app shows a **"Needs Review" badge** when `isComplete === false`.
 
@@ -23,7 +23,7 @@ The app shows a **"Needs Review" badge** when `isComplete === false`.
 
 `isComplete = true` when **any** of:
 1. **Canonical/system transaction** — `isCanonicalInventorySale === true` or `isCanonicalInventory === true`
-2. **Non-itemized category** — budget category's `metadata.categoryType` is not `"itemized"` (includes `"general"`, `"standard"`, `"fee"`, or no category)
+2. **Non-itemized category** — the budget category is not an itemized category. `metadata.categoryType` is canonical: `"general"`, `"standard"` (legacy alias), `"expense"` (legacy alias), `"fee"`, missing, or unknown are non-itemized. `supportedTypes = ["purchase", "return"]` is only an itemized fallback when `metadata.categoryType` is missing.
 3. **All conditions met** for an itemized category:
    - Tax data present — `subtotalCents` is set (not null/undefined) **or** `taxRatePct` is set (not null/undefined, including `0`)
    - Has items — `itemIds` is non-empty **or** lineage edges with `movementKind` "returned", "sold", or "soldToInventory" exist for this transaction
@@ -107,12 +107,13 @@ Fires on every transaction create, update, or delete. Computes `isComplete` + `a
 
 When `purchasePriceCents` changes on an item, queries for parent transactions via `array-contains` on `itemIds`, then recomputes `isComplete` for each. Also queries lineage edges where `itemId == changedItemId` and `movementKind` in `["returned", "sold", "soldToInventory"]` to find source transactions (`fromTransactionId`) that should be recomputed — this handles items that have already left their source transaction.
 
-### 3. Budget Category Type Change (`onAccountBudgetCategoryWritten`)
+### 3. Budget Category Shape Change (`onAccountBudgetCategoryWritten`)
 
-When `metadata.categoryType` changes on an account-level budget category:
+When relevant fields on an account-level budget category change, including `supportedTypes` or legacy `metadata.categoryType`, the function queries transactions with that `budgetCategoryId` and recomputes `isComplete` using the same `computeIsComplete` source of truth.
 
-- **To non-itemized:** Query transactions with that `budgetCategoryId`, batch set `isComplete = true, audit = null`
-- **To itemized:** Query transactions with that `budgetCategoryId`, batch set `isComplete = false, audit = null` (marks for review; full computation happens on next transaction write or via backfill)
+This handles both directions:
+- **To non-itemized/project-cost/fee:** existing transactions become `isComplete = true, audit = null`
+- **To itemized/items:** existing purchase/return transactions are checked for tax data, item/lineage presence, and item subtotal variance
 
 ### 4. Lineage Edge Creation (`onLineageEdgeCreated`)
 

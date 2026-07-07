@@ -43,14 +43,14 @@ AND actual items exist / are being created
 
 Every transaction must have `budgetCategoryId`.
 
-During migration, readers may derive category behavior from legacy
-`metadata.categoryType` or `supportedTypes`, but the target behavior is:
+During migration, readers must derive category behavior from
+`metadata.categoryType` first. `supportedTypes` is compatibility fallback only
+when `metadata.categoryType` is missing.
 
-- `categoryKind = items`: item-backed purchases and returns.
-- `categoryKind = projectCost`: non-itemized project cost purchases without
-  item rows. The storage shape may still be `supportedTypes = ["expense"]`;
-  that is not a transaction type recommendation.
-- `categoryKind = feeCategory`: company revenue/payment categories. Invoice
+- `metadata.categoryType = "itemized"`: item-backed purchases and returns.
+- `metadata.categoryType = "general"`: non-itemized project cost purchases
+  without item rows.
+- `metadata.categoryType = "fee"`: company revenue/payment categories. Invoice
   collection and manual Client Payment entry create categorized
   `paymentToBusiness` transactions using fee/revenue categories.
 

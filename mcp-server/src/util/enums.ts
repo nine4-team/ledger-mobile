@@ -71,7 +71,7 @@ export const inventorySaleDirections = [
 /** @deprecated See `inventorySaleDirections` comment. */
 export type InventorySaleDirection = (typeof inventorySaleDirections)[number];
 
-export const categoryTypes = ["general", "itemized", "fee", "expense"] as const;
+export const categoryTypes = ["general", "itemized", "fee"] as const;
 export type CategoryType = (typeof categoryTypes)[number];
 
 export const categoryKinds = ["items", "projectCost", "feeCategory", "unknown"] as const;
@@ -157,14 +157,12 @@ export const ENUMS: EnumSpec[] = [
     name: "categoryType",
     values: categoryTypes,
     description:
-      "Legacy budget category metadata classification. Prefer categoryKind for business logic and display. " +
-      "Storage values general/expense mean non-itemized project cost, itemized means items, and fee means fee category.",
+      "Canonical budget category behavior. general means non-itemized project cost, itemized means item rows/audit/inventory routing, and fee means company revenue/payment category.",
   },
   {
     name: "categoryKind",
     values: categoryKinds,
     description:
-      "App-facing budget category behavior derived from supportedTypes/categoryType. " +
-      "items categories can contain item rows; projectCost categories are non-itemized purchases; feeCategory categories are company revenue/payment categories.",
+      "Display convenience derived from metadata.categoryType. items categories can contain item rows; projectCost categories are non-itemized purchases; feeCategory categories are company revenue/payment categories.",
   },
 ];

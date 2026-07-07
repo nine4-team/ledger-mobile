@@ -250,13 +250,9 @@ export interface BudgetCategory {
   order?: number;
   metadata?: BudgetCategoryMetadata;
   /**
-   * Storage compatibility field for category behavior. Interpret through
-   * categoryKind/budgetCategoryKind:
-   *   ["purchase","return"] => items
-   *   ["expense"] => projectCost
-   *   ["fee"] => feeCategory
-   * Absent on legacy docs — derive from metadata.categoryType in that case.
-   * See docs/specs/transaction-type.md.
+   * Compatibility field from an abandoned taxonomy migration. Canonical category
+   * behavior is metadata.categoryType; readers may use supportedTypes only as a
+   * fallback when categoryType is missing.
    */
   supportedTypes?: string[];
   createdAt?: FirebaseFirestore.Timestamp;

@@ -154,8 +154,9 @@ const ENTITIES: Record<string, EntitySchema> = {
     requiredOnCreate: [],
     keyFields: [
       { name: "budgetCategoryId", type: "string", description: "Account-level preset category." },
-      { name: "categoryKind", type: "enum(categoryKind)", description: "Recommended behavior/display field derived from supportedTypes/categoryType: items, projectCost, feeCategory, or unknown." },
-      { name: "supportedTypes", type: "string[]", description: "Storage compatibility field. Do not use raw ['expense'] as a transaction type signal; categoryKind == projectCost is the product concept." },
+      { name: "categoryType", type: "enum(categoryType)", description: "Canonical behavior field: general, itemized, or fee." },
+      { name: "categoryKind", type: "enum(categoryKind)", description: "Display convenience derived from categoryType: items, projectCost, feeCategory, or unknown." },
+      { name: "supportedTypes", type: "string[]", description: "Legacy compatibility/debug field. Do not use raw values as the product model." },
       { name: "budgetCents", type: "number", description: "Allocation on a specific project." },
       { name: "excludeFromOverallBudget", type: "boolean", description: "When true, does not count toward project total." },
     ],

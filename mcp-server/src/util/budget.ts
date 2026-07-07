@@ -2,19 +2,46 @@ import type { BudgetCategory, Transaction } from "../types.js";
 
 export type BudgetCategoryKind = "items" | "projectCost" | "feeCategory" | "unknown";
 
+export type ResolvedCategoryType = "general" | "itemized" | "fee";
+
+function normalizeCategoryType(value: string | undefined): ResolvedCategoryType | null {
+  switch (value?.trim().toLowerCase()) {
+    case "fee":
+      return "fee";
+    case "itemized":
+      return "itemized";
+    case "standard":
+    case "expense":
+    case "general":
+      return "general";
+    default:
+      return null;
+  }
+}
+
+function deriveCategoryTypeFromSupportedTypes(supportedTypes: string[] | undefined): ResolvedCategoryType {
+  const supported = new Set((supportedTypes ?? []).map((v) => v.trim().toLowerCase()).filter(Boolean));
+  if (supported.size === 1 && supported.has("fee")) return "fee";
+  if (supported.size === 2 && supported.has("purchase") && supported.has("return")) return "itemized";
+  return "general";
+}
+
 /**
- * Derive `supportedTypes` for a budget category, falling back to the legacy
- * `metadata.categoryType` when the new field is absent. Mirrors the
- * Swift-side `BudgetCategory.resolvedSupportedTypes`. See
- * `docs/specs/transaction-type.md`.
+ * Resolve canonical category behavior. `metadata.categoryType` is the product
+ * model; `supportedTypes` is a compatibility fallback for dirty migration data.
+ */
+export function resolveCategoryType(c: BudgetCategory): ResolvedCategoryType {
+  return normalizeCategoryType(c.metadata?.categoryType) ?? deriveCategoryTypeFromSupportedTypes(c.supportedTypes);
+}
+
+/**
+ * Compatibility shape derived from canonical category behavior. Do not let raw
+ * `supportedTypes` override `metadata.categoryType`.
  */
 export function resolveSupportedTypes(c: BudgetCategory): string[] {
-  if (c.supportedTypes && c.supportedTypes.length > 0) return c.supportedTypes;
-  switch (c.metadata?.categoryType) {
+  switch (resolveCategoryType(c)) {
     case "fee":
       return ["fee"];
-    case "expense":
-      return ["expense"];
     case "itemized":
       return ["purchase", "return"];
     case "general":
@@ -24,15 +51,17 @@ export function resolveSupportedTypes(c: BudgetCategory): string[] {
 }
 
 /**
- * App-facing category behavior derived from supportedTypes. This hides legacy
- * storage literals like ["expense"] behind product names.
+ * App-facing category behavior derived from canonical category type.
  */
 export function budgetCategoryKind(c: BudgetCategory): BudgetCategoryKind {
-  const supported = new Set(resolveSupportedTypes(c));
-  if (supported.size === 1 && supported.has("fee")) return "feeCategory";
-  if (supported.size === 1 && supported.has("expense")) return "projectCost";
-  if (supported.size === 2 && supported.has("purchase") && supported.has("return")) return "items";
-  return "unknown";
+  switch (resolveCategoryType(c)) {
+    case "fee":
+      return "feeCategory";
+    case "itemized":
+      return "items";
+    case "general":
+      return "projectCost";
+  }
 }
 
 /**

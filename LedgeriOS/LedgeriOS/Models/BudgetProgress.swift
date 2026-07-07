@@ -10,19 +10,15 @@ struct BudgetProgress {
         let name: String
         let budgetCents: Int
         let spentCents: Int
-        /// Legacy category-type field. Still populated during the taxonomy
-        /// migration so readers haven't been swapped yet can find it. Phase 4
-        /// removes this. Prefer `isFeeCategory` / `supportedTypes` going forward.
+        /// Canonical category behavior for budget display.
         let categoryType: BudgetCategoryType
-        /// New-model transaction kinds this category accepts. Drives budget-tab
-        /// coloring and labeling. See `docs/specs/transaction-type.md`. Derived
-        /// from `categoryType` when callers haven't been migrated.
+        /// Compatibility shape retained for older summary/read paths.
         let supportedTypes: [TransactionType]
         let excludeFromOverallBudget: Bool
         /// True when a ProjectBudgetCategory document exists (user explicitly enabled this category).
         var isEnabled: Bool = true
 
-        var isFeeCategory: Bool { supportedTypes == [.fee] }
+        var isFeeCategory: Bool { categoryType == .fee }
 
         init(
             id: String,

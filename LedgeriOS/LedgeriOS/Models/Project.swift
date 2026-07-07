@@ -30,27 +30,32 @@ struct BudgetSummaryCategory: Codable, Hashable {
     var budgetCents: Int?
     var spentCents: Int?
     var name: String?
-    /// Legacy — Phase 4 stops writing this. Use `supportedTypes` going forward.
+    /// Canonical category behavior denormalized from the source category.
     var categoryType: String?
-    /// Transaction kinds this category accepts, denormalized from the source
-    /// category document. See `docs/specs/transaction-type.md`.
+    /// Compatibility shape retained for summaries written during the taxonomy
+    /// migration. `categoryType` wins when both fields are present.
     var supportedTypes: [String]?
     var isArchived: Bool?
     var excludeFromOverallBudget: Bool?
 
-    /// Derive `[TransactionType]` from the raw `supportedTypes` strings, falling
-    /// back to the legacy `categoryType` for pre-migration summaries.
-    var resolvedSupportedTypes: [TransactionType] {
-        if let explicit = supportedTypes {
-            let decoded = explicit.compactMap { TransactionType(rawValue: $0.lowercased()) }
-            if !decoded.isEmpty { return decoded }
-        }
+    var resolvedCategoryType: BudgetCategoryType {
         switch categoryType?.lowercased() {
-        case "fee":      return [.fee]
-        case "expense":  return [.expense]
-        case "general":  return [.expense]
-        case "itemized": return [.purchase, .return]
-        default:         return [.expense]
+        case "fee": return .fee
+        case "itemized": return .itemized
+        case "standard", "general", "expense": return .general
+        default:
+            let decoded = Set((supportedTypes ?? []).compactMap { TransactionType(rawValue: $0.lowercased()) })
+            if decoded == [.fee] { return .fee }
+            if decoded == [.purchase, .return] { return .itemized }
+            return .general
+        }
+    }
+
+    var resolvedSupportedTypes: [TransactionType] {
+        switch resolvedCategoryType {
+        case .fee: return [.fee]
+        case .itemized: return [.purchase, .return]
+        case .general, .expense: return [.expense]
         }
     }
 }

@@ -35,17 +35,18 @@ Do not write those values.
 
 Itemization belongs to the budget category, not `Transaction.type`.
 
-Use app/MCP `categoryKind` for behavior:
+Use `metadata.categoryType` for behavior. `categoryKind` is display convenience
+derived from that canonical field:
 
-| categoryKind | Storage compatibility shape | Meaning |
+| categoryType | categoryKind | Meaning |
 | --- | --- | --- |
-| `items` | `supportedTypes = ["purchase", "return"]` | Item-backed categories. Can have item rows, subtotal/tax audit, and inventory routing. |
-| `projectCost` | `supportedTypes = ["expense"]` | Non-itemized project costs such as install services, install supplies, fuel, delivery, receiving, storage, or labor. Transactions are still `type = purchase`. |
-| `feeCategory` | `supportedTypes = ["fee"]` | Company revenue/payment categories used by invoices and payment visibility. |
-| `unknown` | Anything else | Migration/debug state. Do not create new categories in this state. |
+| `itemized` | `items` | Item-backed categories. Can have item rows, subtotal/tax audit, and inventory routing. |
+| `general` | `projectCost` | Non-itemized project costs such as install services, install supplies, fuel, delivery, receiving, storage, or labor. Transactions are still `type = purchase`. |
+| `fee` | `feeCategory` | Company revenue/payment categories used by invoices and payment visibility. |
+| missing/unknown | `unknown` | Migration/debug state. Do not create new categories in this state. |
 
-The raw storage values `expense` and `fee` in `supportedTypes` are compatibility
-markers for category behavior. They are not approved new transaction types.
+The raw values in `supportedTypes` are compatibility markers only. They are not
+approved new transaction types and must not override `metadata.categoryType`.
 
 ## Creation Rules
 

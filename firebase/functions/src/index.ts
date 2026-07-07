@@ -642,8 +642,6 @@ type CreateProjectResponse = {
 
 type BudgetCategoryType = 'standard' | 'general' | 'itemized' | 'fee';
 
-const normalizeBudgetCategoryType = (value?: BudgetCategoryType) => (value === 'general' ? 'standard' : value);
-
 type BudgetCategorySeed = {
   id: string;
   name: string;
@@ -728,9 +726,6 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
     for (let i = 0; i < BUDGET_CATEGORY_PRESET_SEED.length; i++) {
       const seed = BUDGET_CATEGORY_PRESET_SEED[i];
       if (seedSnaps[i].exists) continue;
-      const normalizedMetadata = seed.metadata?.categoryType
-        ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
-        : seed.metadata ?? null;
       tx.set(
         seedRefs[i],
         {
@@ -741,7 +736,7 @@ async function ensureBudgetCategoryPresetsSeeded(params: { accountId: string; cr
           slug: seed.slug,
           isArchived: false,
           order: seed.order,
-          metadata: normalizedMetadata,
+          metadata: seed.metadata ?? null,
           createdAt: now,
           updatedAt: now,
           deletedAt: null,
@@ -1112,20 +1107,81 @@ export const acceptInviteHttp = onRequest(
 // Maintains a precomputed `budgetSummary` on each project document so the
 // projects list can display budget progress without extra queries.
 
-/**
- * Derive supportedTypes for a legacy category from `metadata.categoryType`.
- * Mirrors Swift `BudgetCategory.resolvedSupportedTypes` and the MCP util.
- * See docs/specs/transaction-type.md.
- */
-function deriveSupportedTypesFromLegacyCategoryType(legacy: string | null): string[] {
-  switch (legacy) {
-    case 'fee': return ['fee'];
-    case 'expense': return ['expense'];
-    case 'general': return ['expense'];
-    case 'itemized': return ['purchase', 'return'];
-    // Missing/unknown: widest safe default so the category matches any wizard filter.
-    default: return ['purchase', 'return', 'expense'];
+function normalizeCategoryType(value: string | null): 'general' | 'itemized' | 'fee' | null {
+  switch (value?.trim().toLowerCase()) {
+    case 'fee': return 'fee';
+    case 'itemized': return 'itemized';
+    case 'standard':
+    case 'expense':
+    case 'general': return 'general';
+    default: return null;
   }
+}
+
+function deriveCategoryTypeFromSupportedTypes(supportedTypes: string[]): 'general' | 'itemized' | 'fee' {
+  const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()).filter(Boolean));
+  if (normalized.size === 1 && normalized.has('fee')) return 'fee';
+  if (normalized.size === 2 && normalized.has('purchase') && normalized.has('return')) return 'itemized';
+  return 'general';
+}
+
+function resolveCategoryTypeFromCategoryData(data: DocumentData | undefined | null): 'general' | 'itemized' | 'fee' {
+  const metadata =
+    data?.metadata && typeof data.metadata === 'object'
+      ? (data.metadata as Record<string, unknown>)
+      : {};
+  const categoryType = normalizeCategoryType(
+    typeof metadata.categoryType === 'string' ? metadata.categoryType : null
+  );
+  if (categoryType) return categoryType;
+
+  const explicitSupported = Array.isArray(data?.supportedTypes)
+    ? (data.supportedTypes as unknown[])
+        .filter((v): v is string => typeof v === 'string')
+        .map((v) => v.trim())
+        .filter(Boolean)
+    : [];
+  return deriveCategoryTypeFromSupportedTypes(explicitSupported);
+}
+
+/**
+ * Derive compatibility supportedTypes from canonical category behavior.
+ * `metadata.categoryType` wins over dirty `supportedTypes`.
+ */
+function deriveSupportedTypesFromCategoryType(categoryType: 'general' | 'itemized' | 'fee'): string[] {
+  switch (categoryType) {
+    case 'fee': return ['fee'];
+    case 'itemized': return ['purchase', 'return'];
+    case 'general': return ['expense'];
+  }
+}
+
+function resolveSupportedTypesFromCategoryData(data: DocumentData | undefined | null): string[] {
+  return deriveSupportedTypesFromCategoryType(resolveCategoryTypeFromCategoryData(data));
+}
+
+function isItemsCategorySupportedTypes(supportedTypes: string[]): boolean {
+  const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()));
+  return normalized.size === 2 && normalized.has('purchase') && normalized.has('return');
+}
+
+async function transactionUsesItemsCategory(
+  db: ReturnType<typeof getFirestore>,
+  accountId: string,
+  txData: DocumentData
+): Promise<boolean> {
+  const categoryId =
+    typeof txData.budgetCategoryId === 'string'
+      ? txData.budgetCategoryId.trim()
+      : null;
+  if (!categoryId) return false;
+
+  const categorySnap = await db
+    .doc(`accounts/${accountId}/presets/default/budgetCategories/${categoryId}`)
+    .get();
+  if (!categorySnap.exists) return false;
+
+  return isItemsCategorySupportedTypes(resolveSupportedTypesFromCategoryData(categorySnap.data()));
 }
 
 type BudgetSummaryCategory = {
@@ -1176,18 +1232,11 @@ async function recalculateProjectBudgetSummary(
       data.metadata && typeof data.metadata === 'object'
         ? (data.metadata as Record<string, unknown>)
         : {};
-    const explicitSupported = Array.isArray(data.supportedTypes)
-      ? (data.supportedTypes as unknown[]).filter((v): v is string => typeof v === 'string')
-      : [];
-    const supportedTypes = explicitSupported.length > 0
-      ? explicitSupported
-      : deriveSupportedTypesFromLegacyCategoryType(
-          typeof metadata.categoryType === 'string' ? metadata.categoryType : null
-        );
+    const categoryType = resolveCategoryTypeFromCategoryData(data);
+    const supportedTypes = deriveSupportedTypesFromCategoryType(categoryType);
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
-      categoryType:
-        typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+      categoryType,
       supportedTypes,
       excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
       isArchived: data.isArchived === true,
@@ -1266,8 +1315,8 @@ async function recalculateProjectBudgetSummary(
       budgetCents,
       spentCents,
       name: catMeta?.name ?? '',
-      categoryType: catMeta?.categoryType ?? null,
-      supportedTypes: catMeta?.supportedTypes ?? ['purchase', 'return', 'expense'],
+      categoryType: catMeta?.categoryType ?? 'general',
+      supportedTypes: catMeta?.supportedTypes ?? ['expense'],
       excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
       isArchived: catMeta?.isArchived ?? false,
     };
@@ -1338,16 +1387,19 @@ async function computeIsComplete(
     };
   }
 
-  // 2. Audit gate is now tx-type-based (not category-based). A category can
-  //    be Mixed (items + expenses); whether a specific transaction needs
-  //    tax/subtotal is a property of the transaction's own type.
-  //    See docs/specs/transaction-type.md §"Transaction audit gate".
+  // 2. Only item categories use transaction completeness audit. Purchases can
+  //    be services, fuel, storage, or other project costs; those are complete
+  //    at the transaction level and do not need item rows.
   const txType = typeof txData.type === 'string' ? txData.type.trim().toLowerCase() : null;
   if (txType !== 'purchase' && txType !== 'return') {
     return { isComplete: true, audit: null };
   }
+  const usesItemsCategory = await transactionUsesItemsCategory(db, accountId, txData);
+  if (!usesItemsCategory) {
+    return { isComplete: true, audit: null };
+  }
 
-  // From here: tx is purchase or return — needs tax/subtotal audit
+  // From here: tx is an item-category purchase or return — needs tax/subtotal audit
 
   // 3. Check tax data presence (strict null check — taxRatePct: 0 is valid)
   const hasSubtotal = txData.subtotalCents !== null && txData.subtotalCents !== undefined;
@@ -1599,6 +1651,51 @@ export const onProjectBudgetCategoryWritten = onDocumentWritten(
   }
 );
 
+async function recomputeCompletenessForBudgetCategory(
+  db: ReturnType<typeof getFirestore>,
+  accountId: string,
+  categoryId: string
+): Promise<void> {
+  const txSnapshot = await db
+    .collection(`accounts/${accountId}/transactions`)
+    .where('budgetCategoryId', '==', categoryId)
+    .get();
+
+  const BATCH_SIZE = 500;
+  for (let i = 0; i < txSnapshot.docs.length; i += BATCH_SIZE) {
+    const slice = txSnapshot.docs.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    let batchHasWrites = false;
+
+    for (const txDoc of slice) {
+      const txData = txDoc.data() ?? {};
+      const result = await computeIsComplete(db, accountId, txDoc.id, txData);
+      const currentIsComplete = txData.isComplete ?? null;
+      const currentAudit = txData.audit ?? null;
+
+      if (
+        currentIsComplete !== result.isComplete ||
+        JSON.stringify(currentAudit) !== JSON.stringify(result.audit)
+      ) {
+        batch.set(
+          txDoc.ref,
+          {
+            isComplete: result.isComplete,
+            audit: result.audit,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+        batchHasWrites = true;
+      }
+    }
+
+    if (batchHasWrites) {
+      await batch.commit();
+    }
+  }
+}
+
 /**
  * Recalculate budget summaries for ALL projects when an account-level budget
  * category changes (name, categoryType, excludeFromOverallBudget, isArchived).
@@ -1608,6 +1705,7 @@ export const onAccountBudgetCategoryWritten = onDocumentWritten(
   'accounts/{accountId}/presets/default/budgetCategories/{categoryId}',
   async (event) => {
     const accountId = event.params.accountId;
+    const categoryId = event.params.categoryId;
 
     const before = event.data?.before?.data();
     const after = event.data?.after?.data();
@@ -1642,10 +1740,16 @@ export const onAccountBudgetCategoryWritten = onDocumentWritten(
 
     const db = getFirestore();
 
-    // Note: the audit gate is now tx-type-based (see computeIsComplete and
-    // docs/specs/transaction-type.md §"Transaction audit gate"). We no longer
-    // fan out isComplete recomputes when a category's shape changes, because
-    // isComplete depends on the transaction's own type, not the category's.
+    const completenessPromise = recomputeCompletenessForBudgetCategory(
+      db,
+      accountId,
+      categoryId
+    ).catch((err) => {
+      console.error(
+        `[onAccountBudgetCategoryWritten] isComplete recompute failed for category ${categoryId}:`,
+        err
+      );
+    });
 
     // --- Existing: recalculate budget summaries for all projects ---
     const projectsSnapshot = await db
@@ -1653,27 +1757,29 @@ export const onAccountBudgetCategoryWritten = onDocumentWritten(
       .select()
       .get();
 
-    if (projectsSnapshot.empty) return;
-
-    console.log(
-      `[onAccountBudgetCategoryWritten] Recalculating ${projectsSnapshot.size} projects for account ${accountId}`
-    );
-
-    const projectIds = projectsSnapshot.docs.map((d) => d.id);
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
-      const batch = projectIds.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        batch.map((pid) =>
-          recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
-            console.error(
-              `[onAccountBudgetCategoryWritten] recalculate failed for project ${pid}:`,
-              err
-            );
-          })
-        )
+    if (!projectsSnapshot.empty) {
+      console.log(
+        `[onAccountBudgetCategoryWritten] Recalculating ${projectsSnapshot.size} projects for account ${accountId}`
       );
+
+      const projectIds = projectsSnapshot.docs.map((d) => d.id);
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+        const batch = projectIds.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map((pid) =>
+            recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+              console.error(
+                `[onAccountBudgetCategoryWritten] recalculate failed for project ${pid}:`,
+                err
+              );
+            })
+          )
+        );
+      }
     }
+
+    await completenessPromise;
   }
 );
 

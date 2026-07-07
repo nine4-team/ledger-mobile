@@ -287,6 +287,26 @@ struct ModelCodableTests {
         #expect(meta?["excludeFromOverallBudget"] as? Bool == false)
     }
 
+    @Test("BudgetCategory categoryType wins over conflicting supportedTypes")
+    func budgetCategoryTypeWinsOverSupportedTypes() {
+        var cat = BudgetCategory()
+        cat.metadata = BudgetCategoryMetadata(categoryType: .general, excludeFromOverallBudget: false)
+        cat.supportedTypes = [.purchase, .return]
+
+        #expect(cat.resolvedCategoryType == .general)
+        #expect(cat.isItemsCategory == false)
+        #expect(cat.resolvedSupportedTypes == [.expense])
+    }
+
+    @Test("BudgetCategory falls back to supportedTypes when categoryType is missing")
+    func budgetCategoryFallsBackToSupportedTypes() {
+        var cat = BudgetCategory()
+        cat.supportedTypes = [.purchase, .return]
+
+        #expect(cat.resolvedCategoryType == .itemized)
+        #expect(cat.isItemsCategory)
+    }
+
     // MARK: - AttachmentRef (JSON round-trip — no Firebase wrappers)
 
     @Test("AttachmentRef defaults to image kind")

@@ -48,7 +48,7 @@ export function registerServerInfoTools(server: McpServer, db: Firestore) {
           transactionTaxonomy:
             "Normal transaction writes use Purchase/Return/paymentToBusiness. paymentToBusiness is Client Payment and requires a feeCategory budget category with no source/vendor/items/tax/subtotal/discount/purchaser/reimbursement. Sale is inventory-system-created. Fee/Expense/To Inventory are legacy read/filter values only.",
           categoryTaxonomy:
-            "Use categoryKind for behavior: items, projectCost, feeCategory. Raw supportedTypes/categoryType values are storage compatibility fields.",
+            "Use metadata.categoryType for behavior: general, itemized, fee. categoryKind is display convenience derived from categoryType. supportedTypes is legacy compatibility/debug only.",
         },
       })
     )

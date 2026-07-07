@@ -24,6 +24,16 @@ To verify code compiles, use xcodebuild directly:
 cd LedgeriOS && xcodebuild build -scheme "LedgeriOS" -destination 'platform=iOS Simulator,name=iPhone 17e' -derivedDataPath DerivedData -quiet 2>&1 | tail -5
 ```
 
+### Verification Profiles
+
+Before running Xcode tests, Firebase emulators, or any full suite, state the verification profile being used. The default is the smallest profile that proves the change; do not escalate to emulator or full-suite testing without a specific reason tied to the changed code.
+
+- `taxonomy-model`: category taxonomy, transaction model decoding, summary-shape, MCP schema, and resolver changes. Run `./scripts/verify-taxonomy.sh`. This profile must not start Firebase emulators, use the `LedgeriOS (Emulator)` scheme, or run the full iOS suite.
+- `firestore-integration`: Firebase Auth, Firestore rules, Storage, seed data, snapshot listeners, or service behavior. Preflight the exact emulator stack and focused integration tests first.
+- `release`: shipping only. Use the `finish-him` skill and its release checklist.
+
+See `docs/verification.md` for the full profile definitions.
+
 ### Deploying Firestore Rules
 
 After editing `firebase/firestore.rules`, deploy them to production:

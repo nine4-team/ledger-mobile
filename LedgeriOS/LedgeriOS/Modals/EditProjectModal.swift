@@ -103,10 +103,10 @@ struct EditProjectModal: View {
             CategoryFormModal(
                 mode: .create,
                 existingNames: activeBudgetCategories.map(\.name)
-            ) { name, supportedTypes, excludeFromBudget in
+            ) { name, categoryType, excludeFromBudget in
                 createCategoryOnTheFly(
                     name: name,
-                    supportedTypes: supportedTypes,
+                    categoryType: categoryType,
                     excludeFromBudget: excludeFromBudget
                 )
             }
@@ -332,7 +332,7 @@ struct EditProjectModal: View {
 
     private func createCategoryOnTheFly(
         name: String,
-        supportedTypes: [TransactionType],
+        categoryType: BudgetCategoryType,
         excludeFromBudget: Bool
     ) {
         guard let accountId = accountContext.currentAccountId else { return }
@@ -342,10 +342,9 @@ struct EditProjectModal: View {
         category.slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
         category.order = (activeBudgetCategories.last?.order ?? 0) + 1
         category.metadata = BudgetCategoryMetadata(
-            categoryType: nil,
+            categoryType: categoryType,
             excludeFromOverallBudget: excludeFromBudget
         )
-        category.supportedTypes = supportedTypes
 
         do {
             let newCategoryId = try budgetCategoriesService.createBudgetCategory(

@@ -52,6 +52,25 @@ function normalizeSpendAmount(tx) {
   return amount;
 }
 
+function normalizeCategoryType(value) {
+  switch (typeof value === 'string' ? value.trim().toLowerCase() : null) {
+    case 'fee': return 'fee';
+    case 'itemized': return 'itemized';
+    case 'standard':
+    case 'expense':
+    case 'general': return 'general';
+    default: return 'general';
+  }
+}
+
+function supportedTypesForCategoryType(categoryType) {
+  switch (categoryType) {
+    case 'fee': return ['fee'];
+    case 'itemized': return ['purchase', 'return'];
+    default: return ['expense'];
+  }
+}
+
 async function recalculateProjectBudgetSummary(accountId, projectId) {
   // 1. Fetch account-level budget categories
   const budgetCatsSnapshot = await db
@@ -61,10 +80,11 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
   for (const doc of budgetCatsSnapshot.docs) {
     const data = doc.data() ?? {};
     const metadata = data.metadata ?? {};
+    const categoryType = normalizeCategoryType(metadata.categoryType);
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
-      categoryType:
-        typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+      categoryType,
+      supportedTypes: supportedTypesForCategoryType(categoryType),
       excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
       isArchived: data.isArchived === true,
     };
@@ -126,7 +146,8 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
       budgetCents,
       spentCents,
       name: catMeta?.name ?? '',
-      categoryType: catMeta?.categoryType ?? null,
+      categoryType: catMeta?.categoryType ?? 'general',
+      supportedTypes: catMeta?.supportedTypes ?? ['expense'],
       excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
       isArchived: catMeta?.isArchived ?? false,
     };

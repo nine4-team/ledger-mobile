@@ -444,7 +444,6 @@ function assertInviteCanBeAccepted(inviteData) {
         throw new https_1.HttpsError('deadline-exceeded', 'This invitation has expired.');
     }
 }
-const normalizeBudgetCategoryType = (value) => (value === 'general' ? 'standard' : value);
 const BUDGET_CATEGORY_PRESET_SEED = [
     {
         id: 'seed_furnishings',
@@ -509,9 +508,6 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
             const seed = BUDGET_CATEGORY_PRESET_SEED[i];
             if (seedSnaps[i].exists)
                 continue;
-            const normalizedMetadata = seed.metadata?.categoryType
-                ? { ...seed.metadata, categoryType: normalizeBudgetCategoryType(seed.metadata.categoryType) }
-                : seed.metadata ?? null;
             tx.set(seedRefs[i], {
                 id: seed.id,
                 accountId,
@@ -520,7 +516,7 @@ async function ensureBudgetCategoryPresetsSeeded(params) {
                 slug: seed.slug,
                 isArchived: false,
                 order: seed.order,
-                metadata: normalizedMetadata,
+                metadata: seed.metadata ?? null,
                 createdAt: now,
                 updatedAt: now,
                 deletedAt: null,
@@ -797,20 +793,69 @@ exports.acceptInviteHttp = (0, https_1.onRequest)({ invoker: 'public' }, async (
 // ---------------------------------------------------------------------------
 // Maintains a precomputed `budgetSummary` on each project document so the
 // projects list can display budget progress without extra queries.
-/**
- * Derive supportedTypes for a legacy category from `metadata.categoryType`.
- * Mirrors Swift `BudgetCategory.resolvedSupportedTypes` and the MCP util.
- * See docs/specs/transaction-type.md.
- */
-function deriveSupportedTypesFromLegacyCategoryType(legacy) {
-    switch (legacy) {
-        case 'fee': return ['fee'];
-        case 'expense': return ['expense'];
-        case 'general': return ['expense'];
-        case 'itemized': return ['purchase', 'return'];
-        // Missing/unknown: widest safe default so the category matches any wizard filter.
-        default: return ['purchase', 'return', 'expense'];
+function normalizeCategoryType(value) {
+    switch (value?.trim().toLowerCase()) {
+        case 'fee': return 'fee';
+        case 'itemized': return 'itemized';
+        case 'standard':
+        case 'expense':
+        case 'general': return 'general';
+        default: return null;
     }
+}
+function deriveCategoryTypeFromSupportedTypes(supportedTypes) {
+    const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()).filter(Boolean));
+    if (normalized.size === 1 && normalized.has('fee'))
+        return 'fee';
+    if (normalized.size === 2 && normalized.has('purchase') && normalized.has('return'))
+        return 'itemized';
+    return 'general';
+}
+function resolveCategoryTypeFromCategoryData(data) {
+    const metadata = data?.metadata && typeof data.metadata === 'object'
+        ? data.metadata
+        : {};
+    const categoryType = normalizeCategoryType(typeof metadata.categoryType === 'string' ? metadata.categoryType : null);
+    if (categoryType)
+        return categoryType;
+    const explicitSupported = Array.isArray(data?.supportedTypes)
+        ? data.supportedTypes
+            .filter((v) => typeof v === 'string')
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : [];
+    return deriveCategoryTypeFromSupportedTypes(explicitSupported);
+}
+/**
+ * Derive compatibility supportedTypes from canonical category behavior.
+ * `metadata.categoryType` wins over dirty `supportedTypes`.
+ */
+function deriveSupportedTypesFromCategoryType(categoryType) {
+    switch (categoryType) {
+        case 'fee': return ['fee'];
+        case 'itemized': return ['purchase', 'return'];
+        case 'general': return ['expense'];
+    }
+}
+function resolveSupportedTypesFromCategoryData(data) {
+    return deriveSupportedTypesFromCategoryType(resolveCategoryTypeFromCategoryData(data));
+}
+function isItemsCategorySupportedTypes(supportedTypes) {
+    const normalized = new Set(supportedTypes.map((v) => v.trim().toLowerCase()));
+    return normalized.size === 2 && normalized.has('purchase') && normalized.has('return');
+}
+async function transactionUsesItemsCategory(db, accountId, txData) {
+    const categoryId = typeof txData.budgetCategoryId === 'string'
+        ? txData.budgetCategoryId.trim()
+        : null;
+    if (!categoryId)
+        return false;
+    const categorySnap = await db
+        .doc(`accounts/${accountId}/presets/default/budgetCategories/${categoryId}`)
+        .get();
+    if (!categorySnap.exists)
+        return false;
+    return isItemsCategorySupportedTypes(resolveSupportedTypesFromCategoryData(categorySnap.data()));
 }
 /**
  * Full, idempotent recalculation of a project's budget summary.
@@ -828,15 +873,11 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
         const metadata = data.metadata && typeof data.metadata === 'object'
             ? data.metadata
             : {};
-        const explicitSupported = Array.isArray(data.supportedTypes)
-            ? data.supportedTypes.filter((v) => typeof v === 'string')
-            : [];
-        const supportedTypes = explicitSupported.length > 0
-            ? explicitSupported
-            : deriveSupportedTypesFromLegacyCategoryType(typeof metadata.categoryType === 'string' ? metadata.categoryType : null);
+        const categoryType = resolveCategoryTypeFromCategoryData(data);
+        const supportedTypes = deriveSupportedTypesFromCategoryType(categoryType);
         budgetCategories[doc.id] = {
             name: typeof data.name === 'string' ? data.name : '',
-            categoryType: typeof metadata.categoryType === 'string' ? metadata.categoryType : null,
+            categoryType,
             supportedTypes,
             excludeFromOverallBudget: metadata.excludeFromOverallBudget === true,
             isArchived: data.isArchived === true,
@@ -907,8 +948,8 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
             budgetCents,
             spentCents,
             name: catMeta?.name ?? '',
-            categoryType: catMeta?.categoryType ?? null,
-            supportedTypes: catMeta?.supportedTypes ?? ['purchase', 'return', 'expense'],
+            categoryType: catMeta?.categoryType ?? 'general',
+            supportedTypes: catMeta?.supportedTypes ?? ['expense'],
             excludeFromOverallBudget: catMeta?.excludeFromOverallBudget ?? false,
             isArchived: catMeta?.isArchived ?? false,
         };
@@ -966,15 +1007,18 @@ async function computeIsComplete(db, accountId, transactionId, txData) {
             },
         };
     }
-    // 2. Audit gate is now tx-type-based (not category-based). A category can
-    //    be Mixed (items + expenses); whether a specific transaction needs
-    //    tax/subtotal is a property of the transaction's own type.
-    //    See docs/specs/transaction-type.md §"Transaction audit gate".
+    // 2. Only item categories use transaction completeness audit. Purchases can
+    //    be services, fuel, storage, or other project costs; those are complete
+    //    at the transaction level and do not need item rows.
     const txType = typeof txData.type === 'string' ? txData.type.trim().toLowerCase() : null;
     if (txType !== 'purchase' && txType !== 'return') {
         return { isComplete: true, audit: null };
     }
-    // From here: tx is purchase or return — needs tax/subtotal audit
+    const usesItemsCategory = await transactionUsesItemsCategory(db, accountId, txData);
+    if (!usesItemsCategory) {
+        return { isComplete: true, audit: null };
+    }
+    // From here: tx is an item-category purchase or return — needs tax/subtotal audit
     // 3. Check tax data presence (strict null check — taxRatePct: 0 is valid)
     const hasSubtotal = txData.subtotalCents !== null && txData.subtotalCents !== undefined;
     const hasTaxRate = txData.taxRatePct !== null && txData.taxRatePct !== undefined;
@@ -1182,6 +1226,36 @@ exports.onProjectBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('acc
         console.error(`[onProjectBudgetCategoryWritten] recalculate failed for project ${projectId}:`, err);
     });
 });
+async function recomputeCompletenessForBudgetCategory(db, accountId, categoryId) {
+    const txSnapshot = await db
+        .collection(`accounts/${accountId}/transactions`)
+        .where('budgetCategoryId', '==', categoryId)
+        .get();
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < txSnapshot.docs.length; i += BATCH_SIZE) {
+        const slice = txSnapshot.docs.slice(i, i + BATCH_SIZE);
+        const batch = db.batch();
+        let batchHasWrites = false;
+        for (const txDoc of slice) {
+            const txData = txDoc.data() ?? {};
+            const result = await computeIsComplete(db, accountId, txDoc.id, txData);
+            const currentIsComplete = txData.isComplete ?? null;
+            const currentAudit = txData.audit ?? null;
+            if (currentIsComplete !== result.isComplete ||
+                JSON.stringify(currentAudit) !== JSON.stringify(result.audit)) {
+                batch.set(txDoc.ref, {
+                    isComplete: result.isComplete,
+                    audit: result.audit,
+                    updatedAt: firestore_1.FieldValue.serverTimestamp(),
+                }, { merge: true });
+                batchHasWrites = true;
+            }
+        }
+        if (batchHasWrites) {
+            await batch.commit();
+        }
+    }
+}
 /**
  * Recalculate budget summaries for ALL projects when an account-level budget
  * category changes (name, categoryType, excludeFromOverallBudget, isArchived).
@@ -1189,6 +1263,7 @@ exports.onProjectBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('acc
  */
 exports.onAccountBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('accounts/{accountId}/presets/default/budgetCategories/{categoryId}', async (event) => {
     const accountId = event.params.accountId;
+    const categoryId = event.params.categoryId;
     const before = event.data?.before?.data();
     const after = event.data?.after?.data();
     // On update, skip if only irrelevant fields changed
@@ -1214,26 +1289,26 @@ exports.onAccountBudgetCategoryWritten = (0, firestore_2.onDocumentWritten)('acc
             return;
     }
     const db = (0, firestore_1.getFirestore)();
-    // Note: the audit gate is now tx-type-based (see computeIsComplete and
-    // docs/specs/transaction-type.md §"Transaction audit gate"). We no longer
-    // fan out isComplete recomputes when a category's shape changes, because
-    // isComplete depends on the transaction's own type, not the category's.
+    const completenessPromise = recomputeCompletenessForBudgetCategory(db, accountId, categoryId).catch((err) => {
+        console.error(`[onAccountBudgetCategoryWritten] isComplete recompute failed for category ${categoryId}:`, err);
+    });
     // --- Existing: recalculate budget summaries for all projects ---
     const projectsSnapshot = await db
         .collection(`accounts/${accountId}/projects`)
         .select()
         .get();
-    if (projectsSnapshot.empty)
-        return;
-    console.log(`[onAccountBudgetCategoryWritten] Recalculating ${projectsSnapshot.size} projects for account ${accountId}`);
-    const projectIds = projectsSnapshot.docs.map((d) => d.id);
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
-        const batch = projectIds.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
-            console.error(`[onAccountBudgetCategoryWritten] recalculate failed for project ${pid}:`, err);
-        })));
+    if (!projectsSnapshot.empty) {
+        console.log(`[onAccountBudgetCategoryWritten] Recalculating ${projectsSnapshot.size} projects for account ${accountId}`);
+        const projectIds = projectsSnapshot.docs.map((d) => d.id);
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+            const batch = projectIds.slice(i, i + BATCH_SIZE);
+            await Promise.all(batch.map((pid) => recalculateProjectBudgetSummary(accountId, pid).catch((err) => {
+                console.error(`[onAccountBudgetCategoryWritten] recalculate failed for project ${pid}:`, err);
+            })));
+        }
     }
+    await completenessPromise;
 });
 exports.backfillBudgetSummaries = (0, https_1.onCall)(async (request) => {
     const uid = request.auth?.uid;

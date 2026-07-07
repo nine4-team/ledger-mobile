@@ -6,44 +6,42 @@ struct CategoryFormModal: View {
         case edit(BudgetCategory)
     }
 
-    /// App-facing category kinds. The persisted `supportedTypes` values are kept
-    /// for storage compatibility, but the UI names use the product model.
+    /// App-facing category kinds backed by canonical `metadata.categoryType`.
     enum Kind: Hashable {
-        case feeCategories
-        case projectCosts
-        case items
+        case general
+        case itemized
+        case fee
 
         var label: String {
             switch self {
-            case .feeCategories: return "Fee Categories"
-            case .projectCosts: return "Project Costs"
-            case .items: return "Items"
+            case .general: return "General"
+            case .itemized: return "Itemized"
+            case .fee: return "Fee"
             }
         }
 
-        var supportedTypes: [TransactionType] {
+        var categoryType: BudgetCategoryType {
             switch self {
-            case .feeCategories: return [.fee]
-            case .projectCosts: return [.expense]
-            case .items: return [.purchase, .return]
+            case .general: return .general
+            case .itemized: return .itemized
+            case .fee: return .fee
             }
         }
 
-        /// Best-effort initialization from an existing category. Drives off
-        /// `resolvedSupportedTypes` so it works for both new-model docs and
-        /// legacy docs (which derive supportedTypes from metadata.categoryType).
+        /// Best-effort initialization from an existing category. Canonical
+        /// metadata wins, with supportedTypes fallback handled by the model.
         init(from category: BudgetCategory) {
-            switch category.categoryKind {
-            case .feeCategory: self = .feeCategories
-            case .items: self = .items
-            case .projectCost, .unknown: self = .projectCosts
+            switch category.resolvedCategoryType {
+            case .fee: self = .fee
+            case .itemized: self = .itemized
+            case .general, .expense: self = .general
             }
         }
     }
 
     let mode: Mode
-    /// Callback fires with (name, supportedTypes, excludeFromBudget).
-    let onSave: (String, [TransactionType], Bool) -> Void
+    /// Callback fires with (name, categoryType, excludeFromBudget).
+    let onSave: (String, BudgetCategoryType, Bool) -> Void
     /// Names of existing categories (excluding the one being edited) for uniqueness validation (L14).
     let existingNames: [String]
 
@@ -54,19 +52,20 @@ struct CategoryFormModal: View {
     @State private var excludeFromOverallBudget: Bool
     @State private var validationError: String?
     @State private var hasSubmitted = false
+    @State private var showingKindInfo = false
 
     private var kindOptions: [InlineOption<Kind>] {
         [
-            InlineOption(id: Kind.feeCategories, label: Kind.feeCategories.label),
-            InlineOption(id: Kind.projectCosts, label: Kind.projectCosts.label),
-            InlineOption(id: Kind.items, label: Kind.items.label),
+            InlineOption(id: Kind.general, label: Kind.general.label),
+            InlineOption(id: Kind.itemized, label: Kind.itemized.label),
+            InlineOption(id: Kind.fee, label: Kind.fee.label),
         ]
     }
 
     init(
         mode: Mode,
         existingNames: [String] = [],
-        onSave: @escaping (String, [TransactionType], Bool) -> Void
+        onSave: @escaping (String, BudgetCategoryType, Bool) -> Void
     ) {
         self.mode = mode
         self.existingNames = existingNames
@@ -75,7 +74,7 @@ struct CategoryFormModal: View {
         switch mode {
         case .create:
             _name = State(initialValue: "")
-            _kind = State(initialValue: .projectCosts)
+            _kind = State(initialValue: .general)
             _excludeFromOverallBudget = State(initialValue: false)
         case .edit(let category):
             _name = State(initialValue: category.name)
@@ -111,9 +110,22 @@ struct CategoryFormModal: View {
                 )
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Type")
-                        .font(Typography.label)
-                        .foregroundStyle(BrandColors.textSecondary)
+                    HStack(spacing: Spacing.xs) {
+                        Text("Type")
+                            .font(Typography.label)
+                            .foregroundStyle(BrandColors.textSecondary)
+
+                        Button {
+                            showingKindInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(Typography.small)
+                                .foregroundStyle(BrandColors.textSecondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Category behavior info")
+                    }
+
                     InlineOptionPicker(selection: $kind, options: kindOptions)
                 }
 
@@ -123,6 +135,21 @@ struct CategoryFormModal: View {
                     .tint(BrandColors.primary)
             }
         }
+        .alert("Category Behavior", isPresented: $showingKindInfo) {
+            Button("OK", role: .cancel) { showingKindInfo = false }
+        } message: {
+            Text(kindInfoMessage)
+        }
+    }
+
+    private var kindInfoMessage: String {
+        """
+        General: non-itemized project costs like labor, fuel, delivery, storage, receiving, and install services. These do not require item rows.
+
+        Itemized: purchases and returns that require item rows and are checked against the transaction subtotal.
+
+        Fee: money received by the business, such as design fees or client payments.
+        """
     }
 
     // MARK: - Validation
@@ -160,7 +187,7 @@ struct CategoryFormModal: View {
 
         onSave(
             name.trimmingCharacters(in: .whitespaces),
-            kind.supportedTypes,
+            kind.categoryType,
             excludeFromOverallBudget
         )
         dismiss()
@@ -168,17 +195,17 @@ struct CategoryFormModal: View {
 }
 
 #Preview("Create") {
-    CategoryFormModal(mode: .create) { name, supportedTypes, exclude in
-        print("Create: \(name), \(supportedTypes), exclude: \(exclude)")
+    CategoryFormModal(mode: .create) { name, categoryType, exclude in
+        print("Create: \(name), \(categoryType), exclude: \(exclude)")
     }
 }
 
 #Preview("Edit") {
     var category = BudgetCategory()
     category.name = "Materials"
-    category.supportedTypes = [.expense]
+    category.metadata = BudgetCategoryMetadata(categoryType: .general, excludeFromOverallBudget: false)
 
-    return CategoryFormModal(mode: .edit(category)) { name, supportedTypes, exclude in
-        print("Edit: \(name), \(supportedTypes), exclude: \(exclude)")
+    return CategoryFormModal(mode: .edit(category)) { name, categoryType, exclude in
+        print("Edit: \(name), \(categoryType), exclude: \(exclude)")
     }
 }

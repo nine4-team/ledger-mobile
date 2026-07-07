@@ -30,19 +30,31 @@ extension BudgetCategory {
     var isProjectCostCategory: Bool { categoryKind == .projectCost }
 
     var categoryKind: BudgetCategoryKind {
-        BudgetCategoryKind(supportedTypes: resolvedSupportedTypes)
+        BudgetCategoryKind(categoryType: resolvedCategoryType)
     }
 
-    /// The transaction kinds this category accepts. Falls back to deriving from
-    /// legacy `metadata.categoryType` when `supportedTypes` is absent (pre-migration docs).
-    var resolvedSupportedTypes: [TransactionType] {
-        if let explicit = supportedTypes, !explicit.isEmpty { return explicit }
+    /// Canonical category behavior. `metadata.categoryType` is the product model;
+    /// `supportedTypes` is only a compatibility fallback for dirty migration data.
+    var resolvedCategoryType: BudgetCategoryType {
         switch metadata?.categoryType {
-        case .fee:      return [.fee]
-        case .expense:  return [.expense]
-        case .general:  return [.expense]
+        case .fee: return .fee
+        case .itemized: return .itemized
+        case .general, .expense: return .general
+        case nil:
+            let explicit = Set(supportedTypes ?? [])
+            if explicit == [.fee] { return .fee }
+            if explicit == [.purchase, .return] { return .itemized }
+            return .general
+        }
+    }
+
+    /// Compatibility shape for old readers. Behavior must be decided from
+    /// `resolvedCategoryType`, not by letting raw `supportedTypes` override it.
+    var resolvedSupportedTypes: [TransactionType] {
+        switch resolvedCategoryType {
+        case .fee: return [.fee]
         case .itemized: return [.purchase, .return]
-        case nil:       return [.purchase, .return]
+        case .general, .expense: return [.expense]
         }
     }
 }
@@ -56,6 +68,17 @@ enum BudgetCategoryKind: String, Codable, Hashable {
     case projectCost
     case feeCategory
     case unknown
+
+    init(categoryType: BudgetCategoryType) {
+        switch categoryType {
+        case .fee:
+            self = .feeCategory
+        case .itemized:
+            self = .items
+        case .general, .expense:
+            self = .projectCost
+        }
+    }
 
     init(supportedTypes: [TransactionType]) {
         let set = Set(supportedTypes)
@@ -92,9 +115,9 @@ enum BudgetCategoryKind: String, Codable, Hashable {
 enum TransactionTaxonomy {
     static func resolve(storedType: TransactionType, category: BudgetCategory?) -> TransactionType {
         guard storedType == .purchase else { return storedType }
-        let supported = category?.resolvedSupportedTypes ?? [.purchase, .return]
-        if supported == [.fee] { return .fee }
-        if supported == [.expense] { return .expense }
+        guard let category else { return .purchase }
+        if category.resolvedCategoryType == .fee { return .fee }
+        if category.resolvedCategoryType == .general { return .expense }
         return .purchase
     }
 }

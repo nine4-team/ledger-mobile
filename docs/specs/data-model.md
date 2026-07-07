@@ -509,16 +509,17 @@ Embedded within BudgetCategory documents.
 
 | Field | Type | Constraints |
 |-------|------|-------------|
-| categoryType | string, nullable | Legacy field. Historical values include `"general"`, `"expense"`, `"itemized"`, and `"fee"`. New behavior should prefer BudgetCategory `supportedTypes`. |
+| categoryType | string, nullable | Canonical budget category behavior. Values: `"general"`, `"itemized"`, `"fee"`. Historical `"standard"` and `"expense"` decode as `"general"` but must not be written by new code. |
 | excludeFromOverallBudget | boolean, nullable | When true, this category's spend is not included in the project's overall budget totals |
 
 **Category behavior:**
-- `categoryKind = items` (`supportedTypes = ["purchase", "return"]`): itemized/item category. Drives item entry, tax/subtotal audit, and inventory routing eligibility.
-- `categoryKind = projectCost` (`supportedTypes = ["expense"]`): non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
-- `categoryKind = feeCategory` (`supportedTypes = ["fee"]`): fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
+- `categoryType = "itemized"`: itemized/item category. Drives item entry, tax/subtotal audit, and inventory routing eligibility.
+- `categoryType = "general"`: non-itemized project cost category. Transactions are still stored as `type = "purchase"` in the target taxonomy.
+- `categoryType = "fee"`: fee/revenue category. Invoice lines can use these categories; collection writes `paymentToBusiness` transactions.
 
-`supportedTypes` is still stored for compatibility. App and agent behavior should
-prefer derived `categoryKind` names.
+`supportedTypes` may still exist for compatibility. App and agent behavior must
+prefer `metadata.categoryType`; use `supportedTypes` only as fallback when
+`categoryType` is missing.
 
 ### ProjectBudgetSummary
 
