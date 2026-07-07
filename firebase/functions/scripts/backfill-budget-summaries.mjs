@@ -59,8 +59,31 @@ function normalizeCategoryType(value) {
     case 'standard':
     case 'expense':
     case 'general': return 'general';
-    default: return 'general';
+    default: return null;
   }
+}
+
+function deriveCategoryTypeFromSupportedTypes(supportedTypes) {
+  const normalized = new Set(
+    (Array.isArray(supportedTypes) ? supportedTypes : [])
+      .filter((v) => typeof v === 'string')
+      .map((v) => v.trim().toLowerCase())
+      .filter(Boolean)
+  );
+  if (normalized.size === 1 && normalized.has('fee')) return 'fee';
+  if (normalized.size === 2 && normalized.has('purchase') && normalized.has('return')) return 'itemized';
+  return 'general';
+}
+
+// Mirrors resolveCategoryTypeFromCategoryData in firebase/functions/src/index.ts:
+// metadata.categoryType is canonical; supportedTypes is a fallback for dirty
+// migration data. Keep the two in sync so the backfill and the live function
+// classify legacy categories identically.
+function resolveCategoryTypeFromCategoryData(data) {
+  const metadata = data?.metadata && typeof data.metadata === 'object' ? data.metadata : {};
+  const categoryType = normalizeCategoryType(metadata.categoryType);
+  if (categoryType) return categoryType;
+  return deriveCategoryTypeFromSupportedTypes(data?.supportedTypes);
 }
 
 function supportedTypesForCategoryType(categoryType) {
@@ -80,7 +103,7 @@ async function recalculateProjectBudgetSummary(accountId, projectId) {
   for (const doc of budgetCatsSnapshot.docs) {
     const data = doc.data() ?? {};
     const metadata = data.metadata ?? {};
-    const categoryType = normalizeCategoryType(metadata.categoryType);
+    const categoryType = resolveCategoryTypeFromCategoryData(data);
     budgetCategories[doc.id] = {
       name: typeof data.name === 'string' ? data.name : '',
       categoryType,
