@@ -50,3 +50,6 @@ ui-debug.log
 scripts/migration-logs/
 scripts/node_modules/
 tmp/
+
+# Fastlane run artifacts
+fastlane/report.xml
