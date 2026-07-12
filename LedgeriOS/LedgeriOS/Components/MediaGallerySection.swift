@@ -217,6 +217,15 @@ struct MediaGallerySection: View {
                 await handleImportedFiles(result)
             }
         }
+        #if os(macOS)
+        .onDrop(of: acceptedDropTypeIdentifiers, isTargeted: nil) { providers in
+            guard canAdd else { return false }
+            Task {
+                await handleDroppedItemProviders(providers)
+            }
+            return true
+        }
+        #else
         .dropDestination(for: URL.self) { urls, _ in
             guard canAdd else { return false }
             Task {
@@ -224,6 +233,7 @@ struct MediaGallerySection: View {
             }
             return true
         } isTargeted: { _ in }
+        #endif
         .alert("Image", isPresented: .init(
             get: { saveAlertMessage != nil },
             set: { if !$0 { saveAlertMessage = nil } }
@@ -313,6 +323,41 @@ struct MediaGallerySection: View {
     private func handleDroppedFileURLs(_ urls: [URL]) async {
         await handleFileURLs(urls)
     }
+
+    #if os(macOS)
+    private var acceptedDropTypeIdentifiers: [String] {
+        var types: [String] = [UTType.fileURL.identifier]
+        if allowedKinds.contains(.image), canUploadImages {
+            types.append(UTType.image.identifier)
+        }
+        if allowedKinds.contains(.pdf), onUploadDocument != nil {
+            types.append(UTType.pdf.identifier)
+        }
+        return types
+    }
+
+    private func handleDroppedItemProviders(_ providers: [NSItemProvider]) async {
+        let limitedProviders = Array(providers.prefix(remainingSlots))
+        guard !limitedProviders.isEmpty else { return }
+
+        for provider in limitedProviders {
+            do {
+                if let droppedUpload = try await provider.loadAttachmentUploadIfAvailable(allowedKinds: allowedKinds) {
+                    if droppedUpload.contentType.conforms(to: .pdf), allowedKinds.contains(.pdf), onUploadDocument != nil {
+                        let upload = droppedUpload.upload
+                        await handlePickedDocumentData(upload.data, fileName: upload.displayFileName)
+                    } else if droppedUpload.contentType.conforms(to: .image), canUploadImages {
+                        await handlePickedImageUpload(droppedUpload.upload)
+                    }
+                } else if let url = try await provider.loadFileURLIfAvailable() {
+                    await handleFileURLs([url])
+                }
+            } catch {
+                uploadError = error.localizedDescription
+            }
+        }
+    }
+    #endif
 
     private func handleFileURLs(_ urls: [URL]) async {
         let limitedUrls = Array(urls.prefix(remainingSlots))
@@ -664,6 +709,124 @@ private struct SourceImagePickerModal: View {
         .background(BrandColors.background)
     }
 }
+
+#if os(macOS)
+@MainActor
+private extension NSItemProvider {
+    func loadFileURLIfAvailable() async throws -> URL? {
+        guard hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) else {
+            return nil
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                if let url = item as? URL {
+                    continuation.resume(returning: url)
+                    return
+                }
+
+                if let data = item as? Data,
+                   let url = URL(dataRepresentation: data, relativeTo: nil) {
+                    continuation.resume(returning: url)
+                    return
+                }
+
+                continuation.resume(returning: nil)
+            }
+        }
+    }
+
+    func loadAttachmentUploadIfAvailable(allowedKinds: [AttachmentKind]) async throws -> (upload: AttachmentUpload, contentType: UTType)? {
+        guard let type = preferredAttachmentType(allowedKinds: allowedKinds) else {
+            return nil
+        }
+
+        let data = try await loadFileBackedData(forTypeIdentifier: type.identifier)
+        let fileName = suggestedFileName(for: type)
+        return (
+            AttachmentUpload.file(data: data, fileName: fileName, contentType: type),
+            type
+        )
+    }
+
+    private func preferredAttachmentType(allowedKinds: [AttachmentKind]) -> UTType? {
+        let registeredTypes = registeredTypeIdentifiers.compactMap(UTType.init)
+
+        if allowedKinds.contains(.image),
+           let imageType = registeredTypes.first(where: { $0.conforms(to: .image) }) {
+            return imageType
+        }
+
+        if allowedKinds.contains(.pdf),
+           let pdfType = registeredTypes.first(where: { $0.conforms(to: .pdf) }) {
+            return pdfType
+        }
+
+        return nil
+    }
+
+    private func loadFileBackedData(forTypeIdentifier typeIdentifier: String) async throws -> Data {
+        do {
+            return try await loadDataFromFileRepresentation(forTypeIdentifier: typeIdentifier)
+        } catch {
+            return try await loadDataRepresentationAsync(forTypeIdentifier: typeIdentifier)
+        }
+    }
+
+    private func loadDataFromFileRepresentation(forTypeIdentifier typeIdentifier: String) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let url else {
+                    continuation.resume(throwing: CocoaError(.fileReadNoSuchFile))
+                    return
+                }
+
+                do {
+                    continuation.resume(returning: try Data(contentsOf: url))
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func loadDataRepresentationAsync(forTypeIdentifier typeIdentifier: String) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if let data {
+                    continuation.resume(returning: data)
+                } else {
+                    continuation.resume(throwing: CocoaError(.fileReadUnknown))
+                }
+            }
+        }
+    }
+
+    private func suggestedFileName(for type: UTType) -> String {
+        let fallbackName = type.conforms(to: .pdf) ? "Document" : "Screenshot"
+        let trimmedSuggestedName = suggestedName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseName = trimmedSuggestedName?.isEmpty == false ? trimmedSuggestedName! : fallbackName
+
+        if !URL(fileURLWithPath: baseName).pathExtension.isEmpty {
+            return baseName
+        }
+
+        return "\(baseName).\(type.preferredFilenameExtension ?? "dat")"
+    }
+}
+#endif
 
 // MARK: - Previews
 
