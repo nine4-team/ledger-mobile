@@ -72,6 +72,12 @@ struct TransactionDetailView: View {
     @State private var transactionProtoItems: [ProtoItem] = []
     @State private var pendingCreatedItems: [Item] = []
 
+    // Enabled budget categories for THIS transaction's project, loaded on demand
+    // when the ambient project context isn't the transaction's project (the
+    // detail screen is reachable from Inventory, Search, and Review).
+    @State private var transactionProjectBudgetCategories: [ProjectBudgetCategory] = []
+    @State private var budgetCategoriesListener: ListenerRegistration?
+
     // MARK: - Computed
 
     private var currentTransaction: Transaction {
@@ -88,6 +94,35 @@ struct TransactionDetailView: View {
 
     private var transactionProjectId: String? {
         currentTransaction.projectId ?? projectContext.currentProjectId
+    }
+
+    /// Budget categories the user may assign to this transaction: the ones
+    /// enabled in the transaction's own project. Reuses the ambient project
+    /// context when it matches; otherwise uses the on-demand loaded set. A
+    /// business-inventory transaction (no project) has no project scope, so it
+    /// falls back to the account-wide list.
+    private var editableBudgetCategories: [BudgetCategory] {
+        guard let projectId = currentTransaction.projectId else {
+            return accountContext.allBudgetCategories
+        }
+        if projectContext.currentProjectId == projectId {
+            return projectContext.enabledBudgetCategories
+        }
+        let enabledIds = Set(transactionProjectBudgetCategories.compactMap(\.id))
+        return accountContext.allBudgetCategories.filter { enabledIds.contains($0.id ?? "") }
+    }
+
+    private func subscribeProjectCategoriesIfNeeded() {
+        budgetCategoriesListener?.remove()
+        budgetCategoriesListener = nil
+        transactionProjectBudgetCategories = []
+        guard let accountId = accountContext.currentAccountId,
+              let projectId = currentTransaction.projectId,
+              projectId != projectContext.currentProjectId else { return }
+        budgetCategoriesListener = ProjectBudgetCategoriesService()
+            .subscribeToProjectBudgetCategories(accountId: accountId, projectId: projectId) { pbc in
+                transactionProjectBudgetCategories = pbc
+            }
     }
 
     private var transactionItems: [Item] {
@@ -248,14 +283,20 @@ struct TransactionDetailView: View {
                 .subscribeToProtoItemsForTransaction(accountId: accountId, transactionId: transactionId) { protoItems in
                     transactionProtoItems = protoItems
                 }
+            subscribeProjectCategoriesIfNeeded()
         }
         .onDisappear {
             transactionListener?.remove()
             transactionListener = nil
             protoItemsListener?.remove()
             protoItemsListener = nil
+            budgetCategoriesListener?.remove()
+            budgetCategoriesListener = nil
             protoItemToastTask?.cancel()
             protoItemToastTask = nil
+        }
+        .onChange(of: currentTransaction.projectId) { _, _ in
+            subscribeProjectCategoriesIfNeeded()
         }
         #if canImport(UIKit)
         .toolbarBackground(BrandColors.background, for: .navigationBar)
@@ -307,7 +348,7 @@ struct TransactionDetailView: View {
         .adaptivePresentation(isPresented: $showEditDetails, style: .form) {
             EditTransactionDetailsModal(
                 transaction: currentTransaction,
-                budgetCategories: projectContext.enabledBudgetCategories,
+                budgetCategories: editableBudgetCategories,
                 onSave: { fields in
                     updateTransaction(fields: fields)
                 }
