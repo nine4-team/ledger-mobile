@@ -1143,6 +1143,13 @@ private struct InvoiceRow: View {
     var body: some View {
         BillingRowSurface(isMuted: isPaid || isCanceled) {
             HStack(alignment: .center, spacing: Spacing.md) {
+                NavigationLink(value: invoice) {
+                    invoiceSummary
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: Spacing.sm)
+
                 Button(action: onTogglePaid) {
                     if isWorking {
                         ProgressView()
@@ -1159,42 +1166,37 @@ private struct InvoiceRow: View {
                 .disabled(!canTogglePaid)
                 .accessibilityLabel(isPaid ? "Mark invoice unpaid" : "Mark invoice paid")
                 .accessibilityHint(canTogglePaid ? "" : "Invoice total must be greater than zero.")
-
-                NavigationLink(value: invoice) {
-                    invoiceSummary
-                }
-                .buttonStyle(.plain)
             }
         }
     }
 
     private var invoiceSummary: some View {
-        HStack(alignment: .center, spacing: Spacing.md) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: Spacing.sm) {
-                    Text(invoice.invoiceNumber ?? "Invoice")
-                        .font(Typography.body.weight(.semibold))
-                        .foregroundStyle(BrandColors.textPrimary)
-                        .lineLimit(1)
-                    Text(status.displayLabel)
-                        .font(Typography.caption.weight(.semibold))
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, 2)
-                        .background(statusColor.opacity(0.10), in: Capsule())
-                        .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
-                        .foregroundStyle(statusColor)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: Spacing.sm) {
+                Text(invoice.invoiceNumber ?? "Invoice")
+                    .font(Typography.body.weight(.semibold))
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(1)
+                Text(status.displayLabel)
+                    .font(Typography.caption.weight(.semibold))
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, 2)
+                    .background(statusColor.opacity(0.10), in: Capsule())
+                    .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
+                    .foregroundStyle(statusColor)
+            }
+            HStack(spacing: Spacing.sm) {
+                Text(CurrencyFormatting.formatCents(displayedTotalCents))
+                    .font(Typography.small.weight(.semibold))
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .monospacedDigit()
                 if let date = invoice.datePaid ?? invoice.dateSent ?? invoice.dateIssued {
                     Text(date.formatted(date: .abbreviated, time: .omitted))
                         .font(Typography.caption)
                         .foregroundStyle(BrandColors.textSecondary)
                 }
             }
-            Spacer()
-            Text(CurrencyFormatting.formatCents(displayedTotalCents))
-                .font(Typography.small.weight(.semibold))
-                .foregroundStyle(BrandColors.textPrimary)
-                .monospacedDigit()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
