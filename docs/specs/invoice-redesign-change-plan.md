@@ -59,29 +59,29 @@ Current primary surfaces:
 - `FinancesTabView`
   - shows `BillingSummaryCard`
   - shows an `Invoices` list
-  - shows a separate `BillingPipelineSection`
+  - shows a `Candidate Receivables` section above the invoice list
+  - groups fee installments by fee category with Total / Invoiced / Received / To Invoice tracking
 - `CreateInvoiceModal`
-  - selects items and transactions in a modal
-  - still supports manual New Charge lines
+  - selects fee installments, items, and transactions in a modal
+  - no longer exposes manual New Charge lines
   - splits transactions into charges and credits
 - `InvoiceDetailView`
   - shows invoice report preview
   - exposes lifecycle actions in a menu
-  - freezes lines at `markSent` in current behavior
+  - keeps created/sent invoice amounts live and locks the paid snapshot at collection
 - `InvoiceReportView` / `ReportHTMLBuilder`
   - render invoice presentation and PDF output
 
-This means the redesign is larger than renaming statuses. The current page treats invoice creation as a modal picker plus a separate pipeline view. The target wants the candidate pool and invoice list to be the core page interaction.
+This means the redesign is larger than renaming statuses. The Billing page now has the target two-section shape, but the create/edit flow still uses a modal picker rather than direct multi-select from the candidate section.
 
 Current implementation constraints:
 
-- `BillingPipelineSection` has old buckets baked in: available / invoiced / paid.
-- Current membership logic treats draft invoices as a hidden claimed bucket and sent invoices as "invoiced."
-- Current candidate item logic is too broad: all non-returned project items can enter the invoice pool.
+- Fee installment creation is available from fee groups, but fee installment defaulting/scheduling is not designed yet.
+- Current membership logic treats `created` invoices as a claimed bucket and sent invoices as sent/receivable.
+- Current candidate item logic uses the source-aware billable resolver; future work should keep Create Invoice and Candidate Receivables on the same resolver path.
 - Current transaction candidate logic already excludes canceled/payment/settlement transactions and requires a reimbursement direction.
-- Current `CreateInvoiceModal` still creates manual New Charge invoice lines, which the target model removes.
-- Current `InvoiceDetailView.performMarkSent` freezes invoice lines at send time, which conflicts with live-until-paid.
-- Current invoice rows use live totals only for draft invoices; the target needs live totals for both `created` and `sent`.
+- Current `CreateInvoiceModal` no longer creates manual New Charge invoice lines. Manual `InvoiceLine` remains as an internal representation for returned paid item credits.
+- Current invoice rows and detail/report paths use live totals for `created` and `sent`; paid invoices use the paid-boundary snapshot.
 
 ## Target Invoicing Page UX
 
@@ -231,8 +231,7 @@ Current `CreateInvoiceModal` should not remain the main invoice creation experie
 
 Needed changes:
 
-- Remove new manual financial lines from the target flow.
-- Add fee installment creation/selection.
+- Directly connect candidate-row selection to invoice creation/editing so the top section becomes the primary workflow.
 - Replace item/transaction picker logic with the shared candidate resolver.
 - Support custom client-facing descriptions per invoice line.
 - Keep line amounts live for `created` and `sent`.
@@ -272,8 +271,8 @@ Calculations:
 UI:
 
 - redesign `FinancesTabView` billing section around candidate pool + invoice list
-- revise or replace `BillingPipelineSection`
-- revise or replace `CreateInvoiceModal`
+- `BillingPipelineSection` has been removed in favor of candidate receivables
+- revise `CreateInvoiceModal` until candidate section selection can fully replace the modal picker
 - update `InvoiceDetailView` lifecycle actions and edit rules
 - update `InvoiceRow`
 - update `BillingSummaryCard` labels/definitions

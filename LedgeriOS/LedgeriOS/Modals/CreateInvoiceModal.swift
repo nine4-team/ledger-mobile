@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// Multi-step modal for creating an invoice from a project's billable pool
-/// (items + non-itemized transactions not on any other non-canceled invoice).
+/// Multi-step modal for creating an invoice from a project's billable pool:
+/// fee installments, items, and non-itemized transactions not on any other
+/// non-canceled invoice.
 /// Step 1: pick billables. Step 2: confirm + optional invoice number / notes.
-/// On Create, `InvoiceService.createInvoice` writes signed lines onto the
-/// invoice document; items and transactions are not mutated.
+/// Created and sent invoices stay live until collection; source amounts are
+/// re-derived when the invoice is sent/paid.
 struct CreateInvoiceModal: View {
     let accountId: String
     let projectId: String
@@ -19,12 +20,8 @@ struct CreateInvoiceModal: View {
     @State private var selectedItemIds: Set<String>
     @State private var selectedTxIds: Set<String>
     @State private var selectedFeeInstallmentIds: Set<String>
-    @State private var manualLines: [InvoiceLine]
     @State private var invoiceName: String
     @State private var notes: String
-    @State private var newChargeName = ""
-    @State private var newChargeAmount = ""
-    @State private var newChargeCategoryId = ""
     @State private var searchText = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
@@ -38,7 +35,6 @@ struct CreateInvoiceModal: View {
         _selectedFeeInstallmentIds = State(initialValue: Set(editingInvoice?.lines?.compactMap { line in
             line.sourceType == .feeInstallment ? line.sourceId : nil
         } ?? []))
-        _manualLines = State(initialValue: editingInvoice?.lines?.filter { $0.sourceType == .manual } ?? [])
         _invoiceName = State(initialValue: editingInvoice?.invoiceNumber ?? "")
         _notes = State(initialValue: editingInvoice?.notes ?? "")
     }
@@ -181,22 +177,11 @@ struct CreateInvoiceModal: View {
                 lines.append(line)
             }
         }
-        lines.append(contentsOf: manualLines)
         return InvoiceLineCalculations.netTotalCents(lines: lines)
     }
 
     private var hasSelection: Bool {
-        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !selectedFeeInstallmentIds.isEmpty || !manualLines.isEmpty
-    }
-
-    private var categoryOptions: [(String, String)] {
-        projectContext.budgetCategories
-            .filter { $0.isArchived != true }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-            .compactMap { category in
-                guard let id = category.id else { return nil }
-                return (id, category.name)
-            }
+        !selectedItemIds.isEmpty || !selectedTxIds.isEmpty || !selectedFeeInstallmentIds.isEmpty
     }
 
     // MARK: - Body
@@ -266,9 +251,7 @@ struct CreateInvoiceModal: View {
                     .monospacedDigit()
             }
 
-            newChargeEditor
-
-            if billableItems.isEmpty && billableTransactions.isEmpty && billableFeeInstallments.isEmpty && manualLines.isEmpty {
+            if billableItems.isEmpty && billableTransactions.isEmpty && billableFeeInstallments.isEmpty {
                 Text("Nothing to bill — every fee installment, item, and project cost in this project has already been invoiced or paid.")
                     .font(Typography.small)
                     .foregroundStyle(BrandColors.textSecondary)
@@ -303,7 +286,11 @@ struct CreateInvoiceModal: View {
                         isSelected: selectedItemIds.contains(item.id ?? ""),
                         title: item.displayName.isEmpty ? "Untitled item" : item.displayName,
                         subtitle: categoryName(forCategoryId: item.budgetCategoryId),
-                        cents: item.purchasePriceCents ?? 0,
+                        cents: InvoiceLineCalculations.amountCents(
+                            for: item,
+                            projectId: projectId,
+                            transactions: projectContext.transactions
+                        ) ?? 0,
                         needsReview: false,
                         onToggle: { toggle(itemId: item.id ?? "") }
                     )
@@ -340,68 +327,7 @@ struct CreateInvoiceModal: View {
                 }
             }
 
-            if !manualLines.isEmpty {
-                Text("New Charges")
-                    .sectionLabelStyle()
-                ForEach(manualLines, id: \.id) { line in
-                    manualLineRow(line)
-                }
-            }
         }
-    }
-
-    @ViewBuilder
-    private var newChargeEditor: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("New Charge")
-                .sectionLabelStyle()
-            FormField(label: "Name", text: $newChargeName, placeholder: "Design Fee 1 of 3")
-            FormField(label: "Amount", text: $newChargeAmount, placeholder: "$2,500")
-            FormSelect(label: "Category", selection: $newChargeCategoryId, options: categoryOptions)
-            Button {
-                addManualLine()
-            } label: {
-                Label("Add New Charge", systemImage: "plus.circle.fill")
-                    .font(Typography.body.weight(.semibold))
-                    .foregroundStyle(BrandColors.primary)
-            }
-            .buttonStyle(.plain)
-            .disabled(!canAddManualLine)
-        }
-    }
-
-    private func manualLineRow(_ line: InvoiceLine) -> some View {
-        HStack(alignment: .center, spacing: Spacing.md) {
-            SelectorCircle(isSelected: true, indicator: .check)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(line.snapshotName ?? "New Charge")
-                    .font(Typography.body)
-                    .foregroundStyle(BrandColors.textPrimary)
-                    .lineLimit(2)
-                Text("Manual charge")
-                    .font(Typography.caption)
-                    .foregroundStyle(BrandColors.textSecondary)
-                if let categoryName = categoryName(forCategoryId: line.budgetCategoryId) {
-                    Text(categoryName)
-                        .font(Typography.caption)
-                        .foregroundStyle(BrandColors.textSecondary)
-                }
-            }
-            Spacer()
-            Text(CurrencyFormatting.formatCents(line.signedAmountCents))
-                .font(Typography.body)
-                .foregroundStyle(BrandColors.textPrimary)
-                .monospacedDigit()
-            Button {
-                removeManualLine(id: line.id)
-            } label: {
-                Image(systemName: "trash")
-                    .foregroundStyle(BrandColors.destructive)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Remove charge")
-        }
-        .padding(.vertical, Spacing.sm)
     }
 
     private func selectionRow(
@@ -468,7 +394,7 @@ struct CreateInvoiceModal: View {
             FormField(label: "Invoice Name (optional)", text: $invoiceName, placeholder: "Phase 1 — Furnishings")
             FormField(label: "Notes (optional)", text: $notes, placeholder: "")
 
-            Text("\(selectedFeeInstallmentIds.count) fee\(selectedFeeInstallmentIds.count == 1 ? "" : "s") · \(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) project cost\(selectedTxIds.count == 1 ? "" : "s") · \(manualLines.count) charge\(manualLines.count == 1 ? "" : "s")")
+            Text("\(selectedFeeInstallmentIds.count) fee\(selectedFeeInstallmentIds.count == 1 ? "" : "s") · \(selectedItemIds.count) item\(selectedItemIds.count == 1 ? "" : "s") · \(selectedTxIds.count) project cost\(selectedTxIds.count == 1 ? "" : "s")")
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
         }
@@ -503,34 +429,6 @@ struct CreateInvoiceModal: View {
     private func categoryName(forCategoryId id: String?) -> String? {
         guard let id else { return nil }
         return projectContext.budgetCategories.first { $0.id == id }?.name
-    }
-
-    private var canAddManualLine: Bool {
-        !newChargeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && parseCents(newChargeAmount) != nil
-            && !newChargeCategoryId.isEmpty
-    }
-
-    private func addManualLine() {
-        let name = newChargeName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty,
-              let cents = parseCents(newChargeAmount),
-              !newChargeCategoryId.isEmpty
-        else { return }
-        manualLines.append(InvoiceLine(
-            sourceType: .manual,
-            amountCents: cents,
-            sign: .charge,
-            budgetCategoryId: newChargeCategoryId,
-            snapshotName: name
-        ))
-        newChargeName = ""
-        newChargeAmount = ""
-        newChargeCategoryId = ""
-    }
-
-    private func removeManualLine(id: String) {
-        manualLines.removeAll { $0.id == id }
     }
 
     private func existingLineId(sourceType: InvoiceLineSourceType, sourceId: String) -> String? {
@@ -572,7 +470,6 @@ struct CreateInvoiceModal: View {
             }
             lines.append(line)
         }
-        lines.append(contentsOf: manualLines)
         return lines
     }
 
@@ -582,8 +479,8 @@ struct CreateInvoiceModal: View {
         errorMessage = nil
         let service = InvoiceService()
 
-        // Drafts store line identity and manual New Charge lines. Item/tx
-        // amounts remain live previews and are materialized at markSent.
+        // Drafts store source identity. Amounts remain live previews and are
+        // materialized when the invoice is sent or collected.
         let itemIds = projectContext.items.compactMap { item -> String? in
             guard let id = item.id, selectedItemIds.contains(id) else { return nil }
             return id
@@ -649,11 +546,4 @@ struct CreateInvoiceModal: View {
         }
     }
 
-    private func parseCents(_ text: String) -> Int? {
-        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "$", with: "")
-            .replacingOccurrences(of: ",", with: "")
-        guard !cleaned.isEmpty, let value = Double(cleaned), value >= 0 else { return nil }
-        return Int(round(value * 100))
-    }
 }
