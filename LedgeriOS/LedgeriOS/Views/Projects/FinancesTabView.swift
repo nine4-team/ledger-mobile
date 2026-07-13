@@ -963,7 +963,7 @@ private struct InvoiceListSection: View {
                             transactions: projectContext.transactions,
                             feeInstallments: projectContext.feeInstallments,
                             isWorking: invoice.id.map { workingInvoiceIds.contains($0) } ?? false,
-                            onTogglePaid: { togglePaid(invoice) }
+                            onSelectStatus: { changeStatus(of: invoice, to: $0) }
                         )
                     }
                 }
@@ -980,12 +980,13 @@ private struct InvoiceListSection: View {
         }
     }
 
-    private func togglePaid(_ invoice: Invoice) {
+    private func changeStatus(of invoice: Invoice, to targetStatus: InvoiceStatus) {
         guard let invoiceId = invoice.id,
               let accountId = accountContext.currentAccountId
         else { return }
 
         let status = invoice.status ?? .created
+        guard status != targetStatus else { return }
         guard status != .canceled else { return }
 
         workingInvoiceIds.insert(invoiceId)
@@ -993,7 +994,8 @@ private struct InvoiceListSection: View {
 
         Task {
             do {
-                if status == .paid {
+                switch targetStatus {
+                case .sent where status == .paid:
                     let settlementIds = projectContext.transactions.compactMap { tx -> String? in
                         guard tx.settlementInvoiceId == invoiceId,
                               tx.status != .canceled,
@@ -1007,7 +1009,18 @@ private struct InvoiceListSection: View {
                         settlementTransactionIds: settlementIds,
                         userId: userId
                     )
-                } else {
+
+                case .sent:
+                    let liveLines = materializedLiveLines(for: invoice)
+                    try await InvoiceService().markSent(
+                        invoiceId: invoiceId,
+                        accountId: accountId,
+                        lines: liveLines,
+                        totalCents: InvoiceLineCalculations.netTotalCents(lines: liveLines),
+                        userId: userId
+                    )
+
+                case .paid:
                     let liveLines = materializedLiveLines(for: invoice)
                     var invoiceForCollection = invoice
                     invoiceForCollection.lines = liveLines
@@ -1021,6 +1034,16 @@ private struct InvoiceListSection: View {
                         settlementInvoiceLineIds: liveLines.map(\.id),
                         userId: userId
                     )
+
+                case .canceled:
+                    try await InvoiceService().cancelInvoice(
+                        invoice: invoice,
+                        accountId: accountId,
+                        userId: userId
+                    )
+
+                case .created:
+                    break
                 }
                 await MainActor.run {
                     workingInvoiceIds.remove(invoiceId)
@@ -1028,7 +1051,7 @@ private struct InvoiceListSection: View {
             } catch {
                 await MainActor.run {
                     workingInvoiceIds.remove(invoiceId)
-                    errorMessage = "Could not update invoice collection status."
+                    errorMessage = "Could not update invoice status."
                 }
             }
         }
@@ -1083,12 +1106,11 @@ private struct InvoiceRow: View {
     let transactions: [Transaction]
     let feeInstallments: [FeeInstallment]
     let isWorking: Bool
-    let onTogglePaid: () -> Void
+    let onSelectStatus: (InvoiceStatus) -> Void
 
     private var status: InvoiceStatus { invoice.status ?? .created }
     private var isPaid: Bool { status == .paid }
     private var isCanceled: Bool { status == .canceled }
-    private var canTogglePaid: Bool { !isCanceled && !isWorking && (isPaid || displayedTotalCents > 0) }
 
     /// Created and sent invoices stay live. Paid invoices use the final
     /// `totalCents` snapshot written at collection.
@@ -1140,6 +1162,15 @@ private struct InvoiceRow: View {
         }
     }
 
+    private var statusTargets: [InvoiceStatus] {
+        switch status {
+        case .created: return [.sent, .paid, .canceled]
+        case .sent: return [.paid, .canceled]
+        case .paid: return [.sent]
+        case .canceled: return []
+        }
+    }
+
     var body: some View {
         BillingRowSurface(isMuted: isPaid || isCanceled) {
             HStack(alignment: .center, spacing: Spacing.md) {
@@ -1150,22 +1181,21 @@ private struct InvoiceRow: View {
 
                 Spacer(minLength: Spacing.sm)
 
-                Button(action: onTogglePaid) {
-                    if isWorking {
-                        ProgressView()
-                            .controlSize(.small)
-                            .frame(width: 28, height: 28)
-                    } else {
-                        Image(systemName: isPaid ? "checkmark.square.fill" : "square")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(isPaid ? StatusColors.metText : BrandColors.textTertiary.opacity(canTogglePaid ? 1 : 0.45))
-                            .frame(width: 28, height: 28)
+                Menu {
+                    ForEach(statusTargets, id: \.self) { targetStatus in
+                        Button(role: targetStatus == .canceled ? .destructive : nil) {
+                            onSelectStatus(targetStatus)
+                        } label: {
+                            Label(statusActionLabel(for: targetStatus), systemImage: statusActionIcon(for: targetStatus))
+                        }
+                        .disabled(targetStatus == .paid && displayedTotalCents <= 0)
                     }
+                } label: {
+                    statusControl
                 }
                 .buttonStyle(.plain)
-                .disabled(!canTogglePaid)
-                .accessibilityLabel(isPaid ? "Mark invoice unpaid" : "Mark invoice paid")
-                .accessibilityHint(canTogglePaid ? "" : "Invoice total must be greater than zero.")
+                .disabled(isWorking || statusTargets.isEmpty)
+                .accessibilityLabel("Change invoice status")
             }
         }
     }
@@ -1177,13 +1207,6 @@ private struct InvoiceRow: View {
                     .font(Typography.body.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .lineLimit(1)
-                Text(status.displayLabel)
-                    .font(Typography.caption.weight(.semibold))
-                    .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, 2)
-                    .background(statusColor.opacity(0.10), in: Capsule())
-                    .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
-                    .foregroundStyle(statusColor)
             }
             HStack(spacing: Spacing.sm) {
                 Text(CurrencyFormatting.formatCents(displayedTotalCents))
@@ -1198,5 +1221,43 @@ private struct InvoiceRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var statusControl: some View {
+        HStack(spacing: Spacing.xs) {
+            if isWorking {
+                ProgressView()
+                    .controlSize(.small)
+            }
+            Text(status.displayLabel)
+                .font(Typography.caption.weight(.semibold))
+            if !statusTargets.isEmpty {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+        }
+        .foregroundStyle(statusColor)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
+        .background(statusColor.opacity(0.10), in: Capsule())
+        .overlay(Capsule().stroke(statusColor.opacity(0.30), lineWidth: 1))
+    }
+
+    private func statusActionLabel(for targetStatus: InvoiceStatus) -> String {
+        switch targetStatus {
+        case .created: return "Mark Created"
+        case .sent: return status == .paid ? "Correct to Sent" : "Mark Sent"
+        case .paid: return "Mark Paid"
+        case .canceled: return "Cancel Invoice"
+        }
+    }
+
+    private func statusActionIcon(for targetStatus: InvoiceStatus) -> String {
+        switch targetStatus {
+        case .created: return "doc"
+        case .sent: return status == .paid ? "arrow.uturn.backward" : "paperplane"
+        case .paid: return "checkmark.circle"
+        case .canceled: return "trash"
+        }
     }
 }
