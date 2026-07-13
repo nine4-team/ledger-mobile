@@ -9,9 +9,8 @@ struct ItemsTabView: View {
 
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
+    @State private var itemSearchText = ""
     @State private var expandedSections: Set<String> = ["item-drafts", "items"]
-    @State private var protoItemsListener: ListenerRegistration?
-    @State private var projectProtoItems: [ProtoItem] = []
 
     // Bulk action modals
     @State private var showBulkStatusPicker = false
@@ -59,8 +58,13 @@ struct ItemsTabView: View {
     }
 
     private var activeProjectProtoItems: [ProtoItem] {
-        projectProtoItems
+        let active = projectContext.protoItems
             .filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
+        let trimmed = itemSearchText.trimmingCharacters(in: .whitespaces)
+        let filtered = trimmed.isEmpty
+            ? active
+            : active.filter { SearchCalculations.protoItemMatches(protoItem: $0, query: trimmed) }
+        return filtered
             .sorted { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
     }
 
@@ -230,12 +234,7 @@ struct ItemsTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .createItem)) { _ in
             showNewItem = true
         }
-        .onAppear {
-            subscribeToProjectProtoItems()
-        }
         .onDisappear {
-            protoItemsListener?.remove()
-            protoItemsListener = nil
             protoItemToastTask?.cancel()
             protoItemToastTask = nil
         }
@@ -293,7 +292,8 @@ struct ItemsTabView: View {
                 emptyIcon: "cube.box",
                 filterScope: .project,
                 inline: true,
-                inlineSectionHeader: AnyView(itemsSectionHeader)
+                inlineSectionHeader: AnyView(itemsSectionHeader),
+                externalSearchText: $itemSearchText
             )
         } else {
             itemsSectionHeader
@@ -433,16 +433,6 @@ struct ItemsTabView: View {
         let items = Array(selectedItems)
         Task { try? await service.deleteItems(accountId: accountId, items: items) }
         selectedItemIds.removeAll()
-    }
-
-    private func subscribeToProjectProtoItems() {
-        guard let accountId = accountContext.currentAccountId,
-              let projectId = projectContext.currentProjectId else { return }
-        protoItemsListener?.remove()
-        protoItemsListener = ProtoItemsService()
-            .subscribeToProtoItems(accountId: accountId, scope: .project(projectId)) { protoItems in
-                projectProtoItems = protoItems
-            }
     }
 
     private func toggleFromInventory(_ protoItem: ProtoItem) {

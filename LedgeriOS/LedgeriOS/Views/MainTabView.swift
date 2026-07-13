@@ -69,8 +69,8 @@ struct MainTabView: View {
                         .navigationDestination(for: Transaction.self) { transaction in
                             TransactionDetailView(transaction: transaction)
                         }
-                        .navigationDestination(for: Space.self) { space in
-                            SpaceSearchDetailView(space: space)
+                        .navigationDestination(for: SpaceRoute.self) { route in
+                            SpaceSearchDetailView(route: route)
                         }
                 case .settings:
                     SettingsView()
@@ -153,8 +153,8 @@ struct MainTabView: View {
                         .navigationDestination(for: Transaction.self) { transaction in
                             TransactionDetailView(transaction: transaction)
                         }
-                        .navigationDestination(for: Space.self) { space in
-                            SpaceSearchDetailView(space: space)
+                        .navigationDestination(for: SpaceRoute.self) { route in
+                            SpaceSearchDetailView(route: route)
                         }
                 }
             }

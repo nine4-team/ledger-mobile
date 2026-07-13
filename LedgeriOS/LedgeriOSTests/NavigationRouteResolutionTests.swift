@@ -20,6 +20,13 @@ struct NavigationRouteResolutionTests {
         return i
     }
 
+    private func space(id: String, name: String = "") -> Space {
+        var s = Space()
+        s.id = id
+        s.name = name
+        return s
+    }
+
     // MARK: - Project resolution
 
     @Test("Resolves project by ID")
@@ -69,6 +76,34 @@ struct NavigationRouteResolutionTests {
         let projectItems = [item(id: "1", name: "Project Copy")]
         let accountItems = [item(id: "1", name: "Account Copy")]
         let resolved = NavigationRouteResolution.item(id: "1", projectItems: projectItems, accountItems: accountItems)
+        #expect(resolved?.name == "Project Copy")
+    }
+
+    // MARK: - Space resolution
+
+    @Test("Resolves space from project spaces first")
+    func resolvesSpaceFromProjectSpaces() {
+        let projectSpaces = [space(id: "s1", name: "Project Space")]
+        let accountSpaces = [space(id: "s2", name: "Account Space")]
+        let resolved = NavigationRouteResolution.space(id: "s1", projectSpaces: projectSpaces, accountSpaces: accountSpaces)
+        #expect(resolved?.id == "s1")
+        #expect(resolved?.name == "Project Space")
+    }
+
+    @Test("Falls back to account spaces when project space is missing")
+    func fallsBackToAccountSpaces() {
+        let projectSpaces = [space(id: "s1", name: "Project Space")]
+        let accountSpaces = [space(id: "s2", name: "Account Space")]
+        let resolved = NavigationRouteResolution.space(id: "s2", projectSpaces: projectSpaces, accountSpaces: accountSpaces)
+        #expect(resolved?.id == "s2")
+        #expect(resolved?.name == "Account Space")
+    }
+
+    @Test("Prefers project space over account space for the same ID")
+    func prefersProjectSpaceOverAccountSpace() {
+        let projectSpaces = [space(id: "s1", name: "Project Copy")]
+        let accountSpaces = [space(id: "s1", name: "Account Copy")]
+        let resolved = NavigationRouteResolution.space(id: "s1", projectSpaces: projectSpaces, accountSpaces: accountSpaces)
         #expect(resolved?.name == "Project Copy")
     }
 }

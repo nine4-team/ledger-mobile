@@ -33,3 +33,15 @@ struct ItemRoute: Hashable {
         self.projectId = projectId
     }
 }
+
+/// Stable route to a space detail surface. `projectId` is set for project
+/// spaces; nil is reserved for inventory/account-scope spaces.
+struct SpaceRoute: Hashable, Identifiable {
+    let id: String
+    let projectId: String?
+
+    init(id: String, projectId: String? = nil) {
+        self.id = id
+        self.projectId = projectId
+    }
+}

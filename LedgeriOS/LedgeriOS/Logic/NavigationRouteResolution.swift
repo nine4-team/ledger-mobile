@@ -19,4 +19,10 @@ enum NavigationRouteResolution {
     static func item(id: String, projectItems: [Item], accountItems: [Item]) -> Item? {
         projectItems.first { $0.id == id } ?? accountItems.first { $0.id == id }
     }
+
+    /// Resolve a space by ID, preferring the project-scoped spaces over the
+    /// account-wide list. Returns nil when the space is in neither.
+    static func space(id: String, projectSpaces: [Space], accountSpaces: [Space]) -> Space? {
+        projectSpaces.first { $0.id == id } ?? accountSpaces.first { $0.id == id }
+    }
 }

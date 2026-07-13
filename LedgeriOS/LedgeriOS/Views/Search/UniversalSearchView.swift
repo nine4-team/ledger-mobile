@@ -20,6 +20,7 @@ struct UniversalSearchView: View {
     @State private var showItemLinkTransaction = false
     @State private var showItemMoveToProject = false
     @State private var showItemDeleteConfirmation = false
+    @State private var selectedProtoItem: ProtoItem?
 
     @State private var itemActions = ItemActionsController()
 
@@ -33,7 +34,7 @@ struct UniversalSearchView: View {
     @State private var actionTargetTransactionId: String?
     @State private var showSingleTransactionDeleteConfirmation = false
 
-    private var itemsCount: Int { searchResults.items.count }
+    private var itemsCount: Int { searchResults.items.count + searchResults.protoItems.count }
     private var transactionsCount: Int { searchResults.transactions.count }
     private var spacesCount: Int { searchResults.spaces.count }
 
@@ -63,77 +64,49 @@ struct UniversalSearchView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            searchBar
+        searchContent
+            .navigationTitle("Search")
+            .navBarTitleDisplayMode(.inline)
+            .transactionSearchDestination(item: $navigationTransaction)
+            .protoItemSearchDestination(item: $selectedProtoItem)
+            .universalSearchSelectionBar(
+                selectedItemIds: $selectedItemIds,
+                selectedTransactionIds: $selectedTransactionIds,
+                itemTotalCount: searchResults.items.count,
+                transactionTotalCount: searchResults.transactions.count,
+                selectedItemTotalCents: selectedItemTotalCents,
+                selectedTransactionTotalCents: selectedTransactionTotalCents,
+                showItemBulkActions: $showItemBulkActions,
+                showTransactionBulkActions: $showTransactionBulkActions
+            )
+            .universalSearchEvents(
+                query: $query,
+                debouncedQuery: $debouncedQuery,
+                selectedTab: $selectedTab,
+                searchFocused: $searchFocused,
+                selectedItemIds: $selectedItemIds,
+                selectedTransactionIds: $selectedTransactionIds,
+                transactionsVersion: accountContext.allTransactions.count,
+                itemsVersion: accountContext.allItems.count,
+                protoItemsVersion: accountContext.allProtoItems.count,
+                spacesVersion: accountContext.allSpaces.count,
+                onScheduleSearch: scheduleDebouncedSearch,
+                onPerformSearch: performSearch,
+                onRefreshSearch: refreshActiveSearch
+            )
+            .universalSearchBackground(searchFocused: $searchFocused, presentationHost: presentationHost)
+    }
 
-            if debouncedQuery.isEmpty {
-                initialState
-            } else {
-                resultsView
-            }
+    private var presentationHost: some View {
+        ZStack {
+            itemPresentationHost
+            transactionPresentationHost
+            itemActionSheetsHost
         }
-        .navigationTitle("Search")
-        .navBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $navigationTransaction) { transaction in
-            TransactionDetailView(transaction: transaction)
-        }
-        .safeAreaInset(edge: .bottom) {
-            if !selectedItemIds.isEmpty {
-                BulkSelectionBar(
-                    selectedCount: selectedItemIds.count,
-                    totalCount: searchResults.items.count,
-                    totalCents: selectedItemTotalCents,
-                    onBulkActions: { showItemBulkActions = true },
-                    onClear: { selectedItemIds.removeAll() }
-                )
-            } else if !selectedTransactionIds.isEmpty {
-                BulkSelectionBar(
-                    selectedCount: selectedTransactionIds.count,
-                    totalCount: searchResults.transactions.count,
-                    totalCents: selectedTransactionTotalCents,
-                    onBulkActions: { showTransactionBulkActions = true },
-                    onClear: { selectedTransactionIds.removeAll() }
-                )
-            }
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                searchFocused = true
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
-            searchFocused = true
-        }
-        .onChange(of: query) { _, newValue in
-            debounceTask?.cancel()
-            debounceTask = Task {
-                try? await Task.sleep(for: .milliseconds(400))
-                guard !Task.isCancelled else { return }
-                debouncedQuery = newValue
-            }
-        }
-        .onChange(of: debouncedQuery) { _, newValue in
-            performSearch(query: newValue)
-        }
-        .onChange(of: accountContext.allTransactions.count) { _, _ in
-            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
-        }
-        .onChange(of: accountContext.allItems.count) { _, _ in
-            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
-        }
-        .onChange(of: accountContext.allSpaces.count) { _, _ in
-            if !debouncedQuery.isEmpty { performSearch(query: debouncedQuery) }
-        }
-        .onChange(of: selectedTab) { _, _ in
-            selectedItemIds.removeAll()
-            selectedTransactionIds.removeAll()
-        }
-        .background(
-            BrandColors.background
-                .contentShape(Rectangle())
-                .onTapGesture { searchFocused = false }
-        )
-        // Item bulk action sheets
+    }
+
+    private var itemPresentationHost: some View {
+        EmptyView()
         .adaptivePresentation(isPresented: $showItemBulkActions, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedItemIds.count) Items",
@@ -166,7 +139,10 @@ struct UniversalSearchView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        // Transaction bulk action sheets
+    }
+
+    private var transactionPresentationHost: some View {
+        EmptyView()
         .adaptivePresentation(isPresented: $showTransactionBulkActions, style: .quickMenu) {
             ActionMenuSheet(
                 title: "\(selectedTransactionIds.count) Transactions",
@@ -184,6 +160,10 @@ struct UniversalSearchView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+    }
+
+    private var itemActionSheetsHost: some View {
+        EmptyView()
         .itemActionSheets(
             itemActions,
             spaces: accountContext.allSpaces,
@@ -191,6 +171,19 @@ struct UniversalSearchView: View {
             accountId: accountContext.currentAccountId
         )
     }
+
+    private var searchContent: AnyView {
+        AnyView(VStack(spacing: 0) {
+            searchBar
+
+            if debouncedQuery.isEmpty {
+                initialState
+            } else {
+                resultsView
+            }
+        })
+    }
+
 
     // MARK: - Search Bar
 
@@ -265,9 +258,16 @@ struct UniversalSearchView: View {
 
     private var itemsTab: some View {
         Group {
-            if searchResults.items.isEmpty {
+            if searchResults.items.isEmpty && searchResults.protoItems.isEmpty {
                 emptyState(message: "No items found")
             } else {
+                ForEach(searchResults.protoItems) { protoItem in
+                    ItemDraftCard(
+                        protoItem: protoItem,
+                        onOpen: { selectedProtoItem = protoItem }
+                    )
+                }
+
                 ForEach(searchResults.items) { item in
                     let itemId = item.id ?? ""
                     let isSelected = Binding(
@@ -314,13 +314,8 @@ struct UniversalSearchView: View {
                             else { selectedTransactionIds.remove(txId) }
                         }
                     )
-                    let displayTransaction: Transaction = {
-                        var tx = transaction
-                        tx.source = SearchCalculations.transactionDisplayName(for: transaction)
-                        return tx
-                    }()
                     let card = TransactionCard(
-                        transaction: displayTransaction,
+                        transaction: transaction,
                         budgetCategoryName: categoryName(for: transaction.budgetCategoryId),
                         projectName: TransactionDisplayCalculations.projectLabel(
                             for: transaction,
@@ -350,13 +345,15 @@ struct UniversalSearchView: View {
                 emptyState(message: "No spaces found")
             } else {
                 ForEach(searchResults.spaces) { space in
-                    NavigationLink(value: space) {
-                        SpaceCard(
-                            space: space,
-                            itemCount: itemCount(for: space)
-                        )
+                    if let spaceId = space.id {
+                        NavigationLink(value: SpaceRoute(id: spaceId, projectId: space.projectId)) {
+                            SpaceCard(
+                                space: space,
+                                itemCount: itemCount(for: space)
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -520,10 +517,26 @@ struct UniversalSearchView: View {
 
     // MARK: - Helpers
 
+    private func scheduleDebouncedSearch(_ newValue: String) {
+        debounceTask?.cancel()
+        debounceTask = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            debouncedQuery = newValue
+        }
+    }
+
+    private func refreshActiveSearch() {
+        if !debouncedQuery.isEmpty {
+            performSearch(query: debouncedQuery)
+        }
+    }
+
     private func performSearch(query: String) {
         searchResults = SearchCalculations.search(
             query: query,
             items: accountContext.allItems,
+            protoItems: accountContext.allProtoItems,
             transactions: accountContext.allTransactions,
             spaces: accountContext.allSpaces,
             categories: accountContext.allBudgetCategories
@@ -577,4 +590,196 @@ struct UniversalSearchView: View {
         accountsService: AccountsService(),
         membersService: AccountMembersService()
     ))
+}
+
+private struct ProtoItemSearchDestinationModifier: ViewModifier {
+    @Binding var item: ProtoItem?
+
+    func body(content: Content) -> some View {
+        content.navigationDestination(item: $item) { protoItem in
+            ItemQuickDraftDetailView(protoItem: protoItem)
+        }
+    }
+}
+
+private struct TransactionSearchDestinationModifier: ViewModifier {
+    @Binding var item: Transaction?
+
+    func body(content: Content) -> some View {
+        content.navigationDestination(item: $item) { transaction in
+            TransactionDetailView(transaction: transaction)
+        }
+    }
+}
+
+private struct UniversalSearchSelectionBarModifier: ViewModifier {
+    @Binding var selectedItemIds: Set<String>
+    @Binding var selectedTransactionIds: Set<String>
+    let itemTotalCount: Int
+    let transactionTotalCount: Int
+    let selectedItemTotalCents: Int?
+    let selectedTransactionTotalCents: Int?
+    @Binding var showItemBulkActions: Bool
+    @Binding var showTransactionBulkActions: Bool
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom) {
+            if !selectedItemIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedItemIds.count,
+                    totalCount: itemTotalCount,
+                    totalCents: selectedItemTotalCents,
+                    onBulkActions: { showItemBulkActions = true },
+                    onClear: { selectedItemIds.removeAll() }
+                )
+            } else if !selectedTransactionIds.isEmpty {
+                BulkSelectionBar(
+                    selectedCount: selectedTransactionIds.count,
+                    totalCount: transactionTotalCount,
+                    totalCents: selectedTransactionTotalCents,
+                    onBulkActions: { showTransactionBulkActions = true },
+                    onClear: { selectedTransactionIds.removeAll() }
+                )
+            }
+        }
+    }
+}
+
+private struct UniversalSearchEventsModifier: ViewModifier {
+    @Binding var query: String
+    @Binding var debouncedQuery: String
+    @Binding var selectedTab: String
+    @Binding var searchFocused: Bool
+    @Binding var selectedItemIds: Set<String>
+    @Binding var selectedTransactionIds: Set<String>
+    let transactionsVersion: Int
+    let itemsVersion: Int
+    let protoItemsVersion: Int
+    let spacesVersion: Int
+    let onScheduleSearch: (String) -> Void
+    let onPerformSearch: (String) -> Void
+    let onRefreshSearch: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    searchFocused = true
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+                searchFocused = true
+            }
+            .onChange(of: query) { _, newValue in
+                onScheduleSearch(newValue)
+            }
+            .onChange(of: debouncedQuery) { _, newValue in
+                onPerformSearch(newValue)
+            }
+            .onChange(of: transactionsVersion) { _, _ in
+                onRefreshSearch()
+            }
+            .onChange(of: itemsVersion) { _, _ in
+                onRefreshSearch()
+            }
+            .onChange(of: protoItemsVersion) { _, _ in
+                onRefreshSearch()
+            }
+            .onChange(of: spacesVersion) { _, _ in
+                onRefreshSearch()
+            }
+            .onChange(of: selectedTab) { _, _ in
+                selectedItemIds.removeAll()
+                selectedTransactionIds.removeAll()
+            }
+    }
+}
+
+private struct UniversalSearchBackgroundModifier<PresentationHost: View>: ViewModifier {
+    @Binding var searchFocused: Bool
+    let presentationHost: PresentationHost
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                BrandColors.background
+                    .contentShape(Rectangle())
+                    .onTapGesture { searchFocused = false }
+            )
+            .background(presentationHost)
+    }
+}
+
+private extension View {
+    func transactionSearchDestination(item: Binding<Transaction?>) -> some View {
+        modifier(TransactionSearchDestinationModifier(item: item))
+    }
+
+    func protoItemSearchDestination(item: Binding<ProtoItem?>) -> some View {
+        modifier(ProtoItemSearchDestinationModifier(item: item))
+    }
+
+    func universalSearchSelectionBar(
+        selectedItemIds: Binding<Set<String>>,
+        selectedTransactionIds: Binding<Set<String>>,
+        itemTotalCount: Int,
+        transactionTotalCount: Int,
+        selectedItemTotalCents: Int?,
+        selectedTransactionTotalCents: Int?,
+        showItemBulkActions: Binding<Bool>,
+        showTransactionBulkActions: Binding<Bool>
+    ) -> some View {
+        modifier(UniversalSearchSelectionBarModifier(
+            selectedItemIds: selectedItemIds,
+            selectedTransactionIds: selectedTransactionIds,
+            itemTotalCount: itemTotalCount,
+            transactionTotalCount: transactionTotalCount,
+            selectedItemTotalCents: selectedItemTotalCents,
+            selectedTransactionTotalCents: selectedTransactionTotalCents,
+            showItemBulkActions: showItemBulkActions,
+            showTransactionBulkActions: showTransactionBulkActions
+        ))
+    }
+
+    func universalSearchEvents(
+        query: Binding<String>,
+        debouncedQuery: Binding<String>,
+        selectedTab: Binding<String>,
+        searchFocused: Binding<Bool>,
+        selectedItemIds: Binding<Set<String>>,
+        selectedTransactionIds: Binding<Set<String>>,
+        transactionsVersion: Int,
+        itemsVersion: Int,
+        protoItemsVersion: Int,
+        spacesVersion: Int,
+        onScheduleSearch: @escaping (String) -> Void,
+        onPerformSearch: @escaping (String) -> Void,
+        onRefreshSearch: @escaping () -> Void
+    ) -> some View {
+        modifier(UniversalSearchEventsModifier(
+            query: query,
+            debouncedQuery: debouncedQuery,
+            selectedTab: selectedTab,
+            searchFocused: searchFocused,
+            selectedItemIds: selectedItemIds,
+            selectedTransactionIds: selectedTransactionIds,
+            transactionsVersion: transactionsVersion,
+            itemsVersion: itemsVersion,
+            protoItemsVersion: protoItemsVersion,
+            spacesVersion: spacesVersion,
+            onScheduleSearch: onScheduleSearch,
+            onPerformSearch: onPerformSearch,
+            onRefreshSearch: onRefreshSearch
+        ))
+    }
+
+    func universalSearchBackground<PresentationHost: View>(
+        searchFocused: Binding<Bool>,
+        presentationHost: PresentationHost
+    ) -> some View {
+        modifier(UniversalSearchBackgroundModifier(
+            searchFocused: searchFocused,
+            presentationHost: presentationHost
+        ))
+    }
 }

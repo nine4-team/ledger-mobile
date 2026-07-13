@@ -21,6 +21,9 @@ struct SharedItemsList: View {
     var inline: Bool = false
     var pickerItems: [Item]?
     var inlineSectionHeader: AnyView? = nil
+    var externalSearchText: Binding<String>?
+    var protoItems: [ProtoItem] = []
+    var protoItemCard: ((ProtoItem) -> AnyView)?
 
     // Firestore (standalone / picker mode)
     var accountId: String?
@@ -64,8 +67,27 @@ struct SharedItemsList: View {
             items,
             filters: activeFilters,
             sort: activeSort,
-            search: searchText
+            search: resolvedSearchText.wrappedValue
         )
+    }
+
+    private var processedProtoItems: [ProtoItem] {
+        let trimmed = resolvedSearchText.wrappedValue.trimmingCharacters(in: .whitespaces)
+        let activeProtoItems = protoItems.filter { $0.status == nil || $0.status == .open || $0.status == .inReview }
+        guard !trimmed.isEmpty else { return activeProtoItems }
+        return activeProtoItems.filter { SearchCalculations.protoItemMatches(protoItem: $0, query: trimmed) }
+    }
+
+    private var hasProcessedResults: Bool {
+        !processedProtoItems.isEmpty || !processedItems.isEmpty
+    }
+
+    private var hasSourceResults: Bool {
+        !protoItems.isEmpty || !items.isEmpty
+    }
+
+    private var resolvedSearchText: Binding<String> {
+        externalSearchText ?? $searchText
     }
 
     private var groups: [ItemGroup] {
@@ -242,7 +264,7 @@ struct SharedItemsList: View {
     @ViewBuilder
     private func standardControlBar(style: ControlBarStyle) -> some View {
         NativeListControlBar(
-            searchText: $searchText,
+            searchText: resolvedSearchText,
             searchPlaceholder: "Search items...",
             onAdd: onAdd,
             style: style
@@ -275,7 +297,7 @@ struct SharedItemsList: View {
     private func pickerControlBar(style: ControlBarStyle) -> some View {
         HStack(spacing: Spacing.sm) {
             SearchField(
-                text: $searchText,
+                text: resolvedSearchText,
                 placeholder: "Search items..."
             )
 
@@ -322,8 +344,8 @@ struct SharedItemsList: View {
                 message: error,
                 onRetry: { Task { await setupData() } }
             )
-        } else if processedItems.isEmpty {
-            let message = !items.isEmpty ? "No items match your filters" : emptyMessage
+        } else if !hasProcessedResults {
+            let message = hasSourceResults ? "No items match your filters" : emptyMessage
             ContentUnavailableView {
                 Label(message, systemImage: emptyIcon)
             }
@@ -342,8 +364,8 @@ struct SharedItemsList: View {
                 message: error,
                 onRetry: { Task { await setupData() } }
             )
-        } else if processedItems.isEmpty {
-            let message = !items.isEmpty ? "No items match your filters" : emptyMessage
+        } else if !hasProcessedResults {
+            let message = hasSourceResults ? "No items match your filters" : emptyMessage
             Text(message)
                 .font(Typography.small)
                 .foregroundStyle(BrandColors.textSecondary)
@@ -351,6 +373,10 @@ struct SharedItemsList: View {
                 .padding(.vertical, Spacing.xl)
         } else {
             VStack(alignment: .leading, spacing: Spacing.cardListGap) {
+                ForEach(processedProtoItems) { protoItem in
+                    protoItemRow(for: protoItem)
+                }
+
                 if showGrouped {
                     ForEach(groups) { group in
                         if group.count > 1 {
@@ -380,6 +406,10 @@ struct SharedItemsList: View {
                     alignment: .leading,
                     spacing: Spacing.cardListGap
                 ) {
+                    ForEach(processedProtoItems) { protoItem in
+                        protoItemRow(for: protoItem)
+                    }
+
                     if showGrouped {
                         ForEach(groups) { group in
                             if group.count > 1 {
@@ -490,6 +520,13 @@ struct SharedItemsList: View {
     #endif
 
     // MARK: - Item Cards
+
+    @ViewBuilder
+    private func protoItemRow(for protoItem: ProtoItem) -> some View {
+        if let protoItemCard {
+            protoItemCard(protoItem)
+        }
+    }
 
     /// Wraps a card in a NavigationLink using a stable `ItemRoute` when an
     /// `itemRoute` builder is provided, falling back to the mutable `Item`

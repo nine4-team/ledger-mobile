@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InventoryView: View {
     @Environment(InventoryContext.self) private var inventoryContext
+    @Environment(AccountContext.self) private var accountContext
     @Environment(AuthManager.self) private var authManager
 
     @State private var selectedTab: String
@@ -43,8 +44,18 @@ struct InventoryView: View {
         .navigationDestination(for: Transaction.self) { transaction in
             TransactionDetailView(transaction: transaction)
         }
-        .navigationDestination(for: Space.self) { space in
-            SpaceDetailView(space: space)
+        .navigationDestination(for: SpaceRoute.self) { route in
+            if let space = NavigationRouteResolution.space(
+                id: route.id,
+                projectSpaces: inventoryContext.spaces,
+                accountSpaces: accountContext.allSpaces
+            ) {
+                SpaceDetailView(space: space)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(BrandColors.background)
+            }
         }
         .navigationTitle("Inventory")
         .navBarTitleDisplayMode(.inline)

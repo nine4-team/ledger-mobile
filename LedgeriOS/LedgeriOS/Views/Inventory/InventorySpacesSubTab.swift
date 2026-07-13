@@ -57,13 +57,15 @@ struct InventorySpacesSubTab: View {
                     spacing: Spacing.cardListGap
                 ) {
                     ForEach(filteredSpaces) { space in
-                        NavigationLink(value: space) {
-                            SpaceCard(
-                                space: space,
-                                itemCount: itemCount(for: space)
-                            )
+                        if let spaceId = space.id {
+                            NavigationLink(value: SpaceRoute(id: spaceId, projectId: nil)) {
+                                SpaceCard(
+                                    space: space,
+                                    itemCount: itemCount(for: space)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, Spacing.screenPadding)

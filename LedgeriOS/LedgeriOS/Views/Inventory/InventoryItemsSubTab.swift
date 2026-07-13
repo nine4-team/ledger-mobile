@@ -6,6 +6,7 @@ struct InventoryItemsSubTab: View {
 
     @State private var selectedItemIds: Set<String> = []
     @State private var itemActions = ItemActionsController()
+    @State private var selectedProtoItem: ProtoItem?
 
     // Bulk action modals
     @State private var showBulkStatusPicker = false
@@ -37,8 +38,20 @@ struct InventoryItemsSubTab: View {
             selectedIds: $selectedItemIds,
             useNavigationLinks: true,
             emptyIcon: "shippingbox",
-            filterScope: .inventory
+            filterScope: .inventory,
+            protoItems: inventoryContext.protoItems,
+            protoItemCard: { protoItem in
+                AnyView(
+                    ItemDraftCard(
+                        protoItem: protoItem,
+                        onOpen: { selectedProtoItem = protoItem }
+                    )
+                )
+            }
         )
+        .navigationDestination(item: $selectedProtoItem) { protoItem in
+            ItemQuickDraftDetailView(protoItem: protoItem)
+        }
         .itemActionSheets(
             itemActions,
             spaces: inventoryContext.spaces,

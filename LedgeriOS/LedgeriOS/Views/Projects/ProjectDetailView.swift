@@ -61,6 +61,19 @@ struct ProjectDetailView: View {
                 initialItem: projectContext.items.first { $0.id == route.id }
             )
         }
+        .navigationDestination(for: SpaceRoute.self) { route in
+            if let space = NavigationRouteResolution.space(
+                id: route.id,
+                projectSpaces: projectContext.spaces,
+                accountSpaces: accountContext.allSpaces
+            ) {
+                SpaceDetailView(space: space)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(BrandColors.background)
+            }
+        }
         // TODO(stable-id-navigation): FinancesTabView still pushes `Item` values.
         // Remove this destination once the finance/invoice routes are migrated in
         // a follow-up milestone.
@@ -69,9 +82,6 @@ struct ProjectDetailView: View {
         }
         .navigationDestination(for: Transaction.self) { transaction in
             TransactionDetailView(transaction: transaction)
-        }
-        .navigationDestination(for: Space.self) { space in
-            SpaceDetailView(space: space)
         }
         .navBarTitleDisplayMode(.inline)
         #if os(macOS)

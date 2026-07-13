@@ -3,11 +3,11 @@ import SwiftUI
 struct ItemDraftCard: View {
     let protoItem: ProtoItem
     var onOpen: () -> Void
-    var onConvert: () -> Void
-    var onMerge: () -> Void
+    var onConvert: (() -> Void)?
+    var onMerge: (() -> Void)?
     var toastMessage: String?
     var onToggleFromInventory: (() -> Void)?
-    var onDelete: () -> Void
+    var onDelete: (() -> Void)?
 
     @State private var showMenu = false
     @State private var menuPendingAction: (() -> Void)?
@@ -33,6 +33,10 @@ struct ItemDraftCard: View {
         protoItem.projectId != nil && onToggleFromInventory != nil
     }
 
+    private var hasMenuActions: Bool {
+        onConvert != nil || onMerge != nil || onDelete != nil
+    }
+
     private var displayName: String? {
         let name = protoItem.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return name.isEmpty ? nil : name
@@ -47,7 +51,9 @@ struct ItemDraftCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .buttonStyle(.plain)
 
-                actionColumn
+                if hasMenuActions || showsFromInventoryControl {
+                    actionColumn
+                }
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -69,11 +75,7 @@ struct ItemDraftCard: View {
         }) {
             ActionMenuSheet(
                 title: "Item Quick Draft",
-                items: [
-                    ActionMenuItem(id: "convert", label: "Convert to Item", icon: "square.and.arrow.down", onPress: onConvert),
-                    ActionMenuItem(id: "merge", label: "Merge with Existing Item", icon: "arrow.triangle.merge", onPress: onMerge),
-                    ActionMenuItem(id: "delete", label: "Delete Draft", icon: "trash", isDestructive: true, onPress: onDelete),
-                ],
+                items: menuItems,
                 onSelectAction: { action in
                     menuPendingAction = action
                 }
@@ -83,23 +85,39 @@ struct ItemDraftCard: View {
 
     private var actionColumn: some View {
         VStack(spacing: 0) {
-            Button {
-                showMenu = true
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(BrandColors.textSecondary)
-                    .rotationEffect(.degrees(90))
-                    .frame(width: 44, height: showsFromInventoryControl ? 44 : thumbnailSize)
-                    .contentShape(Rectangle())
+            if hasMenuActions {
+                Button {
+                    showMenu = true
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(BrandColors.textSecondary)
+                        .rotationEffect(.degrees(90))
+                        .frame(width: 44, height: showsFromInventoryControl ? 44 : thumbnailSize)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             if showsFromInventoryControl {
                 fromInventoryControl
             }
         }
         .frame(width: 44, height: thumbnailSize)
+    }
+
+    private var menuItems: [ActionMenuItem] {
+        var items: [ActionMenuItem] = []
+        if let onConvert {
+            items.append(ActionMenuItem(id: "convert", label: "Convert to Item", icon: "square.and.arrow.down", onPress: onConvert))
+        }
+        if let onMerge {
+            items.append(ActionMenuItem(id: "merge", label: "Merge with Existing Item", icon: "arrow.triangle.merge", onPress: onMerge))
+        }
+        if let onDelete {
+            items.append(ActionMenuItem(id: "delete", label: "Delete Draft", icon: "trash", isDestructive: true, onPress: onDelete))
+        }
+        return items
     }
 
     private var fromInventoryControl: some View {
