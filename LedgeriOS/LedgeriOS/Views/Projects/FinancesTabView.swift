@@ -573,18 +573,20 @@ private struct BillingEmptyRow: View {
 }
 
 private struct BillingRowSurface<Content: View>: View {
-    var padding: CGFloat = Spacing.cardPadding
+    var padding: CGFloat = Spacing.md
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        VStack(spacing: 0) {
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(padding)
-            Rectangle()
-                .fill(BrandColors.borderSecondary)
-                .frame(height: Dimensions.borderWidth)
-        }
+        content()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(padding)
+            .background(BrandColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Dimensions.cardRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dimensions.cardRadius)
+                    .stroke(BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+            )
+            .shadow(color: .black.opacity(0.035), radius: 4, x: 0, y: 1)
     }
 }
 
@@ -594,21 +596,16 @@ private struct CandidateRow: View {
     var body: some View {
         BillingRowSurface {
             HStack(alignment: .center, spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: Spacing.sm) {
-                        Text(row.title)
-                            .font(Typography.body.weight(.semibold))
-                            .foregroundStyle(BrandColors.textPrimary)
-                            .lineLimit(2)
-                        Badge(text: row.kindLabel, color: BrandColors.textSecondary)
-                    }
-                    if !row.subtitle.isEmpty {
-                        Text(row.subtitle)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(row.title)
+                        .font(Typography.body.weight(.semibold))
+                        .foregroundStyle(BrandColors.textPrimary)
+                        .lineLimit(1)
+                    HStack(spacing: Spacing.xs) {
+                        Text(metadataLabel)
                             .font(Typography.caption)
                             .foregroundStyle(BrandColors.textSecondary)
                             .lineLimit(1)
-                    }
-                    HStack(spacing: Spacing.xs) {
                         Badge(text: row.state.label, color: row.state.color)
                         if let invoiceName = row.state.invoiceName, !invoiceName.isEmpty {
                             Text(invoiceName)
@@ -620,11 +617,17 @@ private struct CandidateRow: View {
                 }
                 Spacer(minLength: Spacing.md)
                 Text(CurrencyFormatting.formatCents(row.amountCents))
-                    .font(Typography.body.weight(.semibold))
+                    .font(Typography.small.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .monospacedDigit()
             }
         }
+    }
+
+    private var metadataLabel: String {
+        [row.kindLabel, row.subtitle]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
     }
 }
 
@@ -665,13 +668,17 @@ private struct FeeGroupCard: View {
                 Button {
                     withAnimation { isExpanded.toggle() }
                 } label: {
-                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
                         HStack(spacing: Spacing.sm) {
                             Text(display.group.name)
                                 .font(Typography.body.weight(.semibold))
                                 .foregroundStyle(BrandColors.textPrimary)
-                                .lineLimit(2)
+                                .lineLimit(1)
                             Spacer()
+                            Text(CurrencyFormatting.formatCents(display.toInvoiceCents))
+                                .font(Typography.small.weight(.semibold))
+                                .foregroundStyle(BrandColors.textPrimary)
+                                .monospacedDigit()
                             if !display.rows.isEmpty {
                                 Badge(text: "\(display.rows.count)", color: BrandColors.primary)
                             }
@@ -679,14 +686,14 @@ private struct FeeGroupCard: View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(BrandColors.textTertiary)
                         }
-                        metricGrid
+                        feeSummaryLine
                         DualToneFeeProgressBar(
                             totalCents: display.totalCents,
                             invoicedCents: display.invoicedCents,
                             receivedCents: display.receivedCents
                         )
                     }
-                    .padding(Spacing.cardPadding)
+                    .padding(Spacing.md)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -703,7 +710,7 @@ private struct FeeGroupCard: View {
                                 .font(Typography.body.weight(.semibold))
                                 .foregroundStyle(BrandColors.primary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(Spacing.cardPadding)
+                                .padding(Spacing.md)
                         }
                         .buttonStyle(.plain)
                     }
@@ -712,32 +719,15 @@ private struct FeeGroupCard: View {
         }
     }
 
-    private var metricGrid: some View {
-        VStack(spacing: Spacing.xs) {
-            HStack {
-                metric("Total", display.totalCents)
-                Spacer()
-                metric("Invoiced", display.invoicedCents)
-            }
-            HStack {
-                metric("Received", display.receivedCents)
-                Spacer()
-                metric("To Invoice", display.toInvoiceCents)
-            }
+    private var feeSummaryLine: some View {
+        HStack(spacing: Spacing.sm) {
+            Text("Total \(CurrencyFormatting.formatCents(display.totalCents))")
+            Text("Invoiced \(CurrencyFormatting.formatCents(display.invoicedCents))")
+            Text("Received \(CurrencyFormatting.formatCents(display.receivedCents))")
         }
-    }
-
-    private func metric(_ label: String, _ cents: Int) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(Typography.caption)
-                .foregroundStyle(BrandColors.textSecondary)
-            Text(CurrencyFormatting.formatCents(cents))
-                .font(Typography.small.weight(.semibold))
-                .foregroundStyle(BrandColors.textPrimary)
-                .monospacedDigit()
-        }
-        .frame(minWidth: 110, alignment: .leading)
+        .font(Typography.caption)
+        .foregroundStyle(BrandColors.textSecondary)
+        .lineLimit(1)
     }
 }
 
@@ -993,11 +983,12 @@ private struct InvoiceRow: View {
     var body: some View {
         BillingRowSurface {
             HStack(alignment: .center, spacing: Spacing.md) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: Spacing.sm) {
                         Text(invoice.invoiceNumber ?? "Invoice")
                             .font(Typography.body.weight(.semibold))
                             .foregroundStyle(BrandColors.textPrimary)
+                            .lineLimit(1)
                         Text(status.displayLabel)
                             .font(Typography.caption.weight(.semibold))
                             .padding(.horizontal, Spacing.sm)
@@ -1014,7 +1005,7 @@ private struct InvoiceRow: View {
                 }
                 Spacer()
                 Text(CurrencyFormatting.formatCents(displayedTotalCents))
-                    .font(Typography.body.weight(.semibold))
+                    .font(Typography.small.weight(.semibold))
                     .foregroundStyle(BrandColors.textPrimary)
                     .monospacedDigit()
             }
