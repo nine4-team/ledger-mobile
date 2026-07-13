@@ -23,6 +23,7 @@ struct ProjectDetailContainer: View {
         let projectService = ProjectService()
         let transactionsService = TransactionsService()
         let itemsService = ItemsService()
+        let protoItemsService = ProtoItemsService()
         let spacesService = SpacesService()
         let budgetCategoriesService = BudgetCategoriesService()
         let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
@@ -31,6 +32,7 @@ struct ProjectDetailContainer: View {
             projectService: projectService,
             transactionsService: transactionsService,
             itemsService: itemsService,
+            protoItemsService: protoItemsService,
             spacesService: spacesService,
             budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService

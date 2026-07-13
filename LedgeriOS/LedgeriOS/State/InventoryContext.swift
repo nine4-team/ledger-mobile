@@ -4,6 +4,7 @@ import FirebaseFirestore
 @Observable
 final class InventoryContext {
     var items: [Item] = []
+    var protoItems: [ProtoItem] = []
     var transactions: [Transaction] = []
     var spaces: [Space] = []
 
@@ -15,15 +16,18 @@ final class InventoryContext {
     private var listeners: [ListenerRegistration] = []
     private var activeAccountId: String?
     private let itemsService: ItemsServiceProtocol
+    private let protoItemsService: ProtoItemsServiceProtocol?
     private let transactionsService: TransactionsServiceProtocol
     private let spacesService: SpacesServiceProtocol
 
     init(
         itemsService: ItemsServiceProtocol,
+        protoItemsService: ProtoItemsServiceProtocol? = nil,
         transactionsService: TransactionsServiceProtocol,
         spacesService: SpacesServiceProtocol
     ) {
         self.itemsService = itemsService
+        self.protoItemsService = protoItemsService
         self.transactionsService = transactionsService
         self.spacesService = spacesService
     }
@@ -43,6 +47,14 @@ final class InventoryContext {
                 Task { @MainActor in self?.items = items }
             }
         )
+
+        if let protoItemsService {
+            listeners.append(
+                protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .inventory) { [weak self] protoItems in
+                    Task { @MainActor in self?.protoItems = protoItems }
+                }
+            )
+        }
 
         // 2. Transactions scoped to inventory
         listeners.append(
@@ -64,6 +76,7 @@ final class InventoryContext {
         listeners.removeAll()
         activeAccountId = nil
         items = []
+        protoItems = []
         transactions = []
         spaces = []
     }

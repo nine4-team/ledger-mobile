@@ -8,6 +8,7 @@ final class ProjectContext {
     var projects: [Project] = []
     var transactions: [Transaction] = []
     var items: [Item] = []
+    var protoItems: [ProtoItem] = []
     var spaces: [Space] = []
     var budgetCategories: [BudgetCategory] = []
     var projectBudgetCategories: [ProjectBudgetCategory] = []
@@ -24,6 +25,7 @@ final class ProjectContext {
     private let projectService: ProjectServiceProtocol
     private let transactionsService: TransactionsServiceProtocol
     private let itemsService: ItemsServiceProtocol
+    private let protoItemsService: ProtoItemsServiceProtocol?
     private let spacesService: SpacesServiceProtocol
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol
     private let projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol
@@ -35,6 +37,7 @@ final class ProjectContext {
         projectService: ProjectServiceProtocol,
         transactionsService: TransactionsServiceProtocol,
         itemsService: ItemsServiceProtocol,
+        protoItemsService: ProtoItemsServiceProtocol? = nil,
         spacesService: SpacesServiceProtocol,
         budgetCategoriesService: BudgetCategoriesServiceProtocol,
         projectBudgetCategoriesService: ProjectBudgetCategoriesServiceProtocol,
@@ -45,6 +48,7 @@ final class ProjectContext {
         self.projectService = projectService
         self.transactionsService = transactionsService
         self.itemsService = itemsService
+        self.protoItemsService = protoItemsService
         self.spacesService = spacesService
         self.budgetCategoriesService = budgetCategoriesService
         self.projectBudgetCategoriesService = projectBudgetCategoriesService
@@ -107,7 +111,16 @@ final class ProjectContext {
             }
         )
 
-        // 5. Spaces scoped to project
+        // 5. Proto-items scoped to project
+        if let protoItemsService {
+            listeners.append(
+                protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .project(projectId)) { [weak self] protoItems in
+                    Task { @MainActor in self?.protoItems = protoItems }
+                }
+            )
+        }
+
+        // 6. Spaces scoped to project
         listeners.append(
             spacesService.subscribeToSpaces(accountId: accountId, scope: .project(projectId)) { [weak self] spaces in
                 Task { @MainActor in self?.spaces = spaces }
@@ -233,6 +246,7 @@ final class ProjectContext {
         projects = []
         transactions = []
         items = []
+        protoItems = []
         spaces = []
         budgetCategories = []
         projectBudgetCategories = []

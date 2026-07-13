@@ -17,6 +17,7 @@ final class AccountContext {
 
     // Cross-project data for universal search
     var allItems: [Item] = []
+    var allProtoItems: [ProtoItem] = []
     var allTransactions: [Transaction] = []
     var allSpaces: [Space] = []
     var allBudgetCategories: [BudgetCategory] = []
@@ -31,6 +32,7 @@ final class AccountContext {
     private let accountsService: AccountsServiceProtocol
     private let membersService: AccountMembersServiceProtocol
     private let itemsService: ItemsServiceProtocol?
+    private let protoItemsService: ProtoItemsServiceProtocol?
     private let transactionsService: TransactionsServiceProtocol?
     private let spacesService: SpacesServiceProtocol?
     private let budgetCategoriesService: BudgetCategoriesServiceProtocol?
@@ -48,6 +50,7 @@ final class AccountContext {
         accountsService: AccountsServiceProtocol,
         membersService: AccountMembersServiceProtocol,
         itemsService: ItemsServiceProtocol? = nil,
+        protoItemsService: ProtoItemsServiceProtocol? = nil,
         transactionsService: TransactionsServiceProtocol? = nil,
         spacesService: SpacesServiceProtocol? = nil,
         budgetCategoriesService: BudgetCategoriesServiceProtocol? = nil,
@@ -57,6 +60,7 @@ final class AccountContext {
         self.accountsService = accountsService
         self.membersService = membersService
         self.itemsService = itemsService
+        self.protoItemsService = protoItemsService
         self.transactionsService = transactionsService
         self.spacesService = spacesService
         self.budgetCategoriesService = budgetCategoriesService
@@ -128,6 +132,7 @@ final class AccountContext {
         account = nil
         member = nil
         allItems = []
+        allProtoItems = []
         allTransactions = []
         allSpaces = []
         allBudgetCategories = []
@@ -161,6 +166,13 @@ final class AccountContext {
                 Task { @MainActor in self?.allItems = items }
             }
             listeners.append(itemsListener)
+        }
+
+        if let protoItemsService {
+            let protoItemsListener = protoItemsService.subscribeToProtoItems(accountId: accountId, scope: .all) { [weak self] protoItems in
+                Task { @MainActor in self?.allProtoItems = protoItems }
+            }
+            listeners.append(protoItemsListener)
         }
 
         if let transactionsService {
@@ -218,6 +230,7 @@ final class AccountContext {
         member = nil
         discoveredAccounts = []
         allItems = []
+        allProtoItems = []
         allTransactions = []
         allSpaces = []
         allBudgetCategories = []

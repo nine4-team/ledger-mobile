@@ -55,6 +55,7 @@ struct LedgerApp: App {
         let projectService = ProjectService()
         let transactionsService = TransactionsService()
         let itemsService = ItemsService()
+        let protoItemsService = ProtoItemsService()
         let spacesService = SpacesService()
         let budgetCategoriesService = BudgetCategoriesService()
         let projectBudgetCategoriesService = ProjectBudgetCategoriesService()
@@ -64,6 +65,7 @@ struct LedgerApp: App {
             accountsService: accountsService,
             membersService: membersService,
             itemsService: itemsService,
+            protoItemsService: protoItemsService,
             transactionsService: transactionsService,
             spacesService: spacesService,
             budgetCategoriesService: budgetCategoriesService,
@@ -75,6 +77,7 @@ struct LedgerApp: App {
             projectService: projectService,
             transactionsService: transactionsService,
             itemsService: itemsService,
+            protoItemsService: protoItemsService,
             spacesService: spacesService,
             budgetCategoriesService: budgetCategoriesService,
             projectBudgetCategoriesService: projectBudgetCategoriesService
@@ -82,6 +85,7 @@ struct LedgerApp: App {
 
         _inventoryContext = State(initialValue: InventoryContext(
             itemsService: itemsService,
+            protoItemsService: protoItemsService,
             transactionsService: transactionsService,
             spacesService: spacesService
         ))
