@@ -18,6 +18,7 @@ struct NewItemView: View {
     @State private var resolvedContext: ItemCreationContext?
     @State private var selectedProject: Project?
     private let initialImageRefs: [AttachmentRef]
+    private let initialSkuCandidates: [String]
     private let onCreated: (([String]) -> Void)?
 
     init(
@@ -25,6 +26,7 @@ struct NewItemView: View {
         initialTransactionId: String? = nil,
         initialName: String? = nil,
         initialSku: String? = nil,
+        initialSkuCandidates: [String] = [],
         initialQuantity: Int? = nil,
         initialImageRefs: [AttachmentRef] = [],
         onCreated: (([String]) -> Void)? = nil
@@ -34,6 +36,7 @@ struct NewItemView: View {
         self._name = State(initialValue: initialName ?? "")
         self._sku = State(initialValue: initialSku ?? "")
         self._quantity = State(initialValue: min(max(initialQuantity ?? 1, 1), 9999))
+        self.initialSkuCandidates = initialSkuCandidates
         self.initialImageRefs = initialImageRefs
         self.onCreated = onCreated
     }
@@ -147,6 +150,15 @@ struct NewItemView: View {
         )
     }
 
+    private var skuCandidates: [String] {
+        var seen = Set<String>()
+        return initialSkuCandidates.compactMap { candidate in
+            let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, seen.insert(trimmed).inserted else { return nil }
+            return trimmed
+        }
+    }
+
     private var destinationLabel: String {
         switch resolvedContext {
         case .project:
@@ -245,9 +257,41 @@ struct NewItemView: View {
                 destinationSection
                 imagesSection
                 FormField(label: "Name", text: $name, placeholder: "Item name")
-                FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
+                skuSection
                 VendorPickerField(value: $source, showPicker: $showVendorPicker)
                 FormField(label: "Notes", text: $notes, placeholder: "Additional notes", axis: .vertical)
+            }
+        }
+    }
+
+    private var skuSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            FormField(label: "SKU", text: $sku, placeholder: "Barcode or SKU number")
+            if !skuCandidates.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.xs) {
+                        ForEach(skuCandidates, id: \.self) { candidate in
+                            Button {
+                                sku = candidate
+                            } label: {
+                                Text(candidate)
+                                    .font(Typography.caption)
+                                    .foregroundStyle(candidate == sku ? BrandColors.primary : BrandColors.textSecondary)
+                                    .padding(.horizontal, Spacing.sm)
+                                    .padding(.vertical, Spacing.xs)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
+                                            .fill(candidate == sku ? BrandColors.primary.opacity(0.12) : BrandColors.surfaceTertiary)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Dimensions.buttonRadius)
+                                            .stroke(candidate == sku ? BrandColors.primary.opacity(0.35) : BrandColors.borderSecondary, lineWidth: Dimensions.borderWidth)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
             }
         }
     }

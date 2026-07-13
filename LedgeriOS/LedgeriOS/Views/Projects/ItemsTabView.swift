@@ -182,6 +182,8 @@ struct ItemsTabView: View {
                 context: protoItem.projectId.map { .project($0, spaceId: nil) } ?? .inventory,
                 initialTransactionId: protoItem.transactionId,
                 initialName: protoItem.name,
+                initialSku: protoItem.sku,
+                initialSkuCandidates: protoItem.extracted?.skuCandidates ?? [],
                 initialImageRefs: protoItem.photos ?? [],
                 onCreated: { itemIds in
                     if let itemId = itemIds.first {

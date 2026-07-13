@@ -83,6 +83,7 @@ struct ItemQuickDraftDetailView: View {
                 initialTransactionId: liveProtoItem.transactionId,
                 initialName: liveProtoItem.name,
                 initialSku: liveProtoItem.sku,
+                initialSkuCandidates: liveProtoItem.extracted?.skuCandidates ?? [],
                 initialQuantity: liveProtoItem.quantity,
                 initialImageRefs: photos,
                 onCreated: { itemIds in
