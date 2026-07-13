@@ -24,6 +24,7 @@ struct ItemDetailView: View {
     }
 
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(InventoryContext.self) private var inventoryContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
     @Environment(FindStateManager.self) private var findState
@@ -47,7 +48,7 @@ struct ItemDetailView: View {
     @State private var lineageTransactions: [String: Transaction] = [:]
     @State private var lineageLoadTask: Task<Void, Never>?
     @State private var navigationTransaction: Transaction?
-    @State private var navigationSpace: Space?
+    @State private var navigationSpace: SpaceRoute?
 
     // Modal presentation
     @State private var showActionMenu = false
@@ -248,8 +249,18 @@ struct ItemDetailView: View {
         .navigationDestination(item: $navigationTransaction) { transaction in
             TransactionDetailView(transaction: transaction)
         }
-        .navigationDestination(item: $navigationSpace) { space in
-            SpaceDetailView(space: space)
+        .navigationDestination(item: $navigationSpace) { route in
+            if let space = NavigationRouteResolution.space(
+                id: route.id,
+                projectSpaces: route.projectId == nil ? inventoryContext.spaces : projectContext.spaces,
+                accountSpaces: accountContext.allSpaces
+            ) {
+                SpaceDetailView(space: space)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(BrandColors.background)
+            }
         }
         .onAppear {
             NavLifecycleLog.log("ItemDetailView.onAppear itemId=\(itemId)")
@@ -329,7 +340,9 @@ struct ItemDetailView: View {
                     .foregroundStyle(BrandColors.textSecondary)
                 if let space = linkedSpace {
                     Button {
-                        navigationSpace = space
+                        if let spaceId = space.id {
+                            navigationSpace = SpaceRoute(id: spaceId, projectId: space.projectId)
+                        }
                     } label: {
                         FindableText(space.name)
                             .font(Typography.small)
@@ -694,12 +707,17 @@ struct ItemDetailView: View {
 
     private var linkedSpace: Space? {
         guard let spaceId = liveItem.spaceId else { return nil }
-        return projectContext.spaces.first(where: { $0.id == spaceId })
+        let scopedSpaces = liveItem.projectId == nil ? inventoryContext.spaces : projectContext.spaces
+        return scopedSpaces.first(where: { $0.id == spaceId })
+            ?? accountContext.allSpaces.first(where: { $0.id == spaceId })
     }
 
     private var spaceName: String {
         guard let spaceId = liveItem.spaceId else { return "None" }
-        return projectContext.spaces.first(where: { $0.id == spaceId })?.name ?? "None"
+        let scopedSpaces = liveItem.projectId == nil ? inventoryContext.spaces : projectContext.spaces
+        return scopedSpaces.first(where: { $0.id == spaceId })?.name
+            ?? accountContext.allSpaces.first(where: { $0.id == spaceId })?.name
+            ?? "None"
     }
 
     // MARK: - Image Management

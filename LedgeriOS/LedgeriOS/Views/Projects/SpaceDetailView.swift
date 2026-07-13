@@ -5,6 +5,7 @@ struct SpaceDetailView: View {
     let space: Space
 
     @Environment(ProjectContext.self) private var projectContext
+    @Environment(InventoryContext.self) private var inventoryContext
     @Environment(AccountContext.self) private var accountContext
     @Environment(MediaService.self) private var mediaService
     @Environment(FindStateManager.self) private var findState
@@ -39,8 +40,29 @@ struct SpaceDetailView: View {
         liveSpaceData ?? space
     }
 
+    private var isInventorySpace: Bool {
+        liveSpace.projectId == nil
+    }
+
+    private var activeItems: [Item] {
+        isInventorySpace ? inventoryContext.items : projectContext.items
+    }
+
+    private var activeSpaces: [Space] {
+        isInventorySpace ? inventoryContext.spaces : projectContext.spaces
+    }
+
+    private var activeTransactions: [Transaction] {
+        isInventorySpace ? inventoryContext.transactions : projectContext.transactions
+    }
+
+    private var itemScope: ItemScope {
+        isInventorySpace ? .inventory : .project
+    }
+
     private var spaceItems: [Item] {
-        projectContext.items.filter { $0.spaceId == space.id }
+        guard let spaceId = liveSpace.id else { return [] }
+        return activeItems.filter { $0.spaceId == spaceId }
     }
 
     private var canSaveAsTemplate: Bool {
@@ -111,7 +133,7 @@ struct SpaceDetailView: View {
         .adaptivePresentation(isPresented: $showAddExistingItems, style: .fullSheet) {
             AddExistingItemsPicker(
                 context: .space(liveSpace),
-                projectId: projectContext.project?.id,
+                projectId: liveSpace.projectId,
                 onDismiss: { showAddExistingItems = false }
             )
         }
@@ -124,8 +146,8 @@ struct SpaceDetailView: View {
         }
         .itemActionSheets(
             itemActions,
-            spaces: projectContext.spaces,
-            transactions: projectContext.transactions,
+            spaces: activeSpaces,
+            transactions: activeTransactions,
             accountId: accountContext.currentAccountId
         )
         .alert("Error", isPresented: .init(
@@ -242,7 +264,7 @@ struct SpaceDetailView: View {
         guard item.id != nil else { return [] }
         return itemActions.buildMenu(
             for: item,
-            scope: .project,
+            scope: itemScope,
             menuContext: .space,
             accountId: accountContext.currentAccountId
         )
