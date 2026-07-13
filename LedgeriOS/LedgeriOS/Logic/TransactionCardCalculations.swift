@@ -5,7 +5,7 @@ import SwiftUI
 enum TransactionCardCalculations {
 
     /// Returns ordered array of badges for a transaction.
-    /// Order: needs review → type
+    /// Order: canceled/needs review → type → invoice
     static func badgeItems(
         transactionType: TransactionType?,
         reimbursementType: String?,
@@ -19,8 +19,15 @@ enum TransactionCardCalculations {
     ) -> [CardBadge] {
         var badges: [CardBadge] = []
 
-        // 1. Needs review badge (always leftmost) — shows when isComplete is false or nil, but not for canceled transactions
-        if isComplete != true && status != .canceled {
+        // 1. Status badge (always leftmost)
+        if status == .canceled {
+            badges.append(CardBadge(
+                text: "Canceled",
+                color: StatusColors.badgeError,
+                backgroundOpacity: 0.08,
+                borderOpacity: 0.20
+            ))
+        } else if isComplete != true {
             badges.append(CardBadge(
                 text: "Needs Review",
                 color: StatusColors.badgeNeedsReview,
