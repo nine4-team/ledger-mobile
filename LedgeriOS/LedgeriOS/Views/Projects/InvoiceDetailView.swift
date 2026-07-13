@@ -247,10 +247,14 @@ struct InvoiceDetailView: View {
         let source = inv.invoiceNumber?.isEmpty == false
             ? "Collected \(inv.invoiceNumber!)"
             : "Collected invoice"
-        let lineIds = inv.lines?.map(\.id)
+        let liveLines = materializedLiveLines()
+        var invoiceForCollection = inv
+        invoiceForCollection.lines = liveLines
+        invoiceForCollection.totalCents = InvoiceLineCalculations.netTotalCents(lines: liveLines)
+        let lineIds = liveLines.map(\.id)
         runService {
             _ = try await InvoiceService().markCollected(
-                invoice: inv,
+                invoice: invoiceForCollection,
                 accountId: acctId,
                 projectId: projectId,
                 amountCents: amount,
@@ -259,6 +263,30 @@ struct InvoiceDetailView: View {
                 userId: userId
             )
         }
+    }
+
+    private func materializedLiveLines() -> [InvoiceLine] {
+        let itemIdSet = Set(liveInvoice.itemIds ?? [])
+        let txIdSet = Set(liveInvoice.transactionIds ?? [])
+        var lines: [InvoiceLine] = []
+        for item in projectContext.items where item.id.map({ itemIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(
+                item: item,
+                projectId: liveInvoice.projectId ?? "",
+                transactions: projectContext.transactions
+            ) {
+                lines.append(line)
+            }
+        }
+        for tx in projectContext.transactions where tx.id.map({ txIdSet.contains($0) }) ?? false {
+            if let line = InvoiceLineCalculations.makeLine(transaction: tx) {
+                lines.append(line)
+            }
+        }
+        for line in liveInvoice.lines ?? [] where line.sourceType == .manual {
+            lines.append(line)
+        }
+        return lines
     }
 
     private func performCancel() {

@@ -422,14 +422,29 @@ enum InvoiceLineCalculations {
         var toBusiness = 0
         var toClient = 0
 
-        // Sent-but-unpaid invoices contribute their stored signed lines.
+        // Sent-but-unpaid invoices contribute live source-derived line amounts.
         for invoice in invoices {
             guard invoice.projectId == projectId else { continue }
             guard invoice.status == .sent else { continue }
             for line in invoice.lines ?? [] {
+                let amount: Int
+                switch line.sourceType {
+                case .item:
+                    amount = line.sourceId.flatMap { itemId in
+                        items.first { $0.id == itemId }.flatMap {
+                            amountCents(for: $0, projectId: projectId, transactions: transactions)
+                        }
+                    } ?? line.amountCents
+                case .transaction:
+                    amount = line.sourceId.flatMap { txId in
+                        transactions.first { $0.id == txId }?.amountCents
+                    } ?? line.amountCents
+                case .manual:
+                    amount = line.amountCents
+                }
                 switch line.sign {
-                case .charge: toBusiness += line.amountCents
-                case .credit: toClient += line.amountCents
+                case .charge: toBusiness += amount
+                case .credit: toClient += amount
                 }
             }
         }

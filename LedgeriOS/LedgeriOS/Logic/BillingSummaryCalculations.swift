@@ -7,8 +7,8 @@ import Foundation
 /// Definitions:
 /// - **Total Spent** — sum of all item `purchasePriceCents` + all non-itemized
 ///   transaction `amountCents` for the project.
-/// - **Invoiced** — sent or paid invoice demand, including manual New Charge
-///   lines.
+/// - **Invoiced** — sent or paid invoice demand. Sent invoice demand is derived
+///   from current source records; paid invoice demand uses the paid snapshot.
 /// - **Collected** — settlement transactions linked back to invoices.
 /// - **Outstanding** — sent invoice demand minus linked settlements.
 ///
@@ -43,7 +43,7 @@ enum BillingSummaryCalculations {
 
         let itemAmounts = Dictionary(uniqueKeysWithValues: scopedItems.compactMap { item -> (String, Int)? in
             guard let id = item.id else { return nil }
-            return (id, item.purchasePriceCents ?? 0)
+            return (id, InvoiceLineCalculations.amountCents(for: item))
         })
         let nonItemizedTxAmounts = Dictionary(uniqueKeysWithValues: scopedTransactions.compactMap { tx -> (String, Int)? in
             guard let id = tx.id, isNonItemized(tx, budgetCategories: budgetCategories) else { return nil }
@@ -71,6 +71,7 @@ enum BillingSummaryCalculations {
 
             let demand = demandCents(
                 for: invoice,
+                status: invoice.status ?? .created,
                 itemAmounts: itemAmounts,
                 transactionAmounts: nonItemizedTxAmounts
             )
@@ -125,13 +126,28 @@ enum BillingSummaryCalculations {
 
     private static func demandCents(
         for invoice: Invoice,
+        status: InvoiceStatus,
         itemAmounts: [String: Int],
         transactionAmounts: [String: Int]
     ) -> Int {
-        if let lines = invoice.lines {
+        if let lines = invoice.lines, status == .paid {
             return InvoiceLineCalculations.netTotalCents(lines: lines)
         }
-        if let total = invoice.totalCents {
+        if let lines = invoice.lines {
+            return lines.reduce(0) { total, line in
+                let amount: Int
+                switch line.sourceType {
+                case .item:
+                    amount = line.sourceId.flatMap { itemAmounts[$0] } ?? line.amountCents
+                case .transaction:
+                    amount = line.sourceId.flatMap { transactionAmounts[$0] } ?? line.amountCents
+                case .manual:
+                    amount = line.amountCents
+                }
+                return total + (amount * line.sign.rawValue)
+            }
+        }
+        if let total = invoice.totalCents, status == .paid {
             return total
         }
 

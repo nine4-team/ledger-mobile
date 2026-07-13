@@ -6,8 +6,8 @@ protocol InvoiceServiceProtocol: Sendable {
     /// Create an invoice in the created state that references the given item and transaction ids.
     /// Created invoices are live previews — amounts are recomputed from the current item /
     /// transaction state every time the invoice is rendered. The document
-    /// therefore stores only the membership index (`itemIds`, `transactionIds`);
-    /// `lines` and `totalCents` are materialized later, at `markSent`.
+    /// therefore stores the membership index (`itemIds`, `transactionIds`) plus
+    /// any manual credit/charge lines; sourced amounts are finalized when paid.
     ///
     /// Does **not** cascade any status to the referenced items / transactions —
     /// v2 tracks paid-state only on the invoice.
@@ -37,11 +37,11 @@ protocol InvoiceServiceProtocol: Sendable {
         userId: String?
     ) async throws
 
-    /// Transition a created invoice to sent. This is the canonical "snapshot at send time" —
-    /// `lines` and `totalCents` are materialized from the caller-supplied signed
-    /// lines and written atomically with the status transition and `dateSent`.
+    /// Transition a created invoice to sent. This records source-linked lines
+    /// for display/settlement grouping, but sent invoices remain live: source
+    /// amounts are still rederived until the paid boundary.
     /// `itemIds` / `transactionIds` are rederived from `lines` so the membership
-    /// index stays consistent with the frozen snapshot.
+    /// index stays consistent with the selected sources.
     func markSent(
         invoiceId: String,
         accountId: String,
@@ -56,7 +56,9 @@ protocol InvoiceServiceProtocol: Sendable {
 
     /// Record collection by creating categorized payment-to-business
     /// transactions for the real payment event, linking them to the invoice and
-    /// settled line ids, then marking the invoice paid.
+    /// settled line ids, then marking the invoice paid. The caller should pass
+    /// the current source-derived lines on `invoice.lines`; those lines become
+    /// the final paid snapshot.
     func markCollected(
         invoice: Invoice,
         accountId: String,

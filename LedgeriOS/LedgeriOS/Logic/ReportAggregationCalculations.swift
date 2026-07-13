@@ -219,7 +219,7 @@ enum ReportAggregationCalculations {
         if let lines = invoice.lines, !lines.isEmpty {
             var chargeLines: [InvoiceLineEntry] = []
             var creditLines: [InvoiceLineEntry] = []
-            let useFrozenLines = (invoice.status ?? .created) != .created
+            let useFrozenLines = (invoice.status ?? .created) == .paid
             for line in lines {
                 let entry = invoiceLineEntry(from: line, itemMap: itemMap, txMap: txMap, useFrozenLine: useFrozenLines)
                 switch line.sign {

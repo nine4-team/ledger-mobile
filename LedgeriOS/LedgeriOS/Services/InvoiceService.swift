@@ -9,9 +9,8 @@ import FirebaseFirestore
 ///
 /// **Created invoices are live previews.** While an invoice is `status == .created`,
 /// the document stores only `itemIds` / `transactionIds` — the membership index.
-/// `lines` and `totalCents` are materialized at `markSent` from the then-current
-/// item / transaction state. Readers of a created invoice recompute the displayed total
-/// from that live state; readers of a sent / paid invoice read the frozen snapshot.
+/// `lines` and `totalCents` are finalized when the invoice is paid. Created and
+/// sent invoice readers recompute displayed totals from live source state.
 struct InvoiceService: InvoiceServiceProtocol {
     enum InvoiceServiceError: Error {
         case invoiceMissingId
@@ -137,7 +136,7 @@ struct InvoiceService: InvoiceServiceProtocol {
         try await batch.commit()
     }
 
-    // MARK: - Mark Sent (materialize the snapshot)
+    // MARK: - Mark Sent (record source-linked lines, keep amounts live)
 
     func markSent(
         invoiceId: String,
@@ -250,6 +249,10 @@ struct InvoiceService: InvoiceServiceProtocol {
         var invoiceFields: [String: Any] = [
             "status": InvoiceStatus.paid.rawValue,
             "datePaid": now,
+            "lines": lines.map(Self.encodeLine),
+            "totalCents": selectedTotal,
+            "itemIds": Self.membership(from: lines).itemIds,
+            "transactionIds": Self.membership(from: lines).transactionIds,
             "updatedAt": now,
         ]
         if let userId { invoiceFields["updatedBy"] = userId }

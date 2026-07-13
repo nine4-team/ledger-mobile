@@ -294,11 +294,10 @@ private struct InvoiceRow: View {
 
     private var status: InvoiceStatus { invoice.status ?? .created }
 
-    /// Drafts are live previews — compute the displayed total from the current
-    /// item / transaction state. Sent / paid / canceled invoices use the frozen
-    /// `totalCents` snapshot written at `markSent`.
+    /// Created and sent invoices stay live. Paid invoices use the final
+    /// `totalCents` snapshot written at collection.
     private var displayedTotalCents: Int {
-        if status == .created {
+        if status != .paid {
             let itemIdSet = Set(invoice.itemIds ?? [])
             let txIdSet = Set(invoice.transactionIds ?? [])
             var lines: [InvoiceLine] = []
