@@ -33,6 +33,11 @@ struct ItemDraftCard: View {
         protoItem.projectId != nil && onToggleFromInventory != nil
     }
 
+    private var displayName: String? {
+        let name = protoItem.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? nil : name
+    }
+
     var body: some View {
         Card(padding: Spacing.sm) {
             HStack(alignment: .center, spacing: Spacing.sm) {
@@ -138,6 +143,13 @@ struct ItemDraftCard: View {
                     }
                 }
                 .frame(height: thumbnailSize)
+            }
+
+            if let displayName {
+                FindableText(displayName)
+                    .font(Typography.body)
+                    .foregroundStyle(BrandColors.textPrimary)
+                    .lineLimit(1)
             }
 
             if let sku = protoItem.sku?.trimmingCharacters(in: .whitespacesAndNewlines), !sku.isEmpty {
