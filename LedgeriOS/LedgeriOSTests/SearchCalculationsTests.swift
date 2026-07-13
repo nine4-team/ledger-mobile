@@ -68,6 +68,32 @@ private func makeSpace(
     return space
 }
 
+private func makeProtoItem(
+    id: String? = nil,
+    name: String? = nil,
+    sku: String? = nil,
+    notes: String? = nil,
+    status: ProtoItemStatus? = nil,
+    sourceHint: ProtoItemSourceHint? = nil,
+    captureContext: ProtoItemCaptureContext? = nil,
+    extractedSkuCandidates: [String]? = nil
+) -> ProtoItem {
+    var protoItem = ProtoItem()
+    protoItem.id = id
+    protoItem.name = name
+    protoItem.sku = sku
+    protoItem.notes = notes
+    protoItem.status = status
+    protoItem.sourceHint = sourceHint
+    protoItem.captureContext = captureContext
+    if let extractedSkuCandidates {
+        var extracted = ProtoItemExtraction()
+        extracted.skuCandidates = extractedSkuCandidates
+        protoItem.extracted = extracted
+    }
+    return protoItem
+}
+
 private func makeCategory(
     id: String? = nil,
     name: String = ""
@@ -348,6 +374,34 @@ struct TextSubstringTests {
         let result = SearchCalculations.spaceMatches(space: space, query: "40")
         #expect(result == false)
     }
+
+    @Test("Proto item name match")
+    func protoItemNameMatch() {
+        let protoItem = makeProtoItem(name: "Brass Lamp")
+        let result = SearchCalculations.protoItemMatches(protoItem: protoItem, query: "lamp")
+        #expect(result == true)
+    }
+
+    @Test("Proto item normalized SKU match")
+    func protoItemNormalizedSkuMatch() {
+        let protoItem = makeProtoItem(sku: "ABC-123")
+        let result = SearchCalculations.protoItemMatches(protoItem: protoItem, query: "abc123")
+        #expect(result == true)
+    }
+
+    @Test("Proto item extracted SKU candidate match")
+    func protoItemExtractedSkuCandidateMatch() {
+        let protoItem = makeProtoItem(extractedSkuCandidates: ["HD/400-XYZ"])
+        let result = SearchCalculations.protoItemMatches(protoItem: protoItem, query: "400xyz")
+        #expect(result == true)
+    }
+
+    @Test("Proto item status and source hint match")
+    func protoItemStatusAndSourceHintMatch() {
+        let protoItem = makeProtoItem(status: .inReview, sourceHint: .fromInventory)
+        #expect(SearchCalculations.protoItemMatches(protoItem: protoItem, query: "in review") == true)
+        #expect(SearchCalculations.protoItemMatches(protoItem: protoItem, query: "from_inventory") == true)
+    }
 }
 
 // MARK: - Full Search Tests
@@ -358,17 +412,20 @@ struct FullSearchTests {
     @Test("Empty query returns all results")
     func emptyQueryReturnsAll() {
         let items = [makeItem(name: "A"), makeItem(name: "B")]
+        let protoItems = [makeProtoItem(name: "Draft")]
         let transactions = [makeTransaction(source: "X")]
         let spaces = [makeSpace(name: "Y")]
 
         let result = SearchCalculations.search(
             query: "",
             items: items,
+            protoItems: protoItems,
             transactions: transactions,
             spaces: spaces,
             categories: []
         )
         #expect(result.items.count == 2)
+        #expect(result.protoItems.count == 1)
         #expect(result.transactions.count == 1)
         #expect(result.spaces.count == 1)
     }
@@ -389,18 +446,22 @@ struct FullSearchTests {
     @Test("Query filters across all entity types")
     func queryFiltersAll() {
         let items = [makeItem(name: "Table Lamp"), makeItem(name: "Chair")]
+        let protoItems = [makeProtoItem(name: "Lamp Draft"), makeProtoItem(name: "Sofa Draft")]
         let transactions = [makeTransaction(source: "Lamp Store"), makeTransaction(source: "IKEA")]
         let spaces = [makeSpace(name: "Lamp Room"), makeSpace(name: "Kitchen")]
 
         let result = SearchCalculations.search(
             query: "lamp",
             items: items,
+            protoItems: protoItems,
             transactions: transactions,
             spaces: spaces,
             categories: []
         )
         #expect(result.items.count == 1)
         #expect(result.items[0].name == "Table Lamp")
+        #expect(result.protoItems.count == 1)
+        #expect(result.protoItems[0].name == "Lamp Draft")
         #expect(result.transactions.count == 1)
         #expect(result.transactions[0].source == "Lamp Store")
         #expect(result.spaces.count == 1)

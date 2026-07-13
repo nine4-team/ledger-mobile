@@ -6,8 +6,21 @@ enum SearchCalculations {
 
     struct SearchResults {
         let items: [Item]
+        let protoItems: [ProtoItem]
         let transactions: [Transaction]
         let spaces: [Space]
+
+        init(
+            items: [Item],
+            protoItems: [ProtoItem] = [],
+            transactions: [Transaction],
+            spaces: [Space]
+        ) {
+            self.items = items
+            self.protoItems = protoItems
+            self.transactions = transactions
+            self.spaces = spaces
+        }
     }
 
     // MARK: - Main Search
@@ -15,16 +28,18 @@ enum SearchCalculations {
     static func search(
         query: String,
         items: [Item],
+        protoItems: [ProtoItem] = [],
         transactions: [Transaction],
         spaces: [Space],
         categories: [BudgetCategory]
     ) -> SearchResults {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty {
-            return SearchResults(items: items, transactions: transactions, spaces: spaces)
+            return SearchResults(items: items, protoItems: protoItems, transactions: transactions, spaces: spaces)
         }
         return SearchResults(
             items: items.filter { itemMatches(item: $0, query: trimmed, categories: categories) },
+            protoItems: protoItems.filter { protoItemMatches(protoItem: $0, query: trimmed) },
             transactions: transactions.filter { transactionMatches(transaction: $0, query: trimmed, categories: categories) },
             spaces: spaces.filter { spaceMatches(space: $0, query: trimmed) }
         )
@@ -55,6 +70,49 @@ enum SearchCalculations {
         // Amount fields: purchasePriceCents, projectPriceCents, marketValueCents
         let amounts = [item.purchasePriceCents, item.projectPriceCents, item.marketValueCents].compactMap { $0 }
         if amounts.contains(where: { amountMatch(query: query, cents: $0) }) {
+            return true
+        }
+
+        return false
+    }
+
+    static func protoItemMatches(protoItem: ProtoItem, query: String) -> Bool {
+        if query.isEmpty { return true }
+
+        let textFields: [String?] = [
+            protoItem.id,
+            protoItem.name,
+            protoItem.sku,
+            protoItem.notes,
+            protoItem.status?.rawValue,
+            protoItem.status?.displayLabel,
+            protoItem.sourceHint?.rawValue,
+            protoItem.captureContext?.rawValue,
+            protoItem.projectId,
+            protoItem.intendedProjectId,
+            protoItem.transactionId,
+            protoItem.candidateTransactionId,
+            protoItem.candidateItemId,
+            protoItem.convertedItemId,
+            protoItem.extracted?.rawText,
+        ]
+        if textFields.contains(where: { textMatch(query: query, in: $0) }) {
+            return true
+        }
+
+        let normalizedQuery = normalizedSKU(query)
+
+        if let sku = protoItem.sku, !sku.isEmpty {
+            let normalizedItemSKU = normalizedSKU(sku)
+            if !normalizedQuery.isEmpty && normalizedItemSKU.contains(normalizedQuery) {
+                return true
+            }
+        }
+
+        if protoItem.extracted?.skuCandidates?.contains(where: { candidate in
+            textMatch(query: query, in: candidate)
+                || (!normalizedQuery.isEmpty && normalizedSKU(candidate).contains(normalizedQuery))
+        }) == true {
             return true
         }
 
